@@ -43,7 +43,12 @@ export default function HubPage() {
   
   const collectAllGold = (e: React.MouseEvent<HTMLButtonElement>) => {
     const goldToCollect = Math.floor(liveGold);
-    setTotalGold(prev => prev + goldToCollect);
+    
+    // Animate counting up
+    animateGoldCount(totalGold, totalGold + goldToCollect, (value) => {
+      setTotalGold(value);
+    });
+    
     setLiveGold(0);
     
     // Add animation to button
@@ -55,6 +60,31 @@ export default function HubPage() {
     
     // Create gold popup animation
     showGoldPopup(goldToCollect);
+  };
+  
+  const animateGoldCount = (start: number, end: number, callback: (value: number) => void) => {
+    const duration = 1000; // 1 second
+    const startTime = Date.now();
+    const difference = end - start;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const current = Math.floor(start + difference * easeOutQuart);
+      
+      callback(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        callback(end); // Ensure we end at exact value
+      }
+    };
+    
+    requestAnimationFrame(animate);
   };
   
   const showGoldPopup = (amount: number) => {
@@ -130,6 +160,18 @@ export default function HubPage() {
             transform: scale(1);
           }
         }
+        
+        @keyframes goldFloat {
+          0%, 100% {
+            opacity: 0.4;
+            transform: translateY(0px) scale(0.8);
+          }
+          50% {
+            opacity: 1;
+            transform: translateY(-3px) scale(1.2);
+            box-shadow: 0 0 8px rgba(250, 182, 23, 0.6);
+          }
+        }
       `}</style>
       {/* Animated Background Stars */}
       <div className="fixed inset-0 pointer-events-none">
@@ -177,7 +219,14 @@ export default function HubPage() {
           <div className="relative flex items-center justify-between">
             {/* Total Gold Display */}
             <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-400 drop-shadow-[0_0_10px_rgba(250,182,23,0.5)]">
+              <div 
+                className="text-3xl text-yellow-400 drop-shadow-[0_0_10px_rgba(250,182,23,0.5)]"
+                style={{ 
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                  fontWeight: 300,
+                  letterSpacing: '0.05em'
+                }}
+              >
                 {totalGold.toLocaleString()}
               </div>
               <div className="text-xs text-gray-400 uppercase tracking-wider">Total Gold</div>
@@ -192,11 +241,56 @@ export default function HubPage() {
             </div>
             
             {/* Live Earnings */}
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-400 drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">
-                {liveGold.toFixed(2)}
+            <div className="flex items-center gap-3">
+              {/* Gold Particle Animation */}
+              <div className="relative w-5 h-5">
+                <div 
+                  className="absolute w-[3px] h-[3px] rounded-full top-[2px] left-[2px]"
+                  style={{
+                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
+                    animation: 'goldFloat 2s ease-in-out infinite',
+                    animationDelay: '0s'
+                  }}
+                />
+                <div 
+                  className="absolute w-[3px] h-[3px] rounded-full top-[2px] right-[2px]"
+                  style={{
+                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
+                    animation: 'goldFloat 2s ease-in-out infinite',
+                    animationDelay: '0.5s'
+                  }}
+                />
+                <div 
+                  className="absolute w-[3px] h-[3px] rounded-full bottom-[2px] left-[2px]"
+                  style={{
+                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
+                    animation: 'goldFloat 2s ease-in-out infinite',
+                    animationDelay: '1s'
+                  }}
+                />
+                <div 
+                  className="absolute w-[3px] h-[3px] rounded-full bottom-[2px] right-[2px]"
+                  style={{
+                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
+                    animation: 'goldFloat 2s ease-in-out infinite',
+                    animationDelay: '1.5s'
+                  }}
+                />
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Earnings to Collect</div>
+              
+              <div className="text-right">
+                <div 
+                  className="text-2xl text-yellow-400 drop-shadow-[0_0_10px_rgba(250,182,23,0.5)]"
+                  style={{ 
+                    fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                    fontWeight: 200,
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  {liveGold.toFixed(2)}
+                </div>
+                <div className="text-[10px] text-gray-400 uppercase tracking-[0.1em] mt-1">Earnings to Collect</div>
+              </div>
             </div>
           </div>
         </div>
@@ -283,7 +377,11 @@ export default function HubPage() {
               onClick={(e) => {
                 // Collect individual mek gold
                 const mekGold = 968;
-                setTotalGold(prev => prev + mekGold);
+                
+                // Animate counting up
+                animateGoldCount(totalGold, totalGold + mekGold, (value) => {
+                  setTotalGold(value);
+                });
                 
                 // Add animation to button
                 const button = e.currentTarget;

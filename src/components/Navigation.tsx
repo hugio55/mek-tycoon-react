@@ -87,6 +87,25 @@ export default function Navigation() {
       <div className="flex justify-center py-5 mb-5">
         <Link href="/hub" className="group">
           <div className="relative inline-block overflow-hidden" style={{ maxHeight: '100px' }}>
+            {/* Random sparkles across the logo */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={`sparkle-${i}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${10 + (i * 12)}%`,
+                  top: `${20 + ((i * 17) % 60)}%`,
+                  width: '3px',
+                  height: '3px',
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  animation: `sparkle ${2 + (i * 0.3)}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.4}s`,
+                  zIndex: 20,
+                }}
+              />
+            ))}
+            
             {/* Logo shimmer/gleam effect */}
             <div 
               className="absolute inset-0 -left-full z-10 pointer-events-none"
@@ -109,11 +128,11 @@ export default function Navigation() {
               alt="Mek Tycoon Logo"
               width={400}
               height={100}
-              className="object-contain h-[100px] w-auto drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all group-hover:scale-105"
+              className="object-contain h-[100px] w-auto drop-shadow-[0_0_3.5px_rgba(250,182,23,0.35)] group-hover:drop-shadow-[0_0_5.25px_rgba(250,182,23,0.56)] transition-all group-hover:scale-105"
               priority
             />
             
-            {/* CSS for shimmer animation */}
+            {/* CSS for shimmer and sparkle animations */}
             <style jsx>{`
               @keyframes logoShimmer {
                 0% {
@@ -130,6 +149,17 @@ export default function Navigation() {
                 100% {
                   left: 100%;
                   opacity: 0;
+                }
+              }
+              
+              @keyframes sparkle {
+                0%, 100% {
+                  opacity: 0;
+                  transform: scale(0);
+                }
+                50% {
+                  opacity: 1;
+                  transform: scale(1);
                 }
               }
             `}</style>
