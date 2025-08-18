@@ -172,19 +172,52 @@ export default function HubPage() {
             box-shadow: 0 0 8px rgba(250, 182, 23, 0.6);
           }
         }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) translateX(0px);
+          }
+          33% {
+            transform: translateY(-5px) translateX(2px);
+          }
+          66% {
+            transform: translateY(3px) translateX(-2px);
+          }
+        }
+        
+        @keyframes twinkle {
+          0%, 100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 0.8;
+          }
+        }
       `}</style>
-      {/* Animated Background Stars */}
+      {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* Twinkling Stars */}
+        {/* Yellow gradient orbs from sides */}
+        <div 
+          className="absolute left-0 top-0 w-full h-full"
+          style={{
+            background: `
+              radial-gradient(ellipse at 0% 50%, rgba(250, 182, 23, 0.15) 0%, transparent 40%),
+              radial-gradient(ellipse at 100% 50%, rgba(250, 182, 23, 0.15) 0%, transparent 40%)
+            `
+          }}
+        />
+        
+        {/* Static Stars */}
         {[...Array(6)].map((_, i) => (
           <div
             key={`star-${i}`}
-            className="absolute animate-pulse"
+            className="absolute"
             style={{
               left: `${20 + i * 15}%`,
               top: `${10 + i * 10}%`,
-              animationDelay: `${i * 0.5}s`,
               fontSize: '12px',
+              color: '#fab617',
+              opacity: 0.6
             }}
           >
             {i % 2 === 0 ? '✦' : '✧'}
@@ -195,12 +228,13 @@ export default function HubPage() {
         {[...Array(20)].map((_, i) => (
           <div
             key={`fine-${i}`}
-            className="absolute text-gray-600 animate-pulse"
+            className="absolute"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
               fontSize: '8px',
+              color: '#999',
+              opacity: 0.7
             }}
           >
             ·
@@ -211,39 +245,87 @@ export default function HubPage() {
       {/* Main Content */}
       <div className="relative z-10 py-6">
         {/* Hub Title Section */}
-        <div className="relative mb-6 p-6 rounded-xl bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 border-2 border-transparent overflow-hidden">
-          {/* Animated Border Gradient */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-500 via-yellow-400 to-green-400 opacity-50 blur-sm animate-pulse" />
-          <div className="absolute inset-[2px] rounded-xl bg-black" />
+        <div 
+          className="relative mb-6 rounded-xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
+            border: '2px solid #fab617',
+            boxShadow: '0 0 20px rgba(250, 182, 23, 0.3)',
+            padding: '20px'
+          }}
+        >
+          {/* Cosmic Debris Background */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Large floating particles */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={`debris-${i}`}
+                className="absolute opacity-20"
+                style={{
+                  left: `${15 + i * 11}%`,
+                  top: `${20 + (i % 3) * 25}%`,
+                  width: `${3 + (i % 2) * 2}px`,
+                  height: `${3 + (i % 2) * 2}px`,
+                  background: i % 2 === 0 ? '#fab617' : '#00ff88',
+                  borderRadius: '50%',
+                  animation: `float ${8 + i * 0.5}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.3}s`
+                }}
+              />
+            ))}
+            {/* Small particles */}
+            {[...Array(15)].map((_, i) => (
+              <div
+                key={`particle-${i}`}
+                className="absolute opacity-30"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  width: '1px',
+                  height: '1px',
+                  background: '#fab617',
+                  borderRadius: '50%',
+                  animation: `twinkle ${3 + Math.random() * 2}s ease-in-out infinite`,
+                  animationDelay: `${Math.random() * 3}s`
+                }}
+              />
+            ))}
+          </div>
           
-          <div className="relative flex items-center justify-between">
+          {/* Green inner border */}
+          <div 
+            className="absolute inset-[2px] rounded-xl pointer-events-none"
+            style={{
+              border: '1px solid #00ff88',
+              opacity: 0.5
+            }}
+          />
+          
+          <div className="relative flex items-center justify-between px-4">
             {/* Total Gold Display */}
-            <div 
-              className="px-6 py-3 rounded-lg text-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95))',
-                border: '2px solid #fab617',
-                boxShadow: '0 0 15px rgba(250, 182, 23, 0.3)'
-              }}
-            >
+            <div className="text-left">
               <div 
-                className="text-2xl mb-1"
                 style={{ 
                   fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
-                  fontWeight: 200,
+                  fontSize: '32px',
+                  fontWeight: 300,
                   color: '#fab617',
-                  letterSpacing: '0.05em',
-                  textShadow: '0 0 8px rgba(250, 182, 23, 0.4)'
+                  letterSpacing: '0.02em',
+                  textShadow: '0 0 10px rgba(250, 182, 23, 0.5)',
+                  lineHeight: '1'
                 }}
               >
                 {totalGold.toLocaleString()}
               </div>
               <div 
-                className="text-[10px] uppercase"
                 style={{
-                  color: '#999',
-                  letterSpacing: '0.15em',
-                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                  color: '#fab617',
+                  fontSize: '11px',
+                  letterSpacing: '0.2em',
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                  textTransform: 'uppercase',
+                  marginTop: '4px',
+                  opacity: 0.8
                 }}
               >
                 Total Gold
@@ -251,40 +333,59 @@ export default function HubPage() {
             </div>
             
             {/* Hub Title */}
-            <div className="text-center">
-              <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-500 drop-shadow-[0_0_20px_rgba(250,182,23,0.5)]">
+            <div className="text-center flex-1">
+              <h1 
+                style={{
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                  fontSize: '42px',
+                  fontWeight: 700,
+                  color: '#fab617',
+                  letterSpacing: '0.1em',
+                  textShadow: '0 0 20px rgba(250, 182, 23, 0.6)',
+                  margin: 0,
+                  lineHeight: '1'
+                }}
+              >
                 HUB
               </h1>
-              <p className="text-sm text-gray-400 uppercase tracking-widest">Your Tycoon at a Glance</p>
+              <p 
+                style={{
+                  fontSize: '10px',
+                  color: '#999',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3em',
+                  marginTop: '4px',
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                }}
+              >
+                Your Tycoon at a Glance
+              </p>
             </div>
             
             {/* Live Earnings */}
-            <div 
-              className="px-6 py-3 rounded-lg text-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95))',
-                border: '2px solid #fab617',
-                boxShadow: '0 0 15px rgba(250, 182, 23, 0.3)'
-              }}
-            >
+            <div className="text-right">
               <div 
-                className="text-2xl mb-1"
                 style={{ 
                   fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
-                  fontWeight: 200,
-                  color: '#fab617',
-                  letterSpacing: '0.05em',
-                  textShadow: '0 0 8px rgba(250, 182, 23, 0.4)'
+                  fontSize: '28px',
+                  fontWeight: 300,
+                  color: '#00ff88',
+                  letterSpacing: '0.02em',
+                  textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                  lineHeight: '1'
                 }}
               >
                 {liveGold.toFixed(2)}
               </div>
               <div 
-                className="text-[10px] uppercase"
                 style={{
-                  color: '#999',
-                  letterSpacing: '0.15em',
-                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                  color: '#00ff88',
+                  fontSize: '11px',
+                  letterSpacing: '0.2em',
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                  textTransform: 'uppercase',
+                  marginTop: '4px',
+                  opacity: 0.8
                 }}
               >
                 Earnings to Collect

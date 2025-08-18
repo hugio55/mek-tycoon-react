@@ -4,23 +4,71 @@ import { v } from "convex/values";
 export default defineSchema({
   // Main Mek NFT collection
   meks: defineTable({
+    // NFT data
     assetId: v.string(),
     assetName: v.string(),
+    owner: v.string(), // wallet address
+    iconUrl: v.optional(v.string()),
+    verified: v.boolean(), // blockchain verified
+    
+    // Visual attributes
     headGroup: v.optional(v.string()),
     headVariation: v.string(),
     bodyGroup: v.optional(v.string()),
     bodyVariation: v.string(),
+    armsGroup: v.optional(v.string()),
+    armsVariation: v.optional(v.string()),
+    legsGroup: v.optional(v.string()),
+    legsVariation: v.optional(v.string()),
+    boosterGroup: v.optional(v.string()),
+    boosterVariation: v.optional(v.string()),
     itemGroup: v.optional(v.string()),
     itemVariation: v.optional(v.string()),
-    owner: v.string(), // wallet address
-    iconUrl: v.optional(v.string()),
+    
+    // Game stats
+    level: v.optional(v.number()),
+    experience: v.optional(v.number()),
+    health: v.optional(v.number()),
+    maxHealth: v.optional(v.number()),
+    attack: v.optional(v.number()),
+    defense: v.optional(v.number()),
+    speed: v.optional(v.number()),
+    energy: v.optional(v.number()),
+    maxEnergy: v.optional(v.number()),
+    
+    // Rarity and ranking
     rarityRank: v.optional(v.number()),
-    verified: v.boolean(), // blockchain verified
+    rarityTier: v.optional(v.string()), // Common, Uncommon, Rare, Epic, Legendary
+    powerScore: v.optional(v.number()), // Overall power rating
+    
+    // Battle data
+    wins: v.optional(v.number()),
+    losses: v.optional(v.number()),
+    draws: v.optional(v.number()),
+    winStreak: v.optional(v.number()),
+    
+    // Economic data
+    scrapValue: v.optional(v.number()),
+    marketValue: v.optional(v.number()),
+    lastSalePrice: v.optional(v.number()),
+    
+    // Special attributes
+    abilities: v.optional(v.array(v.string())),
+    traits: v.optional(v.array(v.string())),
+    specialMove: v.optional(v.string()),
+    
+    // Metadata
+    lastUpdated: v.optional(v.number()),
+    inBattle: v.optional(v.boolean()),
+    isStaked: v.optional(v.boolean()),
   })
     .index("by_owner", ["owner"])
     .index("by_asset_id", ["assetId"])
     .index("by_head", ["headVariation"])
-    .index("by_body", ["bodyVariation"]),
+    .index("by_body", ["bodyVariation"])
+    .index("by_rarity", ["rarityTier"])
+    .index("by_power", ["powerScore"])
+    .index("by_level", ["level"]),
 
   // User profiles
   users: defineTable({

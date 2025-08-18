@@ -16,7 +16,9 @@ import type {
 import type * as buffs from "../buffs.js";
 import type * as crafting from "../crafting.js";
 import type * as marketplace from "../marketplace.js";
+import type * as meks from "../meks.js";
 import type * as seedData from "../seedData.js";
+import type * as seedMeks from "../seedMeks.js";
 import type * as users from "../users.js";
 
 /**
@@ -31,7 +33,9 @@ declare const fullApi: ApiFromModules<{
   buffs: typeof buffs;
   crafting: typeof crafting;
   marketplace: typeof marketplace;
+  meks: typeof meks;
   seedData: typeof seedData;
+  seedMeks: typeof seedMeks;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
