@@ -86,7 +86,24 @@ export default function Navigation() {
       {/* Large Logo at Top Center */}
       <div className="flex justify-center py-5 mb-5">
         <Link href="/hub" className="group">
-          <div style={{ maxHeight: '100px' }}>
+          <div className="relative inline-block overflow-hidden" style={{ maxHeight: '100px' }}>
+            {/* Logo shimmer/gleam effect */}
+            <div 
+              className="absolute inset-0 -left-full z-10 pointer-events-none"
+              style={{
+                background: `linear-gradient(
+                  90deg,
+                  transparent,
+                  rgba(255, 255, 255, 0.4) 30%,
+                  rgba(255, 255, 255, 0.8) 50%,
+                  rgba(255, 255, 255, 0.4) 70%,
+                  transparent
+                )`,
+                mixBlendMode: 'overlay',
+                animation: 'logoShimmer 4s ease-in-out infinite',
+              }}
+            />
+            
             <Image
               src="/logo-big.png"
               alt="Mek Tycoon Logo"
@@ -95,6 +112,27 @@ export default function Navigation() {
               className="object-contain h-[100px] w-auto drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all group-hover:scale-105"
               priority
             />
+            
+            {/* CSS for shimmer animation */}
+            <style jsx>{`
+              @keyframes logoShimmer {
+                0% {
+                  left: -100%;
+                  opacity: 0;
+                }
+                20% {
+                  opacity: 1;
+                }
+                50% {
+                  left: 100%;
+                  opacity: 1;
+                }
+                100% {
+                  left: 100%;
+                  opacity: 0;
+                }
+              }
+            `}</style>
           </div>
         </Link>
       </div>

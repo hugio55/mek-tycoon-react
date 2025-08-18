@@ -41,10 +41,49 @@ export default function HubPage() {
     return () => clearInterval(interval);
   }, []);
   
-  const collectAllGold = () => {
+  const collectAllGold = (e: React.MouseEvent<HTMLButtonElement>) => {
     const goldToCollect = Math.floor(liveGold);
     setTotalGold(prev => prev + goldToCollect);
     setLiveGold(0);
+    
+    // Add animation to button
+    const button = e.currentTarget;
+    button.classList.add('collecting');
+    setTimeout(() => {
+      button.classList.remove('collecting');
+    }, 500);
+    
+    // Create gold popup animation
+    showGoldPopup(goldToCollect);
+  };
+  
+  const showGoldPopup = (amount: number) => {
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.className = 'gold-popup';
+    popup.textContent = `+${amount} Gold Collected!`;
+    popup.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ffcc00, #ffaa00);
+      color: #000;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 24px;
+      z-index: 9999;
+      animation: goldPopup 1.5s ease-out forwards;
+      box-shadow: 0 10px 40px rgba(255, 204, 0, 0.5);
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Remove after animation
+    setTimeout(() => {
+      popup.remove();
+    }, 1500);
   };
   
   if (!userProfile) {
@@ -59,6 +98,39 @@ export default function HubPage() {
   
   return (
     <div className="text-white overflow-hidden">
+      {/* Global styles for animations */}
+      <style jsx global>{`
+        @keyframes goldPopup {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+          }
+          50% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -60%) scale(1);
+          }
+        }
+        
+        .collecting {
+          animation: collectPulse 0.5s ease-out;
+        }
+        
+        @keyframes collectPulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(0.95);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+      `}</style>
       {/* Animated Background Stars */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Twinkling Stars */}
@@ -179,9 +251,8 @@ export default function HubPage() {
         {/* Active Employees Card */}
         <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <span>🏭</span>
-              <span>Active Employees</span>
+            <h3 className="text-xl font-bold">
+              Active Employees
             </h3>
             <button
               onClick={collectAllGold}
@@ -208,7 +279,24 @@ export default function HubPage() {
                 </div>
               </div>
             </div>
-            <button className="px-4 py-2 bg-yellow-500 text-black font-semibold rounded hover:bg-yellow-400 transition-colors">
+            <button 
+              onClick={(e) => {
+                // Collect individual mek gold
+                const mekGold = 968;
+                setTotalGold(prev => prev + mekGold);
+                
+                // Add animation to button
+                const button = e.currentTarget;
+                button.classList.add('collecting');
+                setTimeout(() => {
+                  button.classList.remove('collecting');
+                }, 500);
+                
+                // Show popup
+                showGoldPopup(mekGold);
+              }}
+              className="px-4 py-2 bg-yellow-500 text-black font-semibold rounded hover:bg-yellow-400 transition-colors"
+            >
               Collect
             </button>
           </div>
@@ -238,9 +326,8 @@ export default function HubPage() {
         
         {/* Recent Activity Card */}
         <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <span>📊</span>
-            <span>Recent Activity</span>
+          <h3 className="text-xl font-bold mb-4">
+            Recent Activity
           </h3>
           <div className="space-y-2 text-sm text-gray-300">
             <div>• Collected 247 gold from Mek #1234</div>
