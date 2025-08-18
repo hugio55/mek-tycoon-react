@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as buffs from "../buffs.js";
 import type * as crafting from "../crafting.js";
 import type * as marketplace from "../marketplace.js";
 import type * as seedData from "../seedData.js";
@@ -27,6 +28,7 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  buffs: typeof buffs;
   crafting: typeof crafting;
   marketplace: typeof marketplace;
   seedData: typeof seedData;

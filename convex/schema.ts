@@ -166,4 +166,55 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_achievement", ["achievementId"]),
+
+  // Buff Types - defines all possible buffs in the game
+  buffTypes: defineTable({
+    name: v.string(), // e.g., "Gold Boost"
+    description: v.string(), // e.g., "Increases gold earning rate"
+    buffType: v.union(
+      v.literal("gold_rate"),           // +X gold/hr
+      v.literal("xp_gain"),            // +X% XP gain
+      v.literal("auction_fee_reduction"), // -X% auction house fees
+      v.literal("essence_rate"),        // +X essence rate
+      v.literal("crafting_speed"),      // -X% crafting time
+      v.literal("crafting_success"),    // +X% crafting success rate
+      v.literal("slot_bonus"),          // +X extra crafting slots
+      v.literal("market_discount"),     // -X% marketplace prices
+      v.literal("essence_efficiency"),  // -X% essence cost for crafting
+      v.literal("gold_capacity")        // +X max gold storage
+    ),
+    valueType: v.union(
+      v.literal("flat"),      // Flat amount (e.g., +50 gold/hr)
+      v.literal("percentage") // Percentage (e.g., +10%)
+    ),
+    baseValue: v.number(), // The base amount or percentage
+    maxStacks: v.number(), // Maximum number of times this buff can stack
+    icon: v.optional(v.string()), // Emoji or icon identifier
+    rarity: v.union(
+      v.literal("common"),
+      v.literal("uncommon"),
+      v.literal("rare"),
+      v.literal("epic"),
+      v.literal("legendary")
+    ),
+  })
+    .index("by_type", ["buffType"])
+    .index("by_rarity", ["rarity"]),
+
+  // Active Buffs - tracks which buffs users currently have active
+  activeBuffs: defineTable({
+    userId: v.id("users"),
+    buffTypeId: v.id("buffTypes"),
+    source: v.string(), // Where did this buff come from? (e.g., "talent_tree", "item", "achievement")
+    sourceId: v.optional(v.string()), // ID of the source (e.g., talent node ID, item ID)
+    value: v.number(), // The actual value of this buff instance
+    stacks: v.number(), // How many stacks of this buff
+    startedAt: v.number(), // When the buff was activated
+    expiresAt: v.optional(v.number()), // When it expires (null = permanent)
+    isActive: v.boolean(), // Is this buff currently active?
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_active", ["userId", "isActive"])
+    .index("by_expiration", ["expiresAt"])
+    .index("by_buff_type", ["buffTypeId"]),
 });
