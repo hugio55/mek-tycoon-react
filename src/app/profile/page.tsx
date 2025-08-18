@@ -259,15 +259,92 @@ export default function ProfilePage() {
           <p className="text-gray-300 mb-4">
             Reach Level 10 to become a mentor and earn gold from other players!
           </p>
-          <div className="relative h-6 bg-gray-700 rounded-full overflow-hidden">
-            <div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-yellow-400"
-              style={{ width: `${(selectedMek.level / 10) * 100}%` }}
-            />
+          
+          {/* Light Bulb Progress Indicator */}
+          <div className="flex justify-center items-center gap-3 mb-4">
+            {[...Array(10)].map((_, index) => {
+              const isLit = index < selectedMek.level;
+              return (
+                <div
+                  key={index}
+                  className="relative"
+                  style={{
+                    animation: isLit ? `bulbPulse ${2 + index * 0.1}s ease-in-out infinite` : 'none',
+                    animationDelay: `${index * 0.1}s`
+                  }}
+                >
+                  {/* Light bulb container */}
+                  <div
+                    className={`w-8 h-8 rounded-full border-2 transition-all duration-500 ${
+                      isLit 
+                        ? 'border-yellow-400 bg-gradient-to-br from-yellow-300 to-yellow-500 shadow-lg' 
+                        : 'border-gray-600 bg-gray-800'
+                    }`}
+                    style={{
+                      boxShadow: isLit 
+                        ? '0 0 20px rgba(250, 182, 23, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3)' 
+                        : 'inset 0 2px 4px rgba(0, 0, 0, 0.5)'
+                    }}
+                  >
+                    {/* Glass shine effect */}
+                    <div 
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: isLit 
+                          ? 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6) 0%, transparent 50%)' 
+                          : 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+                      }}
+                    />
+                    
+                    {/* Inner filament */}
+                    <div 
+                      className="absolute inset-2 rounded-full"
+                      style={{
+                        background: isLit 
+                          ? 'radial-gradient(circle, rgba(255, 255, 200, 0.8) 0%, transparent 70%)' 
+                          : 'none',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Bulb base */}
+                  <div 
+                    className={`w-4 h-2 mx-auto -mt-1 rounded-b transition-colors ${
+                      isLit ? 'bg-yellow-600' : 'bg-gray-700'
+                    }`}
+                    style={{
+                      borderLeft: '1px solid rgba(0, 0, 0, 0.3)',
+                      borderRight: '1px solid rgba(0, 0, 0, 0.3)',
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.3)',
+                    }}
+                  />
+                  
+                  {/* Level number below bulb */}
+                  <div className={`text-xs text-center mt-1 ${isLit ? 'text-yellow-400' : 'text-gray-600'}`}>
+                    {index + 1}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="text-center text-gray-400 mt-3">
+          
+          <div className="text-center text-gray-400">
             Level {selectedMek.level} / 10 Required
           </div>
+          
+          {/* CSS for pulsing animation */}
+          <style jsx>{`
+            @keyframes bulbPulse {
+              0%, 100% {
+                transform: scale(1);
+                filter: brightness(1);
+              }
+              50% {
+                transform: scale(1.05);
+                filter: brightness(1.2);
+              }
+            }
+          `}</style>
         </div>
         
         <div className="mt-6">
