@@ -104,10 +104,10 @@ export default function CraftingPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black text-white">
+    <div className="text-white">
       {/* Header */}
-      <header className="border-b border-yellow-500/30 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-yellow-500/30 bg-black/50 backdrop-blur-sm sticky top-0 z-50 -mx-5 px-5">
+        <div className="py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-yellow-400">
               🔨 Mek Crafting Station
@@ -117,7 +117,7 @@ export default function CraftingPage() {
         </div>
       </header>
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recipe Selection */}
           <div className="lg:col-span-1">

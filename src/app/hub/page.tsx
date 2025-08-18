@@ -58,7 +58,7 @@ export default function HubPage() {
   }
   
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="text-white overflow-hidden">
       {/* Animated Background Stars */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Twinkling Stars */}
@@ -95,7 +95,7 @@ export default function HubPage() {
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-6">
+      <div className="relative z-10 py-6">
         {/* Hub Title Section */}
         <div className="relative mb-6 p-6 rounded-xl bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 border-2 border-transparent overflow-hidden">
           {/* Animated Border Gradient */}
