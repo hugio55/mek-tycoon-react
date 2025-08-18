@@ -218,18 +218,36 @@ export default function HubPage() {
           
           <div className="relative flex items-center justify-between">
             {/* Total Gold Display */}
-            <div className="text-center">
+            <div 
+              className="px-6 py-3 rounded-lg text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95))',
+                border: '2px solid #fab617',
+                boxShadow: '0 0 15px rgba(250, 182, 23, 0.3)'
+              }}
+            >
               <div 
-                className="text-3xl text-yellow-400 drop-shadow-[0_0_10px_rgba(250,182,23,0.5)]"
+                className="text-2xl mb-1"
                 style={{ 
                   fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
-                  fontWeight: 300,
-                  letterSpacing: '0.05em'
+                  fontWeight: 200,
+                  color: '#fab617',
+                  letterSpacing: '0.05em',
+                  textShadow: '0 0 8px rgba(250, 182, 23, 0.4)'
                 }}
               >
                 {totalGold.toLocaleString()}
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Total Gold</div>
+              <div 
+                className="text-[10px] uppercase"
+                style={{
+                  color: '#999',
+                  letterSpacing: '0.15em',
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                }}
+              >
+                Total Gold
+              </div>
             </div>
             
             {/* Hub Title */}
@@ -241,55 +259,35 @@ export default function HubPage() {
             </div>
             
             {/* Live Earnings */}
-            <div className="flex items-center gap-3">
-              {/* Gold Particle Animation */}
-              <div className="relative w-5 h-5">
-                <div 
-                  className="absolute w-[3px] h-[3px] rounded-full top-[2px] left-[2px]"
-                  style={{
-                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
-                    animation: 'goldFloat 2s ease-in-out infinite',
-                    animationDelay: '0s'
-                  }}
-                />
-                <div 
-                  className="absolute w-[3px] h-[3px] rounded-full top-[2px] right-[2px]"
-                  style={{
-                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
-                    animation: 'goldFloat 2s ease-in-out infinite',
-                    animationDelay: '0.5s'
-                  }}
-                />
-                <div 
-                  className="absolute w-[3px] h-[3px] rounded-full bottom-[2px] left-[2px]"
-                  style={{
-                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
-                    animation: 'goldFloat 2s ease-in-out infinite',
-                    animationDelay: '1s'
-                  }}
-                />
-                <div 
-                  className="absolute w-[3px] h-[3px] rounded-full bottom-[2px] right-[2px]"
-                  style={{
-                    background: 'radial-gradient(circle, #fab617, #ffcc00)',
-                    animation: 'goldFloat 2s ease-in-out infinite',
-                    animationDelay: '1.5s'
-                  }}
-                />
+            <div 
+              className="px-6 py-3 rounded-lg text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95))',
+                border: '2px solid #fab617',
+                boxShadow: '0 0 15px rgba(250, 182, 23, 0.3)'
+              }}
+            >
+              <div 
+                className="text-2xl mb-1"
+                style={{ 
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+                  fontWeight: 200,
+                  color: '#fab617',
+                  letterSpacing: '0.05em',
+                  textShadow: '0 0 8px rgba(250, 182, 23, 0.4)'
+                }}
+              >
+                {liveGold.toFixed(2)}
               </div>
-              
-              <div className="text-right">
-                <div 
-                  className="text-2xl text-yellow-400 drop-shadow-[0_0_10px_rgba(250,182,23,0.5)]"
-                  style={{ 
-                    fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
-                    fontWeight: 200,
-                    letterSpacing: '0.02em'
-                  }}
-                >
-                  {liveGold.toFixed(2)}
-                </div>
-                <div className="text-[10px] text-gray-400 uppercase tracking-[0.1em] mt-1">Earnings to Collect</div>
+              <div 
+                className="text-[10px] uppercase"
+                style={{
+                  color: '#999',
+                  letterSpacing: '0.15em',
+                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                }}
+              >
+                Earnings to Collect
               </div>
             </div>
           </div>
