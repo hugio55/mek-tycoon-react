@@ -18,20 +18,21 @@ export default function CraftingPage() {
   
   useEffect(() => {
     const initUser = async () => {
+      // Use a fixed demo wallet for testing
       const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_" + Math.random().toString(36).substr(2, 9) 
+        walletAddress: "demo_wallet_123" 
       });
       if (user) {
         setUserId(user._id as Id<"users">);
       }
     };
     initUser();
-  }, []);
+  }, [getOrCreateUser]);
   
   // Get user profile with real-time updates
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet" } : "skip"
+    userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
   // Get available recipes

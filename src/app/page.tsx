@@ -28,10 +28,10 @@ export default function HomePage() {
             {/* Main Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Link
-                href="/crafting"
+                href="/hub"
                 className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-yellow-500/25"
               >
-                🔨 Start Crafting
+                🏠 Enter Hub
               </Link>
               
               <Link
