@@ -92,7 +92,7 @@ export default function Navigation() {
               alt="Mek Tycoon Logo"
               width={400}
               height={100}
-              className="object-contain h-[100px] w-auto drop-shadow-[0_0_20px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_30px_rgba(250,182,23,0.8)] transition-all group-hover:scale-105"
+              className="object-contain h-[100px] w-auto drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all group-hover:scale-105"
               priority
             />
           </div>
