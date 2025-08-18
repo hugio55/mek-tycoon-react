@@ -1,26 +1,11 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// Sample mek data - replace with your actual data
-const SAMPLE_MEKS = [
-  {
-    assetId: "mek_001",
-    assetName: "Mek Warrior #001",
-    owner: "wallet_address_here",
-    headVariation: "laser",
-    bodyVariation: "stone",
-    rarityTier: "Rare",
-  },
-  {
-    assetId: "mek_002", 
-    assetName: "Mek Guardian #002",
-    owner: "wallet_address_here",
-    headVariation: "bullish",
-    bodyVariation: "disco",
-    rarityTier: "Epic",
-  },
-  // Add more meks here
-];
+// Import the actual mek data
+import meksImportData from './meksImportData.json';
+
+// Use the imported data
+const SAMPLE_MEKS = meksImportData;
 
 export const seedMeks = mutation({
   args: {},
@@ -35,31 +20,8 @@ export const seedMeks = mutation({
     let insertedCount = 0;
     
     for (const mekData of SAMPLE_MEKS) {
-      await ctx.db.insert("meks", {
-        ...mekData,
-        verified: false,
-        iconUrl: `/images/meks/${mekData.assetId}.png`,
-        
-        // Set default values for optional fields
-        level: 1,
-        experience: 0,
-        health: 100,
-        maxHealth: 100,
-        attack: 10 + Math.floor(Math.random() * 20),
-        defense: 10 + Math.floor(Math.random() * 20),
-        speed: 10 + Math.floor(Math.random() * 20),
-        energy: 100,
-        maxEnergy: 100,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        winStreak: 0,
-        powerScore: 100 + Math.floor(Math.random() * 200),
-        scrapValue: 50 + Math.floor(Math.random() * 100),
-        inBattle: false,
-        isStaked: false,
-        lastUpdated: Date.now(),
-      });
+      // The data is already properly formatted from our import script
+      await ctx.db.insert("meks", mekData as any);
       insertedCount++;
     }
     

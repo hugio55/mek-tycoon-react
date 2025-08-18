@@ -63,24 +63,27 @@ export default function EssencePage() {
       </div>
       
       {/* Essence List */}
-      <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6 mb-8">
-        <div className="space-y-4">
+      <div className="bg-gray-900/50 border border-gray-700 rounded-lg overflow-hidden mb-8">
+        <div>
           {displayedEssences.map((essence, index) => {
             const userEssenceValue = userProfile?.totalEssence[essence.name.toLowerCase() as keyof typeof userProfile.totalEssence] || essence.current;
             const percentage = (userEssenceValue / essence.max) * 100;
             
             return (
-              <div key={essence.name} className="bg-gray-800/30 rounded-lg p-3 flex items-center gap-4 hover:bg-gray-800/50 transition-all">
-                {/* Thumbnail Image Placeholder */}
+              <div 
+                key={essence.name} 
+                className="p-3 flex items-center gap-4 hover:bg-gray-800/40 transition-all"
+              >
+                {/* Thumbnail Image Placeholder - 20% bigger (from 40px to 48px) */}
                 <div 
-                  className="w-10 h-10 rounded-full bg-gray-900 border flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-full bg-gray-900 border flex items-center justify-center flex-shrink-0"
                   style={{
                     borderColor: `${essence.color}40`,
                     backgroundColor: `${essence.color}10`,
                   }}
                 >
                   {/* This is where the thumbnail image would go */}
-                  <span className="text-xs font-bold" style={{ color: essence.color }}>
+                  <span className="text-sm font-bold" style={{ color: essence.color }}>
                     {essence.name.slice(0, 2).toUpperCase()}
                   </span>
                 </div>
@@ -89,19 +92,30 @@ export default function EssencePage() {
                 <div className="flex-1">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-gray-300 font-medium text-sm">{essence.name}</span>
-                    <span className="text-gray-500 text-xs">{userEssenceValue.toFixed(1)} / {essence.max}</span>
+                    <span className="text-gray-500 text-xs">/ {essence.max}</span>
                   </div>
                   
                   {/* Thinner Progress Bar */}
-                  <div className="relative h-3 bg-gray-900/50 rounded-full overflow-hidden">
+                  <div className="relative h-3 bg-gray-900/50 rounded-full">
                     <div 
-                      className="absolute inset-y-0 left-0 transition-all duration-500"
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
                       style={{ 
                         width: `${percentage}%`,
                         background: `linear-gradient(90deg, ${essence.color}60, ${essence.color}90)`,
                         boxShadow: `0 0 8px ${essence.color}30`
                       }}
                     />
+                    {/* Number at the tip of the progress bar */}
+                    <span 
+                      className="absolute top-1/2 -translate-y-1/2 text-xs font-bold px-1"
+                      style={{ 
+                        left: `${Math.min(percentage, 94)}%`,
+                        color: percentage > 50 ? '#fff' : essence.color,
+                        textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                      }}
+                    >
+                      {userEssenceValue.toFixed(1)}
+                    </span>
                   </div>
                 </div>
               </div>

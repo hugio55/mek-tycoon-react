@@ -260,67 +260,58 @@ export default function ProfilePage() {
             Reach Level 10 to become a mentor and earn gold from other players!
           </p>
           
-          {/* Light Bulb Progress Indicator */}
-          <div className="flex justify-center items-center gap-3 mb-4">
+          {/* LED Status Indicators */}
+          <div className="flex justify-center items-center gap-5 mb-4 py-4">
             {[...Array(10)].map((_, index) => {
               const isLit = index < selectedMek.level;
               return (
-                <div
-                  key={index}
-                  className="relative"
-                  style={{
-                    animation: isLit ? `bulbPulse ${2 + index * 0.1}s ease-in-out infinite` : 'none',
-                    animationDelay: `${index * 0.1}s`
-                  }}
-                >
-                  {/* Light bulb container */}
-                  <div
-                    className={`w-8 h-8 rounded-full border-2 transition-all duration-500 ${
-                      isLit 
-                        ? 'border-yellow-400 bg-gradient-to-br from-yellow-300 to-yellow-500 shadow-lg' 
-                        : 'border-gray-600 bg-gray-800'
-                    }`}
-                    style={{
-                      boxShadow: isLit 
-                        ? '0 0 20px rgba(250, 182, 23, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3)' 
-                        : 'inset 0 2px 4px rgba(0, 0, 0, 0.5)'
-                    }}
-                  >
-                    {/* Glass shine effect */}
+                <div key={index} className="relative">
+                  {/* LED Container */}
+                  <div className="relative">
+                    {/* Outer ring */}
                     <div 
-                      className="absolute inset-0 rounded-full"
+                      className={`w-5 h-5 rounded-full border transition-all duration-500 ${
+                        isLit ? 'border-gray-600' : 'border-gray-700'
+                      }`}
                       style={{
                         background: isLit 
-                          ? 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6) 0%, transparent 50%)' 
-                          : 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+                          ? 'radial-gradient(circle at center, #fab617 0%, #ffcc00 40%, #fab617 60%, #8b6914 100%)'
+                          : 'radial-gradient(circle at center, #1a1a1a 0%, #2a2a2a 100%)',
+                        boxShadow: isLit 
+                          ? `0 0 20px rgba(250, 182, 23, 0.8), 
+                             inset 0 0 3px rgba(255, 255, 255, 0.4),
+                             0 0 40px rgba(250, 182, 23, 0.4)` 
+                          : 'inset 0 1px 3px rgba(0, 0, 0, 0.8)',
                       }}
-                    />
-                    
-                    {/* Inner filament */}
-                    <div 
-                      className="absolute inset-2 rounded-full"
-                      style={{
-                        background: isLit 
-                          ? 'radial-gradient(circle, rgba(255, 255, 200, 0.8) 0%, transparent 70%)' 
-                          : 'none',
-                      }}
-                    />
+                    >
+                      {/* Inner glow */}
+                      {isLit && (
+                        <div 
+                          className="absolute inset-0 rounded-full animate-pulse"
+                          style={{
+                            background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, transparent 40%)',
+                            animation: `ledPulse ${1.5 + index * 0.1}s ease-in-out infinite`,
+                            animationDelay: `${index * 0.15}s`,
+                          }}
+                        />
+                      )}
+                      
+                      {/* Top reflection */}
+                      <div 
+                        className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full"
+                        style={{
+                          background: isLit 
+                            ? 'radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, transparent 60%)' 
+                            : 'radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%)',
+                        }}
+                      />
+                    </div>
                   </div>
                   
-                  {/* Bulb base */}
-                  <div 
-                    className={`w-4 h-2 mx-auto -mt-1 rounded-b transition-colors ${
-                      isLit ? 'bg-yellow-600' : 'bg-gray-700'
-                    }`}
-                    style={{
-                      borderLeft: '1px solid rgba(0, 0, 0, 0.3)',
-                      borderRight: '1px solid rgba(0, 0, 0, 0.3)',
-                      borderBottom: '1px solid rgba(0, 0, 0, 0.3)',
-                    }}
-                  />
-                  
-                  {/* Level number below bulb */}
-                  <div className={`text-xs text-center mt-1 ${isLit ? 'text-yellow-400' : 'text-gray-600'}`}>
+                  {/* Level number below */}
+                  <div className={`text-[10px] text-center mt-2 font-mono ${
+                    isLit ? 'text-yellow-400/80' : 'text-gray-600'
+                  }`}>
                     {index + 1}
                   </div>
                 </div>
@@ -332,16 +323,14 @@ export default function ProfilePage() {
             Level {selectedMek.level} / 10 Required
           </div>
           
-          {/* CSS for pulsing animation */}
+          {/* CSS for subtle pulsing animation */}
           <style jsx>{`
-            @keyframes bulbPulse {
+            @keyframes ledPulse {
               0%, 100% {
-                transform: scale(1);
-                filter: brightness(1);
+                opacity: 0.6;
               }
               50% {
-                transform: scale(1.05);
-                filter: brightness(1.2);
+                opacity: 1;
               }
             }
           `}</style>
