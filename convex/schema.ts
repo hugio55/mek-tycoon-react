@@ -1,0 +1,169 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  // Main Mek NFT collection
+  meks: defineTable({
+    assetId: v.string(),
+    assetName: v.string(),
+    headGroup: v.optional(v.string()),
+    headVariation: v.string(),
+    bodyGroup: v.optional(v.string()),
+    bodyVariation: v.string(),
+    itemGroup: v.optional(v.string()),
+    itemVariation: v.optional(v.string()),
+    owner: v.string(), // wallet address
+    iconUrl: v.optional(v.string()),
+    rarityRank: v.optional(v.number()),
+    verified: v.boolean(), // blockchain verified
+  })
+    .index("by_owner", ["owner"])
+    .index("by_asset_id", ["assetId"])
+    .index("by_head", ["headVariation"])
+    .index("by_body", ["bodyVariation"]),
+
+  // User profiles
+  users: defineTable({
+    walletAddress: v.string(),
+    username: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    totalEssence: v.object({
+      stone: v.number(),
+      disco: v.number(),
+      paul: v.number(),
+      cartoon: v.number(),
+      candy: v.number(),
+      tiles: v.number(),
+      moss: v.number(),
+      bullish: v.number(),
+      journalist: v.number(),
+      laser: v.number(),
+      flashbulb: v.number(),
+      accordion: v.number(),
+      turret: v.number(),
+      drill: v.number(),
+      security: v.number(),
+    }),
+    gold: v.number(),
+    craftingSlots: v.number(),
+    lastLogin: v.number(),
+  }).index("by_wallet", ["walletAddress"]),
+
+  // Crafting recipes
+  craftingRecipes: defineTable({
+    name: v.string(),
+    outputType: v.union(v.literal("head"), v.literal("body"), v.literal("trait")),
+    outputVariation: v.string(),
+    essenceCost: v.object({
+      stone: v.optional(v.number()),
+      disco: v.optional(v.number()),
+      paul: v.optional(v.number()),
+      cartoon: v.optional(v.number()),
+      candy: v.optional(v.number()),
+      tiles: v.optional(v.number()),
+      moss: v.optional(v.number()),
+      bullish: v.optional(v.number()),
+      journalist: v.optional(v.number()),
+      laser: v.optional(v.number()),
+      flashbulb: v.optional(v.number()),
+      accordion: v.optional(v.number()),
+      turret: v.optional(v.number()),
+      drill: v.optional(v.number()),
+      security: v.optional(v.number()),
+    }),
+    goldCost: v.optional(v.number()),
+    cooldownMinutes: v.number(),
+    successRate: v.number(), // 0-100
+    unlockRequirement: v.optional(v.string()),
+  })
+    .index("by_type", ["outputType"])
+    .index("by_name", ["name"]),
+
+  // Active crafting sessions
+  craftingSessions: defineTable({
+    userId: v.id("users"),
+    recipeId: v.id("craftingRecipes"),
+    startedAt: v.number(),
+    completesAt: v.number(),
+    status: v.union(
+      v.literal("crafting"),
+      v.literal("completed"),
+      v.literal("claimed"),
+      v.literal("failed")
+    ),
+    slotNumber: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_completion", ["completesAt"]),
+
+  // User inventory (crafted items not yet applied to Meks)
+  inventory: defineTable({
+    userId: v.id("users"),
+    itemType: v.union(v.literal("head"), v.literal("body"), v.literal("trait")),
+    itemVariation: v.string(),
+    quantity: v.number(),
+    craftedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_type", ["itemType"]),
+
+  // Marketplace listings
+  marketListings: defineTable({
+    sellerId: v.id("users"),
+    itemType: v.union(
+      v.literal("essence"),
+      v.literal("head"),
+      v.literal("body"),
+      v.literal("trait"),
+      v.literal("mek")
+    ),
+    itemVariation: v.optional(v.string()),
+    mekId: v.optional(v.id("meks")),
+    essenceType: v.optional(v.string()),
+    quantity: v.number(),
+    pricePerUnit: v.number(),
+    listedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    status: v.union(
+      v.literal("active"),
+      v.literal("sold"),
+      v.literal("cancelled"),
+      v.literal("expired")
+    ),
+  })
+    .index("by_seller", ["sellerId"])
+    .index("by_status", ["status"])
+    .index("by_type", ["itemType"])
+    .index("by_price", ["pricePerUnit"]),
+
+  // Transaction history
+  transactions: defineTable({
+    type: v.union(
+      v.literal("craft"),
+      v.literal("purchase"),
+      v.literal("sale"),
+      v.literal("essence_convert"),
+      v.literal("reward")
+    ),
+    userId: v.id("users"),
+    amount: v.optional(v.number()),
+    itemType: v.optional(v.string()),
+    itemVariation: v.optional(v.string()),
+    details: v.optional(v.string()),
+    timestamp: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_type", ["type"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Achievements
+  achievements: defineTable({
+    userId: v.id("users"),
+    achievementId: v.string(),
+    unlockedAt: v.number(),
+    progress: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_achievement", ["achievementId"]),
+});
