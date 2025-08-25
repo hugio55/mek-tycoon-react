@@ -1,6 +1,72 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+// Create or update user on wallet connection
+export const createOrUpdate = mutation({
+  args: { 
+    walletAddress: v.string(),
+    walletName: v.optional(v.string()),
+    lastConnected: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Check if user exists
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    
+    if (existingUser) {
+      // Update connection info
+      await ctx.db.patch(existingUser._id, {
+        lastLogin: Date.now(),
+        isOnline: true,
+        walletName: args.walletName || existingUser.walletName,
+      });
+      return existingUser;
+    }
+    
+    // Create new user with starting resources
+    const newUserId = await ctx.db.insert("users", {
+      walletAddress: args.walletAddress,
+      walletName: args.walletName,
+      username: undefined,
+      avatar: undefined,
+      totalEssence: {
+        stone: 10,      // Starting essence
+        disco: 5,
+        paul: 0,
+        cartoon: 5,
+        candy: 5,
+        tiles: 5,
+        moss: 5,
+        bullish: 0,
+        journalist: 0,
+        laser: 0,
+        flashbulb: 0,
+        accordion: 0,
+        turret: 0,
+        drill: 0,
+        security: 0,
+      },
+      gold: 100,        // Starting gold
+      goldPerHour: 50,  // Starting gold rate
+      lastGoldCollection: Date.now(),
+      pendingGold: 0,
+      craftingSlots: 1, // Start with 1 slot
+      level: 1,
+      experience: 0,
+      lastLogin: Date.now(),
+      createdAt: Date.now(),
+      isOnline: true,
+      role: "user",
+    });
+    
+    const newUser = await ctx.db.get(newUserId);
+    return newUser;
+  },
+});
+
+// [DEPRECATED - Use walletAuth.connectWallet instead]
 // Get or create user by wallet address
 export const getOrCreateUser = mutation({
   args: { walletAddress: v.string() },
@@ -15,6 +81,7 @@ export const getOrCreateUser = mutation({
       // Update last login
       await ctx.db.patch(existingUser._id, {
         lastLogin: Date.now(),
+        isOnline: true,
       });
       return existingUser;
     }
@@ -42,8 +109,16 @@ export const getOrCreateUser = mutation({
         security: 0,
       },
       gold: 100,        // Starting gold
+      goldPerHour: 50,  // Starting gold rate
+      lastGoldCollection: Date.now(),
+      pendingGold: 0,
       craftingSlots: 1, // Start with 1 slot
+      level: 1,
+      experience: 0,
       lastLogin: Date.now(),
+      createdAt: Date.now(),
+      isOnline: true,
+      role: "user",
     });
     
     const newUser = await ctx.db.get(newUserId);
@@ -131,6 +206,30 @@ export const updateProfile = mutation({
     
     await ctx.db.patch(args.userId, updates);
     return await ctx.db.get(args.userId);
+  },
+});
+
+// Update user gold (for admin/testing)
+export const updateUserGold = mutation({
+  args: {
+    walletAddress: v.string(),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    await ctx.db.patch(user._id, {
+      gold: args.amount,
+    });
+    
+    return { success: true, newGold: args.amount };
   },
 });
 

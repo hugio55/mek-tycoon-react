@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.sidc.be)",
+      "Bash(python:*)",
+      "Bash(copy:*)",
+      "WebFetch(domain:miro.com)",
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-00-8c-sheets.googleusercontent.com)",
+      "Bash(npx convex:*)",
+      "Bash(npx next:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(npm run dev:all:*)",
+      "Bash(ren:*)",
+      "Bash(move page.tsx page-complex.tsx)",
+      "Bash(move page-simple.tsx page.tsx)",
+      "Bash(npx tsc:*)",
+      "Bash(powershell:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell Stop-Process:*)",
+      "Bash(where claude)",
+      "Read(/C:\\Users\\Ben Meyers\\AppData\\Roaming\\npm/**)",
+      "Bash(setx:*)",
+      "Bash(dir:*)",
+      "Bash(npm run dev:all:*)",
+      "Bash(git add:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon"
+    ]
+  }
+}

@@ -46,3 +46,36 @@ body {
     box-shadow: 0 0 30px rgba(251, 191, 36, 0.8);
   }
 }
+
+/* Logo shimmer animation - exactly like HTML version */
+@keyframes logoShimmer {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* More noticeable star twinkle animation */
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+    filter: blur(0.3px);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  }
+}

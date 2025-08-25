@@ -1,5 +1,211 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+// Get all active marketplace listings (alias for shop page) - OPTIMIZED
+export const getActiveListings = query({
+  args: {
+    itemType: v.optional(v.string()),
+    searchTerm: v.optional(v.string()),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 100; // Default 100 items max
+    const offset = args.offset || 0;
+    
+    let q = ctx.db
+      .query("marketListings")
+      .withIndex("by_status", (q) => q.eq("status", "active"));
+
+    const listings = await q.collect();
+
+    // Filter by item type if specified
+    let filtered = listings;
+    if (args.itemType && args.itemType !== "all") {
+      filtered = filtered.filter(l => l.itemType === args.itemType);
+    }
+
+    // Filter by search term if specified
+    if (args.searchTerm) {
+      const searchLower = args.searchTerm.toLowerCase();
+      filtered = filtered.filter(l => 
+        l.itemVariation?.toLowerCase().includes(searchLower) ||
+        l.itemType.toLowerCase().includes(searchLower) ||
+        l.essenceType?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply pagination
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return {
+      listings: paginated,
+      total: filtered.length,
+      hasMore: filtered.length > offset + limit,
+    };
+  },
+});
+
+// Get user's own listings (alias for shop page)
+export const getUserListings = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const listings = await ctx.db
+      .query("marketListings")
+      .withIndex("by_seller", (q) => q.eq("sellerId", args.userId))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .collect();
+
+    return listings;
+  },
+});
+
+// Purchase an item from the marketplace (alias for shop page)
+export const purchaseItem = mutation({
+  args: {
+    buyerId: v.id("users"),
+    listingId: v.id("marketListings"),
+    quantity: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Call the helper function
+    return await processPurchase(ctx, {
+      listingId: args.listingId,
+      buyerId: args.buyerId,
+      quantity: args.quantity,
+    });
+  },
+});
+
+// Helper function for purchaseItem
+async function processPurchase(ctx: any, args: {
+  listingId: Id<"marketListings">,
+  buyerId: Id<"users">,
+  quantity?: number,
+}) {
+  const listing = await ctx.db.get(args.listingId);
+  const buyer = await ctx.db.get(args.buyerId);
+  
+  if (!listing || !buyer) {
+    throw new Error("Listing or buyer not found");
+  }
+  
+  if (listing.status !== "active") {
+    throw new Error("Listing not active");
+  }
+  
+  if (listing.sellerId === args.buyerId) {
+    throw new Error("Cannot buy your own listing");
+  }
+  
+  const purchaseQuantity = args.quantity || listing.quantity;
+  if (purchaseQuantity > listing.quantity) {
+    throw new Error("Not enough quantity available");
+  }
+  
+  const totalCost = purchaseQuantity * listing.pricePerUnit;
+  
+  if (buyer.gold < totalCost) {
+    throw new Error("Not enough gold");
+  }
+  
+  // Process the purchase
+  const seller = await ctx.db.get(listing.sellerId);
+  if (!seller) {
+    throw new Error("Seller not found");
+  }
+  
+  // Transfer gold
+  await ctx.db.patch(args.buyerId, {
+    gold: buyer.gold - totalCost,
+  });
+  
+  await ctx.db.patch(listing.sellerId, {
+    gold: seller.gold + totalCost,
+  });
+  
+  // Transfer items
+  if (listing.itemType === "essence" && listing.essenceType) {
+    // Transfer essence
+    const buyerEssence = { ...buyer.totalEssence };
+    const essenceKey = listing.essenceType as keyof typeof buyerEssence;
+    buyerEssence[essenceKey] += purchaseQuantity;
+    await ctx.db.patch(args.buyerId, { totalEssence: buyerEssence });
+    
+  } else if (listing.itemType === "mek" && listing.mekId) {
+    // Transfer Mek ownership
+    await ctx.db.patch(listing.mekId, {
+      owner: buyer.walletAddress,
+    });
+    
+  } else if (listing.itemVariation) {
+    // Add to buyer's inventory
+    const existingItem = await ctx.db
+      .query("inventory")
+      .withIndex("by_user", (q: any) => q.eq("userId", args.buyerId))
+      .filter((q: any) => 
+        q.and(
+          q.eq(q.field("itemType"), listing.itemType),
+          q.eq(q.field("itemVariation"), listing.itemVariation)
+        )
+      )
+      .first();
+    
+    if (existingItem) {
+      await ctx.db.patch(existingItem._id, {
+        quantity: existingItem.quantity + purchaseQuantity,
+      });
+    } else {
+      await ctx.db.insert("inventory", {
+        userId: args.buyerId,
+        itemType: listing.itemType as "head" | "body" | "trait",
+        itemVariation: listing.itemVariation,
+        quantity: purchaseQuantity,
+        craftedAt: Date.now(),
+      });
+    }
+  }
+  
+  // Update or close listing
+  if (purchaseQuantity === listing.quantity) {
+    await ctx.db.patch(args.listingId, {
+      status: "sold",
+      quantity: 0,
+    });
+  } else {
+    await ctx.db.patch(args.listingId, {
+      quantity: listing.quantity - purchaseQuantity,
+    });
+  }
+  
+  // Log transactions
+  const now = Date.now();
+  
+  await ctx.db.insert("transactions", {
+    type: "purchase",
+    userId: args.buyerId,
+    amount: totalCost,
+    itemType: listing.itemType,
+    itemVariation: listing.itemVariation || listing.essenceType,
+    details: `Purchased ${purchaseQuantity}x for ${totalCost}g`,
+    timestamp: now,
+  });
+  
+  await ctx.db.insert("transactions", {
+    type: "sale",
+    userId: listing.sellerId,
+    amount: totalCost,
+    itemType: listing.itemType,
+    itemVariation: listing.itemVariation || listing.essenceType,
+    details: `Sold ${purchaseQuantity}x for ${totalCost}g`,
+    timestamp: now,
+  });
+  
+  return { success: true, totalCost };
+}
 
 // Get active marketplace listings
 export const getListings = query({
@@ -78,9 +284,10 @@ export const createListing = mutation({
       v.literal("head"),
       v.literal("body"),
       v.literal("trait"),
+      v.literal("overexposed"),
       v.literal("mek")
     ),
-    itemVariation: v.optional(v.string()),
+    itemVariation: v.string(),
     mekId: v.optional(v.id("meks")),
     essenceType: v.optional(v.string()),
     quantity: v.number(),
@@ -93,16 +300,31 @@ export const createListing = mutation({
       throw new Error("Seller not found");
     }
     
+    // Calculate and deduct listing fee (2% of total value)
+    const totalValue = args.quantity * args.pricePerUnit;
+    const listingFee = Math.ceil(totalValue * 0.02);
+    
+    if (seller.gold < listingFee) {
+      throw new Error(`Insufficient gold for listing fee. Need ${listingFee}g, have ${seller.gold}g`);
+    }
+    
+    // Deduct listing fee
+    await ctx.db.patch(args.sellerId, {
+      gold: seller.gold - listingFee
+    });
+    
     // Validate the listing based on type
     if (args.itemType === "essence") {
-      if (!args.essenceType) {
+      // For essence, itemVariation is the essence type
+      const essenceType = args.itemVariation;
+      if (!essenceType) {
         throw new Error("Essence type required");
       }
       
       // Check if user has enough essence
-      const essenceKey = args.essenceType as keyof typeof seller.totalEssence;
+      const essenceKey = essenceType as keyof typeof seller.totalEssence;
       if (seller.totalEssence[essenceKey] < args.quantity) {
-        throw new Error("Not enough essence to list");
+        throw new Error(`Not enough ${essenceType} essence to list. Have ${seller.totalEssence[essenceKey]}, need ${args.quantity}`);
       }
       
       // Deduct essence from user (held in escrow)
@@ -163,7 +385,7 @@ export const createListing = mutation({
       itemType: args.itemType,
       itemVariation: args.itemVariation,
       mekId: args.mekId,
-      essenceType: args.essenceType,
+      essenceType: args.itemType === "essence" ? args.itemVariation : undefined,
       quantity: args.quantity,
       pricePerUnit: args.pricePerUnit,
       listedAt: now,
@@ -176,8 +398,8 @@ export const createListing = mutation({
       type: "sale",
       userId: args.sellerId,
       itemType: args.itemType,
-      itemVariation: args.itemVariation || args.essenceType,
-      details: `Listed ${args.quantity}x for ${args.pricePerUnit}g each`,
+      itemVariation: args.itemVariation,
+      details: `Listed ${args.quantity}x for ${args.pricePerUnit}g each (Fee: ${listingFee}g)`,
       timestamp: now,
     });
     
@@ -242,7 +464,7 @@ export const purchaseListing = mutation({
       buyerEssence[essenceKey] += purchaseQuantity;
       await ctx.db.patch(args.buyerId, { totalEssence: buyerEssence });
       
-    } else if (listing.itemType === "mek" && listing.mekId) {
+    } else if ((listing.itemType as string) === "mek" && listing.mekId) {
       // Transfer Mek ownership
       await ctx.db.patch(listing.mekId, {
         owner: buyer.walletAddress,
@@ -315,6 +537,58 @@ export const purchaseListing = mutation({
   },
 });
 
+// Create admin listing (no fees, no inventory checks)
+export const createAdminListing = mutation({
+  args: {
+    sellerId: v.id("users"),
+    itemType: v.string(),
+    itemVariation: v.string(),
+    itemDescription: v.optional(v.string()),
+    quantity: v.number(),
+    pricePerUnit: v.number(),
+    imageUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    essenceType: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const seller = await ctx.db.get(args.sellerId);
+    if (!seller) {
+      throw new Error("Seller not found");
+    }
+    
+    // Create the listing directly without checks or fees
+    const now = Date.now();
+    
+    const listingId = await ctx.db.insert("marketListings", {
+      sellerId: args.sellerId,
+      itemType: args.itemType as any,
+      itemVariation: args.itemVariation,
+      itemDescription: args.itemDescription,
+      mekId: undefined,
+      essenceType: args.essenceType,
+      quantity: args.quantity,
+      pricePerUnit: args.pricePerUnit,
+      imageUrl: args.imageUrl,
+      listedAt: now,
+      expiresAt: args.expiresAt,
+      status: "active",
+      isAdminListing: true,
+    });
+    
+    // Log transaction
+    await ctx.db.insert("transactions", {
+      type: "sale",
+      userId: args.sellerId,
+      itemType: args.itemType as any,
+      itemVariation: args.itemVariation,
+      details: `Admin listed ${args.quantity}x for ${args.pricePerUnit}g each`,
+      timestamp: now,
+    });
+    
+    return listingId;
+  },
+});
+
 // Cancel a listing
 export const cancelListing = mutation({
   args: {
@@ -345,7 +619,7 @@ export const cancelListing = mutation({
       sellerEssence[essenceKey] += listing.quantity;
       await ctx.db.patch(listing.sellerId, { totalEssence: sellerEssence });
       
-    } else if (listing.itemType !== "mek" && listing.itemVariation) {
+    } else if ((listing.itemType as string) !== "mek" && listing.itemVariation) {
       // Return to inventory
       const existingItem = await ctx.db
         .query("inventory")

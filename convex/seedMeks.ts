@@ -13,19 +13,29 @@ export const seedMeks = mutation({
     const existingMeks = await ctx.db.query("meks").collect();
     
     if (existingMeks.length > 0) {
-      console.log("Meks already seeded");
-      return { message: "Database already contains meks", count: existingMeks.length };
+      console.log("Clearing existing meks to re-import all 4000");
+      // Delete existing meks to reimport all
+      for (const mek of existingMeks) {
+        await ctx.db.delete(mek._id);
+      }
     }
     
     let insertedCount = 0;
+    const batchSize = 100; // Insert in batches to avoid timeout
     
-    for (const mekData of SAMPLE_MEKS) {
-      // The data is already properly formatted from our import script
-      await ctx.db.insert("meks", mekData as any);
-      insertedCount++;
+    for (let i = 0; i < SAMPLE_MEKS.length; i += batchSize) {
+      const batch = SAMPLE_MEKS.slice(i, Math.min(i + batchSize, SAMPLE_MEKS.length));
+      
+      for (const mekData of batch) {
+        // The data is already properly formatted from our import script
+        await ctx.db.insert("meks", mekData as any);
+        insertedCount++;
+      }
+      
+      console.log(`Imported ${insertedCount}/${SAMPLE_MEKS.length} meks`);
     }
     
-    return { message: "Meks seeded successfully", count: insertedCount };
+    return { message: "All meks seeded successfully", count: insertedCount };
   },
 });
 

@@ -1,0 +1,446 @@
+{
+  "Materials": [
+    {
+      "id": "scrap_metal",
+      "name": "Scrap Metal",
+      "category": "Materials",
+      "image": "/item-images/scrap_metal.png",
+      "rarity": "common",
+      "description": "A scrap metal item"
+    },
+    {
+      "id": "circuit_boards",
+      "name": "Circuit Boards",
+      "category": "Materials",
+      "image": "/item-images/circuit_boards.png",
+      "rarity": "common",
+      "description": "A circuit boards item"
+    },
+    {
+      "id": "power_cells",
+      "name": "Power Cells",
+      "category": "Materials",
+      "image": "/item-images/power_cells.png",
+      "rarity": "common",
+      "description": "A power cells item"
+    },
+    {
+      "id": "nano_fibers",
+      "name": "Nano Fibers",
+      "category": "Materials",
+      "image": "/item-images/nano_fibers.png",
+      "rarity": "common",
+      "description": "A nano fibers item"
+    },
+    {
+      "id": "quantum_chips",
+      "name": "Quantum Chips",
+      "category": "Materials",
+      "image": "/item-images/quantum_chips.png",
+      "rarity": "common",
+      "description": "A quantum chips item"
+    },
+    {
+      "id": "dark_matter",
+      "name": "Dark Matter",
+      "category": "Materials",
+      "image": "/item-images/dark_matter.png",
+      "rarity": "common",
+      "description": "A dark matter item"
+    },
+    {
+      "id": "crystal_shards",
+      "name": "Crystal Shards",
+      "category": "Materials",
+      "image": "/item-images/crystal_shards.png",
+      "rarity": "common",
+      "description": "A crystal shards item"
+    },
+    {
+      "id": "energy_cores",
+      "name": "Energy Cores",
+      "category": "Materials",
+      "image": "/item-images/energy_cores.png",
+      "rarity": "common",
+      "description": "A energy cores item"
+    },
+    {
+      "id": "titanium_plates",
+      "name": "Titanium Plates",
+      "category": "Materials",
+      "image": "/item-images/titanium_plates.png",
+      "rarity": "common",
+      "description": "A titanium plates item"
+    },
+    {
+      "id": "carbon_mesh",
+      "name": "Carbon Mesh",
+      "category": "Materials",
+      "image": "/item-images/carbon_mesh.png",
+      "rarity": "common",
+      "description": "A carbon mesh item"
+    },
+    {
+      "id": "plasma_cells",
+      "name": "Plasma Cells",
+      "category": "Materials",
+      "image": "/item-images/plasma_cells.png",
+      "rarity": "common",
+      "description": "A plasma cells item"
+    },
+    {
+      "id": "neural_chips",
+      "name": "Neural Chips",
+      "category": "Materials",
+      "image": "/item-images/neural_chips.png",
+      "rarity": "common",
+      "description": "A neural chips item"
+    }
+  ],
+  "Weapons": [
+    {
+      "id": "basic_laser",
+      "name": "Basic Laser",
+      "category": "Weapons",
+      "image": "/item-images/basic_laser.png",
+      "rarity": "common",
+      "description": "A basic laser item"
+    },
+    {
+      "id": "plasma_cannon",
+      "name": "Plasma Cannon",
+      "category": "Weapons",
+      "image": "/item-images/plasma_cannon.png",
+      "rarity": "common",
+      "description": "A plasma cannon item"
+    },
+    {
+      "id": "rocket_launcher",
+      "name": "Rocket Launcher",
+      "category": "Weapons",
+      "image": "/item-images/rocket_launcher.png",
+      "rarity": "common",
+      "description": "A rocket launcher item"
+    },
+    {
+      "id": "energy_sword",
+      "name": "Energy Sword",
+      "category": "Weapons",
+      "image": "/item-images/energy_sword.png",
+      "rarity": "common",
+      "description": "A energy sword item"
+    },
+    {
+      "id": "pulse_rifle",
+      "name": "Pulse Rifle",
+      "category": "Weapons",
+      "image": "/item-images/pulse_rifle.png",
+      "rarity": "common",
+      "description": "A pulse rifle item"
+    },
+    {
+      "id": "gravity_gun",
+      "name": "Gravity Gun",
+      "category": "Weapons",
+      "image": "/item-images/gravity_gun.png",
+      "rarity": "common",
+      "description": "A gravity gun item"
+    },
+    {
+      "id": "ion_blaster",
+      "name": "Ion Blaster",
+      "category": "Weapons",
+      "image": "/item-images/ion_blaster.png",
+      "rarity": "common",
+      "description": "A ion blaster item"
+    },
+    {
+      "id": "photon_torpedo",
+      "name": "Photon Torpedo",
+      "category": "Weapons",
+      "image": "/item-images/photon_torpedo.png",
+      "rarity": "common",
+      "description": "A photon torpedo item"
+    },
+    {
+      "id": "railgun",
+      "name": "Railgun",
+      "category": "Weapons",
+      "image": "/item-images/railgun.png",
+      "rarity": "common",
+      "description": "A railgun item"
+    },
+    {
+      "id": "flamethrower",
+      "name": "Flamethrower",
+      "category": "Weapons",
+      "image": "/item-images/flamethrower.png",
+      "rarity": "common",
+      "description": "A flamethrower item"
+    }
+  ],
+  "Armor": [
+    {
+      "id": "basic_plating",
+      "name": "Basic Plating",
+      "category": "Armor",
+      "image": "/item-images/basic_plating.png",
+      "rarity": "common",
+      "description": "A basic plating item"
+    },
+    {
+      "id": "titanium_armor",
+      "name": "Titanium Armor",
+      "category": "Armor",
+      "image": "/item-images/titanium_armor.png",
+      "rarity": "common",
+      "description": "A titanium armor item"
+    },
+    {
+      "id": "energy_shield",
+      "name": "Energy Shield",
+      "category": "Armor",
+      "image": "/item-images/energy_shield.png",
+      "rarity": "common",
+      "description": "A energy shield item"
+    },
+    {
+      "id": "quantum_barrier",
+      "name": "Quantum Barrier",
+      "category": "Armor",
+      "image": "/item-images/quantum_barrier.png",
+      "rarity": "common",
+      "description": "A quantum barrier item"
+    },
+    {
+      "id": "nano_suit",
+      "name": "Nano Suit",
+      "category": "Armor",
+      "image": "/item-images/nano_suit.png",
+      "rarity": "common",
+      "description": "A nano suit item"
+    },
+    {
+      "id": "force_field",
+      "name": "Force Field",
+      "category": "Armor",
+      "image": "/item-images/force_field.png",
+      "rarity": "common",
+      "description": "A force field item"
+    },
+    {
+      "id": "reactive_armor",
+      "name": "Reactive Armor",
+      "category": "Armor",
+      "image": "/item-images/reactive_armor.png",
+      "rarity": "common",
+      "description": "A reactive armor item"
+    },
+    {
+      "id": "stealth_cloak",
+      "name": "Stealth Cloak",
+      "category": "Armor",
+      "image": "/item-images/stealth_cloak.png",
+      "rarity": "common",
+      "description": "A stealth cloak item"
+    }
+  ],
+  "Tools": [
+    {
+      "id": "mining_drill",
+      "name": "Mining Drill",
+      "category": "Tools",
+      "image": "/item-images/mining_drill.png",
+      "rarity": "common",
+      "description": "A mining drill item"
+    },
+    {
+      "id": "repair_kit",
+      "name": "Repair Kit",
+      "category": "Tools",
+      "image": "/item-images/repair_kit.png",
+      "rarity": "common",
+      "description": "A repair kit item"
+    },
+    {
+      "id": "scanner",
+      "name": "Scanner",
+      "category": "Tools",
+      "image": "/item-images/scanner.png",
+      "rarity": "common",
+      "description": "A scanner item"
+    },
+    {
+      "id": "hacking_device",
+      "name": "Hacking Device",
+      "category": "Tools",
+      "image": "/item-images/hacking_device.png",
+      "rarity": "common",
+      "description": "A hacking device item"
+    },
+    {
+      "id": "teleporter",
+      "name": "Teleporter",
+      "category": "Tools",
+      "image": "/item-images/teleporter.png",
+      "rarity": "common",
+      "description": "A teleporter item"
+    },
+    {
+      "id": "time_warp",
+      "name": "Time Warp",
+      "category": "Tools",
+      "image": "/item-images/time_warp.png",
+      "rarity": "common",
+      "description": "A time warp item"
+    },
+    {
+      "id": "gravity_boots",
+      "name": "Gravity Boots",
+      "category": "Tools",
+      "image": "/item-images/gravity_boots.png",
+      "rarity": "common",
+      "description": "A gravity boots item"
+    },
+    {
+      "id": "jetpack",
+      "name": "Jetpack",
+      "category": "Tools",
+      "image": "/item-images/jetpack.png",
+      "rarity": "common",
+      "description": "A jetpack item"
+    }
+  ],
+  "Consumables": [
+    {
+      "id": "health_pack",
+      "name": "Health Pack",
+      "category": "Consumables",
+      "image": "/item-images/health_pack.png",
+      "rarity": "common",
+      "description": "A health pack item"
+    },
+    {
+      "id": "energy_drink",
+      "name": "Energy Drink",
+      "category": "Consumables",
+      "image": "/item-images/energy_drink.png",
+      "rarity": "common",
+      "description": "A energy drink item"
+    },
+    {
+      "id": "shield_boost",
+      "name": "Shield Boost",
+      "category": "Consumables",
+      "image": "/item-images/shield_boost.png",
+      "rarity": "common",
+      "description": "A shield boost item"
+    },
+    {
+      "id": "speed_boost",
+      "name": "Speed Boost",
+      "category": "Consumables",
+      "image": "/item-images/speed_boost.png",
+      "rarity": "common",
+      "description": "A speed boost item"
+    },
+    {
+      "id": "damage_boost",
+      "name": "Damage Boost",
+      "category": "Consumables",
+      "image": "/item-images/damage_boost.png",
+      "rarity": "common",
+      "description": "A damage boost item"
+    },
+    {
+      "id": "xp_boost",
+      "name": "XP Boost",
+      "category": "Consumables",
+      "image": "/item-images/xp_boost.png",
+      "rarity": "common",
+      "description": "A xp boost item"
+    },
+    {
+      "id": "gold_boost",
+      "name": "Gold Boost",
+      "category": "Consumables",
+      "image": "/item-images/gold_boost.png",
+      "rarity": "common",
+      "description": "A gold boost item"
+    },
+    {
+      "id": "luck_potion",
+      "name": "Luck Potion",
+      "category": "Consumables",
+      "image": "/item-images/luck_potion.png",
+      "rarity": "common",
+      "description": "A luck potion item"
+    }
+  ],
+  "Special": [
+    {
+      "id": "golden_gear",
+      "name": "Golden Gear",
+      "category": "Special",
+      "image": "/item-images/golden_gear.png",
+      "rarity": "common",
+      "description": "A golden gear item"
+    },
+    {
+      "id": "ancient_relic",
+      "name": "Ancient Relic",
+      "category": "Special",
+      "image": "/item-images/ancient_relic.png",
+      "rarity": "common",
+      "description": "A ancient relic item"
+    },
+    {
+      "id": "mystery_box",
+      "name": "Mystery Box",
+      "category": "Special",
+      "image": "/item-images/mystery_box.png",
+      "rarity": "common",
+      "description": "A mystery box item"
+    },
+    {
+      "id": "legendary_core",
+      "name": "Legendary Core",
+      "category": "Special",
+      "image": "/item-images/legendary_core.png",
+      "rarity": "common",
+      "description": "A legendary core item"
+    },
+    {
+      "id": "epic_fragment",
+      "name": "Epic Fragment",
+      "category": "Special",
+      "image": "/item-images/epic_fragment.png",
+      "rarity": "common",
+      "description": "A epic fragment item"
+    },
+    {
+      "id": "rare_crystal",
+      "name": "Rare Crystal",
+      "category": "Special",
+      "image": "/item-images/rare_crystal.png",
+      "rarity": "common",
+      "description": "A rare crystal item"
+    },
+    {
+      "id": "mek_fragment",
+      "name": "Mek Fragment",
+      "category": "Special",
+      "image": "/item-images/mek_fragment.png",
+      "rarity": "common",
+      "description": "A mek fragment item"
+    },
+    {
+      "id": "soul_stone",
+      "name": "Soul Stone",
+      "category": "Special",
+      "image": "/item-images/soul_stone.png",
+      "rarity": "common",
+      "description": "A soul stone item"
+    }
+  ]
+}

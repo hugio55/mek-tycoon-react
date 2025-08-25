@@ -5,20 +5,35 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
+import MekImage from "@/components/MekImage";
+import BackgroundEffects from "@/components/BackgroundEffects";
 
-export default function ProfilePage() {
+export default function MyMeksPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
-  const [selectedMek, setSelectedMek] = useState<any>(null);
-  const [showMeksList, setShowMeksList] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [walletAddress, setWalletAddress] = useState<string>("demo_wallet_123");
+  const [filterEmployment, setFilterEmployment] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadedMeks, setLoadedMeks] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 20; // Load 20 meks at a time
   
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   
   useEffect(() => {
+    // Get stake address from localStorage (this is what NFTs are associated with)
+    const stakeAddress = localStorage.getItem('stakeAddress');
+    const paymentAddress = localStorage.getItem('walletAddress');
+    
+    // Use stake address for NFT lookups, fall back to payment address, then demo
+    const addressToUse = stakeAddress || paymentAddress || "demo_wallet_123";
+    setWalletAddress(addressToUse);
+    
     const initUser = async () => {
       const user = await getOrCreateUser({ 
-        walletAddress: "demo_wallet_123" 
+        walletAddress: addressToUse
       });
       if (user) {
         setUserId(user._id as Id<"users">);
@@ -27,356 +42,288 @@ export default function ProfilePage() {
     initUser();
   }, [getOrCreateUser]);
   
-  // Mock data for demonstration
-  const mockMek = {
-    id: "1234",
-    name: "Mek #1234",
-    level: 5,
-    maxLevel: 10,
-    xp: 2450,
-    xpToNext: 3000,
-    goldRate: 15.5,
-    isActive: true,
-    equipment: {
-      head: { name: "Bark Head", rank: "C", bonus: 2.5, equipped: true },
-      body: { name: "Cartoon Body", rank: "B", bonus: 3.8, equipped: true },
-      trait: { name: "Empty", rank: null, bonus: 0, equipped: false }
-    },
-    buffs: [
-      "+3.5 gold per hour",
-      "+5 Focus",
-      "No Auction house fee",
-      "+1 Employee slot"
-    ],
-    nextLevelRewards: [
-      "+2.0 base gold/hr bonus",
-      "+10 Focus",
-      "+1 hour max cap time"
-    ]
-  };
+  // Fetch user's actual meks from database (using paginated version to save bandwidth)
+  const meksData = useQuery(api.meks.getMeksPaginated, { 
+    owner: walletAddress,
+    page: currentPage,
+    pageSize: pageSize
+  });
   
-  const myMeks = [
-    { id: "1234", name: "Mek #1234", level: 5, goldRate: 15.5, active: true },
-    { id: "2468", name: "Mek #2468", level: 3, goldRate: 8.2, active: false },
-    { id: "3691", name: "Mek #3691", level: 7, goldRate: 22.1, active: true },
+  // Update loaded meks when new data arrives
+  useEffect(() => {
+    if (meksData?.meks) {
+      const newMeks = meksData.meks.map(mek => ({
+        id: mek.assetId,
+        name: mek.assetName,
+        level: mek.level || 1,
+        goldRate: (mek.level || 1) * 3.5,
+        employed: Math.random() > 0.5, // TODO: Get real employment status
+        headVariation: mek.headVariation,
+        bodyVariation: mek.bodyVariation,
+        iconUrl: mek.iconUrl,
+        sourceKey: mek.sourceKeyBase,
+        sourceKeyBase: mek.sourceKeyBase,
+      }));
+      
+      if (currentPage === 1) {
+        setLoadedMeks(newMeks);
+      } else {
+        setLoadedMeks(prev => [...prev, ...newMeks]);
+      }
+      
+      setHasMore(meksData.pagination.hasNextPage);
+    }
+  }, [meksData, currentPage]);
+  
+  // Use loaded meks or demo meks
+  const displayMeks = loadedMeks.length > 0 ? loadedMeks : [
+    { id: "1234", name: "Demo Mek #1234", level: 5, goldRate: 15.5, employed: true, headVariation: "000-000-000", bodyVariation: "000-000-000", sourceKey: null, sourceKeyBase: null },
+    { id: "2468", name: "Demo Mek #2468", level: 3, goldRate: 8.2, employed: false, headVariation: "000-000-000", bodyVariation: "000-000-000", sourceKey: null, sourceKeyBase: null },
+    { id: "3691", name: "Demo Mek #3691", level: 7, goldRate: 22.1, employed: true, headVariation: "000-000-000", bodyVariation: "000-000-000", sourceKey: null, sourceKeyBase: null },
+    { id: "0013", name: "Demo Mek #0013", level: 10, goldRate: 35.0, employed: true, headVariation: "000-000-000", bodyVariation: "000-000-000", sourceKey: null, sourceKeyBase: null },
   ];
   
-  const filteredMeks = myMeks.filter(mek => 
+  // Filter and sort meks
+  let filteredMeks = displayMeks.filter(mek => 
     mek.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     mek.id.includes(searchQuery)
   );
   
-  if (showMeksList) {
-    return (
-      <div className="text-white py-8">
-        <div className="mb-6">
-          <button
-            onClick={() => setShowMeksList(false)}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors mb-4"
-          >
-            ← Back to Profile
-          </button>
-          <h1 className="text-4xl font-bold text-yellow-400">
-            👤 Your Meks Collection
-          </h1>
-        </div>
-        
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold text-yellow-400">
-              🤖 Your Meks ({filteredMeks.length})
-            </h3>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search your meks..."
-              className="px-4 py-2 bg-gray-900 border-2 border-yellow-500 rounded-lg text-white placeholder-gray-500 focus:border-yellow-400 focus:outline-none max-w-xs"
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMeks.map(mek => (
-            <div
-              key={mek.id}
-              onClick={() => {
-                setSelectedMek(mockMek);
-                setShowMeksList(false);
-              }}
-              className="bg-gray-800/50 border-2 border-gray-700 hover:border-yellow-500 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg hover:shadow-yellow-500/20"
-            >
-              <div className="text-center mb-4">
-                <div className="text-5xl mb-3">🤖</div>
-                <h3 className="text-xl font-bold text-yellow-400">{mek.name}</h3>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Level:</span>
-                  <span className="text-white">{mek.level}/10</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Gold Rate:</span>
-                  <span className="text-yellow-400">{mek.goldRate}/hr</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Status:</span>
-                  <span className={mek.active ? "text-green-400" : "text-gray-500"}>
-                    {mek.active ? "🟢 Active" : "⚫ Inactive"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+  if (filterEmployment !== "all") {
+    filteredMeks = filteredMeks.filter(mek => 
+      filterEmployment === "employed" ? mek.employed : !mek.employed
     );
   }
   
-  if (selectedMek) {
-    return (
-      <div className="text-white py-8">
-        <h1 className="text-4xl font-bold text-yellow-400 mb-8">
-          🤖 {selectedMek.name} Profile
-        </h1>
-        
-        {/* Mek Overview */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-          <div className="flex items-center gap-6 mb-6">
-            <div className="text-7xl">🤖</div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-yellow-400">{selectedMek.name}</h2>
-              <div className="text-gray-400 mt-1">Level {selectedMek.level} / {selectedMek.maxLevel}</div>
-              <div className="text-gray-400 text-sm">Owner: You</div>
-            </div>
-            <button className={`px-6 py-3 font-bold rounded-lg transition-all ${
-              selectedMek.isActive 
-                ? "bg-green-500 hover:bg-green-400 text-black" 
-                : "bg-gray-600 hover:bg-gray-500 text-white"
-            }`}>
-              {selectedMek.isActive ? "🟢 Active" : "⚫ Inactive"}
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-900/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">{selectedMek.goldRate}/hr</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">Gold Rate</div>
-            </div>
-            <div className="bg-gray-900/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">{selectedMek.xp}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">Total XP</div>
-            </div>
-            <div className="bg-gray-900/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">{selectedMek.xpToNext - selectedMek.xp}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">XP to Level {selectedMek.level + 1}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Equipment Slots */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">⚙️ Equipment Slots</h3>
-          
-          {Object.entries(selectedMek.equipment).map(([slot, item]: [string, any]) => (
-            <div key={slot} className={`flex items-center gap-4 p-4 mb-3 rounded-lg border-l-4 ${
-              item.equipped ? "bg-gray-900/50 border-yellow-500" : "bg-gray-900/30 border-gray-600"
-            }`}>
-              <div className={`w-16 h-16 rounded-lg flex items-center justify-center text-xs font-bold ${
-                item.equipped ? "bg-gray-700" : "bg-gray-800"
-              }`}>
-                {item.equipped ? item.name.split(' ')[0].toUpperCase() : "EMPTY"}
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-yellow-400 capitalize">{slot} Slot</div>
-                <div className="text-sm text-gray-400">
-                  {item.equipped 
-                    ? `${item.name} (${item.rank}-Rank) | +${item.bonus} gold/hr`
-                    : "Empty | No bonus"
-                  }
-                </div>
-              </div>
-              <div className="text-right">
-                <div className={`text-sm mb-2 ${item.equipped ? "text-green-400" : "text-red-400"}`}>
-                  {item.equipped ? "✓ Equipped" : "Empty"}
-                </div>
-                <button className="px-4 py-1 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded text-sm transition-colors">
-                  {item.equipped ? "Unequip" : "Equip"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Current Buffs */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">
-            🎆 Current Buffs (Level {selectedMek.level})
-          </h3>
-          <div className="bg-gray-900/50 rounded-lg p-5">
-            <div className="space-y-2">
-              {selectedMek.buffs.map((buff: string, index: number) => (
-                <div key={index} className="text-yellow-400">• {buff}</div>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        {/* Level Progression */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">📈 Level Progression</h3>
-          
-          <div className="relative h-8 bg-gray-700 rounded-full overflow-hidden mb-8">
-            <div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-yellow-400"
-              style={{ width: `${(selectedMek.xp / selectedMek.xpToNext) * 100}%` }}
-            />
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold">
-              Lvl {selectedMek.level}
-            </div>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold">
-              Lvl {selectedMek.level + 1}
-            </div>
-          </div>
-          
-          <div className="text-center text-gray-300 mb-6">
-            {selectedMek.xp} / {selectedMek.xpToNext} XP (Level {selectedMek.level + 1})
-          </div>
-          
-          <div>
-            <h4 className="text-yellow-400 font-semibold mb-3">Next Level Unlocks:</h4>
-            <ul className="space-y-1 text-gray-300 ml-5">
-              {selectedMek.nextLevelRewards.map((reward: string, index: number) => (
-                <li key={index}>• {reward}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        
-        {/* Mentorship Requirements */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">🎓 Mentorship Requirements</h3>
-          <p className="text-gray-300 mb-4">
-            Reach Level 10 to become a mentor and earn gold from other players!
-          </p>
-          
-          {/* LED Status Indicators */}
-          <div className="flex justify-center items-center gap-5 mb-4 py-4">
-            {[...Array(10)].map((_, index) => {
-              const isLit = index < selectedMek.level;
-              return (
-                <div key={index} className="relative">
-                  {/* LED Container */}
-                  <div className="relative">
-                    {/* Outer ring */}
-                    <div 
-                      className={`w-5 h-5 rounded-full border transition-all duration-500 ${
-                        isLit ? 'border-gray-600' : 'border-gray-700'
-                      }`}
-                      style={{
-                        background: isLit 
-                          ? 'radial-gradient(circle at center, #fab617 0%, #ffcc00 40%, #fab617 60%, #8b6914 100%)'
-                          : 'radial-gradient(circle at center, #1a1a1a 0%, #2a2a2a 100%)',
-                        boxShadow: isLit 
-                          ? `0 0 20px rgba(250, 182, 23, 0.8), 
-                             inset 0 0 3px rgba(255, 255, 255, 0.4),
-                             0 0 40px rgba(250, 182, 23, 0.4)` 
-                          : 'inset 0 1px 3px rgba(0, 0, 0, 0.8)',
-                      }}
-                    >
-                      {/* Inner glow */}
-                      {isLit && (
-                        <div 
-                          className="absolute inset-0 rounded-full animate-pulse"
-                          style={{
-                            background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, transparent 40%)',
-                            animation: `ledPulse ${1.5 + index * 0.1}s ease-in-out infinite`,
-                            animationDelay: `${index * 0.15}s`,
-                          }}
-                        />
-                      )}
-                      
-                      {/* Top reflection */}
-                      <div 
-                        className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full"
-                        style={{
-                          background: isLit 
-                            ? 'radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, transparent 60%)' 
-                            : 'radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Level number below */}
-                  <div className={`text-[10px] text-center mt-2 font-mono ${
-                    isLit ? 'text-yellow-400/80' : 'text-gray-600'
-                  }`}>
-                    {index + 1}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="text-center text-gray-400">
-            Level {selectedMek.level} / 10 Required
-          </div>
-          
-          {/* CSS for subtle pulsing animation */}
-          <style jsx>{`
-            @keyframes ledPulse {
-              0%, 100% {
-                opacity: 0.6;
-              }
-              50% {
-                opacity: 1;
-              }
-            }
-          `}</style>
-        </div>
-        
-        <div className="mt-6">
-          <button
-            onClick={() => setSelectedMek(null)}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-          >
-            ← Back to Profile
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Sort meks
+  filteredMeks.sort((a, b) => {
+    switch(sortBy) {
+      case "employed":
+        return (b.employed ? 1 : 0) - (a.employed ? 1 : 0);
+      case "level":
+        return b.level - a.level;
+      case "goldRate":
+        return b.goldRate - a.goldRate;
+      case "name":
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
+  
+  // Calculate collection stats
+  const totalMekCount = meksData?.pagination?.totalItems || displayMeks.length;
+  const collectionStats = {
+    totalMeks: totalMekCount,
+    employedCount: displayMeks.filter(m => m.employed).length,
+    unemployedCount: displayMeks.filter(m => !m.employed).length,
+    totalGoldRate: displayMeks.filter(m => m.employed).reduce((sum, m) => sum + m.goldRate, 0),
+  };
+  
+  // Load more handler
+  const loadMore = () => {
+    setCurrentPage(prev => prev + 1);
+  };
   
   return (
-    <div className="text-white py-8">
-      <h1 className="text-4xl font-bold text-yellow-400 mb-8">
-        🤖 Mek Profile
-      </h1>
+    <div className="text-white relative overflow-hidden">
+      <BackgroundEffects />
       
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8">
-        <div className="flex justify-center gap-12">
-          <div
-            onClick={() => setShowMeksList(true)}
-            className="group cursor-pointer text-center p-8 rounded-lg hover:bg-gray-700/50 transition-all"
-          >
-            <div className="w-24 h-24 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center text-5xl group-hover:scale-110 transition-transform">
-              👤
-            </div>
-            <div className="text-xl font-semibold text-yellow-400">Your Meks</div>
+      {/* Compact Header */}
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-yellow-400">
+          MY MEKS
+        </h1>
+        <div className="flex gap-6 text-sm">
+          <div>
+            <span className="text-gray-400">Total:</span> 
+            <span className="text-yellow-400 font-bold ml-2">{collectionStats.totalMeks}</span>
           </div>
-          
-          <Link
-            href="/search"
-            className="group cursor-pointer text-center p-8 rounded-lg hover:bg-gray-700/50 transition-all"
-          >
-            <div className="w-24 h-24 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center text-5xl group-hover:scale-110 transition-transform">
-              🔍
-            </div>
-            <div className="text-xl font-semibold text-yellow-400">Search All Meks</div>
-          </Link>
+          <div>
+            <span className="text-green-400">Employed:</span> 
+            <span className="text-white font-bold ml-2">{collectionStats.employedCount}</span>
+          </div>
+          <div>
+            <span className="text-gray-400">Unemployed:</span> 
+            <span className="text-white font-bold ml-2">{collectionStats.unemployedCount}</span>
+          </div>
+          <div>
+            <span className="text-yellow-400">Gold/hr:</span> 
+            <span className="text-white font-bold ml-2">{collectionStats.totalGoldRate.toFixed(1)}</span>
+          </div>
         </div>
       </div>
+      
+      
+      {/* Search and Filters */}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset pagination on search
+            }}
+            placeholder="Search your meks..."
+            className="flex-1 px-4 py-3 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-2 border-yellow-500/30 rounded-lg text-yellow-400 placeholder-gray-500 focus:outline-none focus:border-yellow-400 focus:shadow-[0_0_15px_rgba(250,182,23,0.3)] transition-all"
+          />
+          
+          <select
+            value={filterEmployment}
+            onChange={(e) => {
+              setFilterEmployment(e.target.value);
+              setCurrentPage(1); // Reset pagination on filter change
+            }}
+            className="px-4 py-3 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-2 border-yellow-500/30 rounded-lg text-yellow-400 focus:outline-none focus:border-yellow-400 transition-all"
+          >
+            <option value="all">All Meks</option>
+            <option value="employed">Employed</option>
+            <option value="unemployed">Unemployed</option>
+          </select>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setCurrentPage(1); // Reset pagination on sort change
+            }}
+            className="px-4 py-3 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-2 border-yellow-500/30 rounded-lg text-yellow-400 focus:outline-none focus:border-yellow-400 transition-all"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="employed">Sort by Employment</option>
+            <option value="level">Sort by Level</option>
+            <option value="goldRate">Sort by Gold Rate</option>
+          </select>
+        </div>
+      </div>
+      
+      {/* Meks Collection Grid - Larger Images */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+        {filteredMeks.map(mek => {
+          return (
+            <Link
+              key={mek.id}
+              href={`/mek/${mek.id}`}
+              className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105 block"
+              style={{
+                background: mek.employed 
+                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(26, 26, 26, 0.95) 100%)'
+                  : 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%)',
+                border: mek.employed ? '2px solid #22c55e' : '2px solid #6b7280',
+                borderRadius: '12px',
+                padding: '12px',
+                boxShadow: mek.employed 
+                  ? '0 4px 20px rgba(34, 197, 94, 0.3)'
+                  : '0 4px 20px rgba(0,0,0,0.5)',
+              }}
+            >
+              {/* Employment Status Badge */}
+              <div 
+                className={`absolute top-2 right-2 z-10 px-3 py-1 rounded-full text-xs font-bold ${
+                  mek.employed 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-gray-600 text-gray-300'
+                }`}
+              >
+                {mek.employed ? 'EMPLOYED' : 'UNEMPLOYED'}
+              </div>
+              
+              {/* Mek Image - Larger */}
+              <div className="relative mb-3 bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-lg overflow-hidden"
+                style={{ aspectRatio: '1' }}
+              >
+                <MekImage 
+                  src={mek.iconUrl}
+                  headVariation={mek.headVariation} 
+                  bodyVariation={mek.bodyVariation}
+                  assetId={mek.id}
+                  size={200}
+                  className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                />
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                  <div className="text-white text-xs">
+                    <div>Level: {mek.level}/10</div>
+                    <div>Gold Rate: {mek.goldRate}/hr</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mek Info */}
+              <div className="text-center">
+                <h3 className="font-bold text-yellow-400 text-sm mb-2">{mek.name}</h3>
+                <div className="space-y-1">
+                  <div className="text-xs">
+                    <span className="text-gray-400">Level:</span> 
+                    <span className="text-white ml-1">{mek.level}</span>
+                  </div>
+                  <div className="text-xs">
+                    <span className="text-gray-400">Rate:</span> 
+                    <span className={mek.employed ? "text-green-400 ml-1 font-bold" : "text-gray-500 ml-1 line-through"}>
+                      {mek.goldRate}/hr
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Talent Tree Button */}
+                <Link
+                  href={`/mek-tree/${mek.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-2 inline-block px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-full transition-all"
+                >
+                  View Tree →
+                </Link>
+              </div>
+              
+            </Link>
+          );
+        })}
+      </div>
+      
+      {/* Load More Button */}
+      {hasMore && filteredMeks.length > 0 && (
+        <div className="text-center py-8">
+          <button
+            onClick={loadMore}
+            className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-400 text-black font-bold rounded-lg hover:from-yellow-400 hover:to-yellow-300 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Load More Meks ({loadedMeks.length} / {totalMekCount})
+          </button>
+        </div>
+      )}
+      
+      {/* Empty State */}
+      {filteredMeks.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🤖</div>
+          <h3 className="text-2xl font-bold text-yellow-400 mb-2">No Meks Found</h3>
+          <p className="text-gray-400 mb-6">
+            {loadedMeks.length === 0 
+              ? "You don't have any Meks yet. Visit the marketplace to get started!"
+              : "No Meks match your current filters."}
+          </p>
+          <Link 
+            href="/shop"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-400 text-black font-bold rounded-lg hover:from-yellow-400 hover:to-yellow-300 transition-all"
+          >
+            Visit Marketplace
+          </Link>
+        </div>
+      )}
+      
+      {/* CSS for animations */}
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(200%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

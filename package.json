@@ -4,15 +4,26 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:turbo": "next dev --turbo",
+    "dev:convex": "convex dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:convex\"",
+    "dev:stable": "next dev -p 3200",
+    "preview": "next build && next start",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "fetch-source-keys": "node scripts/fetch_source_keys.js"
   },
   "dependencies": {
+    "@meshsdk/core": "^1.9.0-beta.72",
+    "@meshsdk/react": "^1.9.0-beta.72",
     "convex": "^1.25.4",
+    "dotenv": "^17.2.1",
+    "lucide-react": "^0.540.0",
     "next": "15.4.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "recharts": "^3.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -20,6 +31,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4",

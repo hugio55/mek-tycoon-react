@@ -95,7 +95,7 @@ export default function BuffsPage() {
   }
   
   return (
-    <div className="text-white py-8">
+    <div className="text-white py-8 relative z-10">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-yellow-400 mb-4">
           🎯 Buff System Demo

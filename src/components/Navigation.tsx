@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+// import WalletConnect from "./WalletConnect";
 
 interface NavCategory {
   id: string;
@@ -14,7 +15,7 @@ interface NavCategory {
   }[];
 }
 
-const navCategories: NavCategory[] = [
+const navCategories: readonly NavCategory[] = [
   {
     id: "operations",
     title: "Operations",
@@ -30,7 +31,7 @@ const navCategories: NavCategory[] = [
     icon: "⚙️",
     items: [
       { label: "Crafting", href: "/crafting" },
-      { label: "Auction", href: "/auction" },
+      { label: "Shop", href: "/shop" },
       { label: "Bank", href: "/bank" },
       { label: "Inventory", href: "/inventory" },
     ],
@@ -40,7 +41,7 @@ const navCategories: NavCategory[] = [
     title: "Meks",
     icon: "🌟",
     items: [
-      { label: "Talents", href: "/talents" },
+      { label: "CiruTree", href: "/cirutree" },
       { label: "Achievements", href: "/achievements" },
       { label: "XP Allocation", href: "/xp-allocation" },
     ],
@@ -50,7 +51,7 @@ const navCategories: NavCategory[] = [
     title: "Management",
     icon: "🤖",
     items: [
-      { label: "Profile", href: "/profile" },
+      { label: "My Meks", href: "/profile" },
       { label: "Search", href: "/search" },
     ],
   },
@@ -61,6 +62,7 @@ const navCategories: NavCategory[] = [
     items: [
       { label: "Fighting Arena", href: "/arena" },
       { label: "Minigames", href: "/minigames" },
+      { label: "Bagatelle", href: "/bagatelle" },
     ],
   },
   {
@@ -68,107 +70,92 @@ const navCategories: NavCategory[] = [
     title: "Admin",
     icon: "⚡",
     items: [
+      { label: "Mek Assignment", href: "/mek-assignment" },
+      { label: "Mek Selector", href: "/mek-selector" },
+      { label: "Mek Selector Grid", href: "/mek-selector-grid" },
+      { label: "Mek Swarm", href: "/mek-swarm" },
+      { label: "Shop Manager", href: "/admin-shop" },
       { label: "Balance", href: "/balance" },
-      { label: "Focus System", href: "/focus" },
+      { label: "Rarity Bias", href: "/rarity-bias" },
+      { label: "Talent Builder", href: "/talent-builder" },
     ],
   },
 ];
 
 export default function Navigation() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
+
+  // Handle mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setExpandedCategory(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div>
       {/* Large Logo at Top Center */}
       <div className="flex justify-center py-5 mb-5">
         <Link href="/hub" className="group">
-          <div className="relative inline-block overflow-hidden" style={{ maxHeight: '100px' }}>
-            {/* Random sparkles across the logo */}
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={`sparkle-${i}`}
-                className="absolute pointer-events-none"
-                style={{
-                  left: `${10 + (i * 12)}%`,
-                  top: `${20 + ((i * 17) % 60)}%`,
-                  width: '3px',
-                  height: '3px',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                  animation: `sparkle ${2 + (i * 0.3)}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.4}s`,
-                  zIndex: 20,
-                }}
-              />
-            ))}
-            
-            {/* Logo shimmer/gleam effect */}
-            <div 
-              className="absolute inset-0 -left-full z-10 pointer-events-none"
-              style={{
-                background: `linear-gradient(
-                  90deg,
-                  transparent,
-                  rgba(255, 255, 255, 0.4) 30%,
-                  rgba(255, 255, 255, 0.8) 50%,
-                  rgba(255, 255, 255, 0.4) 70%,
-                  transparent
-                )`,
-                mixBlendMode: 'overlay',
-                animation: 'logoShimmer 4s ease-in-out infinite',
-              }}
-            />
-            
-            <Image
-              src="/logo-big.png"
-              alt="Mek Tycoon Logo"
-              width={400}
-              height={100}
-              className="object-contain h-[100px] w-auto drop-shadow-[0_0_3.5px_rgba(250,182,23,0.35)] group-hover:drop-shadow-[0_0_5.25px_rgba(250,182,23,0.56)] transition-all group-hover:scale-105"
-              priority
-            />
-            
-            {/* CSS for shimmer and sparkle animations */}
-            <style jsx>{`
-              @keyframes logoShimmer {
-                0% {
-                  left: -100%;
-                  opacity: 0;
-                }
-                20% {
-                  opacity: 1;
-                }
-                50% {
-                  left: 100%;
-                  opacity: 1;
-                }
-                100% {
-                  left: 100%;
-                  opacity: 0;
-                }
-              }
-              
-              @keyframes sparkle {
-                0%, 100% {
-                  opacity: 0;
-                  transform: scale(0);
-                }
-                50% {
-                  opacity: 1;
-                  transform: scale(1);
-                }
-              }
-            `}</style>
-          </div>
+          <Image
+            src="/logo-big.png"
+            alt="Mek Tycoon Logo"
+            width={400}
+            height={100}
+            className="object-contain h-[100px] w-auto drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all"
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* Wallet Connect Section - Temporarily disabled */}
+      {/* <div className="flex justify-center mb-4">
+        <WalletConnect />
+      </div> */}
+
+      {/* Welcome/Logout Link */}
+      <div className="absolute top-2 right-2 z-50 flex items-center gap-4">
+        <button
+          onClick={() => {
+            // Clear wallet data from localStorage
+            localStorage.removeItem('connectedWallet');
+            localStorage.removeItem('walletAddress');
+            localStorage.removeItem('stakeAddress');
+            // Redirect to welcome page
+            window.location.href = '/';
+          }}
+          className="text-red-400 hover:text-red-300 text-sm transition-colors"
+        >
+          Disconnect Wallet
+        </button>
+        <Link
+          href="/"
+          className="text-gray-500 hover:text-yellow-400 text-sm transition-colors"
+        >
+          ← Welcome
         </Link>
       </div>
 
       {/* Navigation Bar */}
-      <nav className="bg-transparent p-2 mb-4 relative z-50">
+      <nav className="bg-transparent p-2 mb-4 relative z-50" ref={navRef}>
         <div className="flex items-stretch gap-4">
           {/* HUB Button */}
           <div className="flex-shrink-0 h-[70px] flex items-stretch">
@@ -188,8 +175,8 @@ export default function Navigation() {
                 `,
               }}
             >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -left-full group-hover:left-full transition-all duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              {/* Shimmer effect on hover */}
+              <div className="absolute inset-0 -left-full group-hover:left-full transition-all duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
               <span className="relative z-10 drop-shadow-[0_0_4px_rgba(255,204,0,0.4)]">HUB</span>
             </Link>
           </div>
@@ -201,7 +188,7 @@ export default function Navigation() {
               key={category.id}
               className={`relative bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-yellow-400/50 rounded-xl overflow-visible transition-all ${
                 expandedCategory === category.id
-                  ? "border-yellow-400 shadow-[0_8px_35px_rgba(255,204,0,0.4)] -translate-y-0.5 z-[200]"
+                  ? "border-yellow-400 shadow-[0_8px_35px_rgba(255,204,0,0.4)] -translate-y-0.5 z-50"
                   : "hover:border-yellow-400/70"
               }`}
             >
@@ -226,11 +213,12 @@ export default function Navigation() {
               </button>
 
               {/* Dropdown Menu */}
+              {mounted && (
               <div
-                className={`absolute top-full left-0 right-0 mt-0.5 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-yellow-400 border-t-0 rounded-b-xl shadow-[0_8px_25px_rgba(255,204,0,0.3)] transition-all z-[300] ${
+                className={`absolute top-full left-0 right-0 mt-0.5 bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-yellow-400 border-t-0 rounded-b-xl shadow-[0_8px_25px_rgba(255,204,0,0.3)] transition-all z-50 ${
                   expandedCategory === category.id
-                    ? "opacity-100 visible translate-y-0"
-                    : "opacity-0 invisible -translate-y-2"
+                    ? "opacity-100 visible translate-y-0 pointer-events-auto"
+                    : "opacity-0 invisible -translate-y-2 pointer-events-none"
                 }`}
               >
                 <div className="p-2 grid grid-cols-1 gap-1">
@@ -248,6 +236,7 @@ export default function Navigation() {
                   ))}
                 </div>
               </div>
+              )}
             </div>
           ))}
         </div>

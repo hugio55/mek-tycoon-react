@@ -136,8 +136,8 @@ function createImportFile() {
   // Sort by rarity rank
   transformedMeks.sort((a, b) => a.rarityRank - b.rarityRank);
   
-  // Take first 100 for initial import (can be adjusted)
-  const importBatch = transformedMeks.slice(0, 100);
+  // Take all 4000 meks
+  const importBatch = transformedMeks;
   
   // Save to file
   const outputPath = path.join(__dirname, 'convex', 'meksImportData.json');

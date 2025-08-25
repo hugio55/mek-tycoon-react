@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "id": "node-1755539201979",
+      "name": "New Node",
+      "x": 456,
+      "y": 330,
+      "tier": 1,
+      "desc": "Node description",
+      "xp": 100
+    },
+    {
+      "id": "node-1755539208951",
+      "name": "New Node",
+      "x": 406,
+      "y": 228,
+      "tier": 1,
+      "desc": "Node description",
+      "xp": 100
+    }
+  ],
+  "connections": [
+    {
+      "from": "node-1755539208951",
+      "to": "node-1755539201979"
+    }
+  ]
+}
