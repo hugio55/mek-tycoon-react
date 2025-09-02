@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mek Tree Storage Checker</title>
+    <style>
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #fbbf24;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+        .status {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .found {
+            border-color: #10b981;
+            background: #064e3b;
+        }
+        .not-found {
+            border-color: #ef4444;
+            background: #450a0a;
+        }
+        .storage-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .key {
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .value {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        .tree-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .tree-stat {
+            background: #334155;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .tree-stat-label {
+            color: #94a3b8;
+            font-size: 0.8em;
+        }
+        .tree-stat-value {
+            color: #10b981;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        .export-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .recover-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .delete-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .today-marker {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Mek Tree Storage Checker</h1>
+        
+        <div class="status" id="main-status">
+            Checking your browser's localStorage for saved mek trees...
+        </div>
+
+        <div class="section">
+            <button onclick="checkAll()">🔍 Check All Storage</button>
+            <button onclick="checkToday()" class="export-btn">📅 Today's Saves Only</button>
+            <button onclick="exportAll()" class="export-btn">💾 Export All Data</button>
+            <button onclick="recoverFromAnyKey()" class="recover-btn">🔧 Deep Recovery Scan</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Check on page load
+        window.onload = () => {
+            checkAll();
+        };
+
+        function checkAll() {
+            const results = document.getElementById('results');
+            const status = document.getElementById('main-status');
+            results.innerHTML = '';
+            
+            // Keys we're looking for
+            const targetKeys = [
+                'ciruTreeSaves',
+                'talentTreeData',
+                'publicTalentTree',
+                'savedSpells',
+                'mekTemplates',
+                'mekTreeTemplates'
+            ];
+            
+            let foundCount = 0;
+            let totalTrees = 0;
+            
+            // Check each key
+            targetKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    foundCount++;
+                    try {
+                        const parsed = JSON.parse(value);
+                        
+                        // Analyze the data
+                        let treeCount = 0;
+                        let nodeCount = 0;
+                        let connectionCount = 0;
+                        let savedAt = null;
+                        
+                        if (key === 'ciruTreeSaves' && Array.isArray(parsed)) {
+                            treeCount = parsed.length;
+                            totalTrees += treeCount;
+                            parsed.forEach(save => {
+                                if (save.data) {
+                                    nodeCount += (save.data.nodes?.length || 0);
+                                    connectionCount += (save.data.connections?.length || 0);
+                                    if (save.data.savedAt) {
+                                        savedAt = new Date(save.data.savedAt);
+                                    }
+                                }
+                            });
+                        } else if (parsed.nodes) {
+                            treeCount = 1;
+                            totalTrees += 1;
+                            nodeCount = parsed.nodes.length;
+                            connectionCount = parsed.connections?.length || 0;
+                            if (parsed.savedAt) {
+                                savedAt = new Date(parsed.savedAt);
+                            }
+                        }
+                        
+                        // Check if saved today
+                        const isToday = savedAt && isDateToday(savedAt);
+                        
+                        results.innerHTML += `
+                            <div class="storage-item ${isToday ? 'found' : ''}">
+                                <div class="key">
+                                    ${key}
+                                    ${isToday ? '<span class="today-marker">TODAY</span>' : ''}
+                                </div>
+                                <div class="tree-info">
+                                    <div class="tree-stat">
+                                        <div class="tree-stat-label">Trees</div>
+                                        <div class="tree-stat-value">${treeCount}</div>
+                                    </div>
+                                    <div class="tree-stat">
+                                        <div class="tree-stat-label">Nodes</div>
+                                        <div class="tree-stat-value">${nodeCount}</div>
+                                    </div>
+                                    <div class="tree-stat">
+                                        <div class="tree-stat-label">Connections</div>
+                                        <div class="tree-stat-value">${connectionCount}</div>
+                                    </div>
+                                    ${savedAt ? `
+                                    <div class="tree-stat">
+                                        <div class="tree-stat-label">Saved</div>
+                                        <div class="tree-stat-value">${savedAt.toLocaleString()}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <details>
+                                    <summary style="cursor: pointer; color: #94a3b8;">View Raw Data</summary>
+                                    <div class="value">${JSON.stringify(parsed, null, 2)}</div>
+                                </details>
+                                <div style="margin-top: 10px;">
+                                    <button onclick="copyKey('${key}')">📋 Copy</button>
+                                    <button onclick="downloadKey('${key}')" class="export-btn">💾 Download</button>
+                                    <button onclick="loadInBuilder('${key}')" class="recover-btn">🔧 Load in Builder</button>
+                                </div>
+                            </div>
+                        `;
+                    } catch (e) {
+                        // Not JSON or error parsing
+                        results.innerHTML += `
+                            <div class="storage-item">
+                                <div class="key">${key} (Raw Data)</div>
+                                <div class="value">${value.substring(0, 1000)}</div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+            
+            // Update status
+            if (foundCount > 0) {
+                status.className = 'status found';
+                status.innerHTML = `✅ Found ${foundCount} storage keys with ${totalTrees} total trees!`;
+            } else {
+                status.className = 'status not-found';
+                status.innerHTML = `❌ No mek tree data found in localStorage. Try the Deep Recovery Scan.`;
+            }
+            
+            // Also scan for any other potential keys
+            results.innerHTML += '<h2 style="margin-top: 30px;">Other Storage Keys:</h2>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!targetKeys.includes(key)) {
+                    const value = localStorage.getItem(key);
+                    if (value && value.includes('node') || value.includes('tree') || value.includes('mek')) {
+                        results.innerHTML += `
+                            <div class="storage-item">
+                                <div class="key">${key} (Potential Match)</div>
+                                <button onclick="copyKey('${key}')">📋 Copy</button>
+                                <button onclick="downloadKey('${key}')" class="export-btn">💾 Download</button>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+        
+        function isDateToday(date) {
+            const today = new Date();
+            return date.getDate() === today.getDate() &&
+                   date.getMonth() === today.getMonth() &&
+                   date.getFullYear() === today.getFullYear();
+        }
+        
+        function checkToday() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Today\'s Saves:</h2>';
+            
+            let foundToday = false;
+            
+            ['ciruTreeSaves', 'talentTreeData'].forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        if (key === 'ciruTreeSaves' && Array.isArray(parsed)) {
+                            parsed.forEach((save, index) => {
+                                if (save.data?.savedAt && isDateToday(new Date(save.data.savedAt))) {
+                                    foundToday = true;
+                                    results.innerHTML += `
+                                        <div class="storage-item found">
+                                            <div class="key">Today's Save: ${save.name}</div>
+                                            <div>Nodes: ${save.data.nodes?.length || 0} | Connections: ${save.data.connections?.length || 0}</div>
+                                            <button onclick="extractSave('${key}', ${index})">Extract This Save</button>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }
+            });
+            
+            if (!foundToday) {
+                results.innerHTML += '<p style="color: #ef4444;">No saves from today found.</p>';
+            }
+        }
+        
+        function copyKey(key) {
+            const value = localStorage.getItem(key);
+            navigator.clipboard.writeText(value).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+        
+        function downloadKey(key) {
+            const value = localStorage.getItem(key);
+            const blob = new Blob([value], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${key}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+        
+        function exportAll() {
+            const backup = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                backup[key] = localStorage.getItem(key);
+            }
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `localStorage_full_backup_${new Date().toISOString()}.json`;
+            a.click();
+        }
+        
+        function loadInBuilder(key) {
+            const value = localStorage.getItem(key);
+            if (value) {
+                // Copy to talentTreeData for immediate loading
+                localStorage.setItem('talentTreeData', value);
+                alert('Data loaded! Now go to /talent-builder and it should appear.');
+                window.location.href = '/talent-builder';
+            }
+        }
+        
+        function extractSave(key, index) {
+            const value = localStorage.getItem(key);
+            const parsed = JSON.parse(value);
+            if (parsed[index]) {
+                const saveData = JSON.stringify(parsed[index].data);
+                localStorage.setItem('talentTreeData', saveData);
+                alert('Save extracted and loaded! Go to /talent-builder');
+            }
+        }
+        
+        function recoverFromAnyKey() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Deep Recovery Scan:</h2>';
+            
+            let recoveredCount = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                
+                try {
+                    const parsed = JSON.parse(value);
+                    
+                    // Check if it looks like tree data
+                    if ((parsed.nodes && Array.isArray(parsed.nodes)) || 
+                        (Array.isArray(parsed) && parsed.some(item => item.data?.nodes))) {
+                        recoveredCount++;
+                        results.innerHTML += `
+                            <div class="storage-item found">
+                                <div class="key">Recovered: ${key}</div>
+                                <button onclick="loadInBuilder('${key}')" class="recover-btn">Load This</button>
+                                <button onclick="downloadKey('${key}')" class="export-btn">Download</button>
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    // Check for stringified JSON within strings
+                    if (value.includes('"nodes"') && value.includes('"connections"')) {
+                        recoveredCount++;
+                        results.innerHTML += `
+                            <div class="storage-item found">
+                                <div class="key">Possible Recovery: ${key}</div>
+                                <button onclick="downloadKey('${key}')" class="export-btn">Download for Manual Recovery</button>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            if (recoveredCount === 0) {
+                results.innerHTML += '<p style="color: #ef4444;">No recoverable tree data found in any localStorage key.</p>';
+            } else {
+                results.innerHTML = `<div class="status found">Found ${recoveredCount} potential recovery items!</div>` + results.innerHTML;
+            }
+        }
+    </script>
+</body>
+</html>

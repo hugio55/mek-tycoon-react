@@ -84,7 +84,8 @@ export const createBuffType = mutation({
       v.literal("slot_bonus"),
       v.literal("market_discount"),
       v.literal("essence_efficiency"),
-      v.literal("gold_capacity")
+      v.literal("gold_capacity"),
+      v.literal("bank_deposit_cap")
     ),
     valueType: v.union(v.literal("flat"), v.literal("percentage")),
     baseValue: v.number(),
@@ -288,6 +289,16 @@ export const seedBuffTypes = mutation({
         maxStacks: 2,
         icon: "🏭",
         rarity: "legendary" as const,
+      },
+      {
+        name: "Bank Deposit Daily Gold Cap Increase",
+        description: "Increases daily bank deposit limit",
+        buffType: "bank_deposit_cap" as const,
+        valueType: "percentage" as const,
+        baseValue: 10,
+        maxStacks: 10,
+        icon: "🏦",
+        rarity: "uncommon" as const,
       },
     ];
 

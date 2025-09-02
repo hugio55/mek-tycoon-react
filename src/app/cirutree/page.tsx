@@ -23,6 +23,11 @@ type Connection = {
   to: string;
 };
 
+interface TalentData {
+  nodes: TalentNode[];
+  connections: Connection[];
+}
+
 // Default talent tree data (fallback if user tree is not loaded)
 const defaultTalentData = {
   nodes: [
@@ -90,7 +95,7 @@ const defaultTalentData = {
 };
 
 export default function TalentsPage() {
-  const [talentData, setTalentData] = useState<any>({ nodes: [], connections: [] });
+  const [talentData, setTalentData] = useState<TalentData>({ nodes: [], connections: [] });
   const [unlockedNodes, setUnlockedNodes] = useState<Set<string>>(new Set(['start']));
   const [xpReduction, setXpReduction] = useState(10); // 10% XP reduction buff example
   const [xpAvailable, setXpAvailable] = useState(1500);
@@ -328,39 +333,92 @@ export default function TalentsPage() {
     setPanOffset({ x: newPanX, y: newPanY });
   };
 
+  // Calculate progress stats
+  const totalNodes = talentData.nodes.length;
+  const unlockedCount = unlockedNodes.size;
+  const progressPercentage = totalNodes > 0 ? Math.round((unlockedCount / totalNodes) * 100) : 0;
+  
+  // Calculate path-specific progress
+  const calculatePathProgress = (pathId: string) => {
+    // Find all nodes connected to this path (recursively)
+    const getPathNodes = (startId: string, visited = new Set<string>()): Set<string> => {
+      if (visited.has(startId)) return visited;
+      visited.add(startId);
+      
+      talentData.connections
+        .filter(conn => conn.from === startId)
+        .forEach(conn => getPathNodes(conn.to, visited));
+      
+      return visited;
+    };
+    
+    const pathNodes = getPathNodes(pathId);
+    pathNodes.delete('start'); // Remove start node from count
+    pathNodes.delete(pathId); // Remove the path root itself
+    
+    const unlockedInPath = Array.from(pathNodes).filter(nodeId => 
+      unlockedNodes.has(nodeId) && nodeId !== 'start' && nodeId !== pathId
+    ).length;
+    
+    return {
+      unlocked: unlockedInPath,
+      total: pathNodes.size
+    };
+  };
+  
+  const headsProgress = calculatePathProgress('heads');
+  const bodiesProgress = calculatePathProgress('bodies');
+  const traitsProgress = calculatePathProgress('traits');
+  
   return (
     <div className="text-white overflow-hidden relative" onMouseMove={handleMouseMove}>
       <BackgroundEffects />
-      {/* Status Bar - under main nav */}
-      <div className="fixed left-0 right-0 z-20 bg-gray-950/90 backdrop-blur-sm border-b border-yellow-400/30" style={{ top: '120px' }}>
-        <div className="flex items-center justify-between px-6 py-3">
-          <Link
-            href="/talent-builder"
-            className="px-4 py-2 text-sm rounded font-bold bg-purple-600 text-white hover:bg-purple-700 transition-all"
-          >
-            Edit Tree →
-          </Link>
-          
-          <h1 className="text-3xl font-bold text-yellow-400 uppercase tracking-wider"
-              style={{ textShadow: '0 0 20px rgba(255, 204, 0, 0.7)' }}>
-            CiruTree
-          </h1>
-          
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Available XP</div>
-              <div className="text-2xl font-bold text-yellow-400">{xpAvailable.toLocaleString()}</div>
+      
+      {/* Info Card with Title and Stats */}
+      <div className="fixed left-4 right-4 z-30" style={{ top: '200px' }}>
+        <div className="bg-gray-900/90 backdrop-blur-sm border border-yellow-400/30 rounded-lg p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Left: Title and Description */}
+            <div>
+              <h1 className="text-3xl font-bold text-yellow-400 uppercase tracking-wider mb-2"
+                  style={{ textShadow: '0 0 20px rgba(255, 204, 0, 0.7)' }}>
+                CiruTree
+              </h1>
+              <p className="text-gray-300 text-xs leading-relaxed">
+                Unlock powerful abilities by spending gold and essence. Each path represents a unique specialization.
+              </p>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-green-400 uppercase tracking-wider">XP Reduction</div>
-              <div className="text-2xl font-bold text-green-400">{xpReduction}%</div>
+            
+            {/* Right: Path Progress */}
+            <div className="grid grid-cols-4 gap-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-yellow-400">{progressPercentage}%</div>
+                <div className="text-[10px] text-gray-400 uppercase">Total</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-cyan-400">{headsProgress.unlocked}/{headsProgress.total}</div>
+                <div className="text-[10px] text-gray-400 uppercase">Heads</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-400">{bodiesProgress.unlocked}/{bodiesProgress.total}</div>
+                <div className="text-[10px] text-gray-400 uppercase">Bodies</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-400">{traitsProgress.unlocked}/{traitsProgress.total}</div>
+                <div className="text-[10px] text-gray-400 uppercase">Traits</div>
+              </div>
             </div>
-            <button
-              onClick={resetTree}
-              className="px-4 py-2 text-sm rounded text-white font-bold bg-red-600 hover:bg-red-700 transition-all"
-            >
-              Reset Tree
-            </button>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -373,7 +431,7 @@ export default function TalentsPage() {
       )}
       
       {/* Canvas Container - Full screen with vignette */}
-      <div className="fixed inset-0" style={{ zIndex: 10, paddingTop: '180px' }}>
+      <div className="fixed inset-0" style={{ zIndex: 10, paddingTop: '300px' }}>
         {/* Vignette effect overlay */}
         <div 
           className="absolute inset-0 pointer-events-none"
@@ -438,8 +496,23 @@ export default function TalentsPage() {
             
             if (!fromNode || !toNode) return null;
             
-            const dx = toNode.x - fromNode.x;
-            const dy = toNode.y - fromNode.y;
+            // Calculate proper center offset based on node type
+            const getNodeCenterOffset = (nodeId: string) => {
+              if (nodeId === 'start') return 20; // 40px / 2
+              if (nodeId === 'heads' || nodeId === 'bodies' || nodeId === 'traits') return 17.5; // 35px / 2
+              return 15; // 30px / 2 for regular nodes
+            };
+            
+            const fromOffset = getNodeCenterOffset(fromNode.id);
+            const toOffset = getNodeCenterOffset(toNode.id);
+            
+            const fromX = fromNode.x + fromOffset;
+            const fromY = fromNode.y + fromOffset;
+            const toX = toNode.x + toOffset;
+            const toY = toNode.y + toOffset;
+            
+            const dx = toX - fromX;
+            const dy = toY - fromY;
             const length = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
             
@@ -452,8 +525,8 @@ export default function TalentsPage() {
                 style={{
                   width: `${length}px`,
                   height: '3px',
-                  left: `${fromNode.x + 12.5}px`,
-                  top: `${fromNode.y + 12.5}px`,
+                  left: `${fromX}px`,
+                  top: `${fromY}px`,
                   transform: `rotate(${angle}deg)`,
                   transformOrigin: '0 50%',
                   background: isActive 
@@ -619,8 +692,11 @@ export default function TalentsPage() {
                   return (
                     <div className="px-4 py-2">
                       <div className="text-yellow-400 text-lg font-bold">
-                        {hoveredNode.name.replace('\\n', ' ')}
+                        {hoveredNode.isSpell ? hoveredNode.spellType || hoveredNode.name : hoveredNode.name.replace('\\n', ' ')}
                       </div>
+                      {hoveredNode.isSpell && (
+                        <div className="text-purple-400 text-xs mt-1">Spell Node</div>
+                      )}
                     </div>
                   );
                 }
@@ -629,44 +705,97 @@ export default function TalentsPage() {
                 return (
                   <div className="p-4" style={{ minWidth: '250px', maxWidth: '350px' }}>
                     <div className="text-yellow-400 text-lg font-bold mb-2">
-                      {hoveredNode.name.replace('\\n', ' ')}
+                      {hoveredNode.isSpell ? hoveredNode.spellType || hoveredNode.name : hoveredNode.name.replace('\\n', ' ')}
                     </div>
                     
-                    {/* XP Cost in big numbers - always show for nodes with details */}
-                    {hoveredNode.xp > 0 && (() => {
-                      const reducedXp = Math.ceil(hoveredNode.xp * (1 - xpReduction / 100));
-                      const canAfford = xpAvailable >= reducedXp;
-                      
-                      return (
-                        <div className="text-center py-2 mb-2" style={{ 
-                          background: canAfford ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                          border: canAfford ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '4px'
-                        }}>
-                          <div className={`text-3xl font-bold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
-                            {reducedXp.toLocaleString()}
-                          </div>
-                          <div className="text-xs text-gray-400">XP REQUIRED</div>
-                          {xpReduction > 0 && (
-                            <div className="text-xs text-gray-400 mt-1">
-                              (reduced from {hoveredNode.xp.toLocaleString()})
+                    {hoveredNode.isSpell && (
+                      <div className="text-purple-400 text-sm mb-2">✨ Spell Node</div>
+                    )}
+                    
+                    {/* Cost Display */}
+                    {hoveredNode.isSpell ? (
+                      // Spell costs display
+                      <div className="space-y-2 mb-2">
+                        {hoveredNode.goldCost && hoveredNode.goldCost > 0 && (
+                          <div className="text-center py-2" style={{ 
+                            background: 'rgba(255, 204, 0, 0.1)',
+                            border: '1px solid rgba(255, 204, 0, 0.3)',
+                            borderRadius: '4px'
+                          }}>
+                            <div className="text-2xl font-bold text-yellow-400">
+                              {hoveredNode.goldCost.toLocaleString()}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })()}
+                            <div className="text-xs text-gray-400">GOLD COST</div>
+                          </div>
+                        )}
+                        
+                        {hoveredNode.essences && hoveredNode.essences.length > 0 && (
+                          <div className="bg-gray-800/50 rounded p-2">
+                            <div className="text-xs text-gray-400 mb-1">ESSENCE REQUIRED:</div>
+                            {hoveredNode.essences.map((essence, idx) => (
+                              <div key={idx} className="text-sm text-purple-300">
+                                • {essence.amount}x {essence.attribute} Essence
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {hoveredNode.specialIngredient && (
+                          <div className="bg-gray-800/50 rounded p-2">
+                            <div className="text-xs text-gray-400 mb-1">SPECIAL INGREDIENT:</div>
+                            <div className="text-sm text-blue-300">{hoveredNode.specialIngredient}</div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      // Regular XP cost display
+                      hoveredNode.xp > 0 && (() => {
+                        const reducedXp = Math.ceil(hoveredNode.xp * (1 - xpReduction / 100));
+                        const canAfford = xpAvailable >= reducedXp;
+                        
+                        return (
+                          <div className="text-center py-2 mb-2" style={{ 
+                            background: canAfford ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            border: canAfford ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '4px'
+                          }}>
+                            <div className={`text-3xl font-bold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
+                              {reducedXp.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-400">XP REQUIRED</div>
+                            {xpReduction > 0 && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                (reduced from {hoveredNode.xp.toLocaleString()})
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()
+                    )}
                     
                     <div className="text-gray-300 text-sm leading-relaxed mb-3">
                       {hoveredNode.desc}
                     </div>
                     
-                    {/* Buffs section */}
+                    {/* Buffs/Effects section */}
                     <div className="border-t border-gray-700 pt-2">
-                      <div className="text-xs text-gray-400 mb-1">BUFFS:</div>
+                      <div className="text-xs text-gray-400 mb-1">
+                        {hoveredNode.isSpell ? 'SPELL EFFECTS:' : 'BUFFS:'}
+                      </div>
                       <div className="space-y-1">
-                        <div className="text-sm text-green-400">• +5% Attack Speed</div>
-                        <div className="text-sm text-green-400">• +10% Critical Chance</div>
-                        <div className="text-sm text-green-400">• +15% Energy Regen</div>
+                        {hoveredNode.isSpell ? (
+                          <>
+                            <div className="text-sm text-purple-400">• Instant cast</div>
+                            <div className="text-sm text-purple-400">• Can be crafted once per day</div>
+                            <div className="text-sm text-purple-400">• Tradeable after crafting</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm text-green-400">• +5% Attack Speed</div>
+                            <div className="text-sm text-green-400">• +10% Critical Chance</div>
+                            <div className="text-sm text-green-400">• +15% Energy Regen</div>
+                          </>
+                        )}
                       </div>
                     </div>
                     

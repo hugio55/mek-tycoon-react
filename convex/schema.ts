@@ -203,6 +203,9 @@ export default defineSchema({
     
     // Profile fields
     username: v.optional(v.string()),
+    displayName: v.optional(v.string()), // The actual display name shown to others (case-sensitive)
+    displayNameLower: v.optional(v.string()), // Lowercase version for uniqueness checking
+    displayNameSet: v.optional(v.boolean()), // Whether the user has set their display name
     avatar: v.optional(v.string()),
     bio: v.optional(v.string()),
     
@@ -252,7 +255,8 @@ export default defineSchema({
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_stake_address", ["walletStakeAddress"])
-    .index("by_username", ["username"]),
+    .index("by_username", ["username"])
+    .index("by_display_name_lower", ["displayNameLower"]),
 
   // Variations reference table - maps all variations to unique IDs
   variationsReference: defineTable({
@@ -261,10 +265,24 @@ export default defineSchema({
     type: v.union(v.literal("head"), v.literal("body"), v.literal("item")), // Type of variation
     baseXp: v.optional(v.number()),       // Base XP required to unlock in talent tree
     copies: v.optional(v.number()), // Number of copies in existence
+    imageUrl: v.optional(v.string()), // URL to the variation image in public/variation-images/
   })
     .index("by_variation_id", ["variationId"])
     .index("by_type", ["type"])
     .index("by_name", ["name"]),
+
+  // Mek Tree Buff Tables for procedural generation
+  mekTreeBuffTables: defineTable({
+    category: v.string(), // e.g., "flat_gold", "gold_multiplier", etc.
+    displayName: v.string(), // e.g., "Flat Gold", "Gold Multiplier"
+    description: v.optional(v.string()),
+    unit: v.optional(v.string()), // e.g., "gold", "%", "x"
+    values: v.array(v.array(v.number())), // 7x10 array: [rarityTier][treeTier]
+    isActive: v.boolean(), // Whether to include in procedural generation
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_category", ["category"]),
 
   // Crafting recipes
   craftingRecipes: defineTable({
@@ -692,4 +710,167 @@ export default defineSchema({
     .index("by_date", ["date"])
     .index("by_timestamp", ["timestamp"])
     .index("by_class", ["class"]),
+
+  // Code saves/backups
+  saves: defineTable({
+    name: v.string(), // Save name
+    description: v.optional(v.string()), // Optional description
+    filesCount: v.number(), // Number of files saved
+    sizeInBytes: v.number(), // Total size of save
+    createdAt: v.number(), // Timestamp
+  })
+    .index("by_created", ["createdAt"]),
+
+  // Leaderboard Cache - pre-computed leaderboard data
+  leaderboardCache: defineTable({
+    category: v.string(), // "gold", "meks", "essence", "networth", "level"
+    userId: v.id("users"),
+    walletAddress: v.string(),
+    username: v.optional(v.string()),
+    value: v.number(), // The metric value (gold amount, mek count, etc.)
+    rank: v.number(), // Pre-computed rank
+    lastUpdated: v.number(),
+    // Additional metadata for display
+    metadata: v.optional(v.object({
+      level: v.optional(v.number()),
+      essenceBreakdown: v.optional(v.object({
+        stone: v.number(),
+        disco: v.number(),
+        paul: v.number(),
+        cartoon: v.number(),
+        candy: v.number(),
+        tiles: v.number(),
+        moss: v.number(),
+        bullish: v.number(),
+        journalist: v.number(),
+        laser: v.number(),
+        flashbulb: v.number(),
+        accordion: v.number(),
+        turret: v.number(),
+        drill: v.number(),
+        security: v.number(),
+      })),
+      mekDetails: v.optional(v.object({
+        total: v.number(),
+        legendary: v.number(),
+        epic: v.number(),
+        rare: v.number(),
+        uncommon: v.number(),
+        common: v.number(),
+        topMekAssetId: v.optional(v.string()),
+        topMekLevel: v.optional(v.number()),
+      })),
+      goldPerHour: v.optional(v.number()),
+      essencePerHour: v.optional(v.number()),
+      bankBalance: v.optional(v.number()),
+      stockValue: v.optional(v.number()),
+      achievementScore: v.optional(v.number()),
+      topMek: v.optional(v.object({
+        assetId: v.string(),
+        assetName: v.string(),
+        level: v.number(),
+        goldRate: v.number(),
+        essenceRate: v.optional(v.number()),
+        totalGold: v.optional(v.number()),
+        totalEssence: v.optional(v.number()),
+      })),
+    })),
+  })
+    .index("by_category_rank", ["category", "rank"])
+    .index("by_category_value", ["category", "value"])
+    .index("by_user_category", ["userId", "category"])
+    .index("by_updated", ["lastUpdated"]),
+
+  // User Stats Cache - pre-computed user statistics
+  userStatsCache: defineTable({
+    userId: v.id("users"),
+    mekCount: v.number(),
+    totalEssence: v.number(),
+    netWorth: v.number(),
+    goldPerHour: v.number(),
+    bankBalance: v.number(),
+    stockValue: v.number(),
+    lastUpdated: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_updated", ["lastUpdated"]),
+
+  // Spells for spell caster minigame
+  spells: defineTable({
+    name: v.string(),
+    description: v.string(),
+    category: v.union(
+      v.literal("offensive"),
+      v.literal("defensive"),
+      v.literal("utility"),
+      v.literal("ultimate")
+    ),
+    manaCost: v.number(),
+    cooldown: v.number(),
+    castTime: v.number(),
+    range: v.number(),
+    
+    // Effects array
+    effects: v.array(v.object({
+      type: v.union(
+        v.literal("damage"),
+        v.literal("heal"),
+        v.literal("buff"),
+        v.literal("debuff"),
+        v.literal("summon"),
+        v.literal("aoe"),
+        v.literal("dot"),
+        v.literal("hot"),
+        v.literal("shield"),
+        v.literal("stun"),
+        v.literal("slow"),
+        v.literal("speed")
+      ),
+      value: v.number(),
+      duration: v.optional(v.number()),
+      radius: v.optional(v.number()),
+      tickRate: v.optional(v.number()),
+    })),
+    
+    // Visual effects
+    visuals: v.object({
+      particleType: v.union(
+        v.literal("fire"),
+        v.literal("ice"),
+        v.literal("lightning"),
+        v.literal("nature"),
+        v.literal("arcane"),
+        v.literal("shadow"),
+        v.literal("holy"),
+        v.literal("physical")
+      ),
+      particleCount: v.number(),
+      particleSpeed: v.number(),
+      particleSize: v.number(),
+      color1: v.string(),
+      color2: v.string(),
+      color3: v.optional(v.string()),
+      emissionPattern: v.union(
+        v.literal("burst"),
+        v.literal("stream"),
+        v.literal("spiral"),
+        v.literal("rain"),
+        v.literal("orbit"),
+        v.literal("wave")
+      ),
+      trailEffect: v.boolean(),
+      glowIntensity: v.number(),
+    }),
+    
+    soundEffect: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    requiredLevel: v.number(),
+    requiredClass: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_active", ["isActive"])
+    .index("by_level", ["requiredLevel"]),
 });

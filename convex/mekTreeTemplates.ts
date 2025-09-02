@@ -59,6 +59,10 @@ export const createTemplate = mutation({
       })),
       abilityId: v.optional(v.string()),
       passiveEffect: v.optional(v.string()),
+      buffGrant: v.optional(v.object({
+        buffType: v.string(),
+        baseValue: v.optional(v.number()),
+      })),
     })),
     connections: v.array(v.object({
       from: v.string(),
@@ -124,6 +128,10 @@ export const updateTemplate = mutation({
       })),
       abilityId: v.optional(v.string()),
       passiveEffect: v.optional(v.string()),
+      buffGrant: v.optional(v.object({
+        buffType: v.string(),
+        baseValue: v.optional(v.number()),
+      })),
     }))),
     connections: v.optional(v.array(v.object({
       from: v.string(),
@@ -231,18 +239,36 @@ export const createDefaultTemplates = mutation({
         category: "offensive",
         nodes: [
           {
-            id: "start",
-            name: "Core",
-            x: 400,
-            y: 50,
+            id: "core-gold",
+            name: "Gold Path",
+            x: 250,
+            y: 110,
             tier: 0,
-            desc: "Mek core systems",
+            desc: "Focus on gold generation",
+            xp: 0,
+          },
+          {
+            id: "core-essence",
+            name: "Essence Path",
+            x: 410,
+            y: 110,
+            tier: 0,
+            desc: "Master essence collection",
+            xp: 0,
+          },
+          {
+            id: "core-lootder",
+            name: "Lootder Path",
+            x: 570,
+            y: 110,
+            tier: 0,
+            desc: "Maximize loot drops",
             xp: 0,
           },
           {
             id: "attack-1",
             name: "Basic Attack",
-            x: 300,
+            x: 200,
             y: 150,
             tier: 1,
             desc: "Increase base attack power",
@@ -253,7 +279,7 @@ export const createDefaultTemplates = mutation({
           {
             id: "crit-1",
             name: "Critical Strike",
-            x: 500,
+            x: 300,
             y: 150,
             tier: 1,
             desc: "Increase critical chance",
@@ -296,8 +322,8 @@ export const createDefaultTemplates = mutation({
           },
         ],
         connections: [
-          { from: "start", to: "attack-1" },
-          { from: "start", to: "crit-1" },
+          { from: "core-gold", to: "attack-1" },
+          { from: "core-gold", to: "crit-1" },
           { from: "attack-1", to: "attack-2" },
           { from: "crit-1", to: "crit-2" },
           { from: "attack-2", to: "ultimate" },
@@ -450,6 +476,125 @@ export const createDefaultTemplates = mutation({
           { from: "dodge", to: "flash" },
         ],
       },
+      {
+        name: "Gold Path Build",
+        description: "Focus on gold generation and banking",
+        category: "economy",
+        nodes: [
+          {
+            id: "start",
+            name: "Core",
+            x: 400,
+            y: 50,
+            tier: 0,
+            desc: "Mek core systems",
+            xp: 0,
+          },
+          {
+            id: "gold-gen-1",
+            name: "Basic Gold Generation",
+            x: 300,
+            y: 150,
+            tier: 1,
+            desc: "Increase gold earning rate",
+            xp: 50,
+            nodeType: "passive" as const,
+            buffGrant: {
+              buffType: "gold_rate",
+              baseValue: 10,
+            },
+          },
+          {
+            id: "bank-cap-tier2",
+            name: "Bank Expansion",
+            x: 500,
+            y: 150,
+            tier: 2,
+            desc: "Increase daily bank deposit limit",
+            xp: 75,
+            nodeType: "special" as const,
+            buffGrant: {
+              buffType: "bank_deposit_cap",
+            },
+          },
+          {
+            id: "gold-gen-2",
+            name: "Advanced Gold Generation",
+            x: 300,
+            y: 250,
+            tier: 3,
+            desc: "Further increase gold earning",
+            xp: 100,
+            nodeType: "passive" as const,
+            buffGrant: {
+              buffType: "gold_rate",
+              baseValue: 20,
+            },
+          },
+          {
+            id: "gold-find",
+            name: "Gold Find",
+            x: 400,
+            y: 250,
+            tier: 3,
+            desc: "Chance to find extra gold",
+            xp: 100,
+            nodeType: "passive" as const,
+            passiveEffect: "10% chance for double gold",
+          },
+          {
+            id: "bank-cap-tier5",
+            name: "Bank Mastery",
+            x: 500,
+            y: 350,
+            tier: 5,
+            desc: "Major bank deposit limit increase",
+            xp: 150,
+            nodeType: "special" as const,
+            buffGrant: {
+              buffType: "bank_deposit_cap",
+            },
+          },
+          {
+            id: "gold-mastery",
+            name: "Gold Mastery",
+            x: 400,
+            y: 350,
+            tier: 4,
+            desc: "Master of gold generation",
+            xp: 200,
+            nodeType: "passive" as const,
+            buffGrant: {
+              buffType: "gold_rate",
+              baseValue: 50,
+            },
+          },
+          {
+            id: "bank-interest",
+            name: "Interest Boost",
+            x: 300,
+            y: 350,
+            tier: 4,
+            desc: "Increase bank interest rate",
+            xp: 125,
+            nodeType: "passive" as const,
+            passiveEffect: "+0.5% daily interest",
+          },
+        ],
+        connections: [
+          { from: "start", to: "gold-gen-1" },
+          { from: "start", to: "bank-cap-tier2" },
+          { from: "gold-gen-1", to: "gold-gen-2" },
+          { from: "gold-gen-1", to: "gold-find" },
+          { from: "bank-cap-tier2", to: "bank-cap-tier5" },
+          { from: "bank-cap-tier2", to: "gold-find" },
+          { from: "gold-gen-2", to: "gold-mastery" },
+          { from: "gold-gen-2", to: "bank-interest" },
+          { from: "gold-find", to: "gold-mastery" },
+          { from: "gold-find", to: "bank-cap-tier5" },
+          { from: "bank-interest", to: "bank-cap-tier5" },
+        ],
+      },
     ];
 
     const created = [];
@@ -464,7 +609,6 @@ export const createDefaultTemplates = mutation({
         created.push({ id, name: template.name });
       } catch (e) {
         // Template might already exist
-        console.log(`Template ${template.name} might already exist:`, e);
       }
     }
 

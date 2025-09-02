@@ -1,0 +1,152 @@
+/* Special Button Styles Collection */
+
+/* ============================= */
+/* PLASMA ENERGY BUTTON (Original) */
+/* ============================= */
+.btn-plasma-energy-v1 {
+  position: relative;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* ============================= */
+/* PLASMA ENERGY BUTTON (Updated) */
+/* ============================= */
+.btn-plasma-energy {
+  position: relative;
+  width: 280px;
+  height: 80px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 0.2s ease;
+}
+
+.btn-plasma-energy:hover {
+  transform: scale(1.05);
+}
+
+.btn-plasma-energy:active {
+  transform: scale(0.98);
+}
+
+.btn-plasma-energy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plasma-core {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  border-radius: 40px;
+  overflow: hidden;
+}
+
+.plasma-field {
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    #fab617,
+    #ff6b35,
+    #fab617,
+    #ffc633,
+    #fab617
+  );
+  animation: plasma-rotate 4s linear infinite;
+  filter: blur(20px);
+  opacity: 0.8;
+}
+
+.btn-plasma-energy:hover .plasma-field {
+  animation-duration: 2s;
+  opacity: 1;
+}
+
+@keyframes plasma-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.plasma-inner {
+  position: relative;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2a 100%);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.plasma-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: plasmaShimmer 2s infinite;
+}
+
+.plasma-text {
+  position: relative;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+  z-index: 1;
+}
+
+.btn-plasma-energy:hover .plasma-core {
+  animation-duration: 1s;
+}
+
+.btn-plasma-energy:hover .plasma-field {
+  inset: -15px;
+  animation-duration: 1s;
+}
+
+.btn-plasma-energy:hover .plasma-text {
+  text-shadow: 0 0 30px rgba(0, 255, 255, 1);
+}
+
+@keyframes plasmaGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes plasmaGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes plasmaShimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* ============================= */
+/* Usage Example in React/JSX: */
+/* ============================= */
+/*
+<button className="btn-plasma-energy">
+  <div className="plasma-core">
+    <div className="plasma-field"></div>
+    <div className="plasma-inner">
+      <span className="plasma-text">PLASMA CORE</span>
+    </div>
+  </div>
+</button>
+*/

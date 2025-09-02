@@ -1,0 +1,455 @@
+.spell-caster-game {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  color: #ffffff;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+.game-header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fab617;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(250, 182, 23, 0.5);
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+}
+
+.game-header p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Large countdown timer bar */
+.countdown-bar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 2px solid rgba(250, 182, 23, 0.5);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.countdown-bar-fill {
+  height: 100%;
+  transition: width 0.016s linear;
+  box-shadow: 
+    0 0 20px currentColor,
+    inset 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.countdown-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  font-weight: bold;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: white;
+  text-shadow: 
+    0 0 10px rgba(0, 0, 0, 1),
+    0 0 20px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/* Score display */
+.score-display {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+  color: #fab617;
+  text-shadow: 
+    0 0 10px rgba(250, 182, 23, 0.5),
+    0 0 20px rgba(250, 182, 23, 0.3);
+  z-index: 100;
+  letter-spacing: 2px;
+}
+
+.canvas-container {
+  position: relative;
+  width: 800px;
+  height: 500px;
+  max-width: 90vw;
+  max-height: 50vh;
+  border: 2px solid rgba(250, 182, 23, 0.3);
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 0 30px rgba(250, 182, 23, 0.1),
+    inset 0 0 30px rgba(0, 0, 0, 0.5);
+  margin-bottom: 2rem;
+}
+
+.damage-bar-container {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.damage-label {
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.damage-min {
+  color: #ff6666;
+}
+
+.damage-max {
+  color: #66ff66;
+}
+
+.damage-bar {
+  flex: 1;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(250, 182, 23, 0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+.damage-bar-fill {
+  height: 100%;
+  transition: width 0.2s ease-out;
+  background: linear-gradient(90deg, #fab617, #ffdd44);
+  position: relative;
+}
+
+.damage-current {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+}
+
+.main-canvas, .trail-canvas, .guide-canvas, .path-canvas, .flare-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.guide-canvas {
+  pointer-events: none;
+  z-index: 1;
+}
+
+.path-canvas {
+  pointer-events: none;
+  z-index: 2;
+}
+
+.flare-canvas {
+  pointer-events: none;
+  z-index: 3;
+}
+
+.trail-canvas {
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 4;
+}
+
+.main-canvas {
+  z-index: 5;
+}
+
+.select-prompt {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  color: rgba(250, 182, 23, 0.5);
+  text-align: center;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.cast-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  animation: castAnimation 2s ease-out forwards;
+  pointer-events: none;
+  color: #fab617;
+  text-shadow: 
+    0 0 20px rgba(250, 182, 23, 0.8),
+    0 0 40px rgba(250, 182, 23, 0.6);
+  z-index: 100;
+}
+
+@keyframes castAnimation {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(1);
+  }
+}
+
+/* Spell grid - 2 columns, 3 rows */
+.spell-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
+  z-index: 10;
+}
+
+/* Landscape spell cards */
+.spell-card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid;
+  backdrop-filter: blur(10px);
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  gap: 1rem;
+  height: 100px;
+}
+
+.spell-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.spell-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spell-thumbnail {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.spell-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.spell-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.15rem;
+}
+
+.spell-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.8rem;
+}
+
+.spell-rarity {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
+.spell-damage {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.spell-damage-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spell-card-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.essence-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.essence-row:hover .essence-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.essence-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.essence-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.essence-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.essence-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(250, 182, 23, 0.3);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.essence-bar {
+  height: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(250, 182, 23, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+.essence-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-out;
+  position: relative;
+}
+
+.essence-bar-fill.flash {
+  animation: essenceFlash 0.5s ease-out;
+}
+
+@keyframes essenceFlash {
+  0% { 
+    filter: brightness(1);
+  }
+  50% { 
+    filter: brightness(2);
+    box-shadow: 0 0 20px currentColor;
+  }
+  100% { 
+    filter: brightness(1);
+  }
+}
+
+.essence-remaining {
+  display: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .spell-caster-game {
+    padding: 1rem;
+  }
+  
+  .game-header h1 {
+    font-size: 2rem;
+  }
+  
+  .spell-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .spell-card {
+    height: 90px;
+  }
+  
+  .canvas-container {
+    width: 100%;
+    height: 400px;
+  }
+  
+  .game-timer {
+    position: static;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+}

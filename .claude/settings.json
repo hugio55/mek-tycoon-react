@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "env": {},
+      "alwaysAllow": [
+        "browser_navigate",
+        "browser_take_screenshot",
+        "browser_console_messages",
+        "browser_click",
+        "browser_hover",
+        "browser_evaluate",
+        "browser_snapshot",
+        "browser_wait_for",
+        "browser_resize"
+      ]
+    }
+  },
+  "agents": {
+    "visual-test": {
+      "name": "Visual Test Agent",
+      "description": "Tests visual changes in the browser using Playwright",
+      "enabled": true
+    },
+    "design-review": {
+      "name": "Design Review Agent",
+      "description": "Comprehensive UI/UX review for pull requests",
+      "enabled": true
+    }
+  },
+  "commands": {
+    "visual-check": {
+      "description": "Quick visual verification of UI changes",
+      "enabled": true
+    }
+  }
+}

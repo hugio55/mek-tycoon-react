@@ -72,6 +72,52 @@ export const deposit = mutation({
       throw new Error("Bank account not found");
     }
 
+    // Check daily deposit cap
+    const now = Date.now();
+    const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+    
+    // Get today's deposits
+    const todaysDeposits = await ctx.db
+      .query("bankTransactions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter(q => 
+        q.and(
+          q.eq(q.field("type"), "deposit"),
+          q.gte(q.field("timestamp"), startOfDay)
+        )
+      )
+      .collect();
+    
+    const todaysDepositTotal = todaysDeposits.reduce((sum, tx) => sum + tx.amount, 0);
+    
+    // Calculate the user's deposit cap with buffs
+    let dailyDepositCap = 500; // Base cap of 500 gold
+    
+    // Check for bank deposit cap increase buffs
+    const activeBuffs = await ctx.db
+      .query("activeBuffs")
+      .withIndex("by_user_active", (q) => 
+        q.eq("userId", args.userId).eq("isActive", true)
+      )
+      .collect();
+    
+    // Apply bank deposit cap buffs
+    for (const buff of activeBuffs) {
+      const buffType = await ctx.db.get(buff.buffTypeId);
+      if (buffType && buffType.buffType === "bank_deposit_cap") {
+        if (buffType.valueType === "flat") {
+          dailyDepositCap += buff.value * buff.stacks;
+        } else if (buffType.valueType === "percentage") {
+          dailyDepositCap *= (1 + (buff.value * buff.stacks) / 100);
+        }
+      }
+    }
+    
+    // Check if deposit would exceed daily cap
+    if (todaysDepositTotal + args.amount > dailyDepositCap) {
+      const remainingCap = Math.max(0, dailyDepositCap - todaysDepositTotal);
+      throw new Error(`Daily deposit cap exceeded. You can only deposit ${remainingCap} more gold today. Daily cap: ${dailyDepositCap} gold.`);
+    }
 
     const balanceBefore = account.balance;
     const balanceAfter = balanceBefore + args.amount;
@@ -264,10 +310,51 @@ export const getAccountStats = query({
 
     const nextInterestAmount = Math.floor(account.balance * (account.interestRate / 100));
 
+    // Calculate daily deposit cap and usage
+    const now = Date.now();
+    const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+    
+    const todaysDeposits = await ctx.db
+      .query("bankTransactions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter(q => 
+        q.and(
+          q.eq(q.field("type"), "deposit"),
+          q.gte(q.field("timestamp"), startOfDay)
+        )
+      )
+      .collect();
+    
+    const todaysDepositTotal = todaysDeposits.reduce((sum, tx) => sum + tx.amount, 0);
+    
+    // Calculate the user's deposit cap with buffs
+    let dailyDepositCap = 500; // Base cap of 500 gold
+    
+    const activeBuffs = await ctx.db
+      .query("activeBuffs")
+      .withIndex("by_user_active", (q) => 
+        q.eq("userId", args.userId).eq("isActive", true)
+      )
+      .collect();
+    
+    for (const buff of activeBuffs) {
+      const buffType = await ctx.db.get(buff.buffTypeId);
+      if (buffType && buffType.buffType === "bank_deposit_cap") {
+        if (buffType.valueType === "flat") {
+          dailyDepositCap += buff.value * buff.stacks;
+        } else if (buffType.valueType === "percentage") {
+          dailyDepositCap *= (1 + (buff.value * buff.stacks) / 100);
+        }
+      }
+    }
+
     return {
       account,
       hoursUntilInterest: Math.ceil(hoursUntilInterest),
       nextInterestAmount,
+      dailyDepositCap,
+      todaysDepositTotal,
+      remainingDepositCap: Math.max(0, dailyDepositCap - todaysDepositTotal),
     };
   },
 });

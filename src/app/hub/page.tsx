@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
+import UsernameModal from "@/components/UsernameModal";
 
 export default function HubPage() {
   
@@ -18,16 +19,67 @@ export default function HubPage() {
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(0);
   const [initError, setInitError] = useState<string | null>(null);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | 'all'>('7d');
+  const [chartMode, setChartMode] = useState<'total' | 'rate'>('total');
+  const [showSlotBuffsModal, setShowSlotBuffsModal] = useState(false);
+  const [employees, setEmployees] = useState([
+    // Full gold meks first (sorted by progress: 100)
+    { id: 1234, level: 5, rate: 15.5, gold: 968, maxGold: 968, progress: 100, buffed: false, hourCap: '72h' },
+    { id: 3691, level: 7, rate: 22.8, gold: 1644, maxGold: 1644, progress: 100, buffed: true, hourCap: '96h' },
+    { id: 9052, level: 6, rate: 18.7, gold: 1346, maxGold: 1346, progress: 100, buffed: false, hourCap: '72h' },
+    { id: 7231, level: 2, rate: 9.5, gold: 684, maxGold: 684, progress: 100, buffed: true, hourCap: '120h' },
+    { id: 5612, level: 8, rate: 25.3, gold: 1820, maxGold: 1820, progress: 100, buffed: false, hourCap: '72h' },
+    // Partial progress meks
+    { id: 2468, level: 3, rate: 12.2, gold: 523, maxGold: 878, progress: 60, buffed: false, hourCap: '72h' },
+    { id: 1847, level: 4, rate: 14.1, gold: 340, maxGold: 1015, progress: 33, buffed: true, hourCap: '96h' },
+    { id: 4089, level: 3, rate: 11.8, gold: 425, maxGold: 850, progress: 50, buffed: false, hourCap: '72h' },
+    { id: null, level: 0, rate: 0, gold: 0, maxGold: 0, progress: 0, buffed: false, hourCap: '72h' }, // Empty slot
+  ]);
+  
+  // Chart data generation based on period
+  const generateChartData = () => {
+    if (chartPeriod === '7d') {
+      // Smoother line with daily variations
+      return {
+        points: "0,75 14,72 28,70 42,65 56,68 70,63 84,60 100,58",
+        dots: [[0, 75], [14, 72], [28, 70], [42, 65], [56, 68], [70, 63], [84, 60], [100, 58]]
+      };
+    } else if (chartPeriod === '30d') {
+      // More volatile line with bigger jumps
+      return {
+        points: "0,85 16,78 32,82 48,70 64,74 80,65 100,55",
+        dots: [[0, 85], [16, 78], [32, 82], [48, 70], [64, 74], [80, 65], [100, 55]]
+      };
+    } else {
+      // All time - overall upward trend with some dips
+      return {
+        points: "0,90 20,85 40,80 60,70 80,60 100,45",
+        dots: []
+      };
+    }
+  };
+  
+  const chartData = generateChartData();
   
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   const getInitialGold = useMutation(api.goldTrackingOptimized.getInitialGoldData);
+  const getUserDisplayName = useQuery(api.usernames.getUserDisplayName, 
+    walletAddress ? { walletAddress } : "skip"
+  );
   
   useEffect(() => {
     const initUser = async () => {
       try {
+        // Get wallet from localStorage or use demo
+        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+        setWalletAddress(storedWallet);
+        
         const user = await getOrCreateUser({ 
-          walletAddress: "demo_wallet_123" 
+          walletAddress: storedWallet 
         });
         if (user) {
           setUserId(user._id as Id<"users">);
@@ -68,31 +120,29 @@ export default function HubPage() {
     });
   }, [getOrCreateUser, getInitialGold]);
   
+  // Check if user has set display name
+  useEffect(() => {
+    if (getUserDisplayName && walletAddress && walletAddress !== "demo_wallet_123") {
+      if (!getUserDisplayName.displayNameSet) {
+        // TEMPORARILY DISABLED: Auto-show username modal
+        // setShowUsernameModal(true);
+      } else {
+        setDisplayName(getUserDisplayName.displayName || null);
+      }
+    }
+  }, [getUserDisplayName, walletAddress]);
+  
   // Get user profile with real-time updates
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    userId && walletAddress ? { walletAddress } : "skip"
   );
   
-  // DISABLED: Server polling for gold status to save bandwidth
-  // Only fetch gold status every 30 seconds instead of continuously
-  const liveGoldData = null; // Disabled server polling
-  /* const liveGoldData = useQuery(
-    api.goldTrackingOptimized.getGoldStatus,
-    userId && Date.now() - lastGoldFetch > 30000 ? { userId } : "skip"
-  ); */
+  const liveGoldData = null; // Server polling disabled for bandwidth optimization
   
-  // Update gold rate when user changes
-  const updateGoldRate = useMutation(api.goldTracking.updateGoldRate);
   const collectGold = useMutation(api.goldTracking.collectGold);
   const setGoldRate = useMutation(api.updateGoldRate.setGoldRate);
   
-  // DISABLED: Initialize gold rate on load to save bandwidth
-  // useEffect(() => {
-  //   if (userId) {
-  //     updateGoldRate({ userId }).catch(console.error);
-  //   }
-  // }, [userId, updateGoldRate]);
   
   // Update gold data when fetched (every 30 seconds)
   useEffect(() => {
@@ -224,9 +274,6 @@ export default function HubPage() {
     }, 1500);
   };
   
-  // Debug logging
-  useEffect(() => {
-  }, [userId, userProfile, initError]);
 
   if (initError) {
     return (
@@ -272,89 +319,48 @@ export default function HubPage() {
   
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative z-10">
-      {/* Global styles for animations */}
-      <style jsx global>{`
+      <style jsx>{`
+        @keyframes collectGold {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.2) rotate(5deg); box-shadow: 0 0 30px rgba(250, 182, 23, 0.8); }
+          100% { transform: scale(1); }
+        }
+        .collecting {
+          animation: collectGold 0.5s ease-in-out;
+        }
+        @keyframes pulsateGlow {
+          0%, 100% { 
+            box-shadow: 0 0 20px rgba(250, 182, 23, 0.6), 0 0 40px rgba(250, 182, 23, 0.3), inset 0 0 20px rgba(250, 182, 23, 0.1);
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 0 0 30px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.4), inset 0 0 30px rgba(250, 182, 23, 0.2);
+            transform: scale(1.05);
+          }
+        }
+        .pulsate-glow {
+          animation: pulsateGlow 2s ease-in-out infinite;
+        }
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 1; }
+        }
+        @keyframes drift {
+          from { transform: translateX(-100px); }
+          to { transform: translateX(calc(100vw + 100px)); }
+        }
         @keyframes goldPopup {
           0% {
             opacity: 0;
             transform: translate(-50%, -50%) scale(0.5);
           }
-          50% {
+          20% {
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
           }
           100% {
             opacity: 0;
-            transform: translate(-50%, -60%) scale(1);
-          }
-        }
-        
-        .collecting {
-          animation: collectPulse 0.5s ease-out;
-        }
-        
-        @keyframes collectPulse {
-          0% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(0.95);
-          }
-          100% {
-            transform: scale(1);
-          }
-        }
-        
-        @keyframes goldFloat {
-          0%, 100% {
-            opacity: 0.4;
-            transform: translateY(0px) scale(0.8);
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(-3px) scale(1.2);
-            box-shadow: 0 0 8px rgba(250, 182, 23, 0.6);
-          }
-        }
-        
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px);
-          }
-          33% {
-            transform: translateY(-5px) translateX(2px);
-          }
-          66% {
-            transform: translateY(3px) translateX(-2px);
-          }
-        }
-        
-        @keyframes twinkle {
-          0%, 100% {
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 0.8;
-          }
-        }
-        
-        @keyframes drift {
-          0% {
-            transform: translateX(0) translateY(0);
-          }
-          100% {
-            transform: translateX(calc(100vw + 20px)) translateY(-10px);
-          }
-        }
-        
-        @keyframes starTwinkle {
-          0%, 100% {
-            opacity: 0.2;
-            transform: scale(0.8);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1);
+            transform: translate(-50%, -50%) scale(1) translateY(-50px);
           }
         }
       `}</style>
@@ -479,6 +485,7 @@ export default function HubPage() {
               >
                 HUB
               </h1>
+              
               <p 
                 style={{
                   fontSize: '10px',
@@ -491,6 +498,69 @@ export default function HubPage() {
               >
                 Your Tycoon at a Glance
               </p>
+              
+              {displayName && (
+                <div 
+                  style={{
+                    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                    fontSize: '14px',
+                    color: '#00ff88',
+                    letterSpacing: '0.05em',
+                    marginTop: '8px',
+                    marginBottom: '4px'
+                  }}
+                >
+                  Welcome, {displayName}
+                </div>
+              )}
+              
+              {/* Account Controls */}
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => setShowUsernameModal(true)}
+                  className="px-4 py-1.5 text-xs text-gray-300 hover:text-white bg-gray-900/50 hover:bg-gray-800/60 rounded transition-all duration-200"
+                  style={{
+                    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                    letterSpacing: '0.05em',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  Edit Name
+                </button>
+                {walletAddress && walletAddress !== "demo_wallet_123" ? (
+                  <button
+                    onClick={() => {
+                      // Disconnect wallet
+                      localStorage.removeItem('walletAddress');
+                      localStorage.removeItem('stakeAddress');
+                      window.location.href = '/';
+                    }}
+                    className="px-4 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-transparent hover:bg-gray-900/30 rounded transition-all duration-200"
+                    style={{
+                      fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                      letterSpacing: '0.05em',
+                      border: '1px solid rgba(255, 255, 255, 0.05)'
+                    }}
+                  >
+                    Disconnect
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      // Go to home page to connect wallet
+                      window.location.href = '/';
+                    }}
+                    className="px-4 py-1.5 text-xs text-gray-300 hover:text-white bg-gray-900/50 hover:bg-gray-800/60 rounded transition-all duration-200"
+                    style={{
+                      fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                      letterSpacing: '0.05em',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    Connect Wallet
+                  </button>
+                )}
+              </div>
             </div>
             
             {/* Live Earnings - Absolute positioned */}
@@ -577,33 +647,43 @@ export default function HubPage() {
                 <div className="text-xs text-gray-400">AH Listings</div>
               </div>
               <div className="p-3 bg-gray-900/50 rounded border-l-4 border-yellow-500 hover:bg-gray-800/70 transition-all">
-                <div className="text-lg font-bold text-yellow-400">0</div>
-                <div className="text-xs text-gray-400">Mek XP</div>
+                <div className="text-lg font-bold text-yellow-400">45,000</div>
+                <div className="text-xs text-gray-400">Total XP</div>
               </div>
-              <div className="p-3 bg-gray-900/50 rounded border-l-4 border-yellow-500 hover:bg-gray-800/70 transition-all">
-                <div className="text-lg font-bold text-yellow-400">0</div>
-                <div className="text-xs text-gray-400">Talent Tree XP</div>
-              </div>
+              <Link 
+                href="/xp-allocation" 
+                className="p-3 bg-gray-900/50 rounded border-l-4 border-yellow-500 hover:bg-gray-800/70 transition-all cursor-pointer"
+              >
+                <div className="text-lg font-bold text-yellow-400">15,000</div>
+                <div className="text-xs text-gray-400">Unspent XP</div>
+              </Link>
             </div>
           </div>
         </div>
         
-        {/* Active Employees Card */}
-        <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">
-              🧪 XP ACTIVE 🧪 Active Employees <span className="text-sm text-gray-400">({currentEmployeePage * 5 + 1}-{Math.min((currentEmployeePage + 1) * 5, 9)} of 9)</span>
-            </h3>
+        {/* Two Column Layout - Active Employees and Gold Stats */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Active Employees Card - Left Column */}
+          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-center flex-1" style={{
+                fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
+                letterSpacing: '0.1em',
+                color: '#fab617',
+                textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+              }}>
+                Active Employees
+              </h3>
             <div className="flex gap-2 flex-wrap">
               <Link 
                 href="/meks" 
-                className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-400 text-black font-bold rounded hover:from-yellow-400 hover:to-yellow-300 transition-all"
+                className="px-3 py-1 text-xs rounded transition-colors bg-gray-700/50 text-gray-400 hover:bg-gray-700 border border-gray-600/50"
               >
                 See All Meks
               </Link>
               <button
                 onClick={collectAllGold}
-                className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-400 text-black font-bold rounded hover:from-yellow-400 hover:to-yellow-300 transition-all"
+                className="px-3 py-1 text-xs rounded transition-colors bg-gray-700/50 text-gray-400 hover:bg-gray-700 border border-gray-600/50"
               >
                 Collect All
               </button>
@@ -612,17 +692,6 @@ export default function HubPage() {
           
           {/* Employee data */}
           {(() => {
-            const employees = [
-              { id: 1234, level: 5, rate: 15.5, gold: 968, maxGold: 968, progress: 100 },
-              { id: 2468, level: 3, rate: 12.2, gold: 523, maxGold: 878, progress: 60 },
-              { id: 3691, level: 7, rate: 22.8, gold: 1644, maxGold: 1644, progress: 100 },
-              { id: 1847, level: 4, rate: 14.1, gold: 340, maxGold: 1015, progress: 33 },
-              { id: 9052, level: 6, rate: 18.7, gold: 1346, maxGold: 1346, progress: 100 },
-              { id: 7231, level: 2, rate: 9.5, gold: 684, maxGold: 684, progress: 100 },
-              { id: 5612, level: 8, rate: 25.3, gold: 1820, maxGold: 1820, progress: 100 },
-              { id: 4089, level: 3, rate: 11.8, gold: 425, maxGold: 850, progress: 50 },
-              { id: null, level: 0, rate: 0, gold: 0, maxGold: 0, progress: 0 }, // Empty slot
-            ];
             
             const startIdx = currentEmployeePage * 5;
             const endIdx = Math.min(startIdx + 5, employees.length);
@@ -632,9 +701,9 @@ export default function HubPage() {
               if (emp.id === null) {
                 // Empty slot
                 return (
-                  <div key={`empty-${idx}`} className="mb-2 p-3 bg-gradient-to-r from-yellow-500/10 to-gray-900/10 rounded-lg border-l-4 border-yellow-500 flex items-center justify-between" style={{ minHeight: '68px' }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 border-2 border-yellow-500 border-dashed rounded-full flex items-center justify-center text-xl text-yellow-500 hover:bg-yellow-500/20 cursor-pointer transition-colors">
+                  <div key={`empty-${idx}`} className="mb-2 p-1.5 bg-gradient-to-r from-yellow-500/10 to-gray-900/10 rounded-lg flex items-center justify-between" style={{ minHeight: '72px' }}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-12 h-12 border-2 border-yellow-500 border-dashed rounded-full flex items-center justify-center text-xl text-yellow-500 hover:bg-yellow-500/20 cursor-pointer transition-colors">
                         +
                       </div>
                       <div>
@@ -642,7 +711,7 @@ export default function HubPage() {
                         <div className="text-xs text-gray-400">Assign a Mek to start earning</div>
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 text-sm bg-yellow-500 text-black font-semibold rounded hover:bg-yellow-400 transition-colors animate-pulse">
+                    <button className="ml-3 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition-colors border border-gray-600 animate-pulse">
                       Assign
                     </button>
                   </div>
@@ -650,20 +719,33 @@ export default function HubPage() {
               }
               
               return (
-                <div key={emp.id} className="mb-2 p-3 bg-gray-900/50 rounded-lg border-l-4 border-yellow-500 flex items-center justify-between" style={{ minHeight: '68px' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center">
-                      <span className="text-gray-500 text-[9px]">MEK</span>
+                <div key={emp.id} className="mb-2 p-1.5 bg-gray-900/50 rounded-lg flex items-center justify-between" style={{ minHeight: '72px' }}>
+                  <div className="flex items-center gap-2.5 flex-1">
+                    <div className="w-12 h-12 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden">
+                      <img 
+                        src="/mek-images/150px/000-000-000.webp" 
+                        alt={`Mek #${emp.id}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling!.textContent = 'MEK';
+                        }}
+                      />
+                      <span className="text-gray-400 text-xs hidden">MEK</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-sm">Mek #{emp.id} - Level {emp.level}</div>
-                      <div className="text-xs text-gray-400">
-                        <span className="text-yellow-400 font-semibold">Rate: {emp.rate}/hr</span> | 
-                        Gold: {emp.gold}/{emp.maxGold} (72h cap)
+                    <div className="flex-1 mr-1">
+                      <div className="font-medium text-sm">Mek #{emp.id} - Level {emp.level}</div>
+                      <div className="text-xs space-y-0.5">
+                        <div className="text-yellow-400 font-medium">Rate: {emp.rate}/hr</div>
+                        <div className={emp.gold === emp.maxGold ? "text-red-400 font-medium" : "text-gray-400"}>
+                          Gold: {emp.gold}/{emp.maxGold} 
+                          <span className={emp.buffed ? "text-green-400" : "text-gray-400"}>({emp.hourCap} cap)</span>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2 mt-1 overflow-hidden" style={{boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)'}}>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden mr-1" style={{boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)'}}>
                         <div 
-                          className="h-2 rounded-full transition-all relative" 
+                          className="h-1.5 rounded-full transition-all relative" 
                           style={{
                             width: `${emp.progress}%`,
                             background: `linear-gradient(90deg, #fab617 0%, #ffd700 50%, #fab617 100%)`,
@@ -685,6 +767,15 @@ export default function HubPage() {
                       // Collect individual mek gold
                       const mekGold = emp.gold;
                       
+                      // Update the employee's gold to 0 and recalculate progress
+                      setEmployees(prevEmployees => 
+                        prevEmployees.map(employee => 
+                          employee.id === emp.id 
+                            ? { ...employee, gold: 0, progress: 0 }
+                            : employee
+                        )
+                      );
+                      
                       // Animate counting up
                       animateGoldCount(totalGold, totalGold + mekGold, (value) => {
                         setTotalGold(value);
@@ -701,7 +792,13 @@ export default function HubPage() {
                       const xpGained = Math.floor(mekGold / 10);
                       showGoldPopup(mekGold, xpGained, false, 1);
                     }}
-                    className="px-3 py-1.5 text-sm bg-yellow-500 text-black font-semibold rounded hover:bg-yellow-400 transition-colors"
+                    className={`ml-1 px-3 py-1.5 text-sm font-medium rounded transition-all duration-200 ${
+                      emp.gold === emp.maxGold 
+                        ? "border-2 border-yellow-500 bg-transparent text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 pulsate-glow"
+                        : emp.gold > 0
+                        ? "border-2 border-yellow-500 bg-transparent text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
+                        : "border border-gray-600 bg-transparent text-gray-500 cursor-not-allowed"
+                    }`}
                     disabled={emp.gold === 0}
                   >
                     Collect
@@ -716,7 +813,7 @@ export default function HubPage() {
             <button 
               onClick={() => setCurrentEmployeePage(Math.max(0, currentEmployeePage - 1))}
               disabled={currentEmployeePage === 0}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
             >
               ← Previous
             </button>
@@ -725,7 +822,7 @@ export default function HubPage() {
                 <button
                   key={page}
                   onClick={() => setCurrentEmployeePage(page)}
-                  className={`w-8 h-8 rounded ${currentEmployeePage === page ? 'bg-yellow-500 text-black' : 'bg-gray-700 hover:bg-gray-600'} transition-colors`}
+                  className={`w-8 h-8 rounded ${currentEmployeePage === page ? 'bg-yellow-500 text-black' : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'} transition-colors`}
                 >
                   {page + 1}
                 </button>
@@ -734,34 +831,377 @@ export default function HubPage() {
             <button 
               onClick={() => setCurrentEmployeePage(Math.min(1, currentEmployeePage + 1))}
               disabled={currentEmployeePage === 1}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
             >
               Next →
             </button>
           </div>
           
           <div className="text-center mt-4">
-            <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
+            <button 
+              onClick={() => setShowSlotBuffsModal(true)}
+              className="px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 rounded transition-all duration-200 font-semibold"
+            >
               <span className="mr-2">+</span> Add Slot
             </button>
           </div>
+          </div>
+          
+          {/* Gold Stats Card - Right Column */}
+          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-center mb-3" style={{
+                fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
+                letterSpacing: '0.1em',
+                color: '#fab617',
+                textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+              }}>Growth</h3>
+              <div className="flex justify-center gap-2">
+                <button
+                  onClick={() => setChartMode('total')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    chartMode === 'total' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Total Gold
+                </button>
+                <button
+                  onClick={() => setChartMode('rate')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    chartMode === 'rate' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Gold/hr
+                </button>
+              </div>
+            </div>
+            
+            {/* Gold History Chart */}
+            <div className="mb-6">
+              <div className="h-32 bg-gray-900/50 rounded-lg p-2 relative">
+                {/* Y-axis labels */}
+                <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 pr-2">
+                  <span>{Math.floor((totalGold + liveGold) * 1.33).toLocaleString()}</span>
+                  <span>{Math.floor((totalGold + liveGold) * 0.67).toLocaleString()}</span>
+                  <span>0</span>
+                </div>
+                
+                {/* Chart area */}
+                <div className="ml-12 h-full relative">
+                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {/* Grid lines */}
+                    <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(156, 163, 175, 0.1)" strokeWidth="0.5"/>
+                    <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(156, 163, 175, 0.1)" strokeWidth="0.5"/>
+                    <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(156, 163, 175, 0.1)" strokeWidth="0.5"/>
+                    
+                    {/* Dynamic line chart based on period */}
+                    <polyline
+                      points={chartData.points}
+                      fill="none"
+                      stroke="#fab617"
+                      strokeWidth="2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    
+                    {/* Data points (dots) for 7d and 30d views */}
+                    {chartData.dots.map(([x, y], i) => (
+                      <circle key={i} cx={x} cy={y} r="1.5" fill="#fab617" stroke="#000" strokeWidth="0.5" vectorEffect="non-scaling-stroke"/>
+                    ))}
+                    
+                    <polyline
+                      points={chartData.points}
+                      fill="url(#goldGradient)"
+                      fillOpacity="0.2"
+                    />
+                    
+                    <defs>
+                      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#fab617" stopOpacity="0.3"/>
+                        <stop offset="100%" stopColor="#fab617" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  
+                  {/* X-axis dates moved down */}
+                  <div className="absolute -bottom-10 left-0 right-0 flex justify-between text-xs text-gray-500">
+                    {chartPeriod === '7d' && (
+                      <>
+                        <span>Aug 20</span>
+                        <span>Aug 22</span>
+                        <span>Aug 24</span>
+                        <span>Aug 26</span>
+                        <span>Today</span>
+                      </>
+                    )}
+                    {chartPeriod === '30d' && (
+                      <>
+                        <span>Jul 28</span>
+                        <span>Aug 7</span>
+                        <span>Aug 17</span>
+                        <span>Today</span>
+                      </>
+                    )}
+                    {chartPeriod === 'all' && (
+                      <>
+                        <span>Jan 2024</span>
+                        <span>May 2024</span>
+                        <span>Aug 2024</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Time Period Buttons - moved down to avoid overlapping x-axis */}
+              <div className="flex justify-center gap-2 mt-12">
+                <button
+                  onClick={() => setChartPeriod('7d')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    chartPeriod === '7d' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  7 Days
+                </button>
+                <button
+                  onClick={() => setChartPeriod('30d')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    chartPeriod === '30d' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  30 Days
+                </button>
+                <button
+                  onClick={() => setChartPeriod('all')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    chartPeriod === 'all' 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  All Time
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {/* Base Mek Gold */}
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Base Mek Gold/hr:</span>
+                <span className="text-yellow-400 font-semibold">{Math.floor(goldPerSecond * 3600).toLocaleString()}</span>
+              </div>
+              
+              {/* Bank Interest */}
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Gold in Bank:</span>
+                <span className="text-white">0</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Bank Interest Rate:</span>
+                <span className="text-green-400">0%</span>
+              </div>
+              
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Gold/hr from Bank:</span>
+                <span className="text-green-400">0</span>
+              </div>
+              
+              {/* Talent Trees */}
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Gold/hr from Talent Trees:</span>
+                <span className="text-blue-400">0</span>
+              </div>
+              
+              {/* Equipped Items */}
+              <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                <span className="text-gray-400 text-sm">Gold/hr from Items:</span>
+                <span className="text-purple-400">0</span>
+              </div>
+              
+              {/* Grand Total Section */}
+              <div className="mt-4 pt-4 border-t-2 border-yellow-500/50 text-center">
+                <div className="text-gray-300 text-sm font-medium mb-2">Total Gold/hr</div>
+                <div 
+                  style={{ 
+                    fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
+                    fontSize: '32px',
+                    fontWeight: 700,
+                    color: '#fab617',
+                    letterSpacing: '0.05em',
+                    textShadow: '0 0 15px rgba(250, 182, 23, 0.6), 0 0 30px rgba(250, 182, 23, 0.3)',
+                    lineHeight: '1',
+                    background: 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}
+                >
+                  {Math.floor(goldPerSecond * 3600).toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider">Epic Production Rate</div>
+              </div>
+            </div>
+          </div>
         </div>
         
-        {/* Recent Activity Card */}
-        <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">
-            Recent Activity
-          </h3>
-          <div className="space-y-2 text-sm text-gray-300">
-            <div>• Collected 247 gold from Mek #1234</div>
-            <div>• Listed Disco Head (C-Rank) on Auction House for 1,200g</div>
-            <div>• Purchased 2x Pearls Essence for 500g</div>
-            <div>• Hired Mentor #2468 for 24 hours</div>
+        {/* Recent Activity and Essence Overview - Two Column Layout */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Recent Activity - Left Column */}
+          <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+            <h3 className="text-lg font-bold mb-4" style={{
+              fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
+              letterSpacing: '0.1em',
+              color: '#fab617',
+              textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+            }}>
+              Recent Activity
+            </h3>
+            <div className="space-y-2">
+              {/* Activity items with timestamps and gold amounts */}
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 mt-1.5 animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Collected <span className="text-yellow-400 font-semibold">247g</span> from Mek #1234</div>
+                  <div className="text-xs text-gray-500">2 minutes ago</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Listed <span className="text-green-400">Disco Head</span> for <span className="text-yellow-400 font-semibold">1,200g</span></div>
+                  <div className="text-xs text-gray-500">15 minutes ago</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Purchased <span className="text-purple-400">2x Pearls</span> for <span className="text-yellow-400 font-semibold">500g</span></div>
+                  <div className="text-xs text-gray-500">1 hour ago</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Hired <span className="text-blue-400">Mentor #2468</span> for 24 hours</div>
+                  <div className="text-xs text-gray-500">2 hours ago</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 mt-1.5"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Mek #5612 reached <span className="text-yellow-400">Level 8</span></div>
+                  <div className="text-xs text-gray-500">3 hours ago</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
+                <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5"></div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-200">Outbid on <span className="text-red-400">Camera Head</span></div>
+                  <div className="text-xs text-gray-500">5 hours ago</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-gray-700/50">
+              <button className="w-full px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded transition-all duration-200 text-sm font-medium border border-gray-600">
+                View Full History
+              </button>
+            </div>
           </div>
-          <div className="text-center mt-4">
-            <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
-              See More History
-            </button>
+          
+          {/* Essence at a Glance - Right Column */}
+          <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+            <h3 className="text-lg font-bold mb-4" style={{
+              fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
+              letterSpacing: '0.1em',
+              color: '#fab617',
+              textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+            }}>
+              Essence Collection
+            </h3>
+            
+            {/* Top 10 Essence Grid */}
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {[
+                { name: 'Pearls', amount: 24, color: '#e0e7ff' },
+                { name: 'Disco', amount: 18, color: '#fce7f3' },
+                { name: 'Camera', amount: 15, color: '#dbeafe' },
+                { name: 'Metal', amount: 12, color: '#e5e7eb' },
+                { name: 'Crystal', amount: 10, color: '#f3e8ff' },
+                { name: 'Flame', amount: 8, color: '#fef3c7' },
+                { name: 'Ice', amount: 7, color: '#cffafe' },
+                { name: 'Nature', amount: 5, color: '#d1fae5' },
+                { name: 'Thunder', amount: 4, color: '#fef9c3' },
+                { name: 'Shadow', amount: 2, color: '#f3f4f6' },
+              ].map((essence, idx) => (
+                <div 
+                  key={idx}
+                  className="relative group cursor-pointer"
+                >
+                  <div 
+                    className="aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-200 hover:scale-110 border-2"
+                    style={{
+                      background: `linear-gradient(135deg, ${essence.color}20, ${essence.color}40)`,
+                      borderColor: essence.color + '60',
+                      boxShadow: `0 0 10px ${essence.color}30`
+                    }}
+                  >
+                    <img 
+                      src="/essence-vial.gif" 
+                      alt={essence.name}
+                      className="w-8 h-8 mb-1 mx-auto"
+                    />
+                    <div className="text-xs font-bold text-white">{essence.amount}</div>
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    {essence.name} Essence
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Essence Stats */}
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
+                <span className="text-sm text-gray-400">Total Essence Types</span>
+                <span className="text-sm font-bold text-yellow-400">27</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
+                <span className="text-sm text-gray-400">Total Essence Count</span>
+                <span className="text-sm font-bold text-yellow-400">126</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
+                <span className="text-sm text-gray-400">Essence per Day</span>
+                <span className="text-sm font-bold text-green-400">+0.100</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
+                <span className="text-sm text-gray-400">Next Essence In</span>
+                <span className="text-sm font-bold text-blue-400">14h 23m</span>
+              </div>
+            </div>
+            
+            {/* Link to Essence Page */}
+            <Link 
+              href="/essence"
+              className="block w-full px-4 py-3 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 hover:from-yellow-500/30 hover:to-yellow-600/30 text-yellow-400 rounded transition-all duration-200 text-center font-semibold border border-yellow-500/50 hover:border-yellow-500"
+            >
+              <span className="mr-2">✨</span>
+              Manage Essence Collection
+            </Link>
           </div>
         </div>
         
@@ -786,6 +1226,19 @@ export default function HubPage() {
           </Link>
         </div>
       </div>
+      
+      {/* Username Modal */}
+      {showUsernameModal && walletAddress && (
+        <UsernameModal
+          isOpen={showUsernameModal}
+          walletAddress={walletAddress}
+          onClose={() => setShowUsernameModal(false)}
+          onSuccess={(name) => {
+            setDisplayName(name);
+            setShowUsernameModal(false);
+          }}
+        />
+      )}
       
     </div>
   );

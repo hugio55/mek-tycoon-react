@@ -40,30 +40,6 @@ export default function BackgroundEffects() {
 
   return (
     <>
-      {/* Global styles for animations */}
-      <style jsx global>{`
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-        
-        @keyframes floatParticle {
-          0% { transform: translateY(0px) translateX(0px); opacity: 0.5; }
-          33% { transform: translateY(-20px) translateX(10px); opacity: 1; }
-          66% { transform: translateY(10px) translateX(-10px); opacity: 0.7; }
-          100% { transform: translateY(0px) translateX(0px); opacity: 0.5; }
-        }
-        
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 10px rgba(250, 182, 23, 0.3); }
-          50% { box-shadow: 0 0 25px rgba(250, 182, 23, 0.6); }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
       
       {/* Background Effects Container */}
       <div className="fixed inset-0 pointer-events-none z-0">

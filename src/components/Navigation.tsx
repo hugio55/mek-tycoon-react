@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-// import WalletConnect from "./WalletConnect";
+import { useSound } from "@/contexts/SoundContext";
 
 interface NavCategory {
   id: string;
@@ -22,7 +22,7 @@ const navCategories: readonly NavCategory[] = [
     icon: "🏭",
     items: [
       { label: "Essence", href: "/essence" },
-      { label: "Essence Empire", href: "/essence-empire" },
+      // { label: "Essence Empire", href: "/essence-empire" },
     ],
   },
   {
@@ -31,6 +31,7 @@ const navCategories: readonly NavCategory[] = [
     icon: "⚙️",
     items: [
       { label: "Crafting", href: "/crafting" },
+      { label: "Incinerator", href: "/incinerator" },
       { label: "Shop", href: "/shop" },
       { label: "Bank", href: "/bank" },
       { label: "Inventory", href: "/inventory" },
@@ -51,8 +52,9 @@ const navCategories: readonly NavCategory[] = [
     title: "Management",
     icon: "🤖",
     items: [
-      { label: "My Meks", href: "/profile" },
+      { label: "Profile", href: "/profile" },
       { label: "Search", href: "/search" },
+      { label: "Leaderboard", href: "/leaderboard" },
     ],
   },
   {
@@ -60,9 +62,13 @@ const navCategories: readonly NavCategory[] = [
     title: "Scrap Yard",
     icon: "🎮",
     items: [
-      { label: "Fighting Arena", href: "/arena" },
-      { label: "Minigames", href: "/minigames" },
+      { label: "Fighting Arena", href: "/scrapyard" },
+      { label: "Individual Battles", href: "/scrapyard/individual" },
+      { label: "Dungeons", href: "/scrapyard/dungeons" },
       { label: "Bagatelle", href: "/bagatelle" },
+      { label: "Block Tower", href: "/scrap-yard/block-game" },
+      { label: "Circular Tower", href: "/scrap-yard/block-tower-b" },
+      { label: "Spell Caster", href: "/spell-caster" },
     ],
   },
   {
@@ -70,14 +76,22 @@ const navCategories: readonly NavCategory[] = [
     title: "Admin",
     icon: "⚡",
     items: [
-      { label: "Mek Assignment", href: "/mek-assignment" },
+      { label: "Save System", href: "/admin-save" },
+      // { label: "Mek Assignment", href: "/mek-assignment" },
       { label: "Mek Selector", href: "/mek-selector" },
       { label: "Mek Selector Grid", href: "/mek-selector-grid" },
-      { label: "Mek Swarm", href: "/mek-swarm" },
+      { label: "Mek Selector B", href: "/mek-selector-b" },
+      // { label: "Mek Swarm", href: "/mek-swarm" },
       { label: "Shop Manager", href: "/admin-shop" },
-      { label: "Balance", href: "/balance" },
+      { label: "UI Showcase", href: "/ui-showcase" },
+      // { label: "Balance", href: "/balance" },
       { label: "Rarity Bias", href: "/rarity-bias" },
       { label: "Talent Builder", href: "/talent-builder" },
+      { label: "Mek Tree Tables", href: "/admin-mek-tree-tables" },
+      { label: "Spell Designer", href: "/admin-spells" },
+      { label: "Spell Caster 3D", href: "/spell-caster-3d" },
+      { label: "Plinko", href: "/admin-plinko" },
+      { label: "Sphere Selector", href: "/admin-sphere" },
     ],
   },
 ];
@@ -86,8 +100,10 @@ export default function Navigation() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const { soundEnabled, toggleSound, playClickSound } = useSound();
 
   const toggleCategory = (categoryId: string) => {
+    playClickSound();
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
@@ -126,15 +142,12 @@ export default function Navigation() {
         </Link>
       </div>
 
-      {/* Wallet Connect Section - Temporarily disabled */}
-      {/* <div className="flex justify-center mb-4">
-        <WalletConnect />
-      </div> */}
 
       {/* Welcome/Logout Link */}
       <div className="absolute top-2 right-2 z-50 flex items-center gap-4">
         <button
           onClick={() => {
+            playClickSound();
             // Clear wallet data from localStorage
             localStorage.removeItem('connectedWallet');
             localStorage.removeItem('walletAddress');
@@ -146,9 +159,31 @@ export default function Navigation() {
         >
           Disconnect Wallet
         </button>
+        <button
+          onClick={() => {
+            playClickSound();
+            toggleSound();
+          }}
+          className="text-gray-400 hover:text-yellow-400 text-sm transition-colors p-1"
+          title={soundEnabled ? "Mute Sounds" : "Enable Sounds"}
+        >
+          {soundEnabled ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          )}
+        </button>
         <Link
           href="/"
           className="text-gray-500 hover:text-yellow-400 text-sm transition-colors"
+          onClick={playClickSound}
         >
           ← Welcome
         </Link>
@@ -161,6 +196,7 @@ export default function Navigation() {
           <div className="flex-shrink-0 h-[70px] flex items-stretch">
             <Link
               href="/hub"
+              onClick={playClickSound}
               className="relative h-full w-[75px] flex items-center justify-center bg-black/20 border-2 border-yellow-400 text-yellow-400 rounded-xl font-bold uppercase tracking-wider text-xl hover:scale-110 transition-transform hover:shadow-[0_0_20px_rgba(250,182,23,0.6)] group overflow-hidden"
               style={{
                 background: `
@@ -227,7 +263,10 @@ export default function Navigation() {
                       key={item.href}
                       href={item.href}
                       className="relative px-3 py-1.5 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-[0.65rem] font-medium uppercase tracking-wider rounded hover:from-gray-700 hover:to-gray-800 hover:border-gray-500 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,0,0,0.4)] transition-all text-center overflow-hidden group"
-                      onClick={() => setExpandedCategory(null)}
+                      onClick={() => {
+                        playClickSound();
+                        setExpandedCategory(null);
+                      }}
                     >
                       {/* Shimmer effect on hover */}
                       <div className="absolute inset-0 -left-full group-hover:left-full transition-all duration-500 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent" />

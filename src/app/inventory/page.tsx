@@ -3,8 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 
-type InventoryTab = 'meks' | 'items' | 'essence' | 'achievements';
+type InventoryTab = 'meks' | 'items' | 'essence' | 'frames' | 'achievements';
 type ItemFilter = 'all' | 'heads' | 'bodies' | 'traits';
+
+interface InventoryItem {
+  name: string;
+  quantity: number;
+  rarity: string;
+  xp: number;
+  type?: string;
+}
 
 export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState<InventoryTab>('meks');
@@ -97,6 +105,15 @@ export default function InventoryPage() {
     { type: 'Security', amount: 180, icon: '🔒', color: '#191970' },
   ];
 
+  const userFrames = [
+    { id: 'bronze', name: 'Bronze Frame', description: 'A sturdy bronze frame', rarity: 'common', unlocked: true, equipped: false },
+    { id: 'silver', name: 'Silver Frame', description: 'A shining silver frame', rarity: 'uncommon', unlocked: true, equipped: false },
+    { id: 'gold', name: 'Gold Frame', description: 'A prestigious gold frame', rarity: 'rare', unlocked: true, equipped: true },
+    { id: 'diamond', name: 'Diamond Frame', description: 'A brilliant diamond frame', rarity: 'epic', unlocked: false, equipped: false },
+    { id: 'plasma', name: 'Plasma Frame', description: 'An animated plasma frame', rarity: 'legendary', unlocked: false, equipped: false },
+    { id: 'wren', name: 'Wren Prestige Frame', description: 'The ultimate prestige frame', rarity: 'mythic', unlocked: false, equipped: false },
+  ];
+
   const achievements = [
     { id: '1', name: 'First Steps', description: 'Complete your first crafting', progress: 100, icon: '🏆' },
     { id: '2', name: 'Mek Collector', description: 'Own 10 different Meks', progress: 40, icon: '🤖' },
@@ -106,7 +123,7 @@ export default function InventoryPage() {
   ];
 
   const filteredItems = () => {
-    let items: any[] = [];
+    let items: InventoryItem[] = [];
     
     if (itemFilter === 'all' || itemFilter === 'heads') {
       items = [...items, ...userItems.heads.map(i => ({ ...i, type: 'head' }))];
@@ -177,6 +194,16 @@ export default function InventoryPage() {
               }`}
             >
               🧪 Essence
+            </button>
+            <button
+              onClick={() => setActiveTab('frames')}
+              className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                activeTab === 'frames' 
+                  ? 'bg-yellow-500 text-black' 
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              }`}
+            >
+              🖼️ Frames
             </button>
             <button
               onClick={() => setActiveTab('achievements')}
@@ -435,6 +462,87 @@ export default function InventoryPage() {
                   <div className="text-sm text-gray-400">Rarest</div>
                   <div className="text-2xl font-bold text-yellow-400">Laser</div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Frames Tab */}
+        {activeTab === 'frames' && (
+          <div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {userFrames.map((frame) => {
+                const rarityColors = {
+                  common: 'border-gray-500',
+                  uncommon: 'border-green-500',
+                  rare: 'border-blue-500',
+                  epic: 'border-purple-500',
+                  legendary: 'border-orange-500',
+                  mythic: 'border-red-500'
+                };
+                
+                return (
+                  <div 
+                    key={frame.id}
+                    className={`bg-gray-900 rounded-lg border-2 ${
+                      frame.equipped ? 'border-yellow-500' : rarityColors[frame.rarity as keyof typeof rarityColors]
+                    } ${frame.unlocked ? 'hover:border-yellow-400' : 'opacity-50'} transition-all p-6 text-center relative`}
+                  >
+                    {frame.equipped && (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
+                        EQUIPPED
+                      </div>
+                    )}
+                    
+                    {!frame.unlocked && (
+                      <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 font-bold">🔒 LOCKED</span>
+                      </div>
+                    )}
+                    
+                    <div className="text-4xl mb-3">🖼️</div>
+                    <h4 className="font-bold text-lg mb-2 text-yellow-400">
+                      {frame.name}
+                    </h4>
+                    <p className="text-sm text-gray-400 mb-3">
+                      {frame.description}
+                    </p>
+                    <div className="text-xs text-gray-500 uppercase">
+                      {frame.rarity}
+                    </div>
+                    
+                    {frame.unlocked && !frame.equipped && (
+                      <button className="mt-3 w-full px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded transition-all">
+                        Equip
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Prestige Progress */}
+            <div className="mt-8 bg-gray-900/60 rounded-lg border border-purple-500 p-6">
+              <h3 className="text-xl font-bold text-purple-400 mb-4">Wren Prestige Progress</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🎭</div>
+                  <div className="font-bold">Wren Head</div>
+                  <div className="text-sm text-gray-400">Not Owned</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-2">⚙️</div>
+                  <div className="font-bold">Wren Body</div>
+                  <div className="text-sm text-gray-400">Not Owned</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-2">✨</div>
+                  <div className="font-bold">Wren Trait</div>
+                  <div className="text-sm text-gray-400">Not Owned</div>
+                </div>
+              </div>
+              <div className="mt-4 text-center text-sm text-gray-500">
+                Craft all three Wren pieces to unlock Prestige and the exclusive Wren Frame!
               </div>
             </div>
           </div>

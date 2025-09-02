@@ -12,9 +12,57 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 
 ## Tech Stack
 - **Frontend**: Next.js 15.4.6 (App Router), React, TypeScript
-- **Styling**: Tailwind CSS with custom glass-morphism effects
+- **Styling**: Tailwind CSS v3 (NOT v4!) with custom glass-morphism effects
 - **Database**: Convex (real-time backend)
 - **Blockchain**: Cardano (wallet integration via MeshSDK - currently disabled)
+
+## CRITICAL: Tailwind CSS Version Management
+**⚠️ ALWAYS CHECK FIRST: This project uses Tailwind CSS v3, NOT v4!**
+
+### If styles appear broken (plain text appearance):
+1. **IMMEDIATELY CHECK** package.json for Tailwind version (must be ^3.x.x, NOT ^4.x.x)
+2. **FIX IMMEDIATELY** if wrong:
+   ```bash
+   npm uninstall tailwindcss @tailwindcss/postcss
+   npm install -D tailwindcss@^3 postcss autoprefixer
+   rm -rf .next
+   npm run dev:all
+   ```
+
+### Required Config Files (DO NOT DELETE):
+- `tailwind.config.ts` - v3 configuration
+- `postcss.config.mjs` - Must use `{tailwindcss: {}, autoprefixer: {}}`
+- `src/app/globals.css` - Must use `@tailwind base/components/utilities`
+
+### NEVER USE:
+- `npm update` (can break version locks)
+- `npm install tailwindcss@latest` (installs v4)
+- `@import "tailwindcss"` syntax (v4 only)
+- `@theme inline` directive (v4 only)
+- `@tailwindcss/postcss` package (v4 only)
+
+### ALWAYS USE:
+- `npm ci` when possible (respects lock file)
+- `npm install` without version specifier (respects package.json)
+- Check CRITICAL_DEPENDENCIES.md if issues arise
+
+## Visual Testing with Playwright
+
+### Available Testing Commands
+- **`/visual-check`** - Verify visual changes are working in browser
+- **`@visual-test`** - Activate visual testing agent for detailed inspection
+
+### What Gets Tested
+1. **Visual Changes**: Screenshots before/after to confirm changes
+2. **Console Errors**: Monitor for JavaScript errors or warnings
+3. **Interactions**: Click, hover, and focus states
+4. **Responsiveness**: Different viewport sizes
+5. **Animations**: Smooth transitions and effects
+
+### Example Usage
+- `/visual-check - verify the save button turned green`
+- `/visual-check - check if mek template modal opens`
+- `@visual-test check if the talent tree nodes are centered on click`
 
 ## Design Requirements
 
@@ -69,9 +117,11 @@ public/          # Static assets
 ```
 
 ### Common Issues & Solutions
-1. **Port conflicts**: Dev server may use ports 3000-3003
-2. **Wallet integration**: Currently disabled (WalletConnect commented out)
-3. **styled-jsx errors**: Use global CSS or Tailwind classes instead
+1. **CSS/Styling broken (plain text appearance)**: Check Tailwind version! Must be v3, not v4. See "CRITICAL: Tailwind CSS Version Management" section above
+2. **Port conflicts**: Dev server may use ports 3000-3007+
+3. **Wallet integration**: Currently disabled (WalletConnect commented out)
+4. **styled-jsx errors**: NEVER use styled-jsx - causes Jest/webpack errors. Use global CSS or Tailwind classes instead
+5. **Jest worker errors**: Remove ALL `<style jsx>` blocks from components
 
 ## Key Features
 
@@ -98,12 +148,28 @@ npx tsc --noEmit   # TypeScript type checking
 ```
 
 ## Notes for Claude
+- **FIRST THING TO CHECK**: If styles look broken, verify Tailwind is v3 not v4 in package.json
 - Always check existing file conventions before making changes
 - Preserve exact indentation and formatting
 - Don't add comments unless explicitly requested
 - Match the existing HTML version's functionality when converting pages
 - Keep responses concise and focused on the task
 - Use TodoWrite tool for complex multi-step tasks
+- NEVER suggest `npm update` or upgrading to latest packages
+- NEVER use styled-jsx (causes build errors)
+
+## 🚨 CRITICAL SAVE SYSTEM PROTECTION 🚨
+**NEVER modify these files without asking the user TWICE:**
+- `/src/app/admin-save/*` - Save system interface
+- `/api/save/*`, `/api/restore/*`, `/api/delete-save/*` - Backend operations  
+- `/convex/saves.ts` - Database schema
+- `/saves/` directory - Actual backup files
+- See `CRITICAL_DO_NOT_MODIFY.md` for full protection rules
+
+**Before modifying ANY save-related file:**
+1. First ask: "This affects your save system. Should I proceed?"
+2. Get confirmation again: "Are you ABSOLUTELY SURE?"
+3. Explain exactly what will change and why
 
 ## Communication Guidelines
 - **Ask for clarity**: If instructions are vague or unclear, ask specific questions rather than guessing

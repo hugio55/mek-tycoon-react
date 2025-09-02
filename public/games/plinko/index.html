@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plinko Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 90vh;
+            max-height: 800px;
+            background: #1a1a1a;
+            border: 3px solid #ffc107;
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        #canvas {
+            border: 2px solid #333;
+            background: #000000;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        #dropButton, #drop50Button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            background: #ffc107;
+            border: 3px solid #000;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #dropButton:hover, #drop50Button:hover {
+            background: #ffeb3b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 0 #000;
+        }
+        
+        #dropButton:active, #drop50Button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 0 #000;
+        }
+        
+        #dropButton:disabled, #drop50Button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #666;
+        }
+        
+        .bucket-images {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            width: 360px;
+            pointer-events: none;
+            padding: 0;
+        }
+        
+        .bucket-image {
+            flex: 1;
+            height: 28px;
+            border: 1px solid #ffc107;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #ffc107;
+            font-weight: bold;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+        <div class="button-container">
+            <button id="dropButton">DROP BALL</button>
+            <button id="drop50Button">DROP 10</button>
+        </div>
+        <div class="bucket-images" id="bucketImages"></div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
