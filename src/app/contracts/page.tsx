@@ -97,6 +97,7 @@ export default function ContractsPage() {
   const [animatingBias, setAnimatingBias] = useState<Record<string, number>>({});
   const [showCancelWarning, setShowCancelWarning] = useState<string | null>(null);
   const [selectedRendition, setSelectedRendition] = useState<number>(1);
+  const [showContractOptions, setShowContractOptions] = useState(false);
   
   // Daily global mission state
   const [dailyVariation] = useState("Acid");
@@ -378,8 +379,103 @@ export default function ContractsPage() {
             </p>
           </div>
           
-          {/* Rendition Selector Dropdown */}
-          <div className="mb-6 flex justify-end">
+          {/* Controls Row */}
+          <div className="mb-6 flex justify-between items-center">
+            {/* Contract Options Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowContractOptions(!showContractOptions)}
+                className="px-4 py-2 bg-black/60 border border-yellow-500/40 rounded-lg text-yellow-400 hover:border-yellow-500 transition-all flex items-center gap-2"
+              >
+                <span>📋</span>
+                <span>Contract Options Reference</span>
+                <span className={`transform transition-transform ${showContractOptions ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              
+              {showContractOptions && (
+                <div className="absolute top-full left-0 mt-2 bg-gray-900 border border-yellow-500/40 rounded-lg shadow-xl z-20 w-[600px] max-h-[500px] overflow-y-auto">
+                  <div className="p-4 space-y-4">
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Contract Configuration Reference</h3>
+                    
+                    {/* Contract Durations Table */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Contract Durations</h4>
+                      <div className="bg-black/40 rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-yellow-500/20">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-yellow-400">Duration</th>
+                              <th className="px-3 py-2 text-center text-yellow-400">Slots</th>
+                              <th className="px-3 py-2 text-right text-yellow-400">Gold Fee</th>
+                              <th className="px-3 py-2 text-center text-yellow-400">Essence</th>
+                              <th className="px-3 py-2 text-right text-yellow-400">Gold Reward</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800">
+                            {contractDurations.map((duration) => (
+                              <tr key={duration.id} className="hover:bg-gray-800/50">
+                                <td className="px-3 py-2 text-white">{duration.label}</td>
+                                <td className="px-3 py-2 text-center text-gray-300">{duration.slots}</td>
+                                <td className="px-3 py-2 text-right text-red-400">{duration.goldFee.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-center text-purple-400">{duration.essenceReward}x</td>
+                                <td className="px-3 py-2 text-right text-green-400">
+                                  {(duration.goldReward.min / 1000).toFixed(0)}K - {(duration.goldReward.max / 1000).toFixed(0)}K
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    {/* Mission Types */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Mission Types</h4>
+                      <div className="grid grid-cols-4 gap-2">
+                        {missionTypes.map((type) => (
+                          <div key={type.id} className="bg-black/40 rounded-lg px-3 py-2 flex items-center gap-2">
+                            <span className="text-lg">{type.icon}</span>
+                            <span className="text-sm text-gray-300">{type.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Mission Locations */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Mission Locations</h4>
+                      <div className="space-y-1">
+                        {missionLocations.slice(0, 5).map((location) => (
+                          <div key={location.name} className="bg-black/40 rounded px-3 py-1">
+                            <div className="text-sm text-yellow-400">{location.name}</div>
+                            <div className="text-xs text-gray-500">{location.desc}</div>
+                          </div>
+                        ))}
+                        <div className="text-xs text-gray-500 italic px-3">...and {missionLocations.length - 5} more locations</div>
+                      </div>
+                    </div>
+                    
+                    {/* Essence Types */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Essence Rarities</h4>
+                      <div className="flex gap-2">
+                        {essenceTypes.map((essence) => (
+                          <div key={essence.id} className="bg-black/40 rounded-lg px-3 py-2 flex items-center gap-2">
+                            <span className="text-lg">{essence.icon}</span>
+                            <div>
+                              <div className="text-sm" style={{ color: essence.color }}>{essence.name}</div>
+                              <div className="text-xs text-gray-500">Rarity: {essence.rarity}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Rendition Selector Dropdown */}
             <select
               value={selectedRendition}
               onChange={(e) => setSelectedRendition(Number(e.target.value))}
