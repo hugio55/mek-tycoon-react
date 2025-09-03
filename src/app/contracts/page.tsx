@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // Contract duration configurations with proper scaling
 const contractDurations = [
@@ -87,6 +88,7 @@ interface ActiveContract {
 }
 
 export default function ContractsPage() {
+  const router = useRouter();
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [activeContracts, setActiveContracts] = useState<ActiveContract[]>([]);
@@ -98,6 +100,7 @@ export default function ContractsPage() {
   const [showCancelWarning, setShowCancelWarning] = useState<string | null>(null);
   const [selectedRendition, setSelectedRendition] = useState<number>(1);
   const [showContractOptions, setShowContractOptions] = useState(false);
+  const [showLayoutOptions, setShowLayoutOptions] = useState(false);
   
   // Daily global mission state
   const [dailyVariation] = useState("Acid");
@@ -381,94 +384,62 @@ export default function ContractsPage() {
           
           {/* Controls Row */}
           <div className="mb-6 flex justify-between items-center">
-            {/* Contract Options Dropdown */}
+            {/* Layout Options Dropdown */}
             <div className="relative">
               <button
-                onClick={() => setShowContractOptions(!showContractOptions)}
+                onClick={() => setShowLayoutOptions(!showLayoutOptions)}
                 className="px-4 py-2 bg-black/60 border border-yellow-500/40 rounded-lg text-yellow-400 hover:border-yellow-500 transition-all flex items-center gap-2"
               >
-                <span>📋</span>
-                <span>Contract Options Reference</span>
-                <span className={`transform transition-transform ${showContractOptions ? 'rotate-180' : ''}`}>▼</span>
+                <span>🎨</span>
+                <span>Contract Layout Options</span>
+                <span className={`transform transition-transform ${showLayoutOptions ? 'rotate-180' : ''}`}>▼</span>
               </button>
               
-              {showContractOptions && (
-                <div className="absolute top-full left-0 mt-2 bg-gray-900 border border-yellow-500/40 rounded-lg shadow-xl z-20 w-[600px] max-h-[500px] overflow-y-auto">
-                  <div className="p-4 space-y-4">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Contract Configuration Reference</h3>
+              {showLayoutOptions && (
+                <div className="absolute top-full left-0 mt-2 bg-gray-900 border border-yellow-500/40 rounded-lg shadow-xl z-20 w-[400px] max-h-[500px] overflow-y-auto">
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Contract Layout Options</h3>
+                    <p className="text-sm text-gray-400 mb-4">Explore different contract UI designs and layouts</p>
                     
-                    {/* Contract Durations Table */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Contract Durations</h4>
-                      <div className="bg-black/40 rounded-lg overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead className="bg-yellow-500/20">
-                            <tr>
-                              <th className="px-3 py-2 text-left text-yellow-400">Duration</th>
-                              <th className="px-3 py-2 text-center text-yellow-400">Slots</th>
-                              <th className="px-3 py-2 text-right text-yellow-400">Gold Fee</th>
-                              <th className="px-3 py-2 text-center text-yellow-400">Essence</th>
-                              <th className="px-3 py-2 text-right text-yellow-400">Gold Reward</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-800">
-                            {contractDurations.map((duration) => (
-                              <tr key={duration.id} className="hover:bg-gray-800/50">
-                                <td className="px-3 py-2 text-white">{duration.label}</td>
-                                <td className="px-3 py-2 text-center text-gray-300">{duration.slots}</td>
-                                <td className="px-3 py-2 text-right text-red-400">{duration.goldFee.toLocaleString()}</td>
-                                <td className="px-3 py-2 text-center text-purple-400">{duration.essenceReward}x</td>
-                                <td className="px-3 py-2 text-right text-green-400">
-                                  {(duration.goldReward.min / 1000).toFixed(0)}K - {(duration.goldReward.max / 1000).toFixed(0)}K
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    
-                    {/* Mission Types */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Mission Types</h4>
-                      <div className="grid grid-cols-4 gap-2">
-                        {missionTypes.map((type) => (
-                          <div key={type.id} className="bg-black/40 rounded-lg px-3 py-2 flex items-center gap-2">
-                            <span className="text-lg">{type.icon}</span>
-                            <span className="text-sm text-gray-300">{type.name}</span>
+                    <div className="space-y-2">
+                      {/* Current Page */}
+                      <button
+                        onClick={() => router.push('/contracts')}
+                        className="w-full text-left px-4 py-3 bg-yellow-500/20 border border-yellow-500/40 rounded-lg hover:bg-yellow-500/30 transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-yellow-400 font-semibold">Main Contracts Page</span>
+                          <span className="text-xs text-yellow-500">CURRENT</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">Full-featured contract system with bias graphs</div>
+                      </button>
+                      
+                      {/* Layout Options 1-11 */}
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => router.push(`/contracts/layout-option-${num}`)}
+                          className="w-full text-left px-4 py-3 bg-black/40 border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-yellow-500/40 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-white">Layout Option {num}</span>
+                            <span className="text-gray-500">→</span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Mission Locations */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Mission Locations</h4>
-                      <div className="space-y-1">
-                        {missionLocations.slice(0, 5).map((location) => (
-                          <div key={location.name} className="bg-black/40 rounded px-3 py-1">
-                            <div className="text-sm text-yellow-400">{location.name}</div>
-                            <div className="text-xs text-gray-500">{location.desc}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {num === 1 && "Compact card layout with minimal details"}
+                            {num === 2 && "Vertical stack with progress bars"}
+                            {num === 3 && "Grid layout with large icons"}
+                            {num === 4 && "Timeline-based mission view"}
+                            {num === 5 && "Detailed stats and probability charts"}
+                            {num === 6 && "Minimalist design with focus on rewards"}
+                            {num === 7 && "Interactive 3D-style card flip"}
+                            {num === 8 && "Dashboard view with analytics"}
+                            {num === 9 && "Mobile-optimized vertical scroll"}
+                            {num === 10 && "Tabbed interface with categories"}
+                            {num === 11 && "Advanced filtering and sorting options"}
                           </div>
-                        ))}
-                        <div className="text-xs text-gray-500 italic px-3">...and {missionLocations.length - 5} more locations</div>
-                      </div>
-                    </div>
-                    
-                    {/* Essence Types */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Essence Rarities</h4>
-                      <div className="flex gap-2">
-                        {essenceTypes.map((essence) => (
-                          <div key={essence.id} className="bg-black/40 rounded-lg px-3 py-2 flex items-center gap-2">
-                            <span className="text-lg">{essence.icon}</span>
-                            <div>
-                              <div className="text-sm" style={{ color: essence.color }}>{essence.name}</div>
-                              <div className="text-xs text-gray-500">Rarity: {essence.rarity}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
