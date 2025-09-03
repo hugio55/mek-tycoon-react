@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import BackgroundEffects from "@/components/BackgroundEffects";
 
 type TalentNode = {
@@ -95,12 +96,14 @@ const defaultTalentData = {
 };
 
 export default function TalentsPage() {
+  const router = useRouter();
   const [talentData, setTalentData] = useState<TalentData>({ nodes: [], connections: [] });
   const [unlockedNodes, setUnlockedNodes] = useState<Set<string>>(new Set(['start']));
   const [xpReduction, setXpReduction] = useState(10); // 10% XP reduction buff example
   const [xpAvailable, setXpAvailable] = useState(1500);
   const [hoveredNode, setHoveredNode] = useState<TalentNode | null>(null);
   const [loadStatus, setLoadStatus] = useState<string>("");
+  const [hoveredMilestone, setHoveredMilestone] = useState<number | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -374,50 +377,201 @@ export default function TalentsPage() {
     <div className="text-white overflow-hidden relative" onMouseMove={handleMouseMove}>
       <BackgroundEffects />
       
-      {/* Info Card with Title and Stats */}
-      <div className="fixed left-4 right-4 z-30" style={{ top: '200px' }}>
-        <div className="bg-gray-900/90 backdrop-blur-sm border border-yellow-400/30 rounded-lg p-4">
+      {/* Info Card with Title and Stats - Style M Ultra-thin dirty glass */}
+      <div className="fixed left-1/2 transform -translate-x-1/2 z-30" style={{ top: '250px', width: '850px' }}>
+        <div 
+          className="relative rounded-lg p-4 overflow-visible group hover:border-yellow-400/20 transition-all duration-300"
+          style={{
+            background: 'rgba(255, 255, 255, 0.01)',
+            backdropFilter: 'blur(2px)',
+            border: '1px solid rgba(255, 255, 255, 0.03)',
+            boxShadow: '0 0 30px rgba(0, 0, 0, 0.3) inset',
+          }}
+        >
+          {/* Style M glass effects */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-50"
+            style={{
+              background: `
+                conic-gradient(from 45deg at 30% 30%, transparent 0deg, rgba(250, 182, 23, 0.03) 90deg, transparent 180deg),
+                conic-gradient(from 225deg at 70% 70%, transparent 0deg, rgba(147, 51, 234, 0.02) 90deg, transparent 180deg),
+                radial-gradient(circle at 50% 50%, transparent 30%, rgba(255, 255, 255, 0.01) 70%, transparent 100%)`,
+              filter: 'blur(4px)',
+            }}
+          />
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E")`,
+            }}
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Left: Title and Description */}
             <div>
-              <h1 className="text-3xl font-bold text-yellow-400 uppercase tracking-wider mb-2"
+              <h1 className="text-3xl font-bold text-yellow-400 uppercase tracking-wider mb-1"
                   style={{ textShadow: '0 0 20px rgba(255, 204, 0, 0.7)' }}>
-                CiruTree
+                CircuTree
               </h1>
               <p className="text-gray-300 text-xs leading-relaxed">
-                Unlock powerful abilities by spending gold and essence. Each path represents a unique specialization.
+                Unlock powerful abilities by spending gold and essence.
               </p>
             </div>
             
             {/* Right: Path Progress */}
             <div className="grid grid-cols-4 gap-3">
               <div className="text-center">
-                <div className="text-lg font-bold text-yellow-400">{progressPercentage}%</div>
+                <div 
+                  className="text-yellow-400"
+                  style={{ 
+                    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: '24px',
+                    fontWeight: 200,
+                    letterSpacing: '1px',
+                    lineHeight: '1',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >{progressPercentage}%</div>
                 <div className="text-[10px] text-gray-400 uppercase">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-cyan-400">{headsProgress.unlocked}/{headsProgress.total}</div>
+                <div 
+                  className="text-cyan-400"
+                  style={{ 
+                    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: '24px',
+                    fontWeight: 200,
+                    letterSpacing: '1px',
+                    lineHeight: '1',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >{headsProgress.unlocked}/{headsProgress.total}</div>
                 <div className="text-[10px] text-gray-400 uppercase">Heads</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-purple-400">{bodiesProgress.unlocked}/{bodiesProgress.total}</div>
+                <div 
+                  className="text-purple-400"
+                  style={{ 
+                    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: '24px',
+                    fontWeight: 200,
+                    letterSpacing: '1px',
+                    lineHeight: '1',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >{bodiesProgress.unlocked}/{bodiesProgress.total}</div>
                 <div className="text-[10px] text-gray-400 uppercase">Bodies</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-green-400">{traitsProgress.unlocked}/{traitsProgress.total}</div>
+                <div 
+                  className="text-green-400"
+                  style={{ 
+                    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: '24px',
+                    fontWeight: 200,
+                    letterSpacing: '1px',
+                    lineHeight: '1',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >{traitsProgress.unlocked}/{traitsProgress.total}</div>
                 <div className="text-[10px] text-gray-400 uppercase">Traits</div>
               </div>
             </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="mt-3">
-            <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+          {/* Progress Bar with Milestones */}
+          <div className="mt-4 relative overflow-visible">
+            {/* Progress Bar Container */}
+            <div className="relative h-8 overflow-visible">
+              {/* Background Track */}
+              <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-2 bg-gray-800 rounded-full shadow-inner" />
+              
+              {/* Progress Fill */}
               <div 
-                className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 transition-all duration-500"
+                className="absolute top-1/2 transform -translate-y-1/2 h-2 bg-gradient-to-r from-yellow-500 via-yellow-400 to-amber-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(250,182,23,0.4)]"
                 style={{ width: `${progressPercentage}%` }}
               />
+              
+              {/* Milestone Markers */}
+              {[
+                { position: 5, name: "First Steps", rewards: ["10,000 gold", "2 Acid Essence"] },
+                { position: 12, name: "Apprentice", rewards: ["25,000 gold", "Silver Dragon Frame"] },
+                { position: 18, name: "Pathfinder", rewards: ["1 Mek slot", "5 Fire Essence"] },
+                { position: 27, name: "Journeyman", rewards: ["50,000 gold", "1 Ambassador Power Chip"] },
+                { position: 35, name: "Adept", rewards: ["100,000 gold", "Golden Phoenix Frame"] },
+                { position: 42, name: "Expert", rewards: ["2 Mek slots", "10 Lightning Essence"] },
+                { position: 56, name: "Master", rewards: ["250,000 gold", "Legendary Core Module"] },
+                { position: 68, name: "Grandmaster", rewards: ["500,000 gold", "3 Mek slots"] },
+                { position: 78, name: "Sage", rewards: ["1,000,000 gold", "Ethereal Wings Frame"] },
+                { position: 85, name: "Enlightened", rewards: ["5 Ambassador Power Chips", "Cosmic Essence x20"] },
+                { position: 92, name: "Transcendent", rewards: ["10,000,000 gold", "Ultimate Mek Blueprint"] },
+                { position: 98, name: "Legendary", rewards: ["Infinite Gold Generator", "Divine Spark"] }
+              ].map((milestone, index) => {
+                const isReached = progressPercentage >= milestone.position;
+                const isHovered = hoveredMilestone === index;
+                
+                return (
+                  <div
+                    key={index}
+                    className="absolute"
+                    style={{ 
+                      left: `${milestone.position}%`,
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: isHovered ? 60 : 40
+                    }}
+                    onMouseEnter={() => setHoveredMilestone(index)}
+                    onMouseLeave={() => setHoveredMilestone(null)}
+                  >
+                    {/* Vertical Line */}
+                    <div 
+                      className={`absolute w-0.5 h-6 -top-3 left-1/2 transform -translate-x-1/2 transition-all duration-200 ${
+                        isReached ? 'bg-yellow-400/60' : 'bg-gray-600/40'
+                      }`}
+                    />
+                    
+                    {/* Diamond Marker - Clickable */}
+                    <div 
+                      className={`relative w-4 h-4 rotate-45 border-2 cursor-pointer transition-all duration-200 ${
+                        isReached 
+                          ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 border-yellow-400 shadow-[0_0_8px_rgba(250,182,23,0.6)]' 
+                          : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 hover:border-gray-500 hover:from-gray-600 hover:to-gray-700'
+                      }`}
+                      onClick={() => {
+                        // Navigate to achievements page with smooth scroll to specific achievement
+                        router.push(`/achievements#${milestone.name.toLowerCase().replace(/\s+/g, '-')}`);
+                      }}
+                    >
+                      {/* Inner glow for reached milestones */}
+                      {isReached && (
+                        <div className="absolute inset-0.5 bg-yellow-300/50 animate-pulse" />
+                      )}
+                    </div>
+                    
+                    {/* Tooltip - Below the bar */}
+                    {isHovered && (
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-6 z-[100] pointer-events-none">
+                        <div className="bg-gray-900/95 backdrop-blur border-2 border-yellow-400/60 rounded-lg p-3 shadow-2xl min-w-[200px] pointer-events-auto">
+                          <div className="text-yellow-400 font-bold text-sm mb-2">{milestone.name}</div>
+                          <ul className="text-gray-300 text-xs space-y-1">
+                            {milestone.rewards.map((reward, idx) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="text-yellow-400/70 mr-1.5">•</span>
+                                <span>{reward}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {/* Arrow pointing up */}
+                          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-gray-900/95" />
+                            <div className="absolute top-[2px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-yellow-400/60" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -430,8 +584,8 @@ export default function TalentsPage() {
         </div>
       )}
       
-      {/* Canvas Container - Full screen with vignette */}
-      <div className="fixed inset-0" style={{ zIndex: 10, paddingTop: '300px' }}>
+      {/* Canvas Container - Full screen from top */}
+      <div className="fixed inset-0" style={{ zIndex: 5 }}>
         {/* Vignette effect overlay */}
         <div 
           className="absolute inset-0 pointer-events-none"
@@ -445,9 +599,9 @@ export default function TalentsPage() {
           }}
         />
         
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full" style={{ paddingTop: '350px' }}>
           {/* Zoom Controls */}
-          <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 bg-gray-900/90 backdrop-blur p-2 rounded">
+          <div className="absolute top-[360px] right-4 z-20 flex flex-col gap-2 bg-gray-900/90 backdrop-blur p-2 rounded">
           <button
             onClick={() => setZoom(Math.min(3, zoom * 1.2))}
             className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
@@ -471,8 +625,7 @@ export default function TalentsPage() {
         
         <div 
           ref={canvasRef}
-          className="relative overflow-hidden cursor-grab active:cursor-grabbing" 
-          style={{ width: '100%', height: '100%' }}
+          className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing" 
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
@@ -483,10 +636,11 @@ export default function TalentsPage() {
             className="absolute"
             style={{ 
               width: '1600px', 
-              height: '1200px',
+              height: '1600px',
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
               transformOrigin: '0 0',
-              transition: isPanning ? 'none' : 'transform 0.1s'
+              transition: isPanning ? 'none' : 'transform 0.1s',
+              top: '-200px' // Allow nodes to be visible at the very top
             }}
           >
           {/* Render connections */}

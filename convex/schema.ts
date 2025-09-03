@@ -424,7 +424,8 @@ export default defineSchema({
       v.literal("slot_bonus"),          // +X extra crafting slots
       v.literal("market_discount"),     // -X% marketplace prices
       v.literal("essence_efficiency"),  // -X% essence cost for crafting
-      v.literal("gold_capacity")        // +X max gold storage
+      v.literal("gold_capacity"),       // +X max gold storage
+      v.literal("bank_deposit_cap")     // +X bank deposit daily cap
     ),
     valueType: v.union(
       v.literal("flat"),      // Flat amount (e.g., +50 gold/hr)
@@ -873,4 +874,30 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_active", ["isActive"])
     .index("by_level", ["requiredLevel"]),
+    
+  // Contracts for missions
+  contracts: defineTable({
+    userId: v.id("users"),
+    location: v.string(),
+    missionType: v.string(),
+    duration: v.number(),
+    goldFee: v.number(),
+    mekIds: v.array(v.string()),
+    biasScore: v.number(),
+    startTime: v.number(),
+    endTime: v.number(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+      v.literal("failed")
+    ),
+    rewards: v.optional(v.object({
+      gold: v.number(),
+      essence: v.string(),
+    })),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_end_time", ["endTime"]),
 });

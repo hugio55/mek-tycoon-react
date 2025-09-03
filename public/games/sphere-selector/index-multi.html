@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mek Tycoon - Glyph Forge Probability Sphere</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #ffcc00;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+        }
+        
+        /* Layout Switcher */
+        .layout-switcher {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .layout-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #666;
+        }
+        
+        .layout-select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            min-width: 200px;
+        }
+        
+        .layout-select option {
+            background: #1a1a1a;
+            color: #ffcc00;
+        }
+        
+        /* Main Container */
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        /* Layout Containers */
+        .layout-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .layout-container.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Canvas Container - Style M glass */
+        .canvas-wrapper {
+            width: 600px;
+            height: 600px;
+            position: relative;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3) inset;
+        }
+        
+        .canvas-wrapper.drag-enabled {
+            cursor: grab;
+        }
+        
+        .canvas-wrapper.dragging {
+            cursor: grabbing;
+        }
+        
+        /* Glass effects overlay */
+        .glass-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.5;
+            background: 
+                conic-gradient(from 45deg at 30% 30%, transparent 0deg, rgba(250, 182, 23, 0.03) 90deg, transparent 180deg),
+                conic-gradient(from 225deg at 70% 70%, transparent 0deg, rgba(147, 51, 234, 0.02) 90deg, transparent 180deg),
+                radial-gradient(circle at 50% 50%, transparent 30%, rgba(255, 255, 255, 0.01) 70%, transparent 100%);
+            filter: blur(4px);
+        }
+        
+        /* Chaos Button Layout Specific */
+        .chaos-controls {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .chaos-button {
+            padding: 20px 60px;
+            background: linear-gradient(135deg, #ff6600, #ffcc00);
+            border: none;
+            border-radius: 50px;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(255, 102, 0, 0.4);
+        }
+        
+        .chaos-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 60px rgba(255, 102, 0, 0.6);
+        }
+        
+        .chaos-button:active {
+            transform: scale(0.95);
+        }
+        
+        .chaos-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+        }
+        
+        .chaos-button:hover::before {
+            animation: shine 0.5s ease-in-out;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        /* Gravity Well Specific */
+        .gravity-controls {
+            position: absolute;
+            top: 50%;
+            right: 50px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+        }
+        
+        .gravity-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .gravity-slider label {
+            font-size: 11px;
+            color: #ffcc00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .gravity-slider input[type="range"] {
+            width: 150px;
+            height: 4px;
+            background: rgba(255, 204, 0, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .gravity-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ffcc00;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .orbit-button {
+            padding: 10px 20px;
+            background: rgba(255, 204, 0, 0.1);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .orbit-button:hover {
+            background: rgba(255, 204, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+        }
+        
+        /* Probability Matrix */
+        .probability-matrix {
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3) inset;
+            padding: 15px;
+            border-radius: 5px;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .matrix-title {
+            color: #ffcc00;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-right: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .matrix-items {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .matrix-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            transition: all 0.1s;
+            min-width: 45px;
+        }
+        
+        .matrix-color {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #333;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            transition: all 0.1s;
+        }
+        
+        .matrix-color.glow {
+            box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+            border-color: currentColor;
+            transform: scale(1.1);
+        }
+        
+        .matrix-prob {
+            color: #999;
+            font-size: 10px;
+            transition: color 0.1s;
+        }
+        
+        .matrix-item.active .matrix-prob {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        
+        /* Wind Indicator */
+        .wind-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            pointer-events: none;
+            z-index: 90;
+        }
+        
+        .wind-arrow {
+            width: 50px;
+            height: 50px;
+            position: relative;
+            filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.5));
+            transition: transform 0.5s ease;
+        }
+        
+        .wind-arrow svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .wind-text {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+            white-space: nowrap;
+        }
+        
+        /* Power Indicator */
+        .power-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .power-indicator.active {
+            opacity: 1;
+        }
+        
+        /* Crosshair */
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 99;
+            opacity: 0.8;
+        }
+        
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #ffcc00;
+            box-shadow: 0 0 10px #ffcc00;
+        }
+        
+        .crosshair::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair::after {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+        
+        /* Result Display */
+        .result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5) inset;
+            padding: 20px 40px;
+            border-radius: 5px;
+            font-size: 24px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 500;
+            pointer-events: none;
+        }
+        
+        .result.show {
+            opacity: 1;
+            animation: result-pulse 0.5s ease-out;
+        }
+        
+        @keyframes result-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        /* Chaos particles */
+        .chaos-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffcc00;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 6px #ffcc00;
+        }
+        
+        /* Gravity well visual */
+        .gravity-well {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            animation: pulse-well 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-well {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+        
+        /* Pattern Toggle */
+        .controls-panel {
+            position: absolute;
+            right: 20px;
+            top: 80px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .pattern-btn, .lighting-btn {
+            display: block;
+            width: 140px;
+            padding: 6px;
+            margin: 4px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            color: #999;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .pattern-btn.active, .lighting-btn.active {
+            border-color: #ffcc00;
+            color: #ffcc00;
+            background: rgba(250, 182, 23, 0.05);
+        }
+        
+        /* Info text */
+        .layout-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .layout-info.highlight {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Layout Switcher -->
+        <div class="layout-switcher">
+            <span class="layout-label">Mode:</span>
+            <select class="layout-select" id="layoutSelect">
+                <option value="classic">Classic Drag Physics</option>
+                <option value="chaos">Chaos Launch</option>
+                <option value="gravity">Gravity Well</option>
+            </select>
+        </div>
+        
+        <!-- Layout 1: Classic Drag -->
+        <div class="layout-container active" id="layout-classic">
+            <div class="canvas-wrapper drag-enabled" id="canvas-classic">
+                <div class="glass-overlay"></div>
+                <div class="crosshair"></div>
+                <div class="power-indicator" id="power-indicator-classic">
+                    <svg width="500" height="500">
+                        <circle cx="250" cy="250" r="140" fill="none" stroke="rgba(255,204,0,0.2)" stroke-width="4"/>
+                        <circle cx="250" cy="250" r="140" fill="none" stroke="#ffcc00" stroke-width="8"
+                                stroke-dasharray="0 880" id="power-arc-classic" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="wind-indicator">
+                    <div class="wind-arrow" id="wind-arrow-classic">
+                        <svg viewBox="0 0 50 50">
+                            <polygon points="25,5 35,35 25,30 15,35" fill="#ffcc00" opacity="0.8"/>
+                        </svg>
+                    </div>
+                    <div class="wind-text" id="wind-text-classic">5 mph</div>
+                </div>
+            </div>
+            
+            <div class="probability-matrix">
+                <div class="matrix-title">ZONES</div>
+                <div class="matrix-items" id="matrix-classic"></div>
+            </div>
+            
+            <div class="layout-info">DRAG SPHERE TO LAUNCH</div>
+        </div>
+        
+        <!-- Layout 2: Chaos Launch -->
+        <div class="layout-container" id="layout-chaos">
+            <div class="canvas-wrapper" id="canvas-chaos">
+                <div class="glass-overlay"></div>
+                <div class="crosshair"></div>
+            </div>
+            
+            <div class="chaos-controls">
+                <button class="chaos-button" id="chaos-launch-btn">
+                    UNLEASH CHAOS
+                </button>
+                <div class="probability-matrix">
+                    <div class="matrix-title">ZONES</div>
+                    <div class="matrix-items" id="matrix-chaos"></div>
+                </div>
+            </div>
+            
+            <div class="layout-info highlight">PURE RANDOMNESS - NO CONTROL</div>
+        </div>
+        
+        <!-- Layout 3: Gravity Well -->
+        <div class="layout-container" id="layout-gravity">
+            <div class="canvas-wrapper" id="canvas-gravity">
+                <div class="glass-overlay"></div>
+                <div class="gravity-well"></div>
+                <div class="crosshair"></div>
+            </div>
+            
+            <div class="gravity-controls">
+                <div class="gravity-slider">
+                    <label>Gravity Force</label>
+                    <input type="range" id="gravity-force" min="1" max="10" value="5">
+                </div>
+                <div class="gravity-slider">
+                    <label>Orbit Speed</label>
+                    <input type="range" id="orbit-speed" min="1" max="10" value="5">
+                </div>
+                <button class="orbit-button" id="launch-orbit">
+                    ENTER ORBIT
+                </button>
+            </div>
+            
+            <div class="probability-matrix">
+                <div class="matrix-title">ZONES</div>
+                <div class="matrix-items" id="matrix-gravity"></div>
+            </div>
+            
+            <div class="layout-info">ORBITAL MECHANICS - SLINGSHOT TO WIN</div>
+        </div>
+        
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div style="color: #ffcc00; font-size: 12px; margin-bottom: 10px;">ZONE PATTERN</div>
+            <button class="pattern-btn active" data-pattern="camo">DIGITAL CAMO</button>
+            <button class="pattern-btn" data-pattern="solid">SOLID ZONES</button>
+            <button class="pattern-btn" data-pattern="organic">ORGANIC</button>
+            <button class="pattern-btn" data-pattern="lines">LINES</button>
+            
+            <div style="color: #ffcc00; font-size: 12px; margin: 15px 0 10px;">RARITY</div>
+            <button class="pattern-btn" id="bias-btn">MEDIUM</button>
+        </div>
+        
+        <!-- Result Display -->
+        <div class="result" id="result">
+            <div>GLYPH FORGED!</div>
+            <div style="font-size: 48px; color: #ffcc00; margin: 10px 0;" id="result-value">-</div>
+            <div style="font-size: 16px; color: #999;" id="result-label"></div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Global variables
+        let currentLayout = 'classic';
+        let rarityBias = 'medium';
+        let currentPattern = 'camo';
+        let scenes = {};
+        let cameras = {};
+        let renderers = {};
+        let spheres = {};
+        let animationFrames = {};
+        
+        // Zone configuration
+        const biasProfiles = {
+            low: [28, 22, 18, 12, 8, 5, 3.5, 2, 1, 0.5],
+            medium: [12, 12, 11, 11, 10, 10, 10, 9, 8, 7],
+            high: [5, 6, 7, 8, 9, 11, 13, 14, 13, 14]
+        };
+        
+        const zoneColorMapping = {
+            low: [0x404040, 0x505050, 0x606060, 0x707070, 0x808080, 0x909090, 0xa0a000, 0xccaa00, 0xff9900, 0xff0000],
+            medium: [0x404040, 0x505050, 0x606060, 0x808080, 0x909090, 0xa0a000, 0xb0b000, 0xccaa00, 0xff9900, 0xff6600],
+            high: [0x303030, 0x404040, 0x505050, 0x707070, 0x909090, 0xb0b000, 0xccaa00, 0xffcc00, 0xff9900, 0xff6600]
+        };
+        
+        // Layout switcher
+        document.getElementById('layoutSelect').addEventListener('change', (e) => {
+            switchLayout(e.target.value);
+        });
+        
+        function switchLayout(layout) {
+            // Hide all layouts
+            document.querySelectorAll('.layout-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Stop current animation
+            if (animationFrames[currentLayout]) {
+                cancelAnimationFrame(animationFrames[currentLayout]);
+            }
+            
+            // Show selected layout
+            document.getElementById(`layout-${layout}`).classList.add('active');
+            currentLayout = layout;
+            
+            // Initialize layout if needed
+            if (!scenes[layout]) {
+                initializeLayout(layout);
+            }
+            
+            // Start animation for new layout
+            animateLayout(layout);
+        }
+        
+        // Initialize Three.js for each layout
+        function initializeLayout(layout) {
+            const container = document.getElementById(`canvas-${layout}`);
+            const rect = container.getBoundingClientRect();
+            
+            // Create scene
+            const scene = new THREE.Scene();
+            scenes[layout] = scene;
+            
+            // Create camera
+            const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+            camera.position.z = 5;
+            cameras[layout] = camera;
+            
+            // Create renderer
+            const renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(600, 600);
+            renderer.setPixelRatio(window.devicePixelRatio * 2);
+            container.appendChild(renderer.domElement);
+            renderers[layout] = renderer;
+            
+            // Add lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambient);
+            
+            const point = new THREE.PointLight(0xffcc00, 1, 100);
+            point.position.set(5, 5, 5);
+            scene.add(point);
+            
+            // Create sphere
+            const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+            const material = createSphereMaterial();
+            const sphere = new THREE.Mesh(geometry, material);
+            scene.add(sphere);
+            spheres[layout] = sphere;
+            
+            // Initialize layout-specific features
+            if (layout === 'classic') {
+                initClassicLayout();
+            } else if (layout === 'chaos') {
+                initChaosLayout();
+            } else if (layout === 'gravity') {
+                initGravityLayout();
+            }
+            
+            // Update probability matrix
+            updateProbabilityMatrix(layout);
+        }
+        
+        // Create sphere material based on pattern
+        function createSphereMaterial() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 2048;
+            const ctx = canvas.getContext('2d');
+            
+            const colors = zoneColorMapping[rarityBias];
+            const probabilities = biasProfiles[rarityBias];
+            
+            // Create weighted distribution
+            const distribution = [];
+            colors.forEach((color, index) => {
+                const pixelCount = Math.round((probabilities[index] / 100) * 1000);
+                for (let i = 0; i < pixelCount; i++) {
+                    distribution.push(color);
+                }
+            });
+            
+            // Shuffle distribution
+            distribution.sort(() => Math.random() - 0.5);
+            
+            // Apply pattern
+            if (currentPattern === 'camo') {
+                const cellSize = 32;
+                let distIndex = 0;
+                
+                for (let y = 0; y < canvas.height; y += cellSize) {
+                    for (let x = 0; x < canvas.width; x += cellSize) {
+                        const color = distribution[distIndex % distribution.length];
+                        distIndex++;
+                        
+                        const r = (color >> 16) & 255;
+                        const g = (color >> 8) & 255;
+                        const b = color & 255;
+                        
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                    }
+                }
+            } else if (currentPattern === 'solid') {
+                let y = 0;
+                probabilities.forEach((prob, index) => {
+                    const height = (prob / 100) * canvas.height;
+                    const color = colors[index];
+                    const r = (color >> 16) & 255;
+                    const g = (color >> 8) & 255;
+                    const b = color & 255;
+                    
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(0, y, canvas.width, height);
+                    
+                    y += height;
+                });
+            } else if (currentPattern === 'organic') {
+                // Voronoi-like pattern
+                const points = [];
+                colors.forEach((color, index) => {
+                    const numPoints = Math.max(1, Math.round(probabilities[index] / 3));
+                    for (let i = 0; i < numPoints; i++) {
+                        points.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            color: color
+                        });
+                    }
+                });
+                
+                for (let y = 0; y < canvas.height; y += 4) {
+                    for (let x = 0; x < canvas.width; x += 4) {
+                        let minDist = Infinity;
+                        let closestPoint = points[0];
+                        
+                        points.forEach(point => {
+                            const dist = Math.sqrt(
+                                Math.pow(x - point.x, 2) + 
+                                Math.pow(y - point.y, 2)
+                            );
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestPoint = point;
+                            }
+                        });
+                        
+                        const color = closestPoint.color;
+                        const r = (color >> 16) & 255;
+                        const g = (color >> 8) & 255;
+                        const b = color & 255;
+                        
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.fillRect(x, y, 4, 4);
+                    }
+                }
+            } else {
+                // Lines pattern
+                const bgColor = colors[0];
+                const bgR = (bgColor >> 16) & 255;
+                const bgG = (bgColor >> 8) & 255;
+                const bgB = bgColor & 255;
+                ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                probabilities.forEach((prob, index) => {
+                    const lineCount = Math.max(1, Math.round(prob / 2));
+                    const color = colors[index];
+                    const r = (color >> 16) & 255;
+                    const g = (color >> 8) & 255;
+                    const b = color & 255;
+                    
+                    for (let i = 0; i < lineCount; i++) {
+                        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.8)`;
+                        ctx.lineWidth = 8 + Math.random() * 16;
+                        ctx.lineCap = 'round';
+                        
+                        ctx.beginPath();
+                        const startX = Math.random() * canvas.width;
+                        const startY = Math.random() * canvas.height;
+                        const endX = startX + (Math.random() - 0.5) * 400;
+                        const endY = startY + (Math.random() - 0.5) * 400;
+                        
+                        ctx.moveTo(startX, startY);
+                        ctx.lineTo(endX, endY);
+                        ctx.stroke();
+                    }
+                });
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            
+            return new THREE.MeshPhongMaterial({
+                map: texture,
+                shininess: 80,
+                specular: 0x222222
+            });
+        }
+        
+        // Classic layout initialization
+        let classicVelocity = { x: 0, y: 0 };
+        let classicSpinning = false;
+        let windDirection = Math.random() * Math.PI * 2;
+        let windStrength = 3 + Math.random() * 7;
+        
+        function initClassicLayout() {
+            const container = document.getElementById('canvas-classic');
+            const renderer = renderers.classic;
+            
+            let isDragging = false;
+            let dragStart = { x: 0, y: 0 };
+            let dragCurrent = { x: 0, y: 0 };
+            
+            // Update wind display
+            updateWind();
+            setInterval(updateWind, 5000 + Math.random() * 5000);
+            
+            function updateWind() {
+                if (!classicSpinning) {
+                    windDirection = Math.random() * Math.PI * 2;
+                    windStrength = 3 + Math.random() * 7;
+                    
+                    const arrow = document.getElementById('wind-arrow-classic');
+                    arrow.style.transform = `rotate(${windDirection * 180 / Math.PI + 90}deg)`;
+                    
+                    document.getElementById('wind-text-classic').textContent = `${Math.round(windStrength)} mph`;
+                }
+            }
+            
+            // Mouse events
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                if (classicSpinning) return;
+                
+                isDragging = true;
+                const rect = renderer.domElement.getBoundingClientRect();
+                dragStart = {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+                dragCurrent = { ...dragStart };
+                
+                container.classList.add('dragging');
+                document.getElementById('power-indicator-classic').classList.add('active');
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const rect = renderer.domElement.getBoundingClientRect();
+                dragCurrent = {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+                
+                const dx = dragCurrent.x - dragStart.x;
+                const dy = dragCurrent.y - dragStart.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const maxDistance = 250;
+                const power = Math.min(distance / maxDistance, 1);
+                const angle = Math.atan2(dy, dx);
+                
+                // Update power arc
+                const arc = document.getElementById('power-arc-classic');
+                const circumference = 880;
+                arc.style.strokeDasharray = `${power * circumference} ${circumference}`;
+                arc.style.transform = `rotate(${angle * 180 / Math.PI - 90}deg)`;
+                arc.style.transformOrigin = 'center';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                container.classList.remove('dragging');
+                document.getElementById('power-indicator-classic').classList.remove('active');
+                
+                const dx = dragCurrent.x - dragStart.x;
+                const dy = dragCurrent.y - dragStart.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 10) {
+                    const maxDistance = 250;
+                    const power = Math.min(distance / maxDistance, 1);
+                    const actualPower = 0.35 + 0.65 * power;
+                    
+                    classicVelocity = {
+                        x: -(dy / distance) * actualPower * 0.2,
+                        y: (dx / distance) * actualPower * 0.2
+                    };
+                    
+                    classicSpinning = true;
+                    
+                    setTimeout(() => {
+                        classicSpinning = false;
+                        classicVelocity = { x: 0, y: 0 };
+                        detectZone('classic');
+                    }, 21000);
+                }
+            });
+        }
+        
+        // Chaos layout initialization
+        let chaosActive = false;
+        let chaosParticles = [];
+        let chaosVelocity = { x: 0, y: 0, z: 0 };
+        let chaosStartTime = 0;
+        
+        function initChaosLayout() {
+            const button = document.getElementById('chaos-launch-btn');
+            
+            button.addEventListener('click', () => {
+                if (chaosActive) return;
+                
+                chaosActive = true;
+                chaosStartTime = Date.now();
+                
+                // Create massive random spin velocities
+                const intensity = 0.4 + Math.random() * 0.3; // 0.4 to 0.7
+                chaosVelocity = {
+                    x: (Math.random() - 0.5) * intensity,
+                    y: (Math.random() - 0.5) * intensity,
+                    z: (Math.random() - 0.5) * intensity * 0.7 // Slightly less Z rotation
+                };
+                
+                // Add some bias to ensure good spin
+                if (Math.abs(chaosVelocity.x) < 0.2) chaosVelocity.x = 0.2 * Math.sign(chaosVelocity.x || 1);
+                if (Math.abs(chaosVelocity.y) < 0.2) chaosVelocity.y = 0.2 * Math.sign(chaosVelocity.y || 1);
+                
+                // Create particle explosion
+                for (let i = 0; i < 30; i++) {
+                    createChaosParticle();
+                }
+                
+                // Add camera shake effect
+                const camera = cameras.chaos;
+                const originalZ = camera.position.z;
+                camera.position.z = originalZ - 0.5;
+                setTimeout(() => {
+                    camera.position.z = originalZ;
+                }, 200);
+            });
+        }
+        
+        function createChaosParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'chaos-particle';
+            
+            const container = document.getElementById('canvas-chaos');
+            const rect = container.getBoundingClientRect();
+            
+            particle.style.left = '300px';
+            particle.style.top = '300px';
+            
+            container.appendChild(particle);
+            
+            // Animate particle
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 5 + Math.random() * 10;
+            const lifetime = 1000 + Math.random() * 1000;
+            
+            let x = 300;
+            let y = 300;
+            let vx = Math.cos(angle) * speed;
+            let vy = Math.sin(angle) * speed;
+            let opacity = 1;
+            
+            const particleInterval = setInterval(() => {
+                x += vx;
+                y += vy;
+                opacity -= 0.02;
+                
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.opacity = opacity;
+                
+                if (opacity <= 0) {
+                    clearInterval(particleInterval);
+                    particle.remove();
+                }
+            }, 16);
+        }
+        
+        // Gravity layout initialization
+        let gravityActive = false;
+        let gravityForce = 5;
+        let orbitSpeed = 5;
+        
+        function initGravityLayout() {
+            const forceSlider = document.getElementById('gravity-force');
+            const speedSlider = document.getElementById('orbit-speed');
+            const launchButton = document.getElementById('launch-orbit');
+            
+            forceSlider.addEventListener('input', (e) => {
+                gravityForce = parseInt(e.target.value);
+            });
+            
+            speedSlider.addEventListener('input', (e) => {
+                orbitSpeed = parseInt(e.target.value);
+            });
+            
+            launchButton.addEventListener('click', () => {
+                if (gravityActive) return;
+                
+                gravityActive = true;
+                
+                const sphere = spheres.gravity;
+                let orbitAngle = 0;
+                let orbitRadius = 2;
+                let decayRate = 0.01;
+                
+                const orbitInterval = setInterval(() => {
+                    // Calculate orbital position
+                    orbitAngle += orbitSpeed * 0.01;
+                    orbitRadius *= (1 - decayRate * (gravityForce / 10));
+                    
+                    // Apply orbital motion to rotation
+                    sphere.rotation.x = Math.sin(orbitAngle) * orbitRadius;
+                    sphere.rotation.y = Math.cos(orbitAngle) * orbitRadius;
+                    sphere.rotation.z = Math.sin(orbitAngle * 0.5) * orbitRadius * 0.5;
+                    
+                    // Spiral inward
+                    if (orbitRadius < 0.1) {
+                        clearInterval(orbitInterval);
+                        gravityActive = false;
+                        detectZone('gravity');
+                    }
+                }, 16);
+            });
+        }
+        
+        // Zone detection
+        function detectZone(layout) {
+            const sphere = spheres[layout];
+            const camera = cameras[layout];
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            
+            const intersects = raycaster.intersectObject(sphere);
+            if (intersects.length > 0) {
+                const uv = intersects[0].uv;
+                if (!uv) return;
+                
+                // Clamp UV to avoid poles
+                const clampedU = Math.max(0.05, Math.min(0.95, uv.x));
+                const clampedV = Math.max(0.05, Math.min(0.95, uv.y));
+                
+                const canvas = sphere.material.map.image;
+                const x = Math.floor(clampedU * canvas.width);
+                const y = Math.floor((1 - clampedV) * canvas.height);
+                
+                const ctx = canvas.getContext('2d');
+                const pixel = ctx.getImageData(x, y, 1, 1).data;
+                
+                // Match pixel to zone
+                const colors = zoneColorMapping[rarityBias];
+                let detectedZone = 1;
+                let minDist = Infinity;
+                
+                colors.forEach((color, index) => {
+                    const r = (color >> 16) & 255;
+                    const g = (color >> 8) & 255;
+                    const b = color & 255;
+                    
+                    const dist = Math.sqrt(
+                        Math.pow(pixel[0] - r, 2) +
+                        Math.pow(pixel[1] - g, 2) +
+                        Math.pow(pixel[2] - b, 2)
+                    );
+                    
+                    if (dist < minDist) {
+                        minDist = dist;
+                        detectedZone = index + 1;
+                    }
+                });
+                
+                showResult(detectedZone);
+            }
+        }
+        
+        // Show result
+        function showResult(zone) {
+            const resultEl = document.getElementById('result');
+            const resultValue = document.getElementById('result-value');
+            const resultLabel = document.getElementById('result-label');
+            
+            const colors = zoneColorMapping[rarityBias];
+            
+            resultValue.textContent = zone;
+            resultValue.style.color = `#${colors[zone - 1].toString(16).padStart(6, '0')}`;
+            
+            if (zone <= 7) {
+                resultLabel.textContent = '1 Buff';
+            } else if (zone === 8) {
+                resultLabel.textContent = '2 Buffs';
+            } else {
+                resultLabel.textContent = '3 Buffs';
+            }
+            
+            resultEl.classList.add('show');
+            
+            setTimeout(() => {
+                resultEl.classList.remove('show');
+            }, 4000);
+        }
+        
+        // Update probability matrix
+        function updateProbabilityMatrix(layout) {
+            const container = document.getElementById(`matrix-${layout}`);
+            const colors = zoneColorMapping[rarityBias];
+            const probabilities = biasProfiles[rarityBias];
+            
+            container.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const item = document.createElement('div');
+                item.className = 'matrix-item';
+                const hex = '#' + colors[i].toString(16).padStart(6, '0');
+                item.innerHTML = `
+                    <div class="matrix-color" style="background: ${hex};"></div>
+                    <div class="matrix-prob">${probabilities[i]}%</div>
+                `;
+                container.appendChild(item);
+            }
+        }
+        
+        // Animation loops
+        function animateLayout(layout) {
+            function animate() {
+                animationFrames[layout] = requestAnimationFrame(animate);
+                
+                const sphere = spheres[layout];
+                const scene = scenes[layout];
+                const camera = cameras[layout];
+                const renderer = renderers[layout];
+                
+                if (layout === 'classic') {
+                    if (classicSpinning) {
+                        // Apply velocity
+                        sphere.rotation.x += classicVelocity.x;
+                        sphere.rotation.y += classicVelocity.y;
+                        
+                        // Wind drift
+                        const windX = Math.sin(windDirection) * 0.0001 * (windStrength / 10);
+                        const windY = Math.cos(windDirection) * 0.0001 * (windStrength / 10);
+                        sphere.rotation.x += windX;
+                        sphere.rotation.y += windY;
+                        
+                        // Friction
+                        classicVelocity.x *= 0.993;
+                        classicVelocity.y *= 0.993;
+                    } else {
+                        // Idle wind animation
+                        const windX = Math.sin(windDirection) * 0.002 * (windStrength / 10);
+                        const windY = Math.cos(windDirection) * 0.002 * (windStrength / 10);
+                        sphere.rotation.x += windX;
+                        sphere.rotation.y += windY;
+                    }
+                } else if (layout === 'chaos') {
+                    if (chaosActive) {
+                        // Apply massive chaotic rotation
+                        sphere.rotation.x += chaosVelocity.x;
+                        sphere.rotation.y += chaosVelocity.y;
+                        sphere.rotation.z += chaosVelocity.z;
+                        
+                        // Occasional random wobbles for extra chaos
+                        if (Math.random() < 0.05) {
+                            sphere.rotation.x += (Math.random() - 0.5) * 0.1;
+                            sphere.rotation.y += (Math.random() - 0.5) * 0.1;
+                        }
+                        
+                        // Apply friction over time
+                        const elapsed = Date.now() - chaosStartTime;
+                        const friction = 0.994; // Slower deceleration for longer spin
+                        
+                        chaosVelocity.x *= friction;
+                        chaosVelocity.y *= friction;
+                        chaosVelocity.z *= friction;
+                        
+                        // Stop after 25 seconds or when very slow
+                        const speed = Math.sqrt(
+                            chaosVelocity.x ** 2 + 
+                            chaosVelocity.y ** 2 + 
+                            chaosVelocity.z ** 2
+                        );
+                        
+                        if (elapsed > 25000 || speed < 0.001) {
+                            chaosActive = false;
+                            chaosVelocity = { x: 0, y: 0, z: 0 };
+                            detectZone('chaos');
+                        }
+                    } else {
+                        // Gentle idle rotation
+                        sphere.rotation.x += 0.001;
+                        sphere.rotation.y += 0.002;
+                    }
+                } else if (layout === 'gravity') {
+                    if (!gravityActive) {
+                        // Gentle idle rotation with wobble
+                        sphere.rotation.x += Math.sin(Date.now() * 0.001) * 0.002;
+                        sphere.rotation.y += 0.001;
+                    }
+                }
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+        }
+        
+        // Pattern and bias controls
+        document.querySelectorAll('.pattern-btn').forEach(btn => {
+            if (btn.id !== 'bias-btn') {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.pattern-btn').forEach(b => {
+                        if (b.id !== 'bias-btn') b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    currentPattern = btn.dataset.pattern;
+                    
+                    // Update all spheres
+                    Object.keys(spheres).forEach(layout => {
+                        spheres[layout].material.dispose();
+                        spheres[layout].material = createSphereMaterial();
+                    });
+                });
+            }
+        });
+        
+        document.getElementById('bias-btn').addEventListener('click', () => {
+            const biases = ['low', 'medium', 'high'];
+            const currentIndex = biases.indexOf(rarityBias);
+            rarityBias = biases[(currentIndex + 1) % 3];
+            
+            document.getElementById('bias-btn').textContent = rarityBias.toUpperCase();
+            
+            // Update all spheres and matrices
+            Object.keys(spheres).forEach(layout => {
+                spheres[layout].material.dispose();
+                spheres[layout].material = createSphereMaterial();
+                updateProbabilityMatrix(layout);
+            });
+        });
+        
+        // Initialize first layout
+        initializeLayout('classic');
+        animateLayout('classic');
+    </script>
+</body>
+</html>

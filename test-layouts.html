@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Layout Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #000;
+            color: white;
+        }
+        .layout-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+        }
+        .layout-card {
+            background: #111;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #fab617;
+            text-align: center;
+        }
+        .layout-card h3 {
+            color: #fab617;
+            margin: 0 0 10px 0;
+        }
+        .layout-card a {
+            display: inline-block;
+            background: #fab617;
+            color: black;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .layout-card a:hover {
+            background: #e6a815;
+        }
+    </style>
+</head>
+<body>
+    <h1>Contract Layout Testing</h1>
+    <p>Click on each layout option to test the visual elements:</p>
+    
+    <div class="layout-links">
+        <div class="layout-card">
+            <h3>Layout Option 1</h3>
+            <p>Garrison-inspired with detailed mission info panels</p>
+            <a href="http://localhost:3100/contracts/layout-option-1" target="_blank">Open Layout 1</a>
+        </div>
+        
+        <div class="layout-card">
+            <h3>Layout Option 2</h3>
+            <p>Horizontal flow with compact stat bars</p>
+            <a href="http://localhost:3100/contracts/layout-option-2" target="_blank">Open Layout 2</a>
+        </div>
+        
+        <div class="layout-card">
+            <h3>Layout Option 3</h3>
+            <p>Two-column layout with epic socket design</p>
+            <a href="http://localhost:3100/contracts/layout-option-3" target="_blank">Open Layout 3</a>
+        </div>
+        
+        <div class="layout-card">
+            <h3>Layout Option 4</h3>
+            <p>Centered design with info pills and 3-column rewards</p>
+            <a href="http://localhost:3100/contracts/layout-option-4" target="_blank">Open Layout 4</a>
+        </div>
+        
+        <div class="layout-card">
+            <h3>Layout Option 5</h3>
+            <p>WoW Garrison-inspired with detailed stats and epic sockets</p>
+            <a href="http://localhost:3100/contracts/layout-option-5" target="_blank">Open Layout 5</a>
+        </div>
+    </div>
+
+    <h2>Elements to Check:</h2>
+    <ul>
+        <li>✅ Global mission badge with Acid variation image at the top</li>
+        <li>✅ Mek slots appear as squares with epic socket designs</li>
+        <li>✅ Gold distribution graph shows bell curve based on bias</li>
+        <li>✅ Essence rewards show images and names below bars</li>
+        <li>✅ Layouts feel polished and "bespoke" like WoW garrison</li>
+    </ul>
+</body>
+</html>

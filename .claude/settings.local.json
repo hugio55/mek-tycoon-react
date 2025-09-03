@@ -74,7 +74,15 @@
       "Bash(start \"\" \"http://localhost:3100/cirutree\")",
       "Bash(playwright --help)",
       "Bash(chromium:*)",
-      "Bash(google-chrome:*)"
+      "Bash(google-chrome:*)",
+      "Read(F:\\Dropbox\\Dropbox\\TYCOON 8-30\\useable things\\sphere selector/**)",
+      "Read(F:\\Dropbox\\Dropbox\\TYCOON 8-30\\useable things\\sphere selector/**)",
+      "Read(F:\\Dropbox\\Dropbox\\TYCOON 8-30\\useable things\\sphere selector/**)",
+      "Bash(if not exist \"C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\TYCOON REACT 8-27\\mek-tycoon-react\\public\\games\\sphere-selector\" mkdir \"C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\TYCOON REACT 8-27\\mek-tycoon-react\\public\\games\\sphere-selector\")",
+      "Bash(start chrome \"http://localhost:3100/cirutree\")",
+      "Bash(where chrome)",
+      "Bash(timeout:*)",
+      "Bash(start chrome \"http://localhost:3100/achievements\")"
     ],
     "deny": [],
     "ask": [],

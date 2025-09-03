@@ -92,6 +92,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },
       { label: "Sphere Selector", href: "/admin-sphere" },
+      { label: "Contracts", href: "/contracts" },
     ],
   },
 ];
@@ -129,7 +130,7 @@ export default function Navigation() {
   return (
     <div>
       {/* Large Logo at Top Center */}
-      <div className="flex justify-center py-5 mb-5">
+      <div className="flex justify-center py-5 mb-5 relative z-[60]">
         <Link href="/hub" className="group">
           <Image
             src="/logo-big.png"

@@ -17,6 +17,7 @@ import type * as accordionCraftingTree from "../accordionCraftingTree.js";
 import type * as bank from "../bank.js";
 import type * as buffManager from "../buffManager.js";
 import type * as buffs from "../buffs.js";
+import type * as contracts from "../contracts.js";
 import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   bank: typeof bank;
   buffManager: typeof buffManager;
   buffs: typeof buffs;
+  contracts: typeof contracts;
   crafting: typeof crafting;
   crons: typeof crons;
   fixMek3412To000: typeof fixMek3412To000;

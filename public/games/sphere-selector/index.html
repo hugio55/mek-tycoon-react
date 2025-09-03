@@ -95,14 +95,13 @@
             opacity: 0;
         }
         
-        /* Wind Indicator - TEMPORARILY HIDDEN */
+        /* Wind Indicator - VISIBLE */
         .wind-indicator {
             position: absolute;
             top: 15px;
             right: 15px;
             pointer-events: none;
             z-index: 90;
-            display: none; /* TEMPORARY - for debugging */
         }
         
         .wind-arrow {
@@ -438,7 +437,7 @@
     <div class="container">
         <div class="controls">
             <button class="btn" id="bias-btn">RARITY: MEDIUM</button>
-            <div style="color: #666; font-size: 11px;">WIND DISABLED FOR DEBUG</div>
+            <div style="color: #666; font-size: 11px;">WIND: <span id="wind-status" style="color: #ffcc00;">ACTIVE</span></div>
         </div>
         
         <div id="canvas-container">
@@ -494,7 +493,7 @@
         
         <div class="info-panel">
             <div>SYSTEM: MK-TYCOON-10.0</div>
-            <div>MODE: NO_WIND_DEBUG</div>
+            <div>MODE: WIND_ACTIVE</div>
             <div>DETAIL: ULTRA</div>
             <div>ZONES: BALANCED</div>
         </div>
@@ -522,21 +521,29 @@
             high: [0x303030, 0x404040, 0x505050, 0x707070, 0x909090, 0xb0b000, 0xccaa00, 0xffcc00, 0xff9900, 0xff6600]
         };
         
-        // Wind system - DISABLED FOR DEBUGGING
-        let windDirection = 0; // Math.random() * Math.PI * 2;
-        let windStrength = 0; // 3 + Math.random() * 7;
+        // Wind system - ACTIVE with visible effect on sphere
+        let windDirection = Math.random() * Math.PI * 2;
+        let windStrength = 3 + Math.random() * 7;
+        let windChangeInterval = null;
+        let canChangeWind = true; // Only allow wind changes when not spinning
         
         function updateWind() {
-            // WIND DISABLED FOR DEBUGGING
-            windDirection = 0;
-            windStrength = 0;
+            if (!canChangeWind) return; // Don't change wind during spin
             
-            /*
+            // Change wind randomly every 5-10 seconds
+            windDirection = Math.random() * Math.PI * 2;
+            windStrength = 3 + Math.random() * 7;
+            
             const arrow = document.getElementById('wind-arrow');
             arrow.style.transform = `rotate(${windDirection * 180 / Math.PI + 90}deg)`;
             
             document.getElementById('wind-text').textContent = `${Math.round(windStrength)} mph`;
-            */
+        }
+        
+        // Start wind changes
+        function startWindChanges() {
+            if (windChangeInterval) clearInterval(windChangeInterval);
+            windChangeInterval = setInterval(updateWind, 5000 + Math.random() * 5000);
         }
         
         // Three.js Setup
@@ -605,8 +612,8 @@
         
         setupLighting();
         
-        // Create Icosahedron with maximum detail
-        const geometry = new THREE.IcosahedronGeometry(1.5, 6); // Increased to 6 for ultra smooth
+        // Create Sphere (not icosahedron) for better UV mapping at poles
+        const geometry = new THREE.SphereGeometry(1.5, 64, 64); // High detail sphere // Increased to 6 for ultra smooth
         
         // Create material with patterns
         function createPolyhedronMaterial() {
@@ -747,6 +754,9 @@
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
             texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            // Improve UV wrapping to reduce pole pinching
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
             
             const materialOptions = {
                 map: texture,
@@ -872,6 +882,7 @@
                 isSpinning = true;
                 hasSpun = false;
                 spinStartTime = Date.now();
+                canChangeWind = false; // Lock wind during spin
                 
                 document.getElementById('launch-text').classList.add('hidden');
                 
@@ -935,9 +946,13 @@
                 const uv = intersects[0].uv;
                 if (!uv) return;
                 
+                // Clamp UV coordinates to avoid pole issues
+                const clampedU = Math.max(0.05, Math.min(0.95, uv.x));
+                const clampedV = Math.max(0.05, Math.min(0.95, uv.y));
+                
                 const canvas = polyhedron.material.map.image;
-                const x = Math.floor(uv.x * canvas.width);
-                const y = Math.floor((1 - uv.y) * canvas.height);
+                const x = Math.floor(clampedU * canvas.width);
+                const y = Math.floor((1 - clampedV) * canvas.height);
                 
                 const ctx = canvas.getContext('2d');
                 const pixel = ctx.getImageData(x, y, 1, 1).data;
@@ -1001,40 +1016,50 @@
             }
             
             if (isSpinning) {
-                // SIMPLE ROTATION - just add velocity
+                // Proper bowling ball physics - velocity drives rotation
                 polyhedron.rotation.x += velocityX;
                 polyhedron.rotation.y += velocityY;
                 
-                // SIMPLE FRICTION
-                const friction = 0.985;
+                // Apply wind as constant drift (not acceleration)
+                const windInfluence = 0.0001 * (windStrength / 10);
+                const windX = Math.sin(windDirection) * windInfluence;
+                const windY = Math.cos(windDirection) * windInfluence;
+                
+                // Add wind drift directly to rotation (like lateral force on bowling ball)
+                polyhedron.rotation.x += windX;
+                polyhedron.rotation.y += windY;
+                
+                // Only apply friction to velocity (proper deceleration)
+                const friction = 0.993; // Tuned for 40% longer spin
                 velocityX *= friction;
                 velocityY *= friction;
                 
                 // Detect zones while spinning
                 detectCurrentZone();
                 
-                // Stop conditions
+                // Stop conditions (increased time for 40% longer spin)
                 const spinTime = Date.now() - spinStartTime;
                 const speedMagnitude = Math.abs(velocityX) + Math.abs(velocityY);
                 
-                if (spinTime > 15000 || speedMagnitude < 0.002) {
+                if (spinTime > 21000 || speedMagnitude < 0.001) { // 40% longer than original
                     velocityX = 0;
                     velocityY = 0;
                     isSpinning = false;
                     hasSpun = true;
+                    canChangeWind = true; // Allow wind changes again
                     calculateFinalResult();
+                    
+                    // Schedule next wind change
+                    setTimeout(updateWind, 2000);
                 }
             } else if (!isDragging && !hasSpun) {
-                // NO WIND - TEMPORARILY DISABLED FOR DEBUGGING
-                // Only idle spin if we haven't completed a spin
-                /*
-                const windX = Math.sin(windDirection) * 0.002;
-                const windY = Math.cos(windDirection) * 0.002;
+                // Apply constant wind when idle - gentler effect
+                const windX = Math.sin(windDirection) * 0.002 * (windStrength / 10);
+                const windY = Math.cos(windDirection) * 0.002 * (windStrength / 10);
                 polyhedron.rotation.x += windX;
                 polyhedron.rotation.y += windY;
-                */
                 
-                // Still detect zones during idle (no wind movement though)
+                // Detect zones during idle
                 detectCurrentZone();
             }
             // If hasSpun is true, sphere stays completely still
@@ -1054,9 +1079,13 @@
                 const uv = intersects[0].uv;
                 if (!uv) return;
                 
+                // Clamp UV coordinates to avoid pole issues
+                const clampedU = Math.max(0.05, Math.min(0.95, uv.x));
+                const clampedV = Math.max(0.05, Math.min(0.95, uv.y));
+                
                 const canvas = polyhedron.material.map.image;
-                const x = Math.floor(uv.x * canvas.width);
-                const y = Math.floor((1 - uv.y) * canvas.height);
+                const x = Math.floor(clampedU * canvas.width);
+                const y = Math.floor((1 - clampedV) * canvas.height);
                 
                 const ctx = canvas.getContext('2d');
                 const pixel = ctx.getImageData(x, y, 1, 1).data;
@@ -1151,6 +1180,7 @@
         // Initialize
         updateProbabilityMatrix();
         updateWind();
+        startWindChanges();
         animate();
     </script>
 </body>
