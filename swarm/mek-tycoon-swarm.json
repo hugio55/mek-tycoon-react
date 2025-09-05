@@ -1,0 +1,115 @@
+{
+  "name": "mek-tycoon-swarm",
+  "description": "Specialized frontend-focused development swarm for Mek Tycoon game",
+  "instances": {
+    "architect": {
+      "name": "UI/UX Architect",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react",
+      "prompt_file": "swarm/prompts/architect.md",
+      "connections": ["react-dev", "css-animator", "threejs-dev", "asset-manager", "component-lib", "game-mechanics"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "bash", "grep", "glob", "ls"]
+      }
+    },
+    "react-dev": {
+      "name": "React/Next.js Specialist",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react\\src",
+      "prompt_file": "swarm/prompts/react-dev.md",
+      "connections": ["architect", "component-lib"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "bash", "grep", "glob"]
+      }
+    },
+    "css-animator": {
+      "name": "CSS Animation Expert",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react",
+      "prompt_file": "swarm/prompts/css-animator.md",
+      "connections": ["architect", "component-lib"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "grep", "glob"],
+        "restricted": ["bash:npm update", "bash:npm install tailwindcss@latest"]
+      }
+    },
+    "threejs-dev": {
+      "name": "Three.js Game Developer",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react\\src",
+      "prompt_file": "swarm/prompts/threejs-dev.md",
+      "connections": ["architect", "game-mechanics"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "bash", "grep", "glob"]
+      }
+    },
+    "asset-manager": {
+      "name": "Asset & Data Manager",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react",
+      "prompt_file": "swarm/prompts/asset-manager.md",
+      "connections": ["architect", "react-dev"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "bash", "grep", "glob", "ls"]
+      }
+    },
+    "component-lib": {
+      "name": "Component Library Architect",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react\\src\\components",
+      "prompt_file": "swarm/prompts/component-lib.md",
+      "connections": ["architect", "react-dev", "css-animator"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "grep", "glob"]
+      }
+    },
+    "game-mechanics": {
+      "name": "Game Mechanics Developer",
+      "model": "claude-3-5-sonnet-latest",
+      "directory": "C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\mek-tycoon-react",
+      "prompt_file": "swarm/prompts/game-mechanics.md",
+      "connections": ["architect", "react-dev", "threejs-dev"],
+      "tools": {
+        "allowed": ["read", "write", "edit", "bash", "grep", "glob"]
+      }
+    }
+  },
+  "workflows": {
+    "new-feature": {
+      "description": "Implement a new UI feature",
+      "steps": [
+        {"agent": "architect", "action": "Plan feature architecture and design"},
+        {"agent": "component-lib", "action": "Create reusable components"},
+        {"agent": "react-dev", "action": "Implement React logic and state"},
+        {"agent": "css-animator", "action": "Add animations and effects"},
+        {"agent": "architect", "action": "Review and integrate"}
+      ]
+    },
+    "minigame": {
+      "description": "Create a new Three.js minigame",
+      "steps": [
+        {"agent": "architect", "action": "Design game concept and UI integration"},
+        {"agent": "threejs-dev", "action": "Build 3D scene and interactions"},
+        {"agent": "game-mechanics", "action": "Implement game logic and scoring"},
+        {"agent": "css-animator", "action": "Style UI overlay elements"},
+        {"agent": "architect", "action": "Final integration and testing"}
+      ]
+    },
+    "crafting-system": {
+      "description": "Enhance crafting system UI",
+      "steps": [
+        {"agent": "game-mechanics", "action": "Define crafting rules and data flow"},
+        {"agent": "asset-manager", "action": "Organize Mek images and metadata"},
+        {"agent": "react-dev", "action": "Build component hierarchy"},
+        {"agent": "css-animator", "action": "Add hover effects and transitions"},
+        {"agent": "architect", "action": "Ensure design consistency"}
+      ]
+    }
+  },
+  "config": {
+    "max_parallel_agents": 3,
+    "communication_mode": "shared_context",
+    "checkpoint_frequency": "after_each_step",
+    "error_handling": "pause_and_notify"
+  }
+}

@@ -110,7 +110,7 @@ export default function TalentBuilderPage() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   // New state for Mek template mode
-  const [builderMode, setBuilderMode] = useState<'circutree' | 'mek'>('circutree');
+  const [builderMode, setBuilderMode] = useState<'circutree' | 'mek' | 'story'>('circutree');
   const [selectedTemplateId, setSelectedTemplateId] = useState<Id<"mekTreeTemplates"> | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
@@ -347,6 +347,129 @@ export default function TalentBuilderPage() {
       setSaveStatus("New tree created");
       setTimeout(() => setSaveStatus(""), 2000);
     }
+  };
+
+  const generateStoryNodes = (algorithm: 'diamond' | 'organic' | 'wave') => {
+    const nodeCountInput = document.getElementById('storyNodeCount') as HTMLInputElement;
+    const maxWidthInput = document.getElementById('storyMaxWidth') as HTMLInputElement;
+    
+    const nodeCount = parseInt(nodeCountInput?.value || '50');
+    const maxWidth = parseInt(maxWidthInput?.value || '5');
+    
+    const newNodes: TalentNode[] = [];
+    const newConnections: Connection[] = [];
+    
+    // Calculate vertical spacing based on node count
+    const verticalSpacing = 120;
+    const horizontalSpacing = 150;
+    const startX = 1500; // Center X position
+    const startY = 2800; // Start from bottom (high Y value)
+    
+    // Generate nodes in levels from bottom to top
+    const nodesPerLevel = Math.ceil(nodeCount / 20); // Roughly 20 levels
+    const totalLevels = Math.ceil(nodeCount / nodesPerLevel);
+    
+    let nodeId = 0;
+    const levelNodes: Map<number, TalentNode[]> = new Map();
+    
+    // Generate nodes level by level (bottom to top)
+    for (let level = 0; level < totalLevels && nodeId < nodeCount; level++) {
+      const levelNodeList: TalentNode[] = [];
+      let nodesInThisLevel = nodesPerLevel;
+      
+      // Vary the width based on algorithm
+      if (algorithm === 'diamond') {
+        // Diamond shape: narrow at top and bottom, wide in middle
+        const midLevel = totalLevels / 2;
+        const distFromMid = Math.abs(level - midLevel) / midLevel;
+        nodesInThisLevel = Math.max(1, Math.round(maxWidth * (1 - distFromMid * 0.7)));
+      } else if (algorithm === 'wave') {
+        // Wave pattern
+        nodesInThisLevel = Math.max(1, Math.round(maxWidth * (0.5 + 0.5 * Math.sin(level * 0.5))));
+      } else {
+        // Organic: random variation
+        nodesInThisLevel = Math.max(1, Math.min(maxWidth, Math.round(Math.random() * maxWidth) + 1));
+      }
+      
+      nodesInThisLevel = Math.min(nodesInThisLevel, nodeCount - nodeId);
+      
+      // Calculate X positions for nodes in this level
+      const levelWidth = (nodesInThisLevel - 1) * horizontalSpacing;
+      const levelStartX = startX - levelWidth / 2;
+      
+      for (let i = 0; i < nodesInThisLevel && nodeId < nodeCount; i++) {
+        const node: TalentNode = {
+          id: `node_${nodeId}`,
+          name: `Node ${nodeId + 1}`,
+          x: levelStartX + (i * horizontalSpacing),
+          y: startY - (level * verticalSpacing),
+          tier: level,
+          desc: `Story node at level ${level}`,
+          xp: 0
+        };
+        
+        newNodes.push(node);
+        levelNodeList.push(node);
+        nodeId++;
+      }
+      
+      levelNodes.set(level, levelNodeList);
+    }
+    
+    // Create connections between levels
+    for (let level = 0; level < totalLevels - 1; level++) {
+      const currentLevel = levelNodes.get(level) || [];
+      const nextLevel = levelNodes.get(level + 1) || [];
+      
+      if (currentLevel.length === 0 || nextLevel.length === 0) continue;
+      
+      // Connect each node to 1-3 nodes in the next level
+      currentLevel.forEach(node => {
+        // Determine which nodes in next level to connect to
+        const connections = algorithm === 'organic' 
+          ? Math.min(nextLevel.length, Math.floor(Math.random() * 3) + 1)
+          : Math.min(2, nextLevel.length);
+        
+        // Find closest nodes in next level
+        const sortedByDistance = [...nextLevel].sort((a, b) => {
+          const distA = Math.abs(a.x - node.x);
+          const distB = Math.abs(b.x - node.x);
+          return distA - distB;
+        });
+        
+        for (let i = 0; i < connections; i++) {
+          const targetNode = sortedByDistance[i];
+          if (targetNode && !newConnections.some(c => 
+            (c.from === node.id && c.to === targetNode.id) ||
+            (c.from === targetNode.id && c.to === node.id)
+          )) {
+            newConnections.push({
+              from: node.id,
+              to: targetNode.id
+            });
+          }
+        }
+      });
+    }
+    
+    // Replace existing nodes and connections
+    setNodes(newNodes);
+    setConnections(newConnections);
+    
+    // Center view on the middle of the tower
+    if (canvasRef.current) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const towerHeight = totalLevels * verticalSpacing;
+      const centerY = startY - (towerHeight / 2);
+      
+      setPanOffset({ 
+        x: canvasRect.width / 2 - startX,
+        y: canvasRect.height / 2 - centerY
+      });
+    }
+    
+    setSaveStatus(`Generated ${nodeCount} story nodes`);
+    setTimeout(() => setSaveStatus(""), 2000);
   };
   
   const allVariations = useMemo(() => getAllVariations(), []);
@@ -612,7 +735,9 @@ export default function TalentBuilderPage() {
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-yellow-400">
-              {builderMode === 'circutree' ? 'CiruTree Builder' : 'Mek Template Builder'}
+              {builderMode === 'circutree' ? 'CiruTree Builder' : 
+               builderMode === 'mek' ? 'Mek Template Builder' :
+               'Story Mode Builder'}
             </h1>
             
             <div className="flex bg-gray-800 rounded-lg p-1">
@@ -658,6 +783,31 @@ export default function TalentBuilderPage() {
                 }`}
               >
                 Mek Template
+              </button>
+              <button
+                onClick={() => {
+                  setBuilderMode('story');
+                  // Initialize with a single starting node at bottom center
+                  setNodes([{
+                    id: 'start',
+                    name: 'Start',
+                    x: 400,
+                    y: 2800,
+                    tier: 0,
+                    desc: 'Chapter Start',
+                    xp: 0
+                  }]);
+                  setConnections([]);
+                  setViewOffset({ x: -300, y: -2200 });
+                  setZoom(0.8);
+                }}
+                className={`px-3 py-1 rounded transition-all ${
+                  builderMode === 'story' 
+                    ? 'bg-green-500 text-white font-bold' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Story Mode
               </button>
             </div>
           </div>
@@ -781,6 +931,66 @@ export default function TalentBuilderPage() {
               <button onClick={() => setShowTemplateManager(true)} className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white">
                 Load Template
               </button>
+            </>
+          )}
+          
+          {builderMode === 'story' && (
+            <>
+              <button 
+                onClick={() => generateStoryNodes('diamond')}
+                className="px-3 py-1 text-sm rounded bg-yellow-600 hover:bg-yellow-700 text-white"
+              >
+                Generate Diamond
+              </button>
+              <button 
+                onClick={() => generateStoryNodes('organic')}
+                className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
+              >
+                Generate Organic
+              </button>
+              <button 
+                onClick={() => generateStoryNodes('wave')}
+                className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Generate Wave
+              </button>
+              <button 
+                onClick={() => {
+                  setNodes([{
+                    id: 'start',
+                    name: 'Start',
+                    x: 400,
+                    y: 2800,
+                    tier: 0,
+                    desc: 'Chapter Start',
+                    xp: 0
+                  }]);
+                  setConnections([]);
+                }}
+                className="px-3 py-1 text-sm rounded bg-red-600 hover:bg-red-700 text-white"
+              >
+                Clear
+              </button>
+              <div className="flex items-center gap-2 ml-2">
+                <label className="text-xs text-gray-400">Nodes:</label>
+                <input 
+                  type="number" 
+                  min="10" 
+                  max="400" 
+                  defaultValue="50"
+                  id="storyNodeCount"
+                  className="w-16 px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white"
+                />
+                <label className="text-xs text-gray-400">Width:</label>
+                <input 
+                  type="number" 
+                  min="3" 
+                  max="7" 
+                  defaultValue="5"
+                  id="storyMaxWidth"
+                  className="w-12 px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white"
+                />
+              </div>
             </>
           )}
           

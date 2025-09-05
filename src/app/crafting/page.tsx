@@ -751,13 +751,19 @@ export default function CraftingPage() {
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono uppercase tracking-wider text-gray-500">Path:</span>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded bg-gray-800/50 border border-gray-700" style={{
-                    fontFamily: 'Rajdhani, sans-serif',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#fab617',
-                    textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
-                  }}>?</span>
+                  <button 
+                    onClick={resetCrafting}
+                    className="px-3 py-1 rounded bg-gray-800/50 border border-gray-700 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#fab617',
+                      textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+                    }}
+                  >
+                    {selectedType?.toUpperCase() || '?'}
+                  </button>
                   <span className="text-gray-600 text-xl">→</span>
                   <span className="px-3 py-1 rounded bg-gray-800/30 border border-gray-700/50" style={{
                     fontFamily: 'Rajdhani, sans-serif',
@@ -812,13 +818,37 @@ export default function CraftingPage() {
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono uppercase tracking-wider text-gray-500">Path:</span>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded bg-yellow-400/20 border border-yellow-400/50" style={{
-                    fontFamily: 'Rajdhani, sans-serif',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#fab617',
-                    textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
-                  }}>{selectedVariation}</span>
+                  <button 
+                    onClick={resetCrafting}
+                    className="px-3 py-1 rounded bg-gray-800/50 border border-gray-700 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: 'rgba(250, 182, 23, 0.7)',
+                      textShadow: '0 0 8px rgba(250, 182, 23, 0.2)'
+                    }}
+                  >
+                    {selectedType?.toUpperCase()}
+                  </button>
+                  <span className="text-gray-600 text-xl">→</span>
+                  <button 
+                    onClick={() => {
+                      setCurrentCategory('group');
+                      setSelectedStyle(null);
+                      setSelectedFinal(null);
+                    }}
+                    className="px-3 py-1 rounded bg-yellow-400/20 border border-yellow-400/50 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#fab617',
+                      textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+                    }}
+                  >
+                    {selectedVariation}
+                  </button>
                   <span className="text-gray-600 text-xl">→</span>
                   <span className="px-3 py-1 rounded bg-gray-800/30 border border-gray-700/50" style={{
                     fontFamily: 'Rajdhani, sans-serif',
@@ -871,21 +901,54 @@ export default function CraftingPage() {
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono uppercase tracking-wider text-gray-500">Path:</span>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded bg-yellow-400/20 border border-yellow-400/50" style={{
-                    fontFamily: 'Rajdhani, sans-serif',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: '#fab617',
-                    textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
-                  }}>{selectedVariation}</span>
+                  <button 
+                    onClick={resetCrafting}
+                    className="px-3 py-1 rounded bg-gray-800/50 border border-gray-700 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: 'rgba(250, 182, 23, 0.6)',
+                      textShadow: '0 0 6px rgba(250, 182, 23, 0.15)'
+                    }}
+                  >
+                    {selectedType?.toUpperCase()}
+                  </button>
                   <span className="text-gray-600 text-xl">→</span>
-                  <span className="px-3 py-1 rounded bg-yellow-400/15 border border-yellow-400/40" style={{
-                    fontFamily: 'Rajdhani, sans-serif',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    color: 'rgba(250, 182, 23, 0.8)',
-                    textShadow: '0 0 8px rgba(250, 182, 23, 0.2)'
-                  }}>{selectedStyle}</span>
+                  <button 
+                    onClick={() => {
+                      setCurrentCategory('group');
+                      setSelectedStyle(null);
+                      setSelectedFinal(null);
+                    }}
+                    className="px-3 py-1 rounded bg-yellow-400/20 border border-yellow-400/50 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: '#fab617',
+                      textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
+                    }}
+                  >
+                    {selectedVariation}
+                  </button>
+                  <span className="text-gray-600 text-xl">→</span>
+                  <button 
+                    onClick={() => {
+                      setCurrentCategory('style');
+                      setSelectedFinal(null);
+                    }}
+                    className="px-3 py-1 rounded bg-yellow-400/15 border border-yellow-400/40 hover:border-yellow-400 transition-all cursor-pointer" 
+                    style={{
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: 'rgba(250, 182, 23, 0.8)',
+                      textShadow: '0 0 8px rgba(250, 182, 23, 0.2)'
+                    }}
+                  >
+                    {selectedStyle}
+                  </button>
                   <span className="text-gray-600 text-xl">→</span>
                   <span className="px-3 py-1 rounded bg-gray-800/30 border border-gray-700/50 animate-pulse" style={{
                     fontFamily: 'Rajdhani, sans-serif',

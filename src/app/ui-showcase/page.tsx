@@ -25,27 +25,29 @@ export default function UIShowcase() {
   const [searchValue, setSearchValue] = useState('');
   const [inlineSearchValue, setInlineSearchValue] = useState('');
   const [progressValue, setProgressValue] = useState(65);
-  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number}>>([]);
-  const [fineStars, setFineStars] = useState<Array<{id: number, left: string, top: string}>>([]);
+  const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
+  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   
   useEffect(() => {
-    // Generate twinkling stars
-    const generatedStars = [...Array(30)].map((_, i) => ({
+    // Generate background effects - matching shop page
+    const generatedParticles = [...Array(20)].map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      size: Math.random() * 2 + 0.5,
+      delay: `${Math.random() * 10}s`,
+      duration: `${5 + Math.random() * 5}s`,
+    }));
+    setParticles(generatedParticles);
+    
+    const generatedStars = [...Array(60)].map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      size: Math.random() * 3 + 0.5,
       opacity: Math.random() * 0.8 + 0.2,
+      twinkle: Math.random() > 0.5,
     }));
     setStars(generatedStars);
-    
-    // Generate extra fine white stars
-    const generatedFineStars = [...Array(50)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-    }));
-    setFineStars(generatedFineStars);
   }, []);
 
   const sampleStats = [
@@ -55,35 +57,37 @@ export default function UIShowcase() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 relative">
-      {/* Background Effects */}
+    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+      
+      {/* Background Effects - Universal BG from Shop Page */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Yellow gradient orbs */}
+        {/* Gradient orbs */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse at 10% 20%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
-              radial-gradient(ellipse at 90% 80%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(250, 182, 23, 0.05) 0%, transparent 70%)
+              radial-gradient(ellipse at 20% 30%, rgba(250, 182, 23, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 50%, rgba(250, 182, 23, 0.08) 0%, transparent 70%)
             `
           }}
         />
         
-        {/* Fine stars */}
-        {fineStars.map((star) => (
-          <div
-            key={`fine-${star.id}`}
-            className="absolute rounded-full bg-white"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: '1px',
-              height: '1px',
-              opacity: 0.6,
-            }}
-          />
-        ))}
+        {/* Pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 35px,
+                rgba(250, 182, 23, 0.03) 35px,
+                rgba(250, 182, 23, 0.03) 70px
+              )
+            `,
+          }}
+        />
         
         {/* Stars */}
         {stars.map((star) => (
@@ -96,11 +100,31 @@ export default function UIShowcase() {
               width: `${star.size}px`,
               height: `${star.size}px`,
               opacity: star.opacity,
+              animation: star.twinkle ? `starTwinkle ${2 + Math.random() * 2}s ease-in-out infinite` : 'none',
+              animationDelay: star.twinkle ? `${Math.random() * 2}s` : '0s',
+            }}
+          />
+        ))}
+        
+        {/* Floating particles */}
+        {particles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute w-1.5 h-1.5 bg-yellow-400 rounded-full"
+            style={{
+              left: particle.left,
+              top: particle.top,
+              animation: `floatParticle ${particle.duration} ease-in-out infinite`,
+              animationDelay: particle.delay,
+              boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
             }}
           />
         ))}
       </div>
-      <div className="max-w-7xl mx-auto relative z-10">
+      
+      {/* Main Content */}
+      <div className="relative z-10 p-8">
+        <div className="max-w-7xl mx-auto">
         <div className="mb-12 text-center">
           <GlowText size="3xl" color="yellow" intensity="high" as="h1">
             UI Component Showcase
@@ -1246,6 +1270,7 @@ export default function UIShowcase() {
           Close Industrial Modal
         </Button>
       </IndustrialModal>
+      </div>
     </div>
   );
 }

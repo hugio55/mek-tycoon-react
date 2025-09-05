@@ -713,8 +713,8 @@
             point.position.set(5, 5, 5);
             scene.add(point);
             
-            // Create sphere
-            const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+            // Create sphere with icosahedron geometry for better UV mapping at poles
+            const geometry = new THREE.IcosahedronGeometry(1.5, 5); // Higher detail icosahedron
             const material = createSphereMaterial();
             const sphere = new THREE.Mesh(geometry, material);
             scene.add(sphere);
@@ -862,8 +862,10 @@
             
             const texture = new THREE.CanvasTexture(canvas);
             texture.needsUpdate = true;
+            // Better wrapping to minimize pole distortion
             texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.anisotropy = renderers[currentLayout] ? renderers[currentLayout].capabilities.getMaxAnisotropy() : 16;
             
             return new THREE.MeshPhongMaterial({
                 map: texture,
@@ -968,6 +970,8 @@
                     setTimeout(() => {
                         classicSpinning = false;
                         classicVelocity = { x: 0, y: 0 };
+                        // Reset camera position
+                        cameras.classic.position.z = 5;
                         detectZone('classic');
                     }, 21000);
                 }
@@ -1088,15 +1092,26 @@
                     orbitAngle += orbitSpeed * 0.01;
                     orbitRadius *= (1 - decayRate * (gravityForce / 10));
                     
-                    // Apply orbital motion to rotation
-                    sphere.rotation.x = Math.sin(orbitAngle) * orbitRadius;
-                    sphere.rotation.y = Math.cos(orbitAngle) * orbitRadius;
-                    sphere.rotation.z = Math.sin(orbitAngle * 0.5) * orbitRadius * 0.5;
+                    // Apply orbital motion to rotation with smooth transitions
+                    const smoothRadius = Math.max(0, orbitRadius);
+                    sphere.rotation.x = Math.sin(orbitAngle) * smoothRadius;
+                    sphere.rotation.y = Math.cos(orbitAngle) * smoothRadius;
+                    sphere.rotation.z = Math.sin(orbitAngle * 0.5) * smoothRadius * 0.5;
+                    
+                    // Camera zoom based on orbit radius
+                    const initialZ = 5;
+                    const minZ = 3.5;
+                    const zoomProgress = 1 - (smoothRadius / 2); // Initial radius is 2
+                    if (zoomProgress > 0 && zoomProgress <= 1) {
+                        cameras.gravity.position.z = initialZ - (initialZ - minZ) * Math.pow(zoomProgress, 2);
+                    }
                     
                     // Spiral inward
                     if (orbitRadius < 0.1) {
                         clearInterval(orbitInterval);
                         gravityActive = false;
+                        // Reset camera
+                        cameras.gravity.position.z = 5;
                         detectZone('gravity');
                     }
                 }, 16);
@@ -1210,7 +1225,10 @@
                 
                 if (layout === 'classic') {
                     if (classicSpinning) {
-                        // Apply velocity
+                        // Calculate total velocity for smooth easing
+                        const totalVel = Math.sqrt(classicVelocity.x ** 2 + classicVelocity.y ** 2);
+                        
+                        // Apply velocity with smoothing
                         sphere.rotation.x += classicVelocity.x;
                         sphere.rotation.y += classicVelocity.y;
                         
@@ -1220,9 +1238,21 @@
                         sphere.rotation.x += windX;
                         sphere.rotation.y += windY;
                         
-                        // Friction
-                        classicVelocity.x *= 0.993;
-                        classicVelocity.y *= 0.993;
+                        // Smooth friction with exponential decay to prevent stuttering
+                        const frictionBase = 0.993;
+                        const smoothFactor = Math.max(0.001, totalVel); // Prevent division by zero
+                        const adaptiveFriction = frictionBase + (1 - frictionBase) * Math.exp(-smoothFactor * 50);
+                        
+                        classicVelocity.x *= adaptiveFriction;
+                        classicVelocity.y *= adaptiveFriction;
+                        
+                        // Camera zoom effect during slowdown
+                        const initialZ = 5;
+                        const minZ = 3.5;
+                        const zoomProgress = 1 - (totalVel / 0.2); // Assuming max velocity ~0.2
+                        if (zoomProgress > 0 && zoomProgress <= 1) {
+                            camera.position.z = initialZ - (initialZ - minZ) * Math.pow(zoomProgress, 2);
+                        }
                     } else {
                         // Idle wind animation
                         const windX = Math.sin(windDirection) * 0.002 * (windStrength / 10);
@@ -1232,24 +1262,42 @@
                     }
                 } else if (layout === 'chaos') {
                     if (chaosActive) {
+                        // Calculate total velocity for smooth transitions
+                        const totalVel = Math.sqrt(
+                            chaosVelocity.x ** 2 + 
+                            chaosVelocity.y ** 2 + 
+                            chaosVelocity.z ** 2
+                        );
+                        
                         // Apply massive chaotic rotation
                         sphere.rotation.x += chaosVelocity.x;
                         sphere.rotation.y += chaosVelocity.y;
                         sphere.rotation.z += chaosVelocity.z;
                         
-                        // Occasional random wobbles for extra chaos
-                        if (Math.random() < 0.05) {
+                        // Occasional random wobbles for extra chaos (less frequent when slowing)
+                        if (Math.random() < 0.05 * Math.min(1, totalVel * 5)) {
                             sphere.rotation.x += (Math.random() - 0.5) * 0.1;
                             sphere.rotation.y += (Math.random() - 0.5) * 0.1;
                         }
                         
-                        // Apply friction over time
+                        // Apply friction over time with smooth easing
                         const elapsed = Date.now() - chaosStartTime;
-                        const friction = 0.994; // Slower deceleration for longer spin
+                        const frictionBase = 0.994;
+                        const smoothFactor = Math.max(0.001, totalVel);
+                        const adaptiveFriction = frictionBase + (1 - frictionBase) * Math.exp(-smoothFactor * 30);
                         
-                        chaosVelocity.x *= friction;
-                        chaosVelocity.y *= friction;
-                        chaosVelocity.z *= friction;
+                        chaosVelocity.x *= adaptiveFriction;
+                        chaosVelocity.y *= adaptiveFriction;
+                        chaosVelocity.z *= adaptiveFriction;
+                        
+                        // Camera zoom effect
+                        const initialZ = 5;
+                        const minZ = 3.2;
+                        const maxVel = 0.7; // Approximate max chaos velocity
+                        const zoomProgress = 1 - (totalVel / maxVel);
+                        if (zoomProgress > 0 && zoomProgress <= 1) {
+                            camera.position.z = initialZ - (initialZ - minZ) * Math.pow(zoomProgress, 1.5);
+                        }
                         
                         // Stop after 25 seconds or when very slow
                         const speed = Math.sqrt(
@@ -1258,9 +1306,11 @@
                             chaosVelocity.z ** 2
                         );
                         
-                        if (elapsed > 25000 || speed < 0.001) {
+                        if (elapsed > 25000 || totalVel < 0.001) {
                             chaosActive = false;
                             chaosVelocity = { x: 0, y: 0, z: 0 };
+                            // Reset camera
+                            cameras.chaos.position.z = 5;
                             detectZone('chaos');
                         }
                     } else {

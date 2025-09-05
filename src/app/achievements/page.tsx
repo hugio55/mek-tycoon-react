@@ -39,8 +39,37 @@ const achievementCategories = [
   { id: "special", name: "Special" },
 ];
 
+// Helper function to generate rewards
+const generateRewards = (tier: string, category: string, points: number) => {
+  const rewards: Reward[] = [];
+  const goldMultiplier = tier === "diamond" ? 1000 : tier === "platinum" ? 100 : tier === "gold" ? 10 : tier === "silver" ? 5 : 1;
+  
+  // Always add gold reward
+  rewards.push({ type: "gold", amount: points * goldMultiplier * 10, icon: "gold" });
+  
+  // Add other rewards based on tier and category
+  if (tier === "diamond" || tier === "platinum") {
+    rewards.push({ type: "frame", name: `${tier} Frame`, icon: "frame" });
+    rewards.push({ type: "title", name: `${category} Master`, icon: "title" });
+    rewards.push({ type: "powerChip", amount: Math.floor(points / 10), icon: "power" });
+    rewards.push({ type: "essence", amount: Math.floor(points / 20), icon: "essence" });
+    rewards.push({ type: "badge", name: `${tier} Badge`, icon: "badge" });
+  } else if (tier === "gold") {
+    rewards.push({ type: "essence", amount: Math.floor(points / 25), icon: "essence" });
+    rewards.push({ type: "powerChip", amount: Math.floor(points / 30), icon: "power" });
+    rewards.push({ type: "frame", name: "Gold Frame", icon: "frame" });
+  } else if (tier === "silver") {
+    rewards.push({ type: "essence", amount: Math.floor(points / 40), icon: "essence" });
+    rewards.push({ type: "powerChip", amount: 1, icon: "power" });
+  } else {
+    rewards.push({ type: "essence", amount: 1, icon: "essence" });
+  }
+  
+  return rewards;
+};
+
 const achievements: Achievement[] = [
-  // Collection Achievements
+  // Collection Achievements (20)
   {
     id: "first_mek",
     name: "Welcome to the Factory",
@@ -53,10 +82,7 @@ const achievements: Achievement[] = [
     unlocked: true,
     unlockedAt: "2024-01-15",
     tier: "bronze",
-    rewards: [
-      { type: "gold", amount: 100, icon: "🪙" },
-      { type: "frame", name: "Starter Frame", icon: "🖼️" }
-    ]
+    rewards: generateRewards("bronze", "collection", 10)
   },
   {
     id: "mek_collector_10",
@@ -329,6 +355,7 @@ const achievements: Achievement[] = [
     unlocked: true,
     unlockedAt: "2024-01-01",
     tier: "platinum",
+    rewards: generateRewards("platinum", "special", 100)
   },
   {
     id: "bug_hunter",
@@ -342,7 +369,799 @@ const achievements: Achievement[] = [
     unlocked: false,
     tier: "gold",
     hidden: true,
+    rewards: generateRewards("gold", "special", 50)
   },
+  
+  // Additional achievements to reach 100 total
+  // More Collection achievements
+  {
+    id: "mek_collector_100",
+    name: "Century Club",
+    description: "Own 100 Meks",
+    icon: "💯",
+    category: "collection",
+    points: 100,
+    progress: 7,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "collection", 100)
+  },
+  {
+    id: "mek_collector_500",
+    name: "Mek Empire",
+    description: "Own 500 Meks",
+    icon: "👑",
+    category: "collection",
+    points: 250,
+    progress: 7,
+    maxProgress: 500,
+    unlocked: false,
+    tier: "platinum",
+    rewards: generateRewards("platinum", "collection", 250)
+  },
+  {
+    id: "complete_set",
+    name: "Complete Set",
+    description: "Own all variations of a single type",
+    icon: "🎭",
+    category: "collection",
+    points: 150,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "collection", 150)
+  },
+  {
+    id: "rainbow_collection",
+    name: "Rainbow Collection",
+    description: "Own Meks of every rarity tier",
+    icon: "🌈",
+    category: "collection",
+    points: 75,
+    progress: 3,
+    maxProgress: 7,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "collection", 75)
+  },
+  {
+    id: "trait_master",
+    name: "Trait Master",
+    description: "Own all 95 trait variations",
+    icon: "⚡",
+    category: "collection",
+    points: 300,
+    progress: 12,
+    maxProgress: 95,
+    unlocked: false,
+    tier: "diamond",
+    rewards: generateRewards("diamond", "collection", 300)
+  },
+  
+  // More Crafting achievements
+  {
+    id: "craft_streak_7",
+    name: "Lucky Seven",
+    description: "Craft successfully 7 days in a row",
+    icon: "🍀",
+    category: "crafting",
+    points: 35,
+    progress: 3,
+    maxProgress: 7,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "crafting", 35)
+  },
+  {
+    id: "craft_streak_30",
+    name: "Consistent Creator",
+    description: "Craft successfully 30 days in a row",
+    icon: "📅",
+    category: "crafting",
+    points: 100,
+    progress: 3,
+    maxProgress: 30,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "crafting", 100)
+  },
+  {
+    id: "essence_master",
+    name: "Essence Master",
+    description: "Use 1000 essences in crafting",
+    icon: "💠",
+    category: "crafting",
+    points: 75,
+    progress: 234,
+    maxProgress: 1000,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "crafting", 75)
+  },
+  {
+    id: "failed_craft",
+    name: "Learning Experience",
+    description: "Fail a craft for the first time",
+    icon: "💔",
+    category: "crafting",
+    points: 5,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "crafting", 5)
+  },
+  {
+    id: "perfect_week",
+    name: "Perfect Week",
+    description: "Craft 7 legendary items in one week",
+    icon: "🌟",
+    category: "crafting",
+    points: 200,
+    progress: 0,
+    maxProgress: 7,
+    unlocked: false,
+    tier: "platinum",
+    rewards: generateRewards("platinum", "crafting", 200)
+  },
+  
+  // More Wealth achievements
+  {
+    id: "first_purchase",
+    name: "First Purchase",
+    description: "Buy your first item from the market",
+    icon: "🛒",
+    category: "wealth",
+    points: 10,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "wealth", 10)
+  },
+  {
+    id: "first_sale",
+    name: "First Sale",
+    description: "Sell your first item on the market",
+    icon: "💵",
+    category: "wealth",
+    points: 10,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "wealth", 10)
+  },
+  {
+    id: "market_mogul",
+    name: "Market Mogul",
+    description: "Complete 500 market transactions",
+    icon: "📈",
+    category: "wealth",
+    points: 150,
+    progress: 3,
+    maxProgress: 500,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "wealth", 150)
+  },
+  {
+    id: "billionaire",
+    name: "Billionaire",
+    description: "Accumulate 1,000,000,000 gold",
+    icon: "🏆",
+    category: "wealth",
+    points: 1000,
+    progress: 850,
+    maxProgress: 1000000000,
+    unlocked: false,
+    tier: "diamond",
+    rewards: generateRewards("diamond", "wealth", 1000)
+  },
+  {
+    id: "profit_master",
+    name: "Profit Master",
+    description: "Make 100,000 gold profit in a single transaction",
+    icon: "📊",
+    category: "wealth",
+    points: 100,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "wealth", 100)
+  },
+  {
+    id: "auction_winner",
+    name: "Auction Winner",
+    description: "Win your first auction",
+    icon: "🔨",
+    category: "wealth",
+    points: 25,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "wealth", 25)
+  },
+  
+  // More Combat achievements
+  {
+    id: "flawless_victory",
+    name: "Flawless Victory",
+    description: "Win a battle without taking damage",
+    icon: "🛡️",
+    category: "combat",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "combat", 50)
+  },
+  {
+    id: "underdog",
+    name: "Underdog",
+    description: "Win against an opponent 100+ levels higher",
+    icon: "🐕",
+    category: "combat",
+    points: 100,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "combat", 100)
+  },
+  {
+    id: "arena_champion",
+    name: "Arena Champion",
+    description: "Reach #1 in the arena",
+    icon: "🥇",
+    category: "combat",
+    points: 500,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "diamond",
+    rewards: generateRewards("diamond", "combat", 500)
+  },
+  {
+    id: "battle_hardened",
+    name: "Battle Hardened",
+    description: "Win 1000 battles",
+    icon: "⚔️",
+    category: "combat",
+    points: 200,
+    progress: 0,
+    maxProgress: 1000,
+    unlocked: false,
+    tier: "platinum",
+    rewards: generateRewards("platinum", "combat", 200)
+  },
+  {
+    id: "peaceful_warrior",
+    name: "Peaceful Warrior",
+    description: "Win 10 battles using only defensive moves",
+    icon: "☮️",
+    category: "combat",
+    points: 75,
+    progress: 0,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "combat", 75)
+  },
+  
+  // More Social achievements
+  {
+    id: "guild_founder",
+    name: "Guild Founder",
+    description: "Create a guild",
+    icon: "🏰",
+    category: "social",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "social", 50)
+  },
+  {
+    id: "guild_leader",
+    name: "Guild Leader",
+    description: "Lead a guild with 50+ members",
+    icon: "👥",
+    category: "social",
+    points: 100,
+    progress: 0,
+    maxProgress: 50,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "social", 100)
+  },
+  {
+    id: "helpful_hand",
+    name: "Helpful Hand",
+    description: "Help 100 other players",
+    icon: "🤲",
+    category: "social",
+    points: 50,
+    progress: 12,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "social", 50)
+  },
+  {
+    id: "gift_giver",
+    name: "Gift Giver",
+    description: "Send 50 gifts to friends",
+    icon: "🎁",
+    category: "social",
+    points: 35,
+    progress: 8,
+    maxProgress: 50,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "social", 35)
+  },
+  {
+    id: "social_butterfly",
+    name: "Social Butterfly",
+    description: "Have 100 friends",
+    icon: "🦋",
+    category: "social",
+    points: 75,
+    progress: 23,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "social", 75)
+  },
+  {
+    id: "mentor",
+    name: "Mentor",
+    description: "Help 10 new players reach level 50",
+    icon: "🎓",
+    category: "social",
+    points: 150,
+    progress: 2,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "social", 150)
+  },
+  
+  // More Exploration achievements
+  {
+    id: "world_explorer",
+    name: "World Explorer",
+    description: "Visit all locations in the game",
+    icon: "🗺️",
+    category: "exploration",
+    points: 100,
+    progress: 45,
+    maxProgress: 50,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "exploration", 100)
+  },
+  {
+    id: "secret_finder",
+    name: "Secret Finder",
+    description: "Discover 20 hidden areas",
+    icon: "🔍",
+    category: "exploration",
+    points: 75,
+    progress: 7,
+    maxProgress: 20,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "exploration", 75)
+  },
+  {
+    id: "lore_master",
+    name: "Lore Master",
+    description: "Collect all lore books",
+    icon: "📚",
+    category: "exploration",
+    points: 100,
+    progress: 23,
+    maxProgress: 30,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "exploration", 100)
+  },
+  {
+    id: "speedrunner",
+    name: "Speedrunner",
+    description: "Complete any minigame in under 30 seconds",
+    icon: "⚡",
+    category: "exploration",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "exploration", 50)
+  },
+  {
+    id: "perfectionist",
+    name: "Perfectionist",
+    description: "Get perfect scores in all minigames",
+    icon: "💎",
+    category: "exploration",
+    points: 200,
+    progress: 2,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "platinum",
+    rewards: generateRewards("platinum", "exploration", 200)
+  },
+  {
+    id: "easter_egg_hunter",
+    name: "Easter Egg Hunter",
+    description: "Find all easter eggs",
+    icon: "🥚",
+    category: "exploration",
+    points: 150,
+    progress: 3,
+    maxProgress: 15,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "exploration", 150)
+  },
+  
+  // More Special achievements
+  {
+    id: "anniversary_player",
+    name: "Anniversary Player",
+    description: "Play on the game's anniversary",
+    icon: "🎂",
+    category: "special",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "special", 50)
+  },
+  {
+    id: "night_owl",
+    name: "Night Owl",
+    description: "Play between 2-5 AM",
+    icon: "🦉",
+    category: "special",
+    points: 25,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "special", 25)
+  },
+  {
+    id: "lucky_number",
+    name: "Lucky Number",
+    description: "Own Mek #7777",
+    icon: "7️⃣",
+    category: "special",
+    points: 77,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    hidden: true,
+    rewards: generateRewards("silver", "special", 77)
+  },
+  {
+    id: "palindrome",
+    name: "Palindrome",
+    description: "Own a Mek with palindrome ID",
+    icon: "🔄",
+    category: "special",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    hidden: true,
+    rewards: generateRewards("silver", "special", 50)
+  },
+  {
+    id: "dedication",
+    name: "Dedication",
+    description: "Play for 365 days",
+    icon: "📆",
+    category: "special",
+    points: 365,
+    progress: 45,
+    maxProgress: 365,
+    unlocked: false,
+    tier: "diamond",
+    rewards: generateRewards("diamond", "special", 365)
+  },
+  {
+    id: "completionist",
+    name: "Completionist",
+    description: "Unlock all other achievements",
+    icon: "🏅",
+    category: "special",
+    points: 1000,
+    progress: 20,
+    maxProgress: 99,
+    unlocked: false,
+    tier: "diamond",
+    rewards: generateRewards("diamond", "special", 1000)
+  },
+  
+  // Additional misc achievements to reach 100
+  {
+    id: "jack_of_all_trades",
+    name: "Jack of All Trades",
+    description: "Have progress in all achievement categories",
+    icon: "🃏",
+    category: "special",
+    points: 50,
+    progress: 5,
+    maxProgress: 7,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "special", 50)
+  },
+  {
+    id: "whale",
+    name: "Whale",
+    description: "Support the game with premium purchases",
+    icon: "🐋",
+    category: "special",
+    points: 100,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    hidden: true,
+    rewards: generateRewards("gold", "special", 100)
+  },
+  {
+    id: "speed_demon",
+    name: "Speed Demon",
+    description: "Complete 100 actions in 1 minute",
+    icon: "😈",
+    category: "special",
+    points: 75,
+    progress: 0,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "special", 75)
+  },
+  {
+    id: "patience",
+    name: "Patience",
+    description: "Wait 24 hours without any action",
+    icon: "⏳",
+    category: "special",
+    points: 25,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "special", 25)
+  },
+  {
+    id: "mek_whisperer",
+    name: "Mek Whisperer",
+    description: "Name all your Meks",
+    icon: "💬",
+    category: "collection",
+    points: 35,
+    progress: 3,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "collection", 35)
+  },
+  {
+    id: "recycler",
+    name: "Recycler",
+    description: "Recycle 100 items",
+    icon: "♻️",
+    category: "crafting",
+    points: 50,
+    progress: 23,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "crafting", 50)
+  },
+  {
+    id: "banker",
+    name: "Banker",
+    description: "Save 1,000,000 gold in bank",
+    icon: "🏦",
+    category: "wealth",
+    points: 100,
+    progress: 234567,
+    maxProgress: 1000000,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "wealth", 100)
+  },
+  {
+    id: "investor",
+    name: "Investor",
+    description: "Invest in 10 different ventures",
+    icon: "📈",
+    category: "wealth",
+    points: 75,
+    progress: 4,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "wealth", 75)
+  },
+  {
+    id: "comeback_kid",
+    name: "Comeback Kid",
+    description: "Win after being down to 1 HP",
+    icon: "💪",
+    category: "combat",
+    points: 100,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "combat", 100)
+  },
+  {
+    id: "pacifist",
+    name: "Pacifist",
+    description: "Reach level 50 without fighting",
+    icon: "🕊️",
+    category: "combat",
+    points: 150,
+    progress: 0,
+    maxProgress: 50,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "combat", 150)
+  },
+  {
+    id: "trendsetter",
+    name: "Trendsetter",
+    description: "Start a trend that 100 players follow",
+    icon: "📱",
+    category: "social",
+    points: 100,
+    progress: 0,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "social", 100)
+  },
+  {
+    id: "event_master",
+    name: "Event Master",
+    description: "Participate in all seasonal events",
+    icon: "🎪",
+    category: "exploration",
+    points: 100,
+    progress: 3,
+    maxProgress: 12,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "exploration", 100)
+  },
+  {
+    id: "data_miner",
+    name: "Data Miner",
+    description: "Discover unused game content",
+    icon: "⛏️",
+    category: "exploration",
+    points: 50,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "silver",
+    hidden: true,
+    rewards: generateRewards("silver", "exploration", 50)
+  },
+  {
+    id: "rng_blessed",
+    name: "RNG Blessed",
+    description: "Get the best possible outcome 10 times in a row",
+    icon: "🎰",
+    category: "special",
+    points: 77,
+    progress: 0,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "silver",
+    hidden: true,
+    rewards: generateRewards("silver", "special", 77)
+  },
+  {
+    id: "minimalist",
+    name: "Minimalist",
+    description: "Complete the game with minimal inventory",
+    icon: "📦",
+    category: "special",
+    points: 100,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "gold",
+    rewards: generateRewards("gold", "special", 100)
+  },
+  {
+    id: "maximalist",
+    name: "Maximalist",
+    description: "Fill every inventory slot",
+    icon: "🗄️",
+    category: "special",
+    points: 50,
+    progress: 234,
+    maxProgress: 500,
+    unlocked: false,
+    tier: "silver",
+    rewards: generateRewards("silver", "special", 50)
+  },
+  {
+    id: "alpha_tester",
+    name: "Alpha Tester",
+    description: "Participated in alpha testing",
+    icon: "🔬",
+    category: "special",
+    points: 200,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "platinum",
+    hidden: true,
+    rewards: generateRewards("platinum", "special", 200)
+  },
+  {
+    id: "photographer",
+    name: "Photographer",
+    description: "Take 100 screenshots",
+    icon: "📸",
+    category: "exploration",
+    points: 25,
+    progress: 34,
+    maxProgress: 100,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "exploration", 25)
+  },
+  {
+    id: "tutorial_skipper",
+    name: "Tutorial Skipper",
+    description: "Skip all tutorials",
+    icon: "⏭️",
+    category: "special",
+    points: 10,
+    progress: 0,
+    maxProgress: 1,
+    unlocked: false,
+    tier: "bronze",
+    hidden: true,
+    rewards: generateRewards("bronze", "special", 10)
+  },
+  {
+    id: "tutorial_reader",
+    name: "Tutorial Reader",
+    description: "Complete all tutorials",
+    icon: "📖",
+    category: "special",
+    points: 25,
+    progress: 8,
+    maxProgress: 10,
+    unlocked: false,
+    tier: "bronze",
+    rewards: generateRewards("bronze", "special", 25)
+  }
 ];
 
 const tierAccents = {
@@ -355,11 +1174,13 @@ const tierAccents = {
 
 export default function AchievementsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showOnlyCollected, setShowOnlyCollected] = useState(false);
+  const [collectionFilter, setCollectionFilter] = useState<"all" | "collected" | "not_collected">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredAchievement, setHoveredAchievement] = useState<string | null>(null);
   const [expandedAchievement, setExpandedAchievement] = useState<string | null>(null);
   const [layoutVariation, setLayoutVariation] = useState<1 | 2 | 3>(1);
+  const [parentConnectionStyle, setParentConnectionStyle] = useState<1 | 2 | 3>(1);
+  // Description display locked to right column format
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [fineStars, setFineStars] = useState<Array<{id: number, left: string, top: string}>>([]);
 
@@ -388,18 +1209,22 @@ export default function AchievementsPage() {
   const filteredAchievements = achievements
     .filter((achievement) => {
       if (achievement.hidden && !achievement.unlocked) return false;
-      if (showOnlyCollected && !achievement.unlocked) return false;
-      if (!showOnlyCollected && achievement.unlocked) return false;
+      if (collectionFilter === "collected" && !achievement.unlocked) return false;
+      if (collectionFilter === "not_collected" && achievement.unlocked) return false;
       if (selectedCategory !== "all" && achievement.category !== selectedCategory) return false;
       if (searchQuery && !achievement.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !achievement.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
     .sort((a, b) => {
-      // Always show unlocked first
+      // First sort by unlocked status (unlocked first)
       if (a.unlocked && !b.unlocked) return -1;
       if (!a.unlocked && b.unlocked) return 1;
-      return 0;
+      
+      // Then sort by progress percentage (highest first)
+      const aProgress = a.maxProgress > 0 ? (a.progress / a.maxProgress) : 0;
+      const bProgress = b.maxProgress > 0 ? (b.progress / b.maxProgress) : 0;
+      return bProgress - aProgress;
     });
 
   const totalPoints = achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.points, 0);
@@ -444,9 +1269,9 @@ export default function AchievementsPage() {
         
         <div className="relative">
           <div 
-            className={`relative flex items-center gap-3 py-2 px-3 rounded-lg transition-all cursor-pointer ${
+            className={`relative flex items-center gap-2 py-1 px-2 rounded-lg transition-all cursor-pointer ${
               hoveredAchievement === achievement.id ? "bg-gray-800/40" : ""
-            }`}
+            } ${isExpanded ? "bg-yellow-400/10 border border-yellow-400/20" : ""}`}
             onClick={() => toggleAchievement(achievement.id)}
           >
             {/* Tier Dot */}
@@ -456,22 +1281,19 @@ export default function AchievementsPage() {
                 : "bg-gray-700 border-gray-800"
             } shadow-lg z-10`} />
 
-            {/* Icon */}
-            <div className={`text-xl ${!achievement.unlocked ? "grayscale opacity-50" : ""}`}>
-              {achievement.icon}
-            </div>
 
-            {/* Name */}
-            <div className="flex-1">
-              <span className={`font-medium text-sm ${
-                achievement.unlocked ? "text-white" : "text-gray-500"
-              }`}>
-                {achievement.name}
-              </span>
-              {/* Show description on hover */}
-              {hoveredAchievement === achievement.id && !isExpanded && (
-                <p className="text-xs text-gray-400 mt-1">{achievement.description}</p>
-              )}
+            {/* Right Column Description Display - Locked In */}
+            <div className="flex-1 relative overflow-visible">
+              <div className="grid grid-cols-2 gap-2">
+                <div className={`font-medium text-sm ${
+                  achievement.unlocked ? "text-yellow-400" : "text-white"
+                }`}>
+                  {achievement.name}
+                </div>
+                <div className="text-xs text-gray-500 text-right">
+                  {achievement.description}
+                </div>
+              </div>
             </div>
 
             {/* Progress - Segmented dots */}
@@ -516,155 +1338,79 @@ export default function AchievementsPage() {
             </div>
           </div>
 
-          {/* Expanded Details - 3 Layout Variations */}
-          {isExpanded && layoutVariation === 1 && (
-            // Variation 1: Card Layout with Side-by-Side
-            <div className={`ml-9 mt-3 p-4 bg-gradient-to-br from-gray-900/60 to-black/60 rounded-lg border border-yellow-400/10 backdrop-blur-sm`}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-300 mb-3">{achievement.description}</p>
-                  {achievement.maxProgress > 1 && (
-                    <div>
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Progress</span>
-                        <span className="text-yellow-400">{achievement.progress} / {achievement.maxProgress}</span>
-                      </div>
-                      <div className="h-3 bg-gray-900/80 rounded-full overflow-hidden border border-gray-800">
-                        <div 
-                          className={`h-full transition-all duration-500 ${
-                            achievement.unlocked 
-                              ? "bg-gradient-to-r from-green-400 to-green-500" 
-                              : "bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500"
-                          }`}
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-yellow-400/70 mt-1">
-                        {Math.round(progressPercent)}% Complete
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {achievement.rewards && achievement.rewards.length > 0 && (
-                  <div>
-                    <h4 className="text-xs text-yellow-400/70 uppercase tracking-wider mb-2">Rewards</h4>
-                    <div className="space-y-1">
-                      {achievement.rewards.map((reward, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
-                          <span className="text-sm">{reward.icon}</span>
-                          <span className="text-xs text-gray-300">
-                            {reward.amount ? `${reward.amount.toLocaleString()}x ` : ''}
-                            {reward.name || reward.type}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              {achievement.unlocked && achievement.unlockedAt && (
-                <div className="mt-3 pt-3 border-t border-gray-800/50 text-xs text-gray-500 text-right">
-                  Achieved: {new Date(achievement.unlockedAt).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-          )}
-
-          {isExpanded && layoutVariation === 2 && (
-            // Variation 2: Minimal Inline Layout
-            <div className={`ml-9 mt-2 flex flex-wrap items-center gap-4 py-3 px-4 bg-black/30 rounded border-l-2 ${
-              achievement.unlocked ? 'border-l-green-400' : 'border-l-yellow-400'
-            }`}>
-              <div className="flex-1 min-w-[200px]">
-                <p className="text-xs text-gray-400">{achievement.description}</p>
-                {achievement.maxProgress > 1 && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          achievement.unlocked ? "bg-green-400" : "bg-yellow-400"
-                        }`}
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500">{Math.round(progressPercent)}%</span>
-                  </div>
-                )}
-              </div>
-              {achievement.rewards && achievement.rewards.length > 0 && (
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500">Rewards:</span>
-                  {achievement.rewards.map((reward, idx) => (
-                    <div key={idx} className="flex items-center gap-1">
-                      <span className="text-sm">{reward.icon}</span>
-                      {reward.amount && <span className="text-xs text-gray-400">{reward.amount}</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {isExpanded && layoutVariation === 3 && (
-            // Variation 3: Detailed Stats Layout
-            <div className={`ml-9 mt-3 relative overflow-hidden`}>
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-transparent" />
-              <div className="relative p-4 bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800/30">
-                <div className="mb-3">
-                  <p className="text-sm text-gray-300 leading-relaxed">{achievement.description}</p>
-                </div>
+          {/* Expanded Details - List with Dividers Layout */}
+          {isExpanded && (
+            <div className="ml-9 mt-3">
+              {(() => {
+                const realRewards = achievement.rewards || [];
+                const getRewardIcon = (type: string) => {
+                  const colors = {
+                    gold: 'bg-yellow-500',
+                    essence: 'bg-purple-500',
+                    powerChip: 'bg-blue-500',
+                    frame: 'bg-green-500',
+                    title: 'bg-orange-500',
+                    badge: 'bg-red-500'
+                  };
+                  return colors[type] || 'bg-gray-500';
+                };
                 
-                {achievement.maxProgress > 1 && (
-                  <div className="mb-4 p-3 bg-gray-900/40 rounded">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs uppercase tracking-wider text-gray-500">Progress Tracker</span>
-                      <span className="text-sm font-bold text-yellow-400">
-                        {achievement.progress} / {achievement.maxProgress}
-                      </span>
-                    </div>
-                    <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
-                          achievement.unlocked 
-                            ? "bg-gradient-to-r from-green-400 to-green-500 text-black" 
-                            : "bg-gradient-to-r from-yellow-400 to-amber-500 text-black"
-                        }`}
-                        style={{ width: `${Math.max(progressPercent, 15)}%` }}
-                      >
-                        {Math.round(progressPercent)}%
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {achievement.rewards && achievement.rewards.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {achievement.rewards.map((reward, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center gap-2 p-2 bg-gradient-to-r from-gray-800/20 to-gray-900/20 rounded border border-gray-700/30"
-                      >
-                        <div className="text-lg">{reward.icon}</div>
-                        <div>
-                          <div className="text-xs font-medium text-white">
-                            {reward.name || reward.type}
+                return (
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-gray-900/40 to-black/40 border-l-2 border-yellow-400/30">
+                    <div className="flex gap-4">
+                      {/* Left: Progress (2/3 width) */}
+                      <div style={{ width: '66.666%' }}>
+                            <p className="text-xs text-gray-300 mb-3">{achievement.description}</p>
+                        {achievement.maxProgress > 1 && (
+                          <div>
+                            <div className="flex justify-between text-xs text-gray-500 mb-1">
+                              <span>Progress</span>
+                              <span className="text-yellow-400">{achievement.progress}/{achievement.maxProgress}</span>
+                            </div>
+                            <div className="h-2 bg-gray-900 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full ${achievement.unlocked ? "bg-green-400" : "bg-yellow-400"}`}
+                                style={{ width: `${progressPercent}%` }}
+                              />
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{Math.round(progressPercent)}% Complete</div>
                           </div>
-                          {reward.amount && (
-                            <div className="text-xs text-yellow-400">+{reward.amount.toLocaleString()}</div>
-                          )}
+                        )}
+                        
+                        {/* Date - Locked to Below Progress Bar */}
+                        {achievement.unlocked && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="text-xs font-bold text-green-400">COLLECTED</span>
+                            <span className="text-sm font-medium text-gray-300">
+                              {new Date(achievement.unlockedAt!).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                        )}
+                          </div>
+                          
+                      {/* Right: Rewards List (1/3 width) */}
+                      {realRewards.length > 0 && (
+                        <div style={{ width: '33.333%' }}>
+                          <div className="text-xs text-gray-500 mb-1">Rewards</div>
+                          {realRewards.map((reward, idx) => (
+                            <div key={idx} className={`flex items-center gap-2 py-1 ${idx > 0 ? 'border-t border-gray-800/50' : ''}`}>
+                              <div className={`w-3 h-3 rounded-sm ${getRewardIcon(reward.type)}`}></div>
+                              <span className="text-xs text-yellow-400">
+                                {reward.amount && reward.amount > 0 ? `+${reward.amount.toLocaleString()}` : ''}
+                                {reward.name || reward.type}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    ))}
+                      )}
+                    </div>
                   </div>
-                )}
-
-                {achievement.unlocked && achievement.unlockedAt && (
-                  <div className="mt-3 flex items-center justify-center gap-2 text-xs text-green-400/70">
-                    <span>✓</span>
-                    <span>Completed {new Date(achievement.unlockedAt).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -750,31 +1496,15 @@ export default function AchievementsPage() {
               <p className="text-gray-400">Track your progress and unlock rewards</p>
             </div>
 
-            {/* Layout Variation Selector */}
-            <div className="flex justify-center gap-2 mb-4">
-              <span className="text-xs text-gray-500">Layout Style:</span>
-              {[1, 2, 3].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => setLayoutVariation(num as 1 | 2 | 3)}
-                  className={`px-3 py-1 text-xs rounded transition-all ${
-                    layoutVariation === num
-                      ? "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
-                      : "bg-black/40 text-gray-400 border border-gray-700 hover:border-gray-600"
-                  }`}
-                >
-                  Style {num}
-                </button>
-              ))}
-            </div>
+
 
             {/* Overall Progress */}
             <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 mb-6 border border-gray-800/50">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-                {/* Center - Total Points with Style B Font */}
+                {/* Center - Total Points with Style B Font and Glow */}
                 <div className="text-center md:order-2">
                   <div 
-                    className="text-yellow-400"
+                    className="text-yellow-400 relative inline-block"
                     style={{ 
                       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
                       fontSize: '48px',
@@ -782,21 +1512,22 @@ export default function AchievementsPage() {
                       letterSpacing: '1px',
                       lineHeight: '1',
                       fontVariantNumeric: 'tabular-nums',
+                      textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)',
                     }}
                   >
                     {totalPoints.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-400 mt-2">Achievement Points</div>
+                  <div className="text-base text-white mt-2 font-medium">Achievement Points</div>
                   <div className="text-xs text-gray-500 mt-1">of {totalPossiblePoints.toLocaleString()} possible</div>
                 </div>
                 
-                {/* Left - Unlocked (20% smaller) */}
+                {/* Left - Unlocked (25% smaller) */}
                 <div className="text-center md:order-1">
                   <div 
                     className="text-green-400"
                     style={{ 
                       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                      fontSize: '38.4px', // 20% smaller than 48px
+                      fontSize: '36px', // 25% smaller than 48px
                       fontWeight: 200,
                       letterSpacing: '1px',
                       lineHeight: '1',
@@ -809,13 +1540,13 @@ export default function AchievementsPage() {
                   <div className="text-xs text-gray-500 mt-1">of {totalCount} achievements</div>
                 </div>
                 
-                {/* Right - Completion (20% smaller) */}
+                {/* Right - Completion (25% smaller) */}
                 <div className="text-center md:order-3">
                   <div 
                     className="text-blue-400"
                     style={{ 
                       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                      fontSize: '38.4px', // 20% smaller than 48px
+                      fontSize: '36px', // 25% smaller than 48px
                       fontWeight: 200,
                       letterSpacing: '1px',
                       lineHeight: '1',
@@ -871,12 +1602,22 @@ export default function AchievementsPage() {
                 ))}
               </select>
 
-              {/* Toggle: Collected / Not Collected */}
+              {/* Toggle: All / Collected / Not Collected */}
               <div className="flex bg-black/60 border border-gray-700 rounded-lg overflow-hidden">
                 <button
-                  onClick={() => setShowOnlyCollected(true)}
+                  onClick={() => setCollectionFilter("all")}
                   className={`px-4 py-2 transition-all ${
-                    showOnlyCollected
+                    collectionFilter === "all"
+                      ? "bg-yellow-400/20 text-yellow-400"
+                      : "text-gray-400 hover:bg-gray-800/50"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setCollectionFilter("collected")}
+                  className={`px-4 py-2 transition-all ${
+                    collectionFilter === "collected"
                       ? "bg-yellow-400/20 text-yellow-400"
                       : "text-gray-400 hover:bg-gray-800/50"
                   }`}
@@ -884,9 +1625,9 @@ export default function AchievementsPage() {
                   Collected
                 </button>
                 <button
-                  onClick={() => setShowOnlyCollected(false)}
+                  onClick={() => setCollectionFilter("not_collected")}
                   className={`px-4 py-2 transition-all ${
-                    !showOnlyCollected
+                    collectionFilter === "not_collected"
                       ? "bg-yellow-400/20 text-yellow-400"
                       : "text-gray-400 hover:bg-gray-800/50"
                   }`}
@@ -895,6 +1636,7 @@ export default function AchievementsPage() {
                 </button>
               </div>
             </div>
+
 
             {/* Achievements List */}
             <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4 max-h-[600px] overflow-y-auto custom-scrollbar">
@@ -912,6 +1654,59 @@ export default function AchievementsPage() {
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                   background: rgba(250, 182, 23, 0.5);
+                }
+                
+                @keyframes slideRightFade {
+                  from {
+                    opacity: 0;
+                    transform: translateX(-10px);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translateX(0);
+                  }
+                }
+                
+                @keyframes fadeInUp {
+                  from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+                
+                @keyframes expandHeight {
+                  from {
+                    max-height: 0;
+                    opacity: 0;
+                  }
+                  to {
+                    max-height: 40px;
+                    opacity: 1;
+                  }
+                }
+                
+                @keyframes scaleIn {
+                  from {
+                    transform: scale(0.8);
+                    opacity: 0;
+                  }
+                  to {
+                    transform: scale(1);
+                    opacity: 1;
+                  }
+                }
+                
+                @keyframes fadeIn {
+                  from {
+                    opacity: 0;
+                  }
+                  to {
+                    opacity: 0.7;
+                  }
                 }
               `}</style>
               

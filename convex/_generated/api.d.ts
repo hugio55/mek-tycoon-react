@@ -43,6 +43,7 @@ import type * as seedMeks from "../seedMeks.js";
 import type * as seedShopListings from "../seedShopListings.js";
 import type * as spells from "../spells.js";
 import type * as stocks from "../stocks.js";
+import type * as storyNodes from "../storyNodes.js";
 import type * as sunspotActions from "../sunspotActions.js";
 import type * as sunspotAntiCheat from "../sunspotAntiCheat.js";
 import type * as sunspots from "../sunspots.js";
@@ -92,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   seedShopListings: typeof seedShopListings;
   spells: typeof spells;
   stocks: typeof stocks;
+  storyNodes: typeof storyNodes;
   sunspotActions: typeof sunspotActions;
   sunspotAntiCheat: typeof sunspotAntiCheat;
   sunspots: typeof sunspots;

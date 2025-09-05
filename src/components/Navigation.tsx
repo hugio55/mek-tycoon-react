@@ -76,11 +76,11 @@ const navCategories: readonly NavCategory[] = [
     title: "Admin",
     icon: "⚡",
     items: [
+      { label: "Admin Dashboard", href: "/admin" },
+      { label: "Story Node Generator", href: "/admin/story-nodes" },
       { label: "Save System", href: "/admin-save" },
       // { label: "Mek Assignment", href: "/mek-assignment" },
       { label: "Mek Selector", href: "/mek-selector" },
-      { label: "Mek Selector Grid", href: "/mek-selector-grid" },
-      { label: "Mek Selector B", href: "/mek-selector-b" },
       // { label: "Mek Swarm", href: "/mek-swarm" },
       { label: "Shop Manager", href: "/admin-shop" },
       { label: "UI Showcase", href: "/ui-showcase" },
@@ -93,6 +93,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Plinko", href: "/admin-plinko" },
       { label: "Sphere Selector", href: "/admin-sphere" },
       { label: "Contracts", href: "/contracts" },
+      { label: "Story Mode", href: "/contracts/chapters" },
     ],
   },
 ];
