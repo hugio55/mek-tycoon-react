@@ -5,80 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { getAllVariations } from "../../lib/variationsData";
-
-// Helper function to safely get error message
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  return 'An unknown error occurred';
-}
-
-interface Template {
-  _id: string;
-  name: string;
-  description?: string;
-  nodes: TalentNode[];
-  connections: Connection[];
-}
-
-type EssenceRequirement = {
-  attribute: string; // e.g., 'Bumblebee', 'Taser', etc.
-  amount: number;
-};
-
-type TalentNode = {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  tier: number;
-  desc: string;
-  xp: number;
-  variation?: string;
-  variationType?: 'head' | 'body' | 'trait';
-  imageUrl?: string;
-  // CiruTree-specific fields
-  goldCost?: number;
-  essences?: EssenceRequirement[];
-  ingredients?: string[];
-  // Spell-specific fields
-  isSpell?: boolean;
-  spellType?: string; // e.g., 'Fire Blast', 'Healing Wave', etc.
-  specialIngredient?: string;
-  // Reward fields
-  frameReward?: string; // Frame ID that gets unlocked
-  buffReward?: { type: string; value: number }; // e.g., {type: 'goldRate', value: 10}
-  essenceReward?: { type: string; amount: number }; // e.g., {type: 'Fire', amount: 5}
-  signatureItemReward?: string; // Over Exposed Signature item ID
-  // Mek-specific fields
-  nodeType?: 'stat' | 'ability' | 'passive' | 'special';
-  statBonus?: {
-    health?: number;
-    speed?: number;
-    attack?: number;
-    defense?: number;
-    critChance?: number;
-    critDamage?: number;
-  };
-  abilityId?: string;
-  passiveEffect?: string;
-};
-
-type Connection = {
-  from: string;
-  to: string;
-};
-
-type DragState = {
-  isDragging: boolean;
-  nodeId: string | null;
-  offsetX: number;
-  offsetY: number;
-};
+import { Template, TalentNode, Connection, DragState, BuilderMode, EssenceRequirement } from "./types";
+import { getErrorMessage } from "./utils";
 
 export default function TalentBuilderPage() {
   const [nodes, setNodes] = useState<TalentNode[]>([]);
@@ -110,13 +38,19 @@ export default function TalentBuilderPage() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   // New state for Mek template mode
-  const [builderMode, setBuilderMode] = useState<'circutree' | 'mek' | 'story'>('circutree');
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('circutree');
   const [selectedTemplateId, setSelectedTemplateId] = useState<Id<"mekTreeTemplates"> | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showCiruTreeLoader, setShowCiruTreeLoader] = useState(false);
+  const [storyChapter, setStoryChapter] = useState(1);
+  const [storyNodeEditMode, setStoryNodeEditMode] = useState<'normal' | 'event' | 'boss' | 'final_boss'>('normal');
   const [savedCiruTrees, setSavedCiruTrees] = useState<{name: string, data: any, isActive?: boolean}[]>([]);
+  const [savedStoryModes, setSavedStoryModes] = useState<{name: string, chapter: number, data: any}[]>([]);
+  const [showStoryLoader, setShowStoryLoader] = useState(false);
+  const [history, setHistory] = useState<{nodes: TalentNode[], connections: Connection[]}[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
   // Convex queries and mutations
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
@@ -228,6 +162,51 @@ export default function TalentBuilderPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges, builderMode]);
+  
+  // Load saved story modes on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('savedStoryModes');
+    if (saved) {
+      setSavedStoryModes(JSON.parse(saved));
+    }
+  }, []);
+  
+  // History management
+  const pushToHistory = useCallback(() => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ nodes: [...nodes], connections: [...connections] });
+    if (newHistory.length > 100) newHistory.shift(); // Keep max 100 history
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [nodes, connections, history, historyIndex]);
+  
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      setNodes(prevState.nodes);
+      setConnections(prevState.connections);
+      setHistoryIndex(historyIndex - 1);
+    }
+  }, [history, historyIndex]);
+  
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setNodes(nextState.nodes);
+      setConnections(nextState.connections);
+      setHistoryIndex(historyIndex + 1);
+    }
+  }, [history, historyIndex]);
+  
+  // Auto-set node type when selecting a node in story mode
+  useEffect(() => {
+    if (builderMode === 'story' && selectedNode) {
+      const node = nodes.find(n => n.id === selectedNode);
+      if (node && node.storyNodeType) {
+        setStoryNodeEditMode(node.storyNodeType);
+      }
+    }
+  }, [selectedNode, nodes, builderMode]);
   
   const saveToLocalStorage = async (showStatus = true) => {
     try {
@@ -492,9 +471,62 @@ export default function TalentBuilderPage() {
     return Math.round((value - offset) / GRID_SIZE) * GRID_SIZE + offset;
   }, [snapToGrid]);
 
-  const addNode = (name?: string, x?: number, y?: number, tier?: number) => {
+  const addNodeWithoutSnap = (x: number, y: number) => {
+    // Generate unique ID with timestamp and random component for story mode
+    const uniqueId = builderMode === 'story' 
+      ? `ch${storyChapter}_node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      : `node-${Date.now()}`;
+    
     const newNode: TalentNode = {
-      id: `node-${Date.now()}`,
+      id: uniqueId,
+      name: '',
+      x: x, // Use exact coordinates without snapping
+      y: y, // Use exact coordinates without snapping
+      tier: 1,
+      desc: '',
+      xp: 0,
+      goldCost: 0,
+      essences: [],
+      ingredients: [],
+      isSpell: false
+    };
+    
+    // Add story mode specific fields if in story mode
+    if (builderMode === 'story') {
+      newNode.storyNodeType = storyNodeEditMode;
+      newNode.goldReward = 100;
+      newNode.essenceRewards = [{ type: 'Fire', amount: 1 }];
+      if (storyNodeEditMode === 'event') {
+        newNode.eventName = 'Event Name';
+        newNode.otherRewards = [];
+      } else if (storyNodeEditMode === 'boss') {
+        newNode.bossMekId = '';
+        newNode.otherRewards = [];
+      } else if (storyNodeEditMode === 'final_boss') {
+        newNode.bossMekId = 'WREN';
+        newNode.otherRewards = [{ item: 'Epic Loot Box', quantity: 1 }];
+        newNode.goldReward = 10000;
+      }
+    }
+    
+    setNodes([...nodes, newNode]);
+    setSelectedNode(newNode.id);
+    setEditingNode(newNode.id);
+    
+    // Push to history after a short delay to allow state to update
+    setTimeout(() => {
+      pushToHistory();
+    }, 0);
+  };
+
+  const addNode = (name?: string, x?: number, y?: number, tier?: number) => {
+    // Generate unique ID with timestamp and random component for story mode
+    const uniqueId = builderMode === 'story' 
+      ? `ch${storyChapter}_node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      : `node-${Date.now()}`;
+    
+    const newNode: TalentNode = {
+      id: uniqueId,
       name: name || '',
       x: snapPosition(x || 800),
       y: snapPosition(y || 400),
@@ -506,9 +538,31 @@ export default function TalentBuilderPage() {
       ingredients: [],
       isSpell: false  // Default to variation node, user can change in properties
     };
+    
+    // Add story mode specific fields if in story mode
+    if (builderMode === 'story') {
+      newNode.storyNodeType = storyNodeEditMode;
+      newNode.goldReward = 100;
+      newNode.essenceRewards = [{ type: 'Fire', amount: 1 }];
+      if (storyNodeEditMode === 'event') {
+        newNode.eventName = 'Event Name';
+        newNode.otherRewards = [];
+      } else if (storyNodeEditMode === 'boss') {
+        newNode.bossMekId = '';
+        newNode.otherRewards = [];
+      } else if (storyNodeEditMode === 'final_boss') {
+        newNode.bossMekId = 'WREN';
+        newNode.otherRewards = [{ item: 'Epic Loot Box', quantity: 1 }];
+        newNode.goldReward = 10000;
+      }
+    }
+    
     setNodes([...nodes, newNode]);
     setSelectedNode(newNode.id);
     setEditingNode(newNode.id);
+    
+    // Push to history after a short delay to allow state to update
+    setTimeout(() => pushToHistory(), 100);
   };
 
   const deleteNode = useCallback((nodeId: string) => {
@@ -524,6 +578,70 @@ export default function TalentBuilderPage() {
   const updateNode = useCallback((nodeId: string, updates: Partial<TalentNode>) => {
     setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, ...updates } : n));
   }, []);
+  
+  // Keyboard event handlers - must be after deleteNode is defined
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't process hotkeys if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      // Delete selected node
+      if (e.key === 'Delete' && selectedNode && !editingNode) {
+        deleteNode(selectedNode);
+        pushToHistory();
+      }
+      
+      // Undo (Ctrl+Z)
+      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      
+      // Redo (Ctrl+Shift+Z or Ctrl+Y)
+      if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault();
+        redo();
+      }
+      
+      // Mode hotkeys (adjusted order)
+      if (e.key === '1') {
+        e.preventDefault();
+        setMode('select');
+      }
+      if (e.key === '2') {
+        e.preventDefault();
+        setMode('add');
+      }
+      if (e.key === '3') {
+        e.preventDefault();
+        setMode('connect');
+        setConnectFrom(null);
+      }
+      
+      // Story mode node type hotkeys
+      if (builderMode === 'story') {
+        if (e.key === 'q' || e.key === 'Q') {
+          e.preventDefault();
+          setStoryNodeEditMode('normal');
+        }
+        if (e.key === 'w' || e.key === 'W') {
+          e.preventDefault();
+          setStoryNodeEditMode('event');
+        }
+        if (e.key === 'e' || e.key === 'E') {
+          e.preventDefault();
+          setStoryNodeEditMode('boss');
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          setStoryNodeEditMode('final_boss');
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, editingNode, deleteNode, pushToHistory, undo, redo, builderMode, mode]);
 
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -540,17 +658,19 @@ export default function TalentBuilderPage() {
           );
           
           if (!exists) {
+            pushToHistory(); // Save state before connection
             return [...prev, { from: connectFrom, to: nodeId }];
           }
           return prev;
         });
-        setConnectFrom(null);
+        // Chain connection: set the target as the new source for next connection
+        setConnectFrom(nodeId);
       }
     } else if (mode === 'select' || mode === 'add') {
       // Allow selection in both select and add modes
       setSelectedNode(prev => prev === nodeId ? null : nodeId);
     }
-  }, [mode, connectFrom]);
+  }, [mode, connectFrom, pushToHistory]);
 
   const handleMouseDown = (nodeId: string, e: React.MouseEvent) => {
     // Allow dragging in both select and add modes
@@ -586,8 +706,12 @@ export default function TalentBuilderPage() {
     if (!rect) return;
     
     // Calculate new position accounting for pan and zoom
+    // In story mode with bottom anchor, we need to handle Y differently
     const worldX = (e.clientX - rect.left - panOffset.x) / zoom - dragState.offsetX;
-    const worldY = (e.clientY - rect.top - panOffset.y) / zoom - dragState.offsetY;
+    let worldY = (e.clientY - rect.top - panOffset.y) / zoom - dragState.offsetY;
+    
+    // In story mode, the grid is anchored at the bottom, but dragging should still feel natural
+    // No inversion needed - the calculation is already correct
     
     updateNode(dragState.nodeId, {
       x: snapPosition(worldX),
@@ -616,18 +740,40 @@ export default function TalentBuilderPage() {
       return;
     }
     
+    // Clear connection when clicking empty space in connect mode
+    if (mode === 'connect' && e.button === 0) {
+      setConnectFrom(null);
+      return;
+    }
+    
     // If in add mode, add a node at clicked position
     if (mode === 'add' && e.button === 0) { // Left click only
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
       
-      // Calculate position accounting for pan and zoom
-      // Subtract 15 pixels (half of 30px node size) to center the node on cursor
-      const nodeRadius = 15; // Half of the node size (30px)
-      const x = (e.clientX - rect.left - panOffset.x) / zoom - nodeRadius;
-      const y = (e.clientY - rect.top - panOffset.y) / zoom - nodeRadius;
+      // Calculate the exact click position in canvas coordinates
+      const clickX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const clickY = (e.clientY - rect.top - panOffset.y) / zoom;
       
-      addNode('', x, y, 1);
+      // First snap the click position to grid if needed
+      const snappedX = snapPosition(clickX);
+      const snappedY = snapPosition(clickY);
+      
+      // Then subtract the node radius to center it on the snapped position
+      let nodeRadius = 15; // Default for 30px node
+      if (builderMode === 'story') {
+        // Adjust for different story mode node sizes
+        if (storyNodeEditMode === 'normal') nodeRadius = 20; // Half of 40px
+        else if (storyNodeEditMode === 'event') nodeRadius = 40; // Half of 80px
+        else if (storyNodeEditMode === 'boss') nodeRadius = 60; // Half of 120px
+        else if (storyNodeEditMode === 'final_boss') nodeRadius = 80; // Half of 160px
+      }
+      
+      const x = snappedX - nodeRadius;
+      const y = snappedY - nodeRadius;
+      
+      // Pass the already-positioned coordinates, don't snap again
+      addNodeWithoutSnap(x, y);
       return;
     }
     
@@ -744,12 +890,11 @@ export default function TalentBuilderPage() {
               <button
                 onClick={() => {
                   setBuilderMode('circutree');
-                  const savedData = localStorage.getItem('talentTreeData');
-                  if (savedData) {
-                    const parsed = JSON.parse(savedData);
-                    setNodes(parsed.nodes || []);
-                    setConnections(parsed.connections || []);
-                  }
+                  // Clear current nodes and start fresh
+                  setNodes([]);
+                  setConnections([]);
+                  setPanOffset({ x: 0, y: 0 });
+                  setZoom(1);
                 }}
                 className={`px-3 py-1 rounded transition-all ${
                   builderMode === 'circutree' 
@@ -788,18 +933,32 @@ export default function TalentBuilderPage() {
                 onClick={() => {
                   setBuilderMode('story');
                   // Initialize with a single starting node at bottom center
-                  setNodes([{
+                  const startNode = {
                     id: 'start',
                     name: 'Start',
-                    x: 400,
-                    y: 2800,
+                    x: 3000 - 25, // Center of grid at 3000px - half of 50px start node size
+                    y: 5950 - 50, // Bottom of 6000px grid - start node size (50px)
                     tier: 0,
                     desc: 'Chapter Start',
                     xp: 0
-                  }]);
+                    // No storyNodeType for start node - it has its own special styling
+                  };
+                  setNodes([startNode]);
                   setConnections([]);
-                  setViewOffset({ x: -300, y: -2200 });
-                  setZoom(0.8);
+                  // Center the viewport on the start node
+                  if (canvasRef.current) {
+                    const canvasRect = canvasRef.current.getBoundingClientRect();
+                    const viewportHeight = canvasRect.height;
+                    // Show start node near bottom of viewport
+                    setPanOffset({
+                      x: -2850, // Center on runway (3000px - 150px viewport offset)
+                      y: -(5900 - viewportHeight + 150)  // Show start node 150px from viewport bottom
+                    });
+                  } else {
+                    // Fallback if canvas not ready
+                    setPanOffset({ x: -2850, y: -5300 });
+                  }
+                  setZoom(1);
                 }}
                 className={`px-3 py-1 rounded transition-all ${
                   builderMode === 'story' 
@@ -935,63 +1094,140 @@ export default function TalentBuilderPage() {
           )}
           
           {builderMode === 'story' && (
-            <>
-              <button 
-                onClick={() => generateStoryNodes('diamond')}
-                className="px-3 py-1 text-sm rounded bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                Generate Diamond
-              </button>
-              <button 
-                onClick={() => generateStoryNodes('organic')}
-                className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
-              >
-                Generate Organic
-              </button>
-              <button 
-                onClick={() => generateStoryNodes('wave')}
-                className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Generate Wave
-              </button>
+            <div className="space-y-2">
+              {/* First Row */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Chapter Selector */}
+                <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-400">Chapter:</label>
+                <select 
+                  value={storyChapter}
+                  onChange={(e) => setStoryChapter(Number(e.target.value))}
+                  className="px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white"
+                >
+                  {[...Array(10)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>Chapter {i + 1}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Node Type Selector */}
+              <div className="flex items-center gap-2 ml-4">
+                <label className="text-xs text-gray-400">Node Type:</label>
+                <div className="flex gap-1 bg-gray-800 p-1 rounded">
+                  <button
+                    onClick={() => setStoryNodeEditMode('normal')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      storyNodeEditMode === 'normal' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Normal (Mek)
+                  </button>
+                  <button
+                    onClick={() => setStoryNodeEditMode('event')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      storyNodeEditMode === 'event' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Event (2x)
+                  </button>
+                  <button
+                    onClick={() => setStoryNodeEditMode('boss')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      storyNodeEditMode === 'boss' 
+                        ? 'bg-red-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Boss (3x)
+                  </button>
+                  <button
+                    onClick={() => setStoryNodeEditMode('final_boss')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      storyNodeEditMode === 'final_boss' 
+                        ? 'bg-orange-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    FINAL (4x)
+                  </button>
+                </div>
+              </div>
+              
+              
+              {/* Save/Load Buttons */}
               <button 
                 onClick={() => {
-                  setNodes([{
-                    id: 'start',
-                    name: 'Start',
-                    x: 400,
-                    y: 2800,
-                    tier: 0,
-                    desc: 'Chapter Start',
-                    xp: 0
-                  }]);
-                  setConnections([]);
+                  const name = prompt(`Save Chapter ${storyChapter} as:`, `Chapter ${storyChapter} Layout`);
+                  if (name) {
+                    const saved = [...savedStoryModes];
+                    saved.push({
+                      name,
+                      chapter: storyChapter,
+                      data: { nodes, connections }
+                    });
+                    setSavedStoryModes(saved);
+                    localStorage.setItem('savedStoryModes', JSON.stringify(saved));
+                    setSaveStatus(`Saved as "${name}"`);
+                    setTimeout(() => setSaveStatus(""), 2000);
+                  }
+                }}
+                className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white ml-4"
+              >
+                Save
+              </button>
+              
+              <button 
+                onClick={() => setShowStoryLoader(true)}
+                className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Load
+              </button>
+              
+              {/* Clear Button */}
+              <button 
+                onClick={() => {
+                  if (confirm(`Clear all nodes for Chapter ${storyChapter}?`)) {
+                    setNodes([{
+                      id: 'start',
+                      name: 'Start',
+                      x: 3000 - 25, // Center of grid at 3000px - half of 50px start node size
+                      y: 5950 - 50, // Bottom of 6000px grid - start node size (50px)
+                      tier: 0,
+                      desc: `Chapter ${storyChapter} Start`,
+                      xp: 0,
+                      storyNodeType: 'normal'
+                    }]);
+                    setConnections([]);
+                    setSaveStatus(`Chapter ${storyChapter} cleared`);
+                    setTimeout(() => setSaveStatus(""), 2000);
+                  }
                 }}
                 className="px-3 py-1 text-sm rounded bg-red-600 hover:bg-red-700 text-white"
               >
-                Clear
+                Clear Chapter
               </button>
-              <div className="flex items-center gap-2 ml-2">
-                <label className="text-xs text-gray-400">Nodes:</label>
-                <input 
-                  type="number" 
-                  min="10" 
-                  max="400" 
-                  defaultValue="50"
-                  id="storyNodeCount"
-                  className="w-16 px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white"
-                />
-                <label className="text-xs text-gray-400">Width:</label>
-                <input 
-                  type="number" 
-                  min="3" 
-                  max="7" 
-                  defaultValue="5"
-                  id="storyMaxWidth"
-                  className="w-12 px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-white"
-                />
               </div>
-            </>
+              
+              {/* Second Row */}
+              <div className="flex items-center gap-4">
+                {/* Node Counter */}
+                <div className="flex items-center gap-3 bg-gray-800/50 px-3 py-1 rounded">
+                  <span className="text-xs text-gray-400">Nodes:</span>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-blue-400">N: {nodes.filter(n => n.storyNodeType === 'normal').length}</span>
+                    <span className="text-purple-400">E: {nodes.filter(n => n.storyNodeType === 'event').length}</span>
+                    <span className="text-red-400">B: {nodes.filter(n => n.storyNodeType === 'boss').length}</span>
+                    <span className="text-orange-400">F: {nodes.filter(n => n.storyNodeType === 'final_boss').length}</span>
+                    <span className="text-yellow-400">Total: {nodes.filter(n => n.storyNodeType).length}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
           
           {/* Mode Selector */}
@@ -1034,7 +1270,7 @@ export default function TalentBuilderPage() {
       {/* Canvas - Full Screen */}
       <div 
         ref={canvasRef}
-        className="fixed inset-0 bg-gray-950"
+        className="fixed left-0 right-0 bottom-0 bg-gray-950"
         style={{ top: '200px' }}
       >
         <div 
@@ -1068,16 +1304,16 @@ export default function TalentBuilderPage() {
           <div 
             className="canvas-content absolute"
             style={{ 
-              width: '3000px', 
-              height: '3000px',
+              width: '6000px',  // Doubled grid size for all modes
+              height: '6000px', // Doubled grid size for all modes
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
-              transformOrigin: '0 0',
+              transformOrigin: '0 0', // Standard top-left origin for all modes
               transition: dragState.isDragging || isPanning ? 'none' : 'transform 0.1s'
             }}
           >
             {/* Grid */}
             {showGrid && (
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.2 }}>
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.25 }}>
                 <defs>
                   <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
                     <circle cx={GRID_SIZE/2} cy={GRID_SIZE/2} r="1" fill="white"/>
@@ -1085,6 +1321,59 @@ export default function TalentBuilderPage() {
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
               </svg>
+            )}
+            
+            {/* Story Mode Runway Guidelines */}
+            {builderMode === 'story' && (
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Left guideline */}
+                <div 
+                  className="absolute h-full bg-yellow-500"
+                  style={{ 
+                    left: '2850px', // Center at 3000px - 150px (half of 300px width)
+                    width: '2px',
+                    opacity: 0.3
+                  }}
+                />
+                {/* Right guideline */}
+                <div 
+                  className="absolute h-full bg-yellow-500"
+                  style={{ 
+                    left: '3150px', // Center at 3000px + 150px (half of 300px width)
+                    width: '2px',
+                    opacity: 0.3
+                  }}
+                />
+                {/* Center line */}
+                <div 
+                  className="absolute h-full bg-yellow-500"
+                  style={{ 
+                    left: '3000px',
+                    width: '1px',
+                    opacity: 0.2
+                  }}
+                />
+                {/* Bottom marker line */}
+                <div 
+                  className="absolute w-full bg-red-500"
+                  style={{ 
+                    bottom: '50px', // Mark where the start node should be
+                    height: '2px',
+                    opacity: 0.3
+                  }}
+                />
+                {/* Runway label */}
+                <div 
+                  className="absolute text-yellow-500 text-sm font-bold"
+                  style={{ 
+                    left: '3010px',
+                    top: '10px',
+                    opacity: 0.5
+                  }}
+                >
+                  STORY RUNWAY (300px)
+                </div>
+              </div>
             )}
             
             {/* Connections */}
@@ -1097,9 +1386,26 @@ export default function TalentBuilderPage() {
               const isFromStart = fromNode.id === 'start' || fromNode.id.startsWith('start-');
               const isToStart = toNode.id === 'start' || toNode.id.startsWith('start-');
               
-              // Calculate center points of nodes
-              const fromRadius = isFromStart ? 25 : 15;
-              const toRadius = isToStart ? 25 : 15;
+              // Calculate center points of nodes based on actual sizes
+              let fromRadius = 15;
+              let toRadius = 15;
+              
+              if (isFromStart) fromRadius = 25;
+              else if (builderMode === 'story' && fromNode.storyNodeType) {
+                if (fromNode.storyNodeType === 'normal') fromRadius = 20;
+                else if (fromNode.storyNodeType === 'event') fromRadius = 40;
+                else if (fromNode.storyNodeType === 'boss') fromRadius = 60;
+                else if (fromNode.storyNodeType === 'final_boss') fromRadius = 80;
+              }
+              
+              if (isToStart) toRadius = 25;
+              else if (builderMode === 'story' && toNode.storyNodeType) {
+                if (toNode.storyNodeType === 'normal') toRadius = 20;
+                else if (toNode.storyNodeType === 'event') toRadius = 40;
+                else if (toNode.storyNodeType === 'boss') toRadius = 60;
+                else if (toNode.storyNodeType === 'final_boss') toRadius = 80;
+              }
+              
               const fromCenterX = fromNode.x + fromRadius;
               const fromCenterY = fromNode.y + fromRadius;
               const toCenterX = toNode.x + toRadius;
@@ -1135,32 +1441,70 @@ export default function TalentBuilderPage() {
               const isConnecting = connectFrom === node.id;
               const isStart = node.id === 'start' || node.id.startsWith('start-');
               
+              // Determine size based on story node type
+              let nodeSize = '30px';
+              if (isStart) nodeSize = '50px';
+              else if (builderMode === 'story' && node.storyNodeType) {
+                if (node.storyNodeType === 'normal') nodeSize = '40px';
+                else if (node.storyNodeType === 'event') nodeSize = '80px';
+                else if (node.storyNodeType === 'boss') nodeSize = '120px';
+                else if (node.storyNodeType === 'final_boss') nodeSize = '160px';
+              }
+              
+              // Determine shape and color
+              let borderRadius = '50%'; // Default circle
+              let background = '#6b7280';
+              
+              if (isStart) {
+                background = 'radial-gradient(circle, #00ff88, #00cc66)';
+              } else if (builderMode === 'story' && node.storyNodeType) {
+                if (node.storyNodeType === 'normal') {
+                  borderRadius = '8px'; // Square for normal mek nodes
+                  background = '#3b82f6'; // Blue
+                } else if (node.storyNodeType === 'event') {
+                  borderRadius = '50%'; // Round for event nodes
+                  background = 'linear-gradient(135deg, #a855f7, #c084fc)'; // Purple gradient
+                } else if (node.storyNodeType === 'boss') {
+                  borderRadius = '8px'; // Square for boss nodes
+                  background = 'linear-gradient(135deg, #dc2626, #ef4444)'; // Red gradient
+                } else if (node.storyNodeType === 'final_boss') {
+                  borderRadius = '12px'; // Square for final boss
+                  background = 'linear-gradient(135deg, #f97316, #fbbf24, #f97316)'; // Orange/Gold gradient
+                }
+              } else if (node.isSpell) {
+                borderRadius = '4px';
+                background = 'linear-gradient(135deg, #9333ea, #c084fc)';
+              } else if (node.nodeType === 'stat') {
+                background = '#3b82f6';
+              } else if (node.nodeType === 'ability') {
+                background = '#a855f7';
+              } else if (node.nodeType === 'passive') {
+                background = '#f97316';
+              } else if (node.nodeType === 'special') {
+                background = '#ef4444';
+              }
+              
               return (
                 <div key={node.id}>
                   <div
                     className={`talent-node absolute flex items-center justify-center cursor-move transition-all duration-200`}
                   style={{
-                    width: isStart ? '50px' : '30px',
-                    height: isStart ? '50px' : '30px',
+                    width: nodeSize,
+                    height: nodeSize,
                     left: `${node.x}px`,
                     top: `${node.y}px`,
-                    background: isStart 
-                      ? 'radial-gradient(circle, #00ff88, #00cc66)'
-                      : node.isSpell ? 'linear-gradient(135deg, #9333ea, #c084fc)'
-                      : node.nodeType === 'stat' ? '#3b82f6'
-                      : node.nodeType === 'ability' ? '#a855f7'
-                      : node.nodeType === 'passive' ? '#f97316'
-                      : node.nodeType === 'special' ? '#ef4444'
-                      : '#6b7280',
+                    background,
                     border: `3px solid ${
                       isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
                     }`,
-                    borderRadius: node.isSpell ? '4px' : '50%',  // Square for spells, circle for variations
+                    borderRadius,
                     boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : 
                               isConnecting ? '0 0 20px rgba(16, 185, 129, 0.5)' :
-                              isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 'none',
+                              isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 
+                              node.storyNodeType === 'boss' ? '0 0 15px rgba(239, 68, 68, 0.5)' : 
+                              node.storyNodeType === 'final_boss' ? '0 0 25px rgba(251, 191, 36, 0.8)' : 'none',
                     zIndex: isSelected ? 20 : 10,
-                    transform: isSelected ? 'scale(1.2)' : 'scale(1)'
+                    transform: isSelected ? 'scale(1.1)' : 'scale(1)'
                   }}
                   onClick={(e) => handleNodeClick(node.id, e)}
                   onMouseDown={(e) => handleMouseDown(node.id, e)}
@@ -1170,11 +1514,19 @@ export default function TalentBuilderPage() {
                     <img 
                       src={node.imageUrl} 
                       alt={node.name}
-                      className={`w-full h-full object-cover pointer-events-none ${node.isSpell ? 'rounded' : 'rounded-full'}`}
+                      className={`w-full h-full object-cover pointer-events-none ${borderRadius === '50%' ? 'rounded-full' : 'rounded'}`}
                     />
                   ) : (
-                    <div className="text-xs font-bold text-white pointer-events-none">
-                      {node.tier}
+                    <div className="text-xs font-bold text-white pointer-events-none flex flex-col items-center justify-center">
+                      {builderMode === 'story' && node.storyNodeType === 'final_boss' ? (
+                        <span className="text-4xl">🔥</span>
+                      ) : builderMode === 'story' && node.storyNodeType === 'boss' ? (
+                        <span className="text-lg">👑</span>
+                      ) : builderMode === 'story' && node.storyNodeType === 'event' ? (
+                        <span className="text-base">⚡</span>
+                      ) : (
+                        node.tier
+                      )}
                     </div>
                   )}
                 </div>
@@ -1183,8 +1535,8 @@ export default function TalentBuilderPage() {
                   <div 
                     className="absolute pointer-events-none text-xs text-white font-medium"
                     style={{
-                      left: `${node.x + (isStart ? 25 : 15)}px`,
-                      top: `${node.y + (isStart ? 55 : 35)}px`,
+                      left: `${node.x + parseInt(nodeSize) / 2}px`,
+                      top: `${node.y + parseInt(nodeSize) + 5}px`,
                       transform: 'translateX(-50%)',
                       width: '100px',
                       textAlign: 'center',
@@ -1287,12 +1639,42 @@ export default function TalentBuilderPage() {
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400">Tier</label>
+                  <label className="text-xs text-gray-400">Completed Nodes to Get Here</label>
                   <input
                     type="number"
-                    value={node.tier}
-                    onChange={(e) => updateNode(node.id, { tier: parseInt(e.target.value) })}
-                    className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                    value={(() => {
+                      // Calculate minimum nodes needed to reach this node
+                      const visited = new Set<string>();
+                      const queue = [{ nodeId: node.id, distance: 0 }];
+                      let maxDistance = 0;
+                      
+                      // Find all paths from start node
+                      const startNode = nodes.find(n => n.id === 'start');
+                      if (!startNode) return 0;
+                      
+                      // Simple BFS to find shortest path from start
+                      const getDistance = (targetId: string): number => {
+                        const visited = new Set<string>();
+                        const queue = [{ id: 'start', dist: 0 }];
+                        
+                        while (queue.length > 0) {
+                          const { id, dist } = queue.shift()!;
+                          if (id === targetId) return dist;
+                          if (visited.has(id)) continue;
+                          visited.add(id);
+                          
+                          connections
+                            .filter(c => c.from === id)
+                            .forEach(c => queue.push({ id: c.to, dist: dist + 1 }));
+                        }
+                        return 0;
+                      };
+                      
+                      return getDistance(node.id);
+                    })()}
+                    readOnly
+                    className="w-full px-2 py-1 bg-gray-700 text-gray-400 rounded text-sm cursor-not-allowed"
+                    title="Auto-calculated based on connections from start node"
                   />
                 </div>
                 <div>
@@ -1595,6 +1977,179 @@ export default function TalentBuilderPage() {
                 </div>
               )}
               
+              {/* Story Mode specific fields */}
+              {builderMode === 'story' && (
+                <>
+                  {/* Node Type Display */}
+                  <div>
+                    <label className="text-xs text-gray-400">Node Type</label>
+                    <div className="px-2 py-1 bg-gray-800 rounded text-sm text-white capitalize">
+                      {node.storyNodeType || 'normal'} 
+                      {node.storyNodeType === 'normal' && ' (Mek Battle)'}
+                      {node.storyNodeType === 'event' && ' (2x Size)'}
+                      {node.storyNodeType === 'boss' && ' (3x Size)'}
+                      {node.storyNodeType === 'final_boss' && ' (6x Size - WREN)'}
+                    </div>
+                  </div>
+                  
+                  {/* Gold Reward */}
+                  <div>
+                    <label className="text-xs text-gray-400">Gold Reward</label>
+                    <input
+                      type="number"
+                      value={node.goldReward || 0}
+                      onChange={(e) => updateNode(node.id, { goldReward: parseInt(e.target.value) })}
+                      className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                      placeholder="e.g., 100"
+                    />
+                  </div>
+                  
+                  {/* Essence Rewards */}
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Essence Rewards</label>
+                    <div className="space-y-2">
+                      {(node.essenceRewards || []).map((essence, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={essence.type}
+                            onChange={(e) => {
+                              const newRewards = [...(node.essenceRewards || [])];
+                              newRewards[index] = { ...newRewards[index], type: e.target.value };
+                              updateNode(node.id, { essenceRewards: newRewards });
+                            }}
+                            placeholder="Type (e.g., Fire)"
+                            className="flex-1 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                          />
+                          <input
+                            type="number"
+                            value={essence.amount}
+                            onChange={(e) => {
+                              const newRewards = [...(node.essenceRewards || [])];
+                              newRewards[index] = { ...newRewards[index], amount: parseInt(e.target.value) };
+                              updateNode(node.id, { essenceRewards: newRewards });
+                            }}
+                            placeholder="Amount"
+                            className="w-20 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                          />
+                          <button
+                            onClick={() => {
+                              const newRewards = [...(node.essenceRewards || [])];
+                              newRewards.splice(index, 1);
+                              updateNode(node.id, { essenceRewards: newRewards });
+                            }}
+                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const newRewards = [...(node.essenceRewards || []), { type: '', amount: 1 }];
+                          updateNode(node.id, { essenceRewards: newRewards });
+                        }}
+                        className="w-full px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                      >
+                        + Add Essence Reward
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Event-specific fields */}
+                  {node.storyNodeType === 'event' && (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-400">Event Name</label>
+                        <input
+                          type="text"
+                          value={node.eventName || ''}
+                          onChange={(e) => updateNode(node.id, { eventName: e.target.value })}
+                          className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                          placeholder="e.g., Ancient Ruins"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400">Other Rewards</label>
+                        <div className="space-y-2">
+                          {(node.otherRewards || []).map((reward, index) => (
+                            <div key={index} className="flex gap-2">
+                              <input
+                                type="text"
+                                value={reward.item}
+                                onChange={(e) => {
+                                  const newRewards = [...(node.otherRewards || [])];
+                                  newRewards[index] = { ...newRewards[index], item: e.target.value };
+                                  updateNode(node.id, { otherRewards: newRewards });
+                                }}
+                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                                placeholder="Item name"
+                              />
+                              <input
+                                type="number"
+                                value={reward.quantity}
+                                onChange={(e) => {
+                                  const newRewards = [...(node.otherRewards || [])];
+                                  newRewards[index] = { ...newRewards[index], quantity: parseInt(e.target.value) || 1 };
+                                  updateNode(node.id, { otherRewards: newRewards });
+                                }}
+                                className="w-20 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                                placeholder="Qty"
+                                min="1"
+                              />
+                              <button
+                                onClick={() => {
+                                  const newRewards = [...(node.otherRewards || [])];
+                                  newRewards.splice(index, 1);
+                                  updateNode(node.id, { otherRewards: newRewards });
+                                }}
+                                className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const newRewards = [...(node.otherRewards || []), { item: '', quantity: 1 }];
+                              updateNode(node.id, { otherRewards: newRewards });
+                            }}
+                            className="w-full px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+                          >
+                            + Add Other Reward
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Boss-specific fields */}
+                  {(node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') && (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-400">Boss Mek ID</label>
+                        <input
+                          type="text"
+                          value={node.bossMekId || ''}
+                          onChange={(e) => updateNode(node.id, { bossMekId: e.target.value })}
+                          className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                          placeholder="e.g., MEK_001 or Wren"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400">Boss Rewards</label>
+                        <textarea
+                          value={node.otherRewards || ''}
+                          onChange={(e) => updateNode(node.id, { otherRewards: e.target.value })}
+                          className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm h-20"
+                          placeholder="e.g., Frame: Legendary, Badge: Chapter Complete"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+              
               <button
                 onClick={() => {
                   deleteNode(node.id);
@@ -1819,6 +2374,73 @@ export default function TalentBuilderPage() {
             
             <button
               onClick={() => setShowTemplateManager(false)}
+              className="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Story Mode Load Modal */}
+      {showStoryLoader && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">Load Story Mode Layout</h2>
+            
+            <div className="flex-1 overflow-y-auto">
+              {savedStoryModes.length === 0 ? (
+                <p className="text-gray-400">No saved story layouts found</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedStoryModes.map((save, index) => (
+                    <div key={index} className="bg-gray-800 rounded p-4 hover:bg-gray-700 transition-colors">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-bold text-white">{save.name}</h3>
+                          <p className="text-sm text-gray-400">Chapter {save.chapter}</p>
+                          <p className="text-xs text-gray-500">
+                            {save.data.nodes.length} nodes, {save.data.connections.length} connections
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setNodes(save.data.nodes);
+                              setConnections(save.data.connections);
+                              setStoryChapter(save.chapter);
+                              if (save.data.gridHeight) setStoryGridHeight(save.data.gridHeight);
+                              setShowStoryLoader(false);
+                              setSaveStatus(`Loaded "${save.name}"`);
+                              setTimeout(() => setSaveStatus(""), 2000);
+                              pushToHistory();
+                            }}
+                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm"
+                          >
+                            Load
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete "${save.name}"?`)) {
+                                const saved = savedStoryModes.filter((_, i) => i !== index);
+                                setSavedStoryModes(saved);
+                                localStorage.setItem('savedStoryModes', JSON.stringify(saved));
+                              }
+                            }}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => setShowStoryLoader(false)}
               className="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
             >
               Close

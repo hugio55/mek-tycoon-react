@@ -3,20 +3,16 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-// OPTIMIZATION: Reduce frequency to save bandwidth
-// Update leaderboard cache every 30 minutes instead of 5
+// DISABLED UNTIL LAUNCH - Leaderboard updates not needed during development
+// Uncomment when going live:
+/*
 crons.interval(
   "update leaderboards",
-  { minutes: 30 },
+  { hours: 2 },
   internal.leaderboardOptimized.updateAllLeaderboards
 );
+*/
 
-// Update user stats cache every 60 minutes instead of 10
-// Note: Individual user stats are also updated on-demand when users perform actions
-crons.interval(
-  "update user stats",
-  { minutes: 60 },
-  internal.leaderboardOptimized.updateAllLeaderboards
-);
+// Currently disabled to save bandwidth during development
 
 export default crons;

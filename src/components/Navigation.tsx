@@ -45,6 +45,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "CiruTree", href: "/cirutree" },
       { label: "Achievements", href: "/achievements" },
       { label: "XP Allocation", href: "/xp-allocation" },
+      { label: "Spell Caster", href: "/spell-caster" },
     ],
   },
   {
@@ -62,13 +63,10 @@ const navCategories: readonly NavCategory[] = [
     title: "Scrap Yard",
     icon: "🎮",
     items: [
-      { label: "Fighting Arena", href: "/scrapyard" },
-      { label: "Individual Battles", href: "/scrapyard/individual" },
-      { label: "Dungeons", href: "/scrapyard/dungeons" },
-      { label: "Bagatelle", href: "/bagatelle" },
-      { label: "Block Tower", href: "/scrap-yard/block-game" },
-      { label: "Circular Tower", href: "/scrap-yard/block-tower-b" },
-      { label: "Spell Caster", href: "/spell-caster" },
+      { label: "Contracts", href: "/contracts" },
+      { label: "Single Missions", href: "/contracts/single-missions" },
+      { label: "Story Mode", href: "/contracts/chapters" },
+      { label: "Story Climb", href: "/scrap-yard/story-climb" },
     ],
   },
   {
@@ -77,7 +75,6 @@ const navCategories: readonly NavCategory[] = [
     icon: "⚡",
     items: [
       { label: "Admin Dashboard", href: "/admin" },
-      { label: "Story Node Generator", href: "/admin/story-nodes" },
       { label: "Save System", href: "/admin-save" },
       // { label: "Mek Assignment", href: "/mek-assignment" },
       { label: "Mek Selector", href: "/mek-selector" },
@@ -92,8 +89,6 @@ const navCategories: readonly NavCategory[] = [
       { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },
       { label: "Sphere Selector", href: "/admin-sphere" },
-      { label: "Contracts", href: "/contracts" },
-      { label: "Story Mode", href: "/contracts/chapters" },
     ],
   },
 ];
@@ -138,7 +133,8 @@ export default function Navigation() {
             alt="Mek Tycoon Logo"
             width={400}
             height={100}
-            className="object-contain h-[100px] w-auto drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all"
+            className="object-contain drop-shadow-[0_0_5px_rgba(250,182,23,0.5)] group-hover:drop-shadow-[0_0_7.5px_rgba(250,182,23,0.8)] transition-all"
+            style={{ height: '100px', width: 'auto' }}
             priority
           />
         </Link>

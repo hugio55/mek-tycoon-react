@@ -47,6 +47,7 @@ const generateSampleMeks = (count: number) => {
       image: `/mek-images/150px/mek${String(mekImageNumber).padStart(4, '0')}.png`,
       traits: variationIndices.map(idx => variations[idx]),
       power: 50 + ((i * 37) % 100),
+      level: Math.floor(Math.random() * 50) + 1,
       rarity: i < count * 0.05 ? "legendary" : i < count * 0.15 ? "rare" : i < count * 0.4 ? "uncommon" : "common",
     };
   });
@@ -98,6 +99,19 @@ type ElegantVariation =
   | "elegant-v3-gradient"
   | "elegant-v4-flat"
   | "elegant-v5-asymmetric"
+
+// Border style types
+type BorderStyle = 
+  | "rounded-gray"
+  | "rounded-gold"
+  | "sharp-gray"
+  | "sharp-gold"
+  | "rounded-thick-gray"
+  | "rounded-thick-gold"
+  | "sharp-double-gray"
+  | "sharp-double-gold"
+  | "rounded-gradient"
+  | "sharp-neon"
   | "elegant-v6-compact"
   | "elegant-v7-horizontal"
   | "elegant-v8-cards"
@@ -112,6 +126,7 @@ export default function ContractsLayoutOption11() {
   const [selectedMeks, setSelectedMeks] = useState<Record<string, any[]>>({});
   const [dailyMeks, setDailyMeks] = useState<any[]>([]);
   const [elegantVariation, setElegantVariation] = useState<ElegantVariation>("industrial-v1");
+  const [borderStyle, setBorderStyle] = useState<BorderStyle>("sharp-gold");
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [hoveredAilment, setHoveredAilment] = useState<string | null>(null);
@@ -121,15 +136,19 @@ export default function ContractsLayoutOption11() {
   const [animatingSuccess, setAnimatingSuccess] = useState<Record<string, number>>({});
   const [animatedSuccessRate, setAnimatedSuccessRate] = useState<Record<string, number>>({});
   const [selectedMekSlot, setSelectedMekSlot] = useState<{ missionId: string; slotIndex: number } | null>(null);
+  const [mekCardStyle, setMekCardStyle] = useState<number>(1);
+  const [traitCircleStyle, setTraitCircleStyle] = useState<number>(1);
   const [hoveredMek, setHoveredMek] = useState<{ missionId: string; slotIndex: number } | null>(null);
   const [mekSlotStyle, setMekSlotStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [traitIndicatorStyle, setTraitIndicatorStyle] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1);
   const [headerStyle, setHeaderStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [mekModalStyle, setMekModalStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [mekFrameStyle, setMekFrameStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [contractExpiry, setContractExpiry] = useState(Date.now() + 2 * 60 * 60 * 1000 + 43 * 60 * 1000 + 21 * 1000); // 2h 43m 21s from now
   const [mekCount, setMekCount] = useState<3 | 10 | 40 | 100>(40);
   const [showOnlyMatched, setShowOnlyMatched] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const dailyVariation = "Acid";
   
   // Update timer every second
@@ -171,7 +190,7 @@ export default function ContractsLayoutOption11() {
     const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((remaining % (1000 * 60)) / 1000);
     if (remaining <= 0) return "Contract Expired";
-    return `Contract Expires: ${h}h ${m}m ${s}s`;
+    return { label: "Contract Expires:", time: `${h}h ${m}m ${s}s` };
   };
 
   const calculateSuccessRate = (meks: any[], mekSlotCount: number, matchedWeaknesses: number): number => {
@@ -194,7 +213,6 @@ export default function ContractsLayoutOption11() {
     
     newMeks[selectedMekSlot.slotIndex] = {
       ...mek,
-      icon: "🤖",
       matchedTraits
     };
     
@@ -216,6 +234,129 @@ export default function ContractsLayoutOption11() {
     setSelectedMekSlot(null);
   };
   
+  // Get border classes based on selected style
+  const getBorderClasses = (style: BorderStyle) => {
+    switch(style) {
+      case "rounded-gray":
+        return "rounded-xl border border-gray-700/50";
+      case "rounded-gold":
+        return "rounded-xl border-2 border-yellow-500/50";
+      case "sharp-gray":
+        return "border border-gray-700/50";
+      case "sharp-gold":
+        return "border-2 border-yellow-500/50";
+      case "rounded-thick-gray":
+        return "rounded-2xl border-4 border-gray-600/50";
+      case "rounded-thick-gold":
+        return "rounded-2xl border-4 border-yellow-500/40";
+      case "sharp-double-gray":
+        return "border-2 border-double border-gray-600/60";
+      case "sharp-double-gold":
+        return "border-2 border-double border-yellow-500/60";
+      case "rounded-gradient":
+        return "rounded-xl border-2 border-transparent bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-red-500/30 p-[2px]";
+      case "sharp-neon":
+        return "border-2 border-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.3)]";
+      default:
+        return "rounded-xl border border-gray-700/50";
+    }
+  };
+
+  // Get mek card styles for the modal
+  const getMekCardStyle = (styleNum: number, hasMatchedTrait: boolean) => {
+    const baseClass = "relative overflow-hidden transition-all duration-200";
+    const highlightedGlow = hasMatchedTrait ? "shadow-[0_0_20px_rgba(250,182,23,0.5)]" : "";
+    
+    switch(styleNum) {
+      case 1: // Thin border
+        return `${baseClass} ${hasMatchedTrait ? 'border border-yellow-400' : 'border border-gray-600'} ${highlightedGlow}`;
+      case 2: // Medium border
+        return `${baseClass} ${hasMatchedTrait ? 'border-2 border-yellow-400' : 'border-2 border-gray-600'} ${highlightedGlow}`;
+      case 3: // Thick border
+        return `${baseClass} ${hasMatchedTrait ? 'border-4 border-yellow-400' : 'border-4 border-gray-700'} ${highlightedGlow}`;
+      case 4: // No border with shadow
+        return `${baseClass} ${hasMatchedTrait ? 'shadow-[0_0_0_2px_rgba(250,182,23,1)]' : 'shadow-md'} ${highlightedGlow}`;
+      case 5: // Double border
+        return `${baseClass} ${hasMatchedTrait ? 'border-double border-4 border-yellow-400' : 'border-double border-4 border-gray-600'} ${highlightedGlow}`;
+      case 6: // Gradient border
+        return `${baseClass} ${hasMatchedTrait ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-[2px]' : 'bg-gradient-to-r from-gray-600 to-gray-700 p-[1px]'}`;
+      case 7: // Outline only
+        return `${baseClass} ${hasMatchedTrait ? 'outline outline-2 outline-yellow-400 outline-offset-2' : 'outline outline-1 outline-gray-600'}`;
+      case 8: // Solid background edge
+        return `${baseClass} ${hasMatchedTrait ? 'ring-4 ring-yellow-400/50 bg-yellow-900/20' : 'ring-2 ring-gray-700/50 bg-gray-900/20'}`;
+      case 9: // Inset border
+        return `${baseClass} ${hasMatchedTrait ? 'shadow-[inset_0_0_0_2px_rgba(250,182,23,1)]' : 'shadow-[inset_0_0_0_1px_rgba(156,163,175,0.5)]'}`;
+      case 10: // No border clean
+        return `${baseClass} ${hasMatchedTrait ? 'bg-yellow-900/30' : 'bg-gray-900/30'} ${highlightedGlow}`;
+      default:
+        return `${baseClass} ${hasMatchedTrait ? 'border-2 border-yellow-400' : 'border-2 border-gray-600'}`;
+    }
+  };
+
+  // Get trait circle styles
+  const getTraitCircleStyle = (styleNum: number, trait: string, isMatched: boolean) => {
+    const size = styleNum <= 5 ? "w-6 h-6" : "w-12 h-12";
+    const baseClass = `${size} flex items-center justify-center transition-all duration-200 flex-shrink-0`;
+    
+    switch(styleNum) {
+      case 1: // Small circles with icons
+        return {
+          container: `${baseClass} rounded-full ${isMatched ? 'bg-yellow-400/30 border border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <span className="text-[8px]">⚙️</span>
+        };
+      case 2: // Square badges
+        return {
+          container: `${baseClass} ${isMatched ? 'bg-yellow-400/30 border-2 border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <span className="text-[10px] font-bold">{trait.slice(0, 3).toUpperCase()}</span>
+        };
+      case 3: // Hexagon style
+        return {
+          container: `${baseClass} ${isMatched ? 'bg-yellow-400/30' : 'bg-gray-800/50'} clip-path-hexagon`,
+          content: <span className="text-sm">◆</span>
+        };
+      case 4: // Text only
+        return {
+          container: `${baseClass}`,
+          content: <span className={`text-xs font-bold ${isMatched ? 'text-yellow-400' : 'text-gray-500'}`}>{trait.toUpperCase()}</span>
+        };
+      case 5: // Large circles with images
+        return {
+          container: `w-14 h-14 rounded-full flex items-center justify-center ${isMatched ? 'bg-yellow-400/30 border-2 border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <Image src={`/item-images/${trait}.png`} width={28} height={28} alt={trait} className="object-contain" />
+        };
+      case 6: // Diamond shape
+        return {
+          container: `${baseClass} rotate-45 ${isMatched ? 'bg-yellow-400/30 border-2 border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <span className="-rotate-45 text-xs">⚡</span>
+        };
+      case 7: // Pills
+        return {
+          container: `px-3 py-1 rounded-full ${isMatched ? 'bg-yellow-400/30 border border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <span className="text-xs font-medium">{trait}</span>
+        };
+      case 8: // Icons with background
+        return {
+          container: `${baseClass} ${isMatched ? 'bg-gradient-to-br from-yellow-400/40 to-orange-400/40' : 'bg-gradient-to-br from-gray-800 to-gray-700'}`,
+          content: <span className="text-lg">💎</span>
+        };
+      case 9: // Minimal dots
+        return {
+          container: `w-8 h-8 rounded-full ${isMatched ? 'bg-yellow-400' : 'bg-gray-600'}`,
+          content: null
+        };
+      case 10: // Bar indicators
+        return {
+          container: `h-6 flex-1 ${isMatched ? 'bg-gradient-to-r from-yellow-400/50 to-yellow-400/20' : 'bg-gray-800/50'} border-l-4 ${isMatched ? 'border-yellow-400' : 'border-gray-600'}`,
+          content: <span className="text-xs ml-2">{trait}</span>
+        };
+      default:
+        return {
+          container: `${baseClass} rounded-full ${isMatched ? 'bg-yellow-400/30 border border-yellow-400' : 'bg-gray-800/50 border border-gray-700'}`,
+          content: <span className="text-xs">⚙️</span>
+        };
+    }
+  };
+
   const renderContract = (contract: any, isGlobal: boolean = false) => {
     const contractId = isGlobal ? 'global' : (contract?.id || 'default');
     const meks = isGlobal ? dailyMeks : (selectedMeks[contractId] || []);
@@ -291,12 +432,12 @@ export default function ContractsLayoutOption11() {
               {/* Gold & XP Bar */}
               <div className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-lg p-3 flex items-center justify-between mb-3">
                 <div>
-                  <div className="text-2xl font-bold text-yellow-400">{formatGoldAmount(goldReward)} Gold</div>
+                  <div className="text-2xl font-bold text-yellow-400">{formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span></div>
                   <div className="text-xs text-yellow-300/70">Primary Reward</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-purple-400">+{xpReward.toLocaleString()} XP</div>
-                  <div className="text-xs text-purple-300/70">Experience</div>
+                  <div className="text-lg font-semibold text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
+                  <div className="text-xs text-blue-300/70">Experience</div>
                 </div>
               </div>
 
@@ -382,8 +523,8 @@ export default function ContractsLayoutOption11() {
             {/* Flat Rewards Section */}
             <div className="bg-yellow-500/5 rounded-lg p-3 mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xl font-bold text-yellow-400">{formatGoldAmount(goldReward)} Gold</span>
-                <span className="text-sm text-purple-400">+{xpReward} XP</span>
+                <span className="text-xl font-bold text-yellow-400">{formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span></span>
+                <span className="text-sm text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></span>
               </div>
               <div className="text-xs text-gray-400 space-y-1">
                 {missionRewards.slice(0, 3).map((r, i) => (
@@ -432,7 +573,7 @@ export default function ContractsLayoutOption11() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-yellow-400">{(goldReward/1000).toFixed(0)}K</div>
-                  <div className="text-xs text-purple-300">+{xpReward} XP</div>
+                  <div className="text-xs text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
               </div>
             </div>
@@ -507,7 +648,7 @@ export default function ContractsLayoutOption11() {
             {/* Left: Rewards */}
             <div>
               <div className="text-2xl font-bold text-yellow-400 mb-1">{formatGoldAmount(goldReward)}</div>
-              <div className="text-xs text-purple-400 mb-3">+{xpReward} XP</div>
+              <div className="text-xs text-blue-400 mb-3">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
               <div className="space-y-1">
                 {missionRewards.slice(0, 3).map((r, i) => (
                   <div key={i} className="text-xs text-gray-400">
@@ -562,7 +703,7 @@ export default function ContractsLayoutOption11() {
                 
                 <div className="flex items-baseline gap-4 mb-4">
                   <div className="text-3xl font-light text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                  <div className="text-lg text-purple-400">+{xpReward} XP</div>
+                  <div className="text-lg text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
 
                 {/* Rewards with percentages */}
@@ -643,7 +784,7 @@ export default function ContractsLayoutOption11() {
             {/* Inline Rewards */}
             <div className="flex items-center gap-3 bg-yellow-900/20 rounded-lg px-3 py-2 mb-2">
               <div className="text-lg font-bold text-yellow-400">{(goldReward/1000).toFixed(0)}K</div>
-              <div className="text-xs text-purple-400">+{xpReward}</div>
+              <div className="text-xs text-blue-400">+{xpReward.toLocaleString()}</div>
               <div className="flex-1 text-right">
                 <span className="text-xs text-green-400">{successRate}% success</span>
               </div>
@@ -695,7 +836,7 @@ export default function ContractsLayoutOption11() {
               <div className="flex items-center gap-4 mb-2">
                 <div>
                   <div className="text-xl font-bold text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                  <div className="text-xs text-purple-400">+{xpReward} XP</div>
+                  <div className="text-xs text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
                 <div className="flex-1">
                   <div className="text-xs text-gray-400 mb-1">Success Rate: {successRate}%</div>
@@ -755,7 +896,7 @@ export default function ContractsLayoutOption11() {
             <div className="bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-lg p-3 mb-3">
               <div className="flex justify-between items-center">
                 <div className="text-2xl font-bold text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                <div className="text-base text-purple-400">+{xpReward} XP</div>
+                <div className="text-base text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
               </div>
             </div>
 
@@ -830,7 +971,7 @@ export default function ContractsLayoutOption11() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-baseline gap-3">
                   <div className="text-2xl font-light text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                  <div className="text-sm text-purple-400">+{xpReward} XP</div>
+                  <div className="text-sm text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
                 <div className="text-right">
                   <div className="text-xl font-bold text-green-400">{successRate}%</div>
@@ -906,13 +1047,13 @@ export default function ContractsLayoutOption11() {
                 <div className="relative flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-light text-yellow-400 mb-1">
-                      {formatGoldAmount(goldReward)} Gold
+                      {formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span>
                     </div>
                     <div className="text-sm text-yellow-300/70">Primary Reward</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-medium text-purple-400">+{xpReward}</div>
-                    <div className="text-sm text-purple-300/70">Experience</div>
+                    <div className="text-2xl font-medium text-blue-400">+{xpReward.toLocaleString()}</div>
+                    <div className="text-sm text-blue-300/70">Experience</div>
                   </div>
                 </div>
               </div>
@@ -1038,7 +1179,7 @@ export default function ContractsLayoutOption11() {
       return (
         <div className="relative">
           <div 
-            className={`relative rounded-lg overflow-hidden`}
+            className={`relative overflow-hidden ${getBorderClasses(borderStyle)}`}
             style={{
               background: `
                 linear-gradient(135deg, 
@@ -1161,17 +1302,34 @@ export default function ContractsLayoutOption11() {
               />
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-bold tracking-wider text-yellow-400 mb-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight" style={{ 
+                    fontFamily: "'Orbitron', sans-serif",
+                    fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
+                    lineHeight: '1.1',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
                     {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                   </h2>
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">
+                  <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
                     {isGlobal ? "Daily Global Contract" : "Standard Contract"}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Mission Duration</div>
+                  <div className="text-[10px] text-gray-300 uppercase tracking-wider font-medium">Mission Duration</div>
                   <div className="text-xl font-bold text-yellow-400">{missionDuration}</div>
-                  <div className="text-[10px] text-orange-400 mt-1">{formatContractExpiry()}</div>
+                  <div className="text-xs mt-1 font-medium whitespace-nowrap">
+                    {(() => {
+                      const expiry = formatContractExpiry();
+                      return (
+                        <>
+                          <span className="text-orange-400/70">{expiry.label}</span>
+                          <span className="text-orange-400 ml-1">{expiry.time}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1199,10 +1357,17 @@ export default function ContractsLayoutOption11() {
                 
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold tracking-wider text-yellow-400 mb-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight" style={{ 
+                      fontFamily: "'Orbitron', sans-serif",
+                      fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
+                      lineHeight: '1.1',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                     </h2>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">
+                    <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
                       {isGlobal ? "Daily Global Contract" : "Standard Contract"}
                     </div>
                   </div>
@@ -1213,13 +1378,23 @@ export default function ContractsLayoutOption11() {
                     </div>
                     <div className="h-8 w-px bg-yellow-400/30" />
                     <div>
-                      <div className="text-xl font-bold text-purple-400">+{xpReward}</div>
+                      <div className="text-xl font-bold text-blue-400">+{xpReward.toLocaleString()}</div>
                       <div className="text-[10px] text-gray-400 uppercase">XP</div>
                     </div>
                     <div className="h-8 w-px bg-yellow-400/30" />
                     <div className="text-right">
                       <div className="text-sm font-bold text-yellow-400">{missionDuration}</div>
-                      <div className="text-[10px] text-orange-400">{formatContractExpiry()}</div>
+                      <div className="text-[10px] whitespace-nowrap">
+                        {(() => {
+                          const expiry = formatContractExpiry();
+                          return (
+                            <>
+                              <span className="text-orange-400/70">{expiry.label}</span>
+                              <span className="text-orange-400 ml-1">{expiry.time}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1255,7 +1430,7 @@ export default function ContractsLayoutOption11() {
                       <span className="text-xs text-gray-500">GOLD</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-cyan-400 text-lg font-bold">+{xpReward}</span>
+                      <span className="text-cyan-400 text-lg font-bold">+{xpReward.toLocaleString()}</span>
                       <span className="text-xs text-gray-500">XP</span>
                     </div>
                     <div className="text-yellow-400 font-mono text-sm">{missionDuration}</div>
@@ -1282,13 +1457,30 @@ export default function ContractsLayoutOption11() {
                     )
                   `
                 }}>
-                  <h2 className="text-2xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  <h2 className="text-lg font-bold text-yellow-400 leading-tight" style={{ 
+                    fontFamily: "'Orbitron', sans-serif",
+                    fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
+                    lineHeight: '1.1',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
                     {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                   </h2>
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">
+                  <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
                     {isGlobal ? "Daily Global Contract" : "Standard Contract"}
                   </div>
-                  <div className="text-xs text-orange-400 mt-1">{formatContractExpiry()}</div>
+                  <div className="text-sm mt-1 font-medium whitespace-nowrap">
+                    {(() => {
+                      const expiry = formatContractExpiry();
+                      return (
+                        <>
+                          <span className="text-orange-400/70">{expiry.label}</span>
+                          <span className="text-orange-400 ml-1">{expiry.time}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
                 
                 {/* Right Section - Rewards */}
@@ -1299,7 +1491,7 @@ export default function ContractsLayoutOption11() {
                       <div className="text-[10px] text-gray-400">GOLD</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-indigo-400">+{xpReward}</div>
+                      <div className="text-2xl font-bold text-blue-400">+{xpReward.toLocaleString()}</div>
                       <div className="text-[10px] text-gray-400">EXP</div>
                     </div>
                     <div className="text-center">
@@ -1347,7 +1539,7 @@ export default function ContractsLayoutOption11() {
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-2xl">✨</span>
-                          <span className="text-xl font-bold text-purple-400">+{xpReward}</span>
+                          <span className="text-xl font-bold text-blue-400">+{xpReward.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -1366,13 +1558,13 @@ export default function ContractsLayoutOption11() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold text-yellow-400">
-                      {formatGoldAmount(goldReward)} Gold
+                      {formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span>
                     </div>
                     <div className="text-xs text-yellow-300/60 uppercase tracking-wider">Primary Reward</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-semibold text-yellow-300">+{xpReward.toLocaleString()} XP</div>
-                    <div className="text-xs text-yellow-300/60 uppercase tracking-wider">Experience</div>
+                    <div className="text-2xl font-semibold text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
+                    <div className="text-xs text-blue-300/60 uppercase tracking-wider">Experience</div>
                   </div>
                 </div>
               </div>
@@ -1406,22 +1598,22 @@ export default function ContractsLayoutOption11() {
 
                 {/* Grid Layout for Variation Buffs */}
                 <div className="flex justify-center">
-                  <div className={isGlobal ? "grid grid-cols-5 gap-3" : "flex gap-4 px-8"}>
+                  <div className={isGlobal ? "grid grid-cols-5 gap-3" : "flex flex-wrap justify-center gap-4 px-8 max-w-md mx-auto"}>
                     {missionMultipliers.map((mult) => {
                       const isMatched = matched.includes(mult.id);
                       return (
                         <div key={mult.id} className="relative">
                           <div className="flex flex-col items-center">
                             <div className={`
-                              relative w-14 h-14 rounded-full bg-black/60 border-2 p-1 overflow-hidden
+                              relative w-[70px] h-[70px] rounded-full bg-black/60 border-2 p-1 overflow-hidden
                               ${isMatched ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-700'}
                               transition-all hover:scale-110
                             `}>
                               <Image
                                 src={mult.image}
                                 alt={mult.id}
-                                width={48}
-                                height={48}
+                                width={60}
+                                height={60}
                                 className="rounded-full object-cover"
                               />
                             </div>
@@ -1472,7 +1664,14 @@ export default function ContractsLayoutOption11() {
                           {!isLocked && (
                             assignedMek ? (
                               <div>
-                                <div className="text-2xl text-center">{assignedMek.icon || "🤖"}</div>
+                                <div className="relative w-full h-3/4">
+                                  <Image
+                                    src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
+                                    alt={assignedMek.name}
+                                    fill
+                                    className="object-contain"
+                                  />
+                                </div>
                                 <div className="text-[8px] text-yellow-300 font-bold truncate w-full text-center px-1">
                                   {assignedMek.name}
                                 </div>
@@ -1643,7 +1842,7 @@ export default function ContractsLayoutOption11() {
       
       return (
         <div className="relative">
-          <div className={`relative ${isGlobal ? 'bg-gradient-to-b from-yellow-900/15 to-black/90' : 'bg-gradient-to-b from-gray-900/50 to-black/90'} backdrop-blur-md rounded-xl border-2 ${isGlobal ? 'border-yellow-500/50' : 'border-gray-700/50'} overflow-hidden`}>
+          <div className={`relative ${isGlobal ? 'bg-gradient-to-b from-yellow-900/15 to-black/90' : 'bg-gradient-to-b from-gray-900/50 to-black/90'} backdrop-blur-md overflow-hidden ${getBorderClasses(borderStyle)}`}>
             
             {/* Header with diagonal stripes */}
             <div className="relative p-4 border-b-2 border-yellow-500/20" style={{
@@ -1776,7 +1975,7 @@ export default function ContractsLayoutOption11() {
       
       return (
         <div className="relative">
-          <div className={`relative bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden`}>
+          <div className={`relative bg-black/90 backdrop-blur-sm overflow-hidden ${getBorderClasses(borderStyle)}`}>
             
             {/* Minimal Industrial Header */}
             <div className="bg-gradient-to-r from-yellow-500/20 via-black to-yellow-500/20 p-4">
@@ -1791,7 +1990,7 @@ export default function ContractsLayoutOption11() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                  <div className="text-xs text-yellow-300/60">+{xpReward} XP</div>
+                  <div className="text-xs text-blue-400/80">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
               </div>
             </div>
@@ -1872,7 +2071,7 @@ export default function ContractsLayoutOption11() {
       return (
         <div className="relative">
           <div 
-            className={`relative rounded-lg border ${isGlobal ? 'border-yellow-400/30' : 'border-yellow-400/20'} overflow-hidden`}
+            className={`relative overflow-hidden ${getBorderClasses(borderStyle)}`}
             style={{
               background: isGlobal 
                 ? 'rgba(250, 182, 23, 0.25)' // 25% yellow opacity for global
@@ -1887,7 +2086,7 @@ export default function ContractsLayoutOption11() {
                   <h2 className="text-xl font-bold text-yellow-400">
                     {missionTitle}
                   </h2>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-gray-300 mt-1 font-medium">
                     {isGlobal ? "Priority Mission" : "Standard Contract"}
                   </div>
                 </div>
@@ -1904,13 +2103,13 @@ export default function ContractsLayoutOption11() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold text-yellow-400">
-                      {formatGoldAmount(goldReward)} Gold
+                      {formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span>
                     </div>
                     <div className="text-xs text-yellow-300/70">Primary Reward</div>
                   </div>
                   <div>
-                    <div className="text-xl font-semibold text-yellow-300">+{xpReward.toLocaleString()} XP</div>
-                    <div className="text-xs text-yellow-300/70">Experience</div>
+                    <div className="text-xl font-semibold text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
+                    <div className="text-xs text-blue-300/70">Experience</div>
                   </div>
                 </div>
               </div>
@@ -2110,20 +2309,6 @@ export default function ContractsLayoutOption11() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Header Layout:</label>
-                <select 
-                  value={headerStyle}
-                  onChange={(e) => setHeaderStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                  className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
-                >
-                  <option value={1}>Separate Cards</option>
-                  <option value={2}>Unified Banner</option>
-                  <option value={3}>Compact Strip</option>
-                  <option value={4}>Split Layout</option>
-                  <option value={5}>Integrated Bar</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-400">Mek Modal:</label>
                 <select 
                   value={mekModalStyle}
@@ -2135,25 +2320,6 @@ export default function ContractsLayoutOption11() {
                   <option value={3}>With Power</option>
                   <option value={4}>With Traits</option>
                   <option value={5}>Full Details</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Trait Indicator:</label>
-                <select 
-                  value={traitIndicatorStyle}
-                  onChange={(e) => setTraitIndicatorStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)}
-                  className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
-                >
-                  <option value={1}>Corner Badge</option>
-                  <option value={2}>Bottom Bar</option>
-                  <option value={3}>Glow Ring</option>
-                  <option value={4}>Star Icon</option>
-                  <option value={5}>Side Banner</option>
-                  <option value={6}>Lightning Bolt</option>
-                  <option value={7}>Corner Triangle</option>
-                  <option value={8}>Plus Symbol</option>
-                  <option value={9}>Gradient Overlay</option>
-                  <option value={10}>Text Only</option>
                 </select>
               </div>
             </div>
@@ -2176,10 +2342,14 @@ export default function ContractsLayoutOption11() {
         </div>
       </div>
       
-      {/* Mek Selection Modal */}
+      {/* Mek Recruitment Lottery Modal */}
       {showMekModal && selectedMekSlot && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-2 border-yellow-400/50 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center">
+          <div className="w-full" style={{ maxWidth: '1152px', padding: '0 24px' }}>
+            <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-2 border-yellow-400/50 rounded-xl overflow-hidden" style={{
+              maxHeight: mekCount <= 10 ? '70vh' : mekCount <= 40 ? '80vh' : '90vh',
+              marginTop: '80px'
+            }}>
             {/* Modal Header - Matching Acid Crisis Style */}
             <div className="relative overflow-hidden" style={{
               background: `
@@ -2195,7 +2365,7 @@ export default function ContractsLayoutOption11() {
             }}>
               <div className="p-4 border-b border-yellow-500/30">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-yellow-400 tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>SELECT MEK UNIT</h2>
+                  <h2 className="text-2xl font-bold text-yellow-400 tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>MEK RECRUITMENT LOTTERY</h2>
                   <button 
                     onClick={() => {
                       setShowMekModal(null);
@@ -2212,47 +2382,144 @@ export default function ContractsLayoutOption11() {
             </div>
             
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto max-h-[70vh] bg-black/40">
+            <div className="p-4 overflow-y-auto bg-black/40" style={{
+              maxHeight: mekCount <= 10 ? 'calc(70vh - 100px)' : mekCount <= 40 ? 'calc(80vh - 100px)' : 'calc(90vh - 100px)'
+            }}>
+              {/* Help Description */}
+              <div className="bg-gray-800/30 border border-yellow-400/20 rounded-lg p-3 mb-3">
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Select a Mek from your collection to assign to this contract slot. Meks with matching variation buffs 
+                  <span className="text-yellow-400 font-semibold"> increase success chance</span>. Power chips below each Mek indicate:
+                  <span className="text-green-400"> ● Active</span>,
+                  <span className="text-yellow-400"> ● Buffed</span>, or
+                  <span className="text-gray-500"> ● Empty</span>.
+                </p>
+              </div>
+
+              {/* Style Dropdowns */}
+              <div className="flex gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-400">Card Style:</label>
+                  <select 
+                    value={mekCardStyle}
+                    onChange={(e) => setMekCardStyle(Number(e.target.value))}
+                    className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-2 py-1 text-sm focus:border-yellow-500 focus:outline-none"
+                  >
+                    <option value={1}>Thin Border</option>
+                    <option value={2}>Medium Border</option>
+                    <option value={3}>Thick Border</option>
+                    <option value={4}>Shadow Only</option>
+                    <option value={5}>Double Border</option>
+                    <option value={6}>Gradient Border</option>
+                    <option value={7}>Outline Style</option>
+                    <option value={8}>Ring Style</option>
+                    <option value={9}>Inset Border</option>
+                    <option value={10}>Clean (No Border)</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-400">Trait Display:</label>
+                  <select 
+                    value={traitCircleStyle}
+                    onChange={(e) => setTraitCircleStyle(Number(e.target.value))}
+                    className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-2 py-1 text-sm focus:border-yellow-500 focus:outline-none"
+                  >
+                    <option value={1}>Small Circles</option>
+                    <option value={2}>Square Badges</option>
+                    <option value={3}>Hexagon</option>
+                    <option value={4}>Text Only</option>
+                    <option value={5}>Large with Images</option>
+                    <option value={6}>Diamond Shape</option>
+                    <option value={7}>Pills</option>
+                    <option value={8}>Icon Background</option>
+                    <option value={9}>Minimal Dots</option>
+                    <option value={10}>Bar Indicators</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Mission Variation Buffs - Center Aligned Circle Images */}
-              <div className="mb-6">
-                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-3">Mission Variation Buffs</div>
-                <div className="flex justify-center gap-4">
+              <div className="mb-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-3">Click Variation Buffs to Filter</div>
+                <div className="flex justify-center gap-3 flex-wrap">
                   {(() => {
                     const missionId = selectedMekSlot.missionId;
                     const isGlobal = missionId === 'global';
                     const missionMultipliers = isGlobal 
-                      ? [...successMultipliers.legendary.slice(0, 1), ...successMultipliers.rare.slice(0, 2), ...successMultipliers.uncommon.slice(0, 2)]
+                      ? [...successMultipliers.legendary, ...successMultipliers.rare, ...successMultipliers.uncommon, ...successMultipliers.common].slice(0, 15)
                       : [...successMultipliers.uncommon.slice(0, 2), ...successMultipliers.common.slice(0, 3)];
                     
-                    return missionMultipliers.slice(0, 5).map(mult => (
-                      <div key={mult.id} className="flex flex-col items-center">
-                        <div className="relative w-16 h-16 rounded-full border-2 border-yellow-400/50 overflow-hidden bg-black/60 mb-2">
-                          <Image
-                            src={mult.image}
-                            alt={mult.id}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="text-xs text-yellow-400 font-bold uppercase">{mult.id}</span>
-                        <span className="text-xs text-green-400 font-bold">{mult.bonus}</span>
-                      </div>
-                    ));
+                    const toggleBuffFilter = (buffId: string) => {
+                      setActiveBuffFilters(prev => 
+                        prev.includes(buffId) 
+                          ? prev.filter(id => id !== buffId)
+                          : [...prev, buffId]
+                      );
+                    };
+                    
+                    return (
+                      <>
+                        {missionMultipliers.map(mult => {
+                          const isActive = activeBuffFilters.includes(mult.id);
+                          const rarityColors = {
+                            common: 'border-gray-400',
+                            uncommon: 'border-green-400', 
+                            rare: 'border-blue-400',
+                            legendary: 'border-purple-400'
+                          };
+                          
+                          return (
+                            <button
+                              key={mult.id}
+                              onClick={() => toggleBuffFilter(mult.id)}
+                              className="flex flex-col items-center group cursor-pointer"
+                            >
+                              <div className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-black/60 mb-1 transition-all ${
+                                isActive 
+                                  ? `${rarityColors[mult.rarity as keyof typeof rarityColors]} shadow-[0_0_15px_rgba(250,182,23,0.6)] scale-110`
+                                  : `${rarityColors[mult.rarity as keyof typeof rarityColors]} opacity-70 hover:opacity-100`
+                              }`}>
+                                <Image
+                                  src={mult.image}
+                                  alt={mult.id}
+                                  width={56}
+                                  height={56}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className={`text-[10px] font-bold uppercase transition-colors ${
+                                isActive ? 'text-yellow-400' : 'text-gray-400'
+                              }`}>{mult.id}</span>
+                              <span className={`text-[10px] font-bold transition-colors ${
+                                isActive ? 'text-green-400' : 'text-gray-500'
+                              }`}>{mult.bonus}</span>
+                            </button>
+                          );
+                        })}
+                        {activeBuffFilters.length > 0 && (
+                          <button
+                            onClick={() => setActiveBuffFilters([])}
+                            className="self-center px-3 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 ml-2"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </>
+                    );
                   })()}
                 </div>
               </div>
               
               {/* Controls Bar */}
-              <div className="mb-4 p-3 bg-gradient-to-r from-gray-900/80 to-black/80 rounded-lg border border-yellow-400/20">
-                <div className="flex items-center gap-4 flex-wrap">
+              <div className="mb-3 p-2 bg-gradient-to-r from-gray-900/80 to-black/80 rounded-lg border border-yellow-400/20">
+                <div className="flex items-center gap-3 flex-wrap">
                   {/* Mek Count Selector */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-400 uppercase">Show:</label>
+                    <label className="text-xs text-gray-400 uppercase">Count:</label>
                     <select 
                       value={mekCount}
                       onChange={(e) => setMekCount(Number(e.target.value) as 3 | 10 | 40 | 100)}
-                      className="bg-black/60 border border-gray-700 text-yellow-400 px-2 py-1 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                      className="bg-black/60 border border-gray-700 text-yellow-400 px-2 py-1 text-xs rounded focus:border-yellow-500 focus:outline-none"
                     >
                       <option value={3}>3 Meks</option>
                       <option value={10}>10 Meks</option>
@@ -2261,52 +2528,54 @@ export default function ContractsLayoutOption11() {
                     </select>
                   </div>
                   
-                  {/* Toggle for Matched Only */}
+                  {/* Frame Style Selector */}
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="showMatched"
-                      checked={showOnlyMatched}
-                      onChange={(e) => setShowOnlyMatched(e.target.checked)}
-                      className="w-4 h-4 bg-black/60 border-gray-700 text-yellow-400 focus:ring-yellow-500 rounded"
-                    />
-                    <label htmlFor="showMatched" className="text-xs text-gray-400 uppercase cursor-pointer">
-                      Only Show Matched
-                    </label>
+                    <label className="text-xs text-gray-400 uppercase">Frame:</label>
+                    <select
+                      value={mekFrameStyle}
+                      onChange={(e) => setMekFrameStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                      className="bg-black/60 border border-gray-700 text-yellow-400 px-2 py-1 text-xs rounded focus:border-yellow-500 focus:outline-none"
+                    >
+                      <option value={1}>Classic Gold</option>
+                      <option value={2}>Cyber Neon</option>
+                      <option value={3}>Military Grade</option>
+                      <option value={4}>Crystal Prism</option>
+                      <option value={5}>Shadow Tech</option>
+                    </select>
                   </div>
                   
                   {/* Search Bar */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 min-w-[150px]">
                     <input
                       type="text"
-                      placeholder="Search by #, style, or variation..."
+                      placeholder="Search meks..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-black/60 border border-gray-700 text-yellow-400 px-3 py-1 text-sm rounded placeholder-gray-600 focus:border-yellow-500 focus:outline-none"
+                      className="w-full bg-black/60 border border-gray-700 text-yellow-400 px-2 py-1 text-xs rounded placeholder-gray-600 focus:border-yellow-500 focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
               
-              {/* Mek Grid - Style Variations */}
-              <div className={mekModalStyle === 1 ? "grid grid-cols-8 gap-2" : mekModalStyle === 2 ? "grid grid-cols-6 gap-2" : mekModalStyle === 3 ? "grid grid-cols-5 gap-3" : mekModalStyle === 4 ? "grid grid-cols-4 gap-3" : "grid grid-cols-3 gap-4"}>
+              {/* Mek Grid - Maximized Canvas */}
+              <div className={`grid gap-1 ${mekCount <= 3 ? 'grid-cols-3' : mekCount <= 10 ? 'grid-cols-5' : mekCount <= 40 ? 'grid-cols-8' : 'grid-cols-10'}`}>
                 {(() => {
                   const allMeks = generateSampleMeks(mekCount);
                   const missionId = selectedMekSlot.missionId;
                   const isGlobal = missionId === 'global';
                   const missionMultipliers = isGlobal 
-                    ? [...successMultipliers.legendary.slice(0, 1), ...successMultipliers.rare.slice(0, 2), ...successMultipliers.uncommon.slice(0, 2)]
+                    ? [...successMultipliers.legendary, ...successMultipliers.rare, ...successMultipliers.uncommon, ...successMultipliers.common].slice(0, 15)
                     : [...successMultipliers.uncommon.slice(0, 2), ...successMultipliers.common.slice(0, 3)];
                   
-                  // Filter meks based on search and match criteria
+                  // Filter meks based on search, buff filters, and match criteria
                   const filteredMeks = allMeks.filter(mek => {
-                    // Check if mek has matching traits
-                    const hasMatch = mek.traits.some(trait => 
-                      missionMultipliers.some(m => m.id === trait)
-                    );
-                    
-                    // Apply "show only matched" filter
-                    if (showOnlyMatched && !hasMatch) return false;
+                    // Apply buff filter
+                    if (activeBuffFilters.length > 0) {
+                      const hasFilteredBuff = mek.traits.some(trait => 
+                        activeBuffFilters.includes(trait)
+                      );
+                      if (!hasFilteredBuff) return false;
+                    }
                     
                     // Apply search filter
                     if (searchQuery) {
@@ -2321,12 +2590,22 @@ export default function ContractsLayoutOption11() {
                     return true;
                   });
                   
-                  return (mekModalStyle === 5 ? filteredMeks.slice(0, 12) : filteredMeks).map(mek => {
+                  return filteredMeks.map(mek => {
                     const matchedTraits = mek.traits.filter(t => 
                       missionMultipliers.some(m => m.id === t)
                     ).map(t => missionMultipliers.find(m => m.id === t));
                     
                     const hasMatch = matchedTraits.length > 0;
+                    
+                    // Generate power chip states (3 chips per mek)
+                    const powerChips = Array.from({ length: 3 }, (_, i) => {
+                      if (i === 0) return hasMatch ? 'buffed' : 'active'; // First chip
+                      if (i === 1) return hasMatch && matchedTraits.length > 1 ? 'buffed' : mek.power > 75 ? 'active' : 'empty'; // Second chip
+                      return hasMatch && matchedTraits.length > 2 ? 'buffed' : mek.rarity === 'legendary' || mek.rarity === 'rare' ? 'active' : 'empty'; // Third chip
+                    });
+                    
+                    // Use the mek card style function
+                    const cardClass = getMekCardStyle(mekCardStyle, hasMatch);
                   
                   return (
                     <div 
@@ -2340,7 +2619,6 @@ export default function ContractsLayoutOption11() {
                         }
                         newMeks[selectedMekSlot.slotIndex] = {
                           ...mek,
-                          icon: "🤖",
                           matchedTraits
                         };
                         setSelectedMeks({ ...selectedMeks, [missionId]: newMeks });
@@ -2356,166 +2634,78 @@ export default function ContractsLayoutOption11() {
                           setMatchedBonuses({ ...matchedBonuses, [missionId]: newMatched });
                         }
                         
-                        // Trigger success rate animation
-                        setAnimatedSuccessRate({ ...animatedSuccessRate, [missionId]: calculateNewSuccessRate(missionId, newMeks) });
-                        
                         // Close modal
                         setShowMekModal(null);
                         setSelectedMekSlot(null);
                       }}
                       className={`
-                        relative cursor-pointer transition-all
-                        ${mekModalStyle === 1 ? 'bg-gradient-to-br from-gray-900 to-black rounded-lg p-1 border-2' : 
-                          mekModalStyle === 2 ? 'bg-gray-800/60 rounded-lg p-2 border' : 
-                          'bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-3 border-2'}
-                        ${hasMatch 
-                          ? 'border-yellow-400 shadow-lg shadow-yellow-400/20 hover:scale-105' 
-                          : 'border-gray-700 hover:border-gray-600 hover:scale-105'
-                        }
+                        ${cardClass}
+                        cursor-pointer group relative overflow-hidden
+                        hover:scale-105 transition-all duration-200
                       `}
+                      style={{
+                        background: `
+                          radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.08) 0%, transparent 30%),
+                          radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 25%),
+                          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%),
+                          linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(0, 0, 0, 0.98) 50%, rgba(17, 24, 39, 0.95) 100%)`
+                      }}
                     >
-                      {/* Style 1: Simple Grid - Square frames with mek images */}
-                      {mekModalStyle === 1 && (
-                        <div className="relative w-full aspect-square overflow-hidden rounded-md bg-gradient-to-br from-gray-800 to-black flex items-center justify-center">
-                          <div className="text-3xl">🤖</div>
-                          {/* Will use actual mek images when available:
+                      {/* Mek Display */}
+                      <div className="p-1">
+                        {/* Bonus indicator */}
+                        {hasMatch && (
+                          <div className="absolute -top-1 -right-1 bg-green-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                            +{matchedTraits.reduce((acc, t) => acc + parseInt(t?.bonus.replace("+", "").replace("%", "") || "0"), 0)}%
+                          </div>
+                        )}
+                        
+                        {/* Mek Image */}
+                        <div className="relative w-full aspect-square overflow-hidden rounded bg-black/40 mb-1">
                           <Image
                             src={mek.image}
                             alt={mek.name}
-                            fill
-                            className="object-cover"
-                          /> */}
+                            width={150}
+                            height={150}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`;
+                            }}
+                          />
                         </div>
-                      )}
+                        
+                        {/* Mek Name and Level */}
+                        <div className="text-[10px] text-center text-gray-300 mb-1 truncate">
+                          {mek.name} <span className="text-yellow-400 font-bold">Lv.{mek.level || 1}</span>
+                        </div>
+                        
+                        {/* Trait Indicators */}
+                        <div className={`flex ${traitCircleStyle === 10 ? 'flex-col gap-1' : 'justify-center gap-1'} px-1`}>
+                          {mek.traits.slice(0, 3).map((trait, i) => {
+                            const isMatched = matchedTraits.some(mt => mt?.id === trait);
+                            const style = getTraitCircleStyle(traitCircleStyle, trait, isMatched);
+                            
+                            return (
+                              <div 
+                                key={i}
+                                className={style.container}
+                                title={`${trait}: ${isMatched ? 'Matched!' : 'No match'}`}
+                              >
+                                {style.content}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                       
-                      {/* Style 2: With Names */}
-                      {mekModalStyle === 2 && (
-                        <>
-                          <div className="relative w-full aspect-square overflow-hidden rounded-md bg-black/40 mb-1">
-                            <Image
-                              src={mek.image}
-                              alt={mek.name}
-                              width={150}
-                              height={150}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                (e.target as HTMLImageElement).parentElement?.insertAdjacentHTML('afterbegin', '<div class="flex items-center justify-center w-full h-full text-2xl">🤖</div>');
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-center text-gray-300">{mek.name}</div>
-                        </>
-                      )}
-                      
-                      {/* Style 3: With Power */}
-                      {mekModalStyle === 3 && (
-                        <>
-                          <div className="relative w-full aspect-square overflow-hidden rounded-md bg-black/40 mb-1">
-                            <Image
-                              src={mek.image}
-                              alt={mek.name}
-                              width={150}
-                              height={150}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                (e.target as HTMLImageElement).parentElement?.insertAdjacentHTML('afterbegin', '<div class="flex items-center justify-center w-full h-full text-3xl">🤖</div>');
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-yellow-400 font-bold text-center">{mek.name}</div>
-                          <div className="text-[10px] text-gray-400 text-center">PWR: {mek.power}</div>
-                        </>
-                      )}
-                      
-                      {/* Style 4: With Traits */}
-                      {mekModalStyle === 4 && (
-                        <>
-                          {hasMatch && (
-                            <div className="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">
-                              +{matchedTraits.reduce((acc, t) => acc + parseInt(t?.bonus.replace("+", "").replace("%", "") || "0"), 0)}%
-                            </div>
-                          )}
-                          <div className="relative w-full aspect-square overflow-hidden rounded-md bg-black/40 mb-2">
-                            <Image
-                              src={mek.image}
-                              alt={mek.name}
-                              width={150}
-                              height={150}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                (e.target as HTMLImageElement).parentElement?.insertAdjacentHTML('afterbegin', '<div class="flex items-center justify-center w-full h-full text-3xl">🤖</div>');
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-yellow-400 font-bold text-center mb-1">{mek.name}</div>
-                          <div className="flex justify-center gap-1">
-                            {mek.traits.slice(0, 3).map((trait, i) => {
-                              const isMatched = matchedTraits.some(m => m?.id === trait);
-                              return (
-                                <div 
-                                  key={i} 
-                                  className={`w-5 h-5 rounded-full bg-black/60 border ${isMatched ? 'border-yellow-400' : 'border-gray-600'} flex items-center justify-center`}
-                                >
-                                  <span className="text-[8px]">⚡</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </>
-                      )}
-                      
-                      {/* Style 5: Full Details */}
-                      {mekModalStyle === 5 && (
-                        <>
-                          {hasMatch && (
-                            <div className="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">
-                              +{matchedTraits.reduce((acc, t) => acc + parseInt(t?.bonus.replace("+", "").replace("%", "") || "0"), 0)}%
-                            </div>
-                          )}
-                          <div className="relative w-full aspect-square overflow-hidden rounded-md bg-black/40 mb-2">
-                            <Image
-                              src={mek.image}
-                              alt={mek.name}
-                              width={150}
-                              height={150}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                (e.target as HTMLImageElement).parentElement?.insertAdjacentHTML('afterbegin', '<div class="flex items-center justify-center w-full h-full text-3xl">🤖</div>');
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-yellow-400 font-bold text-center mb-1">{mek.name}</div>
-                          <div className="text-xs text-gray-400 text-center mb-2">Power: {mek.power}</div>
-                          <div className="flex flex-wrap gap-1 justify-center">
-                            {mek.traits.map(trait => {
-                              const isMatched = missionMultipliers.some(m => m.id === trait);
-                              return (
-                                <span 
-                                  key={trait}
-                                  className={`
-                                    text-[9px] px-1.5 py-0.5 rounded font-bold
-                                    ${isMatched 
-                                      ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
-                                      : 'bg-gray-800 text-gray-500 border border-gray-700'
-                                    }
-                                  `}
-                                >
-                                  {trait}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </>
-                      )}
                     </div>
                   );
+                  });
                 })()}
               </div>
             </div>
+          </div>
           </div>
         </div>
       )}

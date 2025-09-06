@@ -123,6 +123,10 @@ export default defineSchema({
       })),
       abilityId: v.optional(v.string()),
       passiveEffect: v.optional(v.string()),
+      buffGrant: v.optional(v.object({
+        buffType: v.string(),
+        baseValue: v.optional(v.number()),
+      })),
     })),
     
     connections: v.array(v.object({
@@ -171,6 +175,10 @@ export default defineSchema({
       })),
       abilityId: v.optional(v.string()),
       passiveEffect: v.optional(v.string()),
+      buffGrant: v.optional(v.object({
+        buffType: v.string(),
+        baseValue: v.optional(v.number()),
+      })),
     })),
     
     connections: v.array(v.object({

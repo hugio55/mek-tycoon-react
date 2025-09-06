@@ -8,6 +8,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 export default function AdminSavePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
   const [selectedSaveId, setSelectedSaveId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
 
@@ -120,6 +121,35 @@ export default function AdminSavePage() {
     }
   };
 
+  // Handle git commit
+  const handleCommit = async () => {
+    setIsCommitting(true);
+    setMessage({ type: 'info', text: 'Creating git commit...' });
+
+    try {
+      // Create a commit with all current changes
+      const response = await fetch('/api/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Save state: ${new Date().toLocaleString()}`,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMessage({ type: 'success', text: `Git commit created successfully! ${result.message}` });
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to create git commit' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error creating commit: ' + (error instanceof Error ? error.message : 'Unknown error') });
+    } finally {
+      setIsCommitting(false);
+    }
+  };
+
   // Auto-hide messages after 5 seconds
   useEffect(() => {
     if (message) {
@@ -152,30 +182,53 @@ export default function AdminSavePage() {
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-yellow-400 mb-2">Quick Save</h2>
-              <p className="text-sm text-gray-400">Creates an instant backup of all code files</p>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-2">Quick Save & Commit</h2>
+              <p className="text-sm text-gray-400">Create backups and git commits of your code</p>
             </div>
             
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`px-8 py-4 rounded-lg font-bold text-lg transition-all ${
-                isSaving
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/30 hover:scale-105'
-              }`}
-            >
-              {isSaving ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin">⚙️</span>
-                  Creating Save...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  💾 <span>SAVE NOW</span>
-                </span>
-              )}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`px-8 py-4 rounded-lg font-bold text-lg transition-all ${
+                  isSaving
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/30 hover:scale-105'
+                }`}
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Creating Save...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    💾 <span>SAVE NOW</span>
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleCommit}
+                disabled={isCommitting}
+                className={`px-8 py-4 rounded-lg font-bold text-lg transition-all ${
+                  isCommitting
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/30 hover:scale-105'
+                }`}
+              >
+                {isCommitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Committing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    📝 <span>GIT COMMIT</span>
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

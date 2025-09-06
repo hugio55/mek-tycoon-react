@@ -10,6 +10,8 @@ export const getCachedLeaderboard = query({
     limit: v.optional(v.number()),
     sortBy: v.optional(v.string()), // for topMeks sorting
     offset: v.optional(v.number()), // for pagination
+    includeCurrentUser: v.optional(v.boolean()), // Include current user's position at end
+    currentUserId: v.optional(v.id("users")), // User requesting the leaderboard
   },
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit || 50, 50); // Cap at 50 to reduce bandwidth
@@ -70,6 +72,27 @@ export const getCachedLeaderboard = query({
       .take(offset + limit)
       .then(entries => entries.slice(offset)); // Skip first 'offset' entries
     
+    // If requested, append current user's position as 51st entry
+    if (args.includeCurrentUser && args.currentUserId) {
+      const userEntry = await ctx.db
+        .query("leaderboardCache")
+        .withIndex("by_user_category", (q) => 
+          q.eq("userId", args.currentUserId!).eq("category", args.category)
+        )
+        .first();
+      
+      // Only add if user exists and is not already in the top 50
+      if (userEntry && userEntry.rank > limit) {
+        return [
+          ...cachedEntries,
+          {
+            ...userEntry,
+            isCurrentUser: true, // Flag for special styling
+          }
+        ];
+      }
+    }
+    
     return cachedEntries;
   },
 });
@@ -98,15 +121,35 @@ export const getUserRank = query({
 export const updateLeaderboardCache = internalMutation({
   args: { category: v.string() },
   handler: async (ctx, args) => {
-    // OPTIMIZATION: Process users in batches to reduce memory usage
-    const batchSize = 50;
+    // Process ALL users for accurate rankings, but optimize data fetching
+    const batchSize = 100; // Larger batches for efficiency
+    
+    // Get all users - we need complete rankings
     const users = await ctx.db.query("users").collect();
+    
+    // Skip processing for users with no meaningful data based on category
+    const relevantUsers = users.filter(user => {
+      switch (args.category) {
+        case "gold":
+          return user.gold > 0;
+        case "meks":
+          return user.walletAddress !== "";
+        case "essence":
+          return Object.values(user.totalEssence || {}).some(v => v > 0);
+        case "achievements":
+          return true; // Everyone can have achievements
+        case "topMeks":
+          return user.walletAddress !== "";
+        default:
+          return true;
+      }
+    });
     
     let leaderboardData: any[] = [];
     
     // Process users in batches
-    for (let i = 0; i < users.length; i += batchSize) {
-      const batch = users.slice(i, Math.min(i + batchSize, users.length));
+    for (let i = 0; i < relevantUsers.length; i += batchSize) {
+      const batch = relevantUsers.slice(i, Math.min(i + batchSize, relevantUsers.length));
       
       const batchData = await Promise.all(
         batch.map(async (user) => {
@@ -121,12 +164,13 @@ export const updateLeaderboardCache = internalMutation({
               break;
               
             case "meks":
-              // OPTIMIZATION: Only count meks, don't fetch all data
-              const mekCount = await ctx.db
-                .query("meks")
-                .withIndex("by_owner", (q) => q.eq("owner", user.walletAddress))
-                .take(200) // Limit to 200 meks per user
-                .then(meks => meks.length);
+              // OPTIMIZATION: Use cached mek count if available
+              const userStats = await ctx.db
+                .query("userStatsCache")
+                .withIndex("by_user", (q) => q.eq("userId", user._id))
+                .first();
+              
+              const mekCount = userStats?.mekCount || 0;
               
               value = mekCount;
               
@@ -221,11 +265,12 @@ export const updateLeaderboardCache = internalMutation({
     const deletePromises = existingCache.map(entry => ctx.db.delete(entry._id));
     await Promise.all(deletePromises);
     
-    // OPTIMIZATION: Only cache top 200 entries to save space
-    const topEntries = leaderboardData.slice(0, 200);
+    // OPTIMIZATION: Cache top 50 for display, but keep all data for accurate rankings
+    // We'll store everyone's rank but only show top 50 + user's position
+    const topEntries = leaderboardData.slice(0, 100); // Keep 100 for buffer
     const timestamp = Date.now();
     
-    // Insert in batches
+    // Insert top entries for display
     const insertPromises = topEntries.map((data, i) => 
       ctx.db.insert("leaderboardCache", {
         category: args.category,
@@ -239,7 +284,23 @@ export const updateLeaderboardCache = internalMutation({
       })
     );
     
-    await Promise.all(insertPromises);
+    // Also cache entries for users outside top 100 so they can see their rank
+    // Only store minimal data for these to save space
+    const additionalUsers = leaderboardData.slice(100, Math.min(leaderboardData.length, 1000));
+    const additionalInserts = additionalUsers.map((data, i) => 
+      ctx.db.insert("leaderboardCache", {
+        category: args.category,
+        userId: data.userId,
+        walletAddress: data.walletAddress,
+        username: data.username,
+        value: data.value,
+        rank: 101 + i,
+        lastUpdated: timestamp,
+        metadata: undefined, // Minimal metadata to save space
+      })
+    );
+    
+    await Promise.all([...insertPromises, ...additionalInserts]);
   },
 });
 

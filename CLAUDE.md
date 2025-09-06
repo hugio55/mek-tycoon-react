@@ -179,6 +179,12 @@ npx tsc --noEmit   # TypeScript type checking
 - **Be matter-of-fact**: Present pros/cons objectively without sugar-coating issues
 - **It's OK to say "I don't know"**: Better to admit uncertainty than implement something potentially harmful
 
+## Task Completion Rules
+- **ALWAYS finish current tasks completely**: When the user adds new prompts while you're working on something, complete ALL aspects of the current task before moving to the next one
+- **Don't skip parts**: Even if new requests come in, don't skip or rush through any part of what you're currently implementing
+- **Track your work**: Use the TodoWrite tool to ensure nothing gets forgotten when multiple tasks are queued
+- **Acknowledge stacked requests**: Let the user know you'll address their new request after completing the current task
+
 ## User Preferences
 - No emojis in code or file content (unless explicitly requested)
 - Minimal, clean code without unnecessary documentation

@@ -55,30 +55,32 @@ const generateRandomMeks = (count: number): Mek[] => {
   });
 };
 
-// Layout variations (not just colors)
-const LAYOUT_VARIATIONS = {
-  classic: 'Classic Grid',
-  carousel: 'Carousel Style',
-  honeycomb: 'Honeycomb',
-  scattered: 'Scattered Chaos',
-  pyramid: 'Pyramid Stack'
+// Mek frame styles
+const FRAME_STYLES = {
+  none: 'No borders',
+  thin: 'Thin stroke no rounded corners',
+  thin_rounded: 'Thin stroke with rounded corners',
+  thick: 'Thick stroke no rounded corners',
+  thick_rounded: 'Thick stroke with rounded corners',
+  contract_plus: 'Contract Plus - Empty slot with + symbol',
+  contract_glow: 'Contract Glow - Yellow border with shadow',
+  contract_gradient: 'Contract Gradient - Yellow gradient background'
 };
 
 export default function MekSelector() {
   const [meks, setMeks] = useState<Mek[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [gridSize, setGridSize] = useState(10);
+  const [gridSize, setGridSize] = useState(50);
   const [rerollUnits, setRerollUnits] = useState(3);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [isZooming, setIsZooming] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
   const [showLightbox, setShowLightbox] = useState(true);
-  const [layoutVariation, setLayoutVariation] = useState<keyof typeof LAYOUT_VARIATIONS>('classic');
+  const [frameStyle, setFrameStyle] = useState<keyof typeof FRAME_STYLES>('none');
   const animationRef = useRef<number>(0);
   const [backgroundStars, setBackgroundStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number}>>([]);
   const [finalMekIndex, setFinalMekIndex] = useState(0);
   const [showInfoCard, setShowInfoCard] = useState(false);
-  const [selectedMekPosition, setSelectedMekPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const newMeks = generateRandomMeks(gridSize);
@@ -100,10 +102,10 @@ export default function MekSelector() {
     
     setIsAnimating(true);
     setSelectedIndex(0);
-    setIsZooming(false);
+    setIsFlashing(false);
     setShowInfoCard(false);
     
-    const duration = 5000;
+    const duration = 3600; // 15% faster minimum speed
     const startTime = Date.now();
     const loops = gridSize <= 10 ? 3 : gridSize <= 40 ? 4 : 5;
     const totalSteps = meks.length * loops + finalMekIndex;
@@ -116,20 +118,11 @@ export default function MekSelector() {
         setIsAnimating(false);
         setSelectedIndex(finalMekIndex);
         
-        // Get position of selected element for smooth animation
-        const selectedElement = document.getElementById(`mek-${finalMekIndex}`);
-        if (selectedElement) {
-          const rect = selectedElement.getBoundingClientRect();
-          setSelectedMekPosition({ 
-            x: rect.left + rect.width / 2, 
-            y: rect.top + rect.height / 2 
-          });
-        }
-        
+        // Flash/glow the selected mek, then show info card
         setTimeout(() => {
-          setIsZooming(true);
-          setTimeout(() => setShowInfoCard(true), 800);
-        }, 300);
+          setIsFlashing(true);
+          setTimeout(() => setShowInfoCard(true), 500);
+        }, 200);
         return;
       }
       
@@ -165,125 +158,128 @@ export default function MekSelector() {
   const handleGridSizeChange = (size: number) => {
     setGridSize(size);
     setSelectedIndex(null);
-    setIsZooming(false);
+    setIsFlashing(false);
     setIsAnimating(false);
     setShowInfoCard(false);
     setFinalMekIndex(Math.floor(Math.random() * size));
   };
 
-  const getGridClass = () => {
-    switch(gridSize) {
-      case 3: return 'grid grid-cols-3';
-      case 10: return 'grid grid-cols-5';
-      case 40: return 'grid grid-cols-8';
-      case 100: return 'grid grid-cols-10';
-      default: return 'grid grid-cols-5';
+  const calculateOptimalGrid = () => {
+    // Calculate optimal columns for responsive layout
+    // Aim for a wide rectangular layout that uses full width
+    const containerAspectRatio = 3.5; // Wide container (width/height ratio)
+    
+    // Calculate ideal columns based on count and aspect ratio
+    let columns: number;
+    let rows: number;
+    
+    if (gridSize <= 3) {
+      columns = gridSize;
+      rows = 1;
+    } else if (gridSize <= 10) {
+      columns = gridSize;
+      rows = 1;
+    } else {
+      // For larger counts, optimize for wide rectangular layout
+      // Start with aspect ratio calculation
+      rows = Math.ceil(Math.sqrt(gridSize / containerAspectRatio));
+      columns = Math.ceil(gridSize / rows);
+      
+      // Adjust to ensure all meks fit and use width efficiently
+      while (rows * columns < gridSize) {
+        columns++;
+      }
+      
+      // Prefer wider layouts (more columns, fewer rows)
+      if (rows > 1 && (rows - 1) * columns >= gridSize) {
+        rows--;
+        columns = Math.ceil(gridSize / rows);
+      }
     }
+    
+    return { columns, rows };
   };
 
   const getMekSize = () => {
-    // Calculate size to fit without scrolling
-    switch(gridSize) {
-      case 3: return 'w-32 h-32';
-      case 10: return 'w-20 h-20';
-      case 40: return 'w-12 h-12';
-      case 100: return 'w-10 h-10';
-      default: return 'w-20 h-20';
-    }
+    // Return empty - we'll handle sizing differently
+    return '';
   };
 
   const renderMekGrid = () => {
-    if (layoutVariation === 'pyramid' && gridSize <= 10) {
-      // Pyramid layout for small grids
-      const rows = [
-        meks.slice(0, 1),
-        meks.slice(1, 3),
-        meks.slice(3, 6),
-        meks.slice(6, 10)
-      ];
-      
-      return (
-        <div className="flex flex-col items-center justify-center h-full">
-          {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex">
-              {row.map((mek, index) => {
-                const actualIndex = rowIndex === 0 ? 0 :
-                                   rowIndex === 1 ? 1 + index :
-                                   rowIndex === 2 ? 3 + index :
-                                   6 + index;
-                return renderMekCard(mek, actualIndex);
-              })}
-            </div>
-          ))}
-        </div>
-      );
-    }
+    const { columns, rows } = calculateOptimalGrid();
     
-    if (layoutVariation === 'scattered') {
-      // Scattered random positions
-      return (
-        <div className="relative w-full h-full">
-          {meks.map((mek, index) => {
-            const style = {
-              position: 'absolute' as const,
-              left: `${(index * 37) % 80 + 5}%`,
-              top: `${(index * 61) % 80 + 5}%`,
-              transform: `rotate(${(index * 13) % 30 - 15}deg)`
-            };
-            return (
-              <div key={mek.id} style={style}>
-                {renderMekCard(mek, index)}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    
-    if (layoutVariation === 'carousel') {
-      return (
-        <div className="flex overflow-x-auto h-full items-center">
-          {meks.map((mek, index) => renderMekCard(mek, index))}
-        </div>
-      );
-    }
-    
-    // Default grid layout - NO GAPS
     return (
-      <div className={`${getGridClass()} w-fit mx-auto`}>
+      <div 
+        className="grid gap-0 w-full h-full"
+        style={{
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gridTemplateRows: `repeat(${rows}, 1fr)`
+        }}
+      >
         {meks.map((mek, index) => renderMekCard(mek, index))}
       </div>
     );
   };
 
+
+  const getFrameClasses = () => {
+    switch(frameStyle) {
+      case 'thin':
+        return 'border border-gray-400';
+      case 'thin_rounded':
+        return 'border border-gray-400 rounded-lg';
+      case 'thick':
+        return 'border-2 border-gray-300';
+      case 'thick_rounded':
+        return 'border-2 border-gray-300 rounded-lg';
+      case 'contract_plus':
+        return 'border-2 border-gray-700 bg-black/40';
+      case 'contract_glow':
+        return 'border-2 border-yellow-400 shadow-[0_0_10px_rgba(250,182,23,0.5)]';
+      case 'contract_gradient':
+        return 'border-2 border-yellow-600/50 bg-gradient-to-br from-yellow-900/20 to-yellow-800/10 hover:shadow-lg hover:shadow-yellow-500/20';
+      default:
+        return '';
+    }
+  };
+
   const renderMekCard = (mek: Mek, index: number) => {
     const isSelected = selectedIndex === index;
-    const cardSize = getMekSize();
+    const showPlusIcon = frameStyle === 'contract_plus';
     
     return (
       <div
         id={`mek-${index}`}
         key={mek.id}
         className={`
-          relative overflow-hidden ${cardSize} 
-          ${isSelected && !isZooming ? 'ring-2 ring-yellow-400 z-30' : ''}
-          ${isZooming && isSelected ? 'invisible' : ''}
-          ${isZooming && !isSelected ? 'opacity-20' : ''}
+          relative overflow-hidden w-full h-full
+          ${getFrameClasses()}
+          ${isSelected && !isFlashing ? 'ring-2 ring-yellow-400 z-30' : ''}
+          ${isSelected && isFlashing ? 'animate-flash-glow z-30' : ''}
           transition-opacity duration-300
-          ${layoutVariation === 'honeycomb' ? 'hexagon-clip' : ''}
+          ${showPlusIcon ? 'flex items-center justify-center' : ''}
         `}
       >
-        <img 
-          src={`/mek-images/150px/${mek.image}.webp`}
-          alt={`Mek ${mek.number}`}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/meks/placeholder.png';
-          }}
-        />
-        {isSelected && !isZooming && (
-          <div className="absolute inset-0 ring-2 ring-yellow-400 ring-inset animate-pulse" />
+        {showPlusIcon ? (
+          <div className="flex flex-col items-center justify-center text-gray-600 hover:text-yellow-500/60 transition-colors">
+            <span className="text-2xl">+</span>
+            <span className="text-[8px] uppercase">Empty</span>
+          </div>
+        ) : (
+          <>
+            <img 
+              src={`/mek-images/150px/${mek.image}.webp`}
+              alt={`Mek ${mek.number}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/meks/placeholder.png';
+              }}
+            />
+            {isSelected && !isFlashing && (
+              <div className="absolute inset-0 ring-2 ring-yellow-400 ring-inset animate-pulse" />
+            )}
+          </>
         )}
       </div>
     );
@@ -421,24 +417,24 @@ export default function MekSelector() {
             onClick={() => setShowLightbox(false)}
           />
           
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-8">
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div 
-              className="relative w-full max-w-4xl"
+              className="relative w-[95vw] max-w-[1600px]"
               style={{
                 background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(42, 42, 42, 0.98) 50%, rgba(26, 26, 26, 0.98) 100%)',
                 border: '2px solid rgba(250, 182, 23, 0.6)',
                 boxShadow: '0 0 80px rgba(250, 182, 23, 0.3), inset 0 0 40px rgba(0, 0, 0, 0.5)',
               }}
             >
-              {/* Layout variation dropdown */}
+              {/* Frame style dropdown */}
               <div className="absolute top-4 right-4 z-20">
                 <select
-                  value={layoutVariation}
-                  onChange={(e) => setLayoutVariation(e.target.value as keyof typeof LAYOUT_VARIATIONS)}
+                  value={frameStyle}
+                  onChange={(e) => setFrameStyle(e.target.value as keyof typeof FRAME_STYLES)}
                   className="bg-black/80 text-yellow-400 border border-yellow-400/50 rounded px-3 py-1 text-xs uppercase tracking-wider"
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
-                  {Object.entries(LAYOUT_VARIATIONS).map(([key, name]) => (
+                  {Object.entries(FRAME_STYLES).map(([key, name]) => (
                     <option key={key} value={key}>{name}</option>
                   ))}
                 </select>
@@ -491,7 +487,7 @@ export default function MekSelector() {
                     color: '#fab617'
                   }}
                 >
-                  MEK SELECTION LOTTERY
+                  MEK RECRUITMENT LOTTERY
                 </h1>
                 <div className="text-center text-xs text-gray-500 uppercase tracking-wider mt-1">
                   5 Second Random Selection
@@ -499,54 +495,44 @@ export default function MekSelector() {
               </div>
               
               <div className="relative p-5">
-                {/* Grid Size Selector */}
-                <div className="flex justify-center gap-1 mb-4">
-                  {[3, 10, 40, 100].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleGridSizeChange(size)}
-                      className={`
-                        px-5 py-1.5 text-xs font-bold transition-all uppercase tracking-wider
-                        ${gridSize === size 
-                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-400/60' 
-                          : 'bg-black/40 text-gray-500 border border-gray-700 hover:border-gray-500'
-                        }
-                      `}
-                      style={{
-                        fontFamily: "'Orbitron', sans-serif",
-                      }}
+                {/* Grid Size Slider */}
+                <div className="mb-4 px-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <label 
+                      className="text-yellow-400 text-sm uppercase tracking-wider" 
+                      style={{ fontFamily: "'Orbitron', sans-serif" }}
                     >
-                      {size}
-                    </button>
-                  ))}
+                      Mek Count: {gridSize}
+                    </label>
+                    <div className="text-gray-400 text-xs uppercase tracking-wider">
+                      {calculateOptimalGrid().columns} × {calculateOptimalGrid().rows} grid
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500 text-xs font-bold">3</span>
+                    <div className="flex-1 relative">
+                      <input
+                        type="range"
+                        min="3"
+                        max="100"
+                        value={gridSize}
+                        onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer mek-slider"
+                        style={{
+                          background: `linear-gradient(to right, #fab617 0%, #fab617 ${((gridSize - 3) / 97) * 100}%, #374151 ${((gridSize - 3) / 97) * 100}%, #374151 100%)`
+                        }}
+                      />
+                    </div>
+                    <span className="text-gray-500 text-xs font-bold">100</span>
+                  </div>
                 </div>
                 
                 {/* Mek Grid Container - NO SCROLL, FIT ALL */}
-                <div className="bg-black/60 p-4 mb-4 border border-gray-800 flex items-center justify-center" 
-                     style={{ height: '400px' }}>
+                <div className="bg-black/60 mb-4 border border-gray-800 overflow-hidden w-full flex items-center" 
+                     style={{ height: '400px', padding: '0' }}>
                   {renderMekGrid()}
                 </div>
                 
-                {/* Animated Growing Mek - From thumbnail to spotlight */}
-                {isZooming && selectedIndex !== null && (
-                  <div 
-                    className="fixed z-[60] pointer-events-none animate-grow-to-center"
-                    style={{
-                      left: selectedMekPosition.x,
-                      top: selectedMekPosition.y,
-                    }}
-                  >
-                    <img 
-                      src={`/mek-images/150px/${meks[selectedIndex].image}.webp`}
-                      alt={`Mek ${meks[selectedIndex].number}`}
-                      className="w-64 h-64 object-cover rounded-lg shadow-2xl"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/meks/placeholder.png';
-                      }}
-                    />
-                  </div>
-                )}
                 
                 {/* Info Card - Shows after animation */}
                 {showInfoCard && selectedIndex !== null && (
@@ -623,7 +609,7 @@ export default function MekSelector() {
                   </button>
                 </div>
 
-                {!isAnimating && !isZooming && (
+                {!isAnimating && !isFlashing && (
                   <button
                     onClick={startSelection}
                     className="mt-4 w-full py-3 font-bold text-black text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 transition-all uppercase tracking-wider"
@@ -647,13 +633,27 @@ export default function MekSelector() {
         </>
       )}
       
-      <style jsx global>{`
-        @keyframes grow-to-center {
-          from {
-            transform: translate(-50%, -50%) scale(1);
+      <style jsx global>{`        
+        @keyframes flash-glow {
+          0% {
+            box-shadow: 0 0 0 rgba(250, 182, 23, 0);
+            border-color: rgba(250, 182, 23, 0.6);
           }
-          to {
-            transform: translate(-50%, -50%) translateX(calc(50vw - var(--x))) translateY(calc(50vh - var(--y))) scale(4);
+          25% {
+            box-shadow: 0 0 20px rgba(250, 182, 23, 0.8), inset 0 0 20px rgba(250, 182, 23, 0.3);
+            border-color: rgba(250, 182, 23, 1);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(250, 182, 23, 1), inset 0 0 30px rgba(250, 182, 23, 0.5);
+            border-color: rgba(250, 182, 23, 1);
+          }
+          75% {
+            box-shadow: 0 0 20px rgba(250, 182, 23, 0.8), inset 0 0 20px rgba(250, 182, 23, 0.3);
+            border-color: rgba(250, 182, 23, 1);
+          }
+          100% {
+            box-shadow: 0 0 10px rgba(250, 182, 23, 0.6);
+            border-color: rgba(250, 182, 23, 0.8);
           }
         }
         
@@ -668,18 +668,13 @@ export default function MekSelector() {
           }
         }
         
-        .animate-grow-to-center {
-          animation: grow-to-center 0.8s ease-out forwards;
-          --x: 0px;
-          --y: 0px;
+        .animate-flash-glow {
+          animation: flash-glow 1s ease-in-out;
+          border: 2px solid rgba(250, 182, 23, 0.8);
         }
         
         .animate-fade-in {
           animation: fade-in 0.5s ease-out forwards;
-        }
-        
-        .hexagon-clip {
-          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
         }
       `}</style>
     </div>

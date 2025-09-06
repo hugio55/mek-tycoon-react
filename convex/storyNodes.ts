@@ -1,3 +1,7 @@
+// Story nodes feature - not yet implemented
+// This file is commented out until the storyPaths and playerStoryProgress tables are added to the schema
+
+/*
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
@@ -169,3 +173,4 @@ export const savePlayerProgress = mutation({
     }
   },
 });
+*/

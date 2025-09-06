@@ -7,14 +7,6 @@ export default function AdminPage() {
   
   const adminTools = [
     {
-      id: 'story-nodes',
-      title: 'Story Node Generator',
-      description: 'Procedural path generation for story mode chapters',
-      icon: '🗺️',
-      route: '/admin/story-nodes',
-      color: 'from-yellow-500 to-yellow-600'
-    },
-    {
       id: 'save-system',
       title: 'Save System Manager',
       description: 'Manage player saves and backups',

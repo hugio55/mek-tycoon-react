@@ -148,7 +148,13 @@ export const generateRandomBuffsForMek = query({
     numberOfBuffs: v.number(),
     seed: v.optional(v.string()), // For consistent randomization
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Array<{
+    category: string;
+    displayName: string;
+    treeTier: number;
+    value: number;
+    unit?: string;
+  }>> => {
     const activeTables = await ctx.db
       .query("mekTreeBuffTables")
       .filter((q) => q.eq(q.field("isActive"), true))

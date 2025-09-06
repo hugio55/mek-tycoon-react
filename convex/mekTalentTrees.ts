@@ -177,16 +177,16 @@ export const unlockNode = mutation({
       // Find the buff type
       const buffType = await ctx.db
         .query("buffTypes")
-        .filter((q) => q.eq(q.field("buffType"), node.buffGrant.buffType))
+        .filter((q) => q.eq(q.field("buffType"), node.buffGrant!.buffType))
         .first();
       
       if (buffType) {
         // Get the Mek to determine its rank/power score
         const mek = await ctx.db.get(tree.mekId);
-        let buffValue = node.buffGrant.baseValue || 10;
+        let buffValue = node.buffGrant!.baseValue || 10;
         
         // If this is a bank deposit cap buff, scale based on Mek power score and node tier
-        if (node.buffGrant.buffType === "bank_deposit_cap" && mek) {
+        if (node.buffGrant!.buffType === "bank_deposit_cap" && mek) {
           const powerScore = mek.powerScore || 100;
           const nodeTier = node.tier || 1;
           
