@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import theme from "@/lib/design-system";
 
 export default function ContractsPage() {
   const router = useRouter();
@@ -34,31 +35,50 @@ export default function ContractsPage() {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
       
-      {/* Background Effects */}
+      {/* Industrial Background Pattern */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Gradient orbs */}
+        {/* Metal texture grid */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{ background: theme.patterns.metalTexture }}
+        />
+        
+        {/* Hazard stripes at bottom */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-32 opacity-10"
+          style={{ background: theme.patterns.hazardStripes }}
+        />
+        
+        {/* Gradient orbs with industrial color */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse at 20% 30%, rgba(250, 182, 23, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(250, 182, 23, 0.08) 0%, transparent 70%)
+              radial-gradient(ellipse at 20% 30%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)
             `
           }}
         />
         
-        {/* Pattern overlay */}
+        {/* Industrial grid pattern */}
         <div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `
               repeating-linear-gradient(
-                45deg,
+                0deg,
                 transparent,
-                transparent 35px,
-                rgba(250, 182, 23, 0.03) 35px,
-                rgba(250, 182, 23, 0.03) 70px
+                transparent 50px,
+                rgba(250, 182, 23, 0.1) 50px,
+                rgba(250, 182, 23, 0.1) 51px
+              ),
+              repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 50px,
+                rgba(250, 182, 23, 0.1) 50px,
+                rgba(250, 182, 23, 0.1) 51px
               )
             `,
           }}
@@ -68,7 +88,7 @@ export default function ContractsPage() {
         {stars.map((star) => (
           <div
             key={star.id}
-            className="absolute rounded-full bg-white"
+            className="absolute rounded-full bg-yellow-400/80"
             style={{
               left: star.left,
               top: star.top,
@@ -77,6 +97,7 @@ export default function ContractsPage() {
               opacity: star.opacity,
               animation: star.twinkle ? `starTwinkle ${2 + Math.random() * 2}s ease-in-out infinite` : 'none',
               animationDelay: star.twinkle ? `${Math.random() * 2}s` : '0s',
+              boxShadow: '0 0 4px rgba(250, 182, 23, 0.8)'
             }}
           />
         ))}
@@ -91,115 +112,37 @@ export default function ContractsPage() {
               top: particle.top,
               animation: `floatParticle ${particle.duration} ease-in-out infinite`,
               animationDelay: particle.delay,
-              boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
+              boxShadow: '0 0 8px rgba(250, 182, 23, 0.8)',
             }}
           />
         ))}
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-6xl mx-auto w-full">
+      <div className="relative z-10 min-h-screen flex flex-col pt-20 px-8">
+        <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
           
-          {/* Title */}
-          <div className="text-center mb-16">
+          {/* Title with Industrial Typography */}
+          <div className="text-center mb-8">
             <h1 
+              className="mek-text-industrial mek-text-shadow"
               style={{
-                fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
                 fontSize: '56px',
                 fontWeight: '900',
-                letterSpacing: '2px',
-                textShadow: '0 0 30px rgba(250, 182, 23, 0.6)',
+                letterSpacing: '4px',
                 background: 'linear-gradient(135deg, #fab617 0%, #ffdd00 50%, #fab617 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                marginBottom: '16px'
               }}
             >
-              CONTRACTS SYSTEM
+              CONTRACTS
             </h1>
-            <p className="text-gray-400 text-lg">Choose your mission type</p>
           </div>
 
-          {/* Mode Selection Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+          {/* Mode Selection Cards with Industrial Design */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 mt-4 mb-16">
             
-            {/* Story Mode Card */}
-            <div
-              className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105"
-              onMouseEnter={() => setHoveredMode('story')}
-              onMouseLeave={() => setHoveredMode(null)}
-              onClick={() => router.push('/contracts/chapters')}
-            >
-              <div 
-                className="relative rounded-xl overflow-hidden"
-                style={{
-                  background: hoveredMode === 'story' 
-                    ? 'linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%)'
-                    : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
-                  border: '2px solid',
-                  borderColor: hoveredMode === 'story' ? '#fab617' : '#666',
-                  boxShadow: hoveredMode === 'story' 
-                    ? '0 0 40px rgba(250, 182, 23, 0.6)' 
-                    : '0 0 20px rgba(250, 182, 23, 0.2)',
-                  padding: '32px',
-                  height: '400px',
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {/* Animated border glow */}
-                {hoveredMode === 'story' && (
-                  <div 
-                    className="absolute inset-0 opacity-30 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(105deg, transparent 40%, rgba(250, 182, 23, 0.3) 50%, transparent 60%)',
-                      animation: 'shimmer 2s infinite',
-                    }}
-                  />
-                )}
-                
-                <div className="relative z-10 h-full flex flex-col">
-                  {/* Icon */}
-                  <div className="text-6xl mb-6 text-center">📚</div>
-                  
-                  {/* Title */}
-                  <h2 
-                    className="text-3xl font-bold mb-4 text-center"
-                    style={{
-                      fontFamily: "'Orbitron', sans-serif",
-                      color: hoveredMode === 'story' ? '#fab617' : '#fff',
-                      textShadow: hoveredMode === 'story' ? '0 0 20px rgba(250, 182, 23, 0.6)' : 'none',
-                    }}
-                  >
-                    STORY MODE
-                  </h2>
-                  
-                  {/* Description */}
-                  <p className="text-gray-400 text-center mb-6 flex-grow">
-                    Embark on an epic journey through 10 chapters of choose-your-own-adventure gameplay. 
-                    Battle through 400 nodes per chapter and shape your destiny.
-                  </p>
-                  
-                  {/* Features */}
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">10 Epic Chapters</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">4,000 Total Nodes</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">Progressive Unlocking</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Single Mission Mode Card */}
+            {/* Single Contracts Card (Left) */}
             <div
               className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105"
               onMouseEnter={() => setHoveredMode('single')}
@@ -207,85 +150,165 @@ export default function ContractsPage() {
               onClick={() => router.push('/contracts/single-missions')}
             >
               <div 
-                className="relative rounded-xl overflow-hidden"
+                className={`mek-card-industrial mek-border-sharp-gold relative overflow-hidden ${hoveredMode === 'single' ? 'mek-glow-yellow' : ''}`}
                 style={{
-                  background: hoveredMode === 'single' 
-                    ? 'linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%)'
-                    : 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
-                  border: '2px solid',
-                  borderColor: hoveredMode === 'single' ? '#fab617' : '#666',
-                  boxShadow: hoveredMode === 'single' 
-                    ? '0 0 40px rgba(250, 182, 23, 0.6)' 
-                    : '0 0 20px rgba(250, 182, 23, 0.2)',
                   padding: '32px',
                   height: '400px',
                   transition: 'all 0.3s ease',
                 }}
               >
-                {/* Animated border glow */}
+                {/* Industrial overlay patterns */}
+                <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                <div className="absolute inset-0 opacity-10" style={{ background: theme.patterns.diagonalStripes }} />
+                
+                {/* Animated scan line effect on hover */}
                 {hoveredMode === 'single' && (
-                  <div 
-                    className="absolute inset-0 opacity-30 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(105deg, transparent 40%, rgba(250, 182, 23, 0.3) 50%, transparent 60%)',
-                      animation: 'shimmer 2s infinite',
-                    }}
-                  />
+                  <>
+                    <div className="mek-scan-effect" />
+                    <div 
+                      className="absolute inset-0 opacity-20 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(105deg, transparent 40%, rgba(250, 182, 23, 0.4) 50%, transparent 60%)',
+                        animation: 'shimmer 2s infinite',
+                      }}
+                    />
+                  </>
                 )}
                 
                 <div className="relative z-10 h-full flex flex-col">
-                  {/* Icon */}
-                  <div className="text-6xl mb-6 text-center">⚔️</div>
+                  {/* Icon with glow */}
+                  <div className="text-6xl mb-6 text-center" style={{ filter: hoveredMode === 'single' ? 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.6))' : 'none' }}>⚔️</div>
                   
                   {/* Title */}
                   <h2 
-                    className="text-3xl font-bold mb-4 text-center"
+                    className={`text-3xl font-bold mb-4 text-center mek-text-industrial ${hoveredMode === 'single' ? 'text-yellow-400' : 'text-white'}`}
                     style={{
-                      fontFamily: "'Orbitron', sans-serif",
-                      color: hoveredMode === 'single' ? '#fab617' : '#fff',
                       textShadow: hoveredMode === 'single' ? '0 0 20px rgba(250, 182, 23, 0.6)' : 'none',
                     }}
                   >
-                    SINGLE MISSIONS
+                    SINGLE CONTRACTS
                   </h2>
                   
-                  {/* Description */}
-                  <p className="text-gray-400 text-center mb-6 flex-grow">
+                  {/* Description with industrial styling */}
+                  <p className="text-gray-400 text-center mb-6 flex-grow font-medium">
                     Jump straight into action with standalone contracts. 
                     Choose your difficulty, complete objectives, and earn rewards instantly.
                   </p>
                   
-                  {/* Features */}
-                  <div className="space-y-2">
+                  {/* Features with hazard stripes */}
+                  <div className="space-y-2 p-3 rounded" style={{ background: 'rgba(0,0,0,0.4)' }}>
                     <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">Quick Battles</span>
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">Quick Contracts</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">Instant Rewards</span>
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">Instant Rewards</span>
                     </div>
                     <div className="flex items-center text-sm">
-                      <span className="text-yellow-400 mr-2">▸</span>
-                      <span className="text-gray-300">No Prerequisites</span>
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">No Prerequisites</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Story Mode Card (Right) */}
+            <div
+              className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105"
+              onMouseEnter={() => setHoveredMode('story')}
+              onMouseLeave={() => setHoveredMode(null)}
+              onClick={() => router.push('/contracts/chapters')}
+            >
+              <div 
+                className={`mek-card-industrial mek-border-sharp-gold relative overflow-hidden ${hoveredMode === 'story' ? 'mek-glow-yellow' : ''}`}
+                style={{
+                  padding: '32px',
+                  height: '400px',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {/* Industrial overlay patterns */}
+                <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                <div className="absolute inset-0 opacity-10" style={{ background: theme.patterns.diagonalStripes }} />
+                
+                {/* Animated scan line effect on hover */}
+                {hoveredMode === 'story' && (
+                  <>
+                    <div className="mek-scan-effect" />
+                    <div 
+                      className="absolute inset-0 opacity-20 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(105deg, transparent 40%, rgba(250, 182, 23, 0.4) 50%, transparent 60%)',
+                        animation: 'shimmer 2s infinite',
+                      }}
+                    />
+                  </>
+                )}
+                
+                <div className="relative z-10 h-full flex flex-col">
+                  {/* Icon with glow */}
+                  <div className="text-6xl mb-6 text-center" style={{ filter: hoveredMode === 'story' ? 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.6))' : 'none' }}>📚</div>
+                  
+                  {/* Title */}
+                  <h2 
+                    className={`text-3xl font-bold mb-4 text-center mek-text-industrial ${hoveredMode === 'story' ? 'text-yellow-400' : 'text-white'}`}
+                    style={{
+                      textShadow: hoveredMode === 'story' ? '0 0 20px rgba(250, 182, 23, 0.6)' : 'none',
+                    }}
+                  >
+                    STORY MODE
+                  </h2>
+                  
+                  {/* Description with industrial styling */}
+                  <p className="text-gray-400 text-center mb-6 flex-grow font-medium">
+                    Embark on an epic journey through multiple chapters of choose-your-own-adventure gameplay. 
+                    Shape your destiny through strategic choices.
+                  </p>
+                  
+                  {/* Features with hazard stripes */}
+                  <div className="space-y-2 p-3 rounded" style={{ background: 'rgba(0,0,0,0.4)' }}>
+                    <div className="flex items-center text-sm">
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">Epic Chapters</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">Strategic Choices</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="text-yellow-400 mr-2 font-bold">▸</span>
+                      <span className="text-gray-300 uppercase tracking-wider text-xs">Progressive Unlocking</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Back Button */}
-          <div className="text-center mt-12">
-            <button
-              onClick={() => router.push('/')}
-              className="px-6 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all text-gray-400 hover:text-white"
-            >
-              Back to Main Menu
-            </button>
-          </div>
         </div>
       </div>
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        @keyframes floatParticle {
+          0% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-20px) translateX(10px); }
+          50% { transform: translateY(0) translateX(-10px); }
+          75% { transform: translateY(20px) translateX(5px); }
+          100% { transform: translateY(0) translateX(0); }
+        }
+        
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
     </div>
   );
 }

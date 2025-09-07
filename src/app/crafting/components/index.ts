@@ -1,4 +1,5 @@
 export { default as CategorySelector } from './CategorySelector';
+export { default as ChipTypeSelector } from './ChipTypeSelector';
 export { default as CraftButton } from './CraftButton';
 export { default as CraftedItemPopup } from './CraftedItemPopup';
 export { default as MekSelector } from './MekSelector';

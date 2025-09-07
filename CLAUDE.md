@@ -66,22 +66,69 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 
 ## Design Requirements
 
-### Visual Style
-- Dark theme with black backgrounds
-- Yellow accent color (#fab617 / rgba(250, 182, 23))
-- Glass-morphism effects with backdrop blur
-- Subtle animations (no distracting/flashy effects)
-- Font preferences:
-  - Headers: Orbitron, Rajdhani, or Bebas Neue
-  - Body: Inter, Segoe UI
-  - Monospace: Consolas, Monaco
+### 🎨 INDUSTRIAL DESIGN SYSTEM (NEW!)
+**Reference Implementation:** `/contracts/single-missions` page
+
+The site uses an **Industrial/Military** aesthetic with the following key elements:
+
+#### Core Visual Identity
+- **Frames**: Sharp edges with yellow/gold borders (`border-2 border-yellow-500/50`)
+- **Translucence**: Glass-morphism with backdrop blur effects
+- **Textures**: Black and yellow hazard stripes, metal scratches, rust effects
+- **Typography**: 'Orbitron' for headers (uppercase, tracking-wider)
+
+#### Design System Files
+- **CSS Classes**: `/src/styles/global-design-system.css`
+- **JS/TS Utils**: `/src/lib/design-system.ts`
+
+#### Key Patterns to Use
+1. **Industrial Cards**: 
+   ```css
+   .mek-card-industrial /* Translucent with grunge overlays */
+   .mek-border-sharp-gold /* Yellow bordered frames */
+   ```
+
+2. **Hazard Stripes**:
+   ```css
+   .mek-overlay-hazard-stripes /* 45deg black/yellow stripes */
+   .mek-overlay-diagonal-stripes /* 135deg subtle stripes */
+   ```
+
+3. **Grunge Effects**:
+   ```css
+   .mek-overlay-scratches /* Metal wear marks */
+   .mek-overlay-rust /* Rust and stain patterns */
+   .mek-overlay-metal-texture /* Industrial grid texture */
+   ```
+
+4. **Typography Classes**:
+   ```css
+   .mek-value-primary /* Large yellow numbers */
+   .mek-label-uppercase /* Small gray uppercase labels */
+   .mek-text-industrial /* Orbitron bold uppercase */
+   ```
+
+5. **Interactive Elements**:
+   ```css
+   .mek-button-primary /* Angled yellow button */
+   .mek-slot-empty /* Dashed border slots */
+   .mek-glow-yellow /* Yellow glow effects */
+   ```
+
+### Visual Style Guidelines
+- **Primary Color**: Yellow/Gold (#fab617)
+- **Backgrounds**: Deep blacks with subtle gradients
+- **Borders**: Sharp or slightly rounded with yellow accents
+- **Effects**: Glass morphism, scan lines, holographic shimmers
+- **Animations**: Subtle pulses, no flashy/distracting effects
 
 ### UI Components
 - Navigation with dropdown menus for 6 categories
 - Large logo at top with subtle shimmer effect
 - HUB button with special styling
-- Cards with gradient borders and hover effects
-- LED-style indicators instead of progress bars
+- Cards with industrial frames and grunge overlays
+- Progress bars with yellow gradient fills
+- Slots with dashed borders and hazard patterns
 
 ## Important Data Structure
 
@@ -146,6 +193,28 @@ npm run build      # Build for production
 npm run lint       # Run ESLint
 npx tsc --noEmit   # TypeScript type checking
 ```
+
+## Slash Commands
+
+### `/style` - Apply Industrial Design System
+When the user types `/style`, apply the global industrial design system to the current page:
+
+1. **Import design system**: Add `import theme from '@/lib/design-system'` if using TypeScript utilities
+2. **Replace generic styles** with industrial classes:
+   - Cards: Use `.mek-card-industrial` with `.mek-border-sharp-gold`
+   - Headers: Apply `.mek-header-industrial` with hazard stripes
+   - Buttons: Replace with `.mek-button-primary` or `.mek-button-secondary`
+   - Values: Use `.mek-value-primary` for gold numbers, `.mek-value-secondary` for blue
+   - Labels: Apply `.mek-label-uppercase` for small gray labels
+3. **Add grunge overlays**: Apply `.mek-overlay-scratches`, `.mek-overlay-rust` for texture
+4. **Update typography**: Use Orbitron font with `.mek-text-industrial` for headers
+5. **Apply effects**: Add `.mek-glow-yellow` for highlights, `.mek-scan-effect` for animations
+6. **Ensure consistency**: Match the contracts/single-missions page aesthetic
+
+Example transformation:
+- `bg-gray-800 border border-gray-600` → `.mek-card-industrial .mek-border-sharp-gold`
+- `text-2xl font-bold` → `.mek-value-primary` or `.mek-text-industrial`
+- `bg-blue-500 text-white px-4 py-2` → `.mek-button-primary`
 
 ## Notes for Claude
 - **FIRST THING TO CHECK**: If styles look broken, verify Tailwind is v3 not v4 in package.json

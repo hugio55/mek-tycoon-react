@@ -2,9 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import the global design system */
+@import '../styles/global-design-system.css';
+
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
+  /* Industrial Design System Colors */
+  --color-primary: #fab617;
+  --color-primary-rgb: 250, 182, 23;
+  --color-accent-blue: #3b82f6;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-cyan: #22d3ee;
 }
 
 body {

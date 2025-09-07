@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import MekRecruitmentModal from './components/MekRecruitmentModal';
+import MekRecruitmentModalV1 from './components/MekRecruitmentModalV1';
+import MekRecruitmentModalV2 from './components/MekRecruitmentModalV2';
+import MekRecruitmentModalV3 from './components/MekRecruitmentModalV3';
+import MekRecruitmentModalV4 from './components/MekRecruitmentModalV4';
 import { successMultipliers, missionAilments, missionWeaknesses, globalMissionTypes, regularMissionTitles } from './constants/missionData';
 import { formatGoldAmount, formatCountdown, getRewardColor, generateSampleMeks } from './utils/helpers';
 import { getMekCardStyle, getTraitCircleStyle } from './utils/styleHelpers';
@@ -83,6 +87,7 @@ export default function ContractsLayoutOption11() {
   const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const [selectedBuff, setSelectedBuff] = useState<any | null>(null);
   const [buffModalStyle, setBuffModalStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [modalVersion, setModalVersion] = useState<'original' | 'v1' | 'v2' | 'v3' | 'v4'>('v4');
   const dailyVariation = "Acid";
   
   // Update timer every second
@@ -2187,6 +2192,20 @@ export default function ContractsLayoutOption11() {
           <h1 className="text-3xl font-bold text-yellow-400">CONTRACTS SYSTEM</h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 p-2 bg-yellow-400/10 border border-yellow-400/30">
+                <label className="text-sm text-yellow-400 font-bold">MODAL LAYOUT:</label>
+                <select 
+                  value={modalVersion}
+                  onChange={(e) => setModalVersion(e.target.value as 'original' | 'v1' | 'v2' | 'v3' | 'v4')}
+                  className="bg-black border-2 border-yellow-400 text-yellow-400 px-3 py-1.5 text-sm font-bold focus:border-yellow-300 focus:outline-none"
+                >
+                  <option value="v4">Option 4: Refined (5 Styles)</option>
+                  <option value="v1">Option 1: Industrial Sharp</option>
+                  <option value="v2">Option 2: Neon Cyberpunk</option>
+                  <option value="v3">Option 3: Clean Professional</option>
+                  <option value="original">Original (Debug)</option>
+                </select>
+              </div>
               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-400">Mek Modal:</label>
                 <select 
@@ -2235,60 +2254,123 @@ export default function ContractsLayoutOption11() {
         </div>
       </div>
       
-      {/* Mek Recruitment Modal */}
-      <MekRecruitmentModal
-        showMekModal={showMekModal}
-        selectedMekSlot={selectedMekSlot}
-        onClose={() => {
-          setShowMekModal(null);
-          setSelectedMekSlot(null);
-        }}
-        onMekSelection={handleMekSelection}
-        mekCount={mekCount}
-        mekCardStyle={mekCardStyle}
-        traitCircleStyle={traitCircleStyle}
-        mekFrameStyle={mekFrameStyle}
-      />
+      {/* Mek Recruitment Modal - Dynamic Version */}
+      {modalVersion === 'original' && (
+        <MekRecruitmentModal
+          showMekModal={showMekModal}
+          selectedMekSlot={selectedMekSlot}
+          onClose={() => {
+            setShowMekModal(null);
+            setSelectedMekSlot(null);
+          }}
+          onMekSelection={handleMekSelection}
+          mekCount={mekCount}
+          mekCardStyle={mekCardStyle}
+          traitCircleStyle={traitCircleStyle}
+          mekFrameStyle={mekFrameStyle}
+        />
+      )}
+      {modalVersion === 'v1' && (
+        <MekRecruitmentModalV1
+          showMekModal={showMekModal}
+          selectedMekSlot={selectedMekSlot}
+          onClose={() => {
+            setShowMekModal(null);
+            setSelectedMekSlot(null);
+          }}
+          onMekSelection={handleMekSelection}
+          mekCount={mekCount}
+        />
+      )}
+      {modalVersion === 'v2' && (
+        <MekRecruitmentModalV2
+          showMekModal={showMekModal}
+          selectedMekSlot={selectedMekSlot}
+          onClose={() => {
+            setShowMekModal(null);
+            setSelectedMekSlot(null);
+          }}
+          onMekSelection={handleMekSelection}
+          mekCount={mekCount}
+        />
+      )}
+      {modalVersion === 'v3' && (
+        <MekRecruitmentModalV3
+          showMekModal={showMekModal}
+          selectedMekSlot={selectedMekSlot}
+          onClose={() => {
+            setShowMekModal(null);
+            setSelectedMekSlot(null);
+          }}
+          onMekSelection={handleMekSelection}
+          mekCount={mekCount}
+        />
+      )}
+      {modalVersion === 'v4' && (
+        <MekRecruitmentModalV4
+          showMekModal={showMekModal}
+          selectedMekSlot={selectedMekSlot}
+          onClose={() => {
+            setShowMekModal(null);
+            setSelectedMekSlot(null);
+          }}
+          onMekSelection={handleMekSelection}
+          mekCount={mekCount}
+          mekCardStyle={mekCardStyle}
+          traitCircleStyle={traitCircleStyle}
+          mekFrameStyle={mekFrameStyle}
+        />
+      )}
 
       {/* Buff Details Modal */}
       {selectedBuff && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedBuff(null)}
         >
           {/* Style 1: Floating Circle */}
           {buffModalStyle === 1 && (
             <div className="relative" onClick={(e) => e.stopPropagation()}>
-              {/* Info Card Behind (z-index lower) */}
-              <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-72 bg-gray-900/98 rounded-xl shadow-2xl">
-                <div className="pt-52 px-6 pb-6">
-                  {/* Variation Name at Top */}
-                  <h2 className="text-2xl font-bold text-white text-center mb-3 uppercase tracking-wide">
-                    {selectedBuff.name}
-                  </h2>
+              {/* Info Card Behind (z-index lower) - Card Style K */}
+              <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-72">
+                {/* Card Style K: Semi-translucent with glass effect */}
+                <div className="relative bg-black/50 backdrop-blur-lg rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                  
+                  <div className="relative pt-64 px-6 pb-6">
+                    {/* Variation Name at Top */}
+                    <h2 className="text-2xl font-bold text-white text-center mb-3 uppercase tracking-wide">
+                      {selectedBuff.name}
+                    </h2>
 
-                  {/* Stats */}
-                  <div className="space-y-3 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Total copies:</span>
-                      <span className="text-sm font-semibold text-white">4</span>
+                    {/* Stats - with conditional green color for ownership */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-300">Total copies:</span>
+                        <span className="text-sm font-semibold text-white">4</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm ${2 > 0 ? 'text-green-400' : 'text-gray-300'}`}>You Own:</span>
+                        <span className={`text-sm font-semibold ${2 > 0 ? 'text-green-400' : 'text-white'}`}>2</span>
+                      </div>
                     </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">You Own:</span>
-                      <span className="text-sm font-semibold text-white">1</span>
-                    </div>
-                  </div>
 
-                  {/* Success Rate Buff Section */}
-                  <div className="border-t border-gray-700 pt-4">
-                    <div className="mb-2">
-                      <div className="text-sm text-gray-400 mb-1">Success Rate Buff</div>
-                      <div className="text-4xl font-bold text-blue-400 text-right">10%</div>
+                    {/* Success Rate Buff Section - Improved Layout */}
+                    <div className="border-t border-white/20 pt-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="text-base font-semibold text-cyan-400 uppercase tracking-wider">
+                          Success Rate Buff
+                        </div>
+                        <div className="text-5xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text -mt-2" style={{ fontFamily: 'Orbitron, monospace' }}>
+                          10%
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-300 leading-relaxed">
+                        If you deploy a Mek with this variation chip attached, you increase your success rate.
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      If you deploy a Mek with this variation chip attached, you increase your success rate.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -2296,7 +2378,7 @@ export default function ContractsLayoutOption11() {
               {/* Large Stationary Image (z-index higher) - NO animation */}
               <div className="relative z-10 w-[420px] h-[420px] rounded-full overflow-hidden shadow-2xl">
                 <Image
-                  src={selectedBuff.image || "/variation-images-800px/paul.jpg"}
+                  src={selectedBuff.image}
                   alt={selectedBuff.name}
                   fill
                   className="object-cover"
@@ -2304,16 +2386,6 @@ export default function ContractsLayoutOption11() {
                   priority
                 />
               </div>
-
-              {/* Close button */}
-              <button 
-                onClick={() => setSelectedBuff(null)}
-                className="absolute -top-4 -right-4 z-20 w-10 h-10 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-full flex items-center justify-center transition-all"
-              >
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           )}
 
@@ -2364,13 +2436,6 @@ export default function ContractsLayoutOption11() {
                 </div>
               </div>
 
-              {/* Close button */}
-              <button 
-                onClick={() => setSelectedBuff(null)}
-                className="absolute top-0 right-0 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-all"
-              >
-                <span className="text-cyan-400 text-xl">×</span>
-              </button>
             </div>
           )}
 
@@ -2428,13 +2493,6 @@ export default function ContractsLayoutOption11() {
                 </div>
               </div>
 
-              {/* Close button */}
-              <button 
-                onClick={() => setSelectedBuff(null)}
-                className="absolute -top-3 -right-3 w-10 h-10 bg-gray-900 border-2 border-yellow-400/50 rounded-full flex items-center justify-center hover:bg-red-900/50 transition-all"
-              >
-                <span className="text-yellow-400 text-xl">×</span>
-              </button>
             </div>
           )}
 
@@ -2491,15 +2549,6 @@ export default function ContractsLayoutOption11() {
                 </div>
               </div>
 
-              {/* Close button */}
-              <button 
-                onClick={() => setSelectedBuff(null)}
-                className="absolute -top-4 -right-4 w-12 h-12 bg-red-900/80 hover:bg-red-800 border-2 border-red-400/50 rounded-full flex items-center justify-center transition-all shadow-lg"
-              >
-                <svg className="w-6 h-6 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           )}
 
@@ -2534,13 +2583,6 @@ export default function ContractsLayoutOption11() {
                 </div>
               </div>
 
-              {/* Minimal close button */}
-              <button 
-                onClick={() => setSelectedBuff(null)}
-                className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all backdrop-blur-md"
-              >
-                <span className="text-white/80 text-2xl leading-none">×</span>
-              </button>
             </div>
           )}
         </div>

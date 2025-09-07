@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import Navigation from '@/components/Navigation';
+// Navigation is provided by Providers wrapper - no need to import
 
 interface EventNode {
   eventNumber: number;
@@ -251,9 +251,7 @@ export default function EventNodeRewards() {
   const currentChapter = chaptersData[selectedChapter - 1];
 
   return (
-    <div className="min-h-screen bg-black">
-      <Navigation />
-      
+    <div>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-yellow-400 mb-8 font-orbitron text-center">
           Event Node Rewards Manager

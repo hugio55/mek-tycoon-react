@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import MissionCard from "./MissionCard";
 
 // Node types matching the story builder
 type StoryNodeType = 'normal' | 'event' | 'boss' | 'final_boss';
@@ -72,14 +75,6 @@ const getNodeStyle = (node: StoryNode) => {
   return "from-gray-700 to-gray-800 border-gray-600 opacity-50";
 };
 
-// Get reward color
-const getRewardColor = (value: number): string => {
-  if (value >= 1000) return "text-orange-400";
-  if (value >= 500) return "text-purple-400";
-  if (value >= 250) return "text-blue-400";
-  if (value >= 100) return "text-green-400";
-  return "text-gray-400";
-};
 
 export default function StoryClimbPage() {
   const router = useRouter();
@@ -89,65 +84,270 @@ export default function StoryClimbPage() {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [currentChapter, setCurrentChapter] = useState<SavedStoryMode | null>(null);
   const [savedStoryModes, setSavedStoryModes] = useState<SavedStoryMode[]>([]);
-  const cameraOffset = 0; // Fixed camera, no scrolling
+  const [maxScrollY, setMaxScrollY] = useState(0); // Maximum allowed scroll based on progress
   const [canvasHeight, setCanvasHeight] = useState(600); // Default height
+  const [canvasWidth, setCanvasWidth] = useState(400); // Default width
   const [currentNodeIndex, setCurrentNodeIndex] = useState(1); // Player's current progress
+  const [cameraY, setCameraY] = useState(0); // Camera position for scrolling
   const canvasRef = useRef<HTMLDivElement>(null);
   
-  // Load saved story modes from localStorage or create sample data
+  // Convex queries and mutations
+  const dbStoryTrees = useQuery(api.storyTrees.getAllStoryTrees);
+  const saveToDatabase = useMutation(api.storyTrees.saveStoryTree);
+  
+  // Load saved story modes from localStorage and database
   useEffect(() => {
     console.log('Loading story data...');
     
     let storyData: SavedStoryMode | null = null;
+    let existingSaves: SavedStoryMode[] = [];
+    
+    // Check for preferred tree first
+    const preferredTree = localStorage.getItem('preferredStoryTree');
     
     // Try to load from localStorage first
     const saved = localStorage.getItem('savedStoryModes');
-    console.log('Found saved data:', saved);
     
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as SavedStoryMode[];
+        existingSaves = parsed;
         setSavedStoryModes(parsed);
         
-        // Find and load "Chapter 1" or first chapter
+        console.log('📂 Found existing saved story modes:', parsed.map(s => s.name).join(', '));
+        
+        // Priority order: test 3 > preferred tree > test 2 > chapter 1 > first available
         storyData = parsed.find(s => 
+          s.name.toLowerCase() === 'test 3' ||
+          s.name.toLowerCase() === 'chapter test 3' ||
+          s.name.toLowerCase().includes('test 3')
+        ) || (preferredTree ? parsed.find(s => s.name === preferredTree) : null)
+          || parsed.find(s => 
+          s.name.toLowerCase() === 'test 2' ||
+          s.name.toLowerCase() === 'chapter test 2' ||
+          s.name.toLowerCase().includes('test 2')
+        ) || parsed.find(s => 
           s.name.toLowerCase().includes('chapter 1') || 
           s.chapter === 1
-        ) || null;
+        ) || parsed[0] || null; // Fall back to first saved tree if available
         
-        console.log('Found chapter data:', storyData);
+        if (storyData) {
+          console.log('✅ Loading saved story:', storyData.name);
+          if (storyData.name.toLowerCase().includes('test 3')) {
+            console.log('🌟 TEST 3 LOADED! Your latest work is safe.');
+          }
+        }
       } catch (error) {
         console.error('Error parsing saved story modes:', error);
       }
     }
     
-    // If no data found, create sample data for testing
-    if (!storyData) {
-      console.log('Creating sample story data...');
+    // Sync with database if available
+    if (dbStoryTrees && dbStoryTrees.length > 0) {
+      console.log('☁️ Found story trees in database:', dbStoryTrees.map(t => t.name).join(', '));
       
-      storyData = {
-        name: "Chapter 1",
-        chapter: 1,
+      // Merge database trees with local trees (local takes precedence for same name)
+      const localNames = existingSaves.map(s => s.name.toLowerCase());
+      dbStoryTrees.forEach(dbTree => {
+        if (!localNames.includes(dbTree.name.toLowerCase())) {
+          const treeData = {
+            name: dbTree.name,
+            chapter: dbTree.chapter,
+            data: {
+              nodes: dbTree.nodes,
+              connections: dbTree.connections
+            }
+          };
+          existingSaves.push(treeData);
+        }
+      });
+      
+      // Update localStorage with merged data
+      if (existingSaves.length > 0) {
+        localStorage.setItem('savedStoryModes', JSON.stringify(existingSaves));
+        setSavedStoryModes(existingSaves);
+      }
+    }
+    
+    // Only create defaults if NO saved data exists at all (preserve user's saves)
+    if (!storyData && existingSaves.length === 0) {
+      console.log('No saved data found. Creating default layouts...');
+      
+      // Create test 2 layout - a more complex branching tree
+      const test2Data = {
+        name: "test 2",
+        chapter: 2,
         data: {
           nodes: [
-            { id: 'start', x: 0, y: -50, label: 'START', storyNodeType: 'normal' },
-            { id: 'node-1', x: 0, y: -150, label: 'Stage 1', storyNodeType: 'normal' },
-            { id: 'node-2', x: 0, y: -250, label: 'Stage 2', storyNodeType: 'normal' },
-            { id: 'node-3', x: 0, y: -350, label: 'Stage 3', storyNodeType: 'event' },
-            { id: 'node-4', x: 0, y: -450, label: 'Stage 4', storyNodeType: 'normal' },
-            { id: 'node-5', x: 0, y: -550, label: 'Boss', storyNodeType: 'boss' },
-            { id: 'node-6', x: 0, y: -650, label: 'Final', storyNodeType: 'final_boss' },
+            // Start at bottom
+            { id: 'start', x: 0, y: 100, label: 'START', storyNodeType: 'normal' },
+            
+            // Level 1 - Three initial paths
+            { id: 'node-1', x: -200, y: 250, label: 'Scout Path', storyNodeType: 'normal' },
+            { id: 'node-2', x: 0, y: 250, label: 'Main Path', storyNodeType: 'normal' },
+            { id: 'node-3', x: 200, y: 250, label: 'Risk Path', storyNodeType: 'event' },
+            
+            // Level 2 - More branching
+            { id: 'node-4', x: -250, y: 400, label: 'Hidden Cache', storyNodeType: 'event' },
+            { id: 'node-5', x: -100, y: 400, label: 'Ambush Point', storyNodeType: 'normal' },
+            { id: 'node-6', x: 100, y: 400, label: 'Stronghold', storyNodeType: 'normal' },
+            { id: 'node-7', x: 250, y: 400, label: 'Elite Guard', storyNodeType: 'boss' },
+            
+            // Level 3 - Complex interconnections
+            { id: 'node-8', x: -200, y: 550, label: 'Supply Route', storyNodeType: 'normal' },
+            { id: 'node-9', x: -50, y: 550, label: 'Command Post', storyNodeType: 'normal' },
+            { id: 'node-10', x: 50, y: 550, label: 'Weapons Cache', storyNodeType: 'event' },
+            { id: 'node-11', x: 200, y: 550, label: 'Boss Arena', storyNodeType: 'boss' },
+            
+            // Level 4 - Convergence points
+            { id: 'node-12', x: -150, y: 700, label: 'Rally Point', storyNodeType: 'normal' },
+            { id: 'node-13', x: 0, y: 700, label: 'Central Hub', storyNodeType: 'event' },
+            { id: 'node-14', x: 150, y: 700, label: 'Final Prep', storyNodeType: 'normal' },
+            
+            // Level 5 - Mini bosses
+            { id: 'node-15', x: -100, y: 850, label: 'Twin Guards', storyNodeType: 'boss' },
+            { id: 'node-16', x: 100, y: 850, label: 'War Machine', storyNodeType: 'boss' },
+            
+            // Level 6 - Final approach
+            { id: 'node-17', x: -150, y: 1000, label: 'Secret Path', storyNodeType: 'event' },
+            { id: 'node-18', x: 0, y: 1000, label: 'Main Gate', storyNodeType: 'normal' },
+            { id: 'node-19', x: 150, y: 1000, label: 'Side Entry', storyNodeType: 'normal' },
+            
+            // Final boss
+            { id: 'node-20', x: 0, y: 1150, label: 'Overlord', storyNodeType: 'final_boss' },
           ],
           connections: [
+            // From start - three paths
             { from: 'start', to: 'node-1' },
-            { from: 'node-1', to: 'node-2' },
-            { from: 'node-2', to: 'node-3' },
-            { from: 'node-3', to: 'node-4' },
-            { from: 'node-4', to: 'node-5' },
-            { from: 'node-5', to: 'node-6' },
+            { from: 'start', to: 'node-2' },
+            { from: 'start', to: 'node-3' },
+            
+            // Level 1 to 2
+            { from: 'node-1', to: 'node-4' },
+            { from: 'node-1', to: 'node-5' },
+            { from: 'node-2', to: 'node-5' },
+            { from: 'node-2', to: 'node-6' },
+            { from: 'node-3', to: 'node-6' },
+            { from: 'node-3', to: 'node-7' },
+            
+            // Level 2 to 3 - complex routing
+            { from: 'node-4', to: 'node-8' },
+            { from: 'node-5', to: 'node-8' },
+            { from: 'node-5', to: 'node-9' },
+            { from: 'node-6', to: 'node-9' },
+            { from: 'node-6', to: 'node-10' },
+            { from: 'node-7', to: 'node-10' },
+            { from: 'node-7', to: 'node-11' },
+            
+            // Level 3 to 4
+            { from: 'node-8', to: 'node-12' },
+            { from: 'node-9', to: 'node-12' },
+            { from: 'node-9', to: 'node-13' },
+            { from: 'node-10', to: 'node-13' },
+            { from: 'node-10', to: 'node-14' },
+            { from: 'node-11', to: 'node-14' },
+            
+            // Level 4 to 5
+            { from: 'node-12', to: 'node-15' },
+            { from: 'node-13', to: 'node-15' },
+            { from: 'node-13', to: 'node-16' },
+            { from: 'node-14', to: 'node-16' },
+            
+            // Level 5 to 6
+            { from: 'node-15', to: 'node-17' },
+            { from: 'node-15', to: 'node-18' },
+            { from: 'node-16', to: 'node-18' },
+            { from: 'node-16', to: 'node-19' },
+            
+            // To final boss
+            { from: 'node-17', to: 'node-20' },
+            { from: 'node-18', to: 'node-20' },
+            { from: 'node-19', to: 'node-20' },
           ]
         }
       };
+      
+      // Create chapter 1 as backup
+      const chapter1Data = {
+        name: "chapter test 1",
+        chapter: 1,
+        data: {
+          nodes: [
+            // Start at bottom
+            { id: 'start', x: 0, y: 100, label: 'START', storyNodeType: 'normal' },
+            
+            // Level 1 - Two paths from start
+            { id: 'node-1', x: -150, y: 250, label: 'mek 1341', storyNodeType: 'normal' },
+            { id: 'node-2', x: 150, y: 250, label: 'mek 1341', storyNodeType: 'normal' },
+            
+            // Level 2 - Merge and split again
+            { id: 'node-3', x: 0, y: 400, label: 'mek 1341', storyNodeType: 'normal' },
+            
+            // Level 3 - Three branches
+            { id: 'node-4', x: -200, y: 550, label: 'mek 1341', storyNodeType: 'normal' },
+            { id: 'node-5', x: 0, y: 550, label: 'mek 1341', storyNodeType: 'event' },
+            { id: 'node-6', x: 200, y: 550, label: 'mek 1341', storyNodeType: 'normal' },
+            
+            // Level 4 - Converge
+            { id: 'node-7', x: -100, y: 700, label: 'mek 1341', storyNodeType: 'normal' },
+            { id: 'node-8', x: 100, y: 700, label: 'mek 1341', storyNodeType: 'normal' },
+            
+            // Level 5 - Boss
+            { id: 'node-9', x: 0, y: 850, label: 'Boss', storyNodeType: 'boss' },
+            
+            // Level 6 - Final paths
+            { id: 'node-10', x: -150, y: 1000, label: 'mek 1341', storyNodeType: 'normal' },
+            { id: 'node-11', x: 150, y: 1000, label: 'mek 1341', storyNodeType: 'normal' },
+            
+            // Final boss
+            { id: 'node-12', x: 0, y: 1150, label: 'Final Boss', storyNodeType: 'final_boss' },
+          ],
+          connections: [
+            // From start
+            { from: 'start', to: 'node-1' },
+            { from: 'start', to: 'node-2' },
+            
+            // To middle merge
+            { from: 'node-1', to: 'node-3' },
+            { from: 'node-2', to: 'node-3' },
+            
+            // Split again
+            { from: 'node-3', to: 'node-4' },
+            { from: 'node-3', to: 'node-5' },
+            { from: 'node-3', to: 'node-6' },
+            
+            // Converge paths
+            { from: 'node-4', to: 'node-7' },
+            { from: 'node-5', to: 'node-7' },
+            { from: 'node-5', to: 'node-8' },
+            { from: 'node-6', to: 'node-8' },
+            
+            // To boss
+            { from: 'node-7', to: 'node-9' },
+            { from: 'node-8', to: 'node-9' },
+            
+            // After boss
+            { from: 'node-9', to: 'node-10' },
+            { from: 'node-9', to: 'node-11' },
+            
+            // To final
+            { from: 'node-10', to: 'node-12' },
+            { from: 'node-11', to: 'node-12' },
+          ]
+        }
+      };
+      
+      // Use test 2 as the default
+      storyData = test2Data;
+      
+      // Save both layouts to localStorage (only if nothing exists)
+      const defaultSaves = [test2Data, chapter1Data];
+      localStorage.setItem('savedStoryModes', JSON.stringify(defaultSaves));
+      console.log('Created default test 2 and chapter 1 layouts (no existing saves found)');
+    } else if (!storyData && existingSaves.length > 0) {
+      // If we have saves but couldn't find a matching one, use the first save
+      storyData = existingSaves[0];
+      console.log('Using first available saved story:', storyData.name);
     }
     
     // Set the current chapter
@@ -167,11 +367,15 @@ export default function StoryClimbPage() {
     setNodes(processedNodes);
     setConnections(storyData.data.connections);
     
-    // Select current node
+    // Select current node and calculate max scroll
     const current = processedNodes.find(n => n.current);
     if (current) {
       setSelectedNode(current);
-      // Fixed camera - no movement needed
+      // Calculate max scroll based on current progress - allow viewing a bit beyond current node
+      const maxY = Math.max(0, current.y + 200);
+      setMaxScrollY(maxY);
+      // Start camera at bottom (START node visible)
+      setCameraY(0);
     }
   }, []);
   
@@ -193,21 +397,53 @@ export default function StoryClimbPage() {
   const simulateProgress = () => {
     setCurrentNodeIndex(prev => {
       const next = Math.min(prev + 1, nodes.length - 1);
-      // Fixed camera - no movement
+      
+      // Update max scroll when progressing
+      const nextNode = nodes[next];
+      if (nextNode) {
+        const newMaxY = Math.max(0, nextNode.y - 100);
+        setMaxScrollY(newMaxY);
+      }
+      
       return next;
     });
   };
   
-  // Set canvas height to fit viewport minus header (fixed height, no scrolling)
+  // Set canvas dimensions with 2:3 aspect ratio
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const headerHeight = 200; // Header + right panel header + padding
+      const headerHeight = 120; // Header height
       const viewportHeight = window.innerHeight - headerHeight;
-      setCanvasHeight(Math.max(400, Math.min(viewportHeight, 500))); // Constrain between 400-500px
+      const maxWidth = Math.min(500, window.innerWidth * 0.4); // Max 40% of viewport width or 500px
+      const maxHeight = Math.min(viewportHeight, 900); // Max viewport height minus header or 900px
+      
+      // Calculate dimensions maintaining 2:3 aspect ratio
+      let width = maxWidth;
+      let height = width * 1.5; // 2:3 ratio
+      
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height / 1.5;
+      }
+      
+      setCanvasWidth(width);
+      setCanvasHeight(height);
       
       const handleResize = () => {
         const vh = window.innerHeight - headerHeight;
-        setCanvasHeight(Math.max(400, Math.min(vh, 500)));
+        const maxW = Math.min(500, window.innerWidth * 0.4);
+        const maxH = Math.min(vh, 900);
+        
+        let w = maxW;
+        let h = w * 1.5;
+        
+        if (h > maxH) {
+          h = maxH;
+          w = h / 1.5;
+        }
+        
+        setCanvasWidth(w);
+        setCanvasHeight(h);
       };
       
       window.addEventListener('resize', handleResize);
@@ -215,10 +451,41 @@ export default function StoryClimbPage() {
     }
   }, []);
   
+  // Handle scroll with restrictions
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (!canvasRef.current?.contains(e.target as Node)) return;
+      
+      e.preventDefault();
+      const scrollSpeed = 0.5;
+      const newY = cameraY + (e.deltaY * scrollSpeed);
+      
+      // Restrict scrolling: can't go below 0 (START position) or above maxScrollY
+      const clampedY = Math.max(0, Math.min(maxScrollY, newY));
+      setCameraY(clampedY);
+    };
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        const newY = Math.min(maxScrollY, cameraY + 50);
+        setCameraY(newY);
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        const newY = Math.max(0, cameraY - 50);
+        setCameraY(newY);
+      }
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [cameraY, maxScrollY]);
   
   // Calculate canvas bounds
-  const canvasWidth = 300; // Ultra-thin phone width
-  const centerX = 3000; // Center position matching builder
+  const centerX = canvasWidth / 2; // Center position for nodes
   
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -278,12 +545,42 @@ export default function StoryClimbPage() {
                 </button>
                 <div>
                   <h1 className="text-2xl font-bold font-orbitron bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                    {currentChapter?.name || 'Chapter 1'}
+                    {currentChapter?.name || 'No Story Loaded'}
                   </h1>
                   <p className="text-gray-400 text-sm">
-                    {nodes.filter(n => n.completed).length} Missions Completed
+                    {nodes.filter(n => n.completed).length} / {nodes.length} Missions Completed
                   </p>
                 </div>
+                
+                {/* Story Layout Selector */}
+                {savedStoryModes.length > 0 && (
+                  <select
+                    value={currentChapter?.name || ''}
+                    onChange={(e) => {
+                      const selected = savedStoryModes.find(s => s.name === e.target.value);
+                      if (selected) {
+                        setCurrentChapter(selected);
+                        const processedNodes = selected.data.nodes.map((node, index) => ({
+                          ...node,
+                          index: index + 1,
+                          completed: index < currentNodeIndex,
+                          available: index === currentNodeIndex || index === currentNodeIndex + 1,
+                          current: index === currentNodeIndex,
+                        }));
+                        setNodes(processedNodes);
+                        setConnections(selected.data.connections);
+                        setCameraY(0); // Reset camera to bottom
+                      }
+                    }}
+                    className="px-3 py-1 bg-gray-800/50 border border-gray-600 rounded text-sm text-gray-300 hover:border-yellow-400 transition-all"
+                  >
+                    {savedStoryModes.map(save => (
+                      <option key={save.name} value={save.name}>
+                        {save.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm">
@@ -293,11 +590,27 @@ export default function StoryClimbPage() {
             </div>
           </div>
           
-          {/* Node Canvas - Fixed Height, No Scrolling */}
+          {/* Node Canvas - 2:3 Aspect Ratio with Controlled Scrolling */}
           <div className="bg-gray-900/20 flex justify-center relative overflow-hidden" style={{ height: `${canvasHeight}px` }}>
-            {/* Fade gradient at top */}
+            {/* Fade gradient at top for unexplored areas */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/50 to-transparent z-20 pointer-events-none" />
             
+            {/* Scroll indicator when content available above */}
+            {cameraY > 0 && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-bounce">
+                <div className="text-gray-400 text-sm flex items-center gap-2">
+                  <span>↓</span> Scroll down to START <span>↓</span>
+                </div>
+              </div>
+            )}
+            
+            {maxScrollY > cameraY && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-pulse">
+                <div className="text-yellow-400 text-sm flex items-center gap-2">
+                  <span>↑</span> New areas unlocked above <span>↑</span>
+                </div>
+              </div>
+            )}
             
             <div 
               ref={canvasRef}
@@ -305,7 +618,7 @@ export default function StoryClimbPage() {
               style={{ 
                 width: `${canvasWidth}px`, 
                 height: `${canvasHeight}px`,
-                transform: `translateY(${cameraOffset}px)`,
+                transform: `translateY(-${cameraY}px)`,
                 transition: 'transform 0.3s ease-out'
               }}
             >
@@ -314,19 +627,19 @@ export default function StoryClimbPage() {
               <svg 
                 className="absolute pointer-events-none" 
                 width={canvasWidth} 
-                height="3000"
-                style={{ top: '-1000px' }}
+                height={canvasHeight + 1000}
+                style={{ top: '0' }}
               >
                 {connections.map((conn, idx) => {
                   const fromNode = nodes.find(n => n.id === conn.from);
                   const toNode = nodes.find(n => n.id === conn.to);
                   if (!fromNode || !toNode) return null;
                   
-                  // Position connections for bottom-up layout
-                  const x1 = canvasWidth / 2 + (fromNode.x - centerX);
-                  const y1 = canvasHeight - 100 + fromNode.y + cameraOffset; // Apply camera offset
-                  const x2 = canvasWidth / 2 + (toNode.x - centerX);
-                  const y2 = canvasHeight - 100 + toNode.y + cameraOffset;
+                  // Position connections for bottom-up layout (inverted Y)
+                  const x1 = centerX + fromNode.x;
+                  const y1 = canvasHeight - fromNode.y; // Invert Y axis - START at bottom
+                  const x2 = centerX + toNode.x;
+                  const y2 = canvasHeight - toNode.y; // Invert Y axis - nodes go up
                   
                   const isActive = fromNode.completed || fromNode.current || fromNode.available;
                   const isHovered = hoveredNode === fromNode.id || hoveredNode === toNode.id;
@@ -353,24 +666,26 @@ export default function StoryClimbPage() {
                 const baseSize = 60;
                 const nodeSize = baseSize * size;
                 
-                // Position nodes from bottom-up with proper spacing
-                const nodeY = canvasHeight - 100 + node.y - nodeSize / 2; // Start from bottom
-                const nodeX = canvasWidth / 2 + (node.x - centerX) - nodeSize / 2;
-                
-                // Apply camera offset to move the world
-                const adjustedY = nodeY + cameraOffset;
+                // Position nodes with inverted Y (START at bottom, going up)
+                const nodeY = canvasHeight - node.y - nodeSize / 2; // Invert Y axis
+                const nodeX = centerX + node.x - nodeSize / 2;
                 
                 // Only render nodes that are within the visible area (with some buffer)
-                if (adjustedY < -nodeSize - 50 || adjustedY > canvasHeight + 50) {
+                const viewTop = cameraY;
+                const viewBottom = cameraY + canvasHeight;
+                const nodeTop = node.y - nodeSize / 2;
+                const nodeBottom = node.y + nodeSize / 2;
+                
+                if (nodeBottom < viewTop - 100 || nodeTop > viewBottom + 100) {
                   return null; // Don't render off-screen nodes for performance
                 }
                 
-                // Calculate fade based on distance from edges
+                // Calculate fade for unexplored areas (above current progress)
                 let fadeOpacity = 1;
-                if (adjustedY < 50) {
-                  fadeOpacity = Math.max(0.2, adjustedY / 50);
-                } else if (adjustedY > canvasHeight - 50) {
-                  fadeOpacity = Math.max(0.2, (canvasHeight - adjustedY) / 50);
+                if (node.y > maxScrollY + 200) {
+                  fadeOpacity = 0.2; // Fade unexplored nodes
+                } else if (!node.completed && !node.available && !node.current) {
+                  fadeOpacity = 0.5; // Semi-fade locked nodes
                 }
                 
                 return (
@@ -381,7 +696,7 @@ export default function StoryClimbPage() {
                     }`}
                     style={{
                       left: `${nodeX}px`,
-                      top: `${adjustedY}px`,
+                      top: `${nodeY}px`,
                       width: `${nodeSize}px`,
                       height: `${nodeSize}px`,
                       zIndex: selectedNode?.id === node.id ? 20 : 10,
@@ -422,175 +737,13 @@ export default function StoryClimbPage() {
           </div>
         </div>
         
-        {/* Right Panel - Node Details */}
+        {/* Right Panel - Mission Card */}
         <div className="w-96 bg-gray-900/50 backdrop-blur-md border-l border-gray-800 flex flex-col">
-          {selectedNode ? (
-            <>
-              {/* Node Header */}
-              <div className="p-6 border-b border-gray-800">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{getNodeIcon(selectedNode.storyNodeType)}</span>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-yellow-400 font-orbitron">
-                      Stage {selectedNode.index || parseInt(selectedNode.id.split('-')[1]) + 1}
-                    </h2>
-                    <p className="text-gray-400 text-sm capitalize">
-                      {selectedNode.storyNodeType || 'Normal'} 
-                      {selectedNode.storyNodeType === 'boss' && ' Battle'}
-                      {selectedNode.storyNodeType === 'event' && ' Encounter'}
-                      {!selectedNode.storyNodeType && ' Battle'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Node Content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {/* Enemy Preview for battle nodes */}
-                {(!selectedNode.storyNodeType || selectedNode.storyNodeType === 'normal' || selectedNode.storyNodeType === 'boss') && (
-                  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                    <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                      Enemy Forces
-                    </h3>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-                        <Image
-                          src={`/mek-images/150px/mek${String((parseInt(selectedNode.id.split('-')[1]) * 137 % 1000) + 1).padStart(4, '0')}.png`}
-                          alt="Enemy Mek"
-                          width={96}
-                          height={96}
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-white">
-                          {selectedNode.storyNodeType === 'boss' ? 'Boss Mek Guardian' : `Mek Opponent #${(parseInt(selectedNode.id.split('-')[1]) * 137 % 1000) + 1}`}
-                        </p>
-                        <div className="mt-2 space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">Power</span>
-                            <span className="text-red-400 font-bold">
-                              {(selectedNode.index || 1) * (selectedNode.storyNodeType === 'boss' ? 150 : 50) + 100}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Event description for event nodes */}
-                {selectedNode.storyNodeType === 'event' && (
-                  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                    <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                      Mystery Event
-                    </h3>
-                    <p className="text-gray-300">
-                      A mysterious encounter awaits. Choose your path wisely...
-                    </p>
-                  </div>
-                )}
-                
-                {/* Rewards */}
-                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                  <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                    Victory Rewards
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-300 flex items-center gap-2">
-                        <span className="text-yellow-400">💰</span> Gold
-                      </span>
-                      <span className={`font-bold ${getRewardColor((selectedNode.index || 1) * (selectedNode.storyNodeType === 'boss' ? 500 : 100))}`}>
-                        {((selectedNode.index || 1) * (selectedNode.storyNodeType === 'boss' ? 500 : 100)).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-300 flex items-center gap-2">
-                        <span className="text-blue-400">⭐</span> Experience
-                      </span>
-                      <span className={`font-bold ${getRewardColor((selectedNode.index || 1) * 50)}`}>
-                        +{(selectedNode.index || 1) * 50} XP
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Node Status */}
-                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                  <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                    Mission Status
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedNode.completed && (
-                      <span className="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm font-bold">
-                        ✓ Completed
-                      </span>
-                    )}
-                    {selectedNode.current && (
-                      <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm font-bold animate-pulse">
-                        Current Position
-                      </span>
-                    )}
-                    {selectedNode.available && !selectedNode.current && (
-                      <span className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-sm font-bold">
-                        Available
-                      </span>
-                    )}
-                    {!selectedNode.completed && !selectedNode.available && !selectedNode.current && (
-                      <span className="px-3 py-1 bg-gray-600/20 text-gray-400 rounded-full text-sm font-bold">
-                        🔒 Locked
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Controls Help */}
-                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                  <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                    Controls
-                  </h3>
-                  <div className="text-sm text-gray-300 space-y-1">
-                    <div>W/S or ↑/↓ - Move view</div>
-                    <div>Click nodes to view details</div>
-                    <div>Progress unlocks new stages</div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action Button */}
-              <div className="p-6 border-t border-gray-800">
-                {(selectedNode.available || selectedNode.current) && !selectedNode.completed ? (
-                  <button
-                    onClick={handleStartMission}
-                    className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold rounded-lg transition-all transform hover:scale-105 font-orbitron uppercase tracking-wider"
-                  >
-                    {selectedNode.storyNodeType === 'event' ? 'Enter Event' :
-                     selectedNode.storyNodeType === 'boss' ? 'Challenge Boss' :
-                     'Start Battle'}
-                  </button>
-                ) : selectedNode.completed ? (
-                  <div className="text-center text-gray-500">
-                    <p className="text-sm">Stage Complete</p>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-2">Complete previous stages to unlock</p>
-                    <button 
-                      onClick={simulateProgress}
-                      className="px-3 py-1 bg-gray-600/50 hover:bg-gray-500/50 text-gray-300 text-xs rounded transition-all"
-                    >
-                      Debug: Simulate Progress
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <p>Select a node to view details</p>
-            </div>
-          )}
+          <MissionCard 
+            nodeData={selectedNode}
+            onStartMission={handleStartMission}
+            simulateProgress={simulateProgress}
+          />
         </div>
       </div>
       

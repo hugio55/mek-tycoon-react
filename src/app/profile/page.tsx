@@ -5,38 +5,21 @@ import BackgroundEffects from "@/components/BackgroundEffects";
 import MekImage from "@/components/MekImage";
 import EssenceChart, { type EssenceData } from "@/components/EssenceChart";
 
-type Equipment = {
-  id: string;
-  name: string;
-  equipped: boolean;
-  rarity: string;
-  icon: string;
-  slot: 'head' | 'body' | 'accessory';
-};
-
 type Mek = {
   id: string;
   number: number;
-  rank: string;
   level: number;
   goldPerHour: number;
   equipped: {
-    head?: Equipment;
-    body?: Equipment;
-    accessory?: Equipment;
+    head?: any;
+    body?: any;
+    accessory?: any;
   };
 };
 
-type Frame = {
-  id: string;
-  number: number;
-  rank: string;
-  level: number;
-  goldPerHour: number;
-};
 
 type OfferModal = {
-  type: 'essence' | 'equipment' | null;
+  type: 'essence' | null;
   item?: any;
 };
 
@@ -63,6 +46,8 @@ export default function ProfilePage() {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [offerModal, setOfferModal] = useState<OfferModal>({ type: null });
   const [activeTab, setActiveTab] = useState<'meks' | 'essence' | 'inventory' | 'frames'>('meks');
+  const [inventorySubTab, setInventorySubTab] = useState<'universal_chips' | 'mek_chips' | 'various'>('universal_chips');
+  const [mekSortBy, setMekSortBy] = useState<'level' | 'goldPerHour'>('level');
   const [prestigeLevel, setPrestigeLevel] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,15 +56,12 @@ export default function ProfilePage() {
   // Generate 40 mock meks
   const generateMockMeks = () => {
     const meks = [];
-    const variations = ['Camera', 'Musical', 'Material', 'Gaming', 'Cyber', 'Retro', 'Neon', 'Crystal'];
     for (let i = 1; i <= 40; i++) {
       meks.push({
         id: `mek${i}`,
         number: 1000 + i,
-        rank: i <= 5 ? 'S' : i <= 15 ? 'A' : i <= 30 ? 'B' : 'C',
         level: Math.floor(Math.random() * 10) + 1,
         goldPerHour: Math.floor(Math.random() * 400) + 100,
-        variation: variations[Math.floor(Math.random() * variations.length)],
         equipped: i === 1 ? { 
           head: { id: 'h1', name: 'Battle Helm', equipped: true, rarity: 'rare', icon: '🎩', slot: 'head' as const },
           body: { id: 'b1', name: 'War Armor', equipped: true, rarity: 'epic', icon: '🎮', slot: 'body' as const }
@@ -96,27 +78,26 @@ export default function ProfilePage() {
     totalGold: 125420,
     joinDate: '2024-01-15',
     essences: generateEssenceData(),
-    equipment: [
-      { id: 'sword1', name: 'Flame Sword', equipped: true, rarity: 'epic', icon: '🗡️', slot: 'body' as const },
-      { id: 'armor1', name: 'Dragon Scale Armor', equipped: false, rarity: 'legendary', icon: '🛡️', slot: 'body' as const },
-      { id: 'ring1', name: 'Ring of Power', equipped: true, rarity: 'rare', icon: '💍', slot: 'accessory' as const },
-      { id: 'boots1', name: 'Speed Boots', equipped: false, rarity: 'uncommon', icon: '👢', slot: 'accessory' as const },
-      { id: 'helm1', name: 'Crystal Helm', equipped: true, rarity: 'epic', icon: '⛑️', slot: 'head' as const },
-    ],
+    equipment: [],
     meks: generateMockMeks(),
     frames: [
-      { id: 'f1', number: 101, rank: 'A', level: 5, goldPerHour: 150, name: 'Electro Frame', description: 'Reach 500 gold/hr' },
-      { id: 'f2', number: 202, rank: 'B', level: 3, goldPerHour: 100, name: 'Speed Frame', description: 'Complete 10 battles' },
-      { id: 'f3', number: 303, rank: 'S', level: 8, goldPerHour: 250, name: 'Champion Frame', description: 'Win tournament' },
+      { id: 'f1', number: 101, level: 5, goldPerHour: 150, name: 'Electro Frame', description: 'Reach 500 gold/hr' },
+      { id: 'f2', number: 202, level: 3, goldPerHour: 100, name: 'Speed Frame', description: 'Complete 10 battles' },
+      { id: 'f3', number: 303, level: 8, goldPerHour: 250, name: 'Champion Frame', description: 'Win tournament' },
     ]
   };
   
-  // Filter meks based on search
+  // Filter and sort meks based on search and sort option
   const filteredMeks = userData.meks.filter(mek => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
-    return mek.number.toString().includes(term) || 
-           mek.variation?.toLowerCase().includes(term);
+    return mek.number.toString().includes(term);
+  }).sort((a, b) => {
+    if (mekSortBy === 'level') {
+      return b.level - a.level;
+    } else {
+      return b.goldPerHour - a.goldPerHour;
+    }
   });
   
   // Pagination
@@ -144,14 +125,29 @@ export default function ProfilePage() {
   const prestigeStyle = getPrestigeStyle(prestigeLevel);
   const prestigeRoman = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][prestigeLevel];
 
-  const handleMakeOffer = (item: any, type: 'essence' | 'equipment') => {
+  const handleMakeOffer = (item: any, type: 'essence') => {
     if (!isOwnProfile) {
       setOfferModal({ type, item });
     }
   };
 
   return (
-    <div className="min-h-screen p-5 relative text-white">
+    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+      {/* Mission Card Style Background Effects */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div 
+          className="absolute left-0 top-0 w-full h-full"
+          style={{
+            background: `
+              radial-gradient(ellipse at 20% 20%, rgba(250, 182, 23, 0.03) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(250, 182, 23, 0.02) 0%, transparent 50%),
+              linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 1) 100%)
+            `
+          }}
+        />
+      </div>
+      
+      <div className="relative z-10 p-5">
       <BackgroundEffects />
       
       <div className="max-w-7xl mx-auto relative z-10">
@@ -205,7 +201,37 @@ export default function ProfilePage() {
           
           {/* Left Column - Profile & Stats */}
           <div className="col-span-4">
-            <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg overflow-hidden">
+            {/* Style N Card - Ancient Space Glass */}
+            <div className="relative rounded-lg overflow-hidden group"
+              style={{
+                background: 'rgba(255, 255, 255, 0.005)',
+                backdropFilter: 'blur(1px)',
+                border: '1px solid rgba(255, 255, 255, 0.015)',
+                boxShadow: '0 0 20px rgba(0, 0, 0, 0.2) inset',
+              }}>
+              {/* Micro cracks on edges */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,20 L8,15 L12,22 L18,18" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" fill="none"/>
+                <path d="M0,80 L6,82 L10,78 L15,83" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none"/>
+                <path d="M385,10 L380,12 L383,8 L378,6" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" fill="none" transform="translate(-280, 0)"/>
+                <path d="M385,90 L382,85 L388,88 L384,92" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" fill="none" transform="translate(-280, 0)"/>
+              </svg>
+              <div 
+                className="absolute inset-0 pointer-events-none opacity-40"
+                style={{
+                  background: `
+                    radial-gradient(circle at 15% 20%, rgba(250, 182, 23, 0.02) 0%, transparent 20%),
+                    radial-gradient(circle at 85% 80%, rgba(147, 51, 234, 0.015) 0%, transparent 20%),
+                    radial-gradient(circle at 50% 50%, transparent 30%, rgba(255, 255, 255, 0.005) 70%, transparent 100%)`,
+                  filter: 'blur(3px)',
+                }}
+              />
+              <div 
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence baseFrequency='1.5' numOctaves='3' seed='2' /%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noiseFilter)' opacity='0.01'/%3E%3C/svg%3E")`,
+                }}
+              />
               
               {/* Large Avatar - No padding */}
               <div className="relative">
@@ -237,8 +263,7 @@ export default function ProfilePage() {
               <div className="text-center mb-4 px-6 pt-4">
                 <h1 className="text-3xl font-bold text-yellow-400 mb-3">{userData.username}</h1>
                 
-                {/* Prestige Level Sleek Frame */}
-                {prestigeLevel > 0 && (
+                {/* Prestige Level Sleek Frame - Always show */}
                 <div className="inline-block relative">
                   {/* Outer glow effect - intensity based on level */}
                   <div className={`absolute inset-0 blur-lg bg-gradient-to-r ${prestigeStyle.border} ${prestigeLevel > 5 ? 'animate-pulse' : ''}`} 
@@ -259,13 +284,12 @@ export default function ProfilePage() {
                     {/* Inner content - thinner design */}
                     <div className="relative bg-black/90 px-4 py-1 rounded">
                       <div className="text-[8px] text-gray-400 uppercase tracking-widest">Prestige</div>
-                      <div className={`text-lg font-bold bg-gradient-to-r ${prestigeStyle.text} bg-clip-text text-transparent`}>
+                      <div className={`text-lg font-bold bg-gradient-to-r ${prestigeLevel > 0 ? prestigeStyle.text : 'from-gray-300 to-gray-400'} bg-clip-text text-transparent`}>
                         {prestigeRoman}
                       </div>
                     </div>
                   </div>
                 </div>
-                )}
                 
                 <div className="text-xs text-gray-500 mt-3">Joined {userData.joinDate}</div>
               </div>
@@ -315,13 +339,13 @@ export default function ProfilePage() {
 
           {/* Right Column - Content Tabs */}
           <div className="col-span-8">
-            {/* Tab Navigation */}
-            <div className="flex gap-2 mb-4">
+            {/* Tab Navigation - Connected to main frame */}
+            <div className="flex gap-0">
               <button
                 onClick={() => setActiveTab('meks')}
-                className={`px-6 py-3 rounded-t-lg font-bold transition-all ${
+                className={`px-6 py-3 font-bold transition-all ${
                   activeTab === 'meks'
-                    ? 'bg-gray-900/60 border border-b-0 border-gray-800 text-yellow-400'
+                    ? 'bg-gray-900/60 border-t-2 border-l-2 border-r-2 border-yellow-500/50 text-yellow-400 relative z-10'
                     : 'bg-gray-900/30 border border-gray-800 text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -329,9 +353,9 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab('essence')}
-                className={`px-6 py-3 rounded-t-lg font-bold transition-all ${
+                className={`px-6 py-3 font-bold transition-all ${
                   activeTab === 'essence'
-                    ? 'bg-gray-900/60 border border-b-0 border-gray-800 text-yellow-400'
+                    ? 'bg-gray-900/60 border-t-2 border-l-2 border-r-2 border-yellow-500/50 text-yellow-400 relative z-10'
                     : 'bg-gray-900/30 border border-gray-800 text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -339,9 +363,9 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab('inventory')}
-                className={`px-6 py-3 rounded-t-lg font-bold transition-all ${
+                className={`px-6 py-3 font-bold transition-all ${
                   activeTab === 'inventory'
-                    ? 'bg-gray-900/60 border border-b-0 border-gray-800 text-yellow-400'
+                    ? 'bg-gray-900/60 border-t-2 border-l-2 border-r-2 border-yellow-500/50 text-yellow-400 relative z-10'
                     : 'bg-gray-900/30 border border-gray-800 text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -349,9 +373,9 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab('frames')}
-                className={`px-6 py-3 rounded-t-lg font-bold transition-all ${
+                className={`px-6 py-3 font-bold transition-all ${
                   activeTab === 'frames'
-                    ? 'bg-gray-900/60 border border-b-0 border-gray-800 text-yellow-400'
+                    ? 'bg-gray-900/60 border-t-2 border-l-2 border-r-2 border-yellow-500/50 text-yellow-400 relative z-10'
                     : 'bg-gray-900/30 border border-gray-800 text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -359,7 +383,37 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-800 rounded-lg rounded-tl-none p-6 min-h-[600px]">
+            {/* Style K Card - Streaked Glass */}
+            <div className="relative border border-gray-600/20 overflow-hidden p-4 min-h-[600px] -mt-[2px]"
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(4px) contrast(1.1)',
+                borderTop: '2px solid rgba(250, 182, 23, 0.5)',
+                borderLeft: '2px solid rgba(250, 182, 23, 0.5)',
+                borderRight: '2px solid rgba(250, 182, 23, 0.5)',
+                borderBottom: '2px solid rgba(250, 182, 23, 0.5)',
+              }}>
+              {/* Streak effects */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `
+                    linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%),
+                    linear-gradient(-45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%)`,
+                }}
+              />
+              {/* Glow spots */}
+              <div 
+                className="absolute -inset-1 opacity-20"
+                style={{
+                  background: `
+                    radial-gradient(ellipse at top left, rgba(250, 182, 23, 0.15) 0%, transparent 40%),
+                    radial-gradient(ellipse at bottom right, rgba(147, 51, 234, 0.1) 0%, transparent 40%),
+                    radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+                    radial-gradient(circle at 70% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 20%)`,
+                  filter: 'blur(8px)',
+                }}
+              />
               
               {/* Meks Tab */}
               {activeTab === 'meks' && (
@@ -388,56 +442,71 @@ export default function ProfilePage() {
                   
                   {/* Meks Section */}
                   <div>
-                    <h3 className="text-xl font-bold text-yellow-400 mb-4">Owned Meks</h3>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-yellow-400">Owned Meks</h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setMekSortBy('level')}
+                          className={`px-3 py-1 text-xs rounded transition-all ${
+                            mekSortBy === 'level'
+                              ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                              : 'bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-gray-200'
+                          }`}
+                        >
+                          Sort by Level
+                        </button>
+                        <button
+                          onClick={() => setMekSortBy('goldPerHour')}
+                          className={`px-3 py-1 text-xs rounded transition-all ${
+                            mekSortBy === 'goldPerHour'
+                              ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                              : 'bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-gray-200'
+                          }`}
+                        >
+                          Sort by Gold/Hr
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
                       {paginatedMeks.map(mek => (
                         <div
                           key={mek.id}
-                          className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:bg-gray-700/50 transition-all cursor-pointer"
+                          className="relative group cursor-pointer"
+                          onClick={() => window.location.href = `/mek/${mek.id}`}
                         >
-                          {/* Mek Image */}
-                          <div className="relative mb-2">
+                          {/* Clean image display */}
+                          <div className="relative overflow-hidden rounded-lg bg-gray-900/50">
                             <MekImage
                               assetId={mek.id}
-                              size={150}
+                              size={200}
                               alt={`Mek #${mek.number}`}
-                              className="w-full aspect-square bg-gray-700 rounded"
+                              className="w-full aspect-square transition-transform group-hover:scale-110"
                             />
                             
-                            {/* Item Slot Indicators */}
-                            <div className="absolute bottom-2 right-2 flex gap-1 bg-black/50 p-1 rounded">
-                              {['head', 'body', 'accessory'].map((slot, idx) => {
-                                const hasItem = mek.equipped[slot as keyof typeof mek.equipped];
-                                return (
-                                  <div
-                                    key={idx}
-                                    className={`w-2 h-2 rounded-full ${
-                                      hasItem ? 'bg-yellow-400' : 'bg-gray-600'
-                                    }`}
-                                    title={slot}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </div>
-                          
-                          {/* Mek Info */}
-                          <div className="space-y-0.5">
-                            <div className="font-bold text-yellow-400 text-sm">
-                              Mek #{mek.number}
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-gray-400">Rank {mek.rank}</span>
-                              <span className="text-gray-400">Lvl {mek.level}</span>
-                            </div>
-                            <div className="text-xs text-green-400 font-semibold">
-                              {mek.goldPerHour} g/hr
-                            </div>
-                            {mek.variation && (
-                              <div className="text-xs text-gray-500">
-                                {mek.variation}
+                            {/* Hover overlay with info */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
+                              <div className="text-yellow-400 font-bold text-sm mb-1">
+                                Mek #{mek.number}
                               </div>
-                            )}
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-300">Lvl {mek.level}</span>
+                                <span className="text-green-400">{mek.goldPerHour} g/hr</span>
+                              </div>
+                              {/* Item indicators */}
+                              <div className="flex gap-1 mt-2 justify-center">
+                                {['head', 'body', 'accessory'].map((slot, idx) => {
+                                  const hasItem = mek.equipped[slot as keyof typeof mek.equipped];
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className={`w-1.5 h-1.5 rounded-full ${
+                                        hasItem ? 'bg-yellow-400' : 'bg-gray-600'
+                                      }`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -509,51 +578,194 @@ export default function ProfilePage() {
               {/* Inventory Tab */}
               {activeTab === 'inventory' && (
                 <div className="space-y-6">
-                  
-                  {/* Equipment Section */}
-                  <div>
-                    <h3 className="text-xl font-bold text-yellow-400 mb-4">Equipment (Gear)</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {userData.equipment.map(item => (
-                        <div
-                          key={item.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                            item.equipped
-                              ? 'bg-green-900/20 border-green-600'
-                              : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
-                          } ${!isOwnProfile && !item.equipped ? 'cursor-pointer hover:shadow-lg' : ''}`}
-                          onClick={() => !isOwnProfile && !item.equipped && handleMakeOffer(item, 'equipment')}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{item.icon}</span>
-                            <div>
-                              <div className="font-medium text-gray-200">{item.name}</div>
-                              <div className={`text-xs ${
-                                item.rarity === 'legendary' ? 'text-orange-400' :
-                                item.rarity === 'epic' ? 'text-purple-400' :
-                                item.rarity === 'rare' ? 'text-blue-400' :
-                                item.rarity === 'uncommon' ? 'text-green-400' :
+                  {/* Inventory Sub-tabs */}
+                  <div className="flex gap-1 bg-black/40 p-1 rounded-lg backdrop-blur-sm">
+                    {[
+                      { key: 'universal_chips', label: 'Universal Chips' },
+                      { key: 'mek_chips', label: 'Mek Chips' },
+                      { key: 'various', label: 'Various' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setInventorySubTab(tab.key as any)}
+                        className={`px-4 py-2 rounded-md font-medium transition-all ${
+                          inventorySubTab === tab.key
+                            ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Universal Chips Sub-tab */}
+                  {inventorySubTab === 'universal_chips' && (
+                    <div>
+                      <h3 className="text-xl font-bold text-yellow-400 mb-4">Universal Chips</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Mock chip data */}
+                        {[
+                          { id: 'chip1', name: 'Common Power Chip', rarity: 'common', quantity: 12, icon: '💾' },
+                          { id: 'chip2', name: 'Rare Power Chip', rarity: 'rare', quantity: 3, icon: '💎' },
+                          { id: 'chip3', name: 'Epic Memory Core', rarity: 'epic', quantity: 1, icon: '🧠' },
+                        ].map(chip => (
+                          <div
+                            key={chip.id}
+                            className="relative overflow-hidden transition-all hover:shadow-lg"
+                            style={{
+                              background: `
+                                linear-gradient(135deg, 
+                                  rgba(255, 255, 255, 0.02) 0%, 
+                                  rgba(255, 255, 255, 0.05) 50%, 
+                                  rgba(255, 255, 255, 0.02) 100%)`,
+                              backdropFilter: 'blur(6px)',
+                              boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.03)',
+                              border: '1px solid rgba(250, 182, 23, 0.3)',
+                            }}
+                          >
+                            <div 
+                              className="absolute inset-0 pointer-events-none"
+                              style={{
+                                background: `
+                                  radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.08) 0%, transparent 30%),
+                                  radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 25%),
+                                  radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%)`,
+                                mixBlendMode: 'screen',
+                              }}
+                            />
+                            <div 
+                              className="absolute inset-0 pointer-events-none opacity-30"
+                              style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                              }}
+                            />
+                            <div className="relative p-4 text-center">
+                              <div className="text-3xl mb-2">{chip.icon}</div>
+                              <div className="font-medium text-gray-200 text-sm mb-1">{chip.name}</div>
+                              <div className={`text-xs mb-2 ${
+                                chip.rarity === 'epic' ? 'text-purple-400' :
+                                chip.rarity === 'rare' ? 'text-blue-400' :
                                 'text-gray-400'
-                              }`}>{item.rarity} • {item.slot}</div>
+                              }`}>{chip.rarity}</div>
+                              <div className="text-lg font-bold text-yellow-400">×{chip.quantity}</div>
                             </div>
                           </div>
-                          {item.equipped && (
-                            <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">Equipped</span>
-                          )}
-                          {!isOwnProfile && !item.equipped && (
-                            <span className="text-xs text-gray-400">Click to offer</span>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
+                  {/* Mek Chips Sub-tab */}
+                  {inventorySubTab === 'mek_chips' && (
+                    <div>
+                      <h3 className="text-xl font-bold text-yellow-400 mb-4">Mek Chips</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Mock Mek chip data */}
+                        {[
+                          { id: 'mchip1', name: 'Speed Boost Chip', mekType: 'Camera', quantity: 5, icon: '⚡' },
+                          { id: 'mchip2', name: 'Defense Matrix', mekType: 'Musical', quantity: 2, icon: '🛡️' },
+                          { id: 'mchip3', name: 'Gold Amplifier', mekType: 'Any', quantity: 1, icon: '💰' },
+                        ].map(chip => (
+                          <div
+                            key={chip.id}
+                            className="relative overflow-hidden transition-all hover:shadow-lg"
+                            style={{
+                              background: `
+                                linear-gradient(135deg, 
+                                  rgba(255, 255, 255, 0.02) 0%, 
+                                  rgba(255, 255, 255, 0.05) 50%, 
+                                  rgba(255, 255, 255, 0.02) 100%)`,
+                              backdropFilter: 'blur(6px)',
+                              boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.03)',
+                              border: '1px solid rgba(250, 182, 23, 0.3)',
+                            }}
+                          >
+                            <div 
+                              className="absolute inset-0 pointer-events-none"
+                              style={{
+                                background: `
+                                  radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.08) 0%, transparent 30%),
+                                  radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 25%),
+                                  radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%)`,
+                                mixBlendMode: 'screen',
+                              }}
+                            />
+                            <div 
+                              className="absolute inset-0 pointer-events-none opacity-30"
+                              style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                              }}
+                            />
+                            <div className="relative p-4 text-center">
+                              <div className="text-3xl mb-2">{chip.icon}</div>
+                              <div className="font-medium text-gray-200 text-sm mb-1">{chip.name}</div>
+                              <div className="text-xs text-purple-400 mb-2">{chip.mekType} Mek</div>
+                              <div className="text-lg font-bold text-yellow-400">×{chip.quantity}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Other Items Section */}
-                  <div>
-                    <h3 className="text-xl font-bold text-yellow-400 mb-4">Other Items</h3>
-                    <div className="text-gray-400">No other items in inventory</div>
-                  </div>
+                  {/* Various Sub-tab */}
+                  {inventorySubTab === 'various' && (
+                    <div>
+                      <h3 className="text-xl font-bold text-yellow-400 mb-4">Over Exposed Signature Items</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Mock various items */}
+                        {[
+                          { id: 'var1', name: 'Vintage Camera', description: 'From the golden age of photography', icon: '📷', rarity: 'legendary' },
+                          { id: 'var2', name: 'Crystal Shard', description: 'Mysterious energy source', icon: '💎', rarity: 'epic' },
+                          { id: 'var3', name: 'Ancient Scroll', description: 'Contains forgotten knowledge', icon: '📜', rarity: 'rare' },
+                        ].map(item => (
+                          <div
+                            key={item.id}
+                            className="relative border border-gray-600/20 overflow-hidden transition-all hover:shadow-lg"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              backdropFilter: 'blur(4px) contrast(1.1)',
+                            }}
+                          >
+                            <div 
+                              className="absolute inset-0 pointer-events-none"
+                              style={{
+                                background: `
+                                  linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%),
+                                  linear-gradient(-45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%)`,
+                              }}
+                            />
+                            <div 
+                              className="absolute -inset-1 opacity-20"
+                              style={{
+                                background: `
+                                  radial-gradient(ellipse at top left, rgba(250, 182, 23, 0.15) 0%, transparent 40%),
+                                  radial-gradient(ellipse at bottom right, rgba(147, 51, 234, 0.1) 0%, transparent 40%),
+                                  radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+                                  radial-gradient(circle at 70% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 20%)`,
+                                filter: 'blur(8px)',
+                              }}
+                            />
+                            <div className="relative p-4">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="text-2xl">{item.icon}</span>
+                                <div>
+                                  <div className="font-medium text-gray-200">{item.name}</div>
+                                  <div className={`text-xs ${
+                                    item.rarity === 'legendary' ? 'text-orange-400' :
+                                    item.rarity === 'epic' ? 'text-purple-400' :
+                                    'text-blue-400'
+                                  }`}>{item.rarity}</div>
+                                </div>
+                              </div>
+                              <div className="text-sm text-gray-400">{item.description}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -565,19 +777,34 @@ export default function ProfilePage() {
                     {userData.frames.map(frame => (
                       <div
                         key={frame.id}
-                        className="relative p-4 rounded-lg overflow-hidden hover:scale-105 transition-transform"
+                        className="relative p-4 overflow-hidden hover:scale-105 transition-transform"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.005)',
-                          backdropFilter: 'blur(1px)',
-                          border: '1px solid rgba(255, 255, 255, 0.015)',
-                          boxShadow: '0 0 20px rgba(0, 0, 0, 0.2) inset',
+                          background: `
+                            linear-gradient(135deg, 
+                              rgba(255, 255, 255, 0.02) 0%, 
+                              rgba(255, 255, 255, 0.05) 50%, 
+                              rgba(255, 255, 255, 0.02) 100%)`,
+                          backdropFilter: 'blur(6px)',
+                          boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(250, 182, 23, 0.3)',
                         }}
                       >
-                        {/* Ultra-thin dirty glass noise texture */}
+                        {/* Smudge effects */}
                         <div 
-                          className="absolute inset-0 pointer-events-none opacity-20"
+                          className="absolute inset-0 pointer-events-none"
                           style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E")`,
+                            background: `
+                              radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.08) 0%, transparent 30%),
+                              radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 25%),
+                              radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%)`,
+                            mixBlendMode: 'screen',
+                          }}
+                        />
+                        {/* Pattern overlay */}
+                        <div 
+                          className="absolute inset-0 pointer-events-none opacity-30"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                           }}
                         />
                         
@@ -593,15 +820,6 @@ export default function ProfilePage() {
                         </div>
                         
                         <div className="relative z-10 mt-3 pt-3 border-t border-gray-800/50 space-y-1 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Rank:</span>
-                            <span className={`font-bold ${
-                              frame.rank === 'S' ? 'text-yellow-400' :
-                              frame.rank === 'A' ? 'text-purple-400' :
-                              frame.rank === 'B' ? 'text-blue-400' :
-                              'text-gray-400'
-                            }`}>{frame.rank}</span>
-                          </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500">Level:</span>
                             <span className="text-white">{frame.level}</span>
@@ -723,6 +941,7 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

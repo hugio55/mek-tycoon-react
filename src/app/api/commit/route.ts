@@ -14,7 +14,14 @@ export async function POST(request: NextRequest) {
 
     // Execute git commands
     try {
-      // Add all changes
+      // First, reset any problematic files like 'nul'
+      try {
+        await execAsync('git reset HEAD nul');
+      } catch (e) {
+        // Ignore if nul doesn't exist in staging
+      }
+      
+      // Add all changes except problematic files
       await execAsync('git add -A');
       
       // Create commit with the provided message

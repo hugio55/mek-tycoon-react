@@ -91,6 +91,8 @@ const navCategories: readonly NavCategory[] = [
       { label: "Story Rewards", href: "/story-rewards" },
       { label: "Event Node Rewards", href: "/event-node-rewards" },
       { label: "Sphere Selector", href: "/admin-sphere" },
+      { label: "Uni-Chips", href: "/uni-chips" },
+      { label: "Chip Builder", href: "/admin/chip-builder" },
     ],
   },
 ];

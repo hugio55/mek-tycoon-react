@@ -918,4 +918,78 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_user", ["userId"]),
+
+  // Chip Definitions - templates for all possible chips
+  chipDefinitions: defineTable({
+    name: v.string(),
+    description: v.string(),
+    category: v.union(
+      v.literal("attack"),
+      v.literal("defense"),
+      v.literal("utility"),
+      v.literal("economy"),
+      v.literal("special")
+    ),
+    tier: v.number(), // 1-7 for T1-T7
+    imageUrl: v.optional(v.string()),
+    possibleBuffs: v.array(v.object({
+      buffType: v.string(),
+      minValue: v.number(),
+      maxValue: v.number(),
+      weight: v.number(), // probability weight
+    })),
+    rankScaling: v.record(v.string(), v.object({
+      buffMultiplier: v.number(),
+      rollChances: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_tier", ["tier"])
+    .index("by_category", ["category"])
+    .index("by_name", ["name"]),
+
+  // Chip Instances - actual chips owned by users
+  chipInstances: defineTable({
+    userId: v.id("users"),
+    chipDefinitionId: v.id("chipDefinitions"),
+    rank: v.string(), // D, C, B, A, S, SS, SSS, X, XX, XXX
+    rolledBuffs: v.array(v.object({
+      buffType: v.string(),
+      value: v.number(),
+    })),
+    equipped: v.boolean(),
+    equippedToMek: v.optional(v.id("meks")),
+    equipmentSlot: v.optional(v.number()), // Which slot on the Mek (1-3)
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_definition", ["chipDefinitionId"])
+    .index("by_equipped_mek", ["equippedToMek"])
+    .index("by_user_equipped", ["userId", "equipped"]),
+
+  // Story Trees - saved story mode layouts for story climb
+  storyTrees: defineTable({
+    name: v.string(),
+    chapter: v.number(),
+    nodes: v.array(v.object({
+      id: v.string(),
+      x: v.number(),
+      y: v.number(),
+      label: v.string(),
+      index: v.optional(v.number()),
+      storyNodeType: v.optional(v.string()),
+      completed: v.optional(v.boolean()),
+      available: v.optional(v.boolean()),
+      current: v.optional(v.boolean()),
+    })),
+    connections: v.array(v.object({
+      from: v.string(),
+      to: v.string(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_chapter", ["chapter"]),
 });

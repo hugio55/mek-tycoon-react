@@ -58,6 +58,7 @@ export default function TalentBuilderPage() {
   const updateTemplate = useMutation(api.mekTreeTemplates.updateTemplate);
   const deleteTemplate = useMutation(api.mekTreeTemplates.deleteTemplate);
   const createDefaultTemplates = useMutation(api.mekTreeTemplates.createDefaultTemplates);
+  const saveStoryToDatabase = useMutation(api.storyTrees.saveStoryTree);
   
   // Load saved spells from localStorage
   useEffect(() => {
@@ -1161,7 +1162,7 @@ export default function TalentBuilderPage() {
               
               {/* Save/Load Buttons */}
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const name = prompt(`Save Chapter ${storyChapter} as:`, `Chapter ${storyChapter} Layout`);
                   if (name) {
                     const saved = [...savedStoryModes];
@@ -1172,8 +1173,36 @@ export default function TalentBuilderPage() {
                     });
                     setSavedStoryModes(saved);
                     localStorage.setItem('savedStoryModes', JSON.stringify(saved));
-                    setSaveStatus(`Saved as "${name}"`);
-                    setTimeout(() => setSaveStatus(""), 2000);
+                    
+                    // Also save to database for permanent backup
+                    try {
+                      // Convert nodes to match database schema (name -> label)
+                      const dbNodes = nodes.map(node => ({
+                        id: node.id,
+                        x: node.x,
+                        y: node.y,
+                        label: node.name || node.label || 'Node', // Use name field as label
+                        index: node.index,
+                        storyNodeType: node.storyNodeType || 'normal',
+                        completed: node.completed,
+                        available: node.available,
+                        current: node.current
+                      }));
+                      
+                      await saveStoryToDatabase({
+                        name: name,
+                        chapter: storyChapter,
+                        nodes: dbNodes,
+                        connections: connections
+                      });
+                      setSaveStatus(`✅ Saved "${name}" locally & to cloud`);
+                      console.log(`☁️ Backed up "${name}" to database`);
+                    } catch (dbError) {
+                      console.error('Database save error:', dbError);
+                      setSaveStatus(`⚠️ Saved "${name}" locally (cloud backup failed)`);
+                    }
+                    
+                    setTimeout(() => setSaveStatus(""), 3000);
                   }
                 }}
                 className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white ml-4"

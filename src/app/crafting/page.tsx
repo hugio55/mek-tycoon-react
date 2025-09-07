@@ -5,6 +5,7 @@ import { useCraftingState } from './hooks/useCraftingState';
 import { getBaseVariations, getStyles, getFinalVariations } from './utils';
 import {
   CategorySelector,
+  ChipTypeSelector,
   CraftedItemPopup,
   MekSelector,
   PathBreadcrumb,
@@ -15,6 +16,7 @@ import {
 export default function CraftingPage() {
   const {
     // State
+    chipType,
     currentCategory,
     selectedType,
     selectedVariation,
@@ -26,6 +28,7 @@ export default function CraftingPage() {
     craftedItem,
     
     // Actions
+    selectMekChips,
     showCategory,
     selectVariation,
     selectStyle,
@@ -45,8 +48,13 @@ export default function CraftingPage() {
     <div className="text-white py-8 min-h-screen relative">
       <BackgroundEffects />
       
-      {/* Main Category Selection */}
-      {currentCategory === 'main' && !showRecipe && (
+      {/* Chip Type Selection (Uni-Chips vs Mek-Chips) */}
+      {!chipType && !showRecipe && (
+        <ChipTypeSelector onSelectMekChips={selectMekChips} />
+      )}
+      
+      {/* Main Category Selection (for Mek-Chips) */}
+      {chipType === 'mek' && currentCategory === 'main' && !showRecipe && (
         <CategorySelector onSelectCategory={showCategory} />
       )}
 

@@ -6,6 +6,7 @@ export function useCraftingState() {
   const router = useRouter();
   
   // Navigation state
+  const [chipType, setChipType] = useState<'uni' | 'mek' | null>(null);
   const [currentCategory, setCurrentCategory] = useState<Category>('main');
   const [selectedType, setSelectedType] = useState<ComponentType | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
@@ -17,6 +18,10 @@ export function useCraftingState() {
   const [showCraftedPopup, setShowCraftedPopup] = useState(false);
   const [showMekSelector, setShowMekSelector] = useState(false);
   const [craftedItem, setCraftedItem] = useState<CraftedItem | null>(null);
+
+  const selectMekChips = () => {
+    setChipType('mek');
+  };
 
   const showCategory = (type: ComponentType) => {
     setSelectedType(type);
@@ -39,6 +44,7 @@ export function useCraftingState() {
   };
 
   const resetCrafting = () => {
+    setChipType(null);
     setCurrentCategory('main');
     setSelectedType(null);
     setSelectedVariation(null);
@@ -60,10 +66,12 @@ export function useCraftingState() {
     } else if (currentCategory === 'style') {
       setCurrentCategory('group');
       setSelectedStyle(null);
-    } else if (currentCategory === 'group') {
+    } else if (currentCategory === 'group' && chipType === 'mek') {
       setCurrentCategory('main');
       setSelectedVariation(null);
       setSelectedType(null);
+    } else if (currentCategory === 'main' && chipType === 'mek') {
+      setChipType(null);
     }
   };
 
@@ -98,6 +106,7 @@ export function useCraftingState() {
 
   return {
     // State
+    chipType,
     currentCategory,
     selectedType,
     selectedVariation,
@@ -109,6 +118,7 @@ export function useCraftingState() {
     craftedItem,
     
     // Actions
+    selectMekChips,
     showCategory,
     selectVariation,
     selectStyle,

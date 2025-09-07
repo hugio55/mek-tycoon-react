@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { variationsData } from "@/lib/variationsData";
 
 // 5 essence types for the distribution graph
 const essenceTypes = [
@@ -15,24 +14,25 @@ const essenceTypes = [
   { id: "laser", name: "Laser", color: "#00CED1", rarity: 10, image: "/variation-images/neon_flamingo.png" },
 ];
 
-interface VariationItem {
+interface ChipItem {
   id: string;
   name: string;
-  category: 'heads' | 'bodies' | 'traits';
+  category: 'uni' | 'mek'; // uni-chips or mek-specific chips
+  slot?: 'head' | 'body' | 'trait'; // For mek-specific chips
   quantity: number;
-  xp: number;
+  power: number; // Similar to xp, affects bias
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  image?: string;
 }
 
 export default function IncineratorPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
-  const [selectedItem, setSelectedItem] = useState<VariationItem | null>(null);
+  const [selectedChip, setSelectedChip] = useState<ChipItem | null>(null);
   const [isIncinerating, setIsIncinerating] = useState(false);
   const [biasScore, setBiasScore] = useState(150);
   const [resultEssence, setResultEssence] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'heads' | 'bodies' | 'traits'>('all');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [inventoryTab, setInventoryTab] = useState<'uni' | 'mek'>('uni');
   
   // Generate stars for background
   const stars = useMemo(() => [...Array(30)].map((_, i) => ({
@@ -68,69 +68,32 @@ export default function IncineratorPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Mock inventory - in real app, this would come from the database
-  const mockInventory: Record<string, number> = {
-    "Taser": 3,
-    "Log": 1,
-    "Kevlar": 0,
-    "Nuke": 2,
-    "Classic": 1,
-    "Lightning": 0,
-    "Polished": 4,
-    "Royal": 1,
-    "Disco": 0,
-    "Cream": 2,
-    // Add more as needed
-  };
+  // Mock chip inventory - in real app, this would come from the database
+  const mockChipInventory: ChipItem[] = useMemo(() => [
+    // Uni-chips (can be used in any slot)
+    { id: "uni_power_1", name: "Power Chip", category: 'uni', quantity: 5, power: 50, rarity: 'common' },
+    { id: "uni_speed_1", name: "Speed Chip", category: 'uni', quantity: 3, power: 75, rarity: 'common' },
+    { id: "uni_defense_1", name: "Defense Chip", category: 'uni', quantity: 2, power: 100, rarity: 'rare' },
+    { id: "uni_quantum_1", name: "Quantum Chip", category: 'uni', quantity: 1, power: 200, rarity: 'epic' },
+    { id: "uni_neural_1", name: "Neural Chip", category: 'uni', quantity: 1, power: 300, rarity: 'legendary' },
+    { id: "uni_energy_1", name: "Energy Chip", category: 'uni', quantity: 8, power: 40, rarity: 'common' },
+    { id: "uni_boost_1", name: "Boost Chip", category: 'uni', quantity: 4, power: 60, rarity: 'common' },
+    { id: "uni_mega_1", name: "Mega Chip", category: 'uni', quantity: 0, power: 500, rarity: 'legendary' },
+    
+    // Mek-specific chips (trait slot only)
+    { id: "mek_laser_1", name: "Laser Trait Chip", category: 'mek', slot: 'trait', quantity: 3, power: 150, rarity: 'rare' },
+    { id: "mek_flame_1", name: "Flame Trait Chip", category: 'mek', slot: 'trait', quantity: 2, power: 175, rarity: 'rare' },
+    { id: "mek_ice_1", name: "Ice Trait Chip", category: 'mek', slot: 'trait', quantity: 1, power: 225, rarity: 'epic' },
+    { id: "mek_thunder_1", name: "Thunder Trait Chip", category: 'mek', slot: 'trait', quantity: 1, power: 250, rarity: 'epic' },
+    { id: "mek_poison_1", name: "Poison Trait Chip", category: 'mek', slot: 'trait', quantity: 4, power: 125, rarity: 'rare' },
+    { id: "mek_holy_1", name: "Holy Trait Chip", category: 'mek', slot: 'trait', quantity: 0, power: 400, rarity: 'legendary' },
+    { id: "mek_dark_1", name: "Dark Trait Chip", category: 'mek', slot: 'trait', quantity: 1, power: 350, rarity: 'legendary' },
+  ], []);
   
-  // Prepare all variations with inventory data
-  const allVariations = useMemo(() => {
-    const items: VariationItem[] = [];
-    
-    // Add heads
-    variationsData.heads.forEach(head => {
-      items.push({
-        id: `head_${head.name}`,
-        name: head.name,
-        category: 'heads',
-        quantity: mockInventory[head.name] || 0,
-        xp: head.xp
-      });
-    });
-    
-    // Add bodies
-    variationsData.bodies.forEach(body => {
-      items.push({
-        id: `body_${body.name}`,
-        name: body.name,
-        category: 'bodies',
-        quantity: mockInventory[body.name] || 0,
-        xp: body.xp
-      });
-    });
-    
-    // Add traits
-    variationsData.traits.forEach(trait => {
-      items.push({
-        id: `trait_${trait.name}`,
-        name: trait.name,
-        category: 'traits',
-        quantity: mockInventory[trait.name] || 0,
-        xp: trait.xp
-      });
-    });
-    
-    return items;
-  }, []);
-  
-  // Filter variations based on search and category
-  const filteredVariations = useMemo(() => {
-    return allVariations.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    }).slice(0, 10); // Limit dropdown to 10 items
-  }, [allVariations, searchQuery, selectedCategory]);
+  // Filter chips based on selected tab
+  const filteredChips = useMemo(() => {
+    return mockChipInventory.filter(chip => chip.category === inventoryTab);
+  }, [mockChipInventory, inventoryTab]);
   
   // Calculate essence distribution probabilities using bell curve
   const calculateBellCurvePosition = (bias: number): number => {
@@ -174,7 +137,7 @@ export default function IncineratorPage() {
   });
   
   const handleIncinerate = async () => {
-    if (!selectedItem || selectedItem.quantity === 0) return;
+    if (!selectedChip || selectedChip.quantity === 0) return;
     
     setIsIncinerating(true);
     
@@ -200,25 +163,23 @@ export default function IncineratorPage() {
     // Clear result after showing
     setTimeout(() => {
       setResultEssence(null);
-      setSelectedItem(null);
-      setSearchQuery("");
+      setSelectedChip(null);
     }, 3000);
   };
   
   // Gold cost calculation
-  const goldCost = selectedItem ? Math.floor(selectedItem.xp * 0.5) : 0;
+  const goldCost = selectedChip ? Math.floor(selectedChip.power * 2) : 0;
   
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Get rarity color
+  const getRarityColor = (rarity: string) => {
+    switch(rarity) {
+      case 'common': return 'text-gray-400 border-gray-600';
+      case 'rare': return 'text-blue-400 border-blue-600';
+      case 'epic': return 'text-purple-400 border-purple-600';
+      case 'legendary': return 'text-yellow-400 border-yellow-600';
+      default: return 'text-gray-400 border-gray-600';
+    }
+  };
   
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -281,108 +242,53 @@ export default function IncineratorPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Panel - Item Selection */}
             <div className="space-y-4">
-              {/* Search and Category Filter */}
-              <div className="bg-black/40 backdrop-blur-md rounded-lg p-4 border border-yellow-500/20" ref={searchRef}>
-                <h2 className="text-lg font-bold text-yellow-400 mb-4" style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>Select Item</h2>
+              {/* Central Selection Box */}
+              <div className="bg-black/40 backdrop-blur-md rounded-lg p-6 border border-yellow-500/20">
+                <h2 className="text-lg font-bold text-yellow-400 mb-4" style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>Select Chip to Burn</h2>
                 
-                {/* Category Tabs */}
-                <div className="flex gap-2 mb-4">
-                  {(['all', 'heads', 'bodies', 'traits'] as const).map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-3 py-1 rounded text-sm font-inter transition-all ${
-                        selectedCategory === cat 
-                          ? 'bg-yellow-500 text-black font-semibold' 
-                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      }`}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Search Input */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setShowDropdown(true);
-                    }}
-                    onFocus={() => setShowDropdown(true)}
-                    placeholder="Search variations..."
-                    className="w-full px-4 py-2 bg-black/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
-                  />
-                  
-                  {/* Autocomplete Dropdown */}
-                  {showDropdown && searchQuery && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl max-h-64 overflow-y-auto z-50">
-                      {filteredVariations.map(item => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setSearchQuery(item.name);
-                            setShowDropdown(false);
-                          }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center justify-between ${
-                            item.quantity === 0 ? 'opacity-60' : ''
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {/* Placeholder Image */}
-                            <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                              <img 
-                                src="/images/mek-150px/placeholder.png" 
-                                alt={item.name}
-                                className="w-8 h-8 object-contain opacity-50"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <span className={`font-medium ${item.quantity === 0 ? 'text-gray-500' : 'text-white'}`}>
-                                {item.name}
-                              </span>
-                              <span className="text-xs text-gray-500 ml-2">
-                                {item.category}
-                              </span>
-                            </div>
-                          </div>
-                          <span className={`text-sm font-bold ${item.quantity > 0 ? 'text-yellow-400' : 'text-gray-600'}`}>
-                            ({item.quantity})
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                {/* Big Selection Button/Slot */}
+                <button
+                  onClick={() => setShowInventoryModal(true)}
+                  className="w-full aspect-square max-w-[250px] mx-auto bg-black/60 border-2 border-dashed border-gray-600 rounded-lg hover:border-yellow-500/50 transition-all flex flex-col items-center justify-center gap-4 group"
+                >
+                  {selectedChip ? (
+                    // Show selected chip
+                    <>
+                      <div className={`w-20 h-20 rounded-lg flex items-center justify-center border-2 ${getRarityColor(selectedChip.rarity)}`}>
+                        <span className="text-3xl">💾</span>
+                      </div>
+                      <div className="text-center">
+                        <div className={`font-bold ${getRarityColor(selectedChip.rarity).split(' ')[0]}`}>
+                          {selectedChip.name}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {selectedChip.category === 'uni' ? 'Universal' : 'Mek-Specific'}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-2">
+                          Owned: {selectedChip.quantity}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    // Empty state
+                    <>
+                      <div className="text-6xl text-gray-600 group-hover:text-gray-500 transition-colors">
+                        +
+                      </div>
+                      <div className="text-gray-500 group-hover:text-gray-400 transition-colors">
+                        Click to Select Chip
+                      </div>
+                    </>
                   )}
-                </div>
+                </button>
                 
-                {/* Selected Item Display */}
-                {selectedItem && (
-                  <div className="mt-4 p-4 bg-black/40 rounded-lg border border-yellow-500/10">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
-                        <img 
-                          src="/images/mek-150px/placeholder.png" 
-                          alt={selectedItem.name}
-                          className="w-14 h-14 object-contain opacity-60"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-yellow-400">{selectedItem.name}</h3>
-                        <p className="text-sm text-gray-400">
-                          {selectedItem.category} • Owned: {selectedItem.quantity}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {selectedChip && (
+                  <button
+                    onClick={() => setSelectedChip(null)}
+                    className="mt-4 w-full py-2 text-sm text-gray-400 hover:text-red-400 transition-colors"
+                  >
+                    Clear Selection
+                  </button>
                 )}
               </div>
               
@@ -503,22 +409,22 @@ export default function IncineratorPage() {
                 {/* Incinerate Button */}
                 <button
                   onClick={handleIncinerate}
-                  disabled={!selectedItem || selectedItem.quantity === 0 || isIncinerating}
+                  disabled={!selectedChip || selectedChip.quantity === 0 || isIncinerating}
                   className={`
                     w-full py-4 px-6 font-bold text-lg rounded-lg transition-all
-                    ${selectedItem && selectedItem.quantity > 0 && !isIncinerating
+                    ${selectedChip && selectedChip.quantity > 0 && !isIncinerating
                       ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg"
                       : "bg-gray-800 text-gray-600 cursor-not-allowed"
                     }
                   `}
                 >
-                  {isIncinerating ? "INCINERATING..." : selectedItem && selectedItem.quantity === 0 ? "NO ITEMS" : "INCINERATE"}
+                  {isIncinerating ? "INCINERATING..." : selectedChip && selectedChip.quantity === 0 ? "NO CHIPS" : "INCINERATE"}
                 </button>
                 
                 {/* Info Text */}
-                {!selectedItem && (
+                {!selectedChip && (
                   <div className="mt-4 text-center text-gray-500 font-inter">
-                    Search and select an item to see essence probabilities
+                    Select a chip to see essence probabilities
                   </div>
                 )}
               </div>
@@ -526,6 +432,101 @@ export default function IncineratorPage() {
           </div>
         </div>
       </div>
+      
+      {/* Chip Inventory Modal */}
+      {showInventoryModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg border border-yellow-500/30 max-w-4xl w-full max-h-[80vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-yellow-400">Select Chip to Incinerate</h2>
+                <button
+                  onClick={() => setShowInventoryModal(false)}
+                  className="text-gray-400 hover:text-white transition-colors text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {/* Tab Buttons */}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setInventoryTab('uni')}
+                  className={`px-4 py-2 rounded font-medium transition-all ${
+                    inventoryTab === 'uni'
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Uni-Chips
+                </button>
+                <button
+                  onClick={() => setInventoryTab('mek')}
+                  className={`px-4 py-2 rounded font-medium transition-all ${
+                    inventoryTab === 'mek'
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  Mek Chips
+                </button>
+              </div>
+            </div>
+            
+            {/* Chip Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {filteredChips.map(chip => (
+                  <button
+                    key={chip.id}
+                    onClick={() => {
+                      if (chip.quantity > 0) {
+                        setSelectedChip(chip);
+                        setShowInventoryModal(false);
+                        // Update bias based on chip power
+                        setBiasScore(Math.min(1000, chip.power * 3));
+                      }
+                    }}
+                    disabled={chip.quantity === 0}
+                    className={`p-3 rounded-lg border transition-all ${
+                      chip.quantity === 0
+                        ? 'bg-gray-900/50 border-gray-800 opacity-50 cursor-not-allowed'
+                        : 'bg-black/40 hover:bg-black/60 cursor-pointer'
+                    } ${getRarityColor(chip.rarity).split(' ')[1]}`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="text-2xl">💾</div>
+                      <div className={`text-sm font-medium ${getRarityColor(chip.rarity).split(' ')[0]}`}>
+                        {chip.name}
+                      </div>
+                      {chip.category === 'mek' && chip.slot && (
+                        <div className="text-xs text-gray-500">
+                          {chip.slot} slot
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-400">
+                        Power: {chip.power}
+                      </div>
+                      <div className={`text-sm font-bold ${
+                        chip.quantity > 0 ? 'text-yellow-400' : 'text-gray-600'
+                      }`}>
+                        x{chip.quantity}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {filteredChips.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  No chips in this category
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
