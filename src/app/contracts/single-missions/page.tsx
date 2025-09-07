@@ -1,5 +1,5 @@
-import LayoutOption11 from '../layout-option-11';
+import SingleMissions from '../single-missions';
 
 export default function SingleMissionsPage() {
-  return <LayoutOption11 />;
+  return <SingleMissions />;
 }

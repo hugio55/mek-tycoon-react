@@ -116,14 +116,14 @@ export const getBuffValue = query({
     }
     
     // Determine rarity tier based on mek rank
+    // God Tier: 1-10, Legendary: 11-100, Epic: 101-250, Rare: 251-1000, Uncommon: 1001-2000, Common: 2001-4000
     let rarityTier = 0;
-    if (args.mekRank >= 3001 && args.mekRank <= 4000) rarityTier = 0;
-    else if (args.mekRank >= 2001 && args.mekRank <= 3000) rarityTier = 1;
-    else if (args.mekRank >= 1001 && args.mekRank <= 2000) rarityTier = 2;
-    else if (args.mekRank >= 501 && args.mekRank <= 1000) rarityTier = 3;
-    else if (args.mekRank >= 101 && args.mekRank <= 500) rarityTier = 4;
-    else if (args.mekRank >= 26 && args.mekRank <= 100) rarityTier = 5;
-    else if (args.mekRank >= 1 && args.mekRank <= 25) rarityTier = 6;
+    if (args.mekRank >= 2001 && args.mekRank <= 4000) rarityTier = 0; // Common
+    else if (args.mekRank >= 1001 && args.mekRank <= 2000) rarityTier = 1; // Uncommon
+    else if (args.mekRank >= 251 && args.mekRank <= 1000) rarityTier = 2; // Rare
+    else if (args.mekRank >= 101 && args.mekRank <= 250) rarityTier = 3; // Epic
+    else if (args.mekRank >= 11 && args.mekRank <= 100) rarityTier = 4; // Legendary
+    else if (args.mekRank >= 1 && args.mekRank <= 10) rarityTier = 5; // God Tier
     else return null; // Invalid rank
     
     // Tree tier is 1-indexed, convert to 0-indexed

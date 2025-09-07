@@ -27,6 +27,7 @@
     "archiver": "^7.0.1",
     "cannon": "^0.6.2",
     "cannon-es": "^0.20.0",
+    "canvas": "^3.2.0",
     "convex": "^1.25.4",
     "dotenv": "^17.2.1",
     "fs-extra": "^11.3.1",

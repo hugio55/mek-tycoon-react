@@ -117,10 +117,12 @@ export const importMeksFromJSON = mutation({
 // Helper functions
 function getRarityTier(rank?: number): string {
   if (!rank) return "Common";
+  // Based on new tier breakpoints
+  if (rank <= 10) return "God Tier";
   if (rank <= 100) return "Legendary";
-  if (rank <= 500) return "Epic";
-  if (rank <= 1500) return "Rare";
-  if (rank <= 3000) return "Uncommon";
+  if (rank <= 250) return "Epic";
+  if (rank <= 1000) return "Rare";
+  if (rank <= 2000) return "Uncommon";
   return "Common";
 }
 
@@ -156,11 +158,15 @@ function calculateStat(variation: string, statType: string): number {
 function calculatePowerScore(mek: any): number {
   let score = 100;
   
-  // Rarity bonus
+  // Rarity bonus based on new tier breakpoints
+  // God Tier: 1-10, Legendary: 11-100, Epic: 101-250, Rare: 251-1000, Uncommon: 1001-2000, Common: 2001-4000
   if (mek.rarityRank) {
-    if (mek.rarityRank <= 100) score += 200;
-    else if (mek.rarityRank <= 500) score += 100;
-    else if (mek.rarityRank <= 1500) score += 50;
+    if (mek.rarityRank <= 10) score += 300;      // God Tier
+    else if (mek.rarityRank <= 100) score += 200;  // Legendary
+    else if (mek.rarityRank <= 250) score += 150;  // Epic
+    else if (mek.rarityRank <= 1000) score += 100; // Rare
+    else if (mek.rarityRank <= 2000) score += 50;  // Uncommon
+    // Common (2001-4000) gets no bonus
   }
   
   // Part bonuses
@@ -173,9 +179,11 @@ function calculatePowerScore(mek: any): number {
 
 function calculateScrapValue(rank?: number): number {
   if (!rank) return 50;
-  if (rank <= 100) return 500;
-  if (rank <= 500) return 250;
-  if (rank <= 1500) return 150;
-  if (rank <= 3000) return 100;
-  return 50;
+  // Based on new tier breakpoints
+  if (rank <= 10) return 1000;    // God Tier
+  if (rank <= 100) return 500;    // Legendary
+  if (rank <= 250) return 300;    // Epic
+  if (rank <= 1000) return 200;   // Rare
+  if (rank <= 2000) return 100;   // Uncommon
+  return 50;                       // Common
 }

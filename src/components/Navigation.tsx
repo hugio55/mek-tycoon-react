@@ -88,6 +88,8 @@ const navCategories: readonly NavCategory[] = [
       { label: "Spell Designer", href: "/admin-spells" },
       { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },
+      { label: "Story Rewards", href: "/story-rewards" },
+      { label: "Event Node Rewards", href: "/event-node-rewards" },
       { label: "Sphere Selector", href: "/admin-sphere" },
     ],
   },

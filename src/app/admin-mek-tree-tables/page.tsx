@@ -5,15 +5,15 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 
-// Rarity rank ranges for the 7 tiers
+// Rarity rank ranges for the 6 tiers
+// God Tier: 1-10, Legendary: 11-100, Epic: 101-250, Rare: 251-1000, Uncommon: 1001-2000, Common: 2001-4000
 const RARITY_TIERS = [
-  { label: "3k to 4k", min: 3001, max: 4000 },
-  { label: "2 to 3", min: 2001, max: 3000 },
-  { label: "1 to 2", min: 1001, max: 2000 },
-  { label: "500 to 1k", min: 501, max: 1000 },
-  { label: "100 to 500", min: 101, max: 500 },
-  { label: "25 to 100", min: 26, max: 100 },
-  { label: "1 to 25", min: 1, max: 25 },
+  { label: "Common (2001-4000)", min: 2001, max: 4000 },
+  { label: "Uncommon (1001-2000)", min: 1001, max: 2000 },
+  { label: "Rare (251-1000)", min: 251, max: 1000 },
+  { label: "Epic (101-250)", min: 101, max: 250 },
+  { label: "Legendary (11-100)", min: 11, max: 100 },
+  { label: "God Tier (1-10)", min: 1, max: 10 },
 ];
 
 // Default buff categories

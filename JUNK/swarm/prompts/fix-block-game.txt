@@ -1,0 +1,22 @@
+URGENT: Fix Block Tower Game
+
+The block stacking game at src/app/scrap-yard/block-game/BlockGame.tsx is not working properly. When clicking "Start Game", nothing appears.
+
+KEY ISSUES TO FIX:
+1. The original game uses geometry.applyMatrix() to offset the block pivot point to the corner (not center)
+2. Uses THREE.Group() to manage newBlocks, placedBlocks, and choppedBlocks separately
+3. Camera positioning is different (x:2, y:2, z:2 looking at 0,0,0)
+4. Uses MeshToonMaterial not MeshPhongMaterial
+5. Block dimensions start at 10x2x10
+6. Speed calculation uses negative values
+7. The game uses class-based architecture with Stage, Block, and Game classes
+
+ORIGINAL CODE REFERENCE:
+- Geometry uses: geometry.applyMatrix(new THREE.Matrix4().makeTranslation(width/2, height/2, depth/2))
+- This offsets the pivot point to the corner instead of center
+- Camera: OrthographicCamera with position (2, 2, 2) looking at (0, 0, 0)
+- Background color: #D0CBC7
+- Uses THREE.Groups to manage blocks
+- MeshToonMaterial with specific color calculation
+
+Please fix the BlockGame.tsx component to match the original game's behavior exactly.

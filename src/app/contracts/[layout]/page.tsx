@@ -11,7 +11,7 @@ import LayoutOption7 from "../layout-option-7";
 import LayoutOption8 from "../layout-option-8";
 import LayoutOption9 from "../layout-option-9";
 import LayoutOption10 from "../layout-option-10";
-import LayoutOption11 from "../layout-option-11";
+import SingleMissions from "../single-missions";
 
 export default function ContractLayoutPage() {
   const params = useParams();
@@ -39,7 +39,9 @@ export default function ContractLayoutPage() {
     case "layout-option-10":
       return <LayoutOption10 />;
     case "layout-option-11":
-      return <LayoutOption11 />;
+      return <SingleMissions />;
+    case "single-missions":
+      return <SingleMissions />;
     default:
       return (
         <div className="min-h-screen bg-black text-white p-8">
@@ -49,7 +51,7 @@ export default function ContractLayoutPage() {
               {[1,2,3,4,5,6,7,8,9,10,11].map(n => (
                 <a
                   key={n}
-                  href={`/contracts/layout-option-${n}`}
+                  href={n === 11 ? `/contracts/single-missions` : `/contracts/layout-option-${n}`}
                   className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg transition-all"
                 >
                   <h2 className="text-2xl font-bold text-yellow-400 mb-2">Layout Option {n}</h2>

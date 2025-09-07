@@ -908,4 +908,14 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_end_time", ["endTime"]),
+
+  // Event Node Rewards configuration saves
+  eventNodeConfigs: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    data: v.string(), // JSON string of the configuration
+    timestamp: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
 });

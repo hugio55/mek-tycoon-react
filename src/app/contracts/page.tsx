@@ -204,7 +204,7 @@ export default function ContractsPage() {
               className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105"
               onMouseEnter={() => setHoveredMode('single')}
               onMouseLeave={() => setHoveredMode(null)}
-              onClick={() => router.push('/contracts/layout-option-11')}
+              onClick={() => router.push('/contracts/single-missions')}
             >
               <div 
                 className="relative rounded-xl overflow-hidden"
