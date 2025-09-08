@@ -131,10 +131,10 @@ export default function BuffCategoriesPage() {
   }, [categories]);
 
   return (
-    <div className="min-h-screen w-full bg-black text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Sync Status Bar */}
-      <div className="fixed top-0 left-0 right-0 bg-gray-900/95 border-b border-yellow-500/30 px-2 py-1 z-50">
-        <div className="w-full flex items-center justify-between">
+      <div className="fixed top-0 left-0 right-0 bg-gray-900/95 border-b border-yellow-500/30 px-4 py-1 z-50">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-400">Backend Status:</span>
             <div className="flex items-center gap-2">
@@ -165,13 +165,13 @@ export default function BuffCategoriesPage() {
         </div>
       </div>
       
-      <div className="w-full pt-12">
-        <h1 className="text-3xl font-bold text-yellow-500 uppercase tracking-wider mb-3 px-2">
+      <div className="pt-12">
+        <h1 className="text-3xl font-bold text-yellow-500 uppercase tracking-wider mb-3 px-4">
           Admin - Buff Categories
         </h1>
 
         {/* Form Section */}
-        <div className="w-full bg-gray-900/50 border-y-2 border-yellow-500/50 p-3 mb-3">
+        <div className="bg-gray-900/50 border-y-2 border-yellow-500/50 px-4 py-3 mb-3">
           <h2 className="text-xl font-bold text-yellow-500 mb-3">
             {editingId ? "Edit Category" : "Add New Category"}
           </h2>
@@ -275,21 +275,21 @@ export default function BuffCategoriesPage() {
         </div>
 
         {/* Categories List */}
-        <div className="w-full bg-gray-900/50 border-y-2 border-yellow-500/50 p-3">
+        <div className="bg-gray-900/50 border-y-2 border-yellow-500/50 px-4 py-3">
           <h2 className="text-xl font-bold text-yellow-500 mb-3">Existing Categories</h2>
           
           {categories && categories.length > 0 ? (
-            <div className="w-full -mx-3 px-3 overflow-x-auto">
-              <table className="w-full min-w-full table-fixed">
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto">
                 <thead>
                   <tr className="border-b border-yellow-500/30">
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[15%]">Name</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[10%]">Category</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[15%]">Unit Type</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[12%]">Application</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[30%]">Description</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[8%]">Status</th>
-                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold w-[10%]">Actions</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Name</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Category</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Unit Type</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Application</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Description</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Status</th>
+                    <th className="text-left py-2 px-2 text-gray-400 text-xs font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -320,8 +320,8 @@ export default function BuffCategoriesPage() {
                             {applicationLabel}
                           </span>
                         </td>
-                        <td className="py-2 px-2 text-sm text-gray-400 min-w-[200px] max-w-[40%]" title={category.description || "-"}>
-                          <div className="truncate">{category.description || "-"}</div>
+                        <td className="py-2 px-2 text-sm text-gray-400" title={category.description || "-"}>
+                          <div className="truncate max-w-xs">{category.description || "-"}</div>
                         </td>
                         <td className="py-2 px-2">
                           <span

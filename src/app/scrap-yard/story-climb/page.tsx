@@ -17,6 +17,8 @@ export default function StoryClimbPage() {
   const [currentTree, setCurrentTree] = useState<string>('');
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 1000, height: 1000 });
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [isMapPanning, setIsMapPanning] = useState(false);
+  const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
 
   // Track canvas dimensions
   useEffect(() => {
@@ -140,40 +142,149 @@ export default function StoryClimbPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="bg-black/80 border-b border-gray-800 px-6 py-4">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Cinematic Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Deep space background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-black to-gray-950" />
+        
+        {/* Animated scan lines */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(250, 182, 23, 0.1) 2px,
+            rgba(250, 182, 23, 0.1) 4px
+          )`,
+          animation: 'scan 8s linear infinite',
+        }} />
+        
+        {/* Holographic overlay */}
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(250, 182, 23, 0.02) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.02) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(34, 211, 238, 0.01) 0%, transparent 50%)
+          `,
+        }} />
+      </div>
+      {/* Header - Industrial Command Panel */}
+      <div className="relative bg-black/90 border-b-2 border-yellow-500/30 overflow-hidden" style={{
+        background: `
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 100px,
+            rgba(250, 182, 23, 0.03) 100px,
+            rgba(250, 182, 23, 0.03) 101px
+          ),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.9))
+        `,
+      }}>
+        {/* Header corner accents */}
+        <div className="absolute top-0 left-0 w-20 h-1 bg-gradient-to-r from-yellow-500 to-transparent" />
+        <div className="absolute top-0 right-0 w-20 h-1 bg-gradient-to-l from-yellow-500 to-transparent" />
+        
+        <div className="relative px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
               onClick={() => router.push('/scrap-yard')}
-              className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 hover:border-yellow-400 rounded-lg transition-all"
+              className="group relative px-4 py-2 bg-black/50 border border-yellow-500/30 hover:border-yellow-500 transition-all overflow-hidden"
+              style={{
+                clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+              }}
             >
-              ← Back
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <span className="relative flex items-center gap-2 font-bold text-yellow-400 uppercase tracking-wider text-sm">
+                <span className="text-lg">◄</span> RETREAT
+              </span>
             </button>
             
-            <div>
-              <h1 className="text-2xl font-bold text-yellow-400">
-                {currentTree || 'Chapter 1'}
+            <div className="relative">
+              <div className="absolute -inset-2 bg-yellow-500/5 blur-xl" />
+              <h1 className="relative text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 uppercase tracking-wider" 
+                style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                {currentTree || 'CHAPTER 01'}
               </h1>
-              <p className="text-sm text-gray-400">
-                {nodes.filter(n => n.completed).length} Missions Completed
-              </p>
+              <div className="flex items-center gap-4 mt-1">
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">
+                  SECTOR LIBERATION
+                </p>
+                <div className="h-3 w-px bg-yellow-500/30" />
+                <p className="text-xs text-yellow-500 font-bold">
+                  {nodes.filter(n => n.completed).length} / {nodes.length} CLEARED
+                </p>
+              </div>
             </div>
           </div>
           
-          <div className="text-sm text-gray-400">
-            Progress: {nodes.filter(n => n.completed).length} / {nodes.length}
-          </div>
+          <div className="flex items-center gap-4">
+            {/* Mission Status Indicators */}
+            <div className="flex gap-2">
+              <div className="px-3 py-1.5 bg-green-900/30 border border-green-500/30 rounded">
+                <span className="text-xs text-green-400 font-bold">ACTIVE</span>
+              </div>
+              <div className="px-3 py-1.5 bg-yellow-900/30 border border-yellow-500/30 rounded">
+                <span className="text-xs text-yellow-400 font-bold">THREAT: HIGH</span>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-32">
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">COMPLETION</div>
+              <div className="h-2 bg-black/60 border border-yellow-500/20 relative overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
+                  style={{ width: `${(nodes.filter(n => n.completed).length / nodes.length) * 100}%` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+              </div>
+            </div>
+        </div>
         </div>
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] overflow-hidden">
-        {/* Left Column - Tree Canvas */}
-        <div className="flex-1 min-h-[400px] lg:min-h-0 min-w-0 bg-gray-950/50 lg:border-r border-b lg:border-b-0 border-gray-800 relative overflow-auto">
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            {/* Canvas Container */}
+      <div className="relative flex flex-col lg:flex-row h-[calc(100vh-88px)] overflow-hidden">
+        {/* Left Column - Holographic Mission Map */}
+        <div className="flex-1 min-h-[400px] lg:min-h-0 min-w-0 relative overflow-hidden" style={{
+          background: `
+            linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.9) 100%),
+            radial-gradient(circle at 30% 70%, rgba(250, 182, 23, 0.03) 0%, transparent 40%)
+          `,
+        }}>
+          {/* Map Frame Decoration */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Corner brackets */}
+            <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
+            <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
+            <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
+            <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
+            
+            {/* HUD overlay elements */}
+            <div className="absolute top-8 left-8 text-[10px] text-yellow-500/60 font-mono uppercase tracking-wider">
+              <div>MAP // TACTICAL VIEW</div>
+              <div className="text-gray-500">ZOOM: 100%</div>
+            </div>
+            
+            <div className="absolute top-8 right-8 text-right text-[10px] text-yellow-500/60 font-mono uppercase tracking-wider">
+              <div>NODE COUNT: {nodes.length}</div>
+              <div className="text-gray-500">PATHS: {connections.length}</div>
+            </div>
+            
+            {/* Animated scan effect */}
+            <div className="absolute inset-0 opacity-10" style={{
+              background: `linear-gradient(to bottom, transparent 0%, rgba(250, 182, 23, 0.1) 50%, transparent 100%)`,
+              height: '20%',
+              animation: 'scan 4s linear infinite',
+            }} />
+          </div>
+          
+          <div className="relative flex-1 min-h-[400px] lg:min-h-0 min-w-0 lg:border-r-2 border-b lg:border-b-0 border-yellow-500/20 overflow-auto">
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            {/* Canvas Container with holographic effect */}
             <div 
               ref={canvasRef}
               className="relative w-full h-full"
@@ -181,23 +292,49 @@ export default function StoryClimbPage() {
                 minWidth: '600px',
                 minHeight: '800px',
                 maxWidth: '1200px',
-                maxHeight: '1400px'
+                maxHeight: '1400px',
+                filter: 'contrast(1.1)',
               }}
             >
-              {/* Background Grid */}
-              <div className="absolute inset-0 opacity-5">
+              {/* Holographic Grid Background */}
+              <div className="absolute inset-0">
                 <svg className="w-full h-full">
                   <defs>
+                    {/* Main grid pattern */}
                     <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="white" strokeWidth="0.5"/>
+                      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(250, 182, 23, 0.1)" strokeWidth="0.5"/>
                     </pattern>
+                    {/* Secondary grid for depth */}
+                    <pattern id="grid2" width="100" height="100" patternUnits="userSpaceOnUse">
+                      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(34, 211, 238, 0.05)" strokeWidth="1"/>
+                    </pattern>
+                    {/* Glow filter for nodes */}
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
                   </defs>
                   <rect width="100%" height="100%" fill="url(#grid)" />
+                  <rect width="100%" height="100%" fill="url(#grid2)" opacity="0.5" />
                 </svg>
               </div>
 
-              {/* Connections */}
+              {/* Connections with energy flow effect */}
               <svg className="absolute inset-0 pointer-events-none">
+                <defs>
+                  <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(250, 182, 23, 0.6)" />
+                    <stop offset="50%" stopColor="rgba(250, 182, 23, 0.3)" />
+                    <stop offset="100%" stopColor="rgba(250, 182, 23, 0.6)" />
+                  </linearGradient>
+                  <linearGradient id="inactiveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(100, 100, 100, 0.2)" />
+                    <stop offset="100%" stopColor="rgba(100, 100, 100, 0.1)" />
+                  </linearGradient>
+                </defs>
                 {connections.map((conn, idx) => {
                   const fromNode = nodes.find(n => n.id === conn.from);
                   const toNode = nodes.find(n => n.id === conn.to);
@@ -212,21 +349,48 @@ export default function StoryClimbPage() {
                   const y2 = canvasDimensions.height - toNode.y - 100;
                   
                   const isActive = fromNode.completed || fromNode.current || fromNode.available;
+                  const isHighlighted = (selectedNode?.id === fromNode.id || selectedNode?.id === toNode.id);
                   
                   return (
-                    <line
-                      key={idx}
-                      x1={x1} y1={y1} x2={x2} y2={y2}
-                      stroke={isActive ? "#6b7280" : "#1f2937"}
-                      strokeWidth="2"
-                      strokeDasharray={isActive ? "0" : "5,5"}
-                      opacity={isActive ? 0.6 : 0.3}
-                    />
+                    <g key={idx}>
+                      {/* Shadow/glow for active connections */}
+                      {isActive && (
+                        <line
+                          x1={x1} y1={y1} x2={x2} y2={y2}
+                          stroke="rgba(250, 182, 23, 0.2)"
+                          strokeWidth="6"
+                          filter="blur(2px)"
+                        />
+                      )}
+                      {/* Main connection line */}
+                      <line
+                        x1={x1} y1={y1} x2={x2} y2={y2}
+                        stroke={isActive ? "url(#activeGradient)" : "url(#inactiveGradient)"}
+                        strokeWidth={isHighlighted ? "3" : "2"}
+                        strokeDasharray={isActive ? "0" : "5,5"}
+                        opacity={isHighlighted ? 1 : isActive ? 0.7 : 0.3}
+                        className={isActive ? "transition-all duration-300" : ""}
+                      />
+                      {/* Energy pulse animation for active paths */}
+                      {isActive && fromNode.current && (
+                        <circle r="3" fill="rgba(250, 182, 23, 0.8)">
+                          <animateMotion dur="2s" repeatCount="indefinite">
+                            <mpath href={`#path-${idx}`} />
+                          </animateMotion>
+                        </circle>
+                      )}
+                      <path
+                        id={`path-${idx}`}
+                        d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                        fill="none"
+                        stroke="none"
+                      />
+                    </g>
                   );
                 })}
               </svg>
 
-              {/* Nodes */}
+              {/* Nodes with holographic styling */}
               {nodes.map(node => {
                 const nodeSize = getNodeSize(node.storyNodeType);
                 // Use tracked canvas dimensions
@@ -235,36 +399,116 @@ export default function StoryClimbPage() {
                 const nodeX = centerX + node.x - nodeSize / 2;
                 const nodeY = canvasDimensions.height - node.y - 100 - nodeSize / 2;
                 
+                const isHovered = hoveredNode === node.id;
+                const isSelected = selectedNode?.id === node.id;
+                
                 return (
                   <div
                     key={node.id}
-                    className={`absolute cursor-pointer transition-all duration-200 
-                      ${node.completed || node.available || node.current ? 'hover:scale-110' : 'cursor-not-allowed'}`}
+                    className={`absolute transition-all duration-300 
+                      ${node.completed || node.available || node.current ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                     style={{
                       left: `${nodeX}px`,
                       top: `${nodeY}px`,
                       width: `${nodeSize}px`,
                       height: `${nodeSize}px`,
+                      transform: isHovered ? 'scale(1.15)' : isSelected ? 'scale(1.1)' : 'scale(1)',
+                      zIndex: isHovered || isSelected ? 10 : 1,
                     }}
                     onClick={() => handleNodeClick(node)}
                     onMouseEnter={() => setHoveredNode(node.id)}
                     onMouseLeave={() => setHoveredNode(null)}
                   >
-                    <div className={`w-full h-full rounded-xl border-2 flex flex-col items-center justify-center
-                      bg-gradient-to-br ${getNodeStyle(node)}
-                      ${selectedNode?.id === node.id ? 'ring-4 ring-yellow-400/50 shadow-lg shadow-yellow-400/25' : ''}
-                    `}>
-                      <span className="text-2xl">{getNodeIcon(node.storyNodeType)}</span>
-                      <span className="text-xs font-bold mt-1 text-center px-1">{node.label}</span>
+                    {/* Holographic glow effect */}
+                    {(isHovered || isSelected || node.current) && (
+                      <div className="absolute inset-0 rounded-xl" style={{
+                        background: node.storyNodeType === 'final_boss' 
+                          ? 'radial-gradient(circle, rgba(250, 182, 23, 0.3) 0%, transparent 70%)'
+                          : node.storyNodeType === 'boss'
+                          ? 'radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%)'
+                          : node.storyNodeType === 'event'
+                          ? 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)'
+                          : 'radial-gradient(circle, rgba(250, 182, 23, 0.2) 0%, transparent 70%)',
+                        filter: 'blur(8px)',
+                        animation: node.current ? 'pulse 2s infinite' : '',
+                      }} />
+                    )}
+                    
+                    {/* Node container with industrial frame */}
+                    <div className={`relative w-full h-full rounded-xl border-2 overflow-hidden
+                      ${getNodeStyle(node)}
+                      ${isSelected ? 'ring-4 ring-yellow-400/60 shadow-2xl shadow-yellow-400/30' : ''}
+                    `}
+                    style={{
+                      background: `
+                        linear-gradient(135deg, 
+                          ${node.completed ? 'rgba(34, 197, 94, 0.2)' : 
+                            node.current ? 'rgba(59, 130, 246, 0.2)' :
+                            node.available ? 'rgba(250, 182, 23, 0.1)' :
+                            'rgba(0, 0, 0, 0.3)'} 0%,
+                          rgba(0, 0, 0, 0.6) 100%)
+                      `,
+                      backdropFilter: node.completed || node.available || node.current ? 'blur(4px)' : '',
+                    }}>
+                      {/* Inner holographic pattern */}
+                      <div className="absolute inset-0 opacity-30" style={{
+                        backgroundImage: `
+                          repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 3px,
+                            rgba(255, 255, 255, 0.03) 3px,
+                            rgba(255, 255, 255, 0.03) 6px
+                          )
+                        `,
+                      }} />
+                      
+                      {/* Node content */}
+                      <div className="relative h-full flex flex-col items-center justify-center p-2">
+                        <span className="text-2xl drop-shadow-lg" style={{
+                          filter: node.storyNodeType === 'final_boss' || node.storyNodeType === 'boss' 
+                            ? 'drop-shadow(0 0 8px rgba(250, 182, 23, 0.5))' 
+                            : '',
+                        }}>
+                          {getNodeIcon(node.storyNodeType)}
+                        </span>
+                        <span className="text-xs font-bold mt-1 text-center px-1 uppercase tracking-wider"
+                          style={{ 
+                            fontFamily: "'Orbitron', sans-serif",
+                            textShadow: '0 0 4px rgba(0, 0, 0, 0.8)',
+                          }}>
+                          {node.label}
+                        </span>
+                      </div>
+                      
+                      {/* Status badges */}
                       {node.current && (
-                        <div className="absolute -bottom-3 px-2 py-0.5 bg-blue-500 rounded text-xs font-bold animate-pulse">
-                          CURRENT
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-500 rounded-full text-xs font-bold animate-pulse uppercase tracking-wider"
+                          style={{ 
+                            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+                            fontFamily: "'Orbitron', sans-serif",
+                          }}>
+                          ACTIVE
                         </div>
                       )}
                       {node.id === 'start' && (
-                        <div className="absolute -bottom-3 px-2 py-0.5 bg-green-500 rounded text-xs font-bold">
-                          START
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 rounded-full text-xs font-bold uppercase tracking-wider"
+                          style={{ 
+                            boxShadow: '0 0 20px rgba(34, 197, 94, 0.5)',
+                            fontFamily: "'Orbitron', sans-serif",
+                          }}>
+                          ORIGIN
                         </div>
+                      )}
+                      
+                      {/* Corner accents for special nodes */}
+                      {(node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') && (
+                        <>
+                          <div className="absolute top-0 left-0 w-3 h-3 border-l-2 border-t-2 border-yellow-400" />
+                          <div className="absolute top-0 right-0 w-3 h-3 border-r-2 border-t-2 border-yellow-400" />
+                          <div className="absolute bottom-0 left-0 w-3 h-3 border-l-2 border-b-2 border-yellow-400" />
+                          <div className="absolute bottom-0 right-0 w-3 h-3 border-r-2 border-b-2 border-yellow-400" />
+                        </>
                       )}
                     </div>
                   </div>
@@ -272,10 +516,41 @@ export default function StoryClimbPage() {
               })}
             </div>
           </div>
+          </div>
+          
+          {/* Map Controls Overlay */}
+          <div className="absolute bottom-4 left-4 flex gap-2">
+            <button className="px-3 py-1.5 bg-black/80 border border-yellow-500/30 hover:border-yellow-500 text-xs text-yellow-400 font-bold uppercase tracking-wider transition-all"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <span className="text-lg">+</span>
+            </button>
+            <button className="px-3 py-1.5 bg-black/80 border border-yellow-500/30 hover:border-yellow-500 text-xs text-yellow-400 font-bold uppercase tracking-wider transition-all"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <span className="text-lg">-</span>
+            </button>
+            <button className="px-3 py-1.5 bg-black/80 border border-yellow-500/30 hover:border-yellow-500 text-xs text-yellow-400 font-bold uppercase tracking-wider transition-all"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              CENTER
+            </button>
+          </div>
         </div>
 
-        {/* Right Column - Mission Details */}
-        <div className="w-full lg:w-[400px] xl:w-[450px] 2xl:w-[500px] min-h-[300px] lg:min-h-0 bg-black/90 flex flex-col overflow-hidden">
+        {/* Right Column - Tactical Briefing Panel */}
+        <div className="w-full lg:w-[400px] xl:w-[450px] 2xl:w-[500px] min-h-[300px] lg:min-h-0 relative flex flex-col overflow-hidden"
+          style={{
+            background: `
+              linear-gradient(to right, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.9)),
+              radial-gradient(circle at 70% 30%, rgba(250, 182, 23, 0.02) 0%, transparent 40%)
+            `,
+          }}>
+          {/* Panel frame decoration */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Vertical accent line */}
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-yellow-500/50 to-transparent" />
+            
+            {/* Panel header accent */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-yellow-500/50 via-yellow-500/20 to-transparent" />
+          </div>
           <IndustrialMissionCard 
             nodeData={selectedNode}
             onStartMission={handleStartMission}

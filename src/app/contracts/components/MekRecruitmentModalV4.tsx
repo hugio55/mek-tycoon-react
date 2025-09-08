@@ -119,6 +119,7 @@ export default function MekRecruitmentModalV4({
   const [hoveredMekBonus, setHoveredMekBonus] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
+  const [percentageStyle, setPercentageStyle] = useState<'glow' | 'neon' | 'emerald'>('glow');
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -682,6 +683,26 @@ export default function MekRecruitmentModalV4({
                       <option value={100}>100 MEKS</option>
                     </select>
                     <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500/50 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  {/* Percentage Style Selector */}
+                  <div className="relative">
+                    <label className="text-[10px] text-yellow-500/60 uppercase tracking-wider block mb-1" style={{ fontFamily: "'Orbitron', monospace" }}>
+                      % STYLE
+                    </label>
+                    <select 
+                      value={percentageStyle}
+                      onChange={(e) => setPercentageStyle(e.target.value as 'glow' | 'neon' | 'emerald')}
+                      className="bg-black/40 border border-yellow-500/30 text-yellow-400 px-3 py-2 text-xs uppercase tracking-wider focus:border-yellow-400/50 focus:outline-none appearance-none pr-8 cursor-pointer transition-all hover:border-yellow-400/40"
+                      style={{ fontFamily: "'Orbitron', monospace" }}
+                    >
+                      <option value="glow">Glow Green</option>
+                      <option value="neon">Neon Lime</option>
+                      <option value="emerald">Emerald</option>
+                    </select>
+                    <svg className="absolute right-2 bottom-2.5 w-4 h-4 text-yellow-500/50 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
