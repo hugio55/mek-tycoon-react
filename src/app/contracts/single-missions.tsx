@@ -1567,7 +1567,7 @@ export default function ContractsLayoutOption11() {
                                     )}
                                     {/* Style 3: Glow Ring */}
                                     {traitIndicatorStyle === 3 && (
-                                      <div className="absolute inset-0 border-2 border-yellow-400 animate-pulse pointer-events-none" />
+                                      <div className="absolute inset-0 border-2 border-yellow-400 animate-pulse pointer-events-none overflow-hidden" />
                                     )}
                                     {/* Style 4: Star Icon */}
                                     {traitIndicatorStyle === 4 && (
@@ -2151,52 +2151,9 @@ export default function ContractsLayoutOption11() {
   }, [animatedSuccessRate, animatingSuccess]);
   
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div 
-          className="absolute left-0 top-0 w-full h-full"
-          style={{
-            background: `
-              radial-gradient(ellipse at 0% 30%, rgba(250, 182, 23, 0.15) 0%, transparent 40%),
-              radial-gradient(ellipse at 100% 70%, rgba(250, 182, 23, 0.15) 0%, transparent 40%)
-            `
-          }}
-        />
-        
-        {stars.map((star) => (
-          <div
-            key={star.id}
-            className="absolute rounded-full bg-white"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animation: star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : 'none',
-              animationDelay: star.twinkle ? `${star.opacity * 2}s` : '0s',
-            }}
-          />
-        ))}
-      </div>
-      
-      <style jsx>{`
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 1; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
-      
+    <div className="min-h-screen text-white overflow-x-hidden overflow-y-hidden relative">
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-7xl mx-auto px-6 py-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-yellow-400">CONTRACTS SYSTEM</h1>
@@ -2240,7 +2197,7 @@ export default function ContractsLayoutOption11() {
       {/* Buff Details Modal */}
       {selectedBuff && (
         <div 
-          className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 transition-all duration-300"
+          className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-12 overflow-y-auto overflow-x-hidden transition-all duration-300"
           style={{ backdropFilter: 'blur(8px)' }}
           onClick={() => setSelectedBuff(null)}
         >
@@ -2309,8 +2266,8 @@ export default function ContractsLayoutOption11() {
           {buffModalStyle === 2 && (
             <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Holographic Frame */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
+              <div className="relative overflow-hidden rounded-full">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse pointer-events-none" />
                 <div className="relative w-72 h-72 rounded-full border-2 border-cyan-400/50 overflow-hidden">
                   <Image
                     src={selectedBuff.image}
@@ -2359,10 +2316,10 @@ export default function ContractsLayoutOption11() {
           {buffModalStyle === 3 && (
             <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Stacked Card Effect */}
-              <div className="relative">
-                {/* Back cards */}
-                <div className="absolute -left-4 top-4 w-64 h-64 rounded-2xl bg-gray-800/40 transform -rotate-6" />
-                <div className="absolute -right-4 top-4 w-64 h-64 rounded-2xl bg-gray-700/40 transform rotate-6" />
+              <div className="relative overflow-visible" style={{ padding: '1rem' }}>
+                {/* Back cards - Contained within parent */}
+                <div className="absolute left-0 top-4 w-64 h-64 rounded-2xl bg-gray-800/40 transform -rotate-6 origin-center" style={{ left: '-1rem' }} />
+                <div className="absolute right-0 top-4 w-64 h-64 rounded-2xl bg-gray-700/40 transform rotate-6 origin-center" style={{ right: '-1rem' }} />
                 
                 {/* Main Image Card */}
                 <div className="relative w-64 h-64 rounded-2xl overflow-hidden border-4 border-yellow-400/60 shadow-2xl">
@@ -2417,7 +2374,7 @@ export default function ContractsLayoutOption11() {
             <div className="relative max-w-3xl w-full modal-slideUp" onClick={(e) => e.stopPropagation()}>
               <div className="flex gap-6 items-center">
                 {/* Left: Large Floating Image */}
-                <div className="relative flex-shrink-0">
+                <div className="relative flex-shrink-0 overflow-hidden rounded-full">
                   <div className="w-80 h-80 rounded-full overflow-hidden border-4 border-gradient-to-r from-yellow-400 to-orange-400 shadow-2xl">
                     <Image
                       src={selectedBuff.image}
@@ -2428,9 +2385,9 @@ export default function ContractsLayoutOption11() {
                     />
                     <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   </div>
-                  {/* Decorative rings */}
-                  <div className="absolute inset-0 rounded-full border-2 border-yellow-400/20 animate-ping" />
-                  <div className="absolute inset-2 rounded-full border border-yellow-400/10 animate-pulse" />
+                  {/* Decorative rings - Fixed to prevent overflow */}
+                  <div className="absolute inset-0 rounded-full border-2 border-yellow-400/20 animate-ping pointer-events-none" style={{ animation: 'ping-contained 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+                  <div className="absolute inset-2 rounded-full border border-yellow-400/10 animate-pulse pointer-events-none" />
                 </div>
 
                 {/* Right: Info Panel */}

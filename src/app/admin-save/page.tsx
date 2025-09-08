@@ -9,6 +9,7 @@ export default function AdminSavePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedSaveId, setSelectedSaveId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
 
@@ -118,6 +119,61 @@ export default function AdminSavePage() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Error deleting save: ' + (error instanceof Error ? error.message : 'Unknown error') });
+    }
+  };
+
+  // Handle syncing saves from filesystem to database
+  const handleSyncSaves = async () => {
+    setIsSyncing(true);
+    setMessage({ type: 'info', text: 'Syncing saves from filesystem...' });
+
+    try {
+      // Fetch existing saves from filesystem
+      const response = await fetch('/api/sync-saves', {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.savesFound) {
+        // Get existing saves from database to avoid duplicates
+        const existingSaveNames = saves?.map(s => s.name) || [];
+        
+        let importedCount = 0;
+        for (const saveData of result.savesFound) {
+          // Skip if save already exists in database
+          if (existingSaveNames.includes(saveData.name)) {
+            continue;
+          }
+          
+          // Add to database
+          await createSave({
+            name: saveData.name,
+            description: saveData.description,
+            filesCount: saveData.filesCount,
+            sizeInBytes: saveData.sizeInBytes,
+          });
+          importedCount++;
+        }
+
+        if (importedCount > 0) {
+          setMessage({ 
+            type: 'success', 
+            text: `Successfully imported ${importedCount} saves from filesystem!` 
+          });
+        } else {
+          setMessage({ 
+            type: 'info', 
+            text: `All ${result.count} saves are already in the database.` 
+          });
+        }
+      } else {
+        setMessage({ type: 'error', text: result.error || 'No saves found to sync' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error syncing saves: ' + (error instanceof Error ? error.message : 'Unknown error') });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -234,7 +290,33 @@ export default function AdminSavePage() {
 
         {/* Existing Saves Section */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-4">Previous Saves</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-yellow-400">Previous Saves</h2>
+            
+            {/* Sync Button */}
+            {saves && saves.length === 0 && (
+              <button
+                onClick={handleSyncSaves}
+                disabled={isSyncing}
+                className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  isSyncing
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-purple-500/30'
+                }`}
+              >
+                {isSyncing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Syncing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    🔄 <span>Sync Filesystem Saves</span>
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
           
           {!saves ? (
             <div className="text-center py-8 text-gray-500">Loading saves...</div>

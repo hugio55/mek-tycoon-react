@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import BackgroundEffects from "@/components/BackgroundEffects";
 import MekImage from "@/components/MekImage";
 import EssenceChart, { type EssenceData } from "@/components/EssenceChart";
 import Image from "next/image";
@@ -263,19 +262,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute left-0 top-0 w-full h-full" style={{
-          background: `
-            radial-gradient(ellipse at 20% 20%, rgba(250, 182, 23, 0.03) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 80%, rgba(250, 182, 23, 0.02) 0%, transparent 50%),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 1) 100%)
-          `
-        }} />
-      </div>
-      
-      <div className="relative z-10 p-5">
-        <BackgroundEffects />
+    <div className="min-h-screen text-white overflow-hidden relative">
+      <div className="relative p-5">
         
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Top Controls */}

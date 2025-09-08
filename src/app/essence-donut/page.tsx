@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import BackgroundEffects from "@/components/BackgroundEffects";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 
@@ -48,11 +47,11 @@ const generateEssenceData = () => {
     else if (index === 13) amount = 1.8;
     else if (index === 14) amount = 8.2; // Another buffed example
     else if (index < 25) {
-      // Some with very low amounts (0.05-2)
-      amount = 0.05 + Math.random() * 1.95;
+      // Some with very low amounts (0.05-2) - deterministic based on index
+      amount = 0.05 + ((index * 7) % 20) * 0.0975;
     } else {
-      // Rest with scattered amounts (0.1-3)
-      amount = 0.1 + Math.random() * 2.9;
+      // Rest with scattered amounts (0.1-3) - deterministic based on index
+      amount = 0.1 + ((index * 11) % 30) * 0.0967;
     }
     
     let maxAmount = 10;
@@ -75,7 +74,7 @@ const generateEssenceData = () => {
       id: name.toLowerCase().replace(/\s+/g, '-'),
       name,
       amount: parseFloat(amount.toFixed(2)),
-      currentValue: Math.floor(100 + Math.random() * 900), // Random value 100-1000
+      currentValue: Math.floor(100 + ((index * 13 + 7) % 900)), // Deterministic value 100-1000
       maxAmount,
       maxAmountBuffed,
       icon: ["🔮", "💎", "⚡", "🌟", "🔥", "❄️", "🌿", "💫", "✨", "🌊"][index % 10],
@@ -137,8 +136,7 @@ export default function EssenceDonutPage() {
   }, [displayedEssences]);
   
   return (
-    <div className="min-h-screen bg-black relative">
-      <BackgroundEffects />
+    <div className="min-h-screen relative">
       
       <div className="relative z-10 text-white">
         {/* Industrial Header */}

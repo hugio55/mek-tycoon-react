@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import BackgroundEffects from "@/components/BackgroundEffects";
 import MekImage from "@/components/MekImage";
 import Link from "next/link";
 
@@ -322,7 +321,6 @@ export default function LeaderboardPage() {
           color: #ffd700 !important;
         }
       `}</style>
-      <BackgroundEffects />
       
       {/* Epic Title */}
       <div className="text-center mb-12">

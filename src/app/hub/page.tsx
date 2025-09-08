@@ -16,7 +16,7 @@ export default function HubPage() {
   const [goldPerSecond, setGoldPerSecond] = useState(0);
   const [lastGoldFetch, setLastGoldFetch] = useState(Date.now());
   const [cachedGoldData, setCachedGoldData] = useState<{goldPerHour: number; goldPerSecond: number} | null>(null);
-  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
+  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, direction: string, speed: number, delay: number}>>([]);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(0);
   const [initError, setInitError] = useState<string | null>(null);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
@@ -116,6 +116,9 @@ export default function HubPage() {
         size: Math.random() * 3 + 0.5,
         opacity: Math.random() * 0.8 + 0.2,
         twinkle: Math.random() > 0.5,
+        direction: Math.random() > 0.5 ? 'horizontal' : 'vertical', // Random movement direction
+        speed: Math.random() * 60 + 120, // Random speed between 120-180 seconds
+        delay: Math.random() * 60, // Random delay up to 60 seconds
       }));
     });
   }, [getOrCreateUser, getInitialGold]);
@@ -277,7 +280,7 @@ export default function HubPage() {
 
   if (initError) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-400 text-2xl mb-4">Error Loading Hub</div>
           <div className="text-gray-400">{initError}</div>
@@ -294,7 +297,7 @@ export default function HubPage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-yellow-400 text-2xl animate-pulse">
           Initializing user...
         </div>
@@ -304,7 +307,7 @@ export default function HubPage() {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-yellow-400 text-2xl animate-pulse mb-4">
             Loading Hub...
@@ -318,7 +321,7 @@ export default function HubPage() {
   }
   
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative z-10">
+    <div className="min-h-screen text-white overflow-hidden relative">
       <style jsx>{`
         @keyframes collectGold {
           0% { transform: scale(1); }
@@ -349,6 +352,21 @@ export default function HubPage() {
           from { transform: translateX(-100px); }
           to { transform: translateX(calc(100vw + 100px)); }
         }
+        @keyframes slowDriftHorizontal {
+          from { transform: translateX(-20px); }
+          to { transform: translateX(calc(100vw + 20px)); }
+        }
+        @keyframes slowDriftVertical {
+          from { transform: translateY(-20px); }
+          to { transform: translateY(calc(100vh + 20px)); }
+        }
+        @keyframes slowFloat {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(10px, -15px) rotate(0.5deg); }
+          50% { transform: translate(-5px, -25px) rotate(-0.3deg); }
+          75% { transform: translate(-15px, -10px) rotate(0.2deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
         @keyframes goldPopup {
           0% {
             opacity: 0;
@@ -378,21 +396,39 @@ export default function HubPage() {
         />
         
         {/* Dynamic Stars */}
-        {stars.map((star) => (
-          <div
-            key={star.id}
-            className="absolute rounded-full bg-white"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animation: star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : 'none',
-              animationDelay: star.twinkle ? `${star.opacity * 2}s` : '0s',
-            }}
-          />
-        ))}
+        {stars.map((star) => {
+          // Determine movement animation based on direction
+          let movementAnimation = '';
+          if (star.direction === 'horizontal') {
+            movementAnimation = `slowDriftHorizontal ${star.speed}s linear infinite`;
+          } else if (star.direction === 'vertical') {
+            movementAnimation = `slowDriftVertical ${star.speed}s linear infinite`;
+          } else {
+            movementAnimation = `slowFloat ${star.speed}s ease-in-out infinite`;
+          }
+          
+          // Combine twinkle and movement animations
+          const animations = [
+            movementAnimation,
+            star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : ''
+          ].filter(Boolean).join(', ');
+          
+          return (
+            <div
+              key={star.id}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: star.left,
+                top: star.top,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                animation: animations,
+                animationDelay: `${star.delay}s, ${star.twinkle ? star.opacity * 2 : 0}s`,
+              }}
+            />
+          );
+        })}
       </div>
       
       {/* Main Content */}

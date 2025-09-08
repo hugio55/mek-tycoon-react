@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import MissionCard from "./MissionCard";
+import IndustrialMissionCard from "./IndustrialMissionCard";
 import { transformNodesToDisplaySpace, getNodeSize, getNodeIcon } from "../../../lib/story-tree-utils";
 
 // Node types matching the story builder
@@ -737,7 +737,7 @@ export default function StoryClimbPage() {
         
         {/* Right Panel - Mission Card */}
         <div className="w-96 bg-gray-900/50 backdrop-blur-md border-l border-gray-800 flex flex-col">
-          <MissionCard 
+          <IndustrialMissionCard 
             nodeData={selectedNode}
             onStartMission={handleStartMission}
             simulateProgress={simulateProgress}

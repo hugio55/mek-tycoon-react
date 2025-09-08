@@ -138,7 +138,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Night sky stars across entire page */}
       <div className="absolute inset-0">
         {backgroundStars.map((star) => (

@@ -108,15 +108,23 @@ export default function MekRecruitmentModalV4({
   const [searchTerm, setSearchTerm] = useState("");
   const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
-  const [allMeks] = useState(() => generateSampleMeks(mekCount));
+  const [maxMeksToShow, setMaxMeksToShow] = useState<1 | 5 | 20 | 40 | 100>(20);
+  // Generate meks based on the maximum we might show (100), not the initial mekCount
+  const [allMeks] = useState(() => generateSampleMeks(100));
   const [hoveredMekIndex, setHoveredMekIndex] = useState<number | null>(null);
   const [hoveredVariation, setHoveredVariation] = useState<string | null>(null);
   const [currentStyle, setCurrentStyle] = useState<keyof typeof uiStyles>('gradient');
   const [variationCount, setVariationCount] = useState<1 | 5 | 10>(5);
   const [sortByMatch, setSortByMatch] = useState(true);
   const [hoveredMekBonus, setHoveredMekBonus] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
 
   if (!showMekModal || !selectedMekSlot) return null;
+
+  // Calculate pagination values - always use pagination
+  const itemsPerPage = isZoomedOut ? 48 : 12; // Always paginate regardless of count
+  const columnsPerRow = isZoomedOut ? 8 : 4;
 
   const style = uiStyles[currentStyle];
   const missionId = selectedMekSlot.missionId;
@@ -198,6 +206,20 @@ export default function MekRecruitmentModalV4({
     });
   }
 
+  // Calculate total pages based on maxMeksToShow
+  const totalMeksToDisplay = Math.min(displayMeks.length, maxMeksToShow);
+  const totalPages = Math.ceil(totalMeksToDisplay / itemsPerPage);
+  
+  // Ensure current page is valid
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(1);
+  }
+  
+  // Get meks for current page
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalMeksToDisplay);
+  const currentPageMeks = displayMeks.slice(startIndex, endIndex);
+
   // Particle system for background
   const particleCount = 30;
   const particles = Array.from({ length: particleCount }, (_, i) => ({
@@ -211,95 +233,17 @@ export default function MekRecruitmentModalV4({
 
   return (
     <ModalPortal>
-      <style jsx>{`
-        @keyframes pulseFast {
-          0%, 100% { 
-            box-shadow: 0 0 15px rgba(250, 182, 23, 0.8),
-                       0 0 30px rgba(250, 182, 23, 0.4),
-                       inset 0 0 10px rgba(250, 182, 23, 0.2);
-          }
-          50% { 
-            box-shadow: 0 0 25px rgba(250, 182, 23, 1),
-                       0 0 50px rgba(250, 182, 23, 0.6),
-                       inset 0 0 15px rgba(250, 182, 23, 0.3);
-          }
-        }
-        @keyframes pulseGreen {
-          0%, 100% { 
-            opacity: 0.6;
-            filter: brightness(1);
-          }
-          50% { 
-            opacity: 0.8;
-            filter: brightness(1.2);
-          }
-        }
-        @keyframes hologramGlitch {
-          0%, 100% { transform: translateX(0); opacity: 1; }
-          10% { transform: translateX(-2px); opacity: 0.8; }
-          20% { transform: translateX(2px); opacity: 0.9; }
-          30% { transform: translateX(-1px); opacity: 1; }
-        }
-        @keyframes dataStream {
-          0% { transform: translateY(100%); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(-100%); opacity: 0; }
-        }
-        @keyframes neonPulse {
-          0%, 100% { 
-            text-shadow: 0 0 5px rgba(250, 182, 23, 0.8),
-                        0 0 10px rgba(250, 182, 23, 0.6),
-                        0 0 15px rgba(250, 182, 23, 0.4);
-          }
-          50% { 
-            text-shadow: 0 0 10px rgba(250, 182, 23, 1),
-                        0 0 20px rgba(250, 182, 23, 0.8),
-                        0 0 30px rgba(250, 182, 23, 0.6);
-          }
-        }
-        @keyframes floatParticle {
-          0% { transform: translate(0, 0) scale(1); opacity: 0; }
-          10% { opacity: 0.4; }
-          90% { opacity: 0.4; }
-          100% { transform: translate(var(--float-x), var(--float-y)) scale(0.5); opacity: 0; }
-        }
-        @keyframes hexGrid {
-          0% { opacity: 0.03; }
-          50% { opacity: 0.08; }
-          100% { opacity: 0.03; }
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .hologram-text {
-          animation: hologramGlitch 8s infinite;
-        }
-        .neon-glow {
-          animation: neonPulse 2s ease-in-out infinite;
-        }
-        .hazard-stripes {
-          background-image: repeating-linear-gradient(
-            45deg,
-            rgba(250, 182, 23, 0.1),
-            rgba(250, 182, 23, 0.1) 10px,
-            transparent 10px,
-            transparent 20px
-          );
-        }
-      `}</style>
       
       {/* Enhanced backdrop with animated particles - click outside to close */}
       <div 
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center overflow-hidden"
+        className="fixed inset-0 bg-black/50 z-[9999] flex items-start justify-center pt-12 overflow-y-auto overflow-x-hidden"
         onClick={onClose}
       >
         {/* Animated backdrop blur effect - reduced by 50% */}
         <div className="absolute inset-0 backdrop-blur-sm" />
         
         {/* Floating particle system */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {particles.map(particle => (
             <div
               key={particle.id}
@@ -309,8 +253,8 @@ export default function MekRecruitmentModalV4({
                 top: `${particle.y}%`,
                 width: `${particle.size}px`,
                 height: `${particle.size}px`,
-                '--float-x': `${Math.random() * 200 - 100}px`,
-                '--float-y': `${Math.random() * -200 - 100}px`,
+                '--float-x': `${Math.random() * 60 - 30}px`,
+                '--float-y': `${Math.random() * -60 - 30}px`,
                 animation: `floatParticle ${particle.duration}s ${particle.delay}s infinite ease-out`
               } as any}
             />
@@ -327,8 +271,7 @@ export default function MekRecruitmentModalV4({
           }}
         />
         <div 
-          className="w-full max-w-[900px] mx-auto my-8 relative scan-line"
-          style={{ maxHeight: '90vh' }}
+          className="w-full max-w-[900px] mx-auto relative scan-line mb-12"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Industrial hazard stripes overlay */}
@@ -365,7 +308,7 @@ export default function MekRecruitmentModalV4({
           </div>
           
           {/* Main container with industrial aesthetic */}
-          <div className="relative bg-black/80 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden">
+          <div className="relative bg-black/80 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden max-w-full">
             {/* Inner glow effect */}
             <div className="absolute inset-0 bg-gradient-to-t from-amber-950/20 via-transparent to-transparent pointer-events-none" />
             
@@ -377,7 +320,7 @@ export default function MekRecruitmentModalV4({
             
             
             {/* Industrial header */}
-            <div className="relative bg-gradient-to-r from-stone-900/90 via-amber-950/50 to-stone-900/90 border-b-2 border-yellow-500/40 p-4 overflow-hidden">
+            <div className="relative bg-gradient-to-r from-stone-900/90 via-amber-950/50 to-stone-900/90 border-b-2 border-yellow-500/40 p-4 overflow-hidden max-w-full">
               {/* Animated background pattern */}
               <div className="absolute inset-0 opacity-30">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent" />
@@ -387,7 +330,7 @@ export default function MekRecruitmentModalV4({
                 <div className="flex-1">
                   <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 tracking-wider uppercase" 
                       style={{ fontFamily: "'Orbitron', 'Rajdhani', sans-serif", letterSpacing: '0.15em' }}>
-                    <span className="neon-glow">MEK RECRUITMENT INTERFACE</span>
+                    <span className="neon-glow">MEK RECRUITMENT</span>
                   </h2>
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-yellow-400/80 text-xs font-medium uppercase tracking-wider">
@@ -405,7 +348,7 @@ export default function MekRecruitmentModalV4({
                       </div>
                       <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400" 
                         style={{ fontFamily: "'Orbitron', monospace" }}>
-                        {Math.round((displayMeks.filter((m: any) => m.hasMatch).length / Math.max(1, displayMeks.length)) * 100 + (hoveredMekBonus || 0))}%
+                        {Math.round(35 + (hoveredMekBonus || 0))}%
                       </div>
                     </div>
                     
@@ -428,7 +371,7 @@ export default function MekRecruitmentModalV4({
                       <div 
                         className="absolute inset-0 transition-all duration-700 ease-out"
                         style={{ 
-                          width: `${Math.min(100, (displayMeks.filter((m: any) => m.hasMatch).length / Math.max(1, displayMeks.length)) * 100)}%`,
+                          width: `${35}%`,
                           background: `linear-gradient(90deg, 
                             rgba(250, 182, 23, 0.8) 0%, 
                             rgba(245, 158, 11, 0.9) 50%, 
@@ -442,7 +385,7 @@ export default function MekRecruitmentModalV4({
                                style={{ animation: 'shimmer 4s infinite' }} />
                         </div>
                         
-                        {/* Energy particles */}
+                        {/* Energy particles - FIXED to flow left to right */}
                         <div className="absolute inset-0 overflow-hidden">
                           {[...Array(3)].map((_, i) => (
                             <div
@@ -450,10 +393,9 @@ export default function MekRecruitmentModalV4({
                               className="absolute w-1 h-1 bg-white rounded-full"
                               style={{
                                 top: `${25 + i * 25}%`,
-                                animation: `floatParticle ${2 + i}s ${i * 0.3}s infinite linear`,
-                                '--float-x': '100px',
-                                '--float-y': '0px'
-                              } as any}
+                                left: '0',
+                                animation: `particleFlow ${2 + i}s ${i * 0.3}s infinite linear`
+                              }}
                             />
                           ))}
                         </div>
@@ -464,8 +406,8 @@ export default function MekRecruitmentModalV4({
                         <div 
                           className="absolute inset-0 transition-all duration-500"
                           style={{ 
-                            left: `${Math.min(100, (displayMeks.filter((m: any) => m.hasMatch).length / Math.max(1, displayMeks.length)) * 100)}%`,
-                            width: `${Math.min(100 - (displayMeks.filter((m: any) => m.hasMatch).length / Math.max(1, displayMeks.length)) * 100, hoveredMekBonus || 3)}%`,
+                            left: `${35}%`,
+                            width: `${Math.min(65, hoveredMekBonus || 3)}%`,
                             background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.6), rgba(74, 222, 128, 0.4))',
                             boxShadow: '0 0 20px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(34, 197, 94, 0.3)'
                           }}
@@ -506,8 +448,8 @@ export default function MekRecruitmentModalV4({
               </div>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto relative z-10" style={{ maxHeight: 'calc(85vh - 100px)' }}>
+            {/* Fixed Content Container - No Scrolling */}
+            <div className="relative z-10">
               
               {/* System Status */}
               <div className="px-6 pb-3 pt-4">
@@ -664,13 +606,145 @@ export default function MekRecruitmentModalV4({
                     )}
                     <span className="relative z-10">MATCHES ONLY</span>
                   </button>
+
+                  {/* Zoom Out Toggle */}
+                  <button
+                    onClick={() => {
+                      setIsZoomedOut(!isZoomedOut);
+                      setCurrentPage(1); // Reset to first page when toggling zoom
+                    }}
+                    className={`relative px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all overflow-hidden group ${
+                      isZoomedOut 
+                        ? 'text-black' 
+                        : 'text-yellow-400 hover:text-yellow-300'
+                    }`}
+                  >
+                    <div className={`absolute inset-0 transition-all ${
+                      isZoomedOut
+                        ? 'bg-gradient-to-r from-cyan-400 to-blue-500'
+                        : 'bg-black/40 group-hover:bg-black/60'
+                    }`} />
+                    <div className={`absolute inset-0 border transition-all ${
+                      isZoomedOut
+                        ? 'border-cyan-300/50'
+                        : 'border-yellow-500/30 group-hover:border-yellow-400/50'
+                    }`} />
+                    {isZoomedOut && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-[shimmer_3s_infinite]" />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {isZoomedOut ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                        )}
+                      </svg>
+                      {isZoomedOut ? 'ZOOM IN' : 'ZOOM OUT'}
+                    </span>
+                  </button>
+
+                  {/* Max Meks Dropdown */}
+                  <div className="relative">
+                    <select
+                      value={maxMeksToShow}
+                      onChange={(e) => {
+                        setMaxMeksToShow(Number(e.target.value) as 1 | 5 | 20 | 40 | 100);
+                        setCurrentPage(1); // Reset to first page when changing max meks
+                      }}
+                      className="bg-black/40 border border-yellow-500/30 text-yellow-400 px-3 py-2 text-xs uppercase tracking-wider focus:border-yellow-400/50 focus:outline-none appearance-none pr-8 cursor-pointer transition-all hover:border-yellow-400/40"
+                      style={{ fontFamily: "'Orbitron', monospace" }}
+                    >
+                      <option value={1}>1 MEK</option>
+                      <option value={5}>5 MEKS</option>
+                      <option value={20}>20 MEKS</option>
+                      <option value={40}>40 MEKS</option>
+                      <option value={100}>100 MEKS</option>
+                    </select>
+                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500/50 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
               </div>
 
               {/* Industrial Mek Grid */}
               <div className="p-6">
-                <div className="grid grid-cols-5 gap-3">
-                  {displayMeks.map(({ mek, matchedTraits, hasMatch, totalBonus, index }: any) => {
+                {/* Pagination Controls - Top */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs text-yellow-400/60 uppercase tracking-wider font-bold">
+                    SHOWING {startIndex + 1}-{endIndex} OF {totalMeksToDisplay} MEKS
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                        currentPage === 1
+                          ? 'text-gray-600 bg-black/20 border border-gray-800 cursor-not-allowed opacity-50'
+                          : 'text-yellow-400 bg-black/40 border border-yellow-500/30 hover:border-yellow-400/50 hover:text-yellow-300 hover:bg-black/60'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-8 h-8 text-xs font-bold transition-all ${
+                              currentPage === pageNum
+                                ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black border border-yellow-300/50'
+                                : 'text-yellow-400/60 bg-black/20 border border-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 hover:bg-black/40'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                        currentPage === totalPages || totalPages === 0
+                          ? 'text-gray-600 bg-black/20 border border-gray-800 cursor-not-allowed opacity-50'
+                          : 'text-yellow-400 bg-black/40 border border-yellow-500/30 hover:border-yellow-400/50 hover:text-yellow-300 hover:bg-black/60'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="text-xs text-yellow-400/60 uppercase tracking-wider font-bold">
+                    PAGE {currentPage} OF {totalPages || 1}
+                  </div>
+                </div>
+                
+                <div className={`grid ${isZoomedOut ? 'grid-cols-8 gap-2' : 'grid-cols-4 gap-3'} transition-all duration-500`}>
+                  {currentPageMeks.map(({ mek, matchedTraits, hasMatch, totalBonus, index }: any) => {
                     const actualIndex = allMeks.findIndex((m: any) => m.name === mek.name);
                     return (
                       <div
@@ -691,18 +765,24 @@ export default function MekRecruitmentModalV4({
                         className={`
                           group relative cursor-pointer transition-all duration-300 overflow-hidden
                           ${hasMatch 
-                            ? 'bg-gradient-to-b from-amber-950/30 to-black/80 border-2 border-yellow-400/50 shadow-[0_0_15px_rgba(250,182,23,0.3)]' 
+                            ? `border-2 bg-gradient-to-b from-amber-950/30 to-black/80 border-yellow-400 shadow-[0_0_15px_rgba(250,182,23,0.4)]`
                             : 'bg-gradient-to-b from-gray-900/30 to-black/60 border border-gray-700/30 hover:border-yellow-600/40'
                           }
-                          hover:scale-110 hover:z-20 hover:shadow-[0_0_20px_rgba(250,182,23,0.4)]
+                          ${isZoomedOut ? 'hover:scale-110' : 'hover:scale-105'} hover:z-20 hover:shadow-[0_0_20px_rgba(250,182,23,0.4)]
                         `}
                       >
                         {/* Industrial shine effect */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-yellow-400/0 to-transparent group-hover:via-yellow-400/10 transition-all duration-500 pointer-events-none" />
                         
-                        {/* Match indicator glow */}
+                        {/* Match indicator glow - color coded by match count */}
                         {hasMatch && (
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 opacity-40 blur-md" />
+                          <div className={`absolute -inset-0.5 opacity-40 blur-md ${
+                            matchedTraits.length === 3 
+                              ? 'bg-gradient-to-r from-orange-500 via-red-500 to-orange-500'
+                              : matchedTraits.length === 2
+                                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500'
+                                : 'bg-gradient-to-r from-white via-gray-300 to-white'
+                          }`} />
                         )}
                         
                         {/* Mek Image Container */}
@@ -726,83 +806,85 @@ export default function MekRecruitmentModalV4({
                           {/* Industrial overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-yellow-400/5 pointer-events-none" />
                           
-                          {/* Status badge */}
-                          {hasMatch && (
-                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-yellow-400/90 text-black text-[9px] font-black uppercase tracking-wider">
-                              {matchedTraits.length > 1 ? `MATCH x${matchedTraits.length}` : 'MATCH'}
+                          {/* Status badge - show percentage only in normal view */}
+                          {hasMatch && !isZoomedOut && (
+                            <div className="absolute top-1 right-1 px-2 py-1 bg-green-500/90 text-white text-xs font-black uppercase tracking-wider rounded">
+                              +{totalBonus}%
                             </div>
                           )}
                         </div>
                         
-                        {/* Mek Info Panel */}
-                        <div className="relative p-2 bg-gradient-to-b from-black/60 to-black/80">
-                          {/* Data lines decoration */}
-                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                          
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className={`text-[11px] font-bold tracking-wider uppercase ${
-                              hasMatch ? 'text-yellow-300' : 'text-gray-400'
-                            }`}>
-                              {mek.name}
-                            </span>
-                            <span className="text-yellow-500/70 text-[10px] font-mono">
-                              LV.{mek.level || 1}
-                            </span>
-                          </div>
-                          
-                          {/* Enhanced Chip Slots */}
-                          <div className="flex items-center justify-center">
-                            <div className="flex gap-1.5">
-                              {mek.traits.slice(0, 3).map((trait: string, i: number) => {
-                                const isMatched = matchedTraits.some((mt: any) => mt?.id === trait);
-                                
-                                return (
-                                  <div key={i} className="relative group/chip">
-                                    {/* Chip container with stronger glow for matches */}
-                                    <div className={`
-                                      relative w-11 h-11 p-[1px] rounded-full transition-all duration-300
-                                      ${isMatched 
-                                        ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-500 animate-pulse shadow-[0_0_20px_rgba(250,182,23,0.9),0_0_35px_rgba(250,182,23,0.6)]' 
-                                        : 'bg-black opacity-30'
-                                      }
-                                    `}>
-                                      <div className="relative w-full h-full rounded-full bg-black overflow-hidden">
-                                        <Image
-                                          src="/variation-images/acid.jpg"
-                                          alt={trait}
-                                          width={44}
-                                          height={44}
-                                          className={`w-full h-full object-cover rounded-full transition-all ${
-                                            isMatched ? 'brightness-125' : 'brightness-[0.3] opacity-50'
-                                          }`}
-                                        />
-                                        
-                                        {/* Industrial shine */}
-                                        {isMatched && (
-                                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent" 
-                                               style={{ animation: 'shimmer 2s infinite' }} />
-                                        )}
+                        {/* Mek Info Panel - Only show in normal view */}
+                        {!isZoomedOut && (
+                          <div className="relative p-2 bg-gradient-to-b from-black/60 to-black/80">
+                            {/* Data lines decoration */}
+                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
+                            
+                            <div className="flex justify-between items-center mb-1">
+                              <span className={`text-[11px] font-bold tracking-wider uppercase ${
+                                hasMatch ? 'text-yellow-300' : 'text-gray-400'
+                              }`}>
+                                {mek.name}
+                              </span>
+                              <span className="text-yellow-500/70 text-[10px] font-mono">
+                                LV.{mek.level || 1}
+                              </span>
+                            </div>
+                            
+                            {/* Enhanced Chip Slots */}
+                            <div className="flex items-center justify-center">
+                              <div className="flex gap-1.5">
+                                {mek.traits.slice(0, 3).map((trait: string, i: number) => {
+                                  const isMatched = matchedTraits.some((mt: any) => mt?.id === trait);
+                                  
+                                  return (
+                                    <div key={`${trait}-${i}`} className="relative group/chip">
+                                      {/* Chip container with stronger glow for matches */}
+                                      <div className={`
+                                        relative w-11 h-11 p-[1px] rounded-full transition-all duration-300
+                                        ${isMatched 
+                                          ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-500 animate-pulse shadow-[0_0_20px_rgba(250,182,23,0.9),0_0_35px_rgba(250,182,23,0.6)]' 
+                                          : 'bg-black opacity-30'
+                                        }
+                                      `}>
+                                        <div className="relative w-full h-full rounded-full bg-black overflow-hidden">
+                                          <Image
+                                            src="/variation-images/acid.jpg"
+                                            alt={trait}
+                                            width={44}
+                                            height={44}
+                                            className={`w-full h-full object-cover rounded-full transition-all ${
+                                              isMatched ? 'brightness-125' : 'brightness-[0.3] opacity-50'
+                                            }`}
+                                          />
+                                          
+                                          {/* Industrial shine */}
+                                          {isMatched && (
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent" 
+                                                 style={{ animation: 'shimmer 2s infinite' }} />
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Advanced Tooltip */}
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1.5 bg-black/95 border border-yellow-500/50 text-yellow-300 text-[10px] whitespace-nowrap opacity-0 group-hover/chip:opacity-100 pointer-events-none z-50 transition-all">
+                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-b border-r border-yellow-500/50 rotate-45" />
+                                        <div className="font-mono uppercase tracking-wider">
+                                          {trait}
+                                          {isMatched && (
+                                            <span className="text-green-400 ml-2 font-bold">
+                                              +{parseInt(matchedTraits.find((mt: any) => mt?.id === trait)?.bonus?.replace('+', '').replace('%', '') || '0')}%
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-                                    
-                                    {/* Advanced Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1.5 bg-black/95 border border-yellow-500/50 text-yellow-300 text-[10px] whitespace-nowrap opacity-0 group-hover/chip:opacity-100 pointer-events-none z-50 transition-all">
-                                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-b border-r border-yellow-500/50 rotate-45" />
-                                      <div className="font-mono uppercase tracking-wider">
-                                        {trait}
-                                        {isMatched && (
-                                          <span className="text-green-400 ml-2 font-bold">
-                                            {matchedTraits.find((mt: any) => mt?.id === trait)?.bonus}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                         
                         {/* Bottom accent line */}
                         <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${

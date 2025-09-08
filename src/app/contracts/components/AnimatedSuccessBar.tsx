@@ -66,19 +66,48 @@ const AnimatedSuccessBar: React.FC<AnimatedSuccessBarProps> = ({
             <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-shimmer" />
           </div>
           
-          {/* Energy particles - visible on all sizes now that bars are thicker */}
+          {/* Energy particles - FIXED to flow left to right across the bar */}
           <div className="absolute inset-0 overflow-hidden">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 bg-white rounded-full animate-floatParticle"
-                style={{
-                  top: `${20 + i * 15}%`,
-                  animationDelay: `${i * 0.3}s`,
-                  animationDuration: `${2 + i}s`
-                }}
-              />
-            ))}
+            <div
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                top: '20%',
+                left: '0',
+                animation: 'particleFlow 2s 0s infinite linear'
+              }}
+            />
+            <div
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                top: '35%',
+                left: '0',
+                animation: 'particleFlow 2.5s 0.3s infinite linear'
+              }}
+            />
+            <div
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                top: '50%',
+                left: '0',
+                animation: 'particleFlow 3s 0.6s infinite linear'
+              }}
+            />
+            <div
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                top: '65%',
+                left: '0',
+                animation: 'particleFlow 3.5s 0.9s infinite linear'
+              }}
+            />
+            <div
+              className="absolute w-2 h-2 bg-white rounded-full"
+              style={{
+                top: '80%',
+                left: '0',
+                animation: 'particleFlow 4s 1.2s infinite linear'
+              }}
+            />
           </div>
         </div>
         

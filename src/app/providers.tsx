@@ -16,7 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ConvexProvider client={convex}>
       <SoundProvider>
-        <div className="min-h-screen bg-black relative">
+        <div className="min-h-screen relative">
           {isWelcomePage || isTalentBuilder ? (
             // Welcome page and talent builder without navigation
             children

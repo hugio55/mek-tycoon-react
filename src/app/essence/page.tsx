@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import BackgroundEffects from "@/components/BackgroundEffects";
 
 // Generate more essence types with varying quantities (using deterministic values)
 const generateEssenceData = () => {
@@ -98,8 +97,7 @@ export default function EssencePage() {
   const totalIndividualBuff = individualBuffs.reduce((sum, e) => sum + e.individualBuff, 0);
   
   return (
-    <div className="min-h-screen bg-black relative">
-      <BackgroundEffects />
+    <div className="min-h-screen relative">
       
       <div className="relative z-10 text-white py-8">
         {/* Full Width Essence Rate Header */}

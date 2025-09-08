@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import CandlestickChart from "../../components/CandlestickChart";
-import BackgroundEffects from "@/components/BackgroundEffects";
 
 export default function BankPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
@@ -15,6 +14,7 @@ export default function BankPage() {
   const [sellShares, setSellShares] = useState<Record<string, string>>({ MEK: "", ESS: "", MRK: "" });
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, direction: string, speed: number, delay: number}>>([]);
   
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
@@ -43,6 +43,22 @@ export default function BankPage() {
       }
     };
     initUser();
+    
+    // Generate stars for background
+    setStars(prevStars => {
+      if (prevStars.length > 0) return prevStars; // Only generate once
+      return [...Array(40)].map((_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        size: Math.random() * 3 + 0.5,
+        opacity: Math.random() * 0.8 + 0.2,
+        twinkle: Math.random() > 0.5,
+        direction: Math.random() > 0.5 ? 'horizontal' : 'vertical', // Random movement direction
+        speed: Math.random() * 60 + 120, // Random speed between 120-180 seconds
+        delay: Math.random() * 60, // Random delay up to 60 seconds
+      }));
+    });
   }, [getOrCreateUser, getOrCreateAccount, initializeStocks, fetchRealSunspotData, fetchSolarFlareData]);
   
   // Queries
@@ -159,8 +175,69 @@ export default function BankPage() {
   };
   
   return (
-    <div className="text-white py-8 relative">
-      <BackgroundEffects />
+    <div className="text-white py-8 relative min-h-screen overflow-hidden">
+      <style jsx>{`
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 1; }
+        }
+        @keyframes slowDriftHorizontal {
+          from { transform: translateX(-20px); }
+          to { transform: translateX(calc(100vw + 20px)); }
+        }
+        @keyframes slowDriftVertical {
+          from { transform: translateY(-20px); }
+          to { transform: translateY(calc(100vh + 20px)); }
+        }
+        @keyframes slowFloat {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(10px, -15px) rotate(0.5deg); }
+          50% { transform: translate(-5px, -25px) rotate(-0.3deg); }
+          75% { transform: translate(-15px, -10px) rotate(0.2deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
+      `}</style>
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Dynamic Stars */}
+        {stars.map((star) => {
+          // Determine movement animation based on direction
+          let movementAnimation = '';
+          if (star.direction === 'horizontal') {
+            movementAnimation = `slowDriftHorizontal ${star.speed}s linear infinite`;
+          } else if (star.direction === 'vertical') {
+            movementAnimation = `slowDriftVertical ${star.speed}s linear infinite`;
+          } else {
+            movementAnimation = `slowFloat ${star.speed}s ease-in-out infinite`;
+          }
+          
+          // Combine twinkle and movement animations
+          const animations = [
+            movementAnimation,
+            star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : ''
+          ].filter(Boolean).join(', ');
+          
+          return (
+            <div
+              key={star.id}
+              className="absolute rounded-full bg-white"
+              style={{
+                left: star.left,
+                top: star.top,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                animation: animations,
+                animationDelay: `${star.delay}s, ${star.twinkle ? star.opacity * 2 : 0}s`,
+              }}
+            />
+          );
+        })}
+      </div>
+      
+      {/* Main Content */}
+      <div className="relative z-10">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-yellow-400">
           🏦 Mek Tycoon Bank
@@ -523,6 +600,7 @@ export default function BankPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

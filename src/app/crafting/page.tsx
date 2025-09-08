@@ -1,6 +1,5 @@
 "use client";
 
-import BackgroundEffects from "@/components/BackgroundEffects";
 import { useCraftingState } from './hooks/useCraftingState';
 import { getBaseVariations, getStyles, getFinalVariations } from './utils';
 import {
@@ -46,7 +45,6 @@ export default function CraftingPage() {
 
   return (
     <div className="text-white py-8 min-h-screen relative">
-      <BackgroundEffects />
       
       {/* Chip Type Selection (Uni-Chips vs Mek-Chips) */}
       {!chipType && !showRecipe && (

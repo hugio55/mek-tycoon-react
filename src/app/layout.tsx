@@ -4,6 +4,7 @@ import "./globals.css";
 import "@/styles/special-buttons.css";
 import { Providers } from "./providers";
 import { GlobalClickSound } from "@/components/GlobalClickSound";
+import GlobalBackground from "@/components/GlobalBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,10 +29,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
+        style={{ backgroundColor: '#0a0a0a' }}
       >
-        <GlobalClickSound />
-        <Providers>{children}</Providers>
+        {/* Global background with animated stars and particles */}
+        <GlobalBackground />
+        
+        {/* Content layer */}
+        <div className="relative z-10">
+          <GlobalClickSound />
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );

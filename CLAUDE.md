@@ -1,5 +1,11 @@
 # Mek Tycoon - Project Instructions
 
+## Claude Code Documentation
+Local documentation is available in the `claude-code-docs/` directory:
+- **Main docs**: Overview, quickstart, workflows, troubleshooting, etc.
+- **SDK docs**: `claude-code-docs/sdk/` - Headless mode, TypeScript/Python SDKs
+- **Enterprise**: Bedrock, Vertex AI, proxy config, LLM gateways
+
 ## Quick Start Command
 When user says "start it up" or similar, run:
 ```bash
@@ -195,6 +201,12 @@ npx tsc --noEmit   # TypeScript type checking
 ```
 
 ## Slash Commands
+
+### `/ui-team` - Activate all UI agents
+When user types `/ui-team`, activate these three agents together:
+- `@ui-layout-debugger` - Debug layout issues
+- `@scifi-ui-designer` - Apply sci-fi aesthetic
+- `@visual-test` - Test visual changes
 
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:

@@ -9,7 +9,6 @@ import {
   calculateCategoryStats, 
   hasHiddenAchievements 
 } from '@/utils/achievements.utils';
-import { AchievementsBackgroundEffects } from '@/components/achievements/BackgroundEffects';
 import { AchievementStatsDisplay } from '@/components/achievements/AchievementStats';
 import { AchievementFilters } from '@/components/achievements/AchievementFilters';
 import { AchievementsList } from '@/components/achievements/AchievementsList';
@@ -32,9 +31,7 @@ export default function AchievementsPage() {
   const hasHidden = hasHiddenAchievements(achievementsData);
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      {/* Background Effects */}
-      <AchievementsBackgroundEffects />
+    <div className="min-h-screen text-white relative">
 
       {/* Main Content Container */}
       <div className="relative z-10 max-w-6xl mx-auto p-6">

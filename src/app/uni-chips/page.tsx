@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Navigation from '@/components/Navigation';
 import Image from 'next/image';
-import BackgroundEffects from '@/components/BackgroundEffects';
 import theme from '@/lib/design-system';
 
 interface ChipTier {
@@ -177,21 +176,46 @@ export default function UniChipsPage() {
     `;
   };
 
-  // Particle effect generation
+  // Particle effect generation with stable random values
   const ParticleField = ({ color, count = 30 }: { color: string; count?: number }) => {
+    const [particles, setParticles] = useState<Array<{
+      left: number;
+      top: number;
+      delay: number;
+      duration: number;
+      opacity: number;
+    }>>([]);
+
+    useEffect(() => {
+      // Generate particles on client side only
+      const newParticles = Array.from({ length: count }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        delay: Math.random() * 10,
+        duration: 10 + Math.random() * 20,
+        opacity: Math.random() * 0.6 + 0.4,
+      }));
+      setParticles(newParticles);
+    }, [count]);
+
+    if (particles.length === 0) {
+      // Return empty during SSR and initial render
+      return <div className="absolute inset-0 overflow-hidden pointer-events-none" />;
+    }
+
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(count)].map((_, i) => (
+        {particles.map((particle, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 rounded-full animate-float-particle"
             style={{
               background: color,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${10 + Math.random() * 20}s`,
-              opacity: Math.random() * 0.6 + 0.4,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity,
             }}
           />
         ))}
@@ -200,41 +224,11 @@ export default function UniChipsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* Enhanced cinematic background */}
-      <div className="fixed inset-0">
-        {/* Deep space gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-black to-gray-950" />
-        
-        {/* Quantum grid effect */}
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: `
-            linear-gradient(90deg, ${theme.colors.primary.yellow}20 1px, transparent 1px),
-            linear-gradient(180deg, ${theme.colors.primary.yellow}20 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-        
-        {/* Industrial hazard pattern */}
-        <div className="absolute inset-0 opacity-5" style={{
-          background: theme.patterns.hazardStripes
-        }} />
-        
-        {/* Animated scan lines */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent animate-scan" />
-          <div className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent animate-scan" style={{ animationDelay: '1.5s' }} />
-        </div>
-        
-        {/* Particle field for quantum atmosphere */}
-        <ParticleField color={theme.colors.primary.yellow} count={40} />
-      </div>
-      
-      <BackgroundEffects />
+    <div className="min-h-screen text-white relative overflow-hidden">
 
       <Navigation />
       
-      <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
+      <div className="container mx-auto px-4 pt-32 pb-20 relative">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Industrial Header with Cinematic Effects */}
           <div className="mb-16 relative">
@@ -301,7 +295,9 @@ export default function UniChipsPage() {
                     </div>
                     <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 animate-pulse" style={{
-                        width: `${((24 * 60 * 60 * 1000 - (dailyRecipes[0].expiresAt.getTime() - currentTime)) / (24 * 60 * 60 * 1000)) * 100}%`
+                        width: typeof window !== 'undefined' 
+                          ? `${((24 * 60 * 60 * 1000 - (dailyRecipes[0].expiresAt.getTime() - currentTime)) / (24 * 60 * 60 * 1000)) * 100}%`
+                          : '0%'
                       }} />
                     </div>
                   </div>

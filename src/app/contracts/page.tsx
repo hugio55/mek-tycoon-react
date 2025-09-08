@@ -7,116 +7,9 @@ import theme from "@/lib/design-system";
 export default function ContractsPage() {
   const router = useRouter();
   const [hoveredMode, setHoveredMode] = useState<string | null>(null);
-  const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
-  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
-
-  useEffect(() => {
-    // Generate background effects
-    const generatedParticles = [...Array(20)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 10}s`,
-      duration: `${5 + Math.random() * 5}s`,
-    }));
-    setParticles(generatedParticles);
-    
-    const generatedStars = [...Array(60)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      size: Math.random() * 3 + 0.5,
-      opacity: Math.random() * 0.8 + 0.2,
-      twinkle: Math.random() > 0.5,
-    }));
-    setStars(generatedStars);
-  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      
-      {/* Industrial Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Metal texture grid */}
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{ background: theme.patterns.metalTexture }}
-        />
-        
-        {/* Hazard stripes at bottom */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-32 opacity-10"
-          style={{ background: theme.patterns.hazardStripes }}
-        />
-        
-        {/* Gradient orbs with industrial color */}
-        <div 
-          className="absolute left-0 top-0 w-full h-full"
-          style={{
-            background: `
-              radial-gradient(ellipse at 20% 30%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.12) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)
-            `
-          }}
-        />
-        
-        {/* Industrial grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 50px,
-                rgba(250, 182, 23, 0.1) 50px,
-                rgba(250, 182, 23, 0.1) 51px
-              ),
-              repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 50px,
-                rgba(250, 182, 23, 0.1) 50px,
-                rgba(250, 182, 23, 0.1) 51px
-              )
-            `,
-          }}
-        />
-        
-        {/* Stars */}
-        {stars.map((star) => (
-          <div
-            key={star.id}
-            className="absolute rounded-full bg-yellow-400/80"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animation: star.twinkle ? `starTwinkle ${2 + Math.random() * 2}s ease-in-out infinite` : 'none',
-              animationDelay: star.twinkle ? `${Math.random() * 2}s` : '0s',
-              boxShadow: '0 0 4px rgba(250, 182, 23, 0.8)'
-            }}
-          />
-        ))}
-        
-        {/* Floating particles */}
-        {particles.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute w-1.5 h-1.5 bg-yellow-400 rounded-full"
-            style={{
-              left: particle.left,
-              top: particle.top,
-              animation: `floatParticle ${particle.duration} ease-in-out infinite`,
-              animationDelay: particle.delay,
-              boxShadow: '0 0 8px rgba(250, 182, 23, 0.8)',
-            }}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen text-white overflow-hidden relative">
       
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col pt-20 px-8">
@@ -288,27 +181,6 @@ export default function ContractsPage() {
           </div>
         </div>
       </div>
-
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.2); }
-        }
-        
-        @keyframes floatParticle {
-          0% { transform: translateY(0) translateX(0); }
-          25% { transform: translateY(-20px) translateX(10px); }
-          50% { transform: translateY(0) translateX(-10px); }
-          75% { transform: translateY(20px) translateX(5px); }
-          100% { transform: translateY(0) translateX(0); }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
     </div>
   );
 }
