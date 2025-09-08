@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import MissionCard from "./MissionCard";
+import { transformNodesToDisplaySpace, getNodeSize, getNodeIcon } from "../../../lib/story-tree-utils";
 
 // Node types matching the story builder
 type StoryNodeType = 'normal' | 'event' | 'boss' | 'final_boss';
@@ -36,30 +37,11 @@ interface SavedStoryMode {
   };
 }
 
-// Get node icon based on type
-const getNodeIcon = (type?: StoryNodeType) => {
-  switch (type) {
-    case 'event': return '❓';
-    case 'boss': return '👹';
-    case 'final_boss': return '👑';
-    case 'normal':
-    default: return '⚔️';
-  }
-};
+// Node utilities are imported from story-tree-utils
 
-// Get node size multiplier
-const getNodeSize = (type?: StoryNodeType) => {
-  switch (type) {
-    case 'event': return 2;
-    case 'boss': return 3;
-    case 'final_boss': return 4;
-    case 'normal':
-    default: return 1;
-  }
-};
-
-// Get node style based on state
+// Get node style based on type and state
 const getNodeStyle = (node: StoryNode) => {
+  // First check progress state
   if (node.id === 'start') {
     return "from-green-600 to-green-700 border-green-500";
   }
@@ -69,10 +51,24 @@ const getNodeStyle = (node: StoryNode) => {
   if (node.current) {
     return "from-blue-500 to-blue-600 border-blue-400 animate-pulse";
   }
-  if (node.available) {
-    return "from-yellow-500 to-amber-600 border-yellow-400";
+  
+  // Then apply type-based colors for available/locked nodes
+  const opacity = node.available ? '' : 'opacity-50';
+  
+  switch (node.storyNodeType) {
+    case 'event':
+      return `from-purple-600 to-purple-700 border-purple-500 ${opacity}`;
+    case 'boss':
+      return `from-red-600 to-red-700 border-red-500 ${opacity}`;
+    case 'final_boss':
+      return `from-orange-600 via-red-600 to-purple-600 border-yellow-500 ${opacity}`;
+    case 'normal':
+    default:
+      if (node.available) {
+        return "from-yellow-500 to-amber-600 border-yellow-400";
+      }
+      return "from-gray-700 to-gray-800 border-gray-600 opacity-50";
   }
-  return "from-gray-700 to-gray-800 border-gray-600 opacity-50";
 };
 
 
@@ -84,11 +80,11 @@ export default function StoryClimbPage() {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [currentChapter, setCurrentChapter] = useState<SavedStoryMode | null>(null);
   const [savedStoryModes, setSavedStoryModes] = useState<SavedStoryMode[]>([]);
-  const [maxScrollY, setMaxScrollY] = useState(0); // Maximum allowed scroll based on progress
+  // Removed maxScrollY - no manual scrolling allowed
   const [canvasHeight, setCanvasHeight] = useState(600); // Default height
-  const [canvasWidth, setCanvasWidth] = useState(400); // Default width
+  const [canvasWidth, setCanvasWidth] = useState(800); // Default width - wider for better spread
   const [currentNodeIndex, setCurrentNodeIndex] = useState(1); // Player's current progress
-  const [cameraY, setCameraY] = useState(0); // Camera position for scrolling
+  const [viewportY, setViewportY] = useState(0); // Auto-positioned viewport based on progress
   const canvasRef = useRef<HTMLDivElement>(null);
   
   // Convex queries and mutations
@@ -353,31 +349,50 @@ export default function StoryClimbPage() {
     // Set the current chapter
     setCurrentChapter(storyData);
     
-    // Process nodes to add game state
-    const processedNodes = storyData.data.nodes.map((node, index) => ({
-      ...node,
-      index: index + 1,
-      completed: index < currentNodeIndex, // Nodes before current position are completed
-      available: index === currentNodeIndex || index === currentNodeIndex + 1, // Current and next node available
-      current: index === currentNodeIndex, // Current position
-    }));
+    // Transform nodes from talent-builder space if needed
+    // Pass canvas width for proper scaling
+    const transformedNodes = transformNodesToDisplaySpace(storyData.data.nodes, canvasWidth);
     
-    console.log('Processed nodes:', processedNodes);
+    // Process nodes to add game state
+    const processedNodes = transformedNodes.map((node, index) => {
+      return {
+        ...node,
+        index: index + 1,
+        completed: index < currentNodeIndex, // Nodes before current position are completed
+        available: index === currentNodeIndex || index === currentNodeIndex + 1, // Current and next node available
+        current: index === currentNodeIndex, // Current position
+        label: node.label || node.name || `Node ${index + 1}`, // Ensure label exists
+        storyNodeType: node.storyNodeType || 'normal'
+      };
+    });
+    
+    console.log('Processed nodes with normalized coords:', processedNodes);
+    console.log('Node count:', processedNodes.length);
+    console.log('Connection count:', storyData.data.connections.length);
+    
+    // Log coordinate ranges for debugging
+    if (processedNodes.length > 0) {
+      const xValues = processedNodes.map(n => n.x);
+      const yValues = processedNodes.map(n => n.y);
+      console.log('X range:', Math.min(...xValues), 'to', Math.max(...xValues));
+      console.log('Y range:', Math.min(...yValues), 'to', Math.max(...yValues));
+    }
     
     setNodes(processedNodes);
     setConnections(storyData.data.connections);
     
-    // Select current node and calculate max scroll
+    // Select current node and auto-position viewport to show START
     const current = processedNodes.find(n => n.current);
     if (current) {
       setSelectedNode(current);
-      // Calculate max scroll based on current progress - allow viewing a bit beyond current node
-      const maxY = Math.max(0, current.y + 200);
-      setMaxScrollY(maxY);
-      // Start camera at bottom (START node visible)
-      setCameraY(0);
     }
-  }, []);
+    
+    // Position viewport to show START node at bottom of screen
+    // START is at y=100, inverted to canvasHeight - 50
+    // We want to see from START up to the first few nodes
+    const startViewport = Math.max(0, 1400 - canvasHeight - 50);
+    setViewportY(startViewport);
+  }, [dbStoryTrees, currentNodeIndex]); // Re-run when database trees load
   
   const handleNodeClick = (node: StoryNode) => {
     if (node.completed || node.available || node.current) {
@@ -398,49 +413,40 @@ export default function StoryClimbPage() {
     setCurrentNodeIndex(prev => {
       const next = Math.min(prev + 1, nodes.length - 1);
       
-      // Update max scroll when progressing
+      // Auto-update viewport to show new area
       const nextNode = nodes[next];
       if (nextNode) {
-        const newMaxY = Math.max(0, nextNode.y - 100);
-        setMaxScrollY(newMaxY);
+        // Smoothly transition viewport to show next area
+        const nextY = canvasHeight - (nextNode.y - 100) - 50;
+        const optimalViewport = Math.max(0, nextY - canvasHeight / 2);
+        setViewportY(optimalViewport);
       }
       
       return next;
     });
   };
   
-  // Set canvas dimensions with 2:3 aspect ratio
+  // Set canvas dimensions to use full available width
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const headerHeight = 120; // Header height
+      const sidebarWidth = 384; // Right panel width (w-96 = 24rem = 384px)
       const viewportHeight = window.innerHeight - headerHeight;
-      const maxWidth = Math.min(500, window.innerWidth * 0.4); // Max 40% of viewport width or 500px
-      const maxHeight = Math.min(viewportHeight, 900); // Max viewport height minus header or 900px
+      const availableWidth = window.innerWidth - sidebarWidth - 100; // Minus sidebar and padding
       
-      // Calculate dimensions maintaining 2:3 aspect ratio
-      let width = maxWidth;
-      let height = width * 1.5; // 2:3 ratio
-      
-      if (height > maxHeight) {
-        height = maxHeight;
-        width = height / 1.5;
-      }
+      // Use most of available width for better node spread
+      const width = Math.min(availableWidth, 1200); // Max 1200px for very wide screens
+      const height = Math.min(viewportHeight - 20, 900); // Max height with some padding
       
       setCanvasWidth(width);
       setCanvasHeight(height);
       
       const handleResize = () => {
         const vh = window.innerHeight - headerHeight;
-        const maxW = Math.min(500, window.innerWidth * 0.4);
-        const maxH = Math.min(vh, 900);
+        const aw = window.innerWidth - sidebarWidth - 100;
         
-        let w = maxW;
-        let h = w * 1.5;
-        
-        if (h > maxH) {
-          h = maxH;
-          w = h / 1.5;
-        }
+        const w = Math.min(aw, 1200);
+        const h = Math.min(vh - 20, 900);
         
         setCanvasWidth(w);
         setCanvasHeight(h);
@@ -451,38 +457,7 @@ export default function StoryClimbPage() {
     }
   }, []);
   
-  // Handle scroll with restrictions
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (!canvasRef.current?.contains(e.target as Node)) return;
-      
-      e.preventDefault();
-      const scrollSpeed = 0.5;
-      const newY = cameraY + (e.deltaY * scrollSpeed);
-      
-      // Restrict scrolling: can't go below 0 (START position) or above maxScrollY
-      const clampedY = Math.max(0, Math.min(maxScrollY, newY));
-      setCameraY(clampedY);
-    };
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-        const newY = Math.min(maxScrollY, cameraY + 50);
-        setCameraY(newY);
-      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-        const newY = Math.max(0, cameraY - 50);
-        setCameraY(newY);
-      }
-    };
-    
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [cameraY, maxScrollY]);
+  // No manual scrolling - viewport is locked and only moves with progression
   
   // Calculate canvas bounds
   const centerX = canvasWidth / 2; // Center position for nodes
@@ -532,7 +507,7 @@ export default function StoryClimbPage() {
       {/* Main Content */}
       <div className="relative z-10 flex h-screen">
         {/* Left Panel - Fixed Canvas Area */}
-        <div className="flex-1 flex flex-col max-w-[500px] mx-auto">
+        <div className="flex-1 flex flex-col px-8">
           {/* Header */}
           <div className="bg-gray-900/50 backdrop-blur-md border-b border-gray-800 p-4">
             <div className="flex items-center justify-between">
@@ -560,16 +535,25 @@ export default function StoryClimbPage() {
                       const selected = savedStoryModes.find(s => s.name === e.target.value);
                       if (selected) {
                         setCurrentChapter(selected);
-                        const processedNodes = selected.data.nodes.map((node, index) => ({
-                          ...node,
-                          index: index + 1,
-                          completed: index < currentNodeIndex,
-                          available: index === currentNodeIndex || index === currentNodeIndex + 1,
-                          current: index === currentNodeIndex,
-                        }));
+                        
+                        // Transform nodes from talent-builder space if needed
+                        // Pass canvas width for proper scaling
+                        const transformedNodes = transformNodesToDisplaySpace(selected.data.nodes, canvasWidth);
+                        
+                        const processedNodes = transformedNodes.map((node, index) => {
+                          return {
+                            ...node,
+                            index: index + 1,
+                            completed: index < currentNodeIndex,
+                            available: index === currentNodeIndex || index === currentNodeIndex + 1,
+                            current: index === currentNodeIndex,
+                            label: node.label || node.name || `Node ${index + 1}`,
+                            storyNodeType: node.storyNodeType || 'normal'
+                          };
+                        });
                         setNodes(processedNodes);
                         setConnections(selected.data.connections);
-                        setCameraY(0); // Reset camera to bottom
+                        setViewportY(Math.max(0, 1400 - canvasHeight - 50)); // Position viewport to show START
                       }
                     }}
                     className="px-3 py-1 bg-gray-800/50 border border-gray-600 rounded text-sm text-gray-300 hover:border-yellow-400 transition-all"
@@ -596,29 +580,21 @@ export default function StoryClimbPage() {
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/50 to-transparent z-20 pointer-events-none" />
             
             {/* Scroll indicator when content available above */}
-            {cameraY > 0 && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-bounce">
-                <div className="text-gray-400 text-sm flex items-center gap-2">
-                  <span>↓</span> Scroll down to START <span>↓</span>
-                </div>
-              </div>
-            )}
             
-            {maxScrollY > cameraY && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-pulse">
-                <div className="text-yellow-400 text-sm flex items-center gap-2">
-                  <span>↑</span> New areas unlocked above <span>↑</span>
-                </div>
+            {/* Progress indicator */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black/70 px-3 py-1 rounded-full border border-yellow-400/30">
+              <div className="text-yellow-400 text-sm font-bold">
+                Stage {currentNodeIndex} / {nodes.length}
               </div>
-            )}
+            </div>
             
             <div 
               ref={canvasRef}
               className="relative" 
               style={{ 
                 width: `${canvasWidth}px`, 
-                height: `${canvasHeight}px`,
-                transform: `translateY(-${cameraY}px)`,
+                height: '1400px', // Fixed height to contain full tree
+                transform: `translateY(-${viewportY}px)`,
                 transition: 'transform 0.3s ease-out'
               }}
             >
@@ -627,7 +603,7 @@ export default function StoryClimbPage() {
               <svg 
                 className="absolute pointer-events-none" 
                 width={canvasWidth} 
-                height={canvasHeight + 1000}
+                height={2000} // Fixed height to accommodate full tree
                 style={{ top: '0' }}
               >
                 {connections.map((conn, idx) => {
@@ -635,11 +611,13 @@ export default function StoryClimbPage() {
                   const toNode = nodes.find(n => n.id === conn.to);
                   if (!fromNode || !toNode) return null;
                   
-                  // Position connections for bottom-up layout (inverted Y)
+                  // Position connections - tree grows upward, but coordinates are normal
+                  // START is at y=100, final boss at y=1150
+                  // We'll keep the Y coordinates as they are (START at bottom of tree)
                   const x1 = centerX + fromNode.x;
-                  const y1 = canvasHeight - fromNode.y; // Invert Y axis - START at bottom
+                  const y1 = canvasHeight - (fromNode.y - 100) - 50; // Position from bottom
                   const x2 = centerX + toNode.x;
-                  const y2 = canvasHeight - toNode.y; // Invert Y axis - nodes go up
+                  const y2 = canvasHeight - (toNode.y - 100) - 50; // Position from bottom
                   
                   const isActive = fromNode.completed || fromNode.current || fromNode.available;
                   const isHovered = hoveredNode === fromNode.id || hoveredNode === toNode.id;
@@ -661,20 +639,26 @@ export default function StoryClimbPage() {
               </svg>
               
               {/* Draw nodes */}
+              {nodes.length === 0 && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-yellow-400">
+                  Loading nodes...
+                </div>
+              )}
               {nodes.map(node => {
-                const size = getNodeSize(node.storyNodeType);
-                const baseSize = 60;
-                const nodeSize = baseSize * size;
+                const nodeSize = getNodeSize(node.storyNodeType);
                 
-                // Position nodes with inverted Y (START at bottom, going up)
-                const nodeY = canvasHeight - node.y - nodeSize / 2; // Invert Y axis
+                // Position nodes - START at bottom of canvas
+                // Y values: START (100) should be at bottom, higher values go up
+                const nodeY = canvasHeight - (node.y - 100) - nodeSize / 2 - 50; // Position from bottom
                 const nodeX = centerX + node.x - nodeSize / 2;
                 
                 // Only render nodes that are within the visible area (with some buffer)
-                const viewTop = cameraY;
-                const viewBottom = cameraY + canvasHeight;
-                const nodeTop = node.y - nodeSize / 2;
-                const nodeBottom = node.y + nodeSize / 2;
+                // Since we inverted Y, we need to check visibility in the inverted space
+                const viewTop = viewportY;
+                const viewBottom = viewportY + canvasHeight;
+                const actualNodeY = 1400 - node.y; // The actual Y position after inversion
+                const nodeTop = actualNodeY - nodeSize / 2;
+                const nodeBottom = actualNodeY + nodeSize / 2;
                 
                 if (nodeBottom < viewTop - 100 || nodeTop > viewBottom + 100) {
                   return null; // Don't render off-screen nodes for performance
@@ -682,9 +666,7 @@ export default function StoryClimbPage() {
                 
                 // Calculate fade for unexplored areas (above current progress)
                 let fadeOpacity = 1;
-                if (node.y > maxScrollY + 200) {
-                  fadeOpacity = 0.2; // Fade unexplored nodes
-                } else if (!node.completed && !node.available && !node.current) {
+                if (!node.completed && !node.available && !node.current) {
                   fadeOpacity = 0.5; // Semi-fade locked nodes
                 }
                 
@@ -711,9 +693,15 @@ export default function StoryClimbPage() {
                       w-full h-full rounded-xl border-2 flex flex-col items-center justify-center
                       bg-gradient-to-br ${getNodeStyle(node)}
                       ${selectedNode?.id === node.id ? 'ring-4 ring-yellow-400/50 shadow-lg shadow-yellow-400/25' : ''}
+                      ${node.storyNodeType === 'final_boss' && !node.completed ? 'animate-pulse shadow-lg shadow-orange-500/50' : ''}
                       transition-all duration-200
                     `}>
-                      <span className={`text-${size === 1 ? '2xl' : size === 2 ? '3xl' : '4xl'}`}>
+                      <span className={`${
+                        nodeSize === 40 ? 'text-2xl' : 
+                        nodeSize === 80 ? 'text-3xl' : 
+                        nodeSize === 120 ? 'text-4xl' : 
+                        'text-5xl'
+                      }`}>
                         {getNodeIcon(node.storyNodeType)}
                       </span>
                       <span className="text-xs font-bold mt-1">
@@ -727,6 +715,16 @@ export default function StoryClimbPage() {
                       {node.id === 'start' && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-green-500 rounded text-xs font-bold">
                           START
+                        </div>
+                      )}
+                      {node.storyNodeType === 'boss' && !node.completed && !node.current && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-red-500 rounded text-xs font-bold">
+                          BOSS
+                        </div>
+                      )}
+                      {node.storyNodeType === 'final_boss' && !node.completed && !node.current && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-purple-500 rounded text-xs font-bold">
+                          FINAL BOSS
                         </div>
                       )}
                     </div>

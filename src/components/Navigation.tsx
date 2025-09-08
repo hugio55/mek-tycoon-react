@@ -93,6 +93,8 @@ const navCategories: readonly NavCategory[] = [
       { label: "Sphere Selector", href: "/admin-sphere" },
       { label: "Uni-Chips", href: "/uni-chips" },
       { label: "Chip Builder", href: "/admin/chip-builder" },
+      { label: "Essence Donut", href: "/essence-donut" },
+      { label: "Dev Toolbar", href: "/dev-toolbar.html" },
     ],
   },
 ];

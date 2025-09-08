@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MekImageProps {
   src?: string | null;
@@ -23,7 +23,6 @@ export default function MekImage({
 }: MekImageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [imageAttempt, setImageAttempt] = useState(0);
 
   // Determine the image source
   let imageSrc = src;
@@ -61,38 +60,24 @@ export default function MekImage({
     imageSrc = `/mek-images/${imageFolder}/000-000-000.webp`;
   }
 
-  const handleError = () => {
-    // Try fallback images
-    if (imageAttempt < 2) {
-      const folder = size > 250 ? '500px' : '150px';
-      const altFolder = size > 250 ? '150px' : '500px';
-      const attempts = [
-        imageSrc, // Original attempt
-        `/mek-images/${altFolder}/000-000-000.webp`, // Try other folder
-        `/mek-images/150px/000-000-000.webp` // Final fallback
-      ];
-      
-      if (imageAttempt < attempts.length - 1) {
-        setImageAttempt(imageAttempt + 1);
-        // Force re-render with new source
-        const img = document.querySelector(`img[alt="${alt}"]`) as HTMLImageElement;
-        if (img) {
-          img.src = attempts[imageAttempt + 1];
-        }
-        return;
-      }
+  // Use effect to handle image preloading - MUST be before any conditional returns
+  useEffect(() => {
+    if (imageSrc) {
+      const img = new window.Image();
+      img.onload = () => {
+        setLoading(false);
+        setError(false);
+      };
+      img.onerror = () => {
+        console.error(`Failed to load image: ${imageSrc}`);
+        setError(true);
+        setLoading(false);
+      };
+      img.src = imageSrc;
     }
-    
-    console.error(`Failed to load image: ${imageSrc}`);
-    setError(true);
-    setLoading(false);
-  };
+  }, [imageSrc]);
 
-  const handleLoad = () => {
-    setLoading(false);
-  };
-
-  if (!imageSrc || error) {
+  if (!imageSrc) {
     return (
       <div className={`flex items-center justify-center ${className}`}>
         🤖
@@ -100,23 +85,24 @@ export default function MekImage({
     );
   }
 
-  // Debug log
-
   return (
     <div className={`relative ${className}`}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 animate-pulse">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-700 animate-pulse z-10">
           <div className="text-4xl">⏳</div>
         </div>
       )}
       <img
         src={imageSrc}
         alt={alt}
-        className={`w-full h-full object-cover ${loading ? 'opacity-0' : 'opacity-100'}`}
-        loading="lazy"
-        onLoad={handleLoad}
-        onError={handleError}
+        className={`w-full h-full object-cover ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        style={{ display: error ? 'none' : 'block' }}
       />
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+          <div className="text-4xl">🤖</div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Toolbar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            color: white;
+            padding: 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .button-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .toolbar-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            min-width: 120px;
+        }
+        
+        .toolbar-button.favorite {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        }
+        
+        .toolbar-button.favorite:hover {
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+        }
+        
+        .toolbar-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .toolbar-button:active {
+            transform: translateY(0);
+        }
+        
+        .edit-mode .toolbar-button {
+            opacity: 0.7;
+        }
+        
+        .settings-panel {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-edit {
+            padding: 8px 16px;
+            background: #fab617;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-edit:hover {
+            background: #ffc947;
+        }
+        
+        .button-editor {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .button-editor::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .button-editor::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .button-editor::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        .edit-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .edit-item input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .edit-item input:focus {
+            outline: none;
+            border-color: #fab617;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .edit-item label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3px;
+        }
+        
+        .button-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .remove-button {
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-button:hover {
+            background: #c82333;
+        }
+        
+        .favorite-button {
+            padding: 5px 10px;
+            background: #ffc107;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .favorite-button:hover {
+            background: #ffb300;
+        }
+        
+        .favorite-button.is-favorite {
+            background: #28a745;
+            color: white;
+        }
+        
+        .favorite-button.is-favorite:hover {
+            background: #218838;
+        }
+        
+        .add-button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        .add-button:hover {
+            background: #218838;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .status.show {
+            opacity: 1;
+        }
+        
+        h2 {
+            color: #fab617;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar" id="toolbar"></div>
+    
+    <div class="settings-panel">
+        <div class="settings-header">
+            <h2>Button Configuration</h2>
+            <button class="toggle-edit" onclick="toggleEditMode()">Edit Mode: OFF</button>
+        </div>
+        
+        <div class="button-editor hidden" id="editor"></div>
+        <button class="add-button hidden" onclick="addNewButton()">+ Add New Button</button>
+    </div>
+    
+    <div class="instructions">
+        <h3>How to use:</h3>
+        <ul>
+            <li>Click "Edit Mode" to configure your buttons</li>
+            <li>Add button names and URLs (e.g., http://localhost:3100)</li>
+            <li>Click any button to open/replace the current Chrome tab</li>
+            <li>Your configuration is automatically saved</li>
+            <li>To run as a desktop app: Save this file and double-click to open in Chrome</li>
+        </ul>
+    </div>
+    
+    <div class="status" id="status"></div>
+
+    <script>
+        // Default buttons configuration - All pages from navigation
+        let buttons = [
+            // Main
+            { name: "Hub", url: "http://localhost:3100/hub", favorite: false },
+            
+            // Operations
+            { name: "Essence", url: "http://localhost:3100/essence", favorite: false },
+            
+            // Production
+            { name: "Crafting", url: "http://localhost:3100/crafting", favorite: false },
+            { name: "Incinerator", url: "http://localhost:3100/incinerator", favorite: false },
+            { name: "Shop", url: "http://localhost:3100/shop", favorite: false },
+            { name: "Bank", url: "http://localhost:3100/bank", favorite: false },
+            { name: "Inventory", url: "http://localhost:3100/inventory", favorite: false },
+            
+            // Meks
+            { name: "CiruTree", url: "http://localhost:3100/cirutree", favorite: false },
+            { name: "Achievements", url: "http://localhost:3100/achievements", favorite: false },
+            { name: "XP Allocation", url: "http://localhost:3100/xp-allocation", favorite: false },
+            { name: "Spell Caster", url: "http://localhost:3100/spell-caster", favorite: false },
+            
+            // Management
+            { name: "Profile", url: "http://localhost:3100/profile", favorite: false },
+            { name: "Search", url: "http://localhost:3100/search", favorite: false },
+            { name: "Leaderboard", url: "http://localhost:3100/leaderboard", favorite: false },
+            
+            // Scrap Yard
+            { name: "Contracts", url: "http://localhost:3100/contracts", favorite: false },
+            { name: "Single Missions", url: "http://localhost:3100/contracts/single-missions", favorite: false },
+            { name: "Story Mode", url: "http://localhost:3100/contracts/chapters", favorite: false },
+            { name: "Story Climb", url: "http://localhost:3100/scrap-yard/story-climb", favorite: false },
+            
+            // Admin
+            { name: "Admin Dashboard", url: "http://localhost:3100/admin", favorite: false },
+            { name: "Save System", url: "http://localhost:3100/admin-save", favorite: false },
+            { name: "Mek Selector", url: "http://localhost:3100/mek-selector", favorite: false },
+            { name: "Shop Manager", url: "http://localhost:3100/admin-shop", favorite: false },
+            { name: "UI Showcase", url: "http://localhost:3100/ui-showcase", favorite: false },
+            { name: "Rarity Bias", url: "http://localhost:3100/rarity-bias", favorite: false },
+            { name: "Talent Builder", url: "http://localhost:3100/talent-builder", favorite: false },
+            { name: "Mek Tree Tables", url: "http://localhost:3100/admin-mek-tree-tables", favorite: false },
+            { name: "Spell Designer", url: "http://localhost:3100/admin-spells", favorite: false },
+            { name: "Spell Caster 3D", url: "http://localhost:3100/spell-caster-3d", favorite: false },
+            { name: "Plinko", url: "http://localhost:3100/admin-plinko", favorite: false },
+            { name: "Story Rewards", url: "http://localhost:3100/story-rewards", favorite: false },
+            { name: "Event Node Rewards", url: "http://localhost:3100/event-node-rewards", favorite: false },
+            { name: "Sphere Selector", url: "http://localhost:3100/admin-sphere", favorite: false },
+            { name: "Uni-Chips", url: "http://localhost:3100/uni-chips", favorite: false },
+            { name: "Chip Builder", url: "http://localhost:3100/admin/chip-builder", favorite: false },
+            { name: "Essence Donut", url: "http://localhost:3100/essence-donut", favorite: false }
+        ];
+        
+        let editMode = false;
+        let chromeTab = null;
+        
+        // Load saved configuration
+        function loadConfig() {
+            const saved = localStorage.getItem('devToolbarButtons');
+            if (saved) {
+                try {
+                    const savedButtons = JSON.parse(saved);
+                    // Migrate old format if needed
+                    if (savedButtons.length > 0 && savedButtons[0].favorite === undefined) {
+                        savedButtons.forEach(btn => btn.favorite = false);
+                    }
+                    // Only use saved config if it has the favorite property
+                    if (savedButtons.length > 0 && savedButtons[0].hasOwnProperty('favorite')) {
+                        buttons = savedButtons;
+                    } else {
+                        // Clear old config and use new default
+                        localStorage.removeItem('devToolbarButtons');
+                    }
+                } catch (e) {
+                    console.error('Failed to load saved config:', e);
+                }
+            }
+        }
+        
+        // Save configuration
+        function saveConfig() {
+            localStorage.setItem('devToolbarButtons', JSON.stringify(buttons));
+            showStatus('Configuration saved!');
+        }
+        
+        // Show status message
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('show');
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Sort buttons with favorites first
+        function getSortedButtons() {
+            return [...buttons].sort((a, b) => {
+                if (a.favorite && !b.favorite) return -1;
+                if (!a.favorite && b.favorite) return 1;
+                return 0;
+            });
+        }
+        
+        // Render toolbar buttons
+        function renderToolbar() {
+            const toolbar = document.getElementById('toolbar');
+            toolbar.innerHTML = '';
+            
+            const sortedButtons = getSortedButtons();
+            
+            sortedButtons.forEach((button) => {
+                const originalIndex = buttons.indexOf(button);
+                const container = document.createElement('div');
+                container.className = 'button-container';
+                
+                const btn = document.createElement('button');
+                btn.className = button.favorite ? 'toolbar-button favorite' : 'toolbar-button';
+                btn.textContent = button.name;
+                btn.dataset.url = button.url;
+                btn.dataset.index = originalIndex;
+                
+                if (!editMode) {
+                    btn.onclick = () => openInChrome(button.url, button.name);
+                }
+                
+                container.appendChild(btn);
+                toolbar.appendChild(container);
+            });
+        }
+        
+        // Open URL in Chrome (same tab)
+        function openInChrome(url, name) {
+            if (!url) {
+                showStatus('No URL configured for this button');
+                return;
+            }
+            
+            // If we don't have a reference to the Chrome tab, or it's closed, open a new one
+            if (!chromeTab || chromeTab.closed) {
+                chromeTab = window.open(url, 'devToolbarTarget');
+                showStatus(`Opened: ${name}`);
+            } else {
+                // Replace the URL in the existing tab
+                chromeTab.location.href = url;
+                chromeTab.focus();
+                showStatus(`Navigated to: ${name}`);
+            }
+        }
+        
+        // Toggle edit mode
+        function toggleEditMode() {
+            editMode = !editMode;
+            const editor = document.getElementById('editor');
+            const addBtn = document.querySelector('.add-button');
+            const toggleBtn = document.querySelector('.toggle-edit');
+            
+            toggleBtn.textContent = editMode ? 'Edit Mode: ON' : 'Edit Mode: OFF';
+            toggleBtn.style.background = editMode ? '#28a745' : '#fab617';
+            
+            if (editMode) {
+                editor.classList.remove('hidden');
+                addBtn.classList.remove('hidden');
+                document.querySelector('.toolbar').classList.add('edit-mode');
+                renderEditor();
+            } else {
+                editor.classList.add('hidden');
+                addBtn.classList.add('hidden');
+                document.querySelector('.toolbar').classList.remove('edit-mode');
+                saveConfig();
+            }
+            
+            renderToolbar();
+        }
+        
+        // Render button editor
+        function renderEditor() {
+            const editor = document.getElementById('editor');
+            editor.innerHTML = '';
+            
+            const sortedButtons = getSortedButtons();
+            
+            sortedButtons.forEach((button) => {
+                const index = buttons.indexOf(button);
+                const item = document.createElement('div');
+                item.className = 'edit-item';
+                
+                item.innerHTML = `
+                    <label>Button Name:</label>
+                    <input type="text" value="${button.name}" onchange="updateButton(${index}, 'name', this.value)">
+                    <label>URL:</label>
+                    <input type="text" value="${button.url}" onchange="updateButton(${index}, 'url', this.value)">
+                    <div class="button-actions">
+                        <button class="favorite-button ${button.favorite ? 'is-favorite' : ''}" onclick="toggleFavorite(${index})">
+                            ${button.favorite ? '★ Favorited' : '☆ Favorite'}
+                        </button>
+                        <button class="remove-button" onclick="removeButton(${index})">Remove</button>
+                    </div>
+                `;
+                
+                editor.appendChild(item);
+            });
+        }
+        
+        // Update button configuration
+        function updateButton(index, field, value) {
+            buttons[index][field] = value;
+            renderToolbar();
+        }
+        
+        // Remove button
+        function removeButton(index) {
+            if (confirm('Remove this button?')) {
+                buttons.splice(index, 1);
+                renderEditor();
+                renderToolbar();
+            }
+        }
+        
+        // Toggle favorite status
+        function toggleFavorite(index) {
+            buttons[index].favorite = !buttons[index].favorite;
+            renderEditor();
+            renderToolbar();
+            saveConfig();
+        }
+        
+        // Add new button
+        function addNewButton() {
+            buttons.push({
+                name: `Button ${buttons.length + 1}`,
+                url: 'http://localhost:3100/',
+                favorite: false
+            });
+            renderEditor();
+            renderToolbar();
+        }
+        
+        // Initialize
+        loadConfig();
+        renderToolbar();
+        
+        // Save config when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (editMode) {
+                saveConfig();
+            }
+        });
+    </script>
+</body>
+</html>

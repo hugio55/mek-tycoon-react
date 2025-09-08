@@ -7,6 +7,8 @@ import MekRecruitmentModalV1 from './components/MekRecruitmentModalV1';
 import MekRecruitmentModalV2 from './components/MekRecruitmentModalV2';
 import MekRecruitmentModalV3 from './components/MekRecruitmentModalV3';
 import MekRecruitmentModalV4 from './components/MekRecruitmentModalV4';
+import AnimatedSuccessBar from './components/AnimatedSuccessBar';
+import StandardizedMissionRewards from './components/StandardizedMissionRewards';
 import { successMultipliers, missionAilments, missionWeaknesses, globalMissionTypes, regularMissionTitles } from './constants/missionData';
 import { formatGoldAmount, formatCountdown, getRewardColor, generateSampleMeks } from './utils/helpers';
 import { getMekCardStyle, getTraitCircleStyle } from './utils/styleHelpers';
@@ -87,7 +89,6 @@ export default function ContractsLayoutOption11() {
   const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const [selectedBuff, setSelectedBuff] = useState<any | null>(null);
   const [buffModalStyle, setBuffModalStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [modalVersion, setModalVersion] = useState<'original' | 'v1' | 'v2' | 'v3' | 'v4'>('v4');
   const dailyVariation = "Acid";
   
   // Update timer every second
@@ -206,6 +207,28 @@ export default function ContractsLayoutOption11() {
       [missionId]: newMeks
     });
     
+    // Calculate and animate new success rate
+    const mekSlotCount = missionId === 'global' ? 6 : 2;
+    const actualMekCount = newMeks.filter(m => m !== null && m !== undefined).length;
+    const baseRate = (actualMekCount / mekSlotCount) * 70;
+    const bonusRate = hasMatch ? 10 : 0; // Add bonus if this mek has matching traits
+    const newSuccessRate = Math.min(100, baseRate + bonusRate);
+    
+    // Trigger success rate animation
+    setAnimatingSuccess({
+      ...animatingSuccess,
+      [missionId]: newSuccessRate
+    });
+    
+    // Store matched bonuses
+    if (hasMatch && matchedTraits.length > 0) {
+      const matchedIds = matchedTraits.map((t: any) => t.id);
+      setMatchedBonuses({
+        ...matchedBonuses,
+        [missionId]: [...(matchedBonuses[missionId] || []), ...matchedIds]
+      });
+    }
+    
     // Close modal
     setShowMekModal(null);
     setSelectedMekSlot(null);
@@ -237,10 +260,12 @@ export default function ContractsLayoutOption11() {
       return acc + parseInt(mult?.bonus.replace('+', '').replace('%', '') || '0');
     }, 0);
     
-    const baseSuccessRate = (meks.length / mekSlotCount) * 70;
+    // Count actual meks (non-null entries)
+    const actualMekCount = meks.filter((m: any) => m !== null && m !== undefined).length;
+    const baseSuccessRate = (actualMekCount / mekSlotCount) * 70;
     const targetSuccessRate = Math.min(100, baseSuccessRate + bonusPercentage);
-    const currentAnimatedRate = animatingSuccess[contractId] || baseSuccessRate;
-    const successRate = currentAnimatedRate;
+    const currentAnimatedRate = animatingSuccess[contractId] || targetSuccessRate;
+    const successRate = Math.round(currentAnimatedRate);
 
     // Elegant V1: Clean Design
     if (elegantVariation === "elegant-v1-clean") {
@@ -296,34 +321,18 @@ export default function ContractsLayoutOption11() {
               </div>
 
               {/* Success Rate Meter */}
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-gray-400">Success Chance</span>
-                  <span className="text-sm font-bold text-green-400">{successRate}%</span>
-                </div>
-                <div className="h-2 bg-black/40 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-300"
-                    style={{ width: `${successRate}%` }}
-                  />
-                </div>
-              </div>
+              <AnimatedSuccessBar 
+                successRate={successRate} 
+                height="small"
+                className="mb-3"
+              />
 
               {/* Rewards List */}
-              <div className="space-y-1.5 mb-3">
-                {missionRewards.slice(0, 4).map((reward, i) => (
-                  <div key={i} className="flex items-center justify-between bg-black/20 rounded-lg p-2">
-                    <div className="flex items-center gap-2">
-                      <Image src="/variation-images/angler.png" alt="" width={20} height={20} />
-                      <span className="text-sm text-gray-300">{reward.name}</span>
-                      {reward.amount && <span className="text-xs text-yellow-400">x{reward.amount}</span>}
-                    </div>
-                    <span className={`text-xs font-medium ${reward.dropChance === 100 ? 'text-green-400' : reward.dropChance > 50 ? 'text-yellow-400' : 'text-gray-400'}`}>
-                      {reward.dropChance}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <StandardizedMissionRewards 
+                rewards={missionRewards}
+                variant="list"
+                className="mb-3"
+              />
 
               {/* Squad Grid */}
               <div className="grid grid-cols-6 gap-1.5 mb-3">
@@ -391,9 +400,12 @@ export default function ContractsLayoutOption11() {
             </div>
 
             {/* Success Bar */}
-            <div className="h-1 bg-black/30 rounded-full mb-3">
-              <div className="h-full bg-green-500/70 rounded-full" style={{ width: `${successRate}%` }} />
-            </div>
+            <AnimatedSuccessBar 
+              successRate={successRate} 
+              height="small"
+              showLabel={false}
+              className="mb-3"
+            />
 
             {/* Squad & Deploy */}
             <div className="flex items-center gap-3">
@@ -452,9 +464,11 @@ export default function ContractsLayoutOption11() {
                   <span className="text-sm text-white/70">Success Rate</span>
                   <span className="text-lg font-bold text-green-400">{successRate}%</span>
                 </div>
-                <div className="h-3 bg-black/30 rounded-lg overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" style={{ width: `${successRate}%` }} />
-                </div>
+                <AnimatedSuccessBar 
+                  successRate={successRate} 
+                  height="medium"
+                  showLabel={false}
+                />
               </div>
 
               {/* Rewards Grid */}
@@ -519,10 +533,12 @@ export default function ContractsLayoutOption11() {
                   <span key={w} className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
                 ))}
               </div>
-              <div className="text-sm font-medium text-green-400 mb-1">Success: {successRate}%</div>
-              <div className="h-2 bg-gray-800 rounded">
-                <div className="h-full bg-green-500 rounded" style={{ width: `${successRate}%` }} />
-              </div>
+              <AnimatedSuccessBar 
+                successRate={successRate} 
+                height="small"
+                showLabel={false}
+              />
+              <div className="text-lg font-black text-green-400 mt-1 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" style={{ fontFamily: "'Orbitron', monospace" }}>SUCCESS: {successRate}%</div>
             </div>
           </div>
 
@@ -596,10 +612,13 @@ export default function ContractsLayoutOption11() {
                 {/* Success Meter */}
                 <div className="mb-6">
                   <div className="text-xs text-gray-500 uppercase mb-2">Success</div>
-                  <div className="text-2xl font-bold text-green-400">{successRate}%</div>
-                  <div className="h-1 bg-black/40 rounded-full mt-2">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${successRate}%` }} />
-                  </div>
+                  <div className="text-3xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]" style={{ fontFamily: "'Orbitron', monospace" }}>{successRate}%</div>
+                  <AnimatedSuccessBar 
+                    successRate={successRate} 
+                    height="small"
+                    showLabel={false}
+                    className="mt-2"
+                  />
                 </div>
 
                 {/* Deploy Button */}
@@ -693,10 +712,10 @@ export default function ContractsLayoutOption11() {
                   <div className="text-xs text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs text-gray-400 mb-1">Success Rate: {successRate}%</div>
-                  <div className="h-2 bg-black/30 rounded">
-                    <div className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded" style={{ width: `${successRate}%` }} />
-                  </div>
+                  <AnimatedSuccessBar 
+                    successRate={successRate} 
+                    height="small"
+                  />
                 </div>
               </div>
               <div className="flex gap-2">
@@ -828,8 +847,8 @@ export default function ContractsLayoutOption11() {
                   <div className="text-sm text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-green-400">{successRate}%</div>
-                  <div className="text-[9px] text-gray-500 uppercase">Success</div>
+                  <div className="text-2xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]" style={{ fontFamily: "'Orbitron', monospace" }}>{successRate}%</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Success</div>
                 </div>
               </div>
 
@@ -938,13 +957,12 @@ export default function ContractsLayoutOption11() {
                 {/* Success Meter */}
                 <div>
                   <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Success Chance</div>
-                  <div className="text-3xl font-bold text-green-400 mb-2">{successRate}%</div>
-                  <div className="h-3 bg-black/40 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
-                      style={{ width: `${successRate}%` }}
-                    />
-                  </div>
+                  <div className="text-4xl font-black text-green-400 mb-2 drop-shadow-[0_0_12px_rgba(34,197,94,0.9)]" style={{ fontFamily: "'Orbitron', monospace" }}>{successRate}%</div>
+                  <AnimatedSuccessBar 
+                    successRate={successRate} 
+                    height="medium"
+                    showLabel={false}
+                  />
                 </div>
               </div>
 
@@ -1156,13 +1174,10 @@ export default function ContractsLayoutOption11() {
               />
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight" style={{ 
+                  <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[200px]" style={{ 
                     fontFamily: "'Orbitron', sans-serif",
                     fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                    lineHeight: '1.1',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    lineHeight: '1.1'
                   }}>
                     {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                   </h2>
@@ -1211,13 +1226,10 @@ export default function ContractsLayoutOption11() {
                 
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight" style={{ 
+                    <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[200px]" style={{ 
                       fontFamily: "'Orbitron', sans-serif",
                       fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                      lineHeight: '1.1',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
+                      lineHeight: '1.1'
                     }}>
                       {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                     </h2>
@@ -1311,13 +1323,10 @@ export default function ContractsLayoutOption11() {
                     )
                   `
                 }}>
-                  <h2 className="text-lg font-bold text-yellow-400 leading-tight" style={{ 
+                  <h2 className="text-lg font-bold text-yellow-400 leading-tight break-words max-w-[200px]" style={{ 
                     fontFamily: "'Orbitron', sans-serif",
                     fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                    lineHeight: '1.1',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
+                    lineHeight: '1.1'
                   }}>
                     {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
                   </h2>
@@ -1536,18 +1545,14 @@ export default function ContractsLayoutOption11() {
                           `}>
                           {!isLocked && (
                             assignedMek ? (
-                              <div>
-                                <div className="relative w-full h-3/4">
-                                  <Image
-                                    src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
-                                    alt={assignedMek.name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <div className="text-[8px] text-yellow-300 font-bold truncate w-full text-center px-1">
-                                  {assignedMek.name}
-                                </div>
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
+                                  alt={assignedMek.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                                {/* Remove the wrapping div and render indicators directly on image */}
                                 {assignedMek.matchedTraits && assignedMek.matchedTraits.length > 0 && (
                                   <>
                                     {/* Trait Indicator Style 1: Corner Badge */}
@@ -1616,12 +1621,17 @@ export default function ContractsLayoutOption11() {
                           )}
                         </div>
                         
-                        {/* Mek Tooltip - Sticky on Click */}
+                        {/* Mek Tooltip - Smart positioning to stay on screen */}
                         {clickedMek?.missionId === contractId && clickedMek?.slotIndex === i && assignedMek && (
-                          <div className="mek-tooltip absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/95 border border-yellow-400/50 rounded-lg p-3 min-w-[200px]" style={{
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            ...(i >= 3 ? { bottom: 'auto', top: '100%', marginTop: '8px', marginBottom: 0 } : {})
+                          <div className="mek-tooltip absolute z-50 bg-black/95 border border-yellow-400/50 rounded-lg p-3 min-w-[200px] max-w-[250px]" style={{
+                            ...(i % 4 === 0 ? 
+                              { left: '0', right: 'auto' } : 
+                              i % 4 === 3 ? 
+                              { right: '0', left: 'auto' } : 
+                              { left: '50%', transform: 'translateX(-50%)' }),
+                            ...(i >= 4 ? 
+                              { top: '100%', marginTop: '8px', bottom: 'auto' } : 
+                              { bottom: '100%', marginBottom: '8px', top: 'auto' })
                           }}>
                             <div className="text-sm font-bold text-yellow-400 mb-2">{assignedMek.name}</div>
                             <div className="text-xs text-gray-400 mb-2">Power: {assignedMek.power}</div>
@@ -1679,12 +1689,11 @@ export default function ContractsLayoutOption11() {
                     {animatedSuccessRate[contractId] || successRate}%
                   </span>
                 </div>
-                <div className="h-3 bg-black/60 rounded-full overflow-hidden border border-gray-800">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-700 ease-out"
-                    style={{ width: `${animatedSuccessRate[contractId] || successRate}%` }}
-                  />
-                </div>
+                <AnimatedSuccessBar 
+                  successRate={animatedSuccessRate[contractId] || successRate} 
+                  height="medium"
+                  showLabel={false}
+                />
               </div>
 
               {/* Deploy Button */}
@@ -1813,12 +1822,11 @@ export default function ContractsLayoutOption11() {
 
               {/* Success Bar */}
               <div className="mb-4">
-                <div className="h-4 bg-black/60 rounded-full overflow-hidden border border-gray-700">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                    style={{ width: `${successRate}%` }}
-                  />
-                </div>
+                <AnimatedSuccessBar 
+                  successRate={successRate} 
+                  height="medium"
+                  showLabel={false}
+                />
                 <div className="text-center text-sm font-bold text-yellow-400 mt-1">{successRate}% Success Rate</div>
               </div>
 
@@ -1915,9 +1923,12 @@ export default function ContractsLayoutOption11() {
                     })}
                   </div>
                   
-                  <div className="h-2 bg-black/60 rounded-full mb-2">
-                    <div className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded-full" style={{ width: `${successRate}%` }} />
-                  </div>
+                  <AnimatedSuccessBar 
+                    successRate={successRate} 
+                    height="small"
+                    showLabel={false}
+                    className="mb-2"
+                  />
                   
                   <button className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-bold text-sm uppercase">
                     Deploy ({formatGoldAmount(deployFee)})
@@ -2057,12 +2068,11 @@ export default function ContractsLayoutOption11() {
                     {successRate}%
                   </span>
                 </div>
-                <div className="h-2 bg-black/40 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                    style={{ width: `${successRate}%` }}
-                  />
-                </div>
+                <AnimatedSuccessBar 
+                  successRate={successRate} 
+                  height="small"
+                  showLabel={false}
+                />
               </div>
 
               {/* Deploy Section */}
@@ -2192,48 +2202,6 @@ export default function ContractsLayoutOption11() {
           <h1 className="text-3xl font-bold text-yellow-400">CONTRACTS SYSTEM</h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 p-2 bg-yellow-400/10 border border-yellow-400/30">
-                <label className="text-sm text-yellow-400 font-bold">MODAL LAYOUT:</label>
-                <select 
-                  value={modalVersion}
-                  onChange={(e) => setModalVersion(e.target.value as 'original' | 'v1' | 'v2' | 'v3' | 'v4')}
-                  className="bg-black border-2 border-yellow-400 text-yellow-400 px-3 py-1.5 text-sm font-bold focus:border-yellow-300 focus:outline-none"
-                >
-                  <option value="v4">Option 4: Refined (5 Styles)</option>
-                  <option value="v1">Option 1: Industrial Sharp</option>
-                  <option value="v2">Option 2: Neon Cyberpunk</option>
-                  <option value="v3">Option 3: Clean Professional</option>
-                  <option value="original">Original (Debug)</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Mek Modal:</label>
-                <select 
-                  value={mekModalStyle}
-                  onChange={(e) => setMekModalStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                  className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
-                >
-                  <option value={1}>Simple Grid</option>
-                  <option value={2}>With Names</option>
-                  <option value={3}>With Power</option>
-                  <option value={4}>With Traits</option>
-                  <option value={5}>Full Details</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-400">Buff Modal:</label>
-                <select 
-                  value={buffModalStyle}
-                  onChange={(e) => setBuffModalStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                  className="bg-gray-900/80 border border-gray-700 text-yellow-400 px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
-                >
-                  <option value={1}>Floating Circle</option>
-                  <option value={2}>Holographic</option>
-                  <option value={3}>Card Stack</option>
-                  <option value={4}>Split View</option>
-                  <option value={5}>Minimal Float</option>
-                </select>
-              </div>
             </div>
           </div>
         </div>
@@ -2254,83 +2222,31 @@ export default function ContractsLayoutOption11() {
         </div>
       </div>
       
-      {/* Mek Recruitment Modal - Dynamic Version */}
-      {modalVersion === 'original' && (
-        <MekRecruitmentModal
-          showMekModal={showMekModal}
-          selectedMekSlot={selectedMekSlot}
-          onClose={() => {
-            setShowMekModal(null);
-            setSelectedMekSlot(null);
-          }}
-          onMekSelection={handleMekSelection}
-          mekCount={mekCount}
-          mekCardStyle={mekCardStyle}
-          traitCircleStyle={traitCircleStyle}
-          mekFrameStyle={mekFrameStyle}
-        />
-      )}
-      {modalVersion === 'v1' && (
-        <MekRecruitmentModalV1
-          showMekModal={showMekModal}
-          selectedMekSlot={selectedMekSlot}
-          onClose={() => {
-            setShowMekModal(null);
-            setSelectedMekSlot(null);
-          }}
-          onMekSelection={handleMekSelection}
-          mekCount={mekCount}
-        />
-      )}
-      {modalVersion === 'v2' && (
-        <MekRecruitmentModalV2
-          showMekModal={showMekModal}
-          selectedMekSlot={selectedMekSlot}
-          onClose={() => {
-            setShowMekModal(null);
-            setSelectedMekSlot(null);
-          }}
-          onMekSelection={handleMekSelection}
-          mekCount={mekCount}
-        />
-      )}
-      {modalVersion === 'v3' && (
-        <MekRecruitmentModalV3
-          showMekModal={showMekModal}
-          selectedMekSlot={selectedMekSlot}
-          onClose={() => {
-            setShowMekModal(null);
-            setSelectedMekSlot(null);
-          }}
-          onMekSelection={handleMekSelection}
-          mekCount={mekCount}
-        />
-      )}
-      {modalVersion === 'v4' && (
-        <MekRecruitmentModalV4
-          showMekModal={showMekModal}
-          selectedMekSlot={selectedMekSlot}
-          onClose={() => {
-            setShowMekModal(null);
-            setSelectedMekSlot(null);
-          }}
-          onMekSelection={handleMekSelection}
-          mekCount={mekCount}
-          mekCardStyle={mekCardStyle}
-          traitCircleStyle={traitCircleStyle}
-          mekFrameStyle={mekFrameStyle}
-        />
-      )}
+      {/* Mek Recruitment Modal - Locked to V4 */}
+      <MekRecruitmentModalV4
+        showMekModal={showMekModal}
+        selectedMekSlot={selectedMekSlot}
+        onClose={() => {
+          setShowMekModal(null);
+          setSelectedMekSlot(null);
+        }}
+        onMekSelection={handleMekSelection}
+        mekCount={mekCount}
+        mekCardStyle={mekCardStyle}
+        traitCircleStyle={traitCircleStyle}
+        mekFrameStyle={mekFrameStyle}
+      />
 
       {/* Buff Details Modal */}
       {selectedBuff && (
         <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 transition-all duration-300"
+          style={{ backdropFilter: 'blur(8px)' }}
           onClick={() => setSelectedBuff(null)}
         >
           {/* Style 1: Floating Circle */}
           {buffModalStyle === 1 && (
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Info Card Behind (z-index lower) - Card Style K */}
               <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-72">
                 {/* Card Style K: Semi-translucent with glass effect */}
@@ -2391,7 +2307,7 @@ export default function ContractsLayoutOption11() {
 
           {/* Style 2: Holographic */}
           {buffModalStyle === 2 && (
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Holographic Frame */}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
@@ -2441,7 +2357,7 @@ export default function ContractsLayoutOption11() {
 
           {/* Style 3: Card Stack */}
           {buffModalStyle === 3 && (
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Stacked Card Effect */}
               <div className="relative">
                 {/* Back cards */}
@@ -2498,7 +2414,7 @@ export default function ContractsLayoutOption11() {
 
           {/* Style 4: Split View */}
           {buffModalStyle === 4 && (
-            <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="relative max-w-3xl w-full modal-slideUp" onClick={(e) => e.stopPropagation()}>
               <div className="flex gap-6 items-center">
                 {/* Left: Large Floating Image */}
                 <div className="relative flex-shrink-0">
@@ -2554,7 +2470,7 @@ export default function ContractsLayoutOption11() {
 
           {/* Style 5: Minimal Float */}
           {buffModalStyle === 5 && (
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <div className="relative modal-slideUp" onClick={(e) => e.stopPropagation()}>
               {/* Large Minimal Image */}
               <div className="relative w-96 h-96 rounded-full overflow-hidden shadow-2xl">
                 <Image

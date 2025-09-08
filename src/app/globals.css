@@ -605,3 +605,184 @@ body {
 @keyframes radialParticle17 { 0% { transform: translate(-50%, -50%) rotate(306deg) translateX(0) scale(0); opacity: 0; } 10% { opacity: 1; transform: translate(-50%, -50%) rotate(306deg) translateX(20px) scale(1); } 100% { transform: translate(-50%, -50%) rotate(306deg) translateX(80px) scale(0); opacity: 0; } }
 @keyframes radialParticle18 { 0% { transform: translate(-50%, -50%) rotate(324deg) translateX(0) scale(0); opacity: 0; } 10% { opacity: 1; transform: translate(-50%, -50%) rotate(324deg) translateX(20px) scale(1); } 100% { transform: translate(-50%, -50%) rotate(324deg) translateX(80px) scale(0); opacity: 0; } }
 @keyframes radialParticle19 { 0% { transform: translate(-50%, -50%) rotate(342deg) translateX(0) scale(0); opacity: 0; } 10% { opacity: 1; transform: translate(-50%, -50%) rotate(342deg) translateX(20px) scale(1); } 100% { transform: translate(-50%, -50%) rotate(342deg) translateX(80px) scale(0); opacity: 0; } }
+
+/* Buff Modal Entrance Animations */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate3D {
+  from {
+    opacity: 0;
+    transform: perspective(600px) rotateX(-90deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(600px) rotateX(0) scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-100px);
+  }
+  50% {
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes glitchAppear {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px) scaleX(1.1);
+    filter: hue-rotate(90deg) saturate(3);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+  20% {
+    transform: translateX(10px) scaleY(0.9);
+    filter: hue-rotate(-90deg) saturate(2);
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  }
+  40% {
+    opacity: 0.5;
+    transform: translateX(-5px) scale(1.02);
+    filter: hue-rotate(180deg) saturate(1.5);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  60% {
+    transform: translateX(5px) scale(0.98);
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  80% {
+    opacity: 0.9;
+    transform: translateX(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: hue-rotate(0deg) saturate(1);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.modal-slideUp {
+  animation: slideUpFade 0.4s ease-out;
+}
+
+.modal-fadeScale {
+  animation: fadeScale 0.3s ease-out;
+}
+
+.modal-rotate3D {
+  animation: rotate3D 0.5s ease-out;
+  transform-style: preserve-3d;
+}
+
+.modal-bounce {
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.modal-glitch {
+  animation: glitchAppear 0.5s ease-out;
+}
+
+/* ===========================
+   UNI-CHIPS PAGE ANIMATIONS
+   =========================== */
+
+/* Floating chip animation */
+@keyframes float-chip {
+  0%, 100% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotateZ(1deg);
+  }
+  75% {
+    transform: translateY(5px) rotateZ(-1deg);
+  }
+}
+
+/* Floating card animation */
+@keyframes float-card {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Floating particle animation */
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(100px, -100px);
+    opacity: 0;
+  }
+}
+
+/* Slow rotation for energy rings */
+@keyframes rotate-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scan line animation */
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(calc(100vh + 100%));
+  }
+}
+
+/* Shimmer effect for progress bars */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-12deg);
+  }
+}
