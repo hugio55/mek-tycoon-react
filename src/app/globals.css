@@ -8,6 +8,13 @@ html, body {
   max-width: 100vw;
 }
 
+/* Prevent scrollbars when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
 body {
   position: relative;
 }
@@ -57,6 +64,27 @@ body {
   }
   50% {
     box-shadow: 0 0 30px rgba(251, 191, 36, 0.8);
+  }
+}
+
+/* Particle flow animation for progress bars with fade in/out */
+@keyframes particleFlow {
+  0% {
+    left: -10px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
   }
 }
 

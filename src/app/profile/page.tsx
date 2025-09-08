@@ -60,12 +60,12 @@ export default function ProfilePage() {
     const meks = [];
     const traitOptions = ['acid', 'electric', 'fire', 'water', 'earth', 'wind', 'shadow', 'light', 'tech', 'nature'];
     
-    // Real source keys that should work with the image system
+    // Real source keys that actually exist in the image directory
     const sourceKeys = [
-      'aa1-aa1-cd1', 'ab2-ab2-ce2', 'ac3-ac3-cf3', 'ad4-ad4-cg4',
-      'ae5-ae5-ch5', 'af6-af6-ci6', 'ag7-ag7-cj7', 'ah8-ah8-ck8',
-      'ai9-ai9-cl9', 'aj10-aj10-cm10', 'ak11-ak11-cn11', 'al12-al12-co12',
-      'am13-am13-cp13', 'an14-an14-cq14', 'ao15-ao15-cr15', 'ap16-ap16-cs16'
+      'aa1-aa1-cd1', 'aa1-aa3-hn1', 'aa1-aa4-gk1', 'aa1-ak1-bc2',
+      'aa1-ak1-de1', 'aa1-ak1-ji2', 'aa1-ak1-kq2', 'aa1-ak1-mo1',
+      'aa1-ak1-nm1', 'aa1-ak2-lg1', 'aa1-ak3-mt1', 'aa1-at1-ji2',
+      'aa1-at4-ey2', 'aa1-bf1-cd1', 'aa1-bf1-of2', 'aa1-bf2-ap2'
     ];
     
     for (let i = 1; i <= 40; i++) {

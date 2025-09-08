@@ -120,6 +120,26 @@ export default function MekRecruitmentModalV4({
   const [currentPage, setCurrentPage] = useState(1);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showMekModal) {
+      document.body.classList.add('modal-open');
+      const scrollY = window.scrollY;
+      document.body.style.top = `-${scrollY}px`;
+      
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [showMekModal]);
+
+  // Reset page when changing max meks to show
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [maxMeksToShow]);
+
   if (!showMekModal || !selectedMekSlot) return null;
 
   // Calculate pagination values - always use pagination
@@ -808,9 +828,54 @@ export default function MekRecruitmentModalV4({
                           
                           {/* Status badge - show percentage only in normal view */}
                           {hasMatch && !isZoomedOut && (
-                            <div className="absolute top-1 right-1 px-2 py-1 bg-green-500/90 text-white text-xs font-black uppercase tracking-wider rounded">
-                              +{totalBonus}%
-                            </div>
+                            <>
+                              {/* Option 1: Glowing green text with strong shadow */}
+                              <div className="absolute top-1 right-1 text-green-400 text-sm font-black uppercase tracking-wider"
+                                   style={{
+                                     textShadow: `
+                                       0 0 8px rgba(74, 222, 128, 0.8),
+                                       0 0 12px rgba(74, 222, 128, 0.6),
+                                       0 0 20px rgba(74, 222, 128, 0.4),
+                                       2px 2px 4px rgba(0, 0, 0, 0.9),
+                                       -1px -1px 2px rgba(0, 0, 0, 0.5)
+                                     `,
+                                     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))'
+                                   }}>
+                                +{totalBonus}%
+                              </div>
+                              
+                              {/* Option 2: Bright lime with neon glow 
+                              <div className="absolute top-1 right-1 text-lime-300 text-sm font-black uppercase tracking-wider"
+                                   style={{
+                                     textShadow: `
+                                       0 0 3px rgba(163, 230, 53, 1),
+                                       0 0 6px rgba(163, 230, 53, 0.8),
+                                       0 0 10px rgba(163, 230, 53, 0.6),
+                                       1px 1px 3px rgba(0, 0, 0, 1),
+                                       2px 2px 6px rgba(0, 0, 0, 0.7)
+                                     `,
+                                     WebkitTextStroke: '0.5px rgba(0,0,0,0.3)'
+                                   }}>
+                                +{totalBonus}%
+                              </div>
+                              */}
+                              
+                              {/* Option 3: Emerald with subtle outline 
+                              <div className="absolute top-1 right-1 text-emerald-400 text-[13px] font-black uppercase tracking-wider"
+                                   style={{
+                                     textShadow: `
+                                       0 0 5px rgba(52, 211, 153, 0.9),
+                                       0 0 15px rgba(52, 211, 153, 0.5),
+                                       1px 1px 2px rgba(0, 0, 0, 1),
+                                       -1px -1px 2px rgba(0, 0, 0, 0.8),
+                                       0 2px 4px rgba(0, 0, 0, 0.9)
+                                     `,
+                                     letterSpacing: '0.05em'
+                                   }}>
+                                +{totalBonus}%
+                              </div>
+                              */}
+                            </>
                           )}
                         </div>
                         

@@ -161,15 +161,10 @@ export default function EssenceDonutChart({
   return (
     <div className={`relative inline-block ${className}`}>
       {/* Industrial frame container */}
-      <div className="mek-card-industrial mek-border-sharp-gold p-6 relative overflow-hidden">
+      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative overflow-hidden">
         {/* Background patterns */}
         <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10" />
         <div className="absolute inset-0 mek-overlay-metal-texture opacity-5" />
-        
-        {/* Header with hazard stripes */}
-        <div className="mek-header-industrial -mx-6 -mt-6 mb-6 px-6 py-3">
-          <h3 className="mek-text-industrial text-yellow-400 text-xl">ESSENCE DISTRIBUTION</h3>
-        </div>
 
         {/* Chart container */}
         <div className="relative">
@@ -363,8 +358,8 @@ export default function EssenceDonutChart({
 
         </div>
 
-        {/* Fixed Height Details Panel */}
-        <div className="mt-6 h-[200px] relative">
+        {/* Details Panel - Dynamic Height */}
+        <div className="mt-6 min-h-[240px] relative">
           {hoveredSlice ? (() => {
             const slice = processedData.find(d => d.id === hoveredSlice);
             if (!slice) return null;
@@ -378,71 +373,73 @@ export default function EssenceDonutChart({
             const totalValue = slice.amount * slice.currentValue;
             
             return (
-              <div className="w-full h-full bg-black border border-green-500/30 relative overflow-hidden"
-                   style={{ boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)' }}>
+              <div className="w-full bg-black/90 border-2 border-yellow-500/30 relative overflow-hidden"
+                   style={{ boxShadow: '0 0 30px rgba(250, 182, 23, 0.15)' }}>
                 {/* Background texture */}
                 <div className="absolute inset-0 mek-overlay-metal-texture opacity-5" />
                 
                 {/* Main content area */}
-                <div className="flex h-full">
+                <div className="flex">
                   {/* Left: Essence Image and Name */}
-                  <div className="w-32 flex flex-col items-center justify-center p-3 border-r border-gray-800/50">
-                    <div className="relative w-16 h-16 rounded overflow-hidden bg-black/60 border border-gray-700/30">
+                  <div className="w-40 flex flex-col items-center justify-center p-4 bg-black/40">
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-black/60 border-2 border-yellow-500/20">
                       <Image
                         src={`/essence-images/bumblebee ${(processedData.indexOf(slice) % 3) + 1}.png`}
                         alt={slice.name}
                         fill
-                        className="object-contain p-1"
+                        className="object-contain p-2"
                       />
                     </div>
-                    <h3 className="text-sm font-bold text-yellow-400 font-orbitron uppercase mt-2 tracking-wider text-center">
+                    <h3 className="text-base font-bold text-yellow-400 font-orbitron uppercase mt-3 tracking-wider text-center">
                       {slice.name}
                     </h3>
-                    <span className="text-[10px] text-gray-500 mt-1">{slice.percentage.toFixed(1)}% of total</span>
+                    <span className="text-xs text-gray-400 mt-1 font-medium">{slice.percentage.toFixed(1)}% of total</span>
                   </div>
                   
-                  {/* Right: 2x2 Grid of Stats */}
-                  <div className="flex-1 p-4">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 h-full">
+                  {/* Right: Stats Grid */}
+                  <div className="flex-1 p-5">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                       {/* Top Left: Base Rate */}
-                      <div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">BASE RATE</div>
-                        <div className="text-base font-bold text-yellow-400 font-mono">{baseRate.toFixed(2)}/day</div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">BASE RATE</div>
+                        <div className="text-xl font-bold text-yellow-400 font-mono">{baseRate.toFixed(2)}/day</div>
                       </div>
                       
                       {/* Top Right: Market Price */}
-                      <div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">MARKET PRICE</div>
-                        <div className="text-base font-bold text-white font-mono">{slice.currentValue}g/ea</div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">MARKET PRICE</div>
+                        <div className="text-xl font-bold text-white font-mono">{slice.currentValue}g/ea</div>
                       </div>
                       
                       {/* Bottom Left: Bonus Rate */}
-                      <div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">BONUS RATE</div>
-                        <div className="text-base font-bold text-green-400 font-mono">
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">BONUS RATE</div>
+                        <div className="text-xl font-bold text-green-400 font-mono">
                           {bonusRate > 0 ? `+${bonusRate.toFixed(2)}/day` : '0.00/day'}
                         </div>
                       </div>
                       
                       {/* Bottom Right: Total Value */}
-                      <div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">TOTAL VALUE</div>
-                        <div className="text-base font-bold text-yellow-400 font-mono">
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">TOTAL VALUE</div>
+                        <div className="text-xl font-bold text-yellow-400 font-mono">
                           {totalValue.toLocaleString()}g
                         </div>
                       </div>
                     </div>
                     
-                    {/* Bottom Progress Bar Section */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/50 border-t border-gray-800/50">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">ESSENCE PROGRESS</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-yellow-400">{slice.amount.toFixed(1)}</span>
-                          <span className="text-[10px] text-gray-500">/</span>
-                          <span className="text-xs text-gray-400">{effectiveMax.toFixed(1)}</span>
+                    {/* Progress Bar Section - Integrated */}
+                    <div className="mt-6 pt-4 border-t border-gray-800/50">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-gray-400 uppercase tracking-widest font-medium">ESSENCE PROGRESS</span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-bold text-yellow-400">{slice.amount.toFixed(1)}</span>
+                            <span className="text-xs text-gray-500">/</span>
+                            <span className="text-sm text-gray-400">{effectiveMax.toFixed(1)}</span>
+                          </div>
                           {slice.maxAmountBuffed && slice.maxAmountBuffed > (slice.maxAmount || 10) && (
-                            <span className="text-[10px] text-green-400 font-bold animate-pulse">
+                            <span className="text-xs text-green-400 font-bold px-2 py-0.5 bg-green-400/10 rounded animate-pulse">
                               BUFFED
                             </span>
                           )}
@@ -450,7 +447,7 @@ export default function EssenceDonutChart({
                       </div>
                       
                       {/* Industrial Progress Bar */}
-                      <div className="relative h-5 bg-gray-900/80 rounded-sm overflow-hidden border border-gray-700/50">
+                      <div className="relative h-6 bg-gray-900/80 rounded overflow-hidden border border-gray-700/50">
                         {/* Divider lines */}
                         <div className="absolute inset-0 flex">
                           {Array.from({ length: segmentCount }, (_, i) => (
@@ -478,10 +475,10 @@ export default function EssenceDonutChart({
               </div>
             );
           })() : (
-            <div className="w-full h-full bg-black/80 border border-gray-800/50 flex items-center justify-center">
+            <div className="w-full min-h-[240px] bg-black/80 border-2 border-gray-800/50 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-gray-500 text-sm mb-1 uppercase tracking-wider">↑ Hover slice for details ↑</div>
-                <div className="text-gray-600 text-xs">Select any essence segment</div>
+                <div className="text-gray-400 text-sm mb-2 uppercase tracking-widest font-medium">↑ Hover slice for details ↑</div>
+                <div className="text-gray-500 text-xs">Select any essence segment</div>
               </div>
             </div>
           )}

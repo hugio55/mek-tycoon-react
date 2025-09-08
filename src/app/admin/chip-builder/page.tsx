@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Image from 'next/image';
@@ -30,9 +30,19 @@ const BUFF_TYPES = [
 
 interface ChipBuff {
   buffType: string;
-  minValue: number;
-  maxValue: number;
-  weight: number; // probability weight
+  procChance: number; // Base chance this buff can appear (0-100%)
+}
+
+interface TierConfig {
+  tier: number;
+  rarityConfigs: {
+    [rarity: string]: {
+      minValue: number;
+      maxValue: number;
+      buffCount: number; // How many buffs this rarity gets
+      procMultiplier: number; // Multiplier for buff proc chances
+    };
+  };
 }
 
 interface ChipDefinition {
@@ -40,15 +50,10 @@ interface ChipDefinition {
   name: string;
   description: string;
   category: 'attack' | 'defense' | 'utility' | 'economy' | 'special';
-  tier: number; // 1-7 for chip tiers
+  tier: number; // 1-10 for chip tiers
   imageUrl?: string;
   possibleBuffs: ChipBuff[];
-  rankScaling: {
-    [rank: string]: {
-      buffMultiplier: number;
-      rollChances: number; // number of buffs to roll
-    };
-  };
+  tierConfig: TierConfig;
 }
 
 export default function ChipBuilderPage() {
@@ -58,22 +63,36 @@ export default function ChipBuilderPage() {
   const [chipTier, setChipTier] = useState(1);
   const [selectedBuffs, setSelectedBuffs] = useState<ChipBuff[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [rankScaling, setRankScaling] = useState<ChipDefinition['rankScaling']>({});
+  const [tierConfig, setTierConfig] = useState<TierConfig>({
+    tier: 1,
+    rarityConfigs: {}
+  });
   const [savedChips, setSavedChips] = useState<ChipDefinition[]>([]);
   const [editingChip, setEditingChip] = useState<ChipDefinition | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize rank scaling with defaults
-  useState(() => {
-    const defaultScaling: ChipDefinition['rankScaling'] = {};
-    CHIP_RANKS.forEach((rank, index) => {
-      defaultScaling[rank] = {
-        buffMultiplier: 1 + (index * 0.3), // 1x, 1.3x, 1.6x, etc.
-        rollChances: Math.min(1 + Math.floor(index / 3), 5), // 1-5 buffs
+  // Initialize tier config with defaults when tier changes
+  useEffect(() => {
+    const defaultConfig: TierConfig = {
+      tier: chipTier,
+      rarityConfigs: {}
+    };
+    
+    // Set default values for each rarity based on tier
+    CHIP_RANKS.forEach((rank, rankIndex) => {
+      const tierMultiplier = chipTier; // Tier 1 = 1x, Tier 10 = 10x
+      const rarityMultiplier = 1 + (rankIndex * 0.5); // D=1x, C=1.5x, B=2x... XXX=6x
+      
+      defaultConfig.rarityConfigs[rank] = {
+        minValue: Math.round(5 * tierMultiplier * rarityMultiplier),
+        maxValue: Math.round(20 * tierMultiplier * rarityMultiplier),
+        buffCount: Math.min(1 + Math.floor(rankIndex / 2), 6), // 1-6 buffs
+        procMultiplier: 0.5 + (rankIndex * 0.15), // 50% to 185% proc chance multiplier
       };
     });
-    setRankScaling(defaultScaling);
-  });
+    
+    setTierConfig(defaultConfig);
+  }, [chipTier]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,9 +110,7 @@ export default function ChipBuilderPage() {
       ...selectedBuffs,
       {
         buffType: BUFF_TYPES[0].id,
-        minValue: 10,
-        maxValue: 50,
-        weight: 100,
+        procChance: 50, // 50% base chance
       },
     ]);
   };
@@ -108,12 +125,15 @@ export default function ChipBuilderPage() {
     setSelectedBuffs(selectedBuffs.filter((_, i) => i !== index));
   };
 
-  const updateRankScaling = (rank: string, field: 'buffMultiplier' | 'rollChances', value: number) => {
-    setRankScaling({
-      ...rankScaling,
-      [rank]: {
-        ...rankScaling[rank],
-        [field]: value,
+  const updateRarityConfig = (rank: string, field: keyof TierConfig['rarityConfigs'][string], value: number) => {
+    setTierConfig({
+      ...tierConfig,
+      rarityConfigs: {
+        ...tierConfig.rarityConfigs,
+        [rank]: {
+          ...tierConfig.rarityConfigs[rank],
+          [field]: value,
+        },
       },
     });
   };
@@ -132,7 +152,7 @@ export default function ChipBuilderPage() {
       tier: chipTier,
       imageUrl: imagePreview || undefined,
       possibleBuffs: selectedBuffs,
-      rankScaling,
+      tierConfig,
     };
 
     if (editingChip) {
@@ -160,7 +180,7 @@ export default function ChipBuilderPage() {
     setChipTier(chip.tier);
     setSelectedBuffs(chip.possibleBuffs);
     setImagePreview(chip.imageUrl || null);
-    setRankScaling(chip.rankScaling);
+    setTierConfig(chip.tierConfig);
   };
 
   const deleteChip = (chipId: string) => {
@@ -243,13 +263,13 @@ export default function ChipBuilderPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">Tier (T1-T7)</label>
+                      <label className="block text-sm text-gray-400 mb-2">Tier (T1-T10)</label>
                       <select
                         value={chipTier}
                         onChange={(e) => setChipTier(Number(e.target.value))}
                         className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7].map(tier => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
                           <option key={tier} value={tier}>Tier {tier}</option>
                         ))}
                       </select>
@@ -325,33 +345,18 @@ export default function ChipBuilderPage() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                           <div>
-                            <label className="text-xs text-gray-500">Min Value</label>
+                            <label className="text-xs text-gray-500">Base Proc Chance (%)</label>
                             <input
                               type="number"
-                              value={buff.minValue}
-                              onChange={(e) => updateBuff(index, { minValue: Number(e.target.value) })}
+                              value={buff.procChance}
+                              onChange={(e) => updateBuff(index, { procChance: Number(e.target.value) })}
+                              min="0"
+                              max="100"
                               className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
                             />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-500">Max Value</label>
-                            <input
-                              type="number"
-                              value={buff.maxValue}
-                              onChange={(e) => updateBuff(index, { maxValue: Number(e.target.value) })}
-                              className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-500">Weight %</label>
-                            <input
-                              type="number"
-                              value={buff.weight}
-                              onChange={(e) => updateBuff(index, { weight: Number(e.target.value) })}
-                              className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                            />
+                            <span className="text-xs text-gray-500">Chance this buff appears (modified by rarity)</span>
                           </div>
                         </div>
                       </div>
@@ -369,37 +374,60 @@ export default function ChipBuilderPage() {
               </button>
             </div>
 
-            {/* Right Column - Rank Scaling & Preview */}
+            {/* Right Column - Tier/Rarity Configuration & Preview */}
             <div className="space-y-6">
-              {/* Rank Scaling */}
+              {/* Tier Configuration for Each Rarity */}
               <div className="bg-gray-900/60 border border-gray-800 p-6">
-                <h2 className="text-xl font-bold text-yellow-400 mb-4">Rank Scaling</h2>
+                <h2 className="text-xl font-bold text-yellow-400 mb-4">Tier {chipTier} - Rarity Configuration</h2>
+                <p className="text-sm text-gray-400 mb-4">Configure value ranges and buff counts for each rarity</p>
                 
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {CHIP_RANKS.map((rank) => (
                     <div key={rank} className="p-3 bg-black/50 border border-gray-700">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-yellow-400">{rank} Rank</span>
+                        <span className="font-bold text-yellow-400">{rank} Rarity</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
-                          <label className="text-xs text-gray-500">Buff Multiplier</label>
+                          <label className="text-xs text-gray-500">Min Value</label>
                           <input
                             type="number"
-                            value={rankScaling[rank]?.buffMultiplier || 1}
-                            onChange={(e) => updateRankScaling(rank, 'buffMultiplier', Number(e.target.value))}
-                            step="0.1"
+                            value={tierConfig.rarityConfigs[rank]?.minValue || 0}
+                            onChange={(e) => updateRarityConfig(rank, 'minValue', Number(e.target.value))}
                             className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500">Roll Chances</label>
+                          <label className="text-xs text-gray-500">Max Value</label>
                           <input
                             type="number"
-                            value={rankScaling[rank]?.rollChances || 1}
-                            onChange={(e) => updateRankScaling(rank, 'rollChances', Number(e.target.value))}
+                            value={tierConfig.rarityConfigs[rank]?.maxValue || 0}
+                            onChange={(e) => updateRarityConfig(rank, 'maxValue', Number(e.target.value))}
+                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500">Buff Count</label>
+                          <input
+                            type="number"
+                            value={tierConfig.rarityConfigs[rank]?.buffCount || 1}
+                            onChange={(e) => updateRarityConfig(rank, 'buffCount', Number(e.target.value))}
                             min="1"
                             max="10"
+                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500">Proc Multiplier</label>
+                          <input
+                            type="number"
+                            value={tierConfig.rarityConfigs[rank]?.procMultiplier || 1}
+                            onChange={(e) => updateRarityConfig(rank, 'procMultiplier', Number(e.target.value))}
+                            step="0.1"
+                            min="0.1"
+                            max="5"
                             className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
                           />
                         </div>
@@ -439,23 +467,25 @@ export default function ChipBuilderPage() {
                     </div>
 
                     <div className="text-sm text-gray-400">
-                      <p className="mb-2">Example at SSS Rank:</p>
+                      <p className="mb-2">Example at SSS Rarity:</p>
                       <ul className="space-y-1">
                         {selectedBuffs.map((buff, index) => {
                           const buffType = BUFF_TYPES.find(b => b.id === buff.buffType);
-                          const multiplier = rankScaling['SSS']?.buffMultiplier || 1;
-                          const scaledMin = Math.round(buff.minValue * multiplier);
-                          const scaledMax = Math.round(buff.maxValue * multiplier);
+                          const config = tierConfig.rarityConfigs['SSS'];
+                          const finalProcChance = Math.round(buff.procChance * (config?.procMultiplier || 1));
                           return (
                             <li key={index} className="flex items-center gap-2">
                               <span>{buffType?.icon}</span>
-                              <span>{buffType?.name}: {scaledMin}-{scaledMax}{buffType?.unit}</span>
+                              <span>
+                                {buffType?.name}: {config?.minValue || 0}-{config?.maxValue || 0}{buffType?.unit}
+                                <span className="text-xs text-gray-500"> ({finalProcChance}% chance)</span>
+                              </span>
                             </li>
                           );
                         })}
                       </ul>
                       <p className="mt-2 text-xs">
-                        Rolls: {rankScaling['SSS']?.rollChances || 1} random buffs from above
+                        This rarity gets {tierConfig.rarityConfigs['SSS']?.buffCount || 1} random buffs from above
                       </p>
                     </div>
                   </div>

@@ -264,108 +264,149 @@ export default function EssencePage() {
           </div>
         </div>
         
-        {/* Individual Essence Bars */}
+        {/* Individual Essence Bars - Redesigned with Industrial Aesthetic */}
         <div className="max-w-4xl mx-auto px-4 mt-8">
-          <div className="bg-gray-900/20 backdrop-blur-md border border-gray-800/50 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-yellow-400 mb-4 text-center font-orbitron">
-              ESSENCE DETAILS
-            </h3>
-            <div className="space-y-3">
-              {displayedEssences.slice(0, 15).map((essence, index) => {
+          <div className="bg-black border-2 border-green-400/30 rounded-lg p-6 relative">
+            {/* Inner green accent border */}
+            <div className="absolute inset-[2px] rounded-lg border border-green-400/10 pointer-events-none" />
+            
+            {/* Title Section */}
+            <div className="text-center mb-6">
+              <h2 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider" style={{
+                fontFamily: "'Orbitron', 'Rajdhani', sans-serif",
+                textShadow: '0 0 20px rgba(250, 182, 23, 0.5)'
+              }}>
+                BODY
+              </h2>
+              <div className="text-lg text-yellow-400/80 mt-1">
+                {((displayedEssences.reduce((sum, e) => sum + e.quantity, 0) / essenceData.reduce((sum, e) => sum + e.quantity, 0)) * 100).toFixed(1)}%
+              </div>
+            </div>
+            
+            {/* Stats Grid - 2x2 Layout */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {/* Total Essence */}
+              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Essence</div>
+                <div className="text-2xl font-bold text-yellow-400">
+                  {displayedEssences.reduce((sum, e) => sum + e.quantity, 0)}
+                </div>
+              </div>
+              
+              {/* Collection Rate */}
+              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Collection Rate</div>
+                <div className="text-2xl font-bold text-green-400">
+                  {(0.115 + totalIndividualBuff).toFixed(3)}/day
+                </div>
+              </div>
+              
+              {/* Unique Types */}
+              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Unique Types</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {displayedEssences.length}
+                </div>
+              </div>
+              
+              {/* Buff Status */}
+              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Active Buffs</div>
+                <div className="text-2xl font-bold text-purple-400">
+                  {individualBuffs.length}
+                </div>
+              </div>
+            </div>
+            
+            {/* Main Progress Bar */}
+            <div className="relative">
+              <div className="h-8 bg-gray-900 rounded overflow-hidden border border-gray-700/50">
+                {/* Grid lines for visual interest */}
+                <div className="absolute inset-0 flex">
+                  {Array.from({ length: 20 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="border-r border-gray-800/50"
+                      style={{ width: '5%' }}
+                    />
+                  ))}
+                </div>
+                
+                {/* Filled portion */}
+                <div
+                  className="absolute inset-y-0 left-0 transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, (displayedEssences.reduce((sum, e) => sum + e.quantity, 0) / 500) * 100)}%`,
+                    background: 'linear-gradient(90deg, #fab617 0%, #ffd700 50%, #fab617 100%)',
+                    boxShadow: '0 0 20px rgba(250, 182, 23, 0.5)'
+                  }}
+                />
+                
+                {/* Center text */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm tracking-wider" style={{
+                    textShadow: '0 0 4px rgba(0,0,0,0.9)'
+                  }}>
+                    {displayedEssences.reduce((sum, e) => sum + e.quantity, 0)} / 500
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Individual Essence List - Compact View */}
+            <div className="mt-6 space-y-2">
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-3">Top Essences</div>
+              {displayedEssences.slice(0, 5).map((essence, index) => {
                 const color = getEssenceColor(index);
-                const percentage = (essence.quantity / 50) * 100; // Max 50 for bar display
+                const percentage = (essence.quantity / 50) * 100;
                 
                 return (
-                  <div key={essence.name} className="bg-gray-900/30 backdrop-blur-sm border border-gray-800/50 p-4 rounded-lg transition-all hover:bg-gray-900/40">
-                    <div className="flex items-center gap-4">
-                      {/* Essence Icon/Image - Animated GIF */}
-                      <div className="w-12 h-12 rounded-lg flex-shrink-0 relative overflow-hidden">
-                        <img 
-                          src={`/essence-images/bumb.gif?t=${Date.now() + index * 100}`} // Unique timestamp to force separate GIF instances with offset
-                          alt={essence.name}
-                          className="w-full h-full object-cover"
-                          style={{
-                            filter: `hue-rotate(${index * 30}deg) saturate(1.2)` // Vary color per essence
-                          }}
-                        />
-                        {/* Buff indicator on icon */}
-                        {essence.individualBuff > 0 && (
-                          <div className="absolute -top-1 -right-1">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" 
-                                 title="Speed Buffed" />
-                          </div>
-                        )}
+                  <div key={essence.name} className="flex items-center gap-3 p-2 bg-gray-900/30 rounded border border-gray-800/50 hover:border-gray-700/50 transition-all">
+                    {/* Icon */}
+                    <div className="w-8 h-8 rounded flex items-center justify-center text-sm" style={{
+                      backgroundColor: color + '20',
+                      border: `1px solid ${color}50`
+                    }}>
+                      {essence.icon}
+                    </div>
+                    
+                    {/* Name and quantity */}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-300">{essence.name}</span>
+                        <span className="text-sm font-bold text-yellow-400">{essence.quantity}</span>
                       </div>
                       
-                      {/* Progress Section */}
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-white font-medium">{essence.name}</span>
-                            {essence.individualBuff > 0 && (
-                              <span className="text-xs text-green-400 bg-green-400/20 px-1.5 py-0.5 rounded">
-                                +{(essence.individualBuff * 100).toFixed(0)}%
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {essence.rate.toFixed(3)}/day
-                            {essence.individualBuff > 0 && (
-                              <span className="text-green-400 ml-1">
-                                (+{essence.individualBuff.toFixed(3)})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                        
-                        {/* Progress bar */}
-                        <div className="relative h-6 bg-gray-900/50 rounded overflow-hidden border border-gray-700/30">
-                          {/* Divider lines */}
-                          <div className="absolute inset-0 flex">
-                            {Array.from({ length: 10 }, (_, i) => (
-                              <div
-                                key={i}
-                                className="border-r border-gray-700/20"
-                                style={{ 
-                                  width: '10%',
-                                }}
-                              />
-                            ))}
-                          </div>
-                          
-                          {/* Filled portion */}
-                          <div
-                            className="absolute inset-y-0 left-0 transition-all duration-500"
-                            style={{
-                              width: `${Math.min(100, percentage)}%`,
-                              background: `linear-gradient(90deg, ${color}, ${color}dd)`,
-                              boxShadow: `inset 0 0 20px ${color}60, 0 0 10px ${color}40`
-                            }}
-                          />
-                          
-                          {/* Quantity display */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white font-bold text-sm" style={{
-                              textShadow: '0 0 4px rgba(0,0,0,0.8)'
-                            }}>
-                              {essence.quantity} / 50
-                            </span>
-                          </div>
-                        </div>
+                      {/* Mini progress bar */}
+                      <div className="h-1 bg-gray-800 rounded-full mt-1 overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(100, percentage)}%`,
+                            backgroundColor: color
+                          }}
+                        />
                       </div>
                     </div>
+                    
+                    {/* Buff indicator */}
+                    {essence.individualBuff > 0 && (
+                      <div className="text-xs text-green-400 bg-green-400/20 px-1.5 py-0.5 rounded">
+                        +{(essence.individualBuff * 100).toFixed(0)}%
+                      </div>
+                    )}
                   </div>
                 );
               })}
+              
+              {displayedEssences.length > 5 && (
+                <div className="text-center pt-2">
+                  <button className="text-xs text-yellow-400/70 hover:text-yellow-400 transition-colors uppercase tracking-wider">
+                    View All {displayedEssences.length} Types →
+                  </button>
+                </div>
+              )}
             </div>
-            
-            {displayedEssences.length > 15 && (
-              <div className="text-center mt-4">
-                <button className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
-                  View All {displayedEssences.length} Essences →
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>

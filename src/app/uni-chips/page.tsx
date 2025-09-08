@@ -54,16 +54,16 @@ export default function UniChipsPage() {
 
   // Define all 10 chip tiers with industrial styling and quantum properties
   const chipTiers: ChipTier[] = [
-    { tier: 1, name: 'BASIC', unlocked: true, color: '#1a1a1a', glowColor: 'rgba(250, 182, 23, 0.4)', borderColor: '#fab617', description: 'Basic Quantum Core - Entry Level Manufacturing', requiredLevel: 1, particleColor: '#fab617', energySignature: 'STABLE' },
-    { tier: 2, name: 'COMMON', unlocked: false, color: '#0d2818', glowColor: 'rgba(34, 197, 94, 0.4)', borderColor: '#22c55e', description: 'Enhanced Processing Unit - Level 10 Clearance', requiredLevel: 10, particleColor: '#22c55e', energySignature: 'ENHANCED' },
-    { tier: 3, name: 'UNCOMMON', unlocked: false, color: '#1e3a5f', glowColor: 'rgba(59, 130, 246, 0.4)', borderColor: '#3b82f6', description: 'Advanced Quantum Matrix - Level 20 Clearance', requiredLevel: 20, particleColor: '#3b82f6', energySignature: 'ADVANCED' },
-    { tier: 4, name: 'RARE', unlocked: false, color: '#4c1d95', glowColor: 'rgba(139, 92, 246, 0.4)', borderColor: '#8b5cf6', description: 'Rare Element Integration - Level 30 Clearance', requiredLevel: 30, particleColor: '#8b5cf6', energySignature: 'VOLATILE' },
-    { tier: 5, name: 'EPIC', unlocked: false, color: '#831843', glowColor: 'rgba(236, 72, 153, 0.4)', borderColor: '#ec4899', description: 'Epic Quantum Resonance - Level 40 Clearance', requiredLevel: 40, particleColor: '#ec4899', energySignature: 'RESONANT' },
-    { tier: 6, name: 'LEGENDARY', unlocked: false, color: '#7c2d12', glowColor: 'rgba(251, 146, 60, 0.4)', borderColor: '#fb923c', description: 'Legendary Fusion Core - Level 50 Clearance', requiredLevel: 50, particleColor: '#fb923c', energySignature: 'FUSION' },
-    { tier: 7, name: 'MYTHIC', unlocked: false, color: '#713f12', glowColor: 'rgba(250, 204, 21, 0.4)', borderColor: '#facc15', description: 'Mythic Energy Conduit - Level 60 Clearance', requiredLevel: 60, particleColor: '#facc15', energySignature: 'MYTHIC' },
-    { tier: 8, name: 'DIVINE', unlocked: false, color: '#14532d', glowColor: 'rgba(74, 222, 128, 0.5)', borderColor: '#4ade80', description: 'Divine Quantum State - Level 70 Clearance', requiredLevel: 70, particleColor: '#4ade80', energySignature: 'DIVINE' },
-    { tier: 9, name: 'COSMIC', unlocked: false, color: '#1e1b4b', glowColor: 'rgba(165, 180, 252, 0.5)', borderColor: '#a5b4fc', description: 'Cosmic Entanglement Core - Level 80 Clearance', requiredLevel: 80, particleColor: '#a5b4fc', energySignature: 'COSMIC' },
-    { tier: 10, name: 'INFINITY', unlocked: false, color: '#701a75', glowColor: 'rgba(240, 171, 252, 0.6)', borderColor: '#f0abfc', description: 'Infinite Quantum Singularity - Level 100 Clearance', requiredLevel: 100, particleColor: '#f0abfc', energySignature: 'INFINITE' },
+    { tier: 1, name: 'T1', unlocked: true, color: '#1a1a1a', glowColor: 'rgba(250, 182, 23, 0.4)', borderColor: '#fab617', description: 'Basic Quantum Core - Entry Level Manufacturing', requiredLevel: 1, particleColor: '#fab617', energySignature: 'STABLE' },
+    { tier: 2, name: 'T2', unlocked: false, color: '#0d2818', glowColor: 'rgba(34, 197, 94, 0.4)', borderColor: '#22c55e', description: 'Enhanced Processing Unit - Level 10 Clearance', requiredLevel: 10, particleColor: '#22c55e', energySignature: 'ENHANCED' },
+    { tier: 3, name: 'T3', unlocked: false, color: '#1e3a5f', glowColor: 'rgba(59, 130, 246, 0.4)', borderColor: '#3b82f6', description: 'Advanced Quantum Matrix - Level 20 Clearance', requiredLevel: 20, particleColor: '#3b82f6', energySignature: 'ADVANCED' },
+    { tier: 4, name: 'T4', unlocked: false, color: '#4c1d95', glowColor: 'rgba(139, 92, 246, 0.4)', borderColor: '#8b5cf6', description: 'Rare Element Integration - Level 30 Clearance', requiredLevel: 30, particleColor: '#8b5cf6', energySignature: 'VOLATILE' },
+    { tier: 5, name: 'T5', unlocked: false, color: '#831843', glowColor: 'rgba(236, 72, 153, 0.4)', borderColor: '#ec4899', description: 'Epic Quantum Resonance - Level 40 Clearance', requiredLevel: 40, particleColor: '#ec4899', energySignature: 'RESONANT' },
+    { tier: 6, name: 'T6', unlocked: false, color: '#7c2d12', glowColor: 'rgba(251, 146, 60, 0.4)', borderColor: '#fb923c', description: 'Legendary Fusion Core - Level 50 Clearance', requiredLevel: 50, particleColor: '#fb923c', energySignature: 'FUSION' },
+    { tier: 7, name: 'T7', unlocked: false, color: '#713f12', glowColor: 'rgba(250, 204, 21, 0.4)', borderColor: '#facc15', description: 'Mythic Energy Conduit - Level 60 Clearance', requiredLevel: 60, particleColor: '#facc15', energySignature: 'MYTHIC' },
+    { tier: 8, name: 'T8', unlocked: false, color: '#14532d', glowColor: 'rgba(74, 222, 128, 0.5)', borderColor: '#4ade80', description: 'Divine Quantum State - Level 70 Clearance', requiredLevel: 70, particleColor: '#4ade80', energySignature: 'DIVINE' },
+    { tier: 9, name: 'T9', unlocked: false, color: '#1e1b4b', glowColor: 'rgba(165, 180, 252, 0.5)', borderColor: '#a5b4fc', description: 'Cosmic Entanglement Core - Level 80 Clearance', requiredLevel: 80, particleColor: '#a5b4fc', energySignature: 'COSMIC' },
+    { tier: 10, name: 'T10', unlocked: false, color: '#701a75', glowColor: 'rgba(240, 171, 252, 0.6)', borderColor: '#f0abfc', description: 'Infinite Quantum Singularity - Level 100 Clearance', requiredLevel: 100, particleColor: '#f0abfc', energySignature: 'INFINITE' },
   ];
 
   // Generate daily recipes with requirements
@@ -253,13 +253,8 @@ export default function UniChipsPage() {
               
               <div className="flex justify-between items-start relative">
                 <div className="flex-1">
-                  {/* Quantum status indicator */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
-                    <span className="text-xs text-yellow-400/70 uppercase tracking-[0.3em] font-bold">QUANTUM FORGE ONLINE</span>
-                  </div>
                   
-                  <h1 className="text-7xl font-black mb-3 mek-text-industrial" 
+                  <h1 className="text-5xl font-black mb-3 mek-text-industrial" 
                       style={{ 
                         background: 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)',
                         WebkitBackgroundClip: 'text',
@@ -286,7 +281,7 @@ export default function UniChipsPage() {
                 {/* System timer with industrial frame */}
                 <div className="text-right">
                   <div className="bg-black/60 border border-yellow-500/30 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 uppercase tracking-[0.3em] mb-2 font-bold">DAILY RESET</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-[0.3em] mb-2 font-bold">RECIPE RESET</div>
                     <div className="text-3xl font-mono font-bold" style={{ 
                       color: '#fab617',
                       textShadow: '0 0 20px rgba(250,204,21,0.5)' 
@@ -431,11 +426,6 @@ export default function UniChipsPage() {
                       }`}>
                         {tier.name}
                       </div>
-                      {!isLocked && (
-                        <div className="text-xs text-gray-500">
-                          <span className="text-cyan-400">{tier.energySignature}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );

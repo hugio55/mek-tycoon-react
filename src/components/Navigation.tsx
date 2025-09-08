@@ -85,6 +85,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Rarity Bias", href: "/rarity-bias" },
       { label: "Talent Builder", href: "/talent-builder" },
       { label: "Mek Tree Tables", href: "/admin-mek-tree-tables" },
+      { label: "Buff Categories", href: "/admin/buff-categories" },
       { label: "Spell Designer", href: "/admin-spells" },
       { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },

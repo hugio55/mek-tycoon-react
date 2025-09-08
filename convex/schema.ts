@@ -992,4 +992,38 @@ export default defineSchema({
   })
     .index("by_name", ["name"])
     .index("by_chapter", ["chapter"]),
+
+  // Buff Categories - admin-managed buff categories used throughout the site
+  buffCategories: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    category: v.optional(v.union(
+      v.literal("gold"),
+      v.literal("essence"),
+      v.literal("rarity_bias"),
+      v.literal("xp"),
+      v.literal("mek_slot"),
+      v.literal("market"),
+      v.literal("reward_chance")
+    )),
+    unitType: v.optional(v.union(
+      v.literal("flat_number"),        // +10
+      v.literal("rate_change"),        // +0.1 essence/day
+      v.literal("rate_percentage"),    // +1% essence/day
+      v.literal("flat_percentage")     // +10%
+    )),
+    applicationType: v.optional(v.union(
+      v.literal("universal"),          // Not tied to anything
+      v.literal("attachable")          // Applied to a thing and moves with it
+    )),
+    // Old fields (deprecated - for migration)
+    color: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    multiplier: v.optional(v.number()),
+    isActive: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_active", ["isActive"]),
 });

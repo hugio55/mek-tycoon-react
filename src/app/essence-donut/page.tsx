@@ -241,27 +241,20 @@ export default function EssenceDonutPage() {
                   <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent animate-scan" />
                 </div>
                 
-                {/* Chart Title with Stats */}
-                <div className="text-center mb-4">
-                  <h2 className="text-sm font-bold text-gray-500 tracking-[0.3em] uppercase">
-                    Resource Distribution
-                  </h2>
-                  <h3 className="text-2xl font-bold text-yellow-400 font-orbitron">
-                    ESSENCE AT A GLANCE
-                  </h3>
-                  {/* Total Stats Bar */}
-                  <div className="flex justify-center gap-6 mt-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 uppercase">Total:</span>
-                      <span className="text-sm font-bold text-yellow-400">{totalStats.totalAmount.toFixed(1)}</span>
+                {/* Compact Stats Header */}
+                <div className="mb-6 pb-4 border-b border-gray-800/50">
+                  <div className="flex justify-center gap-8">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Total Essence</div>
+                      <div className="text-2xl font-bold text-yellow-400 font-mono">{totalStats.totalAmount.toFixed(1)}</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 uppercase">Value:</span>
-                      <span className="text-sm font-bold text-green-400">{totalStats.totalValue.toLocaleString()}g</span>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Total Value</div>
+                      <div className="text-2xl font-bold text-green-400 font-mono">{totalStats.totalValue.toLocaleString()}g</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 uppercase">Types:</span>
-                      <span className="text-sm font-bold text-blue-400">{totalStats.uniqueTypes}</span>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Essence Types</div>
+                      <div className="text-2xl font-bold text-blue-400 font-mono">{totalStats.uniqueTypes}</div>
                     </div>
                   </div>
                 </div>
