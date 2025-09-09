@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import Image from 'next/image';
 
 // Chip ranks from D to XXX
 const CHIP_RANKS = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS', 'X', 'XX', 'XXX'];
@@ -28,177 +27,118 @@ const BUFF_TYPES = [
   { id: 'scrap_value', name: 'Scrap Value', unit: '%', icon: '🔩' },
 ];
 
-interface ChipBuff {
-  buffType: string;
-  procChance: number; // Base chance this buff can appear (0-100%)
+interface BuffConfig {
+  procChance: number; // 0-100 percentage chance
+  minValue: number;
+  maxValue: number;
 }
 
-interface TierConfig {
+interface ChipConfig {
   tier: number;
-  rarityConfigs: {
-    [rarity: string]: {
-      minValue: number;
-      maxValue: number;
-      buffCount: number; // How many buffs this rarity gets
-      procMultiplier: number; // Multiplier for buff proc chances
-    };
+  rarity: string;
+  buffs: {
+    [buffId: string]: BuffConfig;
   };
 }
 
-interface ChipDefinition {
-  id: string;
-  name: string;
-  description: string;
-  category: 'attack' | 'defense' | 'utility' | 'economy' | 'special';
-  tier: number; // 1-10 for chip tiers
-  imageUrl?: string;
-  possibleBuffs: ChipBuff[];
-  tierConfig: TierConfig;
-}
+// Create a unique key for each chip
+const getChipKey = (tier: number, rarity: string) => `T${tier}_${rarity}`;
 
 export default function ChipBuilderPage() {
-  const [chipName, setChipName] = useState('');
-  const [chipDescription, setChipDescription] = useState('');
-  const [chipCategory, setChipCategory] = useState<ChipDefinition['category']>('utility');
-  const [chipTier, setChipTier] = useState(1);
-  const [selectedBuffs, setSelectedBuffs] = useState<ChipBuff[]>([]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [tierConfig, setTierConfig] = useState<TierConfig>({
-    tier: 1,
-    rarityConfigs: {}
-  });
-  const [savedChips, setSavedChips] = useState<ChipDefinition[]>([]);
-  const [editingChip, setEditingChip] = useState<ChipDefinition | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedTier, setSelectedTier] = useState(1);
+  const [selectedRarity, setSelectedRarity] = useState('D');
+  const [chipConfigs, setChipConfigs] = useState<{ [key: string]: ChipConfig }>({});
+  const [viewMode, setViewMode] = useState<'edit' | 'overview'>('edit');
 
-  // Initialize tier config with defaults when tier changes
+  // Initialize all 100 chips with default values
   useEffect(() => {
-    const defaultConfig: TierConfig = {
-      tier: chipTier,
-      rarityConfigs: {}
-    };
+    const configs: { [key: string]: ChipConfig } = {};
     
-    // Set default values for each rarity based on tier
-    CHIP_RANKS.forEach((rank, rankIndex) => {
-      const tierMultiplier = chipTier; // Tier 1 = 1x, Tier 10 = 10x
-      const rarityMultiplier = 1 + (rankIndex * 0.5); // D=1x, C=1.5x, B=2x... XXX=6x
-      
-      defaultConfig.rarityConfigs[rank] = {
-        minValue: Math.round(5 * tierMultiplier * rarityMultiplier),
-        maxValue: Math.round(20 * tierMultiplier * rarityMultiplier),
-        buffCount: Math.min(1 + Math.floor(rankIndex / 2), 6), // 1-6 buffs
-        procMultiplier: 0.5 + (rankIndex * 0.15), // 50% to 185% proc chance multiplier
-      };
-    });
-    
-    setTierConfig(defaultConfig);
-  }, [chipTier]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    for (let tier = 1; tier <= 10; tier++) {
+      CHIP_RANKS.forEach((rarity, rarityIndex) => {
+        const key = getChipKey(tier, rarity);
+        const tierMultiplier = tier;
+        const rarityMultiplier = 1 + (rarityIndex * 0.5);
+        
+        // Create buff configuration for this chip
+        const buffs: { [buffId: string]: BuffConfig } = {};
+        BUFF_TYPES.forEach(buffType => {
+          // Default proc chances based on tier and rarity
+          let procChance = 10 + (tier * 5) + (rarityIndex * 8);
+          
+          // Adjust proc chances for different buff types
+          if (['gold_rate', 'gold_multiplier', 'xp_gain'].includes(buffType.id)) {
+            procChance = Math.min(100, procChance * 1.5); // Economic buffs more common
+          } else if (['battle_damage', 'battle_defense'].includes(buffType.id)) {
+            procChance = Math.min(100, procChance * 1.2); // Combat buffs moderately common
+          } else if (['essence_drop_rate', 'essence_quality'].includes(buffType.id)) {
+            procChance = Math.min(100, procChance * 0.6); // Rare buffs less common
+          }
+          
+          buffs[buffType.id] = {
+            procChance: Math.round(procChance),
+            minValue: Math.round(5 * tierMultiplier * rarityMultiplier),
+            maxValue: Math.round(20 * tierMultiplier * rarityMultiplier),
+          };
+        });
+        
+        configs[key] = {
+          tier,
+          rarity,
+          buffs,
+        };
+      });
     }
-  };
+    
+    setChipConfigs(configs);
+  }, []);
 
-  const addBuff = () => {
-    setSelectedBuffs([
-      ...selectedBuffs,
-      {
-        buffType: BUFF_TYPES[0].id,
-        procChance: 50, // 50% base chance
-      },
-    ]);
-  };
-
-  const updateBuff = (index: number, updates: Partial<ChipBuff>) => {
-    const newBuffs = [...selectedBuffs];
-    newBuffs[index] = { ...newBuffs[index], ...updates };
-    setSelectedBuffs(newBuffs);
-  };
-
-  const removeBuff = (index: number) => {
-    setSelectedBuffs(selectedBuffs.filter((_, i) => i !== index));
-  };
-
-  const updateRarityConfig = (rank: string, field: keyof TierConfig['rarityConfigs'][string], value: number) => {
-    setTierConfig({
-      ...tierConfig,
-      rarityConfigs: {
-        ...tierConfig.rarityConfigs,
-        [rank]: {
-          ...tierConfig.rarityConfigs[rank],
-          [field]: value,
+  const updateBuffConfig = (buffId: string, field: keyof BuffConfig, value: number) => {
+    const key = getChipKey(selectedTier, selectedRarity);
+    setChipConfigs(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        buffs: {
+          ...prev[key]?.buffs,
+          [buffId]: {
+            ...prev[key]?.buffs[buffId],
+            [field]: value,
+          },
         },
       },
-    });
+    }));
   };
 
-  const saveChip = () => {
-    if (!chipName || selectedBuffs.length === 0) {
-      alert('Please provide a chip name and at least one buff');
-      return;
-    }
-
-    const newChip: ChipDefinition = {
-      id: `chip_${Date.now()}`,
-      name: chipName,
-      description: chipDescription,
-      category: chipCategory,
-      tier: chipTier,
-      imageUrl: imagePreview || undefined,
-      possibleBuffs: selectedBuffs,
-      tierConfig,
-    };
-
-    if (editingChip) {
-      setSavedChips(savedChips.map(chip => chip.id === editingChip.id ? newChip : chip));
-      setEditingChip(null);
-    } else {
-      setSavedChips([...savedChips, newChip]);
-    }
-
-    // Reset form
-    setChipName('');
-    setChipDescription('');
-    setChipCategory('utility');
-    setChipTier(1);
-    setSelectedBuffs([]);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const editChip = (chip: ChipDefinition) => {
-    setEditingChip(chip);
-    setChipName(chip.name);
-    setChipDescription(chip.description);
-    setChipCategory(chip.category);
-    setChipTier(chip.tier);
-    setSelectedBuffs(chip.possibleBuffs);
-    setImagePreview(chip.imageUrl || null);
-    setTierConfig(chip.tierConfig);
-  };
-
-  const deleteChip = (chipId: string) => {
-    if (confirm('Are you sure you want to delete this chip?')) {
-      setSavedChips(savedChips.filter(chip => chip.id !== chipId));
-    }
-  };
-
-  const exportChips = () => {
-    const dataStr = JSON.stringify(savedChips, null, 2);
+  const exportConfigs = () => {
+    const dataStr = JSON.stringify(chipConfigs, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = 'chip_definitions.json';
+    const exportFileDefaultName = 'chip_configs.json';
 
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
   };
+
+  const importConfigs = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target?.result as string);
+          setChipConfigs(imported);
+          alert('Configurations imported successfully!');
+        } catch (error) {
+          alert('Error importing configurations. Please check the file format.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const currentChip = chipConfigs[getChipKey(selectedTier, selectedRarity)];
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -210,63 +150,70 @@ export default function ChipBuilderPage() {
           <div className="mb-8 p-6 bg-gradient-to-b from-gray-900/80 to-gray-950/80 border border-gray-700 relative">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" />
             <h1 className="text-5xl font-bold text-yellow-400 mb-2" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-              CHIP BUILDER
+              UNIVERSAL CHIP CONFIGURATION
             </h1>
             <p className="text-gray-400 text-sm uppercase tracking-wider">
-              Design and configure universal enhancement chips
+              Configure all 100 chip variations (10 tiers × 10 rarities)
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Chip Editor */}
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="bg-gray-900/60 border border-gray-800 p-6">
-                <h2 className="text-xl font-bold text-yellow-400 mb-4">Basic Information</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Chip Name</label>
-                    <input
-                      type="text"
-                      value={chipName}
-                      onChange={(e) => setChipName(e.target.value)}
-                      className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
-                      placeholder="e.g., Quantum Processor"
-                    />
-                  </div>
+          {/* Controls */}
+          <div className="mb-6 flex gap-4 flex-wrap items-center">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('edit')}
+                className={`px-4 py-2 font-bold transition-colors ${
+                  viewMode === 'edit' 
+                    ? 'bg-yellow-400 text-black' 
+                    : 'bg-gray-800 hover:bg-gray-700 text-white'
+                }`}
+              >
+                Edit Mode
+              </button>
+              <button
+                onClick={() => setViewMode('overview')}
+                className={`px-4 py-2 font-bold transition-colors ${
+                  viewMode === 'overview' 
+                    ? 'bg-yellow-400 text-black' 
+                    : 'bg-gray-800 hover:bg-gray-700 text-white'
+                }`}
+              >
+                Overview
+              </button>
+            </div>
+            
+            <div className="flex gap-2 ml-auto">
+              <button
+                onClick={exportConfigs}
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold transition-colors"
+              >
+                Export All
+              </button>
+              <label className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors cursor-pointer">
+                Import
+                <input
+                  type="file"
+                  onChange={importConfigs}
+                  accept=".json"
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
 
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Description</label>
-                    <textarea
-                      value={chipDescription}
-                      onChange={(e) => setChipDescription(e.target.value)}
-                      className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none h-20 resize-none"
-                      placeholder="A powerful chip that enhances quantum calculations..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+          {viewMode === 'edit' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Left Column - Chip Selector */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-900/60 border border-gray-800 p-4 sticky top-32">
+                  <h2 className="text-xl font-bold text-yellow-400 mb-4">Select Chip</h2>
+                  
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">Category</label>
+                      <label className="block text-sm text-gray-400 mb-2">Tier</label>
                       <select
-                        value={chipCategory}
-                        onChange={(e) => setChipCategory(e.target.value as ChipDefinition['category'])}
-                        className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
-                      >
-                        <option value="attack">Attack</option>
-                        <option value="defense">Defense</option>
-                        <option value="utility">Utility</option>
-                        <option value="economy">Economy</option>
-                        <option value="special">Special</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-2">Tier (T1-T10)</label>
-                      <select
-                        value={chipTier}
-                        onChange={(e) => setChipTier(Number(e.target.value))}
+                        value={selectedTier}
+                        onChange={(e) => setSelectedTier(Number(e.target.value))}
                         className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
@@ -274,283 +221,144 @@ export default function ChipBuilderPage() {
                         ))}
                       </select>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Chip Artwork</label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white transition-colors"
-                    >
-                      Upload Image
-                    </button>
-                    {imagePreview && (
-                      <div className="mt-4 relative w-32 h-32 border border-gray-700">
-                        <Image
-                          src={imagePreview}
-                          alt="Chip preview"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Buff Configuration */}
-              <div className="bg-gray-900/60 border border-gray-800 p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">Possible Buffs</h2>
-                  <button
-                    onClick={addBuff}
-                    className="px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-black font-bold transition-colors"
-                  >
-                    + Add Buff
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {selectedBuffs.map((buff, index) => {
-                    const buffType = BUFF_TYPES.find(b => b.id === buff.buffType);
-                    return (
-                      <div key={index} className="p-4 bg-black/50 border border-gray-700">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{buffType?.icon}</span>
-                            <select
-                              value={buff.buffType}
-                              onChange={(e) => updateBuff(index, { buffType: e.target.value })}
-                              className="px-3 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                            >
-                              {BUFF_TYPES.map(type => (
-                                <option key={type.id} value={type.id}>
-                                  {type.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <button
-                            onClick={() => removeBuff(index)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            ✕
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3">
-                          <div>
-                            <label className="text-xs text-gray-500">Base Proc Chance (%)</label>
-                            <input
-                              type="number"
-                              value={buff.procChance}
-                              onChange={(e) => updateBuff(index, { procChance: Number(e.target.value) })}
-                              min="0"
-                              max="100"
-                              className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                            />
-                            <span className="text-xs text-gray-500">Chance this buff appears (modified by rarity)</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <button
-                onClick={saveChip}
-                className="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-lg transition-colors"
-              >
-                {editingChip ? 'Update Chip' : 'Save Chip'}
-              </button>
-            </div>
-
-            {/* Right Column - Tier/Rarity Configuration & Preview */}
-            <div className="space-y-6">
-              {/* Tier Configuration for Each Rarity */}
-              <div className="bg-gray-900/60 border border-gray-800 p-6">
-                <h2 className="text-xl font-bold text-yellow-400 mb-4">Tier {chipTier} - Rarity Configuration</h2>
-                <p className="text-sm text-gray-400 mb-4">Configure value ranges and buff counts for each rarity</p>
-                
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {CHIP_RANKS.map((rank) => (
-                    <div key={rank} className="p-3 bg-black/50 border border-gray-700">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-yellow-400">{rank} Rarity</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 mb-2">
-                        <div>
-                          <label className="text-xs text-gray-500">Min Value</label>
-                          <input
-                            type="number"
-                            value={tierConfig.rarityConfigs[rank]?.minValue || 0}
-                            onChange={(e) => updateRarityConfig(rank, 'minValue', Number(e.target.value))}
-                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500">Max Value</label>
-                          <input
-                            type="number"
-                            value={tierConfig.rarityConfigs[rank]?.maxValue || 0}
-                            onChange={(e) => updateRarityConfig(rank, 'maxValue', Number(e.target.value))}
-                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-gray-500">Buff Count</label>
-                          <input
-                            type="number"
-                            value={tierConfig.rarityConfigs[rank]?.buffCount || 1}
-                            onChange={(e) => updateRarityConfig(rank, 'buffCount', Number(e.target.value))}
-                            min="1"
-                            max="10"
-                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500">Proc Multiplier</label>
-                          <input
-                            type="number"
-                            value={tierConfig.rarityConfigs[rank]?.procMultiplier || 1}
-                            onChange={(e) => updateRarityConfig(rank, 'procMultiplier', Number(e.target.value))}
-                            step="0.1"
-                            min="0.1"
-                            max="5"
-                            className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white text-sm"
-                          />
-                        </div>
-                      </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Rarity</label>
+                      <select
+                        value={selectedRarity}
+                        onChange={(e) => setSelectedRarity(e.target.value)}
+                        className="w-full px-4 py-2 bg-black/50 border border-gray-700 text-white focus:border-yellow-500 outline-none"
+                      >
+                        {CHIP_RANKS.map(rank => (
+                          <option key={rank} value={rank}>{rank}</option>
+                        ))}
+                      </select>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="mt-6 p-4 bg-black/50 border border-gray-700">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-yellow-400">T{selectedTier}</div>
+                      <div className="text-xl font-bold text-white">{selectedRarity}</div>
+                      <div className="text-xs text-gray-400 mt-2">Chip #{(selectedTier - 1) * 10 + CHIP_RANKS.indexOf(selectedRarity) + 1}/100</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Preview */}
-              {chipName && selectedBuffs.length > 0 && (
+              {/* Right Column - Buff Configuration */}
+              <div className="lg:col-span-3">
                 <div className="bg-gray-900/60 border border-gray-800 p-6">
-                  <h2 className="text-xl font-bold text-yellow-400 mb-4">Preview</h2>
+                  <h2 className="text-xl font-bold text-yellow-400 mb-4">
+                    Tier {selectedTier} - {selectedRarity} Rarity Configuration
+                  </h2>
                   
-                  <div className="space-y-4">
-                    <div className="p-4 bg-black/50 border-2 border-yellow-500/50">
-                      <div className="flex items-start gap-4">
-                        {imagePreview && (
-                          <div className="relative w-16 h-16 border border-gray-700 flex-shrink-0">
-                            <Image
-                              src={imagePreview}
-                              alt={chipName}
-                              fill
-                              className="object-cover"
-                            />
+                  <div className="space-y-3">
+                    {BUFF_TYPES.map(buffType => {
+                      const config = currentChip?.buffs[buffType.id];
+                      if (!config) return null;
+                      
+                      return (
+                        <div key={buffType.id} className="p-4 bg-black/50 border border-gray-700">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-2xl">{buffType.icon}</span>
+                            <span className="font-bold text-yellow-400">{buffType.name}</span>
                           </div>
-                        )}
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-yellow-400">{chipName}</h3>
-                          <p className="text-sm text-gray-400 mb-2">{chipDescription}</p>
-                          <div className="flex gap-2 text-xs">
-                            <span className="px-2 py-1 bg-gray-800 text-gray-300">T{chipTier}</span>
-                            <span className="px-2 py-1 bg-gray-800 text-gray-300 capitalize">{chipCategory}</span>
+                          
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <label className="text-xs text-gray-500">Proc Chance (%)</label>
+                              <input
+                                type="number"
+                                value={config.procChance}
+                                onChange={(e) => updateBuffConfig(buffType.id, 'procChance', Number(e.target.value))}
+                                min="0"
+                                max="100"
+                                className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500">Min Value</label>
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  value={config.minValue}
+                                  onChange={(e) => updateBuffConfig(buffType.id, 'minValue', Number(e.target.value))}
+                                  className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white"
+                                />
+                                <span className="ml-1 text-xs text-gray-400">{buffType.unit}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500">Max Value</label>
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  value={config.maxValue}
+                                  onChange={(e) => updateBuffConfig(buffType.id, 'maxValue', Number(e.target.value))}
+                                  className="w-full px-2 py-1 bg-gray-800 border border-gray-600 text-white"
+                                />
+                                <span className="ml-1 text-xs text-gray-400">{buffType.unit}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="text-sm text-gray-400">
-                      <p className="mb-2">Example at SSS Rarity:</p>
-                      <ul className="space-y-1">
-                        {selectedBuffs.map((buff, index) => {
-                          const buffType = BUFF_TYPES.find(b => b.id === buff.buffType);
-                          const config = tierConfig.rarityConfigs['SSS'];
-                          const finalProcChance = Math.round(buff.procChance * (config?.procMultiplier || 1));
-                          return (
-                            <li key={index} className="flex items-center gap-2">
-                              <span>{buffType?.icon}</span>
-                              <span>
-                                {buffType?.name}: {config?.minValue || 0}-{config?.maxValue || 0}{buffType?.unit}
-                                <span className="text-xs text-gray-500"> ({finalProcChance}% chance)</span>
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <p className="mt-2 text-xs">
-                        This rarity gets {tierConfig.rarityConfigs['SSS']?.buffCount || 1} random buffs from above
-                      </p>
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Saved Chips */}
-          {savedChips.length > 0 && (
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-yellow-400">Saved Chips</h2>
-                <button
-                  onClick={exportChips}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold transition-colors"
-                >
-                  Export All Chips
-                </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedChips.map((chip) => (
-                  <div key={chip.id} className="bg-gray-900/60 border border-gray-800 p-4">
-                    <div className="flex items-start gap-3 mb-3">
-                      {chip.imageUrl && (
-                        <div className="relative w-12 h-12 border border-gray-700 flex-shrink-0">
-                          <Image
-                            src={chip.imageUrl}
-                            alt={chip.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-bold text-yellow-400">{chip.name}</h3>
-                        <p className="text-xs text-gray-400">{chip.description}</p>
-                        <div className="flex gap-2 mt-1">
-                          <span className="text-xs px-2 py-1 bg-gray-800">T{chip.tier}</span>
-                          <span className="text-xs px-2 py-1 bg-gray-800 capitalize">{chip.category}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-gray-500 mb-3">
-                      {chip.possibleBuffs.length} buff types configured
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => editChip(chip)}
-                        className="flex-1 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteChip(chip.id)}
-                        className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            </div>
+          ) : (
+            /* Overview Mode - Show all 100 chips in a grid */
+            <div className="bg-gray-900/60 border border-gray-800 p-6">
+              <h2 className="text-xl font-bold text-yellow-400 mb-4">All Chip Configurations</h2>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="p-2 text-left">Chip</th>
+                      {BUFF_TYPES.slice(0, 8).map(buff => (
+                        <th key={buff.id} className="p-2 text-center" title={buff.name}>
+                          <span className="text-lg">{buff.icon}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(tier => (
+                      CHIP_RANKS.map(rarity => {
+                        const chip = chipConfigs[getChipKey(tier, rarity)];
+                        if (!chip) return null;
+                        
+                        return (
+                          <tr key={`${tier}_${rarity}`} className="border-b border-gray-800 hover:bg-gray-800/50">
+                            <td className="p-2">
+                              <span className="font-bold text-yellow-400">T{tier}</span>
+                              <span className="ml-2 text-white">{rarity}</span>
+                            </td>
+                            {BUFF_TYPES.slice(0, 8).map(buff => {
+                              const config = chip.buffs[buff.id];
+                              return (
+                                <td key={buff.id} className="p-2 text-center text-xs">
+                                  <div className="text-green-400">{config?.procChance}%</div>
+                                  <div className="text-gray-400">{config?.minValue}-{config?.maxValue}</div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-4 p-4 bg-black/50 border border-gray-700">
+                <p className="text-sm text-gray-400">
+                  <strong>Note:</strong> Table shows first 8 buff types. Switch to Edit Mode to configure all {BUFF_TYPES.length} buff types for each chip.
+                </p>
               </div>
             </div>
           )}

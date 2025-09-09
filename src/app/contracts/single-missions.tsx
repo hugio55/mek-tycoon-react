@@ -1541,16 +1541,20 @@ export default function ContractsLayoutOption11() {
                                 ? 'bg-gradient-to-br from-yellow-900/40 to-yellow-800/20'
                                 : 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/10 hover:shadow-lg hover:shadow-yellow-500/20 cursor-pointer'
                             }
-                            border-2 ${isLocked ? 'border-gray-900' : assignedMek?.matchedTraits?.length > 0 ? 'border-yellow-400 shadow-[0_0_10px_rgba(250,182,23,0.5)]' : assignedMek ? 'border-white' : 'border-gray-700 hover:border-yellow-400'}
+                            border-2 ${isLocked ? 'border-gray-900' : assignedMek?.matchedTraits?.length > 0 ? 'border-yellow-400 shadow-[0_0_10px_rgba(250,182,23,0.5)]' : assignedMek ? (isHovered ? 'border-yellow-400 shadow-[0_0_15px_rgba(250,182,23,0.6)]' : 'border-white') : 'border-gray-700 hover:border-yellow-400'}
                           `}>
                           {!isLocked && (
                             assignedMek ? (
-                              <div className="relative w-full h-full">
+                              <div className="relative w-full h-full overflow-hidden">
                                 <Image
                                   src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
                                   alt={assignedMek.name}
                                   fill
-                                  className="object-cover"
+                                  className={`object-cover transition-all duration-300 ${
+                                    isHovered 
+                                      ? 'scale-110 brightness-110' 
+                                      : 'scale-100 brightness-100'
+                                  }`}
                                 />
                                 {/* Remove the wrapping div and render indicators directly on image */}
                                 {assignedMek.matchedTraits && assignedMek.matchedTraits.length > 0 && (

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Generator</title>
+    <style>
+        body {
+            background: #111;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .frame-container {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            background: transparent;
+        }
+        
+        .frame {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            box-sizing: border-box;
+        }
+        
+        /* Frame 1: Classic Gold Industrial */
+        #frame1 {
+            border: 20px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                linear-gradient(135deg, #fab617, #d4a017, #fab617, #ffcc00) border-box;
+            box-shadow: 
+                inset 0 0 30px rgba(250, 182, 23, 0.3),
+                0 0 40px rgba(250, 182, 23, 0.4);
+        }
+        
+        /* Frame 2: Hazard Stripes */
+        #frame2 {
+            border: 25px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                repeating-linear-gradient(
+                    45deg,
+                    #000,
+                    #000 10px,
+                    #fab617 10px,
+                    #fab617 20px
+                ) border-box;
+            box-shadow: 0 0 30px rgba(250, 182, 23, 0.5);
+        }
+        
+        /* Frame 3: Hex Tech */
+        #frame3 {
+            border: 18px solid #1a1a1a;
+            outline: 3px solid #fab617;
+            outline-offset: -10px;
+            background: linear-gradient(135deg, #1a1a1a 25%, #2a2a2a 25%, #2a2a2a 50%, #1a1a1a 50%, #1a1a1a 75%, #2a2a2a 75%, #2a2a2a);
+            background-size: 20px 20px;
+            clip-path: polygon(
+                30px 0%, 100% 0%, 100% calc(100% - 30px),
+                calc(100% - 30px) 100%, 0% 100%, 0% 30px
+            );
+        }
+        
+        /* Frame 4: Circuit Board */
+        #frame4 {
+            border: 22px solid #0a0a0a;
+            position: relative;
+            overflow: hidden;
+            background: repeating-linear-gradient(
+                0deg,
+                #0a0a0a,
+                #0a0a0a 2px,
+                #00ff88 2px,
+                #00ff88 3px,
+                #0a0a0a 3px,
+                #0a0a0a 8px
+            );
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 136, 0.3),
+                0 0 30px rgba(0, 255, 136, 0.2);
+        }
+        
+        /* Frame 5: Riveted Steel */
+        #frame5 {
+            border: 28px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                linear-gradient(180deg, #4a4a4a, #6a6a6a, #3a3a3a) border-box;
+            box-shadow: 
+                inset 2px 2px 5px rgba(0,0,0,0.8),
+                inset -2px -2px 5px rgba(255,255,255,0.1);
+            position: relative;
+        }
+        #frame5::after {
+            content: '';
+            position: absolute;
+            top: -28px;
+            left: -28px;
+            right: -28px;
+            bottom: -28px;
+            background: repeating-radial-gradient(
+                circle at 10px 10px,
+                #888 0,
+                #888 3px,
+                transparent 3px,
+                transparent 40px
+            );
+            pointer-events: none;
+        }
+        
+        /* Frame 6: Energy Shield */
+        #frame6 {
+            border: 20px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                conic-gradient(from 180deg at 50% 50%, 
+                    #00ffff 0deg, 
+                    #0088ff 90deg, 
+                    #00ffff 180deg, 
+                    #0088ff 270deg, 
+                    #00ffff 360deg
+                ) border-box;
+            animation: rotate 10s linear infinite;
+            box-shadow: 
+                0 0 40px rgba(0, 200, 255, 0.6),
+                inset 0 0 30px rgba(0, 200, 255, 0.3);
+        }
+        
+        /* Frame 7: Corrupted Data */
+        #frame7 {
+            border: 24px solid #ff0040;
+            position: relative;
+            animation: glitch 3s infinite;
+            box-shadow: 
+                0 0 30px rgba(255, 0, 64, 0.5),
+                inset 0 0 20px rgba(255, 0, 64, 0.3);
+        }
+        #frame7::before {
+            content: '';
+            position: absolute;
+            top: -24px;
+            left: -24px;
+            right: -24px;
+            bottom: -24px;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 0, 64, 0.1) 2px,
+                rgba(255, 0, 64, 0.1) 4px
+            );
+        }
+        
+        /* Frame 8: Diamond Plate */
+        #frame8 {
+            border: 26px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                repeating-linear-gradient(
+                    45deg,
+                    #3a3a3a 0,
+                    #3a3a3a 10px,
+                    #5a5a5a 10px,
+                    #5a5a5a 11px,
+                    #3a3a3a 11px,
+                    #3a3a3a 21px,
+                    #5a5a5a 21px,
+                    #5a5a5a 22px
+                ) border-box;
+            box-shadow: 
+                inset 2px 2px 10px rgba(0,0,0,0.5),
+                inset -2px -2px 10px rgba(255,255,255,0.1);
+        }
+        
+        /* Frame 9: Plasma Core */
+        #frame9 {
+            border: 22px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                radial-gradient(
+                    circle at center,
+                    #ff00ff,
+                    #8800ff,
+                    #ff00ff,
+                    #ff00aa
+                ) border-box;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 255, 0.5),
+                inset 0 0 30px rgba(255, 0, 255, 0.3);
+        }
+        
+        /* Frame 10: Legendary Prism */
+        #frame10 {
+            border: 25px solid transparent;
+            background: 
+                linear-gradient(#111, #111) padding-box,
+                linear-gradient(
+                    45deg,
+                    #ff0000,
+                    #ff7f00,
+                    #ffff00,
+                    #00ff00,
+                    #0000ff,
+                    #4b0082,
+                    #9400d3,
+                    #ff0000
+                ) border-box;
+            animation: rainbow 5s linear infinite;
+            box-shadow: 
+                0 0 60px rgba(255, 255, 255, 0.5),
+                inset 0 0 40px rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+        #frame10::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: inherit;
+            filter: blur(10px);
+            opacity: 0.7;
+            z-index: -1;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes rainbow {
+            from { filter: hue-rotate(0deg); }
+            to { filter: hue-rotate(360deg); }
+        }
+        
+        button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 30px;
+            background: #fab617;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .label {
+            color: #fab617;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame1"></div>
+        </div>
+        <div class="label">Classic Gold Industrial</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame2"></div>
+        </div>
+        <div class="label">Hazard Stripes</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame3"></div>
+        </div>
+        <div class="label">Hex Tech</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame4"></div>
+        </div>
+        <div class="label">Circuit Board</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame5"></div>
+        </div>
+        <div class="label">Riveted Steel</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame6"></div>
+        </div>
+        <div class="label">Energy Shield</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame7"></div>
+        </div>
+        <div class="label">Corrupted Data</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame8"></div>
+        </div>
+        <div class="label">Diamond Plate</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame9"></div>
+        </div>
+        <div class="label">Plasma Core</div>
+    </div>
+    
+    <div>
+        <div class="frame-container">
+            <div class="frame" id="frame10"></div>
+        </div>
+        <div class="label">Legendary Prism</div>
+    </div>
+    
+    <button onclick="downloadFrames()">Download All Frames</button>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        async function downloadFrames() {
+            const frames = [
+                { id: 'frame1', name: 'frame-gold-industrial' },
+                { id: 'frame2', name: 'frame-hazard-stripes' },
+                { id: 'frame3', name: 'frame-hex-tech' },
+                { id: 'frame4', name: 'frame-circuit-board' },
+                { id: 'frame5', name: 'frame-riveted-steel' },
+                { id: 'frame6', name: 'frame-energy-shield' },
+                { id: 'frame7', name: 'frame-corrupted-data' },
+                { id: 'frame8', name: 'frame-diamond-plate' },
+                { id: 'frame9', name: 'frame-plasma-core' },
+                { id: 'frame10', name: 'frame-legendary-prism' }
+            ];
+            
+            for (const frame of frames) {
+                const element = document.getElementById(frame.id).parentElement;
+                const canvas = await html2canvas(element, {
+                    backgroundColor: null,
+                    width: 400,
+                    height: 400
+                });
+                
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${frame.name}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+    </script>
+</body>
+</html>

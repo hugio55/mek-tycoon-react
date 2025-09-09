@@ -1016,6 +1016,8 @@ export default defineSchema({
       v.literal("universal"),          // Not tied to anything
       v.literal("attachable")          // Applied to a thing and moves with it
     )),
+    tierStart: v.optional(v.number()), // 1-10 for chip/mechanism tiers
+    tierEnd: v.optional(v.number()), // 1-10 for chip/mechanism tiers
     // Old fields (deprecated - for migration)
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
@@ -1026,4 +1028,15 @@ export default defineSchema({
   })
     .index("by_name", ["name"])
     .index("by_active", ["isActive"]),
+
+  // Mechanism Tier Configuration - divides 4000 mechanisms into 10 tiers
+  mechanismTiers: defineTable({
+    tier: v.number(), // 1-10
+    startRank: v.number(), // Starting mechanism rank for this tier
+    endRank: v.number(), // Ending mechanism rank for this tier
+    description: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_tier", ["tier"]),
 });

@@ -27,6 +27,10 @@ body {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(calc(100vh + 100%)); }
 }
+@keyframes scanHorizontal {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(calc(100vw + 100%)); }
+}
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.6; }

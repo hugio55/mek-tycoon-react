@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <filter id="glitch">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" result="turbulence" seed="1">
+        <animate attributeName="seed" values="1;5;1" dur="0.5s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="redGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="glitchLines" patternUnits="userSpaceOnUse" width="400" height="4">
+      <line x1="0" y1="2" x2="400" y2="2" stroke="#ff0040" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+  
+  <rect x="0" y="0" width="400" height="400" fill="none" stroke="#ff0040" stroke-width="24" filter="url(#redGlow)"/>
+  <rect x="22" y="22" width="356" height="356" fill="none" stroke="#ff0040" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Glitch effect lines -->
+  <rect x="0" y="0" width="400" height="400" fill="url(#glitchLines)" opacity="0.2"/>
+  
+  <!-- Random glitch blocks -->
+  <g opacity="0.4">
+    <rect x="0" y="50" width="24" height="5" fill="#ff0040">
+      <animate attributeName="width" values="24;50;24" dur="0.3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="376" y="150" width="24" height="5" fill="#ff0040">
+      <animate attributeName="x" values="376;350;376" dur="0.4s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="0" y="250" width="24" height="5" fill="#ff0040">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="0.2s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="376" y="350" width="24" height="5" fill="#ff0040">
+      <animate attributeName="width" values="24;50;24" dur="0.5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  
+  <!-- Corrupted text effect -->
+  <text x="30" y="30" font-family="monospace" font-size="10" fill="#ff0040" opacity="0.2">
+    01001000100111
+    <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1s" repeatCount="indefinite"/>
+  </text>
+</svg>

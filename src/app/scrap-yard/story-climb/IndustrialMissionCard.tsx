@@ -43,7 +43,7 @@ const missionAilments = {
 export default function IndustrialMissionCard({ nodeData, onStartMission, simulateProgress }: IndustrialMissionCardProps) {
   if (!nodeData) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-gray-500 p-8">
         <p>Select a node to view mission details</p>
       </div>
     );
@@ -95,8 +95,8 @@ export default function IndustrialMissionCard({ nodeData, onStartMission, simula
     : ailmentKeys.slice(0, 2);
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden">
-      <div className="relative p-4">
+    <div className="h-full overflow-y-auto overflow-x-hidden">
+      <div className="p-4">
         <div 
           className="relative overflow-hidden border-2 border-yellow-500/50"
           style={{

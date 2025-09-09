@@ -34,6 +34,7 @@ import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
 import type * as loans from "../loans.js";
 import type * as marketplace from "../marketplace.js";
+import type * as mechanismTiers from "../mechanismTiers.js";
 import type * as mekTalentTrees from "../mekTalentTrees.js";
 import type * as mekTreeBuffTables from "../mekTreeBuffTables.js";
 import type * as mekTreeTemplates from "../mekTreeTemplates.js";
@@ -91,6 +92,7 @@ declare const fullApi: ApiFromModules<{
   leaderboardOptimized: typeof leaderboardOptimized;
   loans: typeof loans;
   marketplace: typeof marketplace;
+  mechanismTiers: typeof mechanismTiers;
   mekTalentTrees: typeof mekTalentTrees;
   mekTreeBuffTables: typeof mekTreeBuffTables;
   mekTreeTemplates: typeof mekTreeTemplates;

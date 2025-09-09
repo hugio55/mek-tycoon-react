@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <radialGradient id="energyGradient">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#0088ff;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#00ffff;stop-opacity:0.8" />
+    </radialGradient>
+    <filter id="cyanGlow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <animateTransform
+      attributeName="transform"
+      attributeType="XML"
+      type="rotate"
+      from="0 200 200"
+      to="360 200 200"
+      dur="10s"
+      repeatCount="indefinite"/>
+  </defs>
+  
+  <g filter="url(#cyanGlow)">
+    <rect x="5" y="5" width="390" height="390" fill="none" stroke="url(#energyGradient)" stroke-width="20" opacity="0.9"/>
+    <rect x="20" y="20" width="360" height="360" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.6"/>
+    <rect x="15" y="15" width="370" height="370" fill="none" stroke="#0088ff" stroke-width="1" opacity="0.4"/>
+  </g>
+  
+  <!-- Energy pulses -->
+  <g opacity="0.3">
+    <line x1="0" y1="200" x2="20" y2="200" stroke="#00ffff" stroke-width="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <line x1="380" y1="200" x2="400" y2="200" stroke="#00ffff" stroke-width="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <line x1="200" y1="0" x2="200" y2="20" stroke="#00ffff" stroke-width="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <line x1="200" y1="380" x2="200" y2="400" stroke="#00ffff" stroke-width="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+  </g>
+</svg>

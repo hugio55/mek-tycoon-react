@@ -426,6 +426,18 @@ export default function ShopPage() {
                           alt={listing.itemVariation} 
                           className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
                         />
+                      ) : listing.itemType === 'overexposed' ? (
+                        <img 
+                          src="/oe-items/oe-icon.png" 
+                          alt="OE Signature Item" 
+                          className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
+                        />
+                      ) : (listing.itemType === 'head' || listing.itemType === 'body' || listing.itemType === 'trait') ? (
+                        <img 
+                          src="/chip-images/mek-chips/heads/acid chip.webp" 
+                          alt={`${listing.itemType} chip`} 
+                          className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
+                        />
                       ) : listing.itemType === 'essence' ? (
                         <div 
                           className="w-16 h-16 rounded-full"
@@ -474,15 +486,13 @@ export default function ShopPage() {
                               listing.itemType === 'head' ? 'linear-gradient(135deg, #fab617 0%, #d4a017 100%)' :
                               listing.itemType === 'body' ? 'linear-gradient(135deg, #808080 0%, #606060 100%)' :
                               listing.itemType === 'trait' ? 'linear-gradient(135deg, #fab617 0%, #ffdd00 100%)' :
-                              listing.itemType === 'overexposed' ? 'linear-gradient(135deg, #ffdd00 0%, #fab617 100%)' :
                               'linear-gradient(135deg, #fab617 0%, #d4a017 100%)',
                             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
                           }}
                         >
                           {listing.itemType === 'head' ? 'H' :
                            listing.itemType === 'body' ? 'B' :
-                           listing.itemType === 'trait' ? 'T' :
-                           listing.itemType === 'overexposed' ? 'OE' : '?'}
+                           listing.itemType === 'trait' ? 'T' : '?'}
                         </div>
                       )}
                     </div>

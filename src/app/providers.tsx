@@ -12,6 +12,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isWelcomePage = pathname === "/";
   const isTalentBuilder = pathname === "/talent-builder";
+  const isAdminPage = pathname.startsWith("/admin");
   
   return (
     <ConvexProvider client={convex}>
@@ -20,8 +21,16 @@ export function Providers({ children }: { children: ReactNode }) {
           {isWelcomePage || isTalentBuilder ? (
             // Welcome page and talent builder without navigation
             children
+          ) : isAdminPage ? (
+            // Admin pages with full width layout
+            <>
+              <Navigation fullWidth />
+              <div className="relative z-10">
+                {children}
+              </div>
+            </>
           ) : (
-            // All other pages with navigation
+            // All other pages with constrained width navigation
             <div className="max-w-[900px] mx-auto px-5 relative">
               <Navigation />
               <div className="relative z-10">

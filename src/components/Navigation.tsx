@@ -86,6 +86,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Talent Builder", href: "/talent-builder" },
       { label: "Mek Tree Tables", href: "/admin-mek-tree-tables" },
       { label: "Buff Categories", href: "/admin/buff-categories" },
+      { label: "Frames", href: "/admin/frames" },
       { label: "Spell Designer", href: "/admin-spells" },
       { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },
@@ -100,7 +101,11 @@ const navCategories: readonly NavCategory[] = [
   },
 ];
 
-export default function Navigation() {
+interface NavigationProps {
+  fullWidth?: boolean;
+}
+
+export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -131,7 +136,7 @@ export default function Navigation() {
   }, []);
 
   return (
-    <div>
+    <div className={fullWidth ? "w-full" : "max-w-[900px] mx-auto px-5"}>
       {/* Large Logo at Top Center */}
       <div className="flex justify-center py-5 mb-5 relative z-[60]">
         <Link href="/hub" className="group">

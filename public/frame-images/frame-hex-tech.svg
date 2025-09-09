@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <clipPath id="hexClip">
+      <polygon points="30,0 370,0 400,30 400,370 370,400 30,400 0,370 0,30"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#hexClip)">
+    <polygon points="30,0 370,0 400,30 400,370 370,400 30,400 0,370 0,30" 
+             fill="none" stroke="#1a1a1a" stroke-width="25"/>
+    <polygon points="40,10 360,10 390,40 390,360 360,390 40,390 10,360 10,40" 
+             fill="none" stroke="#fab617" stroke-width="3"/>
+    <polygon points="50,20 350,20 380,50 380,350 350,380 50,380 20,350 20,50" 
+             fill="none" stroke="#2a2a2a" stroke-width="2" stroke-dasharray="5,5"/>
+  </g>
+</svg>

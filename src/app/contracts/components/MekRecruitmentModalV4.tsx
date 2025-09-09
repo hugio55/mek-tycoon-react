@@ -119,7 +119,6 @@ export default function MekRecruitmentModalV4({
   const [hoveredMekBonus, setHoveredMekBonus] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
-  const [percentageStyle, setPercentageStyle] = useState<'glow' | 'neon' | 'emerald'>('glow');
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -686,26 +685,6 @@ export default function MekRecruitmentModalV4({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
-
-                  {/* Percentage Style Selector */}
-                  <div className="relative">
-                    <label className="text-[10px] text-yellow-500/60 uppercase tracking-wider block mb-1" style={{ fontFamily: "'Orbitron', monospace" }}>
-                      % STYLE
-                    </label>
-                    <select 
-                      value={percentageStyle}
-                      onChange={(e) => setPercentageStyle(e.target.value as 'glow' | 'neon' | 'emerald')}
-                      className="bg-black/40 border border-yellow-500/30 text-yellow-400 px-3 py-2 text-xs uppercase tracking-wider focus:border-yellow-400/50 focus:outline-none appearance-none pr-8 cursor-pointer transition-all hover:border-yellow-400/40"
-                      style={{ fontFamily: "'Orbitron', monospace" }}
-                    >
-                      <option value="glow">Glow Green</option>
-                      <option value="neon">Neon Lime</option>
-                      <option value="emerald">Emerald</option>
-                    </select>
-                    <svg className="absolute right-2 bottom-2.5 w-4 h-4 text-yellow-500/50 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
                 </div>
               </div>
 
@@ -849,54 +828,21 @@ export default function MekRecruitmentModalV4({
                           
                           {/* Status badge - show percentage only in normal view */}
                           {hasMatch && !isZoomedOut && (
-                            <>
-                              {/* Option 1: Glowing green text with strong shadow */}
-                              <div className="absolute top-1 right-1 text-green-400 text-sm font-black uppercase tracking-wider"
-                                   style={{
-                                     textShadow: `
-                                       0 0 8px rgba(74, 222, 128, 0.8),
-                                       0 0 12px rgba(74, 222, 128, 0.6),
-                                       0 0 20px rgba(74, 222, 128, 0.4),
-                                       2px 2px 4px rgba(0, 0, 0, 0.9),
-                                       -1px -1px 2px rgba(0, 0, 0, 0.5)
-                                     `,
-                                     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))'
-                                   }}>
-                                +{totalBonus}%
-                              </div>
-                              
-                              {/* Option 2: Bright lime with neon glow 
-                              <div className="absolute top-1 right-1 text-lime-300 text-sm font-black uppercase tracking-wider"
-                                   style={{
-                                     textShadow: `
-                                       0 0 3px rgba(163, 230, 53, 1),
-                                       0 0 6px rgba(163, 230, 53, 0.8),
-                                       0 0 10px rgba(163, 230, 53, 0.6),
-                                       1px 1px 3px rgba(0, 0, 0, 1),
-                                       2px 2px 6px rgba(0, 0, 0, 0.7)
-                                     `,
-                                     WebkitTextStroke: '0.5px rgba(0,0,0,0.3)'
-                                   }}>
-                                +{totalBonus}%
-                              </div>
-                              */}
-                              
-                              {/* Option 3: Emerald with subtle outline 
-                              <div className="absolute top-1 right-1 text-emerald-400 text-[13px] font-black uppercase tracking-wider"
-                                   style={{
-                                     textShadow: `
-                                       0 0 5px rgba(52, 211, 153, 0.9),
-                                       0 0 15px rgba(52, 211, 153, 0.5),
-                                       1px 1px 2px rgba(0, 0, 0, 1),
-                                       -1px -1px 2px rgba(0, 0, 0, 0.8),
-                                       0 2px 4px rgba(0, 0, 0, 0.9)
-                                     `,
-                                     letterSpacing: '0.05em'
-                                   }}>
-                                +{totalBonus}%
-                              </div>
-                              */}
-                            </>
+                            <div 
+                              className="absolute top-1 right-1 text-emerald-400 text-[13px] font-black uppercase tracking-wider"
+                              style={{
+                                textShadow: `
+                                  0 0 5px rgba(52, 211, 153, 0.9),
+                                  0 0 15px rgba(52, 211, 153, 0.5),
+                                  1px 1px 2px rgba(0, 0, 0, 1),
+                                  -1px -1px 2px rgba(0, 0, 0, 0.8),
+                                  0 2px 4px rgba(0, 0, 0, 0.9)
+                                `,
+                                letterSpacing: '0.05em'
+                              }}
+                            >
+                              +{totalBonus}%
+                            </div>
                           )}
                         </div>
                         

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-09-09T03:40:50.437Z",
+  "url": "http://localhost:3100/scrap-yard/story-climb",
+  "layoutInfo": {
+    "hasLeftContainer": true,
+    "hasRightContainer": true,
+    "leftContainerClass": "absolute left-0 top-0 w-full h-full",
+    "rightContainerClass": "absolute top-2 right-2 z-50 flex items-center gap-4",
+    "mainDisplay": "block",
+    "mainFlexDirection": "row",
+    "mainGridTemplate": "none",
+    "pageTitle": "Mek Tycoon",
+    "hasCanvas": false,
+    "canvasSize": null
+  },
+  "viewportInfo": {
+    "innerWidth": 1400,
+    "innerHeight": 900,
+    "documentWidth": 1400,
+    "documentHeight": 1162
+  },
+  "testResult": "PASS",
+  "issues": [
+    "Canvas not found"
+  ]
+}

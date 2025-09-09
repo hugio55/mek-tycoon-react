@@ -43,11 +43,15 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
       // Get changed files count
       const filesChanged = commitOutput.match(/(\d+) files? changed/)?.[1] || '0';
       
+      // Push to GitHub
+      const { stdout: pushOutput } = await execAsync('git push origin master');
+      
       return NextResponse.json({
         success: true,
-        message: `Commit ${commitHash} created with ${filesChanged} files changed`,
+        message: `Commit ${commitHash} created with ${filesChanged} files changed and pushed to GitHub`,
         commitHash,
         filesChanged,
+        pushed: true,
       });
     } catch (gitError: any) {
       // Check if it's because there's nothing to commit

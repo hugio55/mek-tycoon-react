@@ -52,15 +52,13 @@ export default function GlobalBackground() {
     <>
       {/* Background Effects Container - exact copy from shop page */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
-        {/* Gradient orbs - smaller and more localized at edges */}
+        {/* Gradient orbs - gaseous and smoky, only 2 for deep black center */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(circle at -5% 25%, rgba(250, 182, 23, 0.15) 0%, transparent 25%),
-              radial-gradient(circle at 105% 75%, rgba(250, 182, 23, 0.15) 0%, transparent 25%),
-              radial-gradient(circle at -3% 85%, rgba(250, 182, 23, 0.12) 0%, transparent 20%),
-              radial-gradient(circle at 103% 15%, rgba(250, 182, 23, 0.12) 0%, transparent 20%)
+              radial-gradient(ellipse 300px 200px at -8% 30%, rgba(250, 182, 23, 0.08) 0%, rgba(250, 182, 23, 0.04) 30%, transparent 60%),
+              radial-gradient(ellipse 250px 350px at 108% 70%, rgba(250, 182, 23, 0.08) 0%, rgba(250, 182, 23, 0.04) 30%, transparent 60%)
             `
           }}
         />
