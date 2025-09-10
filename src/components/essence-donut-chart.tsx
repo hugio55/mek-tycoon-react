@@ -25,6 +25,9 @@ interface DonutChartProps {
   showCenterStats?: boolean;
   animationDuration?: number;
   className?: string;
+  onSliceHover?: (sliceId: string | null) => void;
+  onSliceClick?: (sliceId: string) => void;
+  selectedSlice?: string | null;
 }
 
 // Industrial color palette for essence types
@@ -47,8 +50,11 @@ export default function EssenceDonutChart({
   size = 400,
   strokeWidth = 3,
   showCenterStats = true,
-  animationDuration = 1000,
+  animationDuration = 800,
   className = "",
+  onSliceHover,
+  onSliceClick,
+  selectedSlice,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -90,8 +96,11 @@ export default function EssenceDonutChart({
     });
   }, [data]);
 
-  // Animation effect
+  // Animation effect - Start immediately
   useEffect(() => {
+    // Start with a small initial value to show something immediately
+    setAnimationProgress(0.01);
+    
     const startTime = Date.now();
     const animate = () => {
       const elapsed = Date.now() - startTime;
@@ -106,6 +115,7 @@ export default function EssenceDonutChart({
       }
     };
     
+    // Start animation on next frame
     requestAnimationFrame(animate);
   }, [animationDuration, data]);
 
@@ -160,23 +170,8 @@ export default function EssenceDonutChart({
 
   return (
     <div className={`relative inline-block ${className}`}>
-      {/* Industrial frame container */}
-      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative overflow-hidden">
-        {/* Background patterns */}
-        <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10" />
-        <div className="absolute inset-0 mek-overlay-metal-texture opacity-5" />
-
-        {/* Chart container */}
-        <div className="relative">
-          {/* Glow effect behind chart */}
-          <div 
-            className="absolute inset-0 rounded-full opacity-20"
-            style={{
-              background: `radial-gradient(circle at center, ${theme.colors.primary.yellow}40 0%, transparent 70%)`,
-              filter: 'blur(40px)',
-              transform: 'scale(1.2)'
-            }}
-          />
+      {/* Chart container without frame */}
+      <div className="relative">
 
           {/* SVG Donut Chart */}
           <svg
@@ -249,8 +244,9 @@ export default function EssenceDonutChart({
             <g filter="url(#industrial-glow)">
               {processedData.map((slice, index) => {
                 const isHovered = hoveredSlice === slice.id;
-                const scale = isHovered ? 1.05 : 1;
-                const opacity = hoveredSlice && !isHovered ? 0.5 : 1;
+                const isSelected = selectedSlice === slice.id;
+                const scale = isHovered || isSelected ? 1.05 : 1;
+                const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.5 : 1;
                 
                 return (
                   <g key={slice.id}>
@@ -258,17 +254,26 @@ export default function EssenceDonutChart({
                     <path
                       d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
                       fill={`url(#slice-gradient-${slice.id})`}
-                      stroke={isHovered ? theme.colors.primary.yellow : 'rgba(0, 0, 0, 0.5)'}
-                      strokeWidth={isHovered ? 2 : 1}
+                      stroke={isHovered || isSelected ? theme.colors.primary.yellow : 'rgba(0, 0, 0, 0.5)'}
+                      strokeWidth={isHovered || isSelected ? 3 : 1}
                       opacity={opacity}
                       transform={`scale(${scale}) translate(${(1 - scale) * center}px, ${(1 - scale) * center}px)`}
                       style={{
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         cursor: 'pointer',
-                        filter: isHovered ? `drop-shadow(0 0 20px ${slice.color}80)` : 'none'
+                        filter: isHovered || isSelected ? `drop-shadow(0 0 20px ${slice.color}80)` : 'none'
                       }}
-                      onMouseEnter={() => setHoveredSlice(slice.id)}
-                      onMouseLeave={() => setHoveredSlice(null)}
+                      onMouseEnter={() => {
+                        setHoveredSlice(slice.id);
+                        onSliceHover?.(slice.id);
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredSlice(null);
+                        onSliceHover?.(null);
+                      }}
+                      onClick={() => {
+                        onSliceClick?.(slice.id);
+                      }}
                     />
 
                     {/* Texture overlay */}
@@ -279,19 +284,7 @@ export default function EssenceDonutChart({
                       pointerEvents="none"
                     />
 
-                    {/* Percentage label (for larger slices) */}
-                    {slice.percentage > 5 && animationProgress === 1 && (
-                      <text
-                        x={center + middleRadius * Math.cos((slice.startAngle + slice.angleSpan / 2) * Math.PI / 180)}
-                        y={center + middleRadius * Math.sin((slice.startAngle + slice.angleSpan / 2) * Math.PI / 180)}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="fill-black font-bold text-xs pointer-events-none"
-                        style={{ textShadow: '0 0 3px rgba(255, 255, 255, 0.8)' }}
-                      >
-                        {slice.percentage.toFixed(1)}%
-                      </text>
-                    )}
+                    {/* Removed percentage labels from slices */}
                   </g>
                 );
               })}
@@ -336,165 +329,7 @@ export default function EssenceDonutChart({
               </g>
             )}
 
-            {/* Scan line effect */}
-            <rect
-              x="0"
-              y="0"
-              width={viewBoxSize}
-              height="2"
-              fill={`url(#scan-gradient)`}
-              opacity="0.6"
-              className="mek-scan-effect"
-            />
-            
-            <defs>
-              <linearGradient id="scan-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="transparent" />
-                <stop offset="50%" stopColor={theme.colors.primary.yellow} />
-                <stop offset="100%" stopColor="transparent" />
-              </linearGradient>
-            </defs>
           </svg>
-
-        </div>
-
-        {/* Details Panel - Dynamic Height */}
-        <div className="mt-6 min-h-[240px] relative">
-          {hoveredSlice ? (() => {
-            const slice = processedData.find(d => d.id === hoveredSlice);
-            if (!slice) return null;
-            
-            const effectiveMax = slice.maxAmountBuffed || slice.maxAmount || 10;
-            const progress = (slice.amount / effectiveMax) * 100;
-            const segmentCount = Math.min(Math.floor(effectiveMax), 10); // Limit subdivisions to 10
-            const baseRate = slice.baseRate || 0.1;
-            const bonusRate = slice.bonusRate || 0;
-            const totalRate = baseRate + bonusRate;
-            const totalValue = slice.amount * slice.currentValue;
-            
-            return (
-              <div className="w-full bg-black/90 border-2 border-yellow-500/30 relative overflow-hidden"
-                   style={{ boxShadow: '0 0 30px rgba(250, 182, 23, 0.15)' }}>
-                {/* Background texture */}
-                <div className="absolute inset-0 mek-overlay-metal-texture opacity-5" />
-                
-                {/* Main content area */}
-                <div className="flex">
-                  {/* Left: Essence Image and Name */}
-                  <div className="w-40 flex flex-col items-center justify-center p-4 bg-black/40">
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-black/60 border-2 border-yellow-500/20">
-                      <Image
-                        src={`/essence-images/bumblebee ${(processedData.indexOf(slice) % 3) + 1}.png`}
-                        alt={slice.name}
-                        fill
-                        className="object-contain p-2"
-                      />
-                    </div>
-                    <h3 className="text-base font-bold text-yellow-400 font-orbitron uppercase mt-3 tracking-wider text-center">
-                      {slice.name}
-                    </h3>
-                    <span className="text-xs text-gray-400 mt-1 font-medium">{slice.percentage.toFixed(1)}% of total</span>
-                  </div>
-                  
-                  {/* Right: Stats Grid */}
-                  <div className="flex-1 p-5">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                      {/* Top Left: Base Rate */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">BASE RATE</div>
-                        <div className="text-xl font-bold text-yellow-400 font-mono">{baseRate.toFixed(2)}/day</div>
-                      </div>
-                      
-                      {/* Top Right: Market Price */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">MARKET PRICE</div>
-                        <div className="text-xl font-bold text-white font-mono">{slice.currentValue}g/ea</div>
-                      </div>
-                      
-                      {/* Bottom Left: Bonus Rate */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">BONUS RATE</div>
-                        <div className="text-xl font-bold text-green-400 font-mono">
-                          {bonusRate > 0 ? `+${bonusRate.toFixed(2)}/day` : '0.00/day'}
-                        </div>
-                      </div>
-                      
-                      {/* Bottom Right: Total Value */}
-                      <div className="space-y-1">
-                        <div className="text-xs text-gray-400 uppercase tracking-widest font-medium">TOTAL VALUE</div>
-                        <div className="text-xl font-bold text-yellow-400 font-mono">
-                          {totalValue.toLocaleString()}g
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Progress Bar Section - Integrated */}
-                    <div className="mt-6 pt-4 border-t border-gray-800/50">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase tracking-widest font-medium">ESSENCE PROGRESS</span>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-yellow-400">{slice.amount.toFixed(1)}</span>
-                            <span className="text-xs text-gray-500">/</span>
-                            <span className="text-sm text-gray-400">{effectiveMax.toFixed(1)}</span>
-                          </div>
-                          {slice.maxAmountBuffed && slice.maxAmountBuffed > (slice.maxAmount || 10) && (
-                            <span className="text-xs text-green-400 font-bold px-2 py-0.5 bg-green-400/10 rounded animate-pulse">
-                              BUFFED
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Industrial Progress Bar */}
-                      <div className="relative h-6 bg-gray-900/80 rounded overflow-hidden border border-gray-700/50">
-                        {/* Divider lines */}
-                        <div className="absolute inset-0 flex">
-                          {Array.from({ length: segmentCount }, (_, i) => (
-                            <div 
-                              key={i} 
-                              className="border-r border-gray-700/30" 
-                              style={{ width: `${100 / segmentCount}%` }} 
-                            />
-                          ))}
-                        </div>
-                        
-                        {/* Filled portion */}
-                        <div 
-                          className="absolute inset-y-0 left-0 transition-all duration-300"
-                          style={{
-                            width: `${Math.min(progress, 100)}%`,
-                            background: `linear-gradient(90deg, ${slice.color || '#fab617'}, ${slice.color || '#fab617'}dd)`,
-                            boxShadow: `inset 0 0 10px ${slice.color || '#fab617'}40`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })() : (
-            <div className="w-full min-h-[240px] bg-black/80 border-2 border-gray-800/50 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-gray-400 text-sm mb-2 uppercase tracking-widest font-medium">↑ Hover slice for details ↑</div>
-                <div className="text-gray-500 text-xs">Select any essence segment</div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <style jsx>{`
-          .glow-green {
-            text-shadow: 0 0 10px rgba(34, 197, 94, 0.8), 0 0 20px rgba(34, 197, 94, 0.6);
-          }
-        `}</style>
-
-        {/* Corner decorations */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-yellow-500/50" />
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/50" />
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/50" />
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-yellow-500/50" />
       </div>
     </div>
   );

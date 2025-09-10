@@ -1083,17 +1083,7 @@ export default function UIShowcase() {
               
               <div>
                 <p className="text-gray-400 mb-3">Style B - Large Numbers (Shop Balance Style):</p>
-                <div 
-                  className="text-yellow-400"
-                  style={{ 
-                    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                    fontSize: '42px',
-                    fontWeight: 200,
-                    letterSpacing: '1px',
-                    lineHeight: '1',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
+                <div className="gold-display-large">
                   1,234,567
                 </div>
                 <div className="text-sm text-gray-500 mt-2">Ultra-light weight for large numbers</div>

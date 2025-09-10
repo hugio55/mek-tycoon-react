@@ -52,14 +52,28 @@ export default function GlobalBackground() {
     <>
       {/* Background Effects Container - exact copy from shop page */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
-        {/* Gradient orbs - gaseous and smoky, only 2 for deep black center */}
+        {/* Gradient orbs - gaseous and smoky nebula clouds */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse 300px 200px at -8% 30%, rgba(250, 182, 23, 0.08) 0%, rgba(250, 182, 23, 0.04) 30%, transparent 60%),
-              radial-gradient(ellipse 250px 350px at 108% 70%, rgba(250, 182, 23, 0.08) 0%, rgba(250, 182, 23, 0.04) 30%, transparent 60%)
-            `
+              radial-gradient(ellipse 600px 400px at -10% 25%, rgba(250, 182, 23, 0.25) 0%, rgba(250, 182, 23, 0.15) 20%, rgba(250, 182, 23, 0.08) 40%, transparent 70%),
+              radial-gradient(ellipse 500px 700px at 110% 75%, rgba(250, 182, 23, 0.22) 0%, rgba(250, 182, 23, 0.12) 25%, rgba(250, 182, 23, 0.06) 45%, transparent 70%)
+            `,
+            filter: 'blur(40px)',
+          }}
+        />
+        
+        {/* Secondary nebula layer for depth and complexity */}
+        <div 
+          className="absolute left-0 top-0 w-full h-full"
+          style={{
+            background: `
+              radial-gradient(ellipse 450px 300px at 5% 40%, rgba(250, 182, 23, 0.12) 0%, rgba(250, 182, 23, 0.06) 30%, transparent 60%),
+              radial-gradient(ellipse 350px 500px at 95% 60%, rgba(250, 182, 23, 0.10) 0%, rgba(250, 182, 23, 0.05) 35%, transparent 65%)
+            `,
+            filter: 'blur(60px)',
+            mixBlendMode: 'screen',
           }}
         />
         

@@ -1,17 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import CreateListingModal from "@/components/CreateListingModal";
+import GlobalBackground from "@/components/GlobalBackground";
 
 const CATEGORIES = [
-  { id: "head", name: "Heads" },
-  { id: "body", name: "Bodies" },
-  { id: "trait", name: "Traits" },
+  { id: "mek-chips", name: "Mek Chips", hasDropdown: true, subcategories: [
+    { id: "head", name: "Heads" },
+    { id: "body", name: "Bodies" },
+    { id: "trait", name: "Traits" },
+  ]},
+  { id: "universal-chips", name: "Universal Chips" },
   { id: "essence", name: "Essence" },
-  { id: "overexposed", name: "OE Signatures" },
+  { id: "frames", name: "Frames" },
+  { id: "oem", name: "OEM" },
 ];
 
 const SORT_OPTIONS = [
@@ -28,9 +33,11 @@ export default function ShopPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyMyListings, setShowOnlyMyListings] = useState(false);
   const [showCreateListing, setShowCreateListing] = useState(false);
+  const [showMekChipsDropdown, setShowMekChipsDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   // New listing form state
-  const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed">("essence");
+  const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed" | "universal-chips" | "frames" | "oem">("essence");
   const [listingVariation, setListingVariation] = useState("");
   const [listingQuantity, setListingQuantity] = useState("1");
   const [listingPrice, setListingPrice] = useState("");
@@ -50,6 +57,23 @@ export default function ShopPage() {
     };
     initUser();
   }, [getOrCreateUser]);
+  
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowMekChipsDropdown(false);
+      }
+    };
+    
+    if (showMekChipsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMekChipsDropdown]);
   
   // Get user profile
   const userProfile = useQuery(
@@ -91,6 +115,18 @@ export default function ShopPage() {
     api.marketplace.getActiveListings,
     { itemType: "overexposed", limit: 1, offset: 0 }
   );
+  const universalListings = useQuery(
+    api.marketplace.getActiveListings,
+    { itemType: "universal-chips", limit: 1, offset: 0 }
+  );
+  const oemListings = useQuery(
+    api.marketplace.getActiveListings,
+    { itemType: "oem", limit: 1, offset: 0 }
+  );
+  const framesListings = useQuery(
+    api.marketplace.getActiveListings,
+    { itemType: "frames", limit: 1, offset: 0 }
+  );
   
   // Auto-select first category with items if current has none
   useEffect(() => {
@@ -118,6 +154,7 @@ export default function ShopPage() {
   const createListing = useMutation(api.marketplace.createListing);
   const purchaseItem = useMutation(api.marketplace.purchaseItem);
   const cancelListing = useMutation(api.marketplace.cancelListing);
+  const seedMarketplace = useMutation(api.seedMarketplace.seedMarketplaceListings);
   
   // Filter for user's listings if needed
   const filteredListings = listings ? (
@@ -173,7 +210,11 @@ export default function ShopPage() {
   
   // Handle purchase
   const handlePurchase = async (listingId: Id<"marketListings">) => {
-    if (!userId) return;
+    console.log('Purchase clicked for listing:', listingId);
+    if (!userId) {
+      alert('Please wait for user initialization...');
+      return;
+    }
     
     try {
       await purchaseItem({
@@ -189,7 +230,11 @@ export default function ShopPage() {
   
   // Handle cancel listing
   const handleCancelListing = async (listingId: Id<"marketListings">) => {
-    if (!userId) return;
+    console.log('Cancel clicked for listing:', listingId);
+    if (!userId) {
+      alert('Please wait for user initialization...');
+      return;
+    }
     
     try {
       await cancelListing({
@@ -204,186 +249,251 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen text-white overflow-hidden relative">
+      <GlobalBackground />
       
       {/* Main Content */}
       <div className="relative z-10 py-6">
-        {/* Title Section */}
-        <div 
-          className="relative mb-6 rounded-xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
-            border: '2px solid #fab617',
-            boxShadow: '0 0 30px rgba(250, 182, 23, 0.4)',
-            padding: '28px'
-          }}
-        >
-          {/* Inner accent border */}
-          <div 
-            className="absolute inset-[2px] rounded-xl pointer-events-none"
-            style={{
-              border: '1px solid #00ff88',
-              opacity: 0.4
-            }}
-          />
+        {/* Title Section - Military Command Panel */}
+        <div className="relative mb-6 mek-card-industrial mek-border-sharp-gold mek-corner-cut p-7 mek-glow-yellow">
+          {/* Hazard Stripes Header */}
+          <div className="absolute top-0 left-0 right-0 h-3 mek-overlay-hazard-stripes opacity-60" />
+          
+          {/* Grunge Overlays */}
+          <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+          <div className="absolute inset-0 mek-overlay-rust pointer-events-none" />
+          
+          {/* Tech Grid Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 mek-overlay-metal-texture" />
+          </div>
           
           <div className="relative flex justify-between items-center">
             <div>
-              <h1 
-                style={{
-                  fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
-                  fontSize: '42px',
-                  fontWeight: 900,
-                  color: '#fab617',
-                  letterSpacing: '0.1em',
-                  textShadow: '0 0 25px rgba(250, 182, 23, 0.7)',
-                  marginBottom: '8px'
-                }}
-              >
-                SHOP
+              <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow mb-2">
+                EQUIPMENT EXCHANGE
               </h1>
-              <p 
-                style={{
-                  fontSize: '12px',
-                  color: '#999',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.3em',
-                  fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
-                }}
-              >
-                Buy and sell items with other players + real world rewards
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <p className="mek-label-uppercase text-green-400">
+                  MARKETPLACE ACTIVE
+                </p>
+              </div>
             </div>
             
-            {/* User Gold Display */}
-            <div className="text-right">
-              <div 
-                style={{
-                  fontSize: '14px',
-                  color: '#fab617',
-                  opacity: 0.7,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.2em',
-                  marginBottom: '4px'
-                }}
-              >
-                Your Balance
-              </div>
-              <div 
-                style={{ 
-                  fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                  fontSize: '42px',
-                  fontWeight: 200,
-                  color: '#fab617',
-                  letterSpacing: '1px',
-                  lineHeight: '1',
-                  fontVariantNumeric: 'tabular-nums',
-                  textShadow: '0 0 15px rgba(250, 182, 23, 0.5)',
-                }}
-              >
-                {Math.floor(userProfile?.gold || 0).toLocaleString()}
-              </div>
-              <div
-                style={{
-                  fontSize: '10px',
-                  color: '#fab617',
-                  opacity: 0.6,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.2em',
-                  marginTop: '2px'
-                }}
-              >
-                GOLD
+            {/* User Gold Display - Military HUD Style */}
+            <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
+              <div className="relative">
+                <div className="mek-label-uppercase text-yellow-400/70 mb-1">
+                  CREDITS AVAILABLE
+                </div>
+                <div className="mek-value-primary text-3xl">
+                  {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-8 h-1 bg-yellow-500/50" />
+                  <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">
+                    GOLD STANDARD
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
+        {/* Search and Filters - Command Interface */}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search shop..."
-              className="flex-1 px-4 py-3 bg-gray-900/80 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-all"
-              style={{
-                boxShadow: searchTerm ? '0 0 20px rgba(250, 182, 23, 0.2)' : 'none'
-              }}
-            />
+            {/* Search Terminal */}
+            <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500/50">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ENTER SEARCH PARAMETERS..."
+                className="w-full pl-10 pr-4 py-3 bg-black/60 border-2 border-gray-700/50 text-yellow-400 placeholder-gray-600 font-mono text-sm uppercase tracking-wider focus:border-yellow-500/50 focus:outline-none transition-all mek-corner-cut"
+                style={{
+                  boxShadow: searchTerm ? '0 0 20px rgba(250, 182, 23, 0.2), inset 0 0 10px rgba(250, 182, 23, 0.1)' : 'none'
+                }}
+              />
+            </div>
+            
+            {/* Create Listing Button - Military Style */}
             <button
               onClick={() => setShowCreateListing(true)}
-              className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-400 text-black font-bold rounded-lg hover:shadow-lg hover:shadow-yellow-500/30 transition-all"
-              style={{
-                fontFamily: "'Orbitron', 'Rajdhani', sans-serif",
-                letterSpacing: '0.05em'
-              }}
+              className="mek-button-primary flex items-center gap-2 group"
             >
-              + Create Listing
+              <span className="text-lg">⊕</span>
+              <span>DEPLOY LISTING</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shimmer pointer-events-none" />
             </button>
           </div>
           
-          {/* Category Filters */}
-          <div className="flex gap-2 flex-wrap">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  selectedCategory === cat.id
-                    ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-                    : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700/80 border border-gray-700'
-                }`}
-                style={{
-                  fontFamily: "'Rajdhani', sans-serif",
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-          
-          {/* Sort Options and Filter */}
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex gap-2">
-              <span className="text-gray-400 text-sm py-2">Sort by:</span>
-              {SORT_OPTIONS.map((option) => (
+          {/* Category Filters - Tactical Selector */}
+          <div className="flex gap-2 flex-wrap items-center p-3 bg-black/40 border border-gray-800 rounded-lg mek-overlay-metal-texture">
+            {CATEGORIES.map((cat) => {
+              const isMekChips = cat.id === 'mek-chips';
+              const isActive = isMekChips 
+                ? ['head', 'body', 'trait'].includes(selectedCategory)
+                : selectedCategory === cat.id;
+              
+              if (isMekChips) {
+                return (
+                  <div key={cat.id} className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowMekChipsDropdown(!showMekChipsDropdown)}
+                      className={`relative px-4 py-2 font-bold uppercase tracking-wider transition-all flex items-center gap-2 group mek-corner-cut ${
+                        isActive
+                          ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                          : 'bg-black/60 text-gray-400 hover:text-yellow-400 border-2 border-gray-700/50 hover:border-yellow-500/50'
+                      }`}
+                    >
+                      <span className="relative z-10">{cat.name}</span>
+                      <svg className={`w-4 h-4 transition-transform ${showMekChipsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      {isActive && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent pointer-events-none" />
+                      )}
+                    </button>
+                    
+                    {/* Dropdown Menu - Military Equipment Selector */}
+                    {showMekChipsDropdown && (
+                      <div className="absolute top-full mt-2 left-0 min-w-[200px] z-50">
+                        <div className="relative bg-black/95 border-2 border-yellow-500/50 mek-corner-cut overflow-hidden">
+                          {/* Dropdown Header */}
+                          <div className="bg-yellow-500/20 px-4 py-2 border-b border-yellow-500/30">
+                            <div className="mek-label-uppercase text-yellow-400 text-[10px]">SELECT EQUIPMENT TYPE</div>
+                          </div>
+                          
+                          {/* Options */}
+                          <div className="relative">
+                            <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10 pointer-events-none" />
+                            {cat.subcategories?.map((sub, index) => (
+                              <button
+                                key={sub.id}
+                                onClick={() => {
+                                  setSelectedCategory(sub.id);
+                                  setShowMekChipsDropdown(false);
+                                }}
+                                className={`relative w-full px-4 py-3 text-left transition-all group flex items-center justify-between ${
+                                  selectedCategory === sub.id
+                                    ? 'bg-yellow-500/20 text-yellow-400'
+                                    : 'text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-400'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-2 h-2 rounded-full ${
+                                    selectedCategory === sub.id ? 'bg-yellow-400' : 'bg-gray-600'
+                                  }`} />
+                                  <span className="font-bold uppercase tracking-wider">{sub.name}</span>
+                                </div>
+                                {selectedCategory === sub.id && (
+                                  <span className="text-yellow-400">▶</span>
+                                )}
+                                {index < cat.subcategories.length - 1 && (
+                                  <div className="absolute bottom-0 left-4 right-4 h-px bg-gray-800" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              return (
                 <button
-                  key={option.id}
-                  onClick={() => setSortBy(option.id)}
-                  className={`px-3 py-1 text-sm rounded-lg transition-all ${
-                    sortBy === option.id
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                      : 'text-gray-500 hover:text-gray-300'
+                  key={cat.id}
+                  onClick={() => {
+                    if (cat.id === 'universal-chips') {
+                      // This category doesn't have items yet
+                      alert('Coming soon!');
+                      return;
+                    }
+                    setSelectedCategory(cat.id);
+                  }}
+                  className={`relative px-4 py-2 font-bold uppercase tracking-wider transition-all mek-corner-cut ${
+                    isActive
+                      ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                      : 'bg-black/60 text-gray-400 hover:text-yellow-400 border-2 border-gray-700/50 hover:border-yellow-500/50'
                   }`}
                 >
-                  {option.name}
+                  <span className="relative z-10">{cat.name}</span>
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent pointer-events-none" />
+                  )}
                 </button>
-              ))}
+              );
+            })}
+          </div>
+          
+          {/* Sort Options and Filter - Control Panel */}
+          <div className="flex items-center justify-between mt-3 p-3 bg-black/40 border border-gray-800 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="mek-label-uppercase text-yellow-400/70">SORT PROTOCOL:</span>
+              <div className="flex gap-1">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSortBy(option.id)}
+                    className={`px-3 py-1 text-xs font-bold uppercase tracking-wider transition-all ${
+                      sortBy === option.id
+                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                        : 'text-gray-600 hover:text-gray-400 border border-transparent'
+                    }`}
+                  >
+                    {option.name}
+                  </button>
+                ))}
+              </div>
             </div>
             <button
               onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+              className={`relative px-4 py-2 font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
                 showOnlyMyListings
-                  ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-                  : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700/80 border border-gray-700'
+                  ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                  : 'bg-black/60 text-gray-400 hover:text-yellow-400 border-2 border-gray-700/50 hover:border-yellow-500/50'
               }`}
-              style={{
-                fontFamily: "'Rajdhani', sans-serif",
-              }}
             >
-              {showOnlyMyListings ? '✓ My Listings' : 'My Listings'}
+              {showOnlyMyListings && (
+                <span className="text-green-600">✓</span>
+              )}
+              <span>MY LISTINGS</span>
             </button>
           </div>
         </div>
         
-        {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* Listings Grid - Equipment Inventory */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
           {sortedListings.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <div className="text-6xl mb-4 opacity-50">[ ]</div>
-              <div className="text-xl text-gray-400">No listings found</div>
-              <div className="text-sm text-gray-500 mt-2">Try adjusting your search or filters</div>
+            <div className="col-span-full text-center py-12 mek-card-industrial mek-border-sharp-gray">
+              <div className="text-6xl mb-4 text-yellow-500/20">⊗</div>
+              <div className="mek-text-industrial text-xl text-gray-400">NO EQUIPMENT AVAILABLE</div>
+              <div className="mek-label-uppercase text-gray-500 mt-2">ADJUST SEARCH PARAMETERS OR CHECK BACK LATER</div>
+              <button
+                onClick={async () => {
+                  try {
+                    const result = await seedMarketplace();
+                    const totalListings = (result.chipListings || 0) + (result.essenceListings || 0) + 
+                                        (result.oeListings || 0) + (result.frameListings || 0) + 
+                                        (result.oemListings || 0);
+                    alert(`Marketplace seeded! Added ${totalListings} mock listings.`);
+                    window.location.reload();
+                  } catch (error) {
+                    alert('Failed to seed marketplace: ' + error);
+                  }
+                }}
+                className="mt-4 px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500/50 hover:bg-yellow-500/30 hover:border-yellow-400 text-yellow-400 font-bold uppercase tracking-wider transition-all mek-corner-cut"
+              >
+                ⊕ POPULATE WITH DEMO LISTINGS
+              </button>
             </div>
           ) : (
             sortedListings.map((listing) => {
@@ -394,93 +504,149 @@ export default function ShopPage() {
               return (
                 <div
                   key={listing._id}
-                  className={`relative bg-gray-900/80 border border-gray-700 rounded-lg p-4 hover:border-yellow-500/50 transition-all group ${
+                  className={`relative mek-card-industrial mek-border-sharp-gray p-4 hover:border-yellow-500/50 transition-all group mek-corner-cut ${
                     isOverexposed ? 'md:col-span-2 lg:col-span-2 xl:col-span-2' : ''
                   }`}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
-                  }}
                 >
-                  {/* Shimmer effect on hover */}
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(105deg, transparent 40%, rgba(250, 182, 23, 0.1) 50%, transparent 60%)',
-                      animation: 'shimmer 2s infinite'
-                    }}
-                  />
+                  {/* Industrial Overlays */}
+                  <div className="absolute inset-0 mek-overlay-metal-texture opacity-5 pointer-events-none" />
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                  
+                  {/* Hover Glow Effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent animate-shimmer" />
+                  </div>
                   
                   {isOwn && (
-                    <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded font-bold">
-                      YOUR LISTING
+                    <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] px-3 py-1 font-bold uppercase tracking-wider mek-corner-cut">
+                      ◆ YOUR LISTING
                     </div>
                   )}
                   
                   <div className={`relative ${isOverexposed ? 'flex gap-4' : ''}`}>
                     {/* Item Thumbnail */}
-                    <div className={`flex justify-center ${isOverexposed ? 'flex-shrink-0' : 'mb-3'}`}>
+                    <div className={`flex justify-center items-center ${isOverexposed ? 'flex-shrink-0 w-24 h-24' : 'mb-3 h-16'}`}>
                       {listing.imageUrl ? (
                         <img 
                           src={listing.imageUrl} 
                           alt={listing.itemVariation} 
-                          className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
+                          className={`${isOverexposed ? 'max-w-[96px] max-h-[96px]' : 'max-w-[64px] max-h-[64px]'} w-auto h-auto object-contain rounded-lg`}
                         />
                       ) : listing.itemType === 'overexposed' ? (
                         <img 
                           src="/oe-items/oe-icon.png" 
                           alt="OE Signature Item" 
-                          className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
+                          className={`${isOverexposed ? 'max-w-[96px] max-h-[96px]' : 'max-w-[64px] max-h-[64px]'} w-auto h-auto object-contain rounded-lg`}
+                        />
+                      ) : listing.itemType === 'oem' ? (
+                        <img 
+                          src="/frame-images/kodak-canister-2.png" 
+                          alt="Film Canister" 
+                          className={`${isOverexposed ? 'max-w-[96px] max-h-[96px]' : 'max-w-[64px] max-h-[64px]'} w-auto h-auto object-contain rounded-lg`}
+                        />
+                      ) : listing.itemType === 'frames' ? (
+                        <img 
+                          src={`/frame-images/${listing.itemVariation || 'frame-gold-industrial'}.svg`} 
+                          alt={`${listing.itemVariation || 'Frame'}`} 
+                          className={`${isOverexposed ? 'max-w-[96px] max-h-[96px]' : 'max-w-[64px] max-h-[64px]'} w-auto h-auto object-contain rounded-lg`}
                         />
                       ) : (listing.itemType === 'head' || listing.itemType === 'body' || listing.itemType === 'trait') ? (
                         <img 
-                          src="/chip-images/mek-chips/heads/acid chip.webp" 
-                          alt={`${listing.itemType} chip`} 
-                          className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} object-cover rounded-lg`}
-                        />
-                      ) : listing.itemType === 'essence' ? (
-                        <div 
-                          className="w-16 h-16 rounded-full"
-                          style={{ 
-                            background: `radial-gradient(circle, ${
-                              listing.essenceType === 'stone' ? '#808080' :
-                              listing.essenceType === 'disco' ? '#FF00FF' :
-                              listing.essenceType === 'paul' ? '#FFD700' :
-                              listing.essenceType === 'cartoon' ? '#00FFFF' :
-                              listing.essenceType === 'candy' ? '#FF69B4' :
-                              listing.essenceType === 'tiles' ? '#4169E1' :
-                              listing.essenceType === 'moss' ? '#228B22' :
-                              listing.essenceType === 'bullish' ? '#FF4500' :
-                              listing.essenceType === 'journalist' ? '#708090' :
-                              listing.essenceType === 'laser' ? '#FF0000' :
-                              listing.essenceType === 'flashbulb' ? '#FFFF00' :
-                              listing.essenceType === 'accordion' ? '#8B4513' :
-                              listing.essenceType === 'turret' ? '#2F4F4F' :
-                              listing.essenceType === 'drill' ? '#CD853F' :
-                              listing.essenceType === 'security' ? '#000080' : '#666666'
-                            }, transparent)`,
-                            boxShadow: `0 0 20px ${
-                              listing.essenceType === 'stone' ? '#808080' :
-                              listing.essenceType === 'disco' ? '#FF00FF' :
-                              listing.essenceType === 'paul' ? '#FFD700' :
-                              listing.essenceType === 'cartoon' ? '#00FFFF' :
-                              listing.essenceType === 'candy' ? '#FF69B4' :
-                              listing.essenceType === 'tiles' ? '#4169E1' :
-                              listing.essenceType === 'moss' ? '#228B22' :
-                              listing.essenceType === 'bullish' ? '#FF4500' :
-                              listing.essenceType === 'journalist' ? '#708090' :
-                              listing.essenceType === 'laser' ? '#FF0000' :
-                              listing.essenceType === 'flashbulb' ? '#FFFF00' :
-                              listing.essenceType === 'accordion' ? '#8B4513' :
-                              listing.essenceType === 'turret' ? '#2F4F4F' :
-                              listing.essenceType === 'drill' ? '#CD853F' :
-                              listing.essenceType === 'security' ? '#000080' : '#666666'
-                            }40`
+                          src={`/chip-images/mek-chips/${listing.itemVariation || 'Acid A'}.webp`} 
+                          alt={`${listing.itemVariation || listing.itemType} chip`} 
+                          className={`${isOverexposed ? 'max-w-[96px] max-h-[96px]' : 'max-w-[64px] max-h-[64px]'} w-auto h-auto object-contain rounded-lg`}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/chip-images/mek-chips/Acid A.webp';
                           }}
                         />
+                      ) : listing.itemType === 'essence' ? (
+                        <div className={`${isOverexposed ? 'w-24 h-24' : 'w-16 h-16'} relative flex items-center justify-center`}>
+                          {/* Glass Bottle Container */}
+                          <div className="relative w-full h-full">
+                            {/* Cork/Cap */}
+                            <div 
+                              className="absolute top-0 left-1/2 -translate-x-1/2 w-1/4 h-[15%] bg-gradient-to-b from-amber-700 to-amber-900 rounded-t-md"
+                              style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)' }}
+                            />
+                            {/* Bottle Neck */}
+                            <div 
+                              className="absolute top-[12%] left-1/2 -translate-x-1/2 w-1/3 h-[20%] bg-gradient-to-b from-gray-200/20 to-gray-300/30 rounded-sm"
+                              style={{ 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                boxShadow: 'inset 0 0 5px rgba(255,255,255,0.1)'
+                              }}
+                            />
+                            {/* Bottle Body with Essence */}
+                            <div 
+                              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-[70%] rounded-b-xl rounded-t-sm overflow-hidden"
+                              style={{
+                                background: `linear-gradient(to bottom, 
+                                  rgba(255,255,255,0.2) 0%, 
+                                  rgba(255,255,255,0.1) 10%,
+                                  ${
+                                    listing.essenceType === 'stone' ? '#808080' :
+                                    listing.essenceType === 'disco' ? '#FF00FF' :
+                                    listing.essenceType === 'paul' ? '#FFD700' :
+                                    listing.essenceType === 'cartoon' ? '#00FFFF' :
+                                    listing.essenceType === 'candy' ? '#FF69B4' :
+                                    listing.essenceType === 'tiles' ? '#4169E1' :
+                                    listing.essenceType === 'moss' ? '#228B22' :
+                                    listing.essenceType === 'bullish' ? '#FF4500' :
+                                    listing.essenceType === 'journalist' ? '#708090' :
+                                    listing.essenceType === 'laser' ? '#FF0000' :
+                                    listing.essenceType === 'flashbulb' ? '#FFFF00' :
+                                    listing.essenceType === 'accordion' ? '#8B4513' :
+                                    listing.essenceType === 'turret' ? '#2F4F4F' :
+                                    listing.essenceType === 'drill' ? '#CD853F' :
+                                    listing.essenceType === 'security' ? '#000080' : '#666666'
+                                  }80 20%,
+                                  ${
+                                    listing.essenceType === 'stone' ? '#808080' :
+                                    listing.essenceType === 'disco' ? '#FF00FF' :
+                                    listing.essenceType === 'paul' ? '#FFD700' :
+                                    listing.essenceType === 'cartoon' ? '#00FFFF' :
+                                    listing.essenceType === 'candy' ? '#FF69B4' :
+                                    listing.essenceType === 'tiles' ? '#4169E1' :
+                                    listing.essenceType === 'moss' ? '#228B22' :
+                                    listing.essenceType === 'bullish' ? '#FF4500' :
+                                    listing.essenceType === 'journalist' ? '#708090' :
+                                    listing.essenceType === 'laser' ? '#FF0000' :
+                                    listing.essenceType === 'flashbulb' ? '#FFFF00' :
+                                    listing.essenceType === 'accordion' ? '#8B4513' :
+                                    listing.essenceType === 'turret' ? '#2F4F4F' :
+                                    listing.essenceType === 'drill' ? '#CD853F' :
+                                    listing.essenceType === 'security' ? '#000080' : '#666666'
+                                  } 100%)`,
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                boxShadow: `inset 0 0 10px rgba(255,255,255,0.2), 0 0 15px ${
+                                  listing.essenceType === 'stone' ? '#808080' :
+                                  listing.essenceType === 'disco' ? '#FF00FF' :
+                                  listing.essenceType === 'paul' ? '#FFD700' :
+                                  listing.essenceType === 'cartoon' ? '#00FFFF' :
+                                  listing.essenceType === 'candy' ? '#FF69B4' :
+                                  listing.essenceType === 'tiles' ? '#4169E1' :
+                                  listing.essenceType === 'moss' ? '#228B22' :
+                                  listing.essenceType === 'bullish' ? '#FF4500' :
+                                  listing.essenceType === 'journalist' ? '#708090' :
+                                  listing.essenceType === 'laser' ? '#FF0000' :
+                                  listing.essenceType === 'flashbulb' ? '#FFFF00' :
+                                  listing.essenceType === 'accordion' ? '#8B4513' :
+                                  listing.essenceType === 'turret' ? '#2F4F4F' :
+                                  listing.essenceType === 'drill' ? '#CD853F' :
+                                  listing.essenceType === 'security' ? '#000080' : '#666666'
+                                }40`
+                              }}
+                            />
+                            {/* Glass Reflection */}
+                            <div 
+                              className="absolute top-[25%] left-[55%] w-[15%] h-[25%] bg-white/20 rounded-full blur-sm"
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <div 
-                          className={`${isOverexposed ? 'w-24 h-24 text-3xl' : 'w-16 h-16 text-2xl'} rounded-lg flex items-center justify-center font-bold text-black`}
+                          className={`${isOverexposed ? 'w-24 h-24 text-3xl' : 'w-16 h-16 text-2xl'} rounded-lg flex items-center justify-center font-bold text-black flex-shrink-0`}
                           style={{ 
                             background: 
                               listing.itemType === 'head' ? 'linear-gradient(135deg, #fab617 0%, #d4a017 100%)' :
@@ -499,26 +665,29 @@ export default function ShopPage() {
                     
                     {/* Content wrapper for overexposed items */}
                     <div className={isOverexposed ? 'flex-1' : ''}>
-                      {/* Item Type Badge - only for non-essence */}
+                      {/* Item Type Badge - Military Classification */}
                       {listing.itemType !== 'essence' && (
-                        <div className={`text-xs uppercase tracking-wider mb-3 ${isOverexposed ? 'text-left' : 'text-center'} text-gray-400`}>
-                          {listing.itemType}
+                        <div className={`mek-label-uppercase mb-3 ${isOverexposed ? 'text-left' : 'text-center'} text-yellow-400/60`}>
+                          <span className="inline-block px-2 py-1 bg-black/60 border border-yellow-500/20">
+                            {listing.itemType}
+                          </span>
                         </div>
                       )}
                       
-                      {/* Item Details */}
+                      {/* Item Details - Equipment Specs */}
                       <div className="mb-3">
-                        <div className={`font-bold text-yellow-400 capitalize ${isOverexposed ? 'text-left text-lg' : 'text-center'}`}>
+                        <div className={`font-bold text-yellow-400 uppercase tracking-wide ${isOverexposed ? 'text-left text-lg' : 'text-center'}`}>
                           {listing.itemVariation || listing.itemType}
                         </div>
                         {listing.itemDescription && (
-                          <div className={`text-xs text-gray-400 mt-1 ${isOverexposed ? 'text-left' : 'text-center px-2'}`}>
+                          <div className={`mek-label-uppercase text-gray-500 mt-1 ${isOverexposed ? 'text-left' : 'text-center px-2'}`}>
                             {listing.itemDescription}
                           </div>
                         )}
                         {listing.itemType !== 'essence' && listing.quantity > 1 && (
-                          <div className={`text-sm text-gray-400 ${isOverexposed ? 'text-left' : 'text-center'}`}>
-                            Quantity: {listing.quantity}
+                          <div className={`flex items-center gap-2 mt-2 ${isOverexposed ? 'justify-start' : 'justify-center'}`}>
+                            <span className="mek-label-uppercase text-gray-500">QTY:</span>
+                            <span className="text-yellow-400 font-bold">{listing.quantity}</span>
                           </div>
                         )}
                         
@@ -541,9 +710,9 @@ export default function ShopPage() {
                         )}
                       </div>
                     
-                      {/* Price */}
-                      <div className="mb-3 p-2 bg-black/50 rounded">
-                        <div className="text-xs text-gray-400">Price per unit</div>
+                      {/* Price Display - Terminal Style */}
+                      <div className="mb-3 p-2 bg-black/80 border border-yellow-500/20 mek-corner-cut">
+                        <div className="mek-label-uppercase text-yellow-400/60">UNIT PRICE</div>
                         {listing.itemType === 'essence' ? (
                           <>
                             <div className="text-xl font-bold text-yellow-400">
@@ -576,25 +745,27 @@ export default function ShopPage() {
                         </div>
                       )}
                       
-                      {/* Action Button */}
+                      {/* Action Button - Military Command Style */}
                       {isOwn ? (
                         <button
                           onClick={() => handleCancelListing(listing._id)}
-                          className="w-full px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded transition-all"
+                          className="relative z-10 w-full px-4 py-2 bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400 font-bold uppercase tracking-wider transition-all mek-corner-cut cursor-pointer"
+                          style={{ position: 'relative', zIndex: 10 }}
                         >
-                          Cancel Listing
+                          ⊗ ABORT LISTING
                         </button>
                       ) : (
                         <button
                           onClick={() => handlePurchase(listing._id)}
                           disabled={!canAfford}
-                          className={`w-full px-4 py-2 font-bold rounded transition-all ${
+                          className={`relative z-10 w-full px-4 py-2 font-bold uppercase tracking-wider transition-all mek-corner-cut ${
                             canAfford
-                              ? 'bg-gradient-to-r from-yellow-500 to-yellow-400 text-black hover:shadow-lg hover:shadow-yellow-500/30'
-                              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                              ? 'mek-button-primary cursor-pointer'
+                              : 'bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed'
                           }`}
+                          style={{ position: 'relative', zIndex: 10 }}
                         >
-                          {canAfford ? 'Buy Now' : 'Insufficient Gold'}
+                          {canAfford ? '◆ ACQUIRE' : '⊗ INSUFFICIENT FUNDS'}
                         </button>
                       )}
                     </div>
@@ -605,48 +776,51 @@ export default function ShopPage() {
           )}
         </div>
         
-        {/* My Listings Section */}
+        {/* My Listings Section - Command Overview */}
         {myListings && myListings.length > 0 && (
           <div className="mt-8">
-            <h2 
-              className="text-2xl font-bold mb-4"
-              style={{
-                color: '#fab617',
-                textShadow: '0 0 15px rgba(250, 182, 23, 0.5)',
-                fontFamily: "'Orbitron', 'Rajdhani', sans-serif",
-              }}
-            >
-              Your Active Listings
-            </h2>
+            <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">
+                ACTIVE DEPLOYMENTS
+              </h2>
+              <p className="mek-label-uppercase text-yellow-400/60 mt-1">
+                {myListings.length} LISTINGS IN MARKETPLACE
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myListings.map((listing) => (
                 <div
                   key={listing._id}
-                  className="bg-gray-900/80 border border-yellow-500/30 rounded-lg p-4"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)',
-                    boxShadow: '0 0 20px rgba(250, 182, 23, 0.2)'
-                  }}
+                  className="relative mek-card-industrial mek-border-sharp-gold p-4 mek-corner-cut"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <div className="font-bold text-yellow-400">
-                        {listing.itemVariation || listing.itemType}
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                  <div className="relative">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="font-bold text-yellow-400 uppercase tracking-wide">
+                          {listing.itemVariation || listing.itemType}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="mek-label-uppercase text-gray-500">QTY:</span>
+                          <span className="text-yellow-400">{listing.quantity}</span>
+                          <span className="text-gray-600">×</span>
+                          <span className="text-yellow-400">{listing.pricePerUnit}g</span>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-400">
-                        {listing.quantity}x @ {listing.pricePerUnit}g each
+                      <div className="text-right">
+                        <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
+                        <div className="text-xs text-yellow-400/60">
+                          {new Date(listing.listedAt).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Listed {new Date(listing.listedAt).toLocaleDateString()}
-                    </div>
+                    <button
+                      onClick={() => handleCancelListing(listing._id)}
+                      className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm mek-corner-cut"
+                    >
+                      ⊗ RECALL LISTING
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleCancelListing(listing._id)}
-                    className="w-full px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded transition-all"
-                  >
-                    Cancel
-                  </button>
                 </div>
               ))}
             </div>

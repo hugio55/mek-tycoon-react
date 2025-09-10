@@ -48,7 +48,7 @@ export default function CreateListingModal({
   userEssence,
   userGold = 0,
 }: CreateListingModalProps) {
-  const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed">("essence");
+  const [listingType, setListingType] = useState<"essence" | "head" | "body" | "trait" | "overexposed" | "frames" | "oem">("essence");
   const [selectedEssence, setSelectedEssence] = useState<string>("");
   const [essenceAmount, setEssenceAmount] = useState(0);
   const [itemName, setItemName] = useState("");
@@ -132,6 +132,8 @@ export default function CreateListingModal({
       body: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       trait: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
       overexposed: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+      frames: "linear-gradient(135deg, #fab617 0%, #d4a017 100%)",
+      oem: "linear-gradient(135deg, #808080 0%, #303030 100%)",
     };
     return placeholders[type] || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
   };
@@ -158,6 +160,8 @@ export default function CreateListingModal({
                 <option value="body">Body</option>
                 <option value="trait">Trait</option>
                 <option value="overexposed">Over Exposed</option>
+                <option value="frames">Frames</option>
+                <option value="oem">OEM (Film Canisters)</option>
               </select>
             </div>
             

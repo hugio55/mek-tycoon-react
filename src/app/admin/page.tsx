@@ -45,6 +45,14 @@ export default function AdminPage() {
       icon: '🎉',
       route: '/admin/events',
       color: 'from-pink-500 to-pink-600'
+    },
+    {
+      id: 'story-tree',
+      title: 'Story Tree Builder',
+      description: 'Design and manage story mode node trees',
+      icon: '🌳',
+      route: '/admin-story-tree',
+      color: 'from-amber-500 to-orange-600'
     }
   ];
   

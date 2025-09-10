@@ -6,22 +6,7 @@ import { Id } from "./_generated/dataModel";
 export const createChipDefinition = mutation({
   args: {
     name: v.string(),
-    description: v.string(),
-    category: v.union(
-      v.literal("attack"),
-      v.literal("defense"),
-      v.literal("utility"),
-      v.literal("economy"),
-      v.literal("special")
-    ),
-    tier: v.number(), // 1-7
     imageUrl: v.optional(v.string()),
-    possibleBuffs: v.array(v.object({
-      buffType: v.string(),
-      minValue: v.number(),
-      maxValue: v.number(),
-      weight: v.number(),
-    })),
     rankScaling: v.record(v.string(), v.object({
       buffMultiplier: v.number(),
       rollChances: v.number(),
@@ -42,22 +27,7 @@ export const updateChipDefinition = mutation({
   args: {
     id: v.id("chipDefinitions"),
     name: v.optional(v.string()),
-    description: v.optional(v.string()),
-    category: v.optional(v.union(
-      v.literal("attack"),
-      v.literal("defense"),
-      v.literal("utility"),
-      v.literal("economy"),
-      v.literal("special")
-    )),
-    tier: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
-    possibleBuffs: v.optional(v.array(v.object({
-      buffType: v.string(),
-      minValue: v.number(),
-      maxValue: v.number(),
-      weight: v.number(),
-    }))),
     rankScaling: v.optional(v.record(v.string(), v.object({
       buffMultiplier: v.number(),
       rollChances: v.number(),
@@ -82,45 +52,114 @@ export const deleteChipDefinition = mutation({
   },
 });
 
-// Get all chip definitions
+// Get all chip definitions (auto-populates if empty)
 export const getAllChipDefinitions = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("chipDefinitions").collect();
+    let chips = await ctx.db.query("chipDefinitions").collect();
+    
+    // If no chips exist, return empty array (use initializeChips mutation to populate)
+    // We can't mutate in a query, so the admin page will need to call initializeChips
+    return chips;
   },
 });
 
-// Get chip definitions by tier
-export const getChipDefinitionsByTier = query({
-  args: {
-    tier: v.number(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("chipDefinitions")
-      .filter((q) => q.eq(q.field("tier"), args.tier))
-      .collect();
+// Initialize chips if database is empty (called once)
+export const initializeChips = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if chips already exist
+    const existingChips = await ctx.db.query("chipDefinitions").collect();
+    if (existingChips.length > 0) {
+      return { message: "Chips already initialized", count: existingChips.length };
+    }
+
+    // All 307 chip names
+    const chipNames = [
+      "007", "101.1 FM", "1960's", "2001", "24K", "Abominable", "Ace of Spades Ultimate", "Ace of Spades",
+      "Acid", "Acrylic", "Albino", "Angler", "Aqua", "Arcade", "Arctic", "Aztec",
+      "Baby", "Bag", "Ballerina", "Bark", "Big Brother", "Black & White", "Black Parade", "Black",
+      "Blasters", "Bling", "Blood", "Blush", "Bone Daddy", "Bone", "Bonebox", "Boombox",
+      "Boss", "Bowling", "Broadcast", "Bubblegum", "Bumble Bird", "Bumblebee", "Burnt Ultimate", "Burnt",
+      "Business", "Butane", "Butterfly", "Cadillac", "Camo", "Cannon Ultimate", "Cannon", "Carbon",
+      "Carbonite", "Cartoon", "Cartoonichrome", "Carving Ultimate", "Carving", "Cheetah", "China", "Chrome Ultimate",
+      "Chrome", "Chromium", "Classic", "Coin", "Concrete", "Contractor", "Corroded", "Cotton Candy",
+      "Couch", "Cousin Itt", "Cream", "Crimson", "Crow", "Crystal Camo", "Crystal Clear", "Cubes",
+      "Damascus", "Dazed Piggy", "Deep Space", "Denim", "Derelict", "desufnoC", "Disco", "Discomania",
+      "Doom", "Dr.", "Dragonfly", "Drill", "Drip", "Dualtone", "Earth", "Electrik",
+      "Ellie Mesh", "Exposed", "Eyes", "Film", "Firebird", "Flaked", "Foil", "Forest",
+      "Fourzin", "Frost Cage", "Frost King", "Frostbit", "Frosted", "Fury", "Gatsby Ultimate", "Gatsby",
+      "Giger", "Goblin", "Gold", "Golden Guns Ultimate", "Golden Guns", "Gone", "Granite", "Grass",
+      "Grate", "Hacker", "Hades", "Hal", "Hammerheat", "Happymeal", "Hawk", "Heart",
+      "Heatmap", "Heatwave Ultimate", "Heatwave", "Hefner", "Heliotropium", "Highlights", "Holographic", "Hydra",
+      "Iced", "Icon", "Inner Rainbow", "Iron", "Ivory", "James", "Jeff", "Jolly Rancher",
+      "Journey", "Just Wren", "Kevlar", "King Tut", "Lazer", "Leeloo", "Lich", "Light",
+      "Lightning", "Linkinator 3000", "Liquid Lavender", "Lizard", "Log", "Lord", "Lumberjack", "Luna",
+      "Luxury Ultimate", "Luxury", "LV-426", "Mac & Cheese", "Magma", "Mahogany", "Majesty", "Maple",
+      "Maps", "Marble", "Mars Attacks", "Matte", "Maze", "Meat", "Mercury", "Mesh",
+      "Microphone", "Milk", "Mini Me", "Mint", "Molten Core", "Moth", "Mugged", "Near Space",
+      "Neon Flamingo", "Night Vision", "Nightstalker", "Nil", "None", "Noob", "Nothing", "Nuclear",
+      "Nuggets", "Nuke", "Null", "Nyan Ultimate", "Nyan", "Obliterator", "Obsidian", "Ocean",
+      "OE Dark", "OE Light", "Oil", "Ol' Faithful", "Oompah", "Ooze", "Ornament", "Palace",
+      "Paparazzi", "Paul Ultimate", "Paul", "Pawn Shop", "Peacock Ultimate", "Peacock", "Pearl", "Peppermint",
+      "Phoenix", "Pie", "Pizza", "Plastik", "Plate", "Plush Ultimate", "Plush", "Poker",
+      "Polished", "Pop", "Porcelain", "Prickles", "Princess", "Projectionist", "Prom", "Purplex",
+      "Pylons", "Pyrex", "QQQ", "Quilt", "R&B", "Radiance", "Rainbow Morpho", "Rattler",
+      "Recon", "Ring Blue", "Ring Green", "Ring Red", "Rose", "Ross", "Royal", "Rug",
+      "Rust", "Sahara", "Sand", "Sap", "Satellite", "Saw", "Scissors", "Screamo",
+      "Seabiscuit", "Seafoam", "Shamrock", "Shark", "Shipped", "Silent Film", "Silicon", "Silver",
+      "Sir", "Sky", "Sleet", "Smurf", "Snapshot", "Snow", "Soul", "Spaghetti",
+      "Spectrum", "Splatter", "Stained Glass", "Stars", "Steam", "Sterling", "Sticky", "Stock",
+      "Stolen", "Stone", "Sun", "Sunset", "Tactical", "Tangerine", "Tarpie", "Taser",
+      "Tat", "Technicolor", "Terminator", "Test Track", "The Lethal Dimension", "The Ram", "Tickle", "Tie Dye",
+      "Tiles", "Trapped", "Tron", "Ultimate Instruments", "Ultimate Weaponry", "Vampire", "Vanished", "Vapor",
+      "Victoria", "Waves", "Whiskey", "White", "Whiteout", "Who", "Wings Ultimate", "Wings",
+      "Wires", "X Ray Ultimate", "X Ray"
+    ];
+
+    // Rank scaling multipliers (only ranks matter for chips)
+    const rankScaling = {
+      "D": { buffMultiplier: 0.5, rollChances: 1 },
+      "C": { buffMultiplier: 0.7, rollChances: 1 },
+      "B": { buffMultiplier: 0.85, rollChances: 2 },
+      "A": { buffMultiplier: 1.0, rollChances: 2 },
+      "S": { buffMultiplier: 1.2, rollChances: 3 },
+      "SS": { buffMultiplier: 1.4, rollChances: 3 },
+      "SSS": { buffMultiplier: 1.6, rollChances: 4 },
+      "X": { buffMultiplier: 2.0, rollChances: 4 },
+      "XX": { buffMultiplier: 2.5, rollChances: 5 },
+      "XXX": { buffMultiplier: 3.0, rollChances: 6 },
+    };
+
+    // Insert all chip definitions
+    let insertedCount = 0;
+    for (const name of chipNames) {
+      // Sanitize filename for Windows compatibility
+      const sanitizedFilename = name
+        .replace(/\?/g, "Q")
+        .replace(/\//g, "-")
+        .replace(/\\/g, "-")
+        .replace(/:/g, "-")
+        .replace(/\*/g, "x")
+        .replace(/"/g, "'")
+        .replace(/</g, "(")
+        .replace(/>/g, ")")
+        .replace(/\|/g, "-");
+      
+      await ctx.db.insert("chipDefinitions", {
+        name: name,
+        imageUrl: `/chip-images/mek-chips/${sanitizedFilename}.webp`,
+        rankScaling,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      insertedCount++;
+    }
+
+    return { message: "Chips initialized successfully", count: insertedCount };
   },
 });
 
-// Get chip definitions by category
-export const getChipDefinitionsByCategory = query({
-  args: {
-    category: v.union(
-      v.literal("attack"),
-      v.literal("defense"),
-      v.literal("utility"),
-      v.literal("economy"),
-      v.literal("special")
-    ),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("chipDefinitions")
-      .filter((q) => q.eq(q.field("category"), args.category))
-      .collect();
-  },
-});
 
 // Create a chip instance for a user (when they craft/obtain a chip)
 export const createChipInstance = mutation({
@@ -255,5 +294,16 @@ export const destroyChip = mutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.chipInstanceId);
+  },
+});
+
+
+// Get a single chip definition by ID
+export const getChipDefinition = query({
+  args: {
+    id: v.id("chipDefinitions"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });

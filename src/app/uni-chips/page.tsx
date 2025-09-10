@@ -79,8 +79,8 @@ export default function UniChipsPage() {
         recipeName: 'Standard Formula',
         rarityBiasBonus: 0,
         requirements: [
-          { name: 'Gold', type: 'gold', amount: 1000 * tier, current: 1000 * tier, icon: '🪙' },
-          { name: 'Accordion Essence', type: 'essence', amount: 0.5 * tier, current: 0.5, essenceType: 'accordion', image: '/essence-images/bumblebee 1.png' },
+          { name: 'Gold', type: 'gold', amount: 1000 * tier, current: 1000 * tier, image: '/gold/gold temp.webp' },
+          { name: 'Accordion Essence', type: 'essence', amount: 0.5 * tier, current: 0.5, essenceType: 'accordion', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
         ],
         expiresAt: baseDate,
       },
@@ -91,9 +91,9 @@ export default function UniChipsPage() {
         recipeName: 'Enhanced Formula',
         rarityBiasBonus: 15,
         requirements: [
-          { name: 'Gold', type: 'gold', amount: 2500 * tier, current: 2500 * tier, icon: '🪙' },
-          { name: 'Drill Essence', type: 'essence', amount: 0.8 * tier, current: 0.3, essenceType: 'drill', image: '/essence-images/bumblebee 3.png' },
-          { name: 'Acid Essence', type: 'essence', amount: 0.3 * tier, current: 0, essenceType: 'acid', image: '/essence-images/bumblebee 1.png' },
+          { name: 'Gold', type: 'gold', amount: 2500 * tier, current: 2500 * tier, image: '/gold/gold temp.webp' },
+          { name: 'Drill Essence', type: 'essence', amount: 0.8 * tier, current: 0.3, essenceType: 'drill', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Acid Essence', type: 'essence', amount: 0.3 * tier, current: 0, essenceType: 'acid', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
         ],
         expiresAt: baseDate,
       },
@@ -104,10 +104,10 @@ export default function UniChipsPage() {
         recipeName: 'Premium Formula',
         rarityBiasBonus: 35,
         requirements: [
-          { name: 'Gold', type: 'gold', amount: 10000 * tier, current: 8000 * tier, icon: '🪙' },
-          { name: 'Gummy Essence', type: 'essence', amount: 2.8 * tier, current: 0.3, essenceType: 'gummy', image: '/essence-images/bumblebee 2.png' },
-          { name: 'Bowling Essence', type: 'essence', amount: 4.1 * tier, current: 0, essenceType: 'bowling', image: '/essence-images/bumblebee 3.png' },
-          { name: 'Crystal Essence', type: 'essence', amount: 1.5 * tier, current: 0.2, essenceType: 'crystal', image: '/essence-images/bumblebee 1.png' },
+          { name: 'Gold', type: 'gold', amount: 10000 * tier, current: 8000 * tier, image: '/gold/gold temp.webp' },
+          { name: 'Gummy Essence', type: 'essence', amount: 2.8 * tier, current: 0.3, essenceType: 'gummy', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Bowling Essence', type: 'essence', amount: 4.1 * tier, current: 0, essenceType: 'bowling', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Crystal Essence', type: 'essence', amount: 1.5 * tier, current: 0.2, essenceType: 'crystal', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
         ],
         expiresAt: baseDate,
       },
@@ -393,19 +393,7 @@ export default function UniChipsPage() {
                           )}
                         </div>
                         
-                        {/* Industrial tier badge */}
-                        <div className={`absolute -bottom-2 -right-2 px-3 py-1.5 font-bold text-xs uppercase tracking-wider ${
-                          isLocked 
-                            ? 'bg-gray-900/90 text-gray-500 border border-gray-700' 
-                            : isSelected
-                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black shadow-lg shadow-yellow-500/30'
-                              : 'bg-black/80 text-yellow-400 border border-yellow-500/50'
-                        }`}
-                        style={{
-                          clipPath: theme.clipPaths.cornerCut,
-                        }}>
-                          T{tier.tier}
-                        </div>
+                        {/* Remove tier badge from chip - will be shown below instead */}
                         
                         {/* Lock overlay with industrial styling */}
                         {isLocked && (
@@ -419,12 +407,32 @@ export default function UniChipsPage() {
                       </div>
                     </button>
                     
-                    {/* Enhanced tier info below chip */}
-                    <div className="text-center mt-4 space-y-1">
-                      <div className={`font-bold text-sm uppercase tracking-wider ${
-                        isLocked ? 'text-gray-600' : isSelected ? 'text-yellow-400' : 'text-gray-400'
+                    {/* Enhanced tier info below chip - plain text, smaller, closer */}
+                    <div className="text-center mt-2 space-y-1">
+                      {/* T number - smaller, plain text, different font */}
+                      <div 
+                        className={`font-bold text-lg ${
+                          isLocked 
+                            ? 'opacity-30' 
+                            : isSelected 
+                              ? 'animate-pulse' 
+                              : ''
+                        }`}
+                        style={{
+                          color: isLocked ? '#666' : tier.borderColor,
+                          textShadow: isLocked ? 'none' : `0 0 15px ${tier.glowColor}`,
+                          fontFamily: "'Rajdhani', 'Bebas Neue', sans-serif",
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        T{tier.tier}
+                      </div>
+                      
+                      {/* Tier name below T number */}
+                      <div className={`font-bold text-xs uppercase tracking-[0.3em] ${
+                        isLocked ? 'text-gray-600' : isSelected ? 'text-yellow-400' : 'text-gray-500'
                       }`}>
-                        {tier.name}
+                        {chipTiers.find(t => t.tier === tier.tier)?.energySignature}
                       </div>
                     </div>
                   </div>
@@ -489,47 +497,52 @@ export default function UniChipsPage() {
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
             </div>
             
-            {/* Premium Recipe Cards Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Redesigned Sci-Fi Recipe Cards Grid with Better Flow */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {dailyRecipes.map((recipe, index) => {
                 const isSelected = selectedRecipe?.id === recipe.id;
                 const craftable = canCraft(recipe);
-                const rarityGradient = recipe.rarityBiasBonus > 30 
-                  ? 'from-purple-600 via-pink-600 to-purple-600' 
+                const rarityColor = recipe.rarityBiasBonus > 30 
+                  ? '#f0abfc' 
                   : recipe.rarityBiasBonus > 0 
-                    ? 'from-blue-600 via-cyan-500 to-blue-600'
-                    : 'from-gray-700 via-gray-600 to-gray-700';
+                    ? '#22d3ee'
+                    : '#6b7280';
                 
                 return (
                   <div
                     key={recipe.id}
-                    className={`relative transition-all duration-500 transform-gpu ${
+                    className={`relative transition-all duration-300 transform-gpu ${
                       isSelected 
-                        ? 'scale-105 z-20' 
-                        : 'hover:scale-102'
+                        ? 'scale-[1.03] z-20' 
+                        : 'hover:scale-[1.01]'
                     }`}
-                    style={{
-                      animation: `float-card ${4 + index}s ease-in-out infinite`,
-                      animationDelay: `${index * 0.3}s`
-                    }}
                   >
-                    {/* Quantum energy field for selected card */}
+                    {/* Holographic glow for selected card */}
                     {isSelected && (
-                      <div className="absolute inset-0 -m-4">
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 blur-2xl animate-pulse" />
+                      <div className="absolute inset-0 -m-2">
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 blur-xl animate-pulse" />
                       </div>
                     )}
                     
-                    {/* Main card with industrial design */}
-                    <div className={`relative mek-card-industrial overflow-hidden border-2 ${
+                    {/* Futuristic card with clean design */}
+                    <div className={`relative bg-gradient-to-b from-gray-900/90 to-black/95 backdrop-blur-sm overflow-hidden border ${
                       isSelected 
-                        ? 'border-yellow-400/80 shadow-[0_0_40px_rgba(250,204,21,0.4)]' 
+                        ? 'border-cyan-400/60 shadow-[0_0_30px_rgba(34,211,238,0.3)]' 
                         : craftable
-                          ? 'border-gray-700/70 hover:border-yellow-500/50'
-                          : 'border-gray-800/50'
-                    }`}>
-                      {/* Rarity gradient bar at top */}
-                      <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${rarityGradient}`} />
+                          ? 'border-gray-700/50 hover:border-cyan-500/40'
+                          : 'border-gray-800/40'
+                    }`}
+                    style={{
+                      clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px))',
+                    }}>
+                      {/* Thin status line at top */}
+                      <div 
+                        className="absolute top-0 left-0 right-0 h-1"
+                        style={{
+                          background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`,
+                          boxShadow: `0 0 10px ${rarityColor}40`
+                        }}
+                      />
                       
                       {/* Scan line effect */}
                       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
@@ -540,55 +553,50 @@ export default function UniChipsPage() {
                       {/* Industrial texture overlay */}
                       <div className="absolute inset-0 opacity-10 mek-overlay-metal-texture pointer-events-none" />
                       
-                      {/* Card content */}
-                      <div className="relative p-6">
-                        {/* Recipe Header with quantum indicators */}
-                        <div className="mb-6">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className={`w-2 h-2 rounded-full animate-pulse ${
-                                  craftable ? 'bg-green-400' : 'bg-red-400'
-                                }`} />
-                                <span className="text-xs text-gray-500 uppercase tracking-[0.2em] font-bold">
-                                  FORMULA #{recipe.recipeIndex}
-                                </span>
+                      {/* Streamlined card content */}
+                      <div className="relative p-5">
+                        {/* Compact Header */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                                  craftable 
+                                    ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-400/50 text-cyan-300' 
+                                    : 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 text-gray-500'
+                                }`}>
+                                  {recipe.recipeIndex}
+                                </div>
+                                {craftable && (
+                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                )}
                               </div>
-                              <h3 className="text-2xl font-black mek-text-industrial" style={{ 
-                                color: '#fab617',
-                                textShadow: '0 0 20px rgba(250,182,23,0.3)' 
-                              }}>
-                                {recipe.recipeName.toUpperCase()}
-                              </h3>
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-100">
+                                  {recipe.recipeName}
+                                </h3>
+                                <div className="text-xs text-gray-500 uppercase tracking-wider">
+                                  Formula T{selectedTier}-{recipe.recipeIndex}
+                                </div>
+                              </div>
                             </div>
                             
-                            {/* Rarity bias indicator */}
-                            <div className="text-right">
-                              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">BIAS</div>
-                              <div className={`text-3xl font-black ${
-                                recipe.rarityBiasBonus > 30 ? 'text-purple-400' : 
-                                recipe.rarityBiasBonus > 0 ? 'text-cyan-400' : 
-                                'text-gray-600'
-                              }`} style={{
-                                textShadow: recipe.rarityBiasBonus > 0 
-                                  ? `0 0 15px ${recipe.rarityBiasBonus > 30 ? 'rgba(168,85,247,0.5)' : 'rgba(34,211,238,0.5)'}` 
-                                  : 'none'
-                              }}>
-                                {recipe.rarityBiasBonus > 0 ? `+${recipe.rarityBiasBonus}%` : '0%'}
+                            {/* Compact bias indicator */}
+                            {recipe.rarityBiasBonus > 0 && (
+                              <div className="flex items-center gap-1 px-2 py-1 rounded-full"
+                                style={{
+                                  background: `${rarityColor}15`,
+                                  border: `1px solid ${rarityColor}40`
+                                }}>
+                                <span className="text-xs font-bold" style={{ color: rarityColor }}>+{recipe.rarityBiasBonus}%</span>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
                         
-                        {/* Enhanced Requirements Display */}
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-700" />
-                            <span className="text-xs text-gray-500 uppercase tracking-[0.3em] font-bold px-2">
-                              REQUIRED RESOURCES
-                            </span>
-                            <div className="h-px flex-1 bg-gradient-to-r from-gray-700 to-transparent" />
-                          </div>
+                        {/* Streamlined Requirements Display */}
+                        <div className="space-y-2 mb-4">
+                          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Requirements</div>
                           
                           {recipe.requirements.map((req, idx) => {
                             const isMet = req.current >= req.amount;
@@ -597,20 +605,41 @@ export default function UniChipsPage() {
                             return (
                               <div key={idx} className="relative group">
                                 <div className="flex items-center gap-3">
-                                  {/* Status indicator with glow */}
-                                  <div className={`relative w-10 h-10 flex items-center justify-center ${
-                                    isMet 
-                                      ? 'bg-gradient-to-br from-green-900/30 to-green-950/30 border border-green-500/50' 
-                                      : 'bg-gradient-to-br from-red-900/30 to-red-950/30 border border-red-500/50'
-                                  }`}
-                                  style={{
-                                    clipPath: theme.clipPaths.cornerCut,
-                                    boxShadow: isMet 
-                                      ? '0 0 10px rgba(34,197,94,0.3)' 
-                                      : '0 0 10px rgba(239,68,68,0.3)'
-                                  }}>
-                                    {req.type === 'gold' ? (
-                                      <span className="text-yellow-400 text-lg">⬢</span>
+                                  {/* Reward image without frame - floating freely */}
+                                  <div className="relative w-10 h-10 flex items-center justify-center">
+                                    {req.type === 'gold' && req.image ? (
+                                      <img 
+                                        src={req.image} 
+                                        alt="Gold" 
+                                        className="w-8 h-8 object-contain"
+                                        style={{
+                                          filter: isMet 
+                                            ? 'drop-shadow(0 0 8px rgba(250,182,23,0.6))'
+                                            : 'brightness(0.5) drop-shadow(0 0 4px rgba(0,0,0,0.5))'
+                                        }}
+                                      />
+                                    ) : req.type === 'essence' && req.image ? (
+                                      <img 
+                                        src={req.image} 
+                                        alt="Essence" 
+                                        className="w-8 h-8 object-contain"
+                                        style={{
+                                          filter: isMet 
+                                            ? 'drop-shadow(0 0 8px rgba(139,92,246,0.6))'
+                                            : 'brightness(0.5) drop-shadow(0 0 4px rgba(0,0,0,0.5))'
+                                        }}
+                                      />
+                                    ) : req.type === 'gold' ? (
+                                      <img 
+                                        src="/gold/gold temp.webp" 
+                                        alt="Gold" 
+                                        className="w-8 h-8 object-contain"
+                                        style={{
+                                          filter: isMet 
+                                            ? 'drop-shadow(0 0 8px rgba(250,182,23,0.6))'
+                                            : 'brightness(0.5) drop-shadow(0 0 4px rgba(0,0,0,0.5))'
+                                        }}
+                                      />
                                     ) : req.type === 'essence' ? (
                                       <span className="text-purple-400 text-lg">◈</span>
                                     ) : (
@@ -621,39 +650,30 @@ export default function UniChipsPage() {
                                   </div>
                                   
                                   <div className="flex-1">
-                                    <div className="flex justify-between items-center mb-1.5">
-                                      <span className="text-sm font-bold text-gray-300 uppercase tracking-wider">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="text-xs font-medium text-gray-400">
                                         {req.name}
                                       </span>
-                                      <span className={`text-sm font-mono font-bold ${
-                                        isMet ? 'text-green-400' : progress > 50 ? 'text-yellow-400' : 'text-red-400'
+                                      <span className={`text-xs font-mono font-bold ${
+                                        isMet ? 'text-cyan-400' : 'text-gray-500'
                                       }`}>
-                                        {req.current.toLocaleString()} / {req.amount.toLocaleString()}
+                                        {req.current.toLocaleString()}/{req.amount.toLocaleString()}
                                       </span>
                                     </div>
                                     
-                                    {/* Progress bar with glow effect */}
-                                    <div className="relative w-full h-2 bg-black/60 overflow-hidden"
-                                      style={{ 
-                                        border: '1px solid rgba(250,182,23,0.2)',
-                                        clipPath: 'polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)'
-                                      }}>
+                                    {/* Minimal progress bar */}
+                                    <div className="relative w-full h-1 bg-gray-800 rounded-full overflow-hidden">
                                       <div 
-                                        className={`h-full transition-all duration-700 relative ${
+                                        className={`h-full transition-all duration-500 rounded-full ${
                                           isMet 
-                                            ? 'bg-gradient-to-r from-green-500 via-green-400 to-green-500' 
-                                            : progress > 50
-                                              ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-yellow-500'
-                                              : 'bg-gradient-to-r from-red-600 via-red-500 to-red-600'
+                                            ? 'bg-gradient-to-r from-cyan-500 to-cyan-400' 
+                                            : 'bg-gradient-to-r from-gray-700 to-gray-600'
                                         }`}
                                         style={{ 
                                           width: `${progress}%`,
-                                          boxShadow: isMet ? '0 0 10px rgba(34,197,94,0.5)' : 'none'
+                                          boxShadow: isMet ? `0 0 8px ${rarityColor}40` : 'none'
                                         }}
-                                      >
-                                        {/* Animated shine effect on progress bar */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full animate-shimmer" />
-                                      </div>
+                                      />
                                     </div>
                                   </div>
                                 </div>
@@ -662,38 +682,34 @@ export default function UniChipsPage() {
                           })}
                         </div>
                         
-                        {/* Premium Craft Button */}
+                        {/* Smaller Craft Button */}
                         <button
                           onClick={() => setSelectedRecipe(recipe)}
-                          className={`relative w-full py-4 font-black text-lg uppercase tracking-[0.2em] transition-all overflow-hidden group ${
+                          className={`relative w-full py-2 font-bold text-sm uppercase tracking-wider transition-all overflow-hidden group ${
                             craftable
-                              ? 'mek-button-primary text-black'
-                              : 'bg-gray-900/50 text-gray-600 border-2 border-gray-800/50 cursor-not-allowed'
+                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black hover:from-yellow-400 hover:to-orange-400'
+                              : 'bg-gray-900/50 text-gray-600 border border-gray-800/50 cursor-not-allowed'
                           }`}
                           disabled={!craftable}
                           style={{
-                            clipPath: craftable ? theme.clipPaths.angledButton : 'none',
+                            clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)',
                           }}
                         >
-                          {/* Button glow effect */}
+                          {/* Button shine effect */}
                           {craftable && (
-                            <>
-                              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500" />
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                            </>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                           )}
                           
-                          <span className="relative flex items-center justify-center gap-3">
+                          <span className="relative flex items-center justify-center gap-2">
                             {craftable ? (
                               <>
-                                <span className="text-xl">⚡</span>
-                                <span>INITIATE QUANTUM FORGE</span>
-                                <span className="text-xl">⚡</span>
+                                <span className="text-xs">▶</span>
+                                <span>CRAFT</span>
                               </>
                             ) : (
                               <>
-                                <span className="text-xl">⚠</span>
-                                <span>INSUFFICIENT RESOURCES</span>
+                                <span className="text-xs">✕</span>
+                                <span>LOCKED</span>
                               </>
                             )}
                           </span>

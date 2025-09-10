@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -89,8 +89,13 @@ export default function EssenceDonutPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
   const [essenceData] = useState(generateEssenceData());
-  const [showLegend, setShowLegend] = useState(false); // Default to no legend for single column
-  const [chartSize, setChartSize] = useState(500);
+  const [chartSize, setChartSize] = useState(525); // Increased by 5%
+  const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
+  const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSlotting, setIsSlotting] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
@@ -106,6 +111,18 @@ export default function EssenceDonutPage() {
     };
     initUser();
   }, [getOrCreateUser]);
+  
+  // Click outside handler for search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   // Get user profile
   const userProfile = useQuery(
@@ -135,6 +152,47 @@ export default function EssenceDonutPage() {
     };
   }, [displayedEssences]);
   
+  // Search filtered essences
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    
+    const query = searchQuery.toLowerCase();
+    return essenceData
+      .filter(e => e.name.toLowerCase().includes(query))
+      .slice(0, 8) // Limit to 8 results
+      .sort((a, b) => {
+        // Prioritize exact matches and beginning matches
+        const aStart = a.name.toLowerCase().startsWith(query);
+        const bStart = b.name.toLowerCase().startsWith(query);
+        if (aStart && !bStart) return -1;
+        if (!aStart && bStart) return 1;
+        return b.amount - a.amount; // Then sort by amount
+      });
+  }, [searchQuery, essenceData]);
+  
+  // Handle search selection
+  const handleSearchSelect = (essenceId: string) => {
+    setIsSlotting(true);
+    setTimeout(() => setIsSlotting(false), 300);
+    setSelectedSlice(essenceId);
+    setHoveredSlice(essenceId);
+    setSearchQuery("");
+    setShowSearchResults(false);
+  };
+  
+  // Handle slice click
+  const handleSliceClick = (essenceId: string) => {
+    setIsSlotting(true);
+    setTimeout(() => setIsSlotting(false), 300);
+    setSelectedSlice(essenceId);
+  };
+  
+  // Handle clear selection
+  const handleClearSelection = () => {
+    setSelectedSlice(null);
+    setHoveredSlice(null);
+  };
+  
   return (
     <div className="min-h-screen relative">
       
@@ -159,66 +217,47 @@ export default function EssenceDonutPage() {
                 <span className="text-gray-400">DISTRIBUTION</span>
               </h1>
               <p className="text-center text-gray-500 uppercase tracking-[0.3em] text-sm">
-                System Analysis • Resource Allocation
+                View Your Essence Inventory
               </p>
             </div>
           </div>
         </div>
         
         {/* Controls Bar */}
-        <div className="w-full bg-black/60 backdrop-blur-md border-y border-gray-800/50 sticky top-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              {/* View Count Selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 uppercase tracking-wider">Display:</span>
+        <div className="w-full bg-black/80 backdrop-blur-md border-y-2 border-yellow-500/20 sticky top-0 z-20">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* Stats - Left Side */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 uppercase tracking-widest">Total Essence:</span>
+                  <span className="text-lg font-bold text-yellow-400 font-mono">{totalStats.totalAmount.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 uppercase tracking-widest">Total Value:</span>
+                  <span className="text-lg font-bold text-green-400 font-mono">{Math.round(totalStats.totalValue).toLocaleString()}g</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 uppercase tracking-widest">Types:</span>
+                  <span className="text-lg font-bold text-blue-400 font-mono">{totalStats.uniqueTypes}</span>
+                </div>
+              </div>
+              
+              {/* View Count Selector - Right Side */}
+              <div className="flex items-center bg-gray-900/60 rounded-lg border border-gray-700/50 p-1">
                 {[5, 10, 20, 30, 100].map(count => (
                   <button
                     key={count}
                     onClick={() => setViewCount(count as typeof viewCount)}
-                    className={`px-3 py-1.5 text-sm font-medium transition-all ${
+                    className={`px-4 py-2 text-sm font-semibold rounded-md transition-all mx-0.5 ${
                       viewCount === count
-                        ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/30'
-                        : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700'
+                        ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+                        : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
                     }`}
-                    style={{
-                      clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))'
-                    }}
                   >
                     {count === 100 ? 'All' : `Top ${count}`}
                   </button>
                 ))}
-              </div>
-              
-              {/* Chart Controls */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">SIZE:</span>
-                  <input
-                    type="range"
-                    min="300"
-                    max="600"
-                    value={chartSize}
-                    onChange={(e) => setChartSize(Number(e.target.value))}
-                    className="w-24"
-                  />
-                </div>
-              </div>
-              
-              {/* Quick Stats */}
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className="text-xs text-gray-500 uppercase">Total</div>
-                  <div className="text-lg font-bold text-yellow-400 font-mono">
-                    {totalStats.totalAmount.toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-gray-500 uppercase">Value</div>
-                  <div className="text-lg font-bold text-green-400 font-mono">
-                    {totalStats.totalValue.toLocaleString()}g
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -226,116 +265,295 @@ export default function EssenceDonutPage() {
         
         {/* Main Content Area */}
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-center">
-            {/* Chart Container - Single Column */}
-            <div className="w-full max-w-5xl">
-              <div className="relative bg-black/40 backdrop-blur-sm border-2 border-yellow-500/30 p-6">
-                {/* Industrial frame corners */}
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-yellow-500"></div>
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-yellow-500"></div>
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-yellow-500"></div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-yellow-500"></div>
-                
-                {/* Scan line effect */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                  <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent animate-scan" />
-                </div>
-                
-                {/* Compact Stats Header */}
-                <div className="mb-6 pb-4 border-b border-gray-800/50">
-                  <div className="flex justify-center gap-8">
-                    <div className="text-center">
-                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Total Essence</div>
-                      <div className="text-2xl font-bold text-yellow-400 font-mono">{totalStats.totalAmount.toFixed(1)}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Total Value</div>
-                      <div className="text-2xl font-bold text-green-400 font-mono">{totalStats.totalValue.toLocaleString()}g</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">Essence Types</div>
-                      <div className="text-2xl font-bold text-blue-400 font-mono">{totalStats.uniqueTypes}</div>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Chart Container - Left Side */}
+            <div className="lg:col-span-2">
+              <div className="relative">
+                {/* Search Bar - Floating above chart */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 w-80">
+                  <div ref={searchRef} className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSearchResults(true);
+                      }}
+                      onFocus={() => setShowSearchResults(true)}
+                      placeholder="Search essence..."
+                      className="w-full px-4 py-2 bg-black/80 backdrop-blur-sm border-2 border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/60 transition-all"
+                    />
+                    
+                    {/* Search icon */}
+                    <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    
+                    {/* Search Results Dropdown */}
+                    {showSearchResults && searchResults.length > 0 && (
+                      <div className="absolute top-full mt-2 w-full bg-black/95 backdrop-blur-sm border-2 border-yellow-500/30 rounded-lg overflow-hidden">
+                        {searchResults.map((essence) => (
+                          <button
+                            key={essence.id}
+                            onClick={() => handleSearchSelect(essence.id)}
+                            className="w-full px-4 py-3 text-left hover:bg-yellow-500/20 transition-colors border-b border-gray-800/50 last:border-b-0"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">{essence.icon}</span>
+                                <span className="text-white font-medium">{essence.name}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-yellow-400 font-bold">{essence.amount.toFixed(1)}</div>
+                                <div className="text-gray-400 text-xs">{essence.currentValue}g/ea</div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 
                 {/* Donut Chart */}
-                <div className="flex justify-center">
+                <div className="flex justify-center pt-8">
                   <EssenceDonutChart
                     data={displayedEssences}
                     size={chartSize}
                     showCenterStats={true}
-                    animationDuration={1500}
+                    animationDuration={600}
+                    onSliceHover={setHoveredSlice}
+                    onSliceClick={handleSliceClick}
+                    selectedSlice={selectedSlice}
                   />
                 </div>
               </div>
             </div>
             
-            {/* Legend/Stats Panel - Removed */}
-            {false && (
-              <div className="lg:col-span-4">
-                <div className="bg-black/40 backdrop-blur-sm border border-gray-800/50 p-4">
-                  <h3 className="text-sm font-bold text-gray-500 tracking-[0.2em] uppercase mb-3">
-                    Essence Breakdown
-                  </h3>
+            {/* Details Panel - Right Side */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                {(hoveredSlice || selectedSlice) ? (() => {
+                  const activeSlice = hoveredSlice || selectedSlice;
+                  const slice = essenceData.find(e => e.id === activeSlice);
+                  if (!slice) return null;
                   
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar">
-                    {displayedEssences.map((essence, index) => {
-                      const percentage = ((essence.amount / totalStats.totalAmount) * 100).toFixed(1);
+                  // Get the color and index for this essence
+                  const sliceIndex = essenceData.indexOf(slice);
+                  const ESSENCE_COLORS = [
+                    '#fab617', '#ff8c00', '#22d3ee', '#8b5cf6', '#10b981',
+                    '#ef4444', '#3b82f6', '#f59e0b', '#ec4899', '#14b8a6'
+                  ];
+                  const sliceColor = ESSENCE_COLORS[sliceIndex % ESSENCE_COLORS.length];
+                  
+                  const effectiveMax = slice.maxAmountBuffed || slice.maxAmount || 10;
+                  const progress = (slice.amount / effectiveMax) * 100;
+                  const baseRate = slice.baseRate || 0.1;
+                  const bonusRate = slice.bonusRate || 0;
+                  const totalRate = baseRate + bonusRate;
+                  const totalValue = slice.amount * slice.currentValue;
+                  const theoreticalIncome = totalRate * slice.currentValue;
+                  
+                  return (
+                    <div className={`mek-card-industrial mek-border-sharp-gold p-4 relative ${isSlotting ? 'animate-pulse' : ''}`}>
+                      {/* Subtle scan line effect */}
+                      <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
                       
-                      return (
-                        <div
-                          key={essence.id}
-                          className="flex items-center gap-2 p-2 bg-gray-900/30 hover:bg-gray-900/50 transition-all group"
-                          style={{
-                            borderLeft: `3px solid ${['#fab617', '#ff8c00', '#22d3ee', '#8b5cf6', '#10b981'][index % 5]}`
-                          }}
-                        >
-                          {/* Icon */}
-                          <div className="text-lg">{essence.icon}</div>
+                      {/* Slotting animation overlay */}
+                      {isSlotting && (
+                        <div className="absolute inset-0 pointer-events-none z-50">
+                          <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/30 via-yellow-500/10 to-transparent animate-pulse"></div>
+                          <div className="absolute inset-x-0 top-0 h-1 bg-yellow-500 animate-pulse"></div>
+                          <div className="absolute inset-x-0 bottom-0 h-1 bg-yellow-500 animate-pulse"></div>
+                        </div>
+                      )}
+                      
+                      {/* Essence Bottle Image */}
+                      <div className="relative mb-4 mek-slot-empty rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30" style={{ minHeight: '200px' }}>
+                        <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
+                        <img 
+                          src={`/essence-images/bumblebee ${(sliceIndex % 3) + 1}.png`}
+                          alt={`${slice.name} essence`}
+                          className="relative z-10 w-full h-full object-contain"
+                          style={{ maxHeight: '180px' }}
+                        />
+                      </div>
+                      
+                      {/* Name and Amount */}
+                      <div className="text-center mb-4">
+                        <h2 className="mek-text-industrial text-3xl text-yellow-400 mb-2 mek-text-shadow">{slice.name.toUpperCase()}</h2>
+                        <p className="text-xl text-gray-300 font-semibold">{slice.amount.toFixed(1)} units</p>
+                      </div>
+                      
+                      {/* Ownership Section */}
+                      <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-2 relative z-10">
+                          <span className="mek-label-uppercase text-yellow-400">OWNERSHIP</span>
+                          <span className="text-2xl font-bold">
+                            <span className="text-yellow-400">{slice.amount.toFixed(1)}</span>
+                            <span className="text-cyan-400">/{effectiveMax}</span>
+                          </span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="relative h-6 bg-black/80 rounded overflow-hidden border border-yellow-500/30">
+                          {/* Filled portion - cyan/blue gradient */}
+                          <div 
+                            className="absolute inset-y-0 left-0 transition-all duration-500"
+                            style={{
+                              width: `${Math.min((slice.amount / effectiveMax) * 100, 100)}%`,
+                              background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))'
+                            }}
+                          >
+                            <div className="absolute inset-0 opacity-50 bg-gradient-to-t from-transparent to-white/20"></div>
+                          </div>
+                          {/* Remaining portion - orange/red gradient */}
+                          <div 
+                            className="absolute inset-y-0 transition-all duration-500"
+                            style={{
+                              left: `${Math.min((slice.amount / effectiveMax) * 100, 100)}%`,
+                              width: `${Math.max(0, 100 - (slice.amount / effectiveMax) * 100)}%`,
+                              background: 'linear-gradient(90deg, rgba(251, 146, 60, 0.6), rgba(239, 68, 68, 0.4))'
+                            }}
+                          >
+                            <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-transparent to-white/10"></div>
+                          </div>
+                          {/* Progress line indicator */}
+                          <div 
+                            className="absolute inset-y-0 w-px bg-white/80 transition-all duration-500"
+                            style={{
+                              left: `${Math.min((slice.amount / effectiveMax) * 100, 100)}%`,
+                              boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Stats Grid */}
+                      <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4 relative overflow-hidden">
+                        <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 relative z-10">
+                          {/* Row 1 */}
+                          <div>
+                            <p className="mek-label-uppercase mb-1">MARKET PRICE</p>
+                            <p className="text-xl font-bold text-yellow-400">{slice.currentValue}g/ea</p>
+                          </div>
+                          <div>
+                            <p className="mek-label-uppercase mb-1">BASE RATE</p>
+                            <p className="text-xl font-bold text-cyan-400">{baseRate.toFixed(2)}/day</p>
+                          </div>
                           
-                          {/* Name & Stats */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-white truncate">
-                                {essence.name}
-                              </span>
-                              <span className="text-xs text-yellow-400 font-mono ml-2">
-                                {percentage}%
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>Qty: {essence.amount}</span>
-                              <span>{essence.currentValue}g/ea</span>
-                            </div>
+                          {/* Row 2 */}
+                          <div>
+                            <p className="mek-label-uppercase mb-1">TOTAL VALUE</p>
+                            <p className="text-xl font-bold text-yellow-400">{Math.round(totalValue)}g</p>
+                          </div>
+                          <div>
+                            <p className="mek-label-uppercase mb-1">BONUS RATE</p>
+                            <p className="text-xl font-bold text-green-400">
+                              {bonusRate > 0 ? `+${bonusRate.toFixed(2)}/day` : '+0.00/day'}
+                            </p>
+                          </div>
+                          
+                          {/* Row 3 */}
+                          <div>
+                            <p className="mek-label-uppercase mb-1">THEORETICAL</p>
+                            <p className="text-xl font-bold text-purple-400">{Math.round(theoreticalIncome)}g/day</p>
+                          </div>
+                          <div>
+                            <p className="mek-label-uppercase mb-1">TOTAL RATE</p>
+                            <p className="text-xl font-bold text-cyan-400">{totalRate.toFixed(2)}/day</p>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                      
+                      {/* Clear Button - Only shows when something is selected, not just hovered */}
+                      {selectedSlice && (
+                        <div className={`mt-4 transition-all duration-300 ${selectedSlice ? 'opacity-100' : 'opacity-0'}`}>
+                          <button
+                            onClick={handleClearSelection}
+                            className="w-full py-2 px-4 bg-black/60 border-2 border-yellow-500/30 rounded-lg text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all duration-200"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })() : (
+                  <div className="mek-card-industrial mek-border-sharp-gold p-4 relative opacity-60">
+                    {/* Subtle scan line effect */}
+                    <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-20"></div>
+                    
+                    {/* Hover instruction */}
+                    <div className="text-center mb-2">
+                      <p className="text-gray-400 text-xs uppercase tracking-widest">Hover over chart for details</p>
+                    </div>
+                    
+                    {/* Essence Bottle Image Placeholder */}
+                    <div className="relative mb-4 mek-slot-empty rounded-lg p-4 flex items-center justify-center border-2 border-gray-700/30" style={{ minHeight: '200px' }}>
+                      <div className="absolute inset-0 mek-overlay-glass opacity-30 pointer-events-none"></div>
+                      <img 
+                        src="/essence-images/bumblebee 1.png"
+                        alt="Essence placeholder"
+                        className="relative z-10 w-full h-full object-contain opacity-30"
+                        style={{ maxHeight: '180px' }}
+                      />
+                    </div>
+                    
+                    {/* Name and Amount Placeholder */}
+                    <div className="text-center mb-4">
+                      <h2 className="mek-text-industrial text-3xl text-gray-500 mb-2">---</h2>
+                      <p className="text-xl text-gray-600 font-semibold">-- units</p>
+                    </div>
+                    
+                    {/* Ownership Section Placeholder */}
+                    <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3 mb-4 relative overflow-hidden border border-gray-700/30">
+                      <div className="flex justify-between items-center mb-2 relative z-10">
+                        <span className="mek-label-uppercase text-gray-500">OWNERSHIP</span>
+                        <span className="text-2xl font-bold text-gray-500">--/--</span>
+                      </div>
+                      
+                      {/* Empty Progress Bar */}
+                      <div className="relative h-6 bg-black/60 rounded overflow-hidden border border-gray-700/30">
+                        <div className="absolute inset-0 bg-gray-800/30"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Stats Grid Placeholder */}
+                    <div className="bg-black/30 backdrop-blur-sm border border-gray-700/30 rounded-lg p-4 relative overflow-hidden">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-4 relative z-10">
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">MARKET PRICE</p>
+                          <p className="text-xl font-bold text-gray-500">--g/ea</p>
+                        </div>
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">BASE RATE</p>
+                          <p className="text-xl font-bold text-gray-500">--/day</p>
+                        </div>
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">TOTAL VALUE</p>
+                          <p className="text-xl font-bold text-gray-500">--g</p>
+                        </div>
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">BONUS RATE</p>
+                          <p className="text-xl font-bold text-gray-500">--/day</p>
+                        </div>
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">THEORETICAL</p>
+                          <p className="text-xl font-bold text-gray-500">--g/day</p>
+                        </div>
+                        <div>
+                          <p className="mek-label-uppercase mb-1 text-gray-600">TOTAL RATE</p>
+                          <p className="text-xl font-bold text-gray-500">--/day</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  {/* Summary Stats */}
-                  <div className="mt-4 pt-4 border-t border-gray-800/50 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Types Shown:</span>
-                      <span className="text-yellow-400 font-bold">{totalStats.uniqueTypes}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Total Amount:</span>
-                      <span className="text-yellow-400 font-bold">{totalStats.totalAmount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Total Value:</span>
-                      <span className="text-green-400 font-bold">{totalStats.totalValue.toLocaleString()}g</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Avg Value:</span>
-                      <span className="text-blue-400 font-bold">{totalStats.averageValue.toFixed(2)}g</span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

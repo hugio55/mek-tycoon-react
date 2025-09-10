@@ -922,22 +922,17 @@ export default defineSchema({
   // Chip Definitions - templates for all possible chips
   chipDefinitions: defineTable({
     name: v.string(),
-    description: v.string(),
-    category: v.union(
-      v.literal("attack"),
-      v.literal("defense"),
-      v.literal("utility"),
-      v.literal("economy"),
-      v.literal("special")
-    ),
-    tier: v.number(), // 1-7 for T1-T7
     imageUrl: v.optional(v.string()),
-    possibleBuffs: v.array(v.object({
+    // Temporary fields to allow clearing old data
+    category: v.optional(v.string()),
+    description: v.optional(v.string()),
+    tier: v.optional(v.number()),
+    possibleBuffs: v.optional(v.array(v.object({
       buffType: v.string(),
       minValue: v.number(),
       maxValue: v.number(),
-      weight: v.number(), // probability weight
-    })),
+      weight: v.number(),
+    }))),
     rankScaling: v.record(v.string(), v.object({
       buffMultiplier: v.number(),
       rollChances: v.number(),
@@ -945,8 +940,6 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_tier", ["tier"])
-    .index("by_category", ["category"])
     .index("by_name", ["name"]),
 
   // Chip Instances - actual chips owned by users
@@ -1039,4 +1032,29 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_tier", ["tier"]),
+
+  // Chip configuration tables
+  chipMasterRanges: defineTable({
+    buffCategoryId: v.id("buffCategories"),
+    min: v.number(),
+    max: v.number(),
+    curvePower: v.optional(v.number()), // 1 = linear, >1 = exponential
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_buff_category", ["buffCategoryId"]),
+
+  chipConfigurations: defineTable({
+    tier: v.number(), // 1-10
+    rank: v.string(), // D, C, B, A, S, SS, SSS, X, XX, XXX
+    buffs: v.array(v.object({
+      buffCategoryId: v.id("buffCategories"),
+      procChance: v.number(),
+      minValue: v.number(),
+      maxValue: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_tier_rank", ["tier", "rank"]),
 });

@@ -109,6 +109,7 @@ export default function TalentsPage() {
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [highestUnlockedY, setHighestUnlockedY] = useState<number | null>(null);
 
   // Prevent page scroll when over canvas
   useEffect(() => {
@@ -126,18 +127,18 @@ export default function TalentsPage() {
     };
   }, []);
 
-  // Function to center view on a node
-  const centerOnNode = (nodeId: string, nodes: TalentNode[]) => {
+  // Function to position view on a node
+  const centerOnNode = (nodeId: string, nodes: TalentNode[], positionAtBottom: boolean = false) => {
     const node = nodes.find(n => n.id === nodeId);
     if (node && canvasRef.current) {
       const canvasRect = canvasRef.current.getBoundingClientRect();
       const centerX = canvasRect.width / 2;
-      const centerY = canvasRect.height / 2;
       
-      // Calculate offset to center the node
+      // Simple positioning - just center the START node
+      // The tree grows downward from here
       setPanOffset({
         x: centerX - node.x,
-        y: centerY - node.y
+        y: canvasRect.height * 0.3 - node.y // Position START at 30% from top
       });
     }
   };
@@ -157,14 +158,16 @@ export default function TalentsPage() {
           );
           if (mainStartNode) {
             setUnlockedNodes(new Set(['start']));
-            // Center on the START node
-            setTimeout(() => centerOnNode('start', parsed.nodes), 100);
+            setHighestUnlockedY(mainStartNode.y);
+            // Position START node at bottom of screen
+            setTimeout(() => centerOnNode('start', parsed.nodes, true), 100);
           } else {
             // Fallback to first tier 0 node
             const firstNode = parsed.nodes.find((n: TalentNode) => n.tier === 0);
             setUnlockedNodes(new Set([firstNode ? firstNode.id : 'start']));
             if (firstNode) {
-              setTimeout(() => centerOnNode(firstNode.id, parsed.nodes), 100);
+              setHighestUnlockedY(firstNode.y);
+              setTimeout(() => centerOnNode(firstNode.id, parsed.nodes, true), 100);
             }
           }
           setLoadStatus("Loaded from browser");
@@ -188,31 +191,37 @@ export default function TalentsPage() {
           );
           if (mainStartNode) {
             setUnlockedNodes(new Set(['start']));
-            // Center on the START node
-            setTimeout(() => centerOnNode('start', data.nodes), 100);
+            setHighestUnlockedY(mainStartNode.y);
+            // Position START node at bottom of screen
+            setTimeout(() => centerOnNode('start', data.nodes, true), 100);
           } else {
             // Fallback to first tier 0 node
             const firstNode = data.nodes.find((n: TalentNode) => n.tier === 0);
             setUnlockedNodes(new Set([firstNode ? firstNode.id : 'start']));
             if (firstNode) {
-              setTimeout(() => centerOnNode(firstNode.id, data.nodes), 100);
+              setHighestUnlockedY(firstNode.y);
+              setTimeout(() => centerOnNode(firstNode.id, data.nodes, true), 100);
             }
           }
           setLoadStatus("Loaded from file");
           setTimeout(() => setLoadStatus(""), 3000);
         } else {
-          // If no tree found, use default and center on it
+          // If no tree found, use default and position start at bottom
           setTalentData(defaultTalentData);
           setUnlockedNodes(new Set(['start']));
-          setTimeout(() => centerOnNode('start', defaultTalentData.nodes), 100);
+          const startNode = defaultTalentData.nodes.find(n => n.id === 'start');
+          if (startNode) setHighestUnlockedY(startNode.y);
+          setTimeout(() => centerOnNode('start', defaultTalentData.nodes, true), 100);
           setLoadStatus("No talent tree found - create one in the builder!");
         }
       })
       .catch(err => {
-        // Use default talent tree and center on it
+        // Use default talent tree and position start at bottom
         setTalentData(defaultTalentData);
         setUnlockedNodes(new Set(['start']));
-        setTimeout(() => centerOnNode('start', defaultTalentData.nodes), 100);
+        const startNode = defaultTalentData.nodes.find(n => n.id === 'start');
+        if (startNode) setHighestUnlockedY(startNode.y);
+        setTimeout(() => centerOnNode('start', defaultTalentData.nodes, true), 100);
         setLoadStatus("No talent tree found - create one in the builder!");
       });
   }, []);
@@ -263,6 +272,9 @@ export default function TalentsPage() {
     newUnlocked.add(node.id);
     setUnlockedNodes(newUnlocked);
     setXpAvailable(xpAvailable - reducedXp);
+    
+    // Don't auto-scroll at all - let the user control the view with manual panning
+    // This prevents any unwanted jumps
   };
 
   const resetTree = () => {
@@ -270,6 +282,13 @@ export default function TalentsPage() {
       // Only unlock the main START node
       setUnlockedNodes(new Set(['start']));
       setXpAvailable(1500);
+      // Reset the highest unlocked Y position
+      const startNode = talentData.nodes.find(n => n.id === 'start');
+      if (startNode) {
+        setHighestUnlockedY(startNode.y);
+      } else {
+        setHighestUnlockedY(null);
+      }
     }
   };
 

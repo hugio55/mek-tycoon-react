@@ -264,61 +264,87 @@ export default function EssencePage() {
           </div>
         </div>
         
-        {/* Individual Essence Bars - Redesigned with Industrial Aesthetic */}
+        {/* Individual Essence Details Frame - Redesigned per mockup */}
         <div className="max-w-4xl mx-auto px-4 mt-8">
           <div className="bg-black border-2 border-green-400/30 rounded-lg p-6 relative">
             {/* Inner green accent border */}
             <div className="absolute inset-[2px] rounded-lg border border-green-400/10 pointer-events-none" />
             
-            {/* Title Section */}
-            <div className="text-center mb-6">
-              <h2 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider" style={{
+            {/* Centered Essence Image - 25% larger, no border */}
+            <div className="flex justify-center mb-4">
+              <div className="w-32 h-32 rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
+                <img 
+                  src="/essence-vial.gif" 
+                  alt="Ruby Essence"
+                  className="w-full h-full object-contain"
+                  style={{ transform: 'scale(1.25)' }}
+                />
+              </div>
+            </div>
+            
+            {/* Essence Name */}
+            <div className="text-center mb-2">
+              <h2 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider" style={{
                 fontFamily: "'Orbitron', 'Rajdhani', sans-serif",
                 textShadow: '0 0 20px rgba(250, 182, 23, 0.5)'
               }}>
-                BODY
+                RUBY
               </h2>
-              <div className="text-lg text-yellow-400/80 mt-1">
-                {((displayedEssences.reduce((sum, e) => sum + e.quantity, 0) / essenceData.reduce((sum, e) => sum + e.quantity, 0)) * 100).toFixed(1)}%
+            </div>
+            
+            {/* Amount Owned - Large Text */}
+            <div className="text-center mb-1">
+              <div className="text-5xl font-bold text-white" style={{
+                fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                letterSpacing: '-0.02em'
+              }}>
+                3.2
+              </div>
+            </div>
+            
+            {/* Percentage of Collection - Small Text */}
+            <div className="text-center mb-6">
+              <div className="text-sm text-gray-400">
+                3.2% of total collection
               </div>
             </div>
             
             {/* Stats Grid - 2x2 Layout */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              {/* Total Essence */}
-              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Essence</div>
-                <div className="text-2xl font-bold text-yellow-400">
-                  {displayedEssences.reduce((sum, e) => sum + e.quantity, 0)}
-                </div>
-              </div>
-              
-              {/* Collection Rate */}
+              {/* Collection Rate - Only green if buffed */}
               <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
                 <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Collection Rate</div>
-                <div className="text-2xl font-bold text-green-400">
+                <div className={`text-2xl font-bold ${totalIndividualBuff > 0 ? 'text-green-400' : 'text-gray-400'}`}>
                   {(0.115 + totalIndividualBuff).toFixed(3)}/day
                 </div>
               </div>
               
-              {/* Unique Types */}
+              {/* Rarity Rank */}
               <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Unique Types</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Rarity Rank</div>
                 <div className="text-2xl font-bold text-blue-400">
-                  {displayedEssences.length}
+                  #42
                 </div>
               </div>
               
-              {/* Buff Status */}
+              {/* Time to Next */}
               <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Active Buffs</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Next Drop In</div>
                 <div className="text-2xl font-bold text-purple-400">
-                  {individualBuffs.length}
+                  14h 23m
+                </div>
+              </div>
+              
+              {/* Buff Status - Only show green if active */}
+              <div className="bg-gray-900/50 border border-gray-700/30 rounded p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Buff Status</div>
+                <div className={`text-2xl font-bold ${individualBuffs.length > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                  {individualBuffs.length > 0 ? 'Active' : 'None'}
                 </div>
               </div>
             </div>
             
-            {/* Main Progress Bar */}
+            {/* Progress Bar with small text */}
             <div className="relative">
               <div className="h-8 bg-gray-900 rounded overflow-hidden border border-gray-700/50">
                 {/* Grid lines for visual interest */}
@@ -336,20 +362,18 @@ export default function EssencePage() {
                 <div
                   className="absolute inset-y-0 left-0 transition-all duration-500"
                   style={{
-                    width: `${Math.min(100, (displayedEssences.reduce((sum, e) => sum + e.quantity, 0) / 500) * 100)}%`,
+                    width: `${Math.min(100, (3.2 / 10) * 100)}%`,
                     background: 'linear-gradient(90deg, #fab617 0%, #ffd700 50%, #fab617 100%)',
                     boxShadow: '0 0 20px rgba(250, 182, 23, 0.5)'
                   }}
                 />
-                
-                {/* Center text */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm tracking-wider" style={{
-                    textShadow: '0 0 4px rgba(0,0,0,0.9)'
-                  }}>
-                    {displayedEssences.reduce((sum, e) => sum + e.quantity, 0)} / 500
-                  </span>
-                </div>
+              </div>
+              
+              {/* Small text below progress bar */}
+              <div className="text-center mt-1">
+                <span className="text-xs text-gray-500">
+                  3.2 / 10
+                </span>
               </div>
             </div>
             
@@ -401,7 +425,7 @@ export default function EssencePage() {
               
               {displayedEssences.length > 5 && (
                 <div className="text-center pt-2">
-                  <button className="text-xs text-yellow-400/70 hover:text-yellow-400 transition-colors uppercase tracking-wider">
+                  <button className="mek-button-secondary text-xs py-1 px-3 rounded">
                     View All {displayedEssences.length} Types →
                   </button>
                 </div>

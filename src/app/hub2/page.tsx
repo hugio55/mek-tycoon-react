@@ -384,17 +384,7 @@ export default function Hub2Page() {
               <div className="relative flex items-center justify-center px-4 py-5">
                 {/* Total Gold Display - Absolute positioned */}
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col">
-                  <div 
-                    style={{ 
-                      fontFamily: "'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif",
-                      fontSize: '40px',
-                      fontWeight: 500,
-                      color: '#fab617',
-                      letterSpacing: '-0.02em',
-                      textShadow: '0 0 10px rgba(250, 182, 23, 0.5)',
-                      lineHeight: '1'
-                    }}
-                  >
+                  <div className="gold-display-medium">
                     {Math.floor(totalGold).toLocaleString()}
                   </div>
                   <div 

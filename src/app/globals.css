@@ -22,6 +22,50 @@ body {
 /* Import the global design system */
 @import '../styles/global-design-system.css';
 
+/* Industrial hazard stripe patterns */
+.bg-repeating-stripes-yellow {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #000000,
+    #000000 10px,
+    #fab617 10px,
+    #fab617 20px
+  );
+}
+
+/* Universal Thin Number Display Classes (for gold and other large numbers) */
+.gold-display-large {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 42px;
+  font-weight: 200;
+  color: #fab617;
+  letter-spacing: 1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 15px rgba(250, 182, 23, 0.5);
+}
+
+.gold-display-medium {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 40px;
+  font-weight: 200;
+  color: #fab617;
+  letter-spacing: 1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 15px rgba(250, 182, 23, 0.5);
+}
+
+.thin-number-xlarge {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 48px;
+  font-weight: 200;
+  color: #fab617;
+  letter-spacing: 1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Story Climb Page Animations */
 @keyframes scan {
   0% { transform: translateY(-100%); }

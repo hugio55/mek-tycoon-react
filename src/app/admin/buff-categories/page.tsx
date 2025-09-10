@@ -30,20 +30,22 @@ interface MechanismTier {
 }
 
 export default function BuffCategoriesPage() {
+  const [editingId, setEditingId] = useState<Id<"buffCategories"> | null>(null);
+  
   const categories = useQuery(api.buffCategories.getAll);
   const createCategory = useMutation(api.buffCategories.create);
   const updateCategory = useMutation(api.buffCategories.update);
   const deleteCategory = useMutation(api.buffCategories.remove);
+  const seedCategories = useMutation(api.seedBuffCategories.seedAll);
+  const removeCategoryFromConfigs = useMutation(api.chipConfigurations.removeCategoryFromConfigs);
   
   const mechanismTiers = useQuery(api.mechanismTiers.getAll);
   const updateMechanismTier = useMutation(api.mechanismTiers.updateTier);
   const initializeTiers = useMutation(api.mechanismTiers.initializeDefaults);
   const resetTiers = useMutation(api.mechanismTiers.resetToDefaults);
-
-  const [editingId, setEditingId] = useState<Id<"buffCategories"> | null>(null);
   const [editingTierId, setEditingTierId] = useState<Id<"mechanismTiers"> | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error">("synced");
-  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [showTierConfig, setShowTierConfig] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -145,9 +147,38 @@ export default function BuffCategoriesPage() {
   };
 
   const handleDelete = async (id: Id<"buffCategories">) => {
-    if (confirm("Are you sure you want to delete this buff category?")) {
+    // Check dependencies first
+    const deps = await checkDependencies({ buffCategoryId: id });
+    
+    let warningMessage = "Are you sure you want to delete this buff category?";
+    
+    if (deps && (deps.hasMasterRange || deps.affectedChipConfigs > 0)) {
+      warningMessage = `⚠️ WARNING: This buff category is being used!\n\n`;
+      
+      if (deps.hasMasterRange) {
+        warningMessage += `• Has master range configuration in Chip Builder\n`;
+      }
+      
+      if (deps.affectedChipConfigs > 0) {
+        warningMessage += `• Used in ${deps.affectedChipConfigs} chip configurations\n`;
+      }
+      
+      warningMessage += `\nDeleting this category will:\n`;
+      warningMessage += `• Remove its master range settings\n`;
+      warningMessage += `• Remove it from all chip configurations\n`;
+      warningMessage += `• Require reconfiguration in the Chip Builder\n\n`;
+      warningMessage += `Are you ABSOLUTELY SURE you want to delete this buff category?`;
+    }
+    
+    if (confirm(warningMessage)) {
       setSyncStatus("syncing");
       try {
+        // Remove from chip configurations first
+        if (deps && (deps.hasMasterRange || deps.affectedChipConfigs > 0)) {
+          await removeCategoryFromConfigs({ buffCategoryId: id });
+        }
+        
+        // Then delete the category
         await deleteCategory({ id });
         setSyncStatus("synced");
         setLastSyncTime(new Date());
@@ -164,8 +195,12 @@ export default function BuffCategoriesPage() {
       setSyncStatus("syncing");
     } else if (categories !== undefined) {
       setSyncStatus("synced");
+      // Set sync time on client side only
+      if (!lastSyncTime) {
+        setLastSyncTime(new Date());
+      }
     }
-  }, [categories]);
+  }, [categories, lastSyncTime]);
 
   // Initialize tiers if they don't exist
   useEffect(() => {
@@ -214,7 +249,7 @@ export default function BuffCategoriesPage() {
                  "Connection Error"}
               </span>
             </div>
-            {syncStatus === "synced" && (
+            {syncStatus === "synced" && lastSyncTime && (
               <span className="text-xs text-gray-500">
                 Last sync: {lastSyncTime.toLocaleTimeString()}
               </span>
@@ -233,9 +268,29 @@ export default function BuffCategoriesPage() {
 
         {/* Form Section */}
         <div className="bg-gray-900/50 border-y-2 border-yellow-500/50 px-8 py-4 mb-3 w-full">
-          <h2 className="text-xl font-bold text-yellow-500 mb-3">
-            {editingId ? "Edit Category" : "Add New Category"}
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-yellow-500">
+              {editingId ? "Edit Category" : "Add New Category"}
+            </h2>
+            {(!categories || categories.length === 0) && (
+              <button
+                onClick={async () => {
+                  setSyncStatus("syncing");
+                  try {
+                    await seedCategories();
+                    setSyncStatus("synced");
+                    setLastSyncTime(new Date());
+                  } catch (error) {
+                    setSyncStatus("error");
+                    console.error("Failed to seed categories:", error);
+                  }
+                }}
+                className="bg-green-600 text-white font-bold px-4 py-1 rounded hover:bg-green-500 transition-colors text-sm"
+              >
+                Seed Default Categories
+              </button>
+            )}
+          </div>
           
           <form onSubmit={handleSubmit} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
             <div>

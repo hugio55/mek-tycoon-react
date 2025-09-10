@@ -133,3 +133,68 @@ export const clearAll = mutation({
     return { deleted: allCategories.length };
   },
 });
+
+// Migrate existing categories to have proper fields
+export const migrateAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const categories = await ctx.db.query("buffCategories").collect();
+    
+    const categoryMappings: Record<string, { category: string; unitType: string; applicationType: string }> = {
+      // Gold & Market
+      "Gold Flat": { category: "gold", unitType: "flat_number", applicationType: "universal" },
+      "Gold Rate Mek": { category: "gold", unitType: "rate_change", applicationType: "attachable" },
+      "Interest Rate Bank": { category: "gold", unitType: "rate_percentage", applicationType: "universal" },
+      "Auction House Fee Reduction": { category: "market", unitType: "flat_percentage", applicationType: "universal" },
+      "CircuTree Gold Cost Reduction %": { category: "gold", unitType: "flat_percentage", applicationType: "attachable" },
+      "Discount on OE Items": { category: "market", unitType: "flat_percentage", applicationType: "universal" },
+      "Scrapyard Gold Reward Increase": { category: "gold", unitType: "flat_percentage", applicationType: "universal" },
+      "Crafting Fee Reduction": { category: "market", unitType: "flat_percentage", applicationType: "universal" },
+      
+      // Essence
+      "CircuTree Essence Cost Reduction %": { category: "essence", unitType: "flat_percentage", applicationType: "attachable" },
+      "Essence Rate Global": { category: "essence", unitType: "rate_change", applicationType: "universal" },
+      "Essence Rate Specific": { category: "essence", unitType: "rate_change", applicationType: "attachable" },
+      "Scrapyard Essence Reward Increase": { category: "essence", unitType: "flat_percentage", applicationType: "universal" },
+      "Flat Rewards of Essence": { category: "essence", unitType: "flat_number", applicationType: "universal" },
+      "Essence Bar Cap Increase": { category: "essence", unitType: "flat_number", applicationType: "universal" },
+      "Crafting Essence Cost Reduction": { category: "essence", unitType: "flat_percentage", applicationType: "universal" },
+      "Crafting Glyph Essence Cost Reduction": { category: "essence", unitType: "flat_percentage", applicationType: "universal" },
+      
+      // Looter & Rewards
+      "Scrap Yard Loot Chance Increase": { category: "reward_chance", unitType: "flat_percentage", applicationType: "universal" },
+      "Rarity Bias": { category: "rarity_bias", unitType: "flat_percentage", applicationType: "universal" },
+      "Fight Cooldown Timer Reduction": { category: "reward_chance", unitType: "flat_percentage", applicationType: "attachable" },
+      "Various Perks to Fight Mechanics": { category: "reward_chance", unitType: "flat_percentage", applicationType: "attachable" },
+      "XP Gain Bank": { category: "xp", unitType: "flat_percentage", applicationType: "universal" },
+      "XP Gain Scrap Yard": { category: "xp", unitType: "flat_percentage", applicationType: "universal" },
+      "Glyph Duration": { category: "reward_chance", unitType: "flat_percentage", applicationType: "attachable" },
+      
+      // Other
+      "Mek Slots": { category: "mek_slot", unitType: "flat_number", applicationType: "attachable" },
+    };
+    
+    let updatedCount = 0;
+    
+    for (const cat of categories) {
+      const mapping = categoryMappings[cat.name];
+      if (mapping && (!cat.category || !cat.unitType)) {
+        await ctx.db.patch(cat._id, {
+          category: mapping.category as any,
+          unitType: mapping.unitType as any,
+          applicationType: mapping.applicationType as any,
+          tierStart: cat.tierStart || 1,
+          tierEnd: cat.tierEnd || 10,
+          updatedAt: Date.now(),
+        });
+        updatedCount++;
+      }
+    }
+    
+    return { 
+      success: true, 
+      updatedCount,
+      message: `Successfully migrated ${updatedCount} buff categories`
+    };
+  },
+});
