@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import mekImagesList from './mek-images.json';
 
 interface StoryNode {
   id: string;
@@ -23,6 +24,7 @@ export default function StoryClimbPage() {
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 900 }); // 2:3 aspect ratio
   const [viewportOffset, setViewportOffset] = useState(0); // For scrolling the tree
   const [mounted, setMounted] = useState(false);
+  const [nodeImages, setNodeImages] = useState<Map<string, HTMLImageElement>>(new Map());
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -33,6 +35,41 @@ export default function StoryClimbPage() {
   const test5Tree = storyTrees?.find(tree => tree.name.toLowerCase() === "test 5");
   
   const treeData = v1Tree || test5Tree; // Use V1 if available, otherwise fall back to Test 5
+
+  // Function to get a deterministic image for each node
+  const getNodeImage = useCallback((nodeId: string): string => {
+    // Use node ID to deterministically select an image
+    let hash = 0;
+    for (let i = 0; i < nodeId.length; i++) {
+      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    const index = Math.abs(hash) % mekImagesList.length;
+    return mekImagesList[index];
+  }, []);
+
+  // Load images for nodes
+  useEffect(() => {
+    if (!treeData) return;
+    
+    const loadImages = async () => {
+      const imageMap = new Map<string, HTMLImageElement>();
+      
+      for (const node of treeData.nodes) {
+        // Only load images for normal, boss, and final_boss nodes
+        if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+          const imageName = getNodeImage(node.id);
+          const img = new Image();
+          img.src = `/mek-images/150px/${imageName}`;
+          imageMap.set(node.id, img);
+        }
+      }
+      
+      setNodeImages(imageMap);
+    };
+    
+    loadImages();
+  }, [treeData, getNodeImage]);
 
   // Handle client-side mounting
   useEffect(() => {
@@ -64,10 +101,6 @@ export default function StoryClimbPage() {
     const nodes = treeData.nodes;
     const completedNodesList = nodes.filter(n => completedNodes.has(n.id));
     
-    console.log('Auto-scroll check:', {
-      completedCount: completedNodesList.length,
-      completedNodes: Array.from(completedNodes)
-    });
     
     if (completedNodesList.length > 0) {
       // Find the highest completed node (lowest Y value = highest up the tree)
@@ -95,15 +128,6 @@ export default function StoryClimbPage() {
       // Define the threshold line at lower third of canvas (67% from top)
       const thresholdY = canvasSize.height * 0.67;
       
-      console.log('Scroll calculations:', {
-        highestNode: highestNode.id,
-        highestNodeY: highestNode.y,
-        nodeScreenYWithoutScroll,
-        thresholdY,
-        shouldScroll: nodeScreenYWithoutScroll < thresholdY,
-        canvasHeight: canvasSize.height,
-        scaledTreeHeight
-      });
       
       // Only scroll if the highest node has risen ABOVE the threshold line (when unscrolled)
       if (nodeScreenYWithoutScroll < thresholdY) {
@@ -114,7 +138,6 @@ export default function StoryClimbPage() {
         const maxPossibleOffset = Math.max(0, scaledTreeHeight - canvasSize.height + padding * 2);
         const targetOffset = Math.min(scrollNeeded, maxPossibleOffset);
         
-        console.log('SCROLLING!', { scrollNeeded, targetOffset, maxPossibleOffset });
         
         // Smooth scroll to the target position
         setViewportOffset(targetOffset);
@@ -205,32 +228,61 @@ export default function StoryClimbPage() {
       // Check if node is completed
       const isCompleted = completedNodes.has(node.id);
       
-      // Set node sizes and colors
-      let nodeSize = 20; // normal nodes - small squares
+      // Set node sizes and colors (matching builder ratios, normal nodes 10% bigger)
+      let nodeSize = 22; // normal nodes 10% bigger than original 20
       let fillColor = '#fab617'; // yellow for normal
       let strokeColor = '#fbbf24';
       
       if (node.id === 'start') {
-        nodeSize = 30;
+        nodeSize = 35; // slightly bigger
         fillColor = '#10b981'; // green
         strokeColor = '#34d399';
       } else if (node.storyNodeType === 'event') {
-        nodeSize = 25; // medium circles
+        nodeSize = 40; // much bigger circles (matching builder)
         fillColor = '#8b5cf6'; // purple
         strokeColor = '#a78bfa';
       } else if (node.storyNodeType === 'boss') {
-        nodeSize = 40; // large squares
+        nodeSize = 50; // large squares (matching builder)
         fillColor = '#ef4444'; // red
         strokeColor = '#f87171';
       } else if (node.storyNodeType === 'final_boss') {
-        nodeSize = 50; // extra large square
+        nodeSize = 60; // extra large square (matching builder)
         fillColor = '#fab617'; // gold
         strokeColor = '#fbbf24';
       }
       
+      // Check if node is available (connected to a completed node)
+      const isAvailable = !isCompleted && treeData.connections.some(conn => {
+        const otherNodeId = conn.from === node.id ? conn.to : (conn.to === node.id ? conn.from : null);
+        return otherNodeId && completedNodes.has(otherNodeId);
+      });
+      
+      // Draw glow for available nodes only
+      if (isAvailable) {
+        ctx.save();
+        const glowIntensity = 0.5 + Math.sin(Date.now() / 500) * 0.3;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = `rgba(250, 204, 21, ${glowIntensity})`;
+        
+        // Draw glow shape
+        if (node.storyNodeType === 'event') {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          ctx.fillStyle = 'transparent';
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(pos.x - nodeSize, pos.y - nodeSize, nodeSize * 2, nodeSize * 2);
+        }
+        ctx.restore();
+      }
+      
       // Draw node shadow
-      ctx.shadowBlur = isCompleted ? 5 : 20;
-      ctx.shadowColor = isCompleted ? strokeColor + '40' : strokeColor;
+      ctx.shadowBlur = isCompleted ? 5 : (isAvailable ? 15 : 8);
+      ctx.shadowColor = isCompleted ? strokeColor + '40' : (isAvailable ? strokeColor : strokeColor + '20');
       
       // Draw node shape based on type
       if (node.storyNodeType === 'event') {
@@ -244,11 +296,33 @@ export default function StoryClimbPage() {
         ctx.stroke();
       } else {
         // All others are squares (normal, boss, final boss, start)
+        const halfSize = nodeSize;
+        
+        // Fill background
         ctx.fillStyle = isCompleted ? fillColor + '60' : fillColor;
-        ctx.fillRect(pos.x - nodeSize/2, pos.y - nodeSize/2, nodeSize, nodeSize);
+        ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+        
+        // Draw mechanism image for normal, boss, and final_boss nodes
+        if ((node.storyNodeType === 'normal' || node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') && nodeImages.has(node.id)) {
+          const img = nodeImages.get(node.id)!;
+          if (img.complete) {
+            ctx.save();
+            // Clip to square shape with padding
+            const padding = 2;
+            ctx.beginPath();
+            ctx.rect(pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
+            ctx.clip();
+            // Draw image
+            ctx.globalAlpha = isCompleted ? 0.4 : 0.85;
+            ctx.drawImage(img, pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
+            ctx.restore();
+          }
+        }
+        
+        // Draw border
         ctx.strokeStyle = isCompleted ? strokeColor + '60' : strokeColor;
         ctx.lineWidth = node.storyNodeType === 'final_boss' ? 4 : 3;
-        ctx.strokeRect(pos.x - nodeSize/2, pos.y - nodeSize/2, nodeSize, nodeSize);
+        ctx.strokeRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
       }
       
       // Draw checkmark for completed nodes
@@ -284,7 +358,7 @@ export default function StoryClimbPage() {
         ctx.fillText(nodeNumber[0], pos.x, pos.y);
       }
     });
-  }, [treeData, canvasSize, viewportOffset, completedNodes]);
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages]);
 
   // Handle canvas click
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -323,11 +397,11 @@ export default function StoryClimbPage() {
     for (const node of nodes) {
       const pos = transform(node.x, node.y);
       
-      let nodeSize = 20;
-      if (node.id === 'start') nodeSize = 30;
-      else if (node.storyNodeType === 'event') nodeSize = 25;
-      else if (node.storyNodeType === 'boss') nodeSize = 40;
-      else if (node.storyNodeType === 'final_boss') nodeSize = 50;
+      let nodeSize = 22; // 10% bigger normal nodes
+      if (node.id === 'start') nodeSize = 35;
+      else if (node.storyNodeType === 'event') nodeSize = 40;
+      else if (node.storyNodeType === 'boss') nodeSize = 50;
+      else if (node.storyNodeType === 'final_boss') nodeSize = 60;
       
       let inBounds = false;
       if (node.storyNodeType === 'event') {
@@ -335,9 +409,8 @@ export default function StoryClimbPage() {
         const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
         inBounds = distance <= nodeSize;
       } else {
-        // Square hit detection
-        const halfSize = nodeSize / 2;
-        inBounds = Math.abs(x - pos.x) <= halfSize && Math.abs(y - pos.y) <= halfSize;
+        // Square hit detection - nodeSize is already the half-size
+        inBounds = Math.abs(x - pos.x) <= nodeSize && Math.abs(y - pos.y) <= nodeSize;
       }
       
       if (inBounds) {
@@ -348,13 +421,11 @@ export default function StoryClimbPage() {
           const newCompleted = new Set(completedNodes);
           newCompleted.add(node.id);
           setCompletedNodes(newCompleted);
-          console.log('Node completed:', node.id, 'Y:', node.y);
         } else if (node.id !== 'start') {
           // Allow uncompleting nodes (except start)
           const newCompleted = new Set(completedNodes);
           newCompleted.delete(node.id);
           setCompletedNodes(newCompleted);
-          console.log('Node uncompleted:', node.id);
         }
         break;
       }
@@ -365,7 +436,8 @@ export default function StoryClimbPage() {
   const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (!treeData || !canvasRef.current) return;
     
-    event.preventDefault();
+    // Don't preventDefault - causes passive listener warning
+    // event.preventDefault();
     
     // Calculate max scroll based on tree size
     const nodes = treeData.nodes;
@@ -414,6 +486,7 @@ export default function StoryClimbPage() {
               className="relative bg-black/80 border-2 border-yellow-500/30 rounded-lg overflow-hidden" 
               style={{ aspectRatio: '2/3' }}
               onWheel={handleWheel}
+              onWheelCapture={(e) => e.stopPropagation()}
             >
               {/* Canvas */}
               <canvas

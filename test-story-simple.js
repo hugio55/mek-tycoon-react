@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   const page = await context.newPage();
 
   console.log('Loading story-climb page...');
-  await page.goto('http://localhost:3102/scrap-yard/story-climb');
+  await page.goto('http://localhost:3100/scrap-yard/story-climb');
   
   // Wait for page to stabilize
   await page.waitForTimeout(6000);

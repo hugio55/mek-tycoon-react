@@ -47,9 +47,11 @@ export default function UniChipsPage() {
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [hoveredBiasRecipe, setHoveredBiasRecipe] = useState<string | null>(null);
   const [biasTooltipPosition, setBiasTooltipPosition] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
 
   // Update timer every second
   useEffect(() => {
+    setMounted(true);
     const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -73,16 +75,22 @@ export default function UniChipsPage() {
     const baseDate = new Date();
     baseDate.setHours(24, 0, 0, 0); // Tomorrow at midnight
     
+    // Use deterministic image selection based on tier and recipe index
+    const getEssenceImage = (tierNum: number, recipeIdx: number, essenceIdx: number) => {
+      const imageNum = ((tierNum + recipeIdx + essenceIdx) % 3) + 1;
+      return `/essence-images/bumblebee ${imageNum}.png`;
+    };
+    
     return [
       {
         id: `recipe-${tier}-1`,
         tier,
         recipeIndex: 1,
-        recipeName: 'Standard Formula',
+        recipeName: 'Standard Recipe',
         rarityBiasBonus: 0,
         requirements: [
           { name: 'Gold', type: 'gold', amount: 1000 * tier, current: 1000 * tier, image: '/gold/gold temp.webp' },
-          { name: 'Accordion Essence', type: 'essence', amount: 0.5 * tier, current: 0.5, essenceType: 'accordion', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Accordion Essence', type: 'essence', amount: 0.5 * tier, current: 0.5, essenceType: 'accordion', image: getEssenceImage(tier, 1, 1) },
         ],
         expiresAt: baseDate,
       },
@@ -90,12 +98,12 @@ export default function UniChipsPage() {
         id: `recipe-${tier}-2`,
         tier,
         recipeIndex: 2,
-        recipeName: 'Enhanced Formula',
+        recipeName: 'Enhanced Recipe',
         rarityBiasBonus: 15,
         requirements: [
           { name: 'Gold', type: 'gold', amount: 2500 * tier, current: 2500 * tier, image: '/gold/gold temp.webp' },
-          { name: 'Drill Essence', type: 'essence', amount: 0.8 * tier, current: 0.3, essenceType: 'drill', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
-          { name: 'Acid Essence', type: 'essence', amount: 0.3 * tier, current: 0, essenceType: 'acid', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Drill Essence', type: 'essence', amount: 0.8 * tier, current: 0.3, essenceType: 'drill', image: getEssenceImage(tier, 2, 1) },
+          { name: 'Acid Essence', type: 'essence', amount: 0.3 * tier, current: 0, essenceType: 'acid', image: getEssenceImage(tier, 2, 2) },
         ],
         expiresAt: baseDate,
       },
@@ -103,13 +111,13 @@ export default function UniChipsPage() {
         id: `recipe-${tier}-3`,
         tier,
         recipeIndex: 3,
-        recipeName: 'Premium Formula',
+        recipeName: 'Premium Recipe',
         rarityBiasBonus: 35,
         requirements: [
           { name: 'Gold', type: 'gold', amount: 10000 * tier, current: 8000 * tier, image: '/gold/gold temp.webp' },
-          { name: 'Gummy Essence', type: 'essence', amount: 2.8 * tier, current: 0.3, essenceType: 'gummy', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
-          { name: 'Bowling Essence', type: 'essence', amount: 4.1 * tier, current: 0, essenceType: 'bowling', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
-          { name: 'Crystal Essence', type: 'essence', amount: 1.5 * tier, current: 0.2, essenceType: 'crystal', image: `/essence-images/bumblebee ${Math.floor(Math.random() * 3) + 1}.png` },
+          { name: 'Gummy Essence', type: 'essence', amount: 2.8 * tier, current: 0.3, essenceType: 'gummy', image: getEssenceImage(tier, 3, 1) },
+          { name: 'Bowling Essence', type: 'essence', amount: 4.1 * tier, current: 0, essenceType: 'bowling', image: getEssenceImage(tier, 3, 2) },
+          { name: 'Crystal Essence', type: 'essence', amount: 1.5 * tier, current: 0.2, essenceType: 'crystal', image: getEssenceImage(tier, 3, 3) },
         ],
         expiresAt: baseDate,
       },
@@ -299,11 +307,11 @@ export default function UniChipsPage() {
                       {getTimeRemaining(dailyRecipes[0].expiresAt)}
                     </div>
                     <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 animate-pulse" style={{
-                        width: typeof window !== 'undefined' 
-                          ? `${((24 * 60 * 60 * 1000 - (dailyRecipes[0].expiresAt.getTime() - currentTime)) / (24 * 60 * 60 * 1000)) * 100}%`
-                          : '0%'
-                      }} />
+                      {mounted && (
+                        <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 animate-pulse" style={{
+                          width: `${((24 * 60 * 60 * 1000 - (dailyRecipes[0].expiresAt.getTime() - currentTime)) / (24 * 60 * 60 * 1000)) * 100}%`
+                        }} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -323,10 +331,8 @@ export default function UniChipsPage() {
             </div>
             
             {/* Chip grid with cinematic effects - allow overflow with extra padding for glow */}
-            <div className="grid grid-cols-5 gap-8 max-w-6xl mx-auto relative" style={{ 
-              overflow: 'visible',
-              padding: '60px 40px', // Extra padding to give space for glows
-              margin: '-60px -40px' // Negative margin to compensate for padding
+            <div className="grid grid-cols-5 gap-8 max-w-6xl mx-auto relative pl-16 pr-8" style={{ 
+              overflow: 'visible'
             }}>
               {chipTiers.map((tier, index) => {
                 const isLocked = !tier.unlocked;
@@ -351,19 +357,18 @@ export default function UniChipsPage() {
                       handleMouseLeave();
                     }}
                   >
-                    {/* Energy field effect for selected chip - massive overflow glow */}
+                    {/* Energy field effect for selected chip - reduced glow size */}
                     {isSelected && (
                       <div className="absolute pointer-events-none" style={{ 
                         zIndex: -1,
-                        top: '-100px',
-                        left: '-100px',
-                        right: '-100px',
-                        bottom: '-100px'
+                        top: '-30px',
+                        left: '-30px',
+                        right: '-30px',
+                        bottom: '-30px'
                       }}>
                         <div className="absolute inset-0">
-                          {/* Large radial glow that extends way past boundaries */}
-                          <div className="absolute inset-0 bg-gradient-radial from-yellow-500/30 via-yellow-500/10 to-transparent blur-3xl animate-pulse" />
-                          <div className="absolute inset-0 bg-gradient-radial from-yellow-400/20 via-transparent to-transparent blur-2xl" />
+                          {/* Smaller, more controlled radial glow */}
+                          <div className="absolute inset-0 bg-gradient-radial from-yellow-500/15 via-yellow-500/05 to-transparent blur-lg animate-pulse" />
                         </div>
                       </div>
                     )}
@@ -379,9 +384,10 @@ export default function UniChipsPage() {
                             : 'hover:scale-105 hover:-translate-y-2' // Smaller hover effect for unselected
                       }`}
                       style={{
-                        // Only selected chip gets the floating animation
-                        animation: !isLocked && isSelected ? `float-chip ${3 + index * 0.5}s ease-in-out infinite` : 'none',
-                        animationDelay: isSelected ? `${index * 0.2}s` : '0s'
+                        // Only selected chip gets the floating animation - fix animation property conflict
+                        ...((!isLocked && isSelected) ? {
+                          animation: `float-chip ${3 + index * 0.5}s ease-in-out infinite ${index * 0.2}s`
+                        } : {})
                       }}
                     >
                       {/* Chip container with quantum effects - ensure overflow is visible */}
@@ -412,16 +418,7 @@ export default function UniChipsPage() {
                             }}
                           />
                           
-                          {/* Holographic overlay - only for selected chip */}
-                          {!isLocked && isSelected && (
-                            <div 
-                              className="absolute inset-0 pointer-events-none opacity-40 mix-blend-screen"
-                              style={{
-                                background: `linear-gradient(135deg, transparent 30%, ${tier.borderColor}60 50%, transparent 70%)`,
-                                animation: 'shimmer 3s ease-in-out infinite',
-                              }}
-                            />
-                          )}
+                          {/* Removed holographic shimmer overlay */}
                         </div>
                         
                         {/* Remove tier badge from chip - will be shown below instead */}
@@ -576,64 +573,7 @@ export default function UniChipsPage() {
                       
                       {/* Streamlined card content */}
                       <div className="relative p-4">
-                        {/* DOMINANT Rarity Bias Display */}
-                        {recipe.rarityBiasBonus > 0 && (
-                          <div className="mb-4">
-                            <div 
-                              className="relative group cursor-help"
-                              onMouseEnter={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                setHoveredBiasRecipe(recipe.id);
-                                setBiasTooltipPosition({
-                                  x: rect.left + rect.width / 2,
-                                  y: rect.top - 10
-                                });
-                              }}
-                              onMouseLeave={() => setHoveredBiasRecipe(null)}
-                            >
-                              <div className="flex flex-col items-center justify-center py-6 relative overflow-hidden"
-                                style={{
-                                  background: `linear-gradient(135deg, ${rarityColor}10 0%, ${rarityColor}05 50%, ${rarityColor}10 100%)`,
-                                  border: `2px solid ${rarityColor}`,
-                                  borderRadius: '8px',
-                                  boxShadow: isSelected 
-                                    ? `0 0 30px ${rarityColor}60, inset 0 0 20px ${rarityColor}20`
-                                    : `0 0 15px ${rarityColor}30`
-                                }}>
-                                {/* Animated background effect */}
-                                <div className="absolute inset-0 opacity-20">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
-                                </div>
-                                
-                                {/* Massive percentage display */}
-                                <div className="relative">
-                                  <div className="text-6xl font-black tracking-tight leading-none"
-                                    style={{ 
-                                      color: rarityColor,
-                                      textShadow: `0 0 20px ${rarityColor}80, 0 0 40px ${rarityColor}40`,
-                                      fontFamily: 'Orbitron, monospace'
-                                    }}>
-                                    +{recipe.rarityBiasBonus}%
-                                  </div>
-                                  <div className="text-center mt-1">
-                                    <span className="text-sm font-bold uppercase tracking-[0.3em]"
-                                      style={{ color: rarityColor }}>
-                                      BIAS
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                {/* Pulse effect for selected */}
-                                {isSelected && (
-                                  <div className="absolute inset-0 pointer-events-none">
-                                    <div className="absolute inset-0 border-2 animate-ping opacity-30"
-                                      style={{ borderColor: rarityColor }} />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                        {/* Compact Rarity Bias Display - moved to header area */}
                         
                         {/* Compact Header */}
                         <div className="mb-3">
@@ -665,10 +605,40 @@ export default function UniChipsPage() {
                                   {recipe.recipeName}
                                 </h3>
                                 <div className="text-xs text-gray-500 uppercase tracking-wider">
-                                  Formula T{selectedTier}-{recipe.recipeIndex}
+                                  Recipe T{selectedTier}-{String.fromCharCode(64 + recipe.recipeIndex)}
                                 </div>
                               </div>
                             </div>
+                            
+                            {/* Compact bias indicator in header */}
+                            {recipe.rarityBiasBonus > 0 && (
+                              <div 
+                                className="flex flex-col items-center px-3 py-1 rounded cursor-help"
+                                style={{
+                                  background: `${rarityColor}15`,
+                                  border: `1px solid ${rarityColor}40`
+                                }}
+                                onMouseEnter={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setHoveredBiasRecipe(recipe.id);
+                                  setBiasTooltipPosition({
+                                    x: rect.left + rect.width / 2,
+                                    y: rect.top - 10
+                                  });
+                                }}
+                                onMouseLeave={() => setHoveredBiasRecipe(null)}
+                              >
+                                <span className="text-2xl font-bold" style={{ 
+                                  color: rarityColor,
+                                  fontFamily: 'Rajdhani, sans-serif',
+                                  letterSpacing: '-0.02em'
+                                }}>+{recipe.rarityBiasBonus}%</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ 
+                                  color: rarityColor, 
+                                  opacity: 0.8 
+                                }}>BIAS</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         

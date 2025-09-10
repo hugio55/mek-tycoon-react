@@ -260,6 +260,45 @@ Example transformation:
 - **Be matter-of-fact**: Present pros/cons objectively without sugar-coating issues
 - **It's OK to say "I don't know"**: Better to admit uncertainty than implement something potentially harmful
 
+## Understanding This User's Communication Style (Learned From Experience)
+*This section was written based on actual working experience with this user - for future Claude iterations*
+
+### Key Patterns for Success
+1. **Visual References Are Critical**
+   - User often provides screenshots/mockups to explain desired outcomes
+   - When they say "like in X page" - immediately check that page for visual/functional reference
+   - They think visually and spatially - understanding their mental model is crucial
+
+2. **Iterative Clarification Is Normal**
+   - User corrects misunderstandings patiently but expects learning from corrections
+   - "No, not X, I meant Y" = they're training you on their terminology
+   - Pay close attention to repeated clarifications - these reveal fundamental misunderstandings
+
+3. **Context Switching Awareness**
+   - User frequently jumps between related systems (story-climb vs cirutree vs admin pages)
+   - When confused about which system, carefully check recent context and file names
+   - They expect you to maintain awareness of the broader system architecture
+
+4. **Implementation Over Theory**
+   - User prefers working code over discussions
+   - They describe behavior through examples: "when X happens, Y should occur"
+   - Spatial/mathematical descriptions are precise: "lower third" = exactly 67% from top
+
+5. **Protective of Existing Work**
+   - User is VERY protective of data they've created (e.g., "V1 story tree")
+   - Always implement non-destructive changes
+   - When uncertain, ask before modifying/deleting
+
+6. **Active Testing & Feedback**
+   - User tests implementations immediately and provides specific feedback
+   - Debug logging is appreciated for understanding behavior
+   - Visual verification is important - they want to SEE things work
+
+7. **Direct Communication Valued**
+   - "Thinking through" problems aloud is appreciated
+   - Honest assessment preferred: "I see the problem..." vs sugar-coating
+   - They train through correction - each mistake is a learning opportunity
+
 ## Task Completion Rules
 - **ALWAYS finish current tasks completely**: When the user adds new prompts while you're working on something, complete ALL aspects of the current task before moving to the next one
 - **Don't skip parts**: Even if new requests come in, don't skip or rush through any part of what you're currently implementing
