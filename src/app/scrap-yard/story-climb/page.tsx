@@ -64,6 +64,11 @@ export default function StoryClimbPage() {
     const nodes = treeData.nodes;
     const completedNodesList = nodes.filter(n => completedNodes.has(n.id));
     
+    console.log('Auto-scroll check:', {
+      completedCount: completedNodesList.length,
+      completedNodes: Array.from(completedNodes)
+    });
+    
     if (completedNodesList.length > 0) {
       // Find the highest completed node (lowest Y value = highest up the tree)
       const highestNode = completedNodesList.reduce((highest, node) => 
@@ -83,31 +88,39 @@ export default function StoryClimbPage() {
       const scale = scaleX * 0.9;
       const scaledTreeHeight = treeHeight * scale;
       
-      // Calculate where the highest node currently appears on canvas
+      // Calculate where the highest node WOULD appear on canvas with NO scrolling
       const scaledNodeY = (highestNode.y - minY) * scale;
-      const nodeScreenY = canvasSize.height - scaledTreeHeight + viewportOffset - padding + scaledNodeY;
+      const nodeScreenYWithoutScroll = canvasSize.height - scaledTreeHeight - padding + scaledNodeY;
       
       // Define the threshold line at lower third of canvas (67% from top)
       const thresholdY = canvasSize.height * 0.67;
       
-      // Only scroll if the highest node has risen ABOVE the threshold line
-      if (nodeScreenY < thresholdY) {
-        // Calculate the offset needed to position the node exactly at the threshold
-        const requiredOffset = nodeScreenY - thresholdY + viewportOffset;
+      console.log('Scroll calculations:', {
+        highestNode: highestNode.id,
+        highestNodeY: highestNode.y,
+        nodeScreenYWithoutScroll,
+        thresholdY,
+        shouldScroll: nodeScreenYWithoutScroll < thresholdY,
+        canvasHeight: canvasSize.height,
+        scaledTreeHeight
+      });
+      
+      // Only scroll if the highest node has risen ABOVE the threshold line (when unscrolled)
+      if (nodeScreenYWithoutScroll < thresholdY) {
+        // Calculate how much we need to scroll to keep the node at the threshold
+        const scrollNeeded = thresholdY - nodeScreenYWithoutScroll;
         
         // Ensure we don't scroll past the bounds
         const maxPossibleOffset = Math.max(0, scaledTreeHeight - canvasSize.height + padding * 2);
-        const targetOffset = Math.max(0, Math.min(maxPossibleOffset, requiredOffset));
+        const targetOffset = Math.min(scrollNeeded, maxPossibleOffset);
+        
+        console.log('SCROLLING!', { scrollNeeded, targetOffset, maxPossibleOffset });
         
         // Smooth scroll to the target position
-        clearTimeout(autoScrollTimeoutRef.current);
-        autoScrollTimeoutRef.current = setTimeout(() => {
-          setViewportOffset(targetOffset);
-        }, 400);
+        setViewportOffset(targetOffset);
       }
-      // If the node is below or at the threshold, don't scroll at all
     }
-  }, [treeData, completedNodes, canvasSize, viewportOffset]);
+  }, [treeData, completedNodes, canvasSize]); // Only depend on actual changes, not viewport
 
   // Draw the tree on canvas
   useEffect(() => {
@@ -335,11 +348,13 @@ export default function StoryClimbPage() {
           const newCompleted = new Set(completedNodes);
           newCompleted.add(node.id);
           setCompletedNodes(newCompleted);
+          console.log('Node completed:', node.id, 'Y:', node.y);
         } else if (node.id !== 'start') {
           // Allow uncompleting nodes (except start)
           const newCompleted = new Set(completedNodes);
           newCompleted.delete(node.id);
           setCompletedNodes(newCompleted);
+          console.log('Node uncompleted:', node.id);
         }
         break;
       }

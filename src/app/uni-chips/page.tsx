@@ -45,6 +45,8 @@ export default function UniChipsPage() {
   const [hoveredTier, setHoveredTier] = useState<number | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [hoveredBiasRecipe, setHoveredBiasRecipe] = useState<string | null>(null);
+  const [biasTooltipPosition, setBiasTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Update timer every second
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function UniChipsPage() {
   // Define all 10 chip tiers with industrial styling and quantum properties
   const chipTiers: ChipTier[] = [
     { tier: 1, name: 'T1', unlocked: true, color: '#1a1a1a', glowColor: 'rgba(250, 182, 23, 0.4)', borderColor: '#fab617', description: 'Basic Quantum Core - Entry Level Manufacturing', requiredLevel: 1, particleColor: '#fab617', energySignature: 'STABLE' },
-    { tier: 2, name: 'T2', unlocked: false, color: '#0d2818', glowColor: 'rgba(34, 197, 94, 0.4)', borderColor: '#22c55e', description: 'Enhanced Processing Unit - Level 10 Clearance', requiredLevel: 10, particleColor: '#22c55e', energySignature: 'ENHANCED' },
+    { tier: 2, name: 'T2', unlocked: true, color: '#0d2818', glowColor: 'rgba(34, 197, 94, 0.4)', borderColor: '#22c55e', description: 'Enhanced Processing Unit - Level 10 Clearance', requiredLevel: 10, particleColor: '#22c55e', energySignature: 'ENHANCED' },
     { tier: 3, name: 'T3', unlocked: false, color: '#1e3a5f', glowColor: 'rgba(59, 130, 246, 0.4)', borderColor: '#3b82f6', description: 'Advanced Quantum Matrix - Level 20 Clearance', requiredLevel: 20, particleColor: '#3b82f6', energySignature: 'ADVANCED' },
     { tier: 4, name: 'T4', unlocked: false, color: '#4c1d95', glowColor: 'rgba(139, 92, 246, 0.4)', borderColor: '#8b5cf6', description: 'Rare Element Integration - Level 30 Clearance', requiredLevel: 30, particleColor: '#8b5cf6', energySignature: 'VOLATILE' },
     { tier: 5, name: 'T5', unlocked: false, color: '#831843', glowColor: 'rgba(236, 72, 153, 0.4)', borderColor: '#ec4899', description: 'Epic Quantum Resonance - Level 40 Clearance', requiredLevel: 40, particleColor: '#ec4899', energySignature: 'RESONANT' },
@@ -164,16 +166,29 @@ export default function UniChipsPage() {
       `;
     }
     
-    const baseIntensity = selectedTier === tier.tier ? 1.5 : (isHovered ? 1.2 : 1);
-    const glowSize = selectedTier === tier.tier ? 40 : (isHovered ? 30 : 20);
+    const isSelected = selectedTier === tier.tier;
     
-    return `
-      drop-shadow(0 0 ${glowSize}px ${tier.glowColor})
-      drop-shadow(0 0 ${glowSize * 2}px ${tier.glowColor})
-      drop-shadow(0 0 ${glowSize * 3}px ${tier.glowColor})
-      brightness(${baseIntensity})
-      contrast(1.1)
-    `;
+    // Only selected chip gets the big glow, unselected chips stay darker
+    if (isSelected) {
+      const glowSize = 50; // Bigger glow for selected
+      return `
+        drop-shadow(0 0 ${glowSize}px ${tier.glowColor})
+        drop-shadow(0 0 ${glowSize * 2}px ${tier.glowColor})
+        drop-shadow(0 0 ${glowSize * 3}px ${tier.glowColor})
+        brightness(1.5)
+        contrast(1.2)
+        saturate(1.3)
+      `;
+    } else {
+      // Unselected chips are darker with minimal glow
+      const glowSize = isHovered ? 15 : 8;
+      return `
+        drop-shadow(0 0 ${glowSize}px ${tier.glowColor})
+        brightness(${isHovered ? 0.8 : 0.6})
+        contrast(1.0)
+        saturate(0.7)
+      `;
+    }
   };
 
   // Particle effect generation with stable random values
@@ -228,7 +243,7 @@ export default function UniChipsPage() {
 
       <Navigation />
       
-      <div className="container mx-auto px-4 pt-32 pb-20 relative">
+      <div className="container mx-auto px-4 pt-20 pb-12 relative">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Industrial Header with Cinematic Effects */}
           <div className="mb-16 relative">
@@ -254,7 +269,7 @@ export default function UniChipsPage() {
               <div className="flex justify-between items-start relative">
                 <div className="flex-1">
                   
-                  <h1 className="text-5xl font-black mb-3 mek-text-industrial" 
+                  <h1 className="text-3xl font-black mb-3 mek-text-industrial" 
                       style={{ 
                         background: 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)',
                         WebkitBackgroundClip: 'text',
@@ -262,18 +277,13 @@ export default function UniChipsPage() {
                         filter: 'drop-shadow(0 0 30px rgba(250,182,23,0.5))',
                         letterSpacing: '4px'
                       }}>
-                    UNIVERSAL CHIP FOUNDRY
+                    UNIVERSAL CHIP CRAFTING
                   </h1>
                   
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 uppercase tracking-wider">PRODUCTION TIER</span>
                       <span className="text-2xl font-bold text-yellow-400 font-mono">T{selectedTier}</span>
-                    </div>
-                    <div className="h-6 w-px bg-gray-700" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 uppercase tracking-wider">ENERGY SIGNATURE</span>
-                      <span className="text-sm font-bold text-cyan-400">{chipTiers.find(t => t.tier === selectedTier)?.energySignature}</span>
                     </div>
                   </div>
                 </div>
@@ -302,7 +312,7 @@ export default function UniChipsPage() {
           </div>
 
           {/* Enhanced Chip Tier Selection with Floating Animation */}
-          <div className="mb-16">
+          <div className="mb-8">
             {/* Section header with industrial styling */}
             <div className="flex items-center gap-4 mb-8">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
@@ -312,8 +322,12 @@ export default function UniChipsPage() {
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
             </div>
             
-            {/* Chip grid with cinematic effects */}
-            <div className="grid grid-cols-5 gap-8 max-w-6xl mx-auto">
+            {/* Chip grid with cinematic effects - allow overflow with extra padding for glow */}
+            <div className="grid grid-cols-5 gap-8 max-w-6xl mx-auto relative" style={{ 
+              overflow: 'visible',
+              padding: '60px 40px', // Extra padding to give space for glows
+              margin: '-60px -40px' // Negative margin to compensate for padding
+            }}>
               {chipTiers.map((tier, index) => {
                 const isLocked = !tier.unlocked;
                 const isSelected = selectedTier === tier.tier;
@@ -322,7 +336,12 @@ export default function UniChipsPage() {
                 return (
                   <div
                     key={tier.tier}
-                    className="relative"
+                    className={`relative transition-opacity duration-300 ${
+                      // Dim unselected chips when one is selected
+                      !isLocked && selectedTier !== tier.tier && selectedTier !== null 
+                        ? 'opacity-50 hover:opacity-75' 
+                        : 'opacity-100'
+                    }`}
                     onMouseEnter={(e) => {
                       setIsHovered(true);
                       handleMouseEnter(tier.tier, e);
@@ -332,10 +351,20 @@ export default function UniChipsPage() {
                       handleMouseLeave();
                     }}
                   >
-                    {/* Energy field effect for selected chip */}
+                    {/* Energy field effect for selected chip - massive overflow glow */}
                     {isSelected && (
-                      <div className="absolute inset-0 -m-4">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent blur-xl animate-pulse" />
+                      <div className="absolute pointer-events-none" style={{ 
+                        zIndex: -1,
+                        top: '-100px',
+                        left: '-100px',
+                        right: '-100px',
+                        bottom: '-100px'
+                      }}>
+                        <div className="absolute inset-0">
+                          {/* Large radial glow that extends way past boundaries */}
+                          <div className="absolute inset-0 bg-gradient-radial from-yellow-500/30 via-yellow-500/10 to-transparent blur-3xl animate-pulse" />
+                          <div className="absolute inset-0 bg-gradient-radial from-yellow-400/20 via-transparent to-transparent blur-2xl" />
+                        </div>
                       </div>
                     )}
                     
@@ -346,23 +375,25 @@ export default function UniChipsPage() {
                         isLocked 
                           ? 'cursor-not-allowed scale-90 hover:scale-95' 
                           : isSelected
-                            ? 'scale-110 -translate-y-4'
-                            : 'hover:scale-110 hover:-translate-y-3'
+                            ? 'scale-115 -translate-y-6' // Bigger scale and translate for selected
+                            : 'hover:scale-105 hover:-translate-y-2' // Smaller hover effect for unselected
                       }`}
                       style={{
-                        animation: !isLocked ? `float-chip ${3 + index * 0.5}s ease-in-out infinite` : 'none',
-                        animationDelay: `${index * 0.2}s`
+                        // Only selected chip gets the floating animation
+                        animation: !isLocked && isSelected ? `float-chip ${3 + index * 0.5}s ease-in-out infinite` : 'none',
+                        animationDelay: isSelected ? `${index * 0.2}s` : '0s'
                       }}
                     >
-                      {/* Chip container with quantum effects */}
-                      <div className="relative w-36 h-36 flex items-center justify-center">
-                        {/* Quantum energy ring (for unlocked chips) */}
-                        {!isLocked && (
+                      {/* Chip container with quantum effects - ensure overflow is visible */}
+                      <div className="relative w-36 h-36 flex items-center justify-center" style={{ overflow: 'visible' }}>
+                        {/* Quantum energy ring - only for selected chip */}
+                        {!isLocked && isSelected && (
                           <div 
-                            className="absolute inset-0 rounded-full opacity-60"
+                            className="absolute inset-0 rounded-full opacity-80"
                             style={{
                               background: `radial-gradient(circle, transparent 30%, ${tier.glowColor} 70%, transparent 100%)`,
                               animation: 'rotate-slow 20s linear infinite',
+                              filter: `blur(2px)` // Softer glow effect
                             }}
                           />
                         )}
@@ -381,12 +412,12 @@ export default function UniChipsPage() {
                             }}
                           />
                           
-                          {/* Holographic overlay for unlocked chips */}
-                          {!isLocked && (
+                          {/* Holographic overlay - only for selected chip */}
+                          {!isLocked && isSelected && (
                             <div 
-                              className="absolute inset-0 pointer-events-none opacity-30 mix-blend-screen"
+                              className="absolute inset-0 pointer-events-none opacity-40 mix-blend-screen"
                               style={{
-                                background: `linear-gradient(135deg, transparent 30%, ${tier.borderColor}40 50%, transparent 70%)`,
+                                background: `linear-gradient(135deg, transparent 30%, ${tier.borderColor}60 50%, transparent 70%)`,
                                 animation: 'shimmer 3s ease-in-out infinite',
                               }}
                             />
@@ -408,31 +439,24 @@ export default function UniChipsPage() {
                     </button>
                     
                     {/* Enhanced tier info below chip - plain text, smaller, closer */}
-                    <div className="text-center mt-2 space-y-1">
+                    <div className="text-center mt-2">
                       {/* T number - smaller, plain text, different font */}
                       <div 
-                        className={`font-bold text-lg ${
+                        className={`font-bold text-lg transition-all duration-300 ${
                           isLocked 
                             ? 'opacity-30' 
                             : isSelected 
-                              ? 'animate-pulse' 
-                              : ''
+                              ? 'animate-pulse scale-110' 
+                              : 'opacity-60' // Unselected chips have lower opacity text
                         }`}
                         style={{
-                          color: isLocked ? '#666' : tier.borderColor,
-                          textShadow: isLocked ? 'none' : `0 0 15px ${tier.glowColor}`,
+                          color: isLocked ? '#666' : (isSelected ? tier.borderColor : '#888'),
+                          textShadow: isLocked ? 'none' : (isSelected ? `0 0 20px ${tier.glowColor}` : 'none'),
                           fontFamily: "'Rajdhani', 'Bebas Neue', sans-serif",
                           letterSpacing: '0.05em'
                         }}
                       >
                         T{tier.tier}
-                      </div>
-                      
-                      {/* Tier name below T number */}
-                      <div className={`font-bold text-xs uppercase tracking-[0.3em] ${
-                        isLocked ? 'text-gray-600' : isSelected ? 'text-yellow-400' : 'text-gray-500'
-                      }`}>
-                        {chipTiers.find(t => t.tier === tier.tier)?.energySignature}
                       </div>
                     </div>
                   </div>
@@ -487,7 +511,7 @@ export default function UniChipsPage() {
           )}
 
           {/* Enhanced Recipe Cards Section */}
-          <div className="mt-16">
+          <div className="mt-8">
             {/* Section header */}
             <div className="flex items-center gap-4 mb-8">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
@@ -511,38 +535,35 @@ export default function UniChipsPage() {
                 return (
                   <div
                     key={recipe.id}
-                    className={`relative transition-all duration-300 transform-gpu ${
+                    className={`relative transition-all duration-500 transform-gpu ${
                       isSelected 
-                        ? 'scale-[1.03] z-20' 
-                        : 'hover:scale-[1.01]'
+                        ? 'scale-[1.05] z-30' 
+                        : 'hover:scale-[1.02]'
                     }`}
                   >
-                    {/* Holographic glow for selected card */}
+                    {/* Enhanced holographic glow for selected card */}
                     {isSelected && (
-                      <div className="absolute inset-0 -m-2">
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 blur-xl animate-pulse" />
-                      </div>
+                      <>
+                        <div className="absolute inset-0 -m-4">
+                          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-cyan-500/30 to-yellow-500/30 blur-2xl animate-pulse" />
+                        </div>
+                        <div className="absolute inset-0 -m-2">
+                          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 blur-lg animate-pulse" 
+                            style={{ animationDelay: '0.5s' }} />
+                        </div>
+                      </>
                     )}
                     
-                    {/* Futuristic card with clean design */}
-                    <div className={`relative bg-gradient-to-b from-gray-900/90 to-black/95 backdrop-blur-sm overflow-hidden border ${
+                    {/* Industrial card with enhanced selection state */}
+                    <div className={`relative mek-card-industrial backdrop-blur-sm overflow-hidden transition-all duration-500 ${
                       isSelected 
-                        ? 'border-cyan-400/60 shadow-[0_0_30px_rgba(34,211,238,0.3)]' 
+                        ? 'border-2 border-yellow-400 shadow-[0_0_40px_rgba(250,182,23,0.6),inset_0_0_20px_rgba(250,182,23,0.1)]' 
                         : craftable
-                          ? 'border-gray-700/50 hover:border-cyan-500/40'
-                          : 'border-gray-800/40'
-                    }`}
-                    style={{
-                      clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px))',
-                    }}>
-                      {/* Thin status line at top */}
-                      <div 
-                        className="absolute top-0 left-0 right-0 h-1"
-                        style={{
-                          background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`,
-                          boxShadow: `0 0 10px ${rarityColor}40`
-                        }}
-                      />
+                          ? 'mek-border-sharp-gold hover:shadow-[0_0_20px_rgba(250,182,23,0.2)]'
+                          : 'border-2 border-gray-700/50 opacity-50'
+                    }`}>
+                      {/* Yellow hazard stripe at top */}
+                      <div className="absolute top-0 left-0 right-0 h-2 mek-overlay-hazard-stripes opacity-50" />
                       
                       {/* Scan line effect */}
                       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
@@ -554,25 +575,93 @@ export default function UniChipsPage() {
                       <div className="absolute inset-0 opacity-10 mek-overlay-metal-texture pointer-events-none" />
                       
                       {/* Streamlined card content */}
-                      <div className="relative p-5">
+                      <div className="relative p-4">
+                        {/* DOMINANT Rarity Bias Display */}
+                        {recipe.rarityBiasBonus > 0 && (
+                          <div className="mb-4">
+                            <div 
+                              className="relative group cursor-help"
+                              onMouseEnter={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setHoveredBiasRecipe(recipe.id);
+                                setBiasTooltipPosition({
+                                  x: rect.left + rect.width / 2,
+                                  y: rect.top - 10
+                                });
+                              }}
+                              onMouseLeave={() => setHoveredBiasRecipe(null)}
+                            >
+                              <div className="flex flex-col items-center justify-center py-6 relative overflow-hidden"
+                                style={{
+                                  background: `linear-gradient(135deg, ${rarityColor}10 0%, ${rarityColor}05 50%, ${rarityColor}10 100%)`,
+                                  border: `2px solid ${rarityColor}`,
+                                  borderRadius: '8px',
+                                  boxShadow: isSelected 
+                                    ? `0 0 30px ${rarityColor}60, inset 0 0 20px ${rarityColor}20`
+                                    : `0 0 15px ${rarityColor}30`
+                                }}>
+                                {/* Animated background effect */}
+                                <div className="absolute inset-0 opacity-20">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+                                </div>
+                                
+                                {/* Massive percentage display */}
+                                <div className="relative">
+                                  <div className="text-6xl font-black tracking-tight leading-none"
+                                    style={{ 
+                                      color: rarityColor,
+                                      textShadow: `0 0 20px ${rarityColor}80, 0 0 40px ${rarityColor}40`,
+                                      fontFamily: 'Orbitron, monospace'
+                                    }}>
+                                    +{recipe.rarityBiasBonus}%
+                                  </div>
+                                  <div className="text-center mt-1">
+                                    <span className="text-sm font-bold uppercase tracking-[0.3em]"
+                                      style={{ color: rarityColor }}>
+                                      BIAS
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* Pulse effect for selected */}
+                                {isSelected && (
+                                  <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute inset-0 border-2 animate-ping opacity-30"
+                                      style={{ borderColor: rarityColor }} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Compact Header */}
-                        <div className="mb-4">
+                        <div className="mb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="relative">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                                  craftable 
-                                    ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-400/50 text-cyan-300' 
-                                    : 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 text-gray-500'
-                                }`}>
+                                <div className={`w-8 h-8 flex items-center justify-center text-xs font-bold ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-yellow-400/30 to-yellow-500/30 border-2 border-yellow-300 text-yellow-200 shadow-[0_0_10px_rgba(250,182,23,0.5)]'
+                                    : craftable 
+                                      ? 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-400/50 text-yellow-300' 
+                                      : 'bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-700 text-gray-500'
+                                }`}
+                                style={{
+                                  clipPath: 'polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)'
+                                }}>
                                   {recipe.recipeIndex}
                                 </div>
-                                {craftable && (
-                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                {(craftable || isSelected) && (
+                                  <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse ${
+                                    isSelected ? 'bg-yellow-300' : 'bg-green-400'
+                                  }`} />
                                 )}
                               </div>
                               <div>
-                                <h3 className="text-lg font-bold text-gray-100">
+                                <h3 className={`text-base font-bold mek-text-industrial uppercase tracking-wider ${
+                                  isSelected ? 'text-yellow-300' : 'text-yellow-400'
+                                }`}>
                                   {recipe.recipeName}
                                 </h3>
                                 <div className="text-xs text-gray-500 uppercase tracking-wider">
@@ -580,23 +669,12 @@ export default function UniChipsPage() {
                                 </div>
                               </div>
                             </div>
-                            
-                            {/* Compact bias indicator */}
-                            {recipe.rarityBiasBonus > 0 && (
-                              <div className="flex items-center gap-1 px-2 py-1 rounded-full"
-                                style={{
-                                  background: `${rarityColor}15`,
-                                  border: `1px solid ${rarityColor}40`
-                                }}>
-                                <span className="text-xs font-bold" style={{ color: rarityColor }}>+{recipe.rarityBiasBonus}%</span>
-                              </div>
-                            )}
                           </div>
                         </div>
                         
                         {/* Streamlined Requirements Display */}
-                        <div className="space-y-2 mb-4">
-                          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Requirements</div>
+                        <div className="space-y-2 mb-3">
+                          <div className="text-xs text-yellow-500/60 uppercase tracking-[0.3em] mb-2 font-bold">Requirements</div>
                           
                           {recipe.requirements.map((req, idx) => {
                             const isMet = req.current >= req.amount;
@@ -655,23 +733,23 @@ export default function UniChipsPage() {
                                         {req.name}
                                       </span>
                                       <span className={`text-xs font-mono font-bold ${
-                                        isMet ? 'text-cyan-400' : 'text-gray-500'
+                                        isMet ? 'text-yellow-400' : 'text-gray-500'
                                       }`}>
                                         {req.current.toLocaleString()}/{req.amount.toLocaleString()}
                                       </span>
                                     </div>
                                     
-                                    {/* Minimal progress bar */}
-                                    <div className="relative w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                                    {/* Industrial progress bar */}
+                                    <div className="relative w-full h-2 bg-black/60 border border-gray-700 overflow-hidden">
                                       <div 
-                                        className={`h-full transition-all duration-500 rounded-full ${
+                                        className={`h-full transition-all duration-500 ${
                                           isMet 
-                                            ? 'bg-gradient-to-r from-cyan-500 to-cyan-400' 
+                                            ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' 
                                             : 'bg-gradient-to-r from-gray-700 to-gray-600'
                                         }`}
                                         style={{ 
                                           width: `${progress}%`,
-                                          boxShadow: isMet ? `0 0 8px ${rarityColor}40` : 'none'
+                                          boxShadow: isMet ? `0 0 8px rgba(250,182,23,0.4)` : 'none'
                                         }}
                                       />
                                     </div>
@@ -685,15 +763,12 @@ export default function UniChipsPage() {
                         {/* Smaller Craft Button */}
                         <button
                           onClick={() => setSelectedRecipe(recipe)}
-                          className={`relative w-full py-2 font-bold text-sm uppercase tracking-wider transition-all overflow-hidden group ${
+                          className={`relative w-full py-2 font-bold text-sm uppercase tracking-[0.2em] transition-all overflow-hidden group mek-button-primary ${
                             craftable
-                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black hover:from-yellow-400 hover:to-orange-400'
-                              : 'bg-gray-900/50 text-gray-600 border border-gray-800/50 cursor-not-allowed'
+                              ? ''
+                              : 'opacity-50 cursor-not-allowed'
                           }`}
                           disabled={!craftable}
-                          style={{
-                            clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)',
-                          }}
                         >
                           {/* Button shine effect */}
                           {craftable && (
@@ -775,6 +850,37 @@ export default function UniChipsPage() {
                       {canCraft(selectedRecipe) ? 'EXECUTE' : 'UNAVAILABLE'}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Rarity Bias Tooltip */}
+          {hoveredBiasRecipe && (
+            <div 
+              className="fixed z-50 pointer-events-none"
+              style={{
+                left: biasTooltipPosition.x,
+                top: biasTooltipPosition.y,
+                transform: 'translate(-50%, -100%)'
+              }}
+            >
+              <div className="bg-black/95 border border-yellow-400/50 px-4 py-3 rounded-lg shadow-[0_0_20px_rgba(250,182,23,0.3)] backdrop-blur-sm mb-2">
+                <div className="flex items-start gap-2">
+                  <div className="text-yellow-400 text-lg mt-1">⚡</div>
+                  <div>
+                    <div className="text-yellow-300 font-bold text-sm mb-1 uppercase tracking-wider">
+                      Rarity Bias Bonus
+                    </div>
+                    <div className="text-gray-300 text-xs leading-relaxed max-w-xs">
+                      This increases your rarity bias score, which in turn increases your chances at a higher rank chip.
+                    </div>
+                  </div>
+                </div>
+                {/* Tooltip arrow */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-2">
+                  <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-yellow-400/50"></div>
+                  <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-black/95 absolute top-[-8px] left-[-5px]"></div>
                 </div>
               </div>
             </div>

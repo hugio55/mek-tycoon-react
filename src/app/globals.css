@@ -897,6 +897,11 @@ body {
   }
 }
 
+/* Radial gradient utilities for chip glows */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
 /* Satellite movement animation */
 @keyframes satelliteMove {
   0% {
