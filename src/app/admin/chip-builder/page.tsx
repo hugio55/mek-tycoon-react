@@ -74,6 +74,8 @@ export default function ChipBuilderPage() {
   const [masterRanges, setMasterRanges] = useState<{[buffId: string]: {min: number, max: number}}>({});
   const [curvePowers, setCurvePowers] = useState<{[buffId: string]: number}>({});
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<'gold' | 'essence' | 'looter'>('gold');
 
   // Sync master ranges from database (only on initial load)
   useEffect(() => {
@@ -628,9 +630,49 @@ export default function ChipBuilderPage() {
             <div className="space-y-6">
               <div className="bg-gray-900/60 border border-gray-800 p-6">
                 <h2 className="text-2xl font-bold text-yellow-400 mb-4">Master Range System</h2>
-                <p className="text-gray-400 mb-6">
+                <p className="text-gray-400 mb-4">
                   Set a single master range for each buff type. This range is automatically divided across all ranks and tiers.
+                  {/* Note for syncing with database */}
+                  <span className="block text-xs text-blue-400 mt-2">
+                    ℹ️ Categories are synced with the database. Add/remove categories in the Buff Categories page to update this list.
+                  </span>
                 </p>
+                
+                {/* Category Tabs */}
+                <div className="mb-6 border-b border-gray-700">
+                  <div className="flex gap-0">
+                    <button
+                      onClick={() => setSelectedCategoryTab('gold')}
+                      className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedCategoryTab === 'gold'
+                          ? 'bg-yellow-400 text-black border-b-2 border-yellow-400'
+                          : 'bg-gray-800/60 text-gray-400 hover:text-white hover:bg-gray-700/60'
+                      }`}
+                    >
+                      Gold & Market
+                    </button>
+                    <button
+                      onClick={() => setSelectedCategoryTab('essence')}
+                      className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedCategoryTab === 'essence'
+                          ? 'bg-purple-400 text-black border-b-2 border-purple-400'
+                          : 'bg-gray-800/60 text-gray-400 hover:text-white hover:bg-gray-700/60'
+                      }`}
+                    >
+                      Essence
+                    </button>
+                    <button
+                      onClick={() => setSelectedCategoryTab('looter')}
+                      className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedCategoryTab === 'looter'
+                          ? 'bg-blue-400 text-black border-b-2 border-blue-400'
+                          : 'bg-gray-800/60 text-gray-400 hover:text-white hover:bg-gray-700/60'
+                      }`}
+                    >
+                      Looter & Rewards
+                    </button>
+                  </div>
+                </div>
                 
                 <div className="flex gap-4 mb-6">
                   <button
@@ -657,24 +699,60 @@ export default function ChipBuilderPage() {
                 {/* Master Range Charts */}
                 <div className="space-y-8">
                   {buffCategories && buffCategories
-                    .filter(cat => cat.isActive !== false)
+                    .filter(cat => {
+                      // Filter by active status
+                      if (cat.isActive === false) return false;
+                      
+                      // Filter by selected category tab
+                      if (selectedCategoryTab === 'gold') {
+                        return cat.category === 'gold' || cat.category === 'market';
+                      } else if (selectedCategoryTab === 'essence') {
+                        return cat.category === 'essence';
+                      } else if (selectedCategoryTab === 'looter') {
+                        return cat.category === 'rarity_bias' || cat.category === 'reward_chance' || cat.category === 'xp';
+                      }
+                      return false;
+                    })
                     .map(category => {
                       const masterRange = masterRanges[category._id] || { min: 1, max: 100 };
                       const icon = getCategoryIcon(category.category || 'gold');
                       const unit = getUnitDisplay(category.unitType || 'flat_number');
                       
+                      const isExpanded = expandedCategory === category._id;
+                      
                       return (
-                        <div key={category._id} className="bg-black/50 border border-gray-700 p-4">
-                          <div className="flex items-center gap-3 mb-4">
+                        <div key={category._id} className="bg-black/50 border border-gray-700">
+                          <div 
+                            className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-800/30 transition-colors"
+                            onClick={() => setExpandedCategory(isExpanded ? null : category._id)}
+                          >
+                            {/* Expand/Collapse Indicator */}
+                            <span className="text-xl text-gray-400">
+                              {isExpanded ? '▼' : '▶'}
+                            </span>
                             <span className="text-2xl">{icon}</span>
                             <h3 className="text-xl font-bold text-yellow-400">{category.name}</h3>
                             <span className="text-sm text-gray-400">({unit || 'points'})</span>
+                            
+                            {/* Quick Preview when collapsed */}
+                            {!isExpanded && (
+                              <div className="ml-auto flex items-center gap-2 text-sm">
+                                <span className="text-gray-500">Range:</span>
+                                <span className="text-green-400">{masterRange.min}</span>
+                                <span className="text-gray-500">-</span>
+                                <span className="text-blue-400">{masterRange.max}</span>
+                                <span className="text-gray-400">{unit}</span>
+                              </div>
+                            )}
                           </div>
                         
-                        {/* Master Range Input */}
-                        <div className="mb-4 p-4 bg-green-900/30 border-2 border-green-500 rounded">
-                          <div className="flex items-center gap-4 mb-3">
-                            <label className="text-green-400 font-bold">MASTER RANGE:</label>
+                        {/* Expandable Content */}
+                        {isExpanded && (
+                          <div className="p-4">
+                            {/* Master Range Input */}
+                            <div className="mb-4 p-4 bg-green-900/30 border-2 border-green-500 rounded">
+                              <div className="flex items-center gap-4 mb-3">
+                                <label className="text-green-400 font-bold">MASTER RANGE:</label>
                             <input
                               type="number"
                               value={masterRange.min}
@@ -814,10 +892,49 @@ export default function ChipBuilderPage() {
                             </tbody>
                           </table>
                         </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                 </div>
+                
+                {/* Category Count Info */}
+                {buffCategories && (
+                  <div className="mt-6 p-4 bg-black/50 border border-gray-700">
+                    <div className="text-sm text-gray-400">
+                      {(() => {
+                        const filteredCount = buffCategories.filter(cat => {
+                          if (cat.isActive === false) return false;
+                          if (selectedCategoryTab === 'gold') {
+                            return cat.category === 'gold' || cat.category === 'market';
+                          } else if (selectedCategoryTab === 'essence') {
+                            return cat.category === 'essence';
+                          } else if (selectedCategoryTab === 'looter') {
+                            return cat.category === 'rarity_bias' || cat.category === 'reward_chance' || cat.category === 'xp';
+                          }
+                          return false;
+                        }).length;
+                        
+                        if (filteredCount === 0) {
+                          return (
+                            <div className="text-center py-8">
+                              <p className="text-yellow-400 text-lg mb-2">No categories found in this group</p>
+                              <p className="text-gray-500">Add categories in the <a href="/admin/buff-categories" className="text-blue-400 hover:text-blue-300 underline">Buff Categories</a> page</p>
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <>
+                            <p>Showing {filteredCount} active {selectedCategoryTab === 'gold' ? 'Gold & Market' : selectedCategoryTab === 'essence' ? 'Essence' : 'Looter & Rewards'} categories</p>
+                            <p className="text-xs mt-1">Categories automatically sync from the database. Manage them in the <a href="/admin/buff-categories" className="text-blue-400 hover:text-blue-300 underline">Buff Categories</a> page.</p>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

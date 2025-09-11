@@ -95,6 +95,8 @@ export default function EssenceDonutPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSlotting, setIsSlotting] = useState(false);
+  const [zoomMode, setZoomMode] = useState<'none' | 'magnify' | 'expand' | 'filter'>('none');
+  const [minSliceSize, setMinSliceSize] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
   
   // Get or create user
@@ -130,13 +132,35 @@ export default function EssenceDonutPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Sort and slice essence data for display
+  // Sort and slice essence data for display with zoom filtering
   const displayedEssences = useMemo(() => {
-    return [...essenceData]
+    let filtered = [...essenceData]
       .sort((a, b) => b.amount - a.amount)
       .slice(0, viewCount)
       .filter(e => e.amount > 0); // Only show essences with quantity
-  }, [essenceData, viewCount]);
+    
+    // Apply filter mode if active
+    if (zoomMode === 'filter' && minSliceSize > 0) {
+      filtered = filtered.filter(e => e.amount >= minSliceSize);
+    }
+    
+    // Apply expand mode if active - modify amounts for display
+    if (zoomMode === 'expand') {
+      const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+      const minVisiblePercentage = 2; // Minimum 2% visibility
+      
+      filtered = filtered.map(e => {
+        const percentage = (e.amount / total) * 100;
+        if (percentage < minVisiblePercentage) {
+          // Scale up small slices to be visible
+          return { ...e, displayAmount: (minVisiblePercentage / 100) * total };
+        }
+        return { ...e, displayAmount: e.amount };
+      });
+    }
+    
+    return filtered;
+  }, [essenceData, viewCount, zoomMode, minSliceSize]);
   
   // Calculate total stats
   const totalStats = useMemo(() => {
@@ -223,41 +247,169 @@ export default function EssenceDonutPage() {
           </div>
         </div>
         
-        {/* Controls Bar */}
-        <div className="w-full bg-black/80 backdrop-blur-md border-y-2 border-yellow-500/20 sticky top-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              {/* Stats - Left Side */}
-              <div className="flex items-center gap-6">
+        {/* Controls Bar - Redesigned Sci-Fi Stats Display */}
+        <div className="w-full sticky top-0 z-20">
+          {/* Main container with industrial frame */}
+          <div className="relative bg-black/95 backdrop-blur-xl border-y-2 border-yellow-500/30">
+            {/* Animated scan line effect */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute inset-0 opacity-10" style={{
+                background: 'linear-gradient(180deg, transparent 0%, rgba(250, 182, 23, 0.3) 50%, transparent 100%)',
+                animation: 'scan 8s linear infinite',
+                height: '200%',
+                transform: 'translateY(-50%)'
+              }} />
+            </div>
+            
+            {/* Grid overlay for tech feel */}
+            <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
+              backgroundImage: 'linear-gradient(0deg, rgba(250, 182, 23, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.1) 1px, transparent 1px)',
+              backgroundSize: '40px 40px'
+            }} />
+            
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between gap-8">
+                {/* Stats Section - Left Side */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 uppercase tracking-widest">Total Essence:</span>
-                  <span className="text-lg font-bold text-yellow-400 font-mono">{totalStats.totalAmount.toFixed(1)}</span>
+                  {/* Total Essence Stat */}
+                  <div className="relative group">
+                    <div className="relative bg-gradient-to-br from-yellow-900/20 to-black/60 border border-yellow-500/40 px-6 py-3 clip-path-polygon">
+                      {/* Glow effect on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Label */}
+                      <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">
+                        ESSENCE
+                      </div>
+                      
+                      {/* Value with glow */}
+                      <div className="relative">
+                        <div className="text-3xl font-bold font-mono text-yellow-400 tracking-tight" style={{
+                          textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
+                        }}>
+                          {totalStats.totalAmount.toFixed(1)}
+                        </div>
+                        {/* Subtle pulse animation */}
+                        <div className="absolute inset-0 animate-pulse opacity-50">
+                          <div className="text-3xl font-bold font-mono text-yellow-400 tracking-tight blur-sm">
+                            {totalStats.totalAmount.toFixed(1)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Corner accents */}
+                    <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-yellow-400/60" />
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-yellow-400/60" />
+                  </div>
+                  
+                  {/* Separator */}
+                  <div className="h-12 w-px bg-gradient-to-b from-transparent via-yellow-500/30 to-transparent" />
+                  
+                  {/* Total Value Stat */}
+                  <div className="relative group">
+                    <div className="relative bg-gradient-to-br from-green-900/20 to-black/60 border border-green-500/40 px-6 py-3 clip-path-polygon">
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">
+                        VALUE
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="text-3xl font-bold font-mono text-green-400 tracking-tight flex items-baseline" style={{
+                          textShadow: '0 0 20px rgba(74, 222, 128, 0.5), 0 0 40px rgba(74, 222, 128, 0.3)'
+                        }}>
+                          {Math.round(totalStats.totalValue).toLocaleString()}
+                          <span className="text-lg ml-1 text-green-400/80">g</span>
+                        </div>
+                        <div className="absolute inset-0 animate-pulse opacity-50">
+                          <div className="text-3xl font-bold font-mono text-green-400 tracking-tight blur-sm">
+                            {Math.round(totalStats.totalValue).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-green-400/60" />
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-green-400/60" />
+                  </div>
+                  
+                  {/* Separator */}
+                  <div className="h-12 w-px bg-gradient-to-b from-transparent via-cyan-500/30 to-transparent" />
+                  
+                  {/* Types Stat */}
+                  <div className="relative group">
+                    <div className="relative bg-gradient-to-br from-cyan-900/20 to-black/60 border border-cyan-500/40 px-6 py-3 clip-path-polygon">
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">
+                        TYPES
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="text-3xl font-bold font-mono text-cyan-400 tracking-tight" style={{
+                          textShadow: '0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.3)'
+                        }}>
+                          {totalStats.uniqueTypes}
+                        </div>
+                        <div className="absolute inset-0 animate-pulse opacity-50">
+                          <div className="text-3xl font-bold font-mono text-cyan-400 tracking-tight blur-sm">
+                            {totalStats.uniqueTypes}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-cyan-400/60" />
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-cyan-400/60" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 uppercase tracking-widest">Total Value:</span>
-                  <span className="text-lg font-bold text-green-400 font-mono">{Math.round(totalStats.totalValue).toLocaleString()}g</span>
+                
+                {/* View Count Selector - Right Side with integrated design */}
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 blur-lg opacity-50" />
+                  <div className="relative flex items-center bg-black/80 border border-yellow-500/30 p-1">
+                    {/* Label */}
+                    <div className="px-3 py-2 text-[10px] text-gray-400 uppercase tracking-[0.2em] border-r border-yellow-500/20">
+                      Display
+                    </div>
+                    
+                    {/* Buttons */}
+                    <div className="flex">
+                      {[
+                        { value: 5, label: 'TOP 5' },
+                        { value: 10, label: 'TOP 10' },
+                        { value: 20, label: 'TOP 20' },
+                        { value: 30, label: 'TOP 30' },
+                        { value: 100, label: 'ALL' }
+                      ].map(({ value, label }) => (
+                        <button
+                          key={value}
+                          onClick={() => setViewCount(value as typeof viewCount)}
+                          className={`relative px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                            viewCount === value
+                              ? 'bg-gradient-to-r from-yellow-500/80 to-yellow-600/80 text-black shadow-lg'
+                              : 'bg-black/40 text-gray-400 hover:bg-yellow-500/20 hover:text-yellow-400 hover:border-yellow-500/50'
+                          }`}
+                          style={{
+                            clipPath: value === 100 
+                              ? 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)' 
+                              : undefined,
+                            boxShadow: viewCount === value 
+                              ? '0 0 20px rgba(250, 182, 23, 0.4), inset 0 0 10px rgba(250, 182, 23, 0.2)' 
+                              : undefined
+                          }}
+                        >
+                          {/* Active indicator */}
+                          {viewCount === value && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 animate-pulse" />
+                          )}
+                          <span className="relative z-10">{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 uppercase tracking-widest">Types:</span>
-                  <span className="text-lg font-bold text-blue-400 font-mono">{totalStats.uniqueTypes}</span>
-                </div>
-              </div>
-              
-              {/* View Count Selector - Right Side */}
-              <div className="flex items-center bg-gray-900/60 rounded-lg border border-gray-700/50 p-1">
-                {[5, 10, 20, 30, 100].map(count => (
-                  <button
-                    key={count}
-                    onClick={() => setViewCount(count as typeof viewCount)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-md transition-all mx-0.5 ${
-                      viewCount === count
-                        ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-                        : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                    }`}
-                  >
-                    {count === 100 ? 'All' : `Top ${count}`}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
@@ -269,9 +421,10 @@ export default function EssenceDonutPage() {
             {/* Chart Container - Left Side */}
             <div className="lg:col-span-2">
               <div className="relative">
-                {/* Search Bar - Floating above chart */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 w-80">
-                  <div ref={searchRef} className="relative">
+                {/* Search Bar - Above chart with proper spacing */}
+                <div className="mb-8">
+                  <div className="flex justify-center">
+                    <div ref={searchRef} className="relative w-80">
                     <input
                       type="text"
                       value={searchQuery}
@@ -312,19 +465,105 @@ export default function EssenceDonutPage() {
                         ))}
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
                 
+                {/* Zoom Controls - Three Options for Small Slices */}
+                {viewCount === 100 && (
+                  <div className="mb-6">
+                    <div className="flex justify-center gap-4">
+                      {/* Option 1: Magnify Glass Mode */}
+                      <button
+                        onClick={() => setZoomMode(zoomMode === 'magnify' ? 'none' : 'magnify')}
+                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                          zoomMode === 'magnify' 
+                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
+                            : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
+                        }`}
+                        title="Magnify small slices on hover"
+                      >
+                        <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                        Magnify Mode
+                      </button>
+                      
+                      {/* Option 2: Expand Small Slices */}
+                      <button
+                        onClick={() => setZoomMode(zoomMode === 'expand' ? 'none' : 'expand')}
+                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                          zoomMode === 'expand' 
+                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
+                            : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
+                        }`}
+                        title="Expand small slices to minimum visible size"
+                      >
+                        <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Expand Small
+                      </button>
+                      
+                      {/* Option 3: Filter by Size */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setZoomMode(zoomMode === 'filter' ? 'none' : 'filter')}
+                          className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                            zoomMode === 'filter' 
+                              ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
+                              : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
+                          }`}
+                          title="Filter to show only essences above threshold"
+                        >
+                          <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                          </svg>
+                          Filter Small
+                        </button>
+                        
+                        {zoomMode === 'filter' && (
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={minSliceSize}
+                            onChange={(e) => setMinSliceSize(parseFloat(e.target.value))}
+                            className="w-32"
+                            title={`Hide slices smaller than ${minSliceSize.toFixed(1)}`}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Zoom Mode Description */}
+                    {zoomMode !== 'none' && (
+                      <div className="mt-3 text-center">
+                        <p className="text-xs text-yellow-400/60 uppercase tracking-wider">
+                          {zoomMode === 'magnify' && 'Hover over small slices to magnify them'}
+                          {zoomMode === 'expand' && 'Small slices expanded to minimum visible size'}
+                          {zoomMode === 'filter' && `Showing essences with ${minSliceSize.toFixed(1)}+ amount`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {/* Donut Chart */}
-                <div className="flex justify-center pt-8">
+                <div className="flex justify-center">
                   <EssenceDonutChart
-                    data={displayedEssences}
+                    data={displayedEssences.map(e => ({
+                      ...e,
+                      amount: e.displayAmount || e.amount // Use display amount if in expand mode
+                    }))}
                     size={chartSize}
                     showCenterStats={true}
                     animationDuration={600}
                     onSliceHover={setHoveredSlice}
                     onSliceClick={handleSliceClick}
                     selectedSlice={selectedSlice}
+                    magnifyMode={zoomMode === 'magnify'}
                   />
                 </div>
               </div>
@@ -379,16 +618,15 @@ export default function EssenceDonutPage() {
                         />
                       </div>
                       
-                      {/* Name and Amount */}
+                      {/* Name */}
                       <div className="text-center mb-4">
-                        <h2 className="mek-text-industrial text-3xl text-yellow-400 mb-2 mek-text-shadow">{slice.name.toUpperCase()}</h2>
-                        <p className="text-xl text-gray-300 font-semibold">{slice.amount.toFixed(1)} units</p>
+                        <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow text-center">{slice.name.toUpperCase()}</h2>
                       </div>
                       
                       {/* Ownership Section */}
-                      <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden">
+                      <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
                         <div className="flex justify-between items-center mb-2 relative z-10">
-                          <span className="mek-label-uppercase text-yellow-400">OWNERSHIP</span>
+                          <span className="text-sm font-bold text-yellow-400 uppercase tracking-wider">OWNERSHIP</span>
                           <span className="text-2xl font-bold">
                             <span className="text-yellow-400">{slice.amount.toFixed(1)}</span>
                             <span className="text-cyan-400">/{effectiveMax}</span>
@@ -466,29 +704,12 @@ export default function EssenceDonutPage() {
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Clear Button - Only shows when something is selected, not just hovered */}
-                      {selectedSlice && (
-                        <div className={`mt-4 transition-all duration-300 ${selectedSlice ? 'opacity-100' : 'opacity-0'}`}>
-                          <button
-                            onClick={handleClearSelection}
-                            className="w-full py-2 px-4 bg-black/60 border-2 border-yellow-500/30 rounded-lg text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all duration-200"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      )}
                     </div>
                   );
                 })() : (
                   <div className="mek-card-industrial mek-border-sharp-gold p-4 relative opacity-60">
                     {/* Subtle scan line effect */}
                     <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-20"></div>
-                    
-                    {/* Hover instruction */}
-                    <div className="text-center mb-2">
-                      <p className="text-gray-400 text-xs uppercase tracking-widest">Hover over chart for details</p>
-                    </div>
                     
                     {/* Essence Bottle Image Placeholder */}
                     <div className="relative mb-4 mek-slot-empty rounded-lg p-4 flex items-center justify-center border-2 border-gray-700/30" style={{ minHeight: '200px' }}>
@@ -550,9 +771,28 @@ export default function EssenceDonutPage() {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Floating hover instruction in center */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-500/40 rounded-lg px-5 py-3 shadow-2xl">
+                        <p className="text-yellow-400 text-sm font-semibold uppercase tracking-wider">Hover Chart for Details</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+              
+              {/* Clear text outside frame - only shows when selected */}
+              {selectedSlice && (
+                <div className="mt-3 text-center transition-all duration-300 opacity-100">
+                  <button
+                    onClick={handleClearSelection}
+                    className="text-yellow-400/60 hover:text-yellow-400 text-sm uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

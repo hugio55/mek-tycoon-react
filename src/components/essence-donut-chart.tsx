@@ -28,6 +28,7 @@ interface DonutChartProps {
   onSliceHover?: (sliceId: string | null) => void;
   onSliceClick?: (sliceId: string) => void;
   selectedSlice?: string | null;
+  magnifyMode?: boolean;
 }
 
 // Industrial color palette for essence types
@@ -55,6 +56,7 @@ export default function EssenceDonutChart({
   onSliceHover,
   onSliceClick,
   selectedSlice,
+  magnifyMode = false,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -245,7 +247,10 @@ export default function EssenceDonutChart({
               {processedData.map((slice, index) => {
                 const isHovered = hoveredSlice === slice.id;
                 const isSelected = selectedSlice === slice.id;
-                const scale = isHovered || isSelected ? 1.05 : 1;
+                // In magnify mode, scale up small slices more when hovered
+                const isTinySlice = slice.percentage < 2;
+                const magnifyScale = magnifyMode && isHovered && isTinySlice ? 1.15 : 1.05;
+                const scale = isHovered || isSelected ? magnifyScale : 1;
                 const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.5 : 1;
                 
                 return (

@@ -33,6 +33,11 @@ body {
   );
 }
 
+/* Clip path for angled edges */
+.clip-path-polygon {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+}
+
 /* Universal Thin Number Display Classes (for gold and other large numbers) */
 .gold-display-large {
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -154,6 +159,16 @@ body {
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
+}
+
+/* Timer gradient shimmer animation */
+@keyframes shimmer-gradient {
+  0% {
+    background-position: -200% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 /* Block Game Styles */
