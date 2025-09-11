@@ -16,6 +16,7 @@ interface EssenceData {
   color?: string;
   baseRate?: number; // Base generation rate per day
   bonusRate?: number; // Bonus generation rate per day
+  isFull?: boolean; // If essence is at max capacity
 }
 
 interface DonutChartProps {
@@ -28,7 +29,6 @@ interface DonutChartProps {
   onSliceHover?: (sliceId: string | null) => void;
   onSliceClick?: (sliceId: string) => void;
   selectedSlice?: string | null;
-  magnifyMode?: boolean;
 }
 
 // Industrial color palette for essence types
@@ -56,7 +56,6 @@ export default function EssenceDonutChart({
   onSliceHover,
   onSliceClick,
   selectedSlice,
-  magnifyMode = false,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -217,6 +216,13 @@ export default function EssenceDonutChart({
                 <rect width="1" height="4" fill="rgba(255,255,255,0.02)" />
                 <rect width="4" height="1" fill="rgba(255,255,255,0.02)" />
               </pattern>
+              
+              {/* Striped pattern for full essences */}
+              <pattern id="full-stripes" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect width="10" height="10" fill="transparent" />
+                <rect width="3" height="10" fill="rgba(59, 130, 246, 0.3)" />
+                <rect x="5" width="3" height="10" fill="rgba(96, 165, 250, 0.3)" />
+              </pattern>
             </defs>
 
             {/* Background ring */}
@@ -247,10 +253,7 @@ export default function EssenceDonutChart({
               {processedData.map((slice, index) => {
                 const isHovered = hoveredSlice === slice.id;
                 const isSelected = selectedSlice === slice.id;
-                // In magnify mode, scale up small slices more when hovered
-                const isTinySlice = slice.percentage < 2;
-                const magnifyScale = magnifyMode && isHovered && isTinySlice ? 1.15 : 1.05;
-                const scale = isHovered || isSelected ? magnifyScale : 1;
+                const scale = isHovered || isSelected ? 1.05 : 1;
                 const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.5 : 1;
                 
                 return (
@@ -288,6 +291,17 @@ export default function EssenceDonutChart({
                       opacity={0.3}
                       pointerEvents="none"
                     />
+                    
+                    {/* Striped overlay for full essences */}
+                    {slice.isFull && (
+                      <path
+                        d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
+                        fill="url(#full-stripes)"
+                        opacity={1}
+                        pointerEvents="none"
+                        className="animate-pulse"
+                      />
+                    )}
 
                     {/* Removed percentage labels from slices */}
                   </g>

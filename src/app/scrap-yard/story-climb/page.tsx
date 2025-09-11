@@ -197,6 +197,24 @@ export default function StoryClimbPage() {
     
     // Find bounds of all nodes
     const nodes = treeData.nodes;
+    // Calculate bounds INCLUDING node sizes
+    let actualMinX = Infinity, actualMaxX = -Infinity;
+    let actualMinY = Infinity, actualMaxY = -Infinity;
+    
+    // Calculate the actual bounds including node sizes
+    nodes.forEach(node => {
+      let nodeSize = 25; // normal nodes
+      if (node.id === 'start') nodeSize = 40;
+      else if (node.storyNodeType === 'event') nodeSize = 60;
+      else if (node.storyNodeType === 'boss') nodeSize = 80;
+      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      
+      actualMinX = Math.min(actualMinX, node.x - nodeSize);
+      actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
+      actualMinY = Math.min(actualMinY, node.y - nodeSize);
+      actualMaxY = Math.max(actualMaxY, node.y + nodeSize);
+    });
+    
     const minX = Math.min(...nodes.map(n => n.x));
     const maxX = Math.max(...nodes.map(n => n.x));
     const minY = Math.min(...nodes.map(n => n.y));
@@ -207,15 +225,17 @@ export default function StoryClimbPage() {
     if (startNode) {
       console.log("Start node position:", { x: startNode.x, y: startNode.y });
       console.log("Tree bounds:", { minX, maxX, minY, maxY });
+      console.log("Actual bounds with node sizes:", { actualMinX, actualMaxX, actualMinY, actualMaxY });
     }
     
     const treeWidth = maxX - minX;
     const treeHeight = maxY - minY;
+    const actualTreeWidth = actualMaxX - actualMinX;
     
-    // Calculate scale to fit width primarily
-    const padding = 40;
-    const scaleX = (canvas.width - padding * 2) / treeWidth;
-    const scale = scaleX * 0.9; // Use horizontal scale
+    // Calculate scale to fit width INCLUDING node sizes
+    const padding = 60; // Increased padding to ensure nodes don't clip
+    const scaleX = (canvas.width - padding * 2) / actualTreeWidth;
+    const scale = scaleX * 0.85; // Reduced scale factor to ensure everything fits
     
     // Calculate total tree height when scaled
     const scaledTreeHeight = treeHeight * scale;
@@ -225,20 +245,16 @@ export default function StoryClimbPage() {
       const scaledX = (x - minX) * scale;
       const scaledY = (y - minY) * scale;
       
-      // Center horizontally based on the start node if it exists
+      // Center the tree horizontally accounting for node sizes
       let offsetX = (canvas.width - treeWidth * scale) / 2;
-      if (startNode) {
-        const startScaledX = (startNode.x - minX) * scale;
-        offsetX = canvas.width / 2 - startScaledX;
-      }
       
       // Position the start node near the bottom of the canvas
       let offsetY;
       if (startNode) {
         // Always position based on start node
         const startScaledY = (startNode.y - minY) * scale;
-        // Put start node at 85% down the canvas (leaving room for the START label)
-        offsetY = canvas.height * 0.85 - startScaledY + viewportOffset;
+        // Put start node at 75% down the canvas (more room for the node and START label)
+        offsetY = canvas.height * 0.75 - startScaledY + viewportOffset;
       } else {
         // Fallback if no start node
         offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
@@ -419,8 +435,8 @@ export default function StoryClimbPage() {
           ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
         }
         
-        // Draw mechanism image for normal nodes
-        if (node.storyNodeType === 'normal' && nodeImages.has(node.id)) {
+        // Draw mechanism image for normal nodes (but NOT the start node)
+        if (node.storyNodeType === 'normal' && node.id !== 'start' && nodeImages.has(node.id)) {
           const img = nodeImages.get(node.id)!;
           if (img.complete) {
             ctx.save();
@@ -526,6 +542,24 @@ export default function StoryClimbPage() {
     const y = event.clientY - rect.top;
     
     const nodes = treeData.nodes;
+    
+    // Calculate bounds INCLUDING node sizes (same as draw function)
+    let actualMinX = Infinity, actualMaxX = -Infinity;
+    let actualMinY = Infinity, actualMaxY = -Infinity;
+    
+    nodes.forEach(node => {
+      let nodeSize = 25;
+      if (node.id === 'start') nodeSize = 40;
+      else if (node.storyNodeType === 'event') nodeSize = 60;
+      else if (node.storyNodeType === 'boss') nodeSize = 80;
+      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      
+      actualMinX = Math.min(actualMinX, node.x - nodeSize);
+      actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
+      actualMinY = Math.min(actualMinY, node.y - nodeSize);
+      actualMaxY = Math.max(actualMaxY, node.y + nodeSize);
+    });
+    
     const minX = Math.min(...nodes.map(n => n.x));
     const maxX = Math.max(...nodes.map(n => n.x));
     const minY = Math.min(...nodes.map(n => n.y));
@@ -533,16 +567,30 @@ export default function StoryClimbPage() {
     
     const treeWidth = maxX - minX;
     const treeHeight = maxY - minY;
-    const padding = 40;
-    const scaleX = (canvas.width - padding * 2) / treeWidth;
-    const scale = scaleX * 0.9;
+    const actualTreeWidth = actualMaxX - actualMinX;
+    
+    const padding = 60;
+    const scaleX = (canvas.width - padding * 2) / actualTreeWidth;
+    const scale = scaleX * 0.85;
     const scaledTreeHeight = treeHeight * scale;
     
     const transform = (nodeX: number, nodeY: number) => {
       const scaledX = (nodeX - minX) * scale;
       const scaledY = (nodeY - minY) * scale;
-      const offsetX = (canvas.width - treeWidth * scale) / 2;
-      const offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
+      
+      // Use the same offset calculation as the draw function
+      let offsetX = (canvas.width - treeWidth * scale) / 2;
+      
+      // Position the start node near the bottom of the canvas
+      let offsetY;
+      const startNode = nodes.find(n => n.id === 'start');
+      if (startNode) {
+        const startScaledY = (startNode.y - minY) * scale;
+        offsetY = canvas.height * 0.75 - startScaledY + viewportOffset;
+      } else {
+        offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
+      }
+      
       return {
         x: scaledX + offsetX,
         y: scaledY + offsetY
@@ -603,16 +651,35 @@ export default function StoryClimbPage() {
     
     // Calculate max scroll based on tree size
     const nodes = treeData.nodes;
+    
+    // Calculate bounds INCLUDING node sizes
+    let actualMinX = Infinity, actualMaxX = -Infinity;
+    let actualMinY = Infinity, actualMaxY = -Infinity;
+    
+    nodes.forEach(node => {
+      let nodeSize = 25;
+      if (node.id === 'start') nodeSize = 40;
+      else if (node.storyNodeType === 'event') nodeSize = 60;
+      else if (node.storyNodeType === 'boss') nodeSize = 80;
+      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      
+      actualMinX = Math.min(actualMinX, node.x - nodeSize);
+      actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
+      actualMinY = Math.min(actualMinY, node.y - nodeSize);
+      actualMaxY = Math.max(actualMaxY, node.y + nodeSize);
+    });
+    
     const minX = Math.min(...nodes.map(n => n.x));
     const maxX = Math.max(...nodes.map(n => n.x));
     const minY = Math.min(...nodes.map(n => n.y));
     const maxY = Math.max(...nodes.map(n => n.y));
     const treeWidth = maxX - minX;
     const treeHeight = maxY - minY;
+    const actualTreeWidth = actualMaxX - actualMinX;
     
-    const padding = 40;
-    const scaleX = (canvasSize.width - padding * 2) / treeWidth;
-    const scale = scaleX * 0.9;
+    const padding = 60;
+    const scaleX = (canvasSize.width - padding * 2) / actualTreeWidth;
+    const scale = scaleX * 0.85;
     const scaledTreeHeight = treeHeight * scale;
     
     const maxPossibleOffset = Math.max(0, scaledTreeHeight - canvasSize.height + padding * 2);

@@ -52,28 +52,80 @@ export default function GlobalBackground() {
     <>
       {/* Background Effects Container - exact copy from shop page */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
-        {/* Gradient orbs - gaseous and smoky nebula clouds */}
+        {/* Gradient orbs - gaseous and smoky nebula clouds with smoother gradients */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse 600px 400px at -10% 25%, rgba(250, 182, 23, 0.25) 0%, rgba(250, 182, 23, 0.15) 20%, rgba(250, 182, 23, 0.08) 40%, transparent 70%),
-              radial-gradient(ellipse 500px 700px at 110% 75%, rgba(250, 182, 23, 0.22) 0%, rgba(250, 182, 23, 0.12) 25%, rgba(250, 182, 23, 0.06) 45%, transparent 70%)
+              radial-gradient(ellipse 600px 400px at -10% 25%, 
+                rgba(250, 182, 23, 0.25) 0%, 
+                rgba(250, 182, 23, 0.23) 5%,
+                rgba(250, 182, 23, 0.21) 10%,
+                rgba(250, 182, 23, 0.19) 15%,
+                rgba(250, 182, 23, 0.15) 20%, 
+                rgba(250, 182, 23, 0.13) 25%,
+                rgba(250, 182, 23, 0.11) 30%,
+                rgba(250, 182, 23, 0.09) 35%,
+                rgba(250, 182, 23, 0.08) 40%, 
+                rgba(250, 182, 23, 0.06) 45%,
+                rgba(250, 182, 23, 0.04) 50%,
+                rgba(250, 182, 23, 0.02) 60%,
+                transparent 70%),
+              radial-gradient(ellipse 500px 700px at 110% 75%, 
+                rgba(250, 182, 23, 0.22) 0%, 
+                rgba(250, 182, 23, 0.20) 5%,
+                rgba(250, 182, 23, 0.18) 10%,
+                rgba(250, 182, 23, 0.16) 15%,
+                rgba(250, 182, 23, 0.14) 20%,
+                rgba(250, 182, 23, 0.12) 25%, 
+                rgba(250, 182, 23, 0.10) 30%,
+                rgba(250, 182, 23, 0.08) 35%,
+                rgba(250, 182, 23, 0.06) 45%, 
+                rgba(250, 182, 23, 0.04) 55%,
+                rgba(250, 182, 23, 0.02) 65%,
+                transparent 70%)
             `,
             filter: 'blur(40px)',
+            transform: 'translateZ(0)', // GPU acceleration
+            willChange: 'transform',
           }}
         />
         
-        {/* Secondary nebula layer for depth and complexity */}
+        {/* Secondary nebula layer for depth and complexity with more gradient stops */}
         <div 
           className="absolute left-0 top-0 w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse 450px 300px at 5% 40%, rgba(250, 182, 23, 0.12) 0%, rgba(250, 182, 23, 0.06) 30%, transparent 60%),
-              radial-gradient(ellipse 350px 500px at 95% 60%, rgba(250, 182, 23, 0.10) 0%, rgba(250, 182, 23, 0.05) 35%, transparent 65%)
+              radial-gradient(ellipse 450px 300px at 5% 40%, 
+                rgba(250, 182, 23, 0.12) 0%, 
+                rgba(250, 182, 23, 0.10) 10%,
+                rgba(250, 182, 23, 0.08) 20%,
+                rgba(250, 182, 23, 0.06) 30%, 
+                rgba(250, 182, 23, 0.04) 40%,
+                rgba(250, 182, 23, 0.02) 50%,
+                transparent 60%),
+              radial-gradient(ellipse 350px 500px at 95% 60%, 
+                rgba(250, 182, 23, 0.10) 0%, 
+                rgba(250, 182, 23, 0.09) 10%,
+                rgba(250, 182, 23, 0.07) 20%,
+                rgba(250, 182, 23, 0.05) 35%, 
+                rgba(250, 182, 23, 0.03) 50%,
+                rgba(250, 182, 23, 0.01) 60%,
+                transparent 65%)
             `,
             filter: 'blur(60px)',
             mixBlendMode: 'screen',
+            transform: 'translateZ(0)', // GPU acceleration
+            willChange: 'transform',
+          }}
+        />
+        
+        {/* Noise texture overlay to reduce banding */}
+        <div 
+          className="absolute left-0 top-0 w-full h-full opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
           }}
         />
         

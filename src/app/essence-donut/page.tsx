@@ -95,8 +95,7 @@ export default function EssenceDonutPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSlotting, setIsSlotting] = useState(false);
-  const [zoomMode, setZoomMode] = useState<'none' | 'magnify' | 'expand' | 'filter'>('none');
-  const [minSliceSize, setMinSliceSize] = useState(0);
+  const [maxSliceFilter, setMaxSliceFilter] = useState(10); // Default to 10 (show all)
   const searchRef = useRef<HTMLDivElement>(null);
   
   // Get or create user
@@ -132,35 +131,20 @@ export default function EssenceDonutPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Sort and slice essence data for display with zoom filtering
+  // Sort and slice essence data for display with filtering
   const displayedEssences = useMemo(() => {
     let filtered = [...essenceData]
       .sort((a, b) => b.amount - a.amount)
       .slice(0, viewCount)
       .filter(e => e.amount > 0); // Only show essences with quantity
     
-    // Apply filter mode if active
-    if (zoomMode === 'filter' && minSliceSize > 0) {
-      filtered = filtered.filter(e => e.amount >= minSliceSize);
-    }
-    
-    // Apply expand mode if active - modify amounts for display
-    if (zoomMode === 'expand') {
-      const total = filtered.reduce((sum, e) => sum + e.amount, 0);
-      const minVisiblePercentage = 2; // Minimum 2% visibility
-      
-      filtered = filtered.map(e => {
-        const percentage = (e.amount / total) * 100;
-        if (percentage < minVisiblePercentage) {
-          // Scale up small slices to be visible
-          return { ...e, displayAmount: (minVisiblePercentage / 100) * total };
-        }
-        return { ...e, displayAmount: e.amount };
-      });
+    // Apply max filter - only show essences below the threshold
+    if (viewCount === 100 && maxSliceFilter < 10) {
+      filtered = filtered.filter(e => e.amount <= maxSliceFilter);
     }
     
     return filtered;
-  }, [essenceData, viewCount, zoomMode, minSliceSize]);
+  }, [essenceData, viewCount, maxSliceFilter]);
   
   // Calculate total stats
   const totalStats = useMemo(() => {
@@ -469,84 +453,47 @@ export default function EssenceDonutPage() {
                   </div>
                 </div>
                 
-                {/* Zoom Controls - Three Options for Small Slices */}
+                {/* Filter Slider - Only shows when viewing All */}
                 {viewCount === 100 && (
-                  <div className="mb-6">
-                    <div className="flex justify-center gap-4">
-                      {/* Option 1: Magnify Glass Mode */}
-                      <button
-                        onClick={() => setZoomMode(zoomMode === 'magnify' ? 'none' : 'magnify')}
-                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                          zoomMode === 'magnify' 
-                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
-                            : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
-                        }`}
-                        title="Magnify small slices on hover"
-                      >
-                        <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                        </svg>
-                        Magnify Mode
-                      </button>
+                  <div className="mb-6 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-gray-400 uppercase tracking-widest">Filter by Maximum Amount</span>
+                      <span className="text-sm font-semibold text-yellow-400">
+                        {maxSliceFilter < 10 ? `Showing ≤ ${maxSliceFilter.toFixed(1)}` : 'Showing All'}
+                      </span>
+                    </div>
+                    
+                    <div className="relative">
+                      {/* Slider Track Background */}
+                      <div className="absolute inset-0 h-2 bg-gradient-to-r from-cyan-500/20 via-yellow-500/20 to-gray-700/20 rounded-full"></div>
                       
-                      {/* Option 2: Expand Small Slices */}
-                      <button
-                        onClick={() => setZoomMode(zoomMode === 'expand' ? 'none' : 'expand')}
-                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                          zoomMode === 'expand' 
-                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
-                            : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
-                        }`}
-                        title="Expand small slices to minimum visible size"
-                      >
-                        <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
-                        Expand Small
-                      </button>
+                      {/* Custom Slider */}
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="10"
+                        step="0.1"
+                        value={maxSliceFilter}
+                        onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-transparent rounded-full appearance-none cursor-pointer relative z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-yellow-400/50 [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:scale-110 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
+                      />
                       
-                      {/* Option 3: Filter by Size */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setZoomMode(zoomMode === 'filter' ? 'none' : 'filter')}
-                          className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                            zoomMode === 'filter' 
-                              ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' 
-                              : 'bg-black/40 border-gray-700 text-gray-400 hover:border-yellow-500/50'
-                          }`}
-                          title="Filter to show only essences above threshold"
-                        >
-                          <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                          </svg>
-                          Filter Small
-                        </button>
-                        
-                        {zoomMode === 'filter' && (
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={minSliceSize}
-                            onChange={(e) => setMinSliceSize(parseFloat(e.target.value))}
-                            className="w-32"
-                            title={`Hide slices smaller than ${minSliceSize.toFixed(1)}`}
-                          />
-                        )}
+                      {/* Scale markers */}
+                      <div className="flex justify-between mt-2 text-xs text-gray-500">
+                        <span>0.1</span>
+                        <span>2</span>
+                        <span>4</span>
+                        <span>6</span>
+                        <span>8</span>
+                        <span>10</span>
                       </div>
                     </div>
                     
-                    {/* Zoom Mode Description */}
-                    {zoomMode !== 'none' && (
-                      <div className="mt-3 text-center">
-                        <p className="text-xs text-yellow-400/60 uppercase tracking-wider">
-                          {zoomMode === 'magnify' && 'Hover over small slices to magnify them'}
-                          {zoomMode === 'expand' && 'Small slices expanded to minimum visible size'}
-                          {zoomMode === 'filter' && `Showing essences with ${minSliceSize.toFixed(1)}+ amount`}
-                        </p>
-                      </div>
-                    )}
+                    <div className="mt-2 text-center">
+                      <p className="text-xs text-gray-400">
+                        Drag left to focus on smaller amounts • {displayedEssences.length} essences visible
+                      </p>
+                    </div>
                   </div>
                 )}
                 
@@ -555,7 +502,8 @@ export default function EssenceDonutPage() {
                   <EssenceDonutChart
                     data={displayedEssences.map(e => ({
                       ...e,
-                      amount: e.displayAmount || e.amount // Use display amount if in expand mode
+                      amount: e.amount,
+                      isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10) // Mark if essence is full
                     }))}
                     size={chartSize}
                     showCenterStats={true}
@@ -563,7 +511,6 @@ export default function EssenceDonutPage() {
                     onSliceHover={setHoveredSlice}
                     onSliceClick={handleSliceClick}
                     selectedSlice={selectedSlice}
-                    magnifyMode={zoomMode === 'magnify'}
                   />
                 </div>
               </div>
@@ -587,6 +534,7 @@ export default function EssenceDonutPage() {
                   
                   const effectiveMax = slice.maxAmountBuffed || slice.maxAmount || 10;
                   const progress = (slice.amount / effectiveMax) * 100;
+                  const isFull = slice.amount >= effectiveMax;
                   const baseRate = slice.baseRate || 0.1;
                   const bonusRate = slice.bonusRate || 0;
                   const totalRate = baseRate + bonusRate;
@@ -626,8 +574,8 @@ export default function EssenceDonutPage() {
                       {/* Ownership Section */}
                       <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
                         <div className="flex justify-between items-center mb-2 relative z-10">
-                          <span className="text-sm font-bold text-yellow-400 uppercase tracking-wider">OWNERSHIP</span>
-                          <span className="text-2xl font-bold">
+                          <span className="text-xs text-white uppercase tracking-widest">OWNERSHIP</span>
+                          <span className="text-xl font-normal">
                             <span className="text-yellow-400">{slice.amount.toFixed(1)}</span>
                             <span className="text-cyan-400">/{effectiveMax}</span>
                           </span>
@@ -635,12 +583,15 @@ export default function EssenceDonutPage() {
                         
                         {/* Progress Bar */}
                         <div className="relative h-6 bg-black/80 rounded overflow-hidden border border-yellow-500/30">
-                          {/* Filled portion - cyan/blue gradient */}
+                          {/* Filled portion - cyan/blue gradient - flashing if full */}
                           <div 
-                            className="absolute inset-y-0 left-0 transition-all duration-500"
+                            className={`absolute inset-y-0 left-0 transition-all duration-500 ${isFull ? 'animate-pulse' : ''}`}
                             style={{
                               width: `${Math.min((slice.amount / effectiveMax) * 100, 100)}%`,
-                              background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))'
+                              background: isFull 
+                                ? 'linear-gradient(90deg, rgba(59, 130, 246, 0.9), rgba(96, 165, 250, 1), rgba(147, 197, 253, 0.9))' 
+                                : 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))',
+                              animation: isFull ? 'flash 0.5s ease-in-out infinite' : 'none'
                             }}
                           >
                             <div className="absolute inset-0 opacity-50 bg-gradient-to-t from-transparent to-white/20"></div>
@@ -668,39 +619,55 @@ export default function EssenceDonutPage() {
                       </div>
                       
                       {/* Stats Grid */}
-                      <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4 relative overflow-hidden">
+                      <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-3 relative overflow-hidden">
                         <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 relative z-10">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10">
                           {/* Row 1 */}
                           <div>
                             <p className="mek-label-uppercase mb-1">MARKET PRICE</p>
-                            <p className="text-xl font-bold text-yellow-400">{slice.currentValue}g/ea</p>
+                            <p className="text-lg text-yellow-400">
+                              <span className="font-semibold">{slice.currentValue}</span>
+                              <span className="font-light">g/ea</span>
+                            </p>
                           </div>
                           <div>
                             <p className="mek-label-uppercase mb-1">BASE RATE</p>
-                            <p className="text-xl font-bold text-cyan-400">{baseRate.toFixed(2)}/day</p>
+                            <p className="text-lg text-cyan-400">
+                              <span className="font-semibold">{baseRate.toFixed(2)}</span>
+                              <span className="font-light">/d</span>
+                            </p>
                           </div>
                           
                           {/* Row 2 */}
                           <div>
                             <p className="mek-label-uppercase mb-1">TOTAL VALUE</p>
-                            <p className="text-xl font-bold text-yellow-400">{Math.round(totalValue)}g</p>
+                            <p className="text-lg text-yellow-400">
+                              <span className="font-semibold">{Math.round(totalValue).toLocaleString()}</span>
+                              <span className="font-light">g</span>
+                            </p>
                           </div>
                           <div>
                             <p className="mek-label-uppercase mb-1">BONUS RATE</p>
-                            <p className="text-xl font-bold text-green-400">
-                              {bonusRate > 0 ? `+${bonusRate.toFixed(2)}/day` : '+0.00/day'}
+                            <p className="text-lg text-green-400">
+                              <span className="font-semibold">{bonusRate > 0 ? `+${bonusRate.toFixed(2)}` : '+0.00'}</span>
+                              <span className="font-light">/d</span>
                             </p>
                           </div>
                           
                           {/* Row 3 */}
                           <div>
                             <p className="mek-label-uppercase mb-1">THEORETICAL</p>
-                            <p className="text-xl font-bold text-purple-400">{Math.round(theoreticalIncome)}g/day</p>
+                            <p className="text-lg text-purple-400">
+                              <span className="font-semibold">{Math.round(theoreticalIncome)}</span>
+                              <span className="font-light">g/d</span>
+                            </p>
                           </div>
                           <div>
                             <p className="mek-label-uppercase mb-1">TOTAL RATE</p>
-                            <p className="text-xl font-bold text-cyan-400">{totalRate.toFixed(2)}/day</p>
+                            <p className="text-lg text-cyan-400">
+                              <span className="font-semibold">{totalRate.toFixed(2)}</span>
+                              <span className="font-light">/d</span>
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -797,6 +764,20 @@ export default function EssenceDonutPage() {
           </div>
         </div>
       </div>
+      
+      {/* CSS for flashing animation */}
+      <style jsx>{`
+        @keyframes flash {
+          0%, 100% {
+            opacity: 1;
+            filter: brightness(1);
+          }
+          50% {
+            opacity: 0.7;
+            filter: brightness(1.5);
+          }
+        }
+      `}</style>
     </div>
   );
 }
