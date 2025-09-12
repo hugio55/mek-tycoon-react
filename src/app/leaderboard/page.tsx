@@ -328,15 +328,82 @@ export default function LeaderboardPage() {
                   />
                 </div>
               </div>
-              <div className="p-3 rounded-lg backdrop-blur-sm" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(192, 192, 192, 0.2)', width: '128px' }}>
+              <div 
+                className="relative overflow-hidden"
+                style={{ 
+                  width: '128px',
+                  background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+                  border: '2px solid',
+                  borderImage: 'linear-gradient(135deg, #C0C0C0 0%, #808080 50%, #C0C0C0 100%) 1',
+                  boxShadow: '0 4px 20px rgba(192, 192, 192, 0.3), inset 0 0 20px rgba(192, 192, 192, 0.1)',
+                  padding: '12px',
+                }}
+              >
+                {/* Metal texture overlay */}
                 <div 
-                  className="text-base font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
+                  className="absolute inset-0 opacity-20 pointer-events-none"
+                  style={{
+                    background: `repeating-linear-gradient(
+                      45deg,
+                      transparent,
+                      transparent 10px,
+                      rgba(192, 192, 192, 0.1) 10px,
+                      rgba(192, 192, 192, 0.1) 11px
+                    )`,
+                  }}
+                />
+                
+                {/* Rank badge */}
+                <div 
+                  className="absolute -top-1 -right-1 w-8 h-8 flex items-center justify-center rounded-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)',
+                    boxShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: '#000',
+                  }}
+                >
+                  2
+                </div>
+                
+                <div 
+                  className="relative text-base font-bold truncate cursor-pointer transition-all duration-300 hover:text-silver-300"
                   onClick={() => {}}
+                  style={{
+                    fontFamily: "'Orbitron', monospace",
+                    letterSpacing: '0.05em',
+                    color: '#C0C0C0',
+                    textShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
+                  }}
                 >
                   {podiumData[1].username || 'Player 2'}
                 </div>
-                <div className="text-2xl font-bold text-yellow-400 mt-1">{formatNumber(podiumData[1].value)}</div>
-                <div className="text-xs text-gray-400">Achievement Points</div>
+                <div 
+                  className="text-2xl font-bold mt-1"
+                  style={{
+                    background: 'linear-gradient(135deg, #C0C0C0 0%, #E5E5E5 50%, #C0C0C0 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 20px rgba(192, 192, 192, 0.6)',
+                    filter: 'drop-shadow(0 0 8px rgba(192, 192, 192, 0.4))',
+                  }}
+                >
+                  {formatNumber(podiumData[1].value)}
+                </div>
+                <div 
+                  className="text-xs uppercase tracking-wider mt-1"
+                  style={{
+                    color: '#808080',
+                    letterSpacing: '0.1em',
+                    fontWeight: '500',
+                  }}
+                >
+                  Achievement Points
+                </div>
               </div>
             </div>
           )}
@@ -477,17 +544,98 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="p-3 rounded-lg backdrop-blur-sm mt-2" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(255, 215, 0, 0.2)', width: '160px' }}>
+              <div 
+                className="relative overflow-hidden mt-2"
+                style={{ 
+                  width: '160px',
+                  background: 'linear-gradient(135deg, rgba(40, 35, 20, 0.95) 0%, rgba(20, 15, 10, 0.95) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+                  border: '2px solid',
+                  borderImage: 'linear-gradient(45deg, #FFD700, #FFA500, #FFD700, #FFA500, #FFD700) 1',
+                  boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15)',
+                  padding: '14px',
+                  animation: 'goldPulse 3s ease-in-out infinite',
+                }}
+              >
+                {/* Hazard stripes overlay */}
                 <div 
-                  className="text-lg font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
+                  className="absolute inset-0 opacity-10 pointer-events-none"
+                  style={{
+                    background: `repeating-linear-gradient(
+                      -45deg,
+                      transparent,
+                      transparent 8px,
+                      #FFD700 8px,
+                      #FFD700 16px
+                    )`,
+                  }}
+                />
+                
+                {/* Scan line effect */}
+                <div 
+                  className="absolute inset-0 pointer-events-none overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(180deg, transparent 0%, rgba(255, 215, 0, 0.1) 50%, transparent 100%)',
+                    height: '40px',
+                    animation: 'scanline 4s linear infinite',
+                  }}
+                />
+                
+                {/* Crown icon */}
+                <div 
+                  className="absolute -top-2 -right-2 w-10 h-10 flex items-center justify-center"
+                  style={{
+                    background: 'radial-gradient(circle, #FFD700 0%, #FFA500 100%)',
+                    clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                    boxShadow: '0 0 20px rgba(255, 215, 0, 0.8)',
+                    filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))',
+                  }}
+                />
+                
+                <div 
+                  className="relative text-lg font-bold truncate cursor-pointer transition-all duration-300 hover:scale-105"
                   onClick={() => {}}
+                  style={{
+                    fontFamily: "'Orbitron', monospace",
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 20px rgba(255, 215, 0, 0.6)',
+                    filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))',
+                  }}
                 >
                   {podiumData[0].username || 'Player 1'}
                 </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mt-1">
+                <div 
+                  className="text-3xl font-bold mt-1 relative"
+                  style={{
+                    fontFamily: "'Rajdhani', monospace",
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 25%, #FFD700 50%, #FFA500 75%, #FFD700 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    backgroundSize: '200% 100%',
+                    animation: 'goldShimmer 3s linear infinite',
+                    filter: 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))',
+                  }}
+                >
                   {formatNumber(podiumData[0].value)}
                 </div>
-                <div className="text-sm text-gray-400">Achievement Points</div>
+                <div 
+                  className="text-xs uppercase tracking-wider mt-1"
+                  style={{
+                    color: '#FFA500',
+                    letterSpacing: '0.15em',
+                    fontWeight: '600',
+                    textShadow: '0 0 8px rgba(255, 165, 0, 0.5)',
+                  }}
+                >
+                  Achievement Points
+                </div>
               </div>
             </div>
           )}
@@ -510,15 +658,78 @@ export default function LeaderboardPage() {
                   />
                 </div>
               </div>
-              <div className="p-3 rounded-lg backdrop-blur-sm" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(205, 127, 50, 0.2)', width: '128px' }}>
+              <div 
+                className="relative overflow-hidden"
+                style={{ 
+                  width: '128px',
+                  background: 'linear-gradient(135deg, rgba(35, 25, 20, 0.95) 0%, rgba(20, 15, 10, 0.95) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+                  border: '2px solid',
+                  borderImage: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 50%, #CD7F32 100%) 1',
+                  boxShadow: '0 4px 20px rgba(205, 127, 50, 0.3), inset 0 0 20px rgba(205, 127, 50, 0.1)',
+                  padding: '12px',
+                }}
+              >
+                {/* Rust texture overlay */}
                 <div 
-                  className="text-base font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
+                  className="absolute inset-0 opacity-15 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse at 20% 30%, rgba(205, 127, 50, 0.3) 0%, transparent 40%),
+                                radial-gradient(ellipse at 70% 60%, rgba(139, 69, 19, 0.2) 0%, transparent 40%),
+                                radial-gradient(ellipse at 40% 80%, rgba(205, 127, 50, 0.2) 0%, transparent 40%)`,
+                  }}
+                />
+                
+                {/* Rank badge */}
+                <div 
+                  className="absolute -top-1 -right-1 w-8 h-8 flex items-center justify-center rounded-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)',
+                    boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: '#FFF',
+                  }}
+                >
+                  3
+                </div>
+                
+                <div 
+                  className="relative text-base font-bold truncate cursor-pointer transition-all duration-300 hover:text-orange-400"
                   onClick={() => {}}
+                  style={{
+                    fontFamily: "'Orbitron', monospace",
+                    letterSpacing: '0.05em',
+                    color: '#CD7F32',
+                    textShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
+                  }}
                 >
                   {podiumData[2].username || 'Player 3'}
                 </div>
-                <div className="text-2xl font-bold text-yellow-400 mt-1">{formatNumber(podiumData[2].value)}</div>
-                <div className="text-xs text-gray-400">Achievement Points</div>
+                <div 
+                  className="text-2xl font-bold mt-1"
+                  style={{
+                    background: 'linear-gradient(135deg, #CD7F32 0%, #DDA860 50%, #CD7F32 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 20px rgba(205, 127, 50, 0.6)',
+                    filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.4))',
+                  }}
+                >
+                  {formatNumber(podiumData[2].value)}
+                </div>
+                <div 
+                  className="text-xs uppercase tracking-wider mt-1"
+                  style={{
+                    color: '#8B4513',
+                    letterSpacing: '0.1em',
+                    fontWeight: '500',
+                  }}
+                >
+                  Achievement Points
+                </div>
               </div>
             </div>
           )}
@@ -526,7 +737,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Category Tabs - Sci-Fi Industrial Style */}
-      <div className="flex gap-3 mb-10 justify-center flex-wrap px-4" onClick={(e) => e.preventDefault()}>
+      <div className="flex gap-2 mb-8 justify-center flex-wrap px-4" onClick={(e) => e.preventDefault()}>
         {/* Achievement Points - Primary Button */}
         <div
           role="button"
@@ -544,7 +755,7 @@ export default function LeaderboardPage() {
           }}
         >
           <div className={`
-            relative px-6 py-3 font-bold uppercase tracking-wider
+            relative px-3 py-1.5 font-semibold uppercase tracking-wide text-xs
             transition-all duration-300 transform
             ${selectedCategory === 'achievements' 
               ? 'mek-button-primary scale-105' 
@@ -585,7 +796,7 @@ export default function LeaderboardPage() {
               textShadow: selectedCategory === 'achievements'
                 ? '0 0 10px rgba(0, 0, 0, 0.3)'
                 : '0 0 10px rgba(250, 182, 23, 0.5)',
-              fontSize: '0.875rem',
+              fontSize: '0.675rem',
             }}
             >
               Achievement Points
@@ -611,7 +822,7 @@ export default function LeaderboardPage() {
               setShowEssenceSubmenu(false);
             }}
             className={`
-              relative px-6 py-3 font-bold uppercase tracking-wider
+              relative px-3 py-1.5 font-semibold uppercase tracking-wide text-xs
               transition-all duration-300 transform
               ${selectedCategory === 'gold' 
                 ? 'mek-button-primary scale-105' 
@@ -652,7 +863,7 @@ export default function LeaderboardPage() {
               textShadow: selectedCategory === 'gold'
                 ? '0 0 10px rgba(0, 0, 0, 0.3)'
                 : '0 0 10px rgba(250, 182, 23, 0.5)',
-              fontSize: '0.875rem',
+              fontSize: '0.675rem',
             }}
             >
               {selectedCategory === 'gold' ? (goldView === 'total' ? 'Total Gold' : 'Gold/hr') : 'Total Gold'} 
@@ -716,7 +927,7 @@ export default function LeaderboardPage() {
               setShowGoldSubmenu(false);
             }}
             className={`
-              relative px-6 py-3 font-bold uppercase tracking-wider
+              relative px-3 py-1.5 font-semibold uppercase tracking-wide text-xs
               transition-all duration-300 transform
               ${selectedCategory === 'essence' 
                 ? 'mek-button-primary scale-105' 
@@ -757,7 +968,7 @@ export default function LeaderboardPage() {
               textShadow: selectedCategory === 'essence'
                 ? '0 0 10px rgba(0, 0, 0, 0.3)'
                 : '0 0 10px rgba(250, 182, 23, 0.5)',
-              fontSize: '0.875rem',
+              fontSize: '0.675rem',
             }}
             >
               {selectedCategory === 'essence' ? (essenceView === 'total' ? 'Total Essence' : 'Essence/hr') : 'Total Essence'} 
@@ -824,7 +1035,7 @@ export default function LeaderboardPage() {
           }`}
         >
           <div className={`
-            relative px-6 py-3 font-bold uppercase tracking-wider
+            relative px-3 py-1.5 font-semibold uppercase tracking-wide text-xs
             transition-all duration-300 transform
             ${selectedCategory === 'meks' 
               ? 'mek-button-primary scale-105' 
@@ -865,7 +1076,7 @@ export default function LeaderboardPage() {
               textShadow: selectedCategory === 'meks'
                 ? '0 0 10px rgba(0, 0, 0, 0.3)'
                 : '0 0 10px rgba(250, 182, 23, 0.5)',
-              fontSize: '0.875rem',
+              fontSize: '0.675rem',
             }}
             >
               Mek Count
@@ -887,7 +1098,7 @@ export default function LeaderboardPage() {
           }`}
         >
           <div className={`
-            relative px-6 py-3 font-bold uppercase tracking-wider
+            relative px-3 py-1.5 font-semibold uppercase tracking-wide text-xs
             transition-all duration-300 transform
             ${selectedCategory === 'topMeks' 
               ? 'mek-button-primary scale-105' 
@@ -928,7 +1139,7 @@ export default function LeaderboardPage() {
               textShadow: selectedCategory === 'topMeks'
                 ? '0 0 10px rgba(0, 0, 0, 0.3)'
                 : '0 0 10px rgba(250, 182, 23, 0.5)',
-              fontSize: '0.875rem',
+              fontSize: '0.675rem',
             }}
             >
               Top Meks

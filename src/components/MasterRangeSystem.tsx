@@ -66,6 +66,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
   // Master range system - local state for editing
   const [masterRanges, setMasterRanges] = useState<{[buffId: string]: {min: number, max: number}}>({});
   const [curvePowers, setCurvePowers] = useState<{[buffId: string]: number}>({});
+  const [roundingModes, setRoundingModes] = useState<{[buffId: string]: 'none' | '0.01' | '0.1' | '1' | '5' | '10'}>({});
   const [hasInitialized, setHasInitialized] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<'gold' | 'essence' | 'looter'>('gold');
@@ -113,13 +114,41 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
     }
   }, [buffCategories, hasInitialized, curvePowers]);
 
+  // Helper function to apply rounding rules
+  const applyRounding = (value: number, buffId: string): number => {
+    const mode = roundingModes[buffId] || 'none';
+    
+    switch (mode) {
+      case '0.01':
+        // Round to nearest 0.01 (hundredths)
+        return Math.round(value * 100) / 100;
+      case '0.1':
+        // Round to nearest 0.1 (tenths)
+        return Math.round(value * 10) / 10;
+      case '1':
+        // Round to nearest integer
+        return Math.round(value);
+      case '5':
+        // Round to nearest 5
+        return Math.round(value / 5) * 5;
+      case '10':
+        // Round to nearest 10
+        return Math.round(value / 10) * 10;
+      case 'none':
+      default:
+        // No special rounding, just to 2 decimal places for display
+        return Math.round(value * 100) / 100;
+    }
+  };
+
   // Calculate value based on master range, tier, rank, and curve power
   const calculateValueFromMasterRange = (
     masterMin: number,
     masterMax: number,
     tier: number,
     rankIndex: number,
-    curvePower: number = 1
+    curvePower: number = 1,
+    buffId?: string
   ): { min: number, max: number } => {
     const masterSpan = masterMax - masterMin;
     
@@ -138,9 +167,12 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
     // Calculate a small range around this position (for min/max)
     const rangeWidth = (masterSpan / totalSteps) * Math.max(1, curvedPos * 2);
     
+    const minValue = Math.max(masterMin, positionValue - rangeWidth / 2);
+    const maxValue = Math.min(masterMax, positionValue + rangeWidth / 2);
+    
     return {
-      min: Math.round(Math.max(masterMin, positionValue - rangeWidth / 2)),
-      max: Math.round(Math.min(masterMax, positionValue + rangeWidth / 2))
+      min: buffId ? applyRounding(minValue, buffId) : Math.round(minValue),
+      max: buffId ? applyRounding(maxValue, buffId) : Math.round(maxValue)
     };
   };
 
@@ -177,7 +209,8 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
             masterRange.max,
             tier,
             rarityIndex,
-            curvePower
+            curvePower,
+            category._id
           );
           
           // Calculate proc chance based on category type
@@ -271,7 +304,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
           </div>
         </div>
         
-        <div className="flex gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={applyMasterRanges}
             className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white font-bold transition-colors"
@@ -375,6 +408,28 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                       placeholder="Max"
                     />
                     <span className="text-green-400 ml-2">{unit || 'points'}</span>
+                    
+                    {/* Rounding Mode Selector */}
+                    <div className="ml-auto flex items-center gap-2">
+                      <label className="text-xs text-gray-400 uppercase">Rounding:</label>
+                      <select
+                        value={roundingModes[category._id] || 'none'}
+                        onChange={(e) => {
+                          setRoundingModes(prev => ({
+                            ...prev,
+                            [category._id]: e.target.value as any
+                          }));
+                        }}
+                        className="px-3 py-1 bg-gray-800 border border-gray-600 text-white text-sm rounded"
+                      >
+                        <option value="none">None</option>
+                        <option value="0.01">0.01 (Hundredths)</option>
+                        <option value="0.1">0.1 (Tenths)</option>
+                        <option value="1">1 (Integer)</option>
+                        <option value="5">5 (Fives)</option>
+                        <option value="10">10 (Tens)</option>
+                      </select>
+                    </div>
                   </div>
                   
                   {/* Distribution Curve Slider */}
@@ -444,7 +499,8 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                                       masterRange.max,
                                       tier,
                                       rankIndex,
-                                      currentCurvePower
+                                      currentCurvePower,
+                                      category._id
                                     );
                                     return (
                                       <td key={tier} className="p-2 text-center">

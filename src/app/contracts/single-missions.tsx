@@ -9,9 +9,11 @@ import MekRecruitmentModalV3 from './components/MekRecruitmentModalV3';
 import MekRecruitmentModalV4 from './components/MekRecruitmentModalV4';
 import AnimatedSuccessBar from './components/AnimatedSuccessBar';
 import StandardizedMissionRewards from './components/StandardizedMissionRewards';
+import IndustrialMissionCard from '@/components/IndustrialMissionCard';
 import { successMultipliers, missionAilments, missionWeaknesses, globalMissionTypes, regularMissionTitles } from './constants/missionData';
 import { formatGoldAmount, formatCountdown, getRewardColor, generateSampleMeks } from './utils/helpers';
 import { getMekCardStyle, getTraitCircleStyle } from './utils/styleHelpers';
+import ViewActiveContractsButton from '@/components/ViewActiveContractsButton';
 
 // Sample rewards with drop rates (sorted by chance)
 const sampleRewardsWithRates = {
@@ -1032,7 +1034,7 @@ export default function ContractsLayoutOption11() {
       );
     }
 
-    // Industrial V1: Locked in as default
+    // Industrial V1: Locked in as default - Now using IndustrialMissionCard component
     {
       // Epic mission titles
       const epicTitles: Record<string, string> = {
@@ -1047,675 +1049,203 @@ export default function ContractsLayoutOption11() {
         : epicTitles[contract?.name?.toLowerCase() || ""] || "OPERATION PHOENIX";
       
       const missionDuration = isGlobal ? "24 Hours" : "2 Hours";
+      const contractType = isGlobal ? "Daily Global Contract" : "Standard Contract";
+      
+      // Format expiry for the component
+      const expiry = formatContractExpiry();
+      const expiryLabel = typeof expiry === 'string' ? expiry : expiry.label;
+      const expiryTime = typeof expiry === 'string' ? '' : expiry.time;
+      
+      return (
+        <IndustrialMissionCard
+          // Mission Data
+          missionTitle={missionTitle}
+          missionDuration={missionDuration}
+          contractType={contractType}
+          expiryLabel={expiryLabel}
+          expiryTime={expiryTime}
+          
+          // Rewards
+          goldReward={goldReward}
+          xpReward={xpReward}
+          missionRewards={missionRewards}
+          
+          // Variation Buffs
+          missionMultipliers={missionMultipliers}
+          matchedVariations={matched}
+          onBuffClick={(buff) => setSelectedBuff(buff)}
+          
+          // Mek Slots
+          mekSlotCount={mekSlotCount}
+          selectedMeks={selectedMeks[contractId] || []}
+          onMekSlotClick={(slotIndex, currentMek) => {
+            if (currentMek) {
+              // Toggle clicked state for removal tooltip
+              if (clickedMek?.missionId === contractId && clickedMek?.slotIndex === slotIndex) {
+                setClickedMek(null);
+              } else {
+                setClickedMek({ missionId: contractId, slotIndex });
+              }
+            } else {
+              // Open modal to add mek
+              setSelectedMekSlot({ missionId: contractId, slotIndex });
+              setShowMekModal(contractId);
+            }
+          }}
+          hoveredMekIndex={hoveredMek?.missionId === contractId ? hoveredMek.slotIndex : null}
+          clickedMekIndex={clickedMek?.missionId === contractId ? clickedMek.slotIndex : null}
+          onMekHover={(slotIndex) => {
+            if (slotIndex !== null) {
+              setHoveredMek({ missionId: contractId, slotIndex });
+            } else {
+              setHoveredMek(null);
+            }
+          }}
+          onMekRemove={(slotIndex) => {
+            const newMeks = [...(selectedMeks[contractId] || [])];
+            newMeks[slotIndex] = null;
+            setSelectedMeks({ ...selectedMeks, [contractId]: newMeks });
+            // Trigger success rate animation
+            setAnimatedSuccessRate({ ...animatedSuccessRate, [contractId]: calculateNewSuccessRate(contractId, newMeks) });
+          }}
+          onMekChange={(slotIndex) => {
+            setSelectedMekSlot({ missionId: contractId, slotIndex });
+            setShowMekModal(contractId);
+          }}
+          
+          // Success Rate
+          successRate={successRate}
+          animatedSuccessRate={animatedSuccessRate[contractId]}
+          
+          // Deploy
+          deployFee={deployFee}
+          onDeploy={() => {
+            // Deploy logic here
+            console.log('Deploy mission:', contractId);
+          }}
+          
+          // Styling
+          isGlobal={isGlobal}
+          borderStyle="border-2"
+          headerStyle={headerStyle}
+          traitIndicatorStyle={traitIndicatorStyle}
+          
+          // Helper functions
+          formatGoldAmount={formatGoldAmount}
+          getRewardColor={getRewardColor}
+        />
+      );
+    }
+
+    // Industrial V2: 2x3 Grid Layout
+    // Industrial V1: Core Design System Implementation
+    if (elegantVariation === "industrial-v1") {
+      const missionTitle = isGlobal 
+        ? `GLOBAL ${dailyVariation.toUpperCase()} EVENT`
+        : contract?.name?.toUpperCase() || "TACTICAL MISSION";
       
       return (
         <div className="relative">
-          <div 
-            className={`relative overflow-hidden ${getBorderClasses(borderStyle)}`}
-            style={{
-              background: `
-                linear-gradient(135deg, 
-                  ${isGlobal ? 'rgba(250, 182, 23, 0.02)' : 'rgba(255, 255, 255, 0.02)'} 0%, 
-                  ${isGlobal ? 'rgba(250, 182, 23, 0.05)' : 'rgba(255, 255, 255, 0.05)'} 50%, 
-                  ${isGlobal ? 'rgba(250, 182, 23, 0.02)' : 'rgba(255, 255, 255, 0.02)'} 100%)`,
-              backdropFilter: 'blur(6px)',
-              boxShadow: isGlobal 
-                ? 'inset 0 0 40px rgba(250, 182, 23, 0.03)' 
-                : 'inset 0 0 40px rgba(255, 255, 255, 0.03)',
-            }}
-          >
-            {/* Glass effect overlays - Style J */}
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `
-                  radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.08) 0%, transparent 30%),
-                  radial-gradient(circle at 80% 70%, ${isGlobal ? 'rgba(250, 182, 23, 0.06)' : 'rgba(139, 92, 246, 0.06)'} 0%, transparent 25%),
-                  radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%)`,
-                mixBlendMode: 'screen',
-              }}
-            />
-            {/* Dirty glass smudge pattern */}
-            <div 
-              className="absolute inset-0 pointer-events-none opacity-30"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              }}
-            />
+          <div className={`mek-card-industrial ${isGlobal ? 'mek-card-industrial-global' : ''} mek-border-sharp-gold overflow-hidden`}>
             
-            {/* Header Layout Variations - All with Industrial Grunge Style */}
-            {headerStyle === 1 && (
-              /* Layout 1: Separate Cards (Current) */
-              <>
-                <div className="relative p-4 overflow-hidden" style={{
-                  background: `
-                    repeating-linear-gradient(
-                      45deg,
-                      rgba(0, 0, 0, 0.9),
-                      rgba(0, 0, 0, 0.9) 10px,
-                      rgba(250, 182, 23, 0.15) 10px,
-                      rgba(250, 182, 23, 0.15) 20px
-                    ),
-                    linear-gradient(to right, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8))
-                  `
-                }}>
-              {/* Procedural grunge overlay 1 - scratches and wear */}
-              <div 
-                className="absolute inset-0 pointer-events-none opacity-30"
-                style={{
-                  background: `
-                    linear-gradient(105deg, transparent 40%, rgba(0, 0, 0, 0.3) 41%, transparent 43%),
-                    linear-gradient(85deg, transparent 65%, rgba(0, 0, 0, 0.2) 66%, transparent 67%),
-                    linear-gradient(175deg, transparent 70%, rgba(0, 0, 0, 0.25) 71%, transparent 72%),
-                    linear-gradient(27deg, transparent 55%, rgba(0, 0, 0, 0.15) 56%, transparent 58%),
-                    linear-gradient(-20deg, transparent 33%, rgba(0, 0, 0, 0.2) 34%, transparent 35%)
-                  `,
-                  mixBlendMode: 'multiply',
-                }}
-              />
-              
-              {/* Procedural grunge overlay 2 - rust and stains */}
-              <div 
-                className="absolute inset-0 pointer-events-none opacity-20"
-                style={{
-                  background: `
-                    radial-gradient(ellipse at 15% 20%, rgba(139, 69, 19, 0.4) 0%, transparent 25%),
-                    radial-gradient(ellipse at 85% 80%, rgba(101, 67, 33, 0.3) 0%, transparent 20%),
-                    radial-gradient(ellipse at 45% 60%, rgba(184, 134, 11, 0.2) 0%, transparent 30%),
-                    radial-gradient(circle at 70% 30%, rgba(0, 0, 0, 0.5) 0%, transparent 15%),
-                    radial-gradient(circle at 25% 75%, rgba(139, 69, 19, 0.3) 0%, transparent 20%)
-                  `,
-                  filter: 'blur(1px)',
-                }}
-              />
-              
-              {/* Procedural grunge overlay 3 - metal texture noise */}
-              <div 
-                className="absolute inset-0 pointer-events-none opacity-40"
-                style={{
-                  backgroundImage: `
-                    repeating-linear-gradient(90deg, 
-                      transparent, 
-                      transparent 2px, 
-                      rgba(0, 0, 0, 0.1) 2px, 
-                      rgba(0, 0, 0, 0.1) 3px),
-                    repeating-linear-gradient(0deg, 
-                      transparent, 
-                      transparent 2px, 
-                      rgba(0, 0, 0, 0.08) 2px, 
-                      rgba(0, 0, 0, 0.08) 3px)
-                  `,
-                }}
-              />
-              
-              {/* Paint chips and wear marks */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10,5 L15,7 L12,9 L14,6" stroke="rgba(0,0,0,0.4)" strokeWidth="0.5" fill="rgba(0,0,0,0.2)"/>
-                <path d="M90,8 L92,5 L94,8 L91,7" stroke="rgba(0,0,0,0.3)" strokeWidth="0.5" fill="rgba(0,0,0,0.15)"/>
-                <path d="M50,3 L52,6 L51,8 L49,5" stroke="rgba(0,0,0,0.35)" strokeWidth="0.5" fill="rgba(0,0,0,0.18)"/>
-                <path d="M30,50 L35,52 L32,54" stroke="rgba(0,0,0,0.3)" strokeWidth="0.4" fill="none"/>
-                <path d="M70,45 L75,47 L72,48" stroke="rgba(0,0,0,0.25)" strokeWidth="0.4" fill="none"/>
-                <circle cx="20%" cy="70%" r="2" fill="rgba(0,0,0,0.2)"/>
-                <circle cx="80%" cy="30%" r="1.5" fill="rgba(0,0,0,0.15)"/>
-                <circle cx="60%" cy="60%" r="1" fill="rgba(0,0,0,0.25)"/>
-              </svg>
-              
-              {/* Procedural grunge overlay 4 - oil stains */}
-              <div 
-                className="absolute inset-0 pointer-events-none opacity-15"
-                style={{
-                  background: `
-                    conic-gradient(from 45deg at 20% 30%, transparent 0deg, rgba(0, 0, 0, 0.4) 45deg, transparent 90deg),
-                    conic-gradient(from 180deg at 75% 70%, transparent 0deg, rgba(0, 0, 0, 0.3) 60deg, transparent 120deg),
-                    radial-gradient(circle at 40% 50%, rgba(0, 0, 0, 0.2) 0%, transparent 20%)
-                  `,
-                  filter: 'blur(2px)',
-                }}
-              />
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[200px]" style={{ 
-                    fontFamily: "'Orbitron', sans-serif",
-                    fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                    lineHeight: '1.1'
-                  }}>
-                    {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
-                  </h2>
-                  <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
-                    {isGlobal ? "Daily Global Contract" : "Standard Contract"}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-gray-300 uppercase tracking-wider font-medium">Mission Duration</div>
-                  <div className="text-xl font-bold text-yellow-400">{missionDuration}</div>
-                  <div className="text-xs mt-1 font-medium whitespace-nowrap">
-                    {(() => {
-                      const expiry = formatContractExpiry();
-                      return (
-                        <>
-                          <span className="text-orange-400/70">{expiry.label}</span>
-                          <span className="text-orange-400 ml-1">{expiry.time}</span>
-                        </>
-                      );
-                    })()}
-                  </div>
+            {/* Industrial Header with Hazard Stripes */}
+            <div className="mek-header-industrial">
+              <div className="relative z-10">
+                <h2 className="mek-text-industrial text-xl font-black tracking-wider text-yellow-400">
+                  {missionTitle}
+                </h2>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="mek-label-uppercase">Expires in</div>
+                  <div className="text-sm font-bold text-yellow-300">{formatCountdown(missionEndTime)}</div>
                 </div>
               </div>
+              {/* Add grunge overlays */}
+              <div className="mek-overlay-scratches"></div>
             </div>
-                </>
-              )}
-            
-            {headerStyle === 2 && (
-              /* Layout 2: Unified Banner - Header and Rewards Combined */
-              <div className="relative p-4 overflow-hidden" style={{
-                background: `
-                  repeating-linear-gradient(
-                    45deg,
-                    rgba(0, 0, 0, 0.9),
-                    rgba(0, 0, 0, 0.9) 10px,
-                    rgba(250, 182, 23, 0.15) 10px,
-                    rgba(250, 182, 23, 0.15) 20px
-                  ),
-                  linear-gradient(to right, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8))
-                `
-              }}>
-                {/* Same grunge overlays */}
-                <div className="absolute inset-0 pointer-events-none opacity-30" style={{
-                  background: `linear-gradient(105deg, transparent 40%, rgba(0, 0, 0, 0.3) 41%, transparent 43%)`
-                }} />
-                
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h2 className="text-lg font-bold tracking-wider text-yellow-400 mb-1 leading-tight break-words max-w-[200px]" style={{ 
-                      fontFamily: "'Orbitron', sans-serif",
-                      fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                      lineHeight: '1.1'
-                    }}>
-                      {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
-                    </h2>
-                    <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
-                      {isGlobal ? "Daily Global Contract" : "Standard Contract"}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6 bg-black/40 rounded-lg px-4 py-2">
-                    <div>
-                      <div className="text-2xl font-bold text-yellow-400">{formatGoldAmount(goldReward)}</div>
-                      <div className="text-[10px] text-gray-400 uppercase">Gold</div>
-                    </div>
-                    <div className="h-8 w-px bg-yellow-400/30" />
-                    <div>
-                      <div className="text-xl font-bold text-blue-400">+{xpReward.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400 uppercase">XP</div>
-                    </div>
-                    <div className="h-8 w-px bg-yellow-400/30" />
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-yellow-400">{missionDuration}</div>
-                      <div className="text-[10px] whitespace-nowrap">
-                        {(() => {
-                          const expiry = formatContractExpiry();
-                          return (
-                            <>
-                              <span className="text-orange-400/70">{expiry.label}</span>
-                              <span className="text-orange-400 ml-1">{expiry.time}</span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {headerStyle === 3 && (
-              /* Layout 3: Compact Strip - Everything in One Line */
-              <div className="relative px-5 py-3" style={{
-                background: `
-                  repeating-linear-gradient(
-                    90deg,
-                    rgba(0, 0, 0, 0.9),
-                    rgba(0, 0, 0, 0.9) 20px,
-                    rgba(250, 182, 23, 0.1) 20px,
-                    rgba(250, 182, 23, 0.1) 40px
-                  )
-                `
-              }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                      {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
-                    </h2>
-                    <span className="text-xs text-gray-500">|</span>
-                    <div className="text-xs text-gray-400 uppercase">
-                      {isGlobal ? "Global" : "Standard"}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-400 text-lg font-bold">{formatGoldAmount(goldReward)}</span>
-                      <span className="text-xs text-gray-500">GOLD</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400 text-lg font-bold">+{xpReward.toLocaleString()}</span>
-                      <span className="text-xs text-gray-500">XP</span>
-                    </div>
-                    <div className="text-yellow-400 font-mono text-sm">{missionDuration}</div>
-                    <div className="text-orange-400 text-xs">{formatContractExpiry()}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {headerStyle === 4 && (
-              /* Layout 4: Split Layout - Left Title, Right Stats */
-              <div className="relative flex" style={{
-                background: `linear-gradient(to right, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8))`
-              }}>
-                {/* Left Section - Title */}
-                <div className="flex-1 p-4" style={{
-                  background: `
-                    repeating-linear-gradient(
-                      45deg,
-                      transparent,
-                      transparent 10px,
-                      rgba(250, 182, 23, 0.05) 10px,
-                      rgba(250, 182, 23, 0.05) 20px
-                    )
-                  `
-                }}>
-                  <h2 className="text-lg font-bold text-yellow-400 leading-tight break-words max-w-[200px]" style={{ 
-                    fontFamily: "'Orbitron', sans-serif",
-                    fontSize: 'clamp(0.75rem, 2vw, 1.125rem)',
-                    lineHeight: '1.1'
-                  }}>
-                    {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
-                  </h2>
-                  <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
-                    {isGlobal ? "Daily Global Contract" : "Standard Contract"}
-                  </div>
-                  <div className="text-sm mt-1 font-medium whitespace-nowrap">
-                    {(() => {
-                      const expiry = formatContractExpiry();
-                      return (
-                        <>
-                          <span className="text-orange-400/70">{expiry.label}</span>
-                          <span className="text-orange-400 ml-1">{expiry.time}</span>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-                
-                {/* Right Section - Rewards */}
-                <div className="flex items-center bg-gradient-to-l from-yellow-900/30 to-transparent px-6">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-400">{(goldReward/1000).toFixed(0)}K</div>
-                      <div className="text-[10px] text-gray-400">GOLD</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-400">+{xpReward.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400">EXP</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-white">{missionDuration}</div>
-                      <div className="text-[10px] text-gray-400">TIME</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {headerStyle === 5 && (
-              /* Layout 5: Integrated Bar - All Info in Gradient Bar */
-              <div className="relative overflow-hidden">
-                <div className="relative p-4" style={{
-                  background: `
-                    linear-gradient(90deg, 
-                      rgba(0, 0, 0, 0.95) 0%,
-                      rgba(250, 182, 23, 0.15) 30%,
-                      rgba(250, 182, 23, 0.2) 50%,
-                      rgba(139, 92, 246, 0.15) 70%,
-                      rgba(0, 0, 0, 0.95) 100%)
-                  `
-                }}>
-                  {/* Industrial texture overlay */}
-                  <div className="absolute inset-0 opacity-20" style={{
-                    backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.3) 2px, rgba(0, 0, 0, 0.3) 3px)`
-                  }} />
-                  
-                  <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div>
-                        <h2 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                          {isGlobal ? `${dailyVariation} Crisis` : missionTitle}
-                        </h2>
-                        <div className="text-[10px] text-gray-400 uppercase">
-                          {isGlobal ? "Daily Global" : "Standard"} • {formatContractExpiry()}
-                        </div>
-                      </div>
-                      <div className="h-10 w-px bg-yellow-400/30" />
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <span className="text-2xl">💰</span>
-                          <span className="text-xl font-bold text-yellow-400">{formatGoldAmount(goldReward)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-2xl">✨</span>
-                          <span className="text-xl font-bold text-blue-400">+{xpReward.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-mono text-white">{missionDuration}</div>
-                      <div className="text-[10px] text-gray-400 uppercase">Duration</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            <div className="p-5">
-              {/* Gold & XP Display */}
-              <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-lg p-4 mb-4 border border-yellow-500/20">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-3xl font-bold text-yellow-400">
-                      {formatGoldAmount(goldReward)} <span className="text-sm font-normal">Gold</span>
-                    </div>
-                    <div className="text-xs text-yellow-300/60 uppercase tracking-wider">Primary Reward</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-semibold text-blue-400">+{xpReward.toLocaleString()} <span className="text-blue-300">XP</span></div>
-                    <div className="text-xs text-blue-300/60 uppercase tracking-wider">Experience</div>
-                  </div>
+            <div className="p-5 relative">
+              {/* Rewards Section */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-black/60 mek-border-sharp-gold p-4">
+                  <div className="mek-value-primary">{formatGoldAmount(goldReward)}</div>
+                  <div className="mek-label-uppercase">Gold Reward</div>
+                </div>
+                <div className="bg-black/60 mek-border-sharp-gold p-4">
+                  <div className="mek-value-secondary">+{xpReward.toLocaleString()}</div>
+                  <div className="mek-label-uppercase">Experience</div>
                 </div>
               </div>
 
-              {/* Rewards List - Sorted by chance with color coding */}
-              <div className="bg-black/60 rounded-lg p-4 mb-4 border border-gray-800">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-3">Potential Rewards</div>
-                <div className="space-y-2">
-                  {missionRewards.map((reward, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-gray-900/80 rounded flex items-center justify-center text-xs">
-                          {reward.icon || "📦"}
-                        </div>
-                        <span className="text-sm text-gray-300">{reward.name}</span>
-                        {reward.amount && <span className="text-xs text-gray-500">x{reward.amount}</span>}
-                      </div>
-                      <span className={`text-sm font-bold ${getRewardColor(reward.dropChance)}`}>
-                        {reward.dropChance}%
-                      </span>
+              {/* Mission Ailments */}
+              <div className="mb-4">
+                <div className="mek-label-uppercase mb-2">Ailments</div>
+                <div className="flex gap-2">
+                  {missionWeaknesses.map(w => (
+                    <div key={w} className="bg-black/40 mek-border-sharp-gray px-3 py-2 flex items-center gap-2">
+                      <span className="text-lg">{missionAilments[w as keyof typeof missionAilments].icon}</span>
+                      <span className="text-xs text-gray-400">{missionAilments[w as keyof typeof missionAilments].name}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Variation Buffs Section */}
+              {/* Mek Slots Grid (4x2 for 8 slots) */}
               <div className="mb-4">
-                <div className="mb-3">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-                  <div className="text-[10px] text-gray-400 mt-1">
-                    Match Mek traits to these variations for success bonuses
-                  </div>
-                </div>
-
-                {/* Grid Layout for Variation Buffs - Max 10 circular images */}
-                <div className="flex justify-center">
-                  <div className="grid grid-cols-5 gap-2 max-w-[400px]">
-                    {missionMultipliers.map((mult) => {
-                      const isMatched = matched.includes(mult.id);
-                      return (
-                        <div key={mult.id} className="relative">
-                          <div className="flex flex-col items-center">
-                            <div 
-                              onClick={() => setSelectedBuff(mult)}
-                              className={`
-                              relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 overflow-hidden cursor-pointer
-                              ${isMatched ? 'border-yellow-400 shadow-lg shadow-yellow-400/30' : 'border-gray-700'}
-                              transition-all hover:scale-110
-                            `}>
-                              <Image
-                                src={mult.image}
-                                alt={mult.id}
-                                fill
-                                className="rounded-full object-cover"
-                                sizes="60px"
-                              />
-                            </div>
-                            <div className={`text-[9px] font-medium mt-1 ${isMatched ? 'text-white' : 'text-gray-400'} uppercase tracking-wider text-center`}>
-                              {mult.name}
-                            </div>
-                            <div className={`text-[10px] font-bold ${isMatched ? 'text-yellow-400 drop-shadow-[0_0_4px_rgba(250,182,23,0.5)]' : 'text-gray-500'}`}>
-                              {mult.bonus}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Mek Slots - Industrial Grid Locked In */}
-              <div className="mb-4">
+                <div className="mek-label-uppercase mb-3">Deploy Meks ({meks.length}/{mekSlotCount})</div>
                 <div className="grid grid-cols-4 gap-2">
-                  {Array.from({ length: 8 }).map((_, i) => {
-                    const isLocked = i >= mekSlotCount;
-                    const assignedMek = (selectedMeks[contractId] || [])[i];
-                    const isHovered = hoveredMek?.missionId === contractId && hoveredMek?.slotIndex === i;
-                    
-                    return (
-                      <div key={i} className="aspect-square relative mek-slot">
-                        <div 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!isLocked) {
-                              if (assignedMek) {
-                                // Toggle clicked state for removal tooltip
-                                if (clickedMek?.missionId === contractId && clickedMek?.slotIndex === i) {
-                                  setClickedMek(null);
-                                } else {
-                                  setClickedMek({ missionId: contractId, slotIndex: i });
-                                }
-                              } else {
-                                // Open modal to add mek
-                                setSelectedMekSlot({ missionId: contractId, slotIndex: i });
-                                setShowMekModal(contractId);
-                              }
-                            }
-                          }}
-                          onMouseEnter={() => {
-                            if (assignedMek) {
-                              setHoveredMek({ missionId: contractId, slotIndex: i });
-                            }
-                          }}
-                          onMouseLeave={() => setHoveredMek(null)}
-                          className={`
-                            w-full h-full flex flex-col items-center justify-center transition-all relative
-                            ${isLocked 
-                              ? 'bg-black/80 opacity-30' 
-                              : assignedMek
-                                ? 'bg-gradient-to-br from-yellow-900/40 to-yellow-800/20'
-                                : 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/10 hover:shadow-lg hover:shadow-yellow-500/20 cursor-pointer'
-                            }
-                            border-2 ${isLocked ? 'border-gray-900' : assignedMek?.matchedTraits?.length > 0 ? 'border-yellow-400 shadow-[0_0_10px_rgba(250,182,23,0.5)]' : assignedMek ? (isHovered ? 'border-yellow-400 shadow-[0_0_15px_rgba(250,182,23,0.6)]' : 'border-white') : 'border-gray-700 hover:border-yellow-400'}
-                          `}>
-                          {!isLocked && (
-                            assignedMek ? (
-                              <div className="relative w-full h-full overflow-hidden">
-                                <Image
-                                  src={assignedMek.image || `/mek-images/150px/mek${String(Math.floor(Math.random() * 1000) + 1).padStart(4, '0')}.png`}
-                                  alt={assignedMek.name}
-                                  fill
-                                  className={`object-cover transition-all duration-300 ${
-                                    isHovered 
-                                      ? 'scale-110 brightness-110' 
-                                      : 'scale-100 brightness-100'
-                                  }`}
-                                />
-                                {/* Remove the wrapping div and render indicators directly on image */}
-                                {assignedMek.matchedTraits && assignedMek.matchedTraits.length > 0 && (
-                                  <>
-                                    {/* Trait Indicator Style 1: Corner Badge */}
-                                    {traitIndicatorStyle === 1 && (
-                                      <div className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                        +{assignedMek.matchedTraits.reduce((acc: number, trait: any) => acc + parseInt(trait.bonus.replace("%", "").replace("+", "")), 0)}%
-                                      </div>
-                                    )}
-                                    {/* Style 2: Bottom Bar */}
-                                    {traitIndicatorStyle === 2 && (
-                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-400 to-yellow-500 h-1.5" />
-                                    )}
-                                    {/* Style 3: Glow Ring */}
-                                    {traitIndicatorStyle === 3 && (
-                                      <div className="absolute inset-0 border-2 border-yellow-400 animate-pulse pointer-events-none overflow-hidden" />
-                                    )}
-                                    {/* Style 4: Star Icon */}
-                                    {traitIndicatorStyle === 4 && (
-                                      <div className="absolute -top-1.5 -right-1.5 text-yellow-400 text-lg drop-shadow-[0_0_4px_rgba(250,182,23,0.8)]">
-                                        ⭐
-                                      </div>
-                                    )}
-                                    {/* Style 5: Side Banner */}
-                                    {traitIndicatorStyle === 5 && (
-                                      <div className="absolute top-1 -right-1 bg-black/80 border border-yellow-400 text-yellow-400 text-[9px] font-bold px-1.5 py-0.5 rounded-l">
-                                        +{assignedMek.matchedTraits.reduce((acc: number, trait: any) => acc + parseInt(trait.bonus.replace("%", "").replace("+", "")), 0)}%
-                                      </div>
-                                    )}
-                                    {/* Style 6: Lightning Bolt */}
-                                    {traitIndicatorStyle === 6 && (
-                                      <div className="absolute -top-1 -right-1 text-yellow-400 text-base">
-                                        ⚡
-                                      </div>
-                                    )}
-                                    {/* Style 7: Corner Triangle */}
-                                    {traitIndicatorStyle === 7 && (
-                                      <div className="absolute top-0 right-0">
-                                        <div className="w-0 h-0 border-t-[20px] border-t-yellow-400 border-l-[20px] border-l-transparent" />
-                                      </div>
-                                    )}
-                                    {/* Style 8: Plus Symbol */}
-                                    {traitIndicatorStyle === 8 && (
-                                      <div className="absolute -top-2 -right-2 bg-black rounded-full p-0.5">
-                                        <div className="text-yellow-400 font-bold text-sm">+</div>
-                                      </div>
-                                    )}
-                                    {/* Style 9: Gradient Overlay */}
-                                    {traitIndicatorStyle === 9 && (
-                                      <div className="absolute inset-0 bg-gradient-to-t from-yellow-400/30 to-transparent pointer-events-none" />
-                                    )}
-                                    {/* Style 10: Text Only */}
-                                    {traitIndicatorStyle === 10 && (
-                                      <div className="absolute top-0.5 right-0.5 text-[8px] text-yellow-400 font-bold drop-shadow-[0_0_2px_rgba(0,0,0,1)]">
-                                        {assignedMek.matchedTraits.reduce((acc: number, trait: any) => acc + parseInt(trait.bonus.replace("%", "").replace("+", "")), 0)}%
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center justify-center">
-                                <span className="text-3xl text-yellow-500/60 hover:text-yellow-400 transition-colors">+</span>
-                                <span className="text-[9px] text-yellow-500/40 uppercase tracking-wider">Empty</span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                        
-                        {/* Mek Tooltip - Smart positioning to stay on screen */}
-                        {clickedMek?.missionId === contractId && clickedMek?.slotIndex === i && assignedMek && (
-                          <div className="mek-tooltip absolute z-50 bg-black/95 border border-yellow-400/50 rounded-lg p-3 min-w-[200px] max-w-[250px]" style={{
-                            ...(i % 4 === 0 ? 
-                              { left: '0', right: 'auto' } : 
-                              i % 4 === 3 ? 
-                              { right: '0', left: 'auto' } : 
-                              { left: '50%', transform: 'translateX(-50%)' }),
-                            ...(i >= 4 ? 
-                              { top: '100%', marginTop: '8px', bottom: 'auto' } : 
-                              { bottom: '100%', marginBottom: '8px', top: 'auto' })
-                          }}>
-                            <div className="text-sm font-bold text-yellow-400 mb-2">{assignedMek.name}</div>
-                            <div className="text-xs text-gray-400 mb-2">Power: {assignedMek.power}</div>
-                            {assignedMek.matchedTraits && assignedMek.matchedTraits.length > 0 && (
-                              <div className="mb-2">
-                                <div className="text-xs text-green-400 font-bold mb-1">Matched Bonuses:</div>
-                                {assignedMek.matchedTraits.map((trait: any) => (
-                                  <div key={trait.id} className="text-xs text-gray-300">
-                                    {trait.id}: <span className="text-green-400 font-bold">{trait.bonus}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex gap-2 mt-3">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedMekSlot({ missionId: contractId, slotIndex: i });
-                                  setShowMekModal(contractId);
-                                }}
-                                className="flex-1 px-2 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded text-xs text-yellow-400 font-bold transition-all"
-                              >
-                                Change
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newMeks = [...(selectedMeks[contractId] || [])];
-                                  newMeks[i] = null;
-                                  setSelectedMeks({ ...selectedMeks, [contractId]: newMeks });
-                                  // Trigger success rate animation
-                                  setAnimatedSuccessRate({ ...animatedSuccessRate, [contractId]: calculateNewSuccessRate(contractId, newMeks) });
-                                }}
-                                className="flex-1 px-2 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-xs text-red-400 font-bold transition-all"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {Array.from({ length: Math.max(mekSlotCount, 8) }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/30 bg-black/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-yellow-500/60 transition-all ${meks[i] ? 'bg-yellow-900/20' : ''}`}
+                      onClick={() => handleMekSlotClick(contractId, i)}
+                    >
+                      {meks[i] ? (
+                        <div className="text-xs text-yellow-400 font-bold">MEK</div>
+                      ) : (
+                        <div className="text-2xl text-gray-600">+</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Success Chance Bar */}
+              {/* Success Rate Bar */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs text-gray-500 uppercase tracking-wider">Success Chance</span>
-                  <span className={`text-lg font-bold transition-all duration-500 ${
-                    (animatedSuccessRate[contractId] || successRate) >= 80 ? 'text-green-400' : 
-                    (animatedSuccessRate[contractId] || successRate) >= 50 ? 'text-yellow-400' : 'text-orange-400'
-                  }`}>
-                    {animatedSuccessRate[contractId] || successRate}%
-                  </span>
+                  <div className="mek-label-uppercase">Success Rate</div>
+                  <div className={`text-lg font-bold ${successRate >= 80 ? 'text-green-400' : successRate >= 50 ? 'text-yellow-400' : 'text-orange-400'}`}>
+                    {successRate}%
+                  </div>
                 </div>
                 <AnimatedSuccessBar 
-                  successRate={animatedSuccessRate[contractId] || successRate} 
-                  height="medium"
+                  successRate={successRate} 
+                  height="small"
                   showLabel={false}
                 />
               </div>
 
               {/* Deploy Button */}
-              <div className="text-center">
-                <div className="text-xs text-gray-400 mb-2">
-                  Deployment Fee: <span className="text-yellow-400 font-bold">{formatGoldAmount(deployFee)} Gold</span>
+              <div className="flex items-center gap-3">
+                <div className="bg-black/60 mek-border-sharp-gray px-4 py-3 flex-1">
+                  <div className="mek-label-uppercase">Deploy Fee</div>
+                  <div className="text-sm font-bold text-gray-300">
+                    {formatGoldAmount(deployFee)} Gold
+                  </div>
                 </div>
-                <button className="px-12 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black rounded font-bold text-base uppercase tracking-wider transition-all shadow-lg hover:shadow-yellow-500/30">
-                  DEPLOY
+                <button className="mek-button-primary px-6 py-3 font-bold uppercase tracking-wider">
+                  Deploy
                 </button>
               </div>
+
+              {/* Industrial Overlays */}
+              <div className="mek-overlay-rust"></div>
+              <div className="mek-overlay-metal-texture"></div>
             </div>
           </div>
         </div>
       );
     }
 
-    // Industrial V2: 2x3 Grid Layout
     if (elegantVariation === "industrial-v2") {
       const epicTitles: Record<string, string> = {
         "mining outpost": "DRILL SITE ECHO",
@@ -2159,12 +1689,21 @@ export default function ContractsLayoutOption11() {
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-6 py-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-yellow-400">CONTRACTS SYSTEM</h1>
-          <div className="flex items-center gap-4">
+        <div className="mek-header-industrial mb-6">
+          <div className="relative z-10 flex justify-between items-center">
+            <h1 className="mek-text-industrial text-4xl font-black text-yellow-400 tracking-wider">SINGLE MISSIONS</h1>
             <div className="flex items-center gap-4">
+              <ViewActiveContractsButton
+                activeContracts={6}
+                maxContracts={14}
+                onClick={() => console.log('Navigate to active contracts')}
+                variant={1}
+              />
             </div>
           </div>
+          {/* Add industrial overlays */}
+          <div className="mek-overlay-scratches"></div>
+          <div className="mek-overlay-diagonal-stripes"></div>
         </div>
         
         {/* Grid Layout */}

@@ -22,6 +22,26 @@ body {
 /* Import the global design system */
 @import '../styles/global-design-system.css';
 
+/* Leaderboard animations */
+@keyframes goldPulse {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.6), inset 0 0 30px rgba(255, 215, 0, 0.25);
+  }
+}
+
+@keyframes goldShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400px); }
+}
+
 /* Industrial hazard stripe patterns */
 .bg-repeating-stripes-yellow {
   background-image: repeating-linear-gradient(
@@ -139,6 +159,16 @@ body {
   animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Slow pulse animation keyframes */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Particle flow animation for progress bars with fade in/out */
 @keyframes particleFlow {
   0% {
@@ -213,6 +243,22 @@ body {
   to {
     transform: translate(-50%, -50%) rotate(360deg);
   }
+}
+
+/* View Active Contracts Button Animations */
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+@keyframes grid-move {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(20px, 20px); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 @keyframes magicParticle {

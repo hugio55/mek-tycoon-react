@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import MasterRangeSystem from '@/components/MasterRangeSystem';
 
 // Data system definitions
 const DATA_SYSTEMS = [
   { id: 'mek-talent-tree', name: 'Mek Talent Tree Nodes', icon: '🌳', implemented: false },
   { id: 'mech-power-chips', name: 'Mech Power Chips', icon: '⚡', implemented: false },
-  { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: false },
+  { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: true },
   { id: 'events', name: 'Events System', icon: '📅', implemented: false },
   { id: 'bosses', name: 'Bosses', icon: '👹', implemented: false },
   { id: 'final-bosses', name: 'Final Bosses', icon: '🐉', implemented: false },
@@ -204,7 +205,7 @@ export default function AdminMasterDataPage() {
           </div>
 
           {/* Universal Power Chips */}
-          <div className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
+          <div className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg">
             <button
               onClick={() => toggleSection('universal-chips')}
               className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
@@ -212,15 +213,21 @@ export default function AdminMasterDataPage() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🔮</span>
                 <h3 className="text-lg font-bold text-yellow-400">Universal Power Chips</h3>
+                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
               </div>
               <span className="text-gray-400">{expandedSections.has('universal-chips') ? '▼' : '▶'}</span>
             </button>
             {expandedSections.has('universal-chips') && (
               <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Universal chip generation and balance</p>
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
-                </div>
+                <p className="text-gray-400 mb-4">
+                  Universal chip buff generation system with master ranges for all buff categories.
+                  <span className="text-green-400 ml-2">✓ Migrated from chip-builder page</span>
+                </p>
+                <MasterRangeSystem 
+                  onApplyRanges={() => {
+                    console.log('Universal chip ranges applied');
+                  }}
+                />
               </div>
             )}
           </div>

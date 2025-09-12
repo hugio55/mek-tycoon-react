@@ -398,10 +398,8 @@ export default function MekChips3Page() {
                                   className="object-contain transition-all duration-300"
                                   style={{
                                     filter: getChipGlow(tier, isHovered),
-                                    width: 'auto',
-                                    height: 'auto',
-                                    maxWidth: '80px',
-                                    maxHeight: '80px'
+                                    width: '80px',
+                                    height: '80px'
                                   }}
                                 />
                               </div>
@@ -664,25 +662,23 @@ export default function MekChips3Page() {
                                 </div>
                               </div>
                               
-                              {recipe.rarityBiasBonus > 0 && (
-                                <div 
-                                  className="flex flex-col items-center px-2 py-1 rounded"
-                                  style={{
-                                    background: `${rarityColor}15`,
-                                    border: `1px solid ${rarityColor}40`
-                                  }}
-                                >
-                                  <span className="text-lg font-bold" style={{ 
-                                    color: rarityColor,
-                                    fontFamily: 'Rajdhani, sans-serif',
-                                    letterSpacing: '-0.02em'
-                                  }}>+{recipe.rarityBiasBonus}</span>
-                                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ 
-                                    color: rarityColor, 
-                                    opacity: 0.8 
-                                  }}>BIAS</span>
-                                </div>
-                              )}
+                              <div 
+                                className="flex flex-col items-center px-2 py-1 rounded"
+                                style={{
+                                  background: recipe.rarityBiasBonus > 0 ? `${rarityColor}15` : 'rgba(107,114,128,0.15)',
+                                  border: recipe.rarityBiasBonus > 0 ? `1px solid ${rarityColor}40` : '1px solid rgba(107,114,128,0.4)'
+                                }}
+                              >
+                                <span className="text-lg font-bold" style={{ 
+                                  color: recipe.rarityBiasBonus > 0 ? rarityColor : '#6b7280',
+                                  fontFamily: 'Rajdhani, sans-serif',
+                                  letterSpacing: '-0.02em'
+                                }}>+{recipe.rarityBiasBonus}</span>
+                                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ 
+                                  color: recipe.rarityBiasBonus > 0 ? rarityColor : '#6b7280', 
+                                  opacity: 0.8 
+                                }}>BIAS</span>
+                              </div>
                             </div>
                           </div>
                           
@@ -696,33 +692,23 @@ export default function MekChips3Page() {
                               const isHoveringCraft = hoveredCraftButton === recipe.id;
                               
                               return (
-                                <div key={idx} className={`relative group transition-all duration-300 ${
-                                  !isMet 
-                                    ? isHoveringCraft
-                                      ? 'animate-pulse' 
-                                      : 'animate-pulse-slow'
-                                    : ''
-                                }`}
-                                  style={{
-                                    filter: !isMet 
-                                      ? isHoveringCraft
-                                        ? 'drop-shadow(0 0 15px rgba(239,68,68,1)) drop-shadow(0 0 30px rgba(239,68,68,0.6))' 
-                                        : 'drop-shadow(0 0 6px rgba(239,68,68,0.5)) drop-shadow(0 0 12px rgba(239,68,68,0.3))'
-                                      : 'none',
-                                    animation: !isMet && !isHoveringCraft ? 'pulse-glow 2s ease-in-out infinite' : undefined
-                                  }}
-                                >
+                                <div key={idx} className={`relative group transition-all duration-300`}>
                                   <div className="flex items-center gap-2">
                                     <div className="relative w-8 h-8 flex items-center justify-center">
                                       {req.image ? (
                                         <img 
                                           src={req.image} 
                                           alt={req.name} 
-                                          className="w-6 h-6 object-contain"
+                                          className={`w-6 h-6 object-contain ${
+                                            !isMet && isHoveringCraft ? 'animate-pulse' : ''
+                                          }`}
                                           style={{
                                             filter: isMet 
                                               ? 'drop-shadow(0 0 6px rgba(250,182,23,0.6))'
-                                              : 'brightness(0.5) drop-shadow(0 0 3px rgba(0,0,0,0.5))'
+                                              : isHoveringCraft
+                                                ? 'brightness(0.8) drop-shadow(0 0 10px rgba(239,68,68,1)) drop-shadow(0 0 20px rgba(239,68,68,0.6))'
+                                                : 'brightness(0.6) drop-shadow(0 0 5px rgba(239,68,68,0.8))',
+                                            animation: !isMet && !isHoveringCraft ? 'pulse-slow 3s ease-in-out infinite' : undefined
                                           }}
                                         />
                                       ) : (
