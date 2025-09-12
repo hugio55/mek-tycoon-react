@@ -3,20 +3,26 @@
 import { useState, useEffect } from "react";
 
 export default function GlobalBackground() {
-  const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string, size: number}>>([]);
+  const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string, size: number, driftAngle: number}>>([]);
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, fastPulse?: boolean}>>([]);
   const [satellites, setSatellites] = useState<Array<{id: number, startX: string, startY: string, endX: string, endY: string, delay: string, duration: string}>>([]);
 
   useEffect(() => {
-    // Generate floating particles with size variation
-    const generatedParticles = [...Array(20)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 10}s`,
-      duration: `${5 + Math.random() * 5}s`,
-      size: 0.8 + Math.random() * 0.8, // Size between 0.8px and 1.6px
-    }));
+    // Generate particles that drift in straight lines like space debris
+    const generatedParticles = [...Array(25)].map((_, i) => {
+      // Random drift angle between -20 and 20 degrees from horizontal
+      const driftAngle = -20 + Math.random() * 40;
+      
+      return {
+        id: i,
+        left: `${-10 + Math.random() * 120}%`, // Can start slightly off-screen
+        top: `${Math.random() * 100}%`,
+        delay: `${Math.random() * 30}s`, // Stagger over 30 seconds
+        duration: `${20 + Math.random() * 15}s`, // 20-35 seconds to cross
+        size: 0.8 + Math.random() * 0.8, // Size between 0.8px and 1.6px
+        driftAngle: driftAngle,
+      };
+    });
     setParticles(generatedParticles);
     
     // Generate twinkling stars (35% more = 81 stars)
@@ -163,7 +169,7 @@ export default function GlobalBackground() {
           />
         ))}
         
-        {/* Floating particles with size variation */}
+        {/* Floating particles drifting in straight lines like space debris */}
         {particles.map((particle) => (
           <div
             key={particle.id}
@@ -173,10 +179,12 @@ export default function GlobalBackground() {
               height: `${particle.size}px`,
               left: particle.left,
               top: particle.top,
-              animation: `floatParticle ${particle.duration} ease-in-out infinite`,
+              animation: `linearDrift ${particle.duration} linear infinite`,
               animationDelay: particle.delay,
               boxShadow: '0 0 6px rgba(250, 182, 23, 0.6)',
-            }}
+              '--drift-x': `${Math.cos(particle.driftAngle * Math.PI / 180) * 150}vw`,
+              '--drift-y': `${Math.sin(particle.driftAngle * Math.PI / 180) * 150}vh`,
+            } as React.CSSProperties}
           />
         ))}
         

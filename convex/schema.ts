@@ -281,10 +281,8 @@ export default defineSchema({
 
   // Mek Tree Buff Tables for procedural generation
   mekTreeBuffTables: defineTable({
-    category: v.string(), // e.g., "flat_gold", "gold_multiplier", etc.
-    displayName: v.string(), // e.g., "Flat Gold", "Gold Multiplier"
-    description: v.optional(v.string()),
-    unit: v.optional(v.string()), // e.g., "gold", "%", "x"
+    category: v.string(), // e.g., "Gold Flat", "Essence Rate Global", etc.
+    displayName: v.optional(v.string()), // Optional display name
     values: v.array(v.array(v.number())), // 7x10 array: [rarityTier][treeTier]
     isActive: v.boolean(), // Whether to include in procedural generation
     createdAt: v.number(),

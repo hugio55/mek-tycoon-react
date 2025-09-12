@@ -37,9 +37,6 @@ export const getActiveBuffTables = query({
 export const saveBuffTable = mutation({
   args: {
     category: v.string(),
-    displayName: v.string(),
-    description: v.optional(v.string()),
-    unit: v.optional(v.string()),
     values: v.array(v.array(v.number())), // 7x10 array
     isActive: v.boolean(),
   },
@@ -64,9 +61,6 @@ export const saveBuffTable = mutation({
     if (existing) {
       // Update existing
       await ctx.db.patch(existing._id, {
-        displayName: args.displayName,
-        description: args.description,
-        unit: args.unit,
         values: args.values,
         isActive: args.isActive,
         updatedAt: Date.now(),
@@ -76,9 +70,6 @@ export const saveBuffTable = mutation({
       // Create new
       return await ctx.db.insert("mekTreeBuffTables", {
         category: args.category,
-        displayName: args.displayName,
-        description: args.description,
-        unit: args.unit,
         values: args.values,
         isActive: args.isActive,
         createdAt: Date.now(),
@@ -135,8 +126,7 @@ export const getBuffValue = query({
     
     return {
       value: table.values[rarityTier][tierIndex],
-      unit: table.unit,
-      displayName: table.displayName,
+      category: table.category,
     };
   },
 });
@@ -150,10 +140,8 @@ export const generateRandomBuffsForMek = query({
   },
   handler: async (ctx, args): Promise<Array<{
     category: string;
-    displayName: string;
     treeTier: number;
     value: number;
-    unit?: string;
   }>> => {
     const activeTables = await ctx.db
       .query("mekTreeBuffTables")
@@ -194,10 +182,8 @@ export const generateRandomBuffsForMek = query({
       if (buffValue) {
         buffs.push({
           category: selectedTable.category,
-          displayName: buffValue.displayName,
           treeTier: treeTier,
           value: buffValue.value,
-          unit: buffValue.unit,
         });
       }
     }

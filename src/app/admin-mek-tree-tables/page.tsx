@@ -16,40 +16,67 @@ const RARITY_TIERS = [
   { label: "God Tier (1-10)", min: 1, max: 10 },
 ];
 
-// Default buff categories
-const DEFAULT_BUFF_CATEGORIES = [
-  "Flat Gold",
-  "Gold Multiplier",
-  "Essence Drop Rate",
-  "Essence Multiplier",
-  "XP Gain",
-  "Critical Chance",
-  "Critical Damage",
-  "Attack Speed",
-  "Movement Speed",
-  "Health Regen",
-  "Damage Reduction",
-  "Luck",
-];
+// Official buff categories from the game's categories pool
+// Organized by category type: gold, essence, market, reward_chance, rarity_bias, xp, mek_slot
+const BUFF_CATEGORIES_BY_TYPE = {
+  gold: [
+    "Gold Flat",
+    "Gold Rate Mek",
+    "Interest Rate Bank",
+    "CircuTree Gold Cost Reduction %",
+    "Scrapyard Gold Reward Increase",
+  ],
+  essence: [
+    "CircuTree Essence Cost Reduction %",
+    "Essence Rate Global",
+    "Essence Rate Specific",
+    "Scrapyard Essence Reward Increase",
+    "Flat Rewards of Essence",
+    "Essence Bar Cap Increase",
+    "Crafting Glyph Essence Cost Reduction",
+  ],
+  market: [
+    "Auction House Fee Reduction",
+    "Discount on OE Items",
+    "Crafting Fee Reduction",
+  ],
+  reward_chance: [
+    "Scrap Yard Loot Chance Increase",
+    "Fight Cooldown Timer Reduction",
+    "Various Perks to Fight Mechanics",
+    "Glyph Duration",
+  ],
+  rarity_bias: [
+    "Rarity Bias",
+  ],
+  xp: [
+    "XP Gain Bank",
+    "XP Gain Scrap Yard",
+  ],
+  mek_slot: [
+    "Mek Slots",
+  ],
+};
+
+// Flatten for backward compatibility
+const DEFAULT_BUFF_CATEGORIES = Object.values(BUFF_CATEGORIES_BY_TYPE).flat();
 
 interface BuffTable {
   _id?: Id<"mekTreeBuffTables">;
   category: string;
-  displayName: string;
-  description?: string;
-  unit?: string; // e.g., "gold", "%", "x", etc.
   values: number[][]; // [rarityTier][treeTier] = value
   isActive: boolean;
   createdAt?: number;
   updatedAt?: number;
 }
 
-// Interpolation function with adjustable curve
+// Interpolation function with adjustable curve and rounding
 function interpolateValue(
   min: number,
   max: number,
   position: number, // 0 to 1
-  curveStrength: number // 0 = linear, 1 = maximum curve
+  curveStrength: number, // 0 = linear, 1 = maximum curve
+  roundTo: number = 1 // 1 = no rounding, 10 = round to tens, 100 = round to hundreds
 ): number {
   // Apply power curve based on strength
   // curveStrength 0 = linear (power of 1)
@@ -57,7 +84,13 @@ function interpolateValue(
   const power = 1 + (curveStrength * 2);
   const curvedPosition = Math.pow(position, power);
   
-  return Math.round(min + (max - min) * curvedPosition);
+  const value = min + (max - min) * curvedPosition;
+  return Math.round(value / roundTo) * roundTo;
+}
+
+// Format number with commas
+function formatNumber(num: number): string {
+  return num.toLocaleString('en-US');
 }
 
 // Generate full table from min/max values
@@ -65,7 +98,8 @@ function generateTableFromMinMax(
   minValue: number,
   maxValue: number,
   horizontalCurve: number,
-  verticalCurve: number
+  verticalCurve: number,
+  roundTo: number = 1
 ): number[][] {
   const table: number[][] = [];
   
@@ -80,11 +114,11 @@ function generateTableFromMinMax(
       const horizontalPos = tierIndex / 9;
       
       // Calculate min and max for this rarity level
-      const rarityMin = interpolateValue(minValue, maxValue, verticalPos * 0.3, verticalCurve);
-      const rarityMax = interpolateValue(minValue, maxValue, verticalPos + (1 - verticalPos) * 0.7, verticalCurve);
+      const rarityMin = interpolateValue(minValue, maxValue, verticalPos * 0.3, verticalCurve, roundTo);
+      const rarityMax = interpolateValue(minValue, maxValue, verticalPos + (1 - verticalPos) * 0.7, verticalCurve, roundTo);
       
       // Calculate value for this tier within the rarity range
-      const value = interpolateValue(rarityMin, rarityMax, horizontalPos, horizontalCurve);
+      const value = interpolateValue(rarityMin, rarityMax, horizontalPos, horizontalCurve, roundTo);
       
       row.push(value);
     }
@@ -106,9 +140,6 @@ export default function MekTreeTablesPage() {
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryData, setNewCategoryData] = useState({
     category: "",
-    displayName: "",
-    description: "",
-    unit: "",
   });
   
   // Interpolation controls
@@ -117,6 +148,7 @@ export default function MekTreeTablesPage() {
     maxValue: 2800,
     horizontalCurve: 0.3, // 0 = linear, 1 = maximum curve
     verticalCurve: 0.6,   // 0 = linear, 1 = maximum curve
+    roundTo: 1, // 1 = no rounding, 10 = round to tens, 100 = round to hundreds
   });
 
   // Convex queries and mutations
@@ -137,23 +169,40 @@ export default function MekTreeTablesPage() {
         setCurrentTable(found);
         // Set interpolation min/max from existing data
         if (found.values && found.values.length > 0) {
-          setInterpolationData({
-            ...interpolationData,
+          setInterpolationData(prev => ({
+            ...prev,
             minValue: found.values[0][0],
             maxValue: found.values[6][9],
-          });
+          }));
         }
       } else {
         // Create new empty table for this category
         setCurrentTable({
           category: selectedCategory,
-          displayName: selectedCategory,
           values: createEmptyTable(),
           isActive: true,
         });
       }
     }
   }, [buffTables, selectedCategory]);
+
+  // Real-time interpolation update
+  useEffect(() => {
+    if (!currentTable || !interpolateMode) return;
+    
+    const newValues = generateTableFromMinMax(
+      interpolationData.minValue,
+      interpolationData.maxValue,
+      interpolationData.horizontalCurve,
+      interpolationData.verticalCurve,
+      interpolationData.roundTo
+    );
+    
+    setCurrentTable(prev => ({
+      ...prev!,
+      values: newValues,
+    }));
+  }, [interpolationData, interpolateMode]);
 
   // Handle cell value change
   const handleCellChange = (rarityIndex: number, tierIndex: number, value: string) => {
@@ -169,24 +218,6 @@ export default function MekTreeTablesPage() {
     });
   };
 
-  // Apply interpolation
-  const applyInterpolation = () => {
-    if (!currentTable) return;
-    
-    const newValues = generateTableFromMinMax(
-      interpolationData.minValue,
-      interpolationData.maxValue,
-      interpolationData.horizontalCurve,
-      interpolationData.verticalCurve
-    );
-    
-    setCurrentTable({
-      ...currentTable,
-      values: newValues,
-    });
-    
-    setMessage({ type: 'success', text: 'Values interpolated successfully!' });
-  };
 
   // Parse pasted data (tab-delimited from spreadsheet)
   const parsePastedData = (text: string) => {
@@ -246,14 +277,11 @@ export default function MekTreeTablesPage() {
     try {
       await saveBuffTable({
         category: currentTable.category,
-        displayName: currentTable.displayName,
-        description: currentTable.description,
-        unit: currentTable.unit,
         values: currentTable.values,
         isActive: currentTable.isActive,
       });
       
-      setMessage({ type: 'success', text: `Saved ${currentTable.displayName} successfully!` });
+      setMessage({ type: 'success', text: `Saved ${currentTable.category} successfully!` });
       setEditMode(false);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to save table' });
@@ -262,24 +290,21 @@ export default function MekTreeTablesPage() {
 
   // Create new category
   const handleCreateCategory = async () => {
-    if (!newCategoryData.category || !newCategoryData.displayName) {
-      setMessage({ type: 'error', text: 'Category and display name are required' });
+    if (!newCategoryData.category) {
+      setMessage({ type: 'error', text: 'Category name is required' });
       return;
     }
     
     try {
       await saveBuffTable({
         category: newCategoryData.category,
-        displayName: newCategoryData.displayName,
-        description: newCategoryData.description,
-        unit: newCategoryData.unit,
         values: createEmptyTable(),
         isActive: true,
       });
       
       setSelectedCategory(newCategoryData.category);
       setShowNewCategory(false);
-      setNewCategoryData({ category: "", displayName: "", description: "", unit: "" });
+      setNewCategoryData({ category: "" });
       setMessage({ type: 'success', text: 'New category created!' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to create category' });
@@ -290,13 +315,13 @@ export default function MekTreeTablesPage() {
   const handleDelete = async () => {
     if (!currentTable?._id) return;
     
-    if (!confirm(`Are you sure you want to delete "${currentTable.displayName}"?`)) {
+    if (!confirm(`Are you sure you want to delete "${currentTable.category}"?`)) {
       return;
     }
     
     try {
       await deleteBuffTable({ id: currentTable._id });
-      setSelectedCategory("Flat Gold");
+      setSelectedCategory("Gold Flat");
       setMessage({ type: 'success', text: 'Category deleted' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to delete category' });
@@ -307,7 +332,7 @@ export default function MekTreeTablesPage() {
   const exportAsCSV = () => {
     if (!currentTable) return;
     
-    let csv = `${currentTable.displayName}\n`;
+    let csv = `${currentTable.category}\n`;
     csv += "Rank\t" + Array.from({length: 10}, (_, i) => i + 1).join("\t") + "\n";
     
     RARITY_TIERS.forEach((tier, i) => {
@@ -363,40 +388,41 @@ export default function MekTreeTablesPage() {
                 </button>
               </div>
               
-              <div className="space-y-1 max-h-[70vh] overflow-y-auto">
-                {buffTables?.map((table) => (
-                  <button
-                    key={table._id}
-                    onClick={() => setSelectedCategory(table.category)}
-                    className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all ${
-                      selectedCategory === table.category
-                        ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
-                        : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="font-semibold">{table.displayName}</div>
-                    {table.unit && (
-                      <div className="text-xs text-gray-500">Unit: {table.unit}</div>
-                    )}
-                  </button>
-                ))}
-                
-                {/* Default categories that don't exist yet */}
-                {DEFAULT_BUFF_CATEGORIES.filter(cat => 
-                  !buffTables?.find(t => t.category === cat)
-                ).map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all ${
-                      selectedCategory === cat
-                        ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
-                        : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="font-semibold">{cat}</div>
-                    <div className="text-xs text-gray-500 italic">Not configured</div>
-                  </button>
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+                {/* Group categories by type */}
+                {Object.entries(BUFF_CATEGORIES_BY_TYPE).map(([categoryType, categories]) => (
+                  <div key={categoryType}>
+                    {/* Category Type Header */}
+                    <div className="text-xs font-bold text-gray-400 uppercase px-2 py-1 bg-gray-800/30 rounded-sm mb-1">
+                      {categoryType.replace('_', ' ')}
+                    </div>
+                    
+                    {/* Categories in this type */}
+                    <div className="space-y-1 pl-2">
+                      {categories.map(catName => {
+                        const existingTable = buffTables?.find(t => t.category === catName);
+                        
+                        return (
+                          <button
+                            key={catName}
+                            onClick={() => setSelectedCategory(catName)}
+                            className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all ${
+                              selectedCategory === catName
+                                ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                                : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600'
+                            }`}
+                          >
+                            <div className="font-semibold">
+                              {catName}
+                            </div>
+                            {!existingTable && (
+                              <div className="text-xs text-gray-500 italic">Not configured</div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -409,10 +435,7 @@ export default function MekTreeTablesPage() {
                 {/* Table Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-lg font-bold text-yellow-400">{currentTable.displayName}</h2>
-                    {currentTable.description && (
-                      <p className="text-xs text-gray-400 mt-0.5">{currentTable.description}</p>
-                    )}
+                    <h2 className="text-lg font-bold text-yellow-400">{currentTable.category}</h2>
                   </div>
                   
                   <div className="flex gap-2">
@@ -473,8 +496,8 @@ export default function MekTreeTablesPage() {
                 {/* Interpolation Controls */}
                 {interpolateMode && (
                   <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-                    <h3 className="text-sm font-bold text-purple-400 mb-3">Value Interpolation</h3>
-                    <div className="grid grid-cols-4 gap-4">
+                    <h3 className="text-sm font-bold text-purple-400 mb-3">Live Value Interpolation</h3>
+                    <div className="grid grid-cols-5 gap-4">
                       <div>
                         <label className="text-xs text-gray-400">Min Value (3k-4k, Tier 1)</label>
                         <input
@@ -529,19 +552,25 @@ export default function MekTreeTablesPage() {
                           <span className="text-xs text-yellow-400 w-10">{Math.round(interpolationData.verticalCurve * 100)}%</span>
                         </div>
                       </div>
+                      <div>
+                        <label className="text-xs text-gray-400">Rounding</label>
+                        <select
+                          value={interpolationData.roundTo}
+                          onChange={(e) => setInterpolationData({...interpolationData, roundTo: parseInt(e.target.value)})}
+                          className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs"
+                        >
+                          <option value="1">No rounding</option>
+                          <option value="10">Round to 10s</option>
+                          <option value="100">Round to 100s</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={applyInterpolation}
-                        className="px-4 py-1.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700"
-                      >
-                        Apply Interpolation
-                      </button>
+                    <div className="mt-3">
                       <button
                         onClick={() => setInterpolateMode(false)}
                         className="px-4 py-1.5 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
                       >
-                        Close
+                        Close Interpolation
                       </button>
                     </div>
                     <p className="text-xs text-gray-400 mt-2">
@@ -555,36 +584,7 @@ export default function MekTreeTablesPage() {
                 {/* Settings Row (in edit mode) */}
                 {editMode && (
                   <div className="mb-3 p-3 bg-gray-800/50 rounded">
-                    <div className="grid grid-cols-4 gap-3">
-                      <div>
-                        <label className="text-xs text-gray-400">Display Name</label>
-                        <input
-                          type="text"
-                          value={currentTable.displayName}
-                          onChange={(e) => setCurrentTable({...currentTable, displayName: e.target.value})}
-                          className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400">Unit (e.g., gold, %, x)</label>
-                        <input
-                          type="text"
-                          value={currentTable.unit || ""}
-                          onChange={(e) => setCurrentTable({...currentTable, unit: e.target.value})}
-                          className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="text-xs text-gray-400">Description</label>
-                        <input
-                          type="text"
-                          value={currentTable.description || ""}
-                          onChange={(e) => setCurrentTable({...currentTable, description: e.target.value})}
-                          className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs"
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         id="isActive"
@@ -627,8 +627,7 @@ export default function MekTreeTablesPage() {
                                 />
                               ) : (
                                 <span className="text-gray-200 text-xs">
-                                  {currentTable.values[rarityIndex][tierIndex]}
-                                  {currentTable.unit && ` ${currentTable.unit}`}
+                                  {formatNumber(currentTable.values[rarityIndex][tierIndex])}
                                 </span>
                               )}
                             </td>
@@ -705,45 +704,13 @@ export default function MekTreeTablesPage() {
               
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-gray-400">Category ID (no spaces)</label>
+                  <label className="text-xs text-gray-400">Category Name</label>
                   <input
                     type="text"
                     value={newCategoryData.category}
-                    onChange={(e) => setNewCategoryData({...newCategoryData, category: e.target.value.replace(/\s+/g, '_')})}
-                    placeholder="e.g., attack_power"
-                    className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-xs text-gray-400">Display Name</label>
-                  <input
-                    type="text"
-                    value={newCategoryData.displayName}
-                    onChange={(e) => setNewCategoryData({...newCategoryData, displayName: e.target.value})}
+                    onChange={(e) => setNewCategoryData({...newCategoryData, category: e.target.value})}
                     placeholder="e.g., Attack Power"
                     className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-xs text-gray-400">Unit (optional)</label>
-                  <input
-                    type="text"
-                    value={newCategoryData.unit}
-                    onChange={(e) => setNewCategoryData({...newCategoryData, unit: e.target.value})}
-                    placeholder="e.g., damage, %, gold"
-                    className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-xs"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-xs text-gray-400">Description (optional)</label>
-                  <textarea
-                    value={newCategoryData.description}
-                    onChange={(e) => setNewCategoryData({...newCategoryData, description: e.target.value})}
-                    placeholder="What does this buff do?"
-                    className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white h-16 text-xs"
                   />
                 </div>
               </div>
@@ -758,7 +725,7 @@ export default function MekTreeTablesPage() {
                 <button
                   onClick={() => {
                     setShowNewCategory(false);
-                    setNewCategoryData({ category: "", displayName: "", description: "", unit: "" });
+                    setNewCategoryData({ category: "" });
                   }}
                   className="px-4 py-1.5 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
                 >

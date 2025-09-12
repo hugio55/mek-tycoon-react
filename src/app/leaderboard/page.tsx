@@ -290,37 +290,6 @@ export default function LeaderboardPage() {
 
   return (
     <div className="text-white py-8 min-h-screen relative">
-      <style jsx>{`
-        @keyframes pulseGlow {
-          0%, 100% { 
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
-            transform: scale(1.03);
-          }
-        }
-        
-        .podium-image-hover {
-          transition: all 0.3s ease;
-        }
-        
-        .podium-image-hover:hover {
-          transform: scale(1.05);
-          filter: brightness(1.1);
-          box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.5) !important;
-        }
-        
-        .podium-name-hover {
-          transition: all 0.3s ease;
-        }
-        
-        .podium-name-hover:hover {
-          text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.5);
-          color: #ffd700 !important;
-        }
-      `}</style>
       
       {/* Epic Title */}
       <div className="text-center mb-12">
@@ -347,7 +316,7 @@ export default function LeaderboardPage() {
               <div className="text-3xl font-thin text-gray-300 mb-2">2</div>
               <div className="relative mb-3">
                 <div 
-                  className="w-32 h-32 rounded-lg overflow-hidden bg-gray-900 border-2 border-silver-400 cursor-pointer podium-image-hover" 
+                  className="w-32 h-32 rounded-lg overflow-hidden bg-gray-900 border-2 border-silver-400 cursor-pointer transition-all duration-300 hover:scale-105 hover:brightness-110" 
                   style={{ borderColor: '#C0C0C0', boxShadow: '0 4px 20px rgba(192, 192, 192, 0.4)' }}
                   onClick={() => {}}
                 >
@@ -361,7 +330,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="p-3 rounded-lg backdrop-blur-sm" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(192, 192, 192, 0.2)', width: '128px' }}>
                 <div 
-                  className="text-base font-bold text-white truncate cursor-pointer podium-name-hover"
+                  className="text-base font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
                   onClick={() => {}}
                 >
                   {podiumData[1].username || 'Player 2'}
@@ -479,7 +448,7 @@ export default function LeaderboardPage() {
                   
                   {/* The Mek Image with reduced glow */}
                   <div 
-                    className="absolute inset-0 rounded-lg overflow-hidden bg-gray-900 cursor-pointer podium-image-hover" 
+                    className="absolute inset-0 rounded-lg overflow-hidden bg-gray-900 cursor-pointer transition-all duration-300 hover:scale-105 hover:brightness-110" 
                     onClick={() => {}}
                     style={{ 
                       borderWidth: '3px',
@@ -490,7 +459,7 @@ export default function LeaderboardPage() {
                         0 0 40px rgba(255, 215, 0, 0.5),
                         inset 0 0 15px rgba(255, 215, 0, 0.15)
                       `,
-                      animation: 'pulseGlow 3s ease-in-out infinite',
+                      animation: '',
                       zIndex: 1 
                     }}>
                     <MekImage
@@ -510,7 +479,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="p-3 rounded-lg backdrop-blur-sm mt-2" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(255, 215, 0, 0.2)', width: '160px' }}>
                 <div 
-                  className="text-lg font-bold text-white truncate cursor-pointer podium-name-hover"
+                  className="text-lg font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
                   onClick={() => {}}
                 >
                   {podiumData[0].username || 'Player 1'}
@@ -529,7 +498,7 @@ export default function LeaderboardPage() {
               <div className="text-3xl font-thin text-orange-600 mb-2">3</div>
               <div className="relative mb-3">
                 <div 
-                  className="w-32 h-32 rounded-lg overflow-hidden bg-gray-900 border-2 cursor-pointer podium-image-hover" 
+                  className="w-32 h-32 rounded-lg overflow-hidden bg-gray-900 border-2 cursor-pointer transition-all duration-300 hover:scale-105 hover:brightness-110" 
                   style={{ borderColor: '#CD7F32', boxShadow: '0 4px 20px rgba(205, 127, 50, 0.4)' }}
                   onClick={() => {}}
                 >
@@ -543,7 +512,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="p-3 rounded-lg backdrop-blur-sm" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(205, 127, 50, 0.2)', width: '128px' }}>
                 <div 
-                  className="text-base font-bold text-white truncate cursor-pointer podium-name-hover"
+                  className="text-base font-bold text-white truncate cursor-pointer transition-all duration-300 hover:text-yellow-400"
                   onClick={() => {}}
                 >
                   {podiumData[2].username || 'Player 3'}
@@ -556,8 +525,9 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2 mb-8 justify-center flex-wrap" onClick={(e) => e.preventDefault()}>
+      {/* Category Tabs - Sci-Fi Industrial Style */}
+      <div className="flex gap-3 mb-10 justify-center flex-wrap px-4" onClick={(e) => e.preventDefault()}>
+        {/* Achievement Points - Primary Button */}
         <div
           role="button"
           tabIndex={0}
@@ -566,16 +536,72 @@ export default function LeaderboardPage() {
             setShowGoldSubmenu(false);
             setShowEssenceSubmenu(false);
           }}
-          className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-            selectedCategory === 'achievements'
-              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-              : 'bg-gray-900/50 text-gray-400 hover:text-white'
+          className={`relative group ${
+            selectedCategory === 'achievements' ? 'z-20' : 'z-10'
           }`}
+          style={{
+            perspective: '1000px'
+          }}
         >
-          Achievement Points
+          <div className={`
+            relative px-6 py-3 font-bold uppercase tracking-wider
+            transition-all duration-300 transform
+            ${selectedCategory === 'achievements' 
+              ? 'mek-button-primary scale-105' 
+              : 'mek-button-secondary hover:scale-105'
+            }
+          `}
+          style={{
+            clipPath: selectedCategory === 'achievements' 
+              ? 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%)' 
+              : 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+            background: selectedCategory === 'achievements'
+              ? 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)'
+              : 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 20, 20, 0.8) 100%)',
+            boxShadow: selectedCategory === 'achievements'
+              ? '0 0 30px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
+              : '0 0 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            border: selectedCategory === 'achievements'
+              ? '2px solid #ffd700'
+              : '1px solid rgba(250, 182, 23, 0.3)',
+          }}
+          >
+            {selectedCategory === 'achievements' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    width: '200%',
+                  }}
+                />
+              </div>
+            )}
+            <span className={`relative ${
+              selectedCategory === 'achievements' 
+                ? 'text-black' 
+                : 'text-yellow-400 group-hover:text-yellow-300'
+            }`}
+            style={{
+              textShadow: selectedCategory === 'achievements'
+                ? '0 0 10px rgba(0, 0, 0, 0.3)'
+                : '0 0 10px rgba(250, 182, 23, 0.5)',
+              fontSize: '0.875rem',
+            }}
+            >
+              Achievement Points
+            </span>
+            {selectedCategory === 'achievements' && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"
+                style={{
+                  boxShadow: '0 0 10px rgba(74, 222, 128, 0.8)',
+                }}
+              />
+            )}
+          </div>
         </div>
         
-        <div className="relative">
+        {/* Total Gold with Dropdown */}
+        <div className="relative group">
           <div
             role="button"
             tabIndex={0}
@@ -584,16 +610,67 @@ export default function LeaderboardPage() {
               setShowGoldSubmenu(!showGoldSubmenu);
               setShowEssenceSubmenu(false);
             }}
-            className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-              selectedCategory === 'gold'
-                ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-                : 'bg-gray-900/50 text-gray-400 hover:text-white'
-            }`}
+            className={`
+              relative px-6 py-3 font-bold uppercase tracking-wider
+              transition-all duration-300 transform
+              ${selectedCategory === 'gold' 
+                ? 'mek-button-primary scale-105' 
+                : 'mek-button-secondary hover:scale-105'
+              }
+            `}
+            style={{
+              clipPath: selectedCategory === 'gold' 
+                ? 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%)' 
+                : 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+              background: selectedCategory === 'gold'
+                ? 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)'
+                : 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 20, 20, 0.8) 100%)',
+              boxShadow: selectedCategory === 'gold'
+                ? '0 0 30px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
+                : '0 0 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              border: selectedCategory === 'gold'
+                ? '2px solid #ffd700'
+                : '1px solid rgba(250, 182, 23, 0.3)',
+            }}
           >
-            {selectedCategory === 'gold' ? (goldView === 'total' ? 'Total Gold' : 'Gold/hr') : 'Total Gold'} {selectedCategory === 'gold' && '▼'}
+            {selectedCategory === 'gold' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    width: '200%',
+                  }}
+                />
+              </div>
+            )}
+            <span className={`relative ${
+              selectedCategory === 'gold' 
+                ? 'text-black' 
+                : 'text-yellow-400 group-hover:text-yellow-300'
+            }`}
+            style={{
+              textShadow: selectedCategory === 'gold'
+                ? '0 0 10px rgba(0, 0, 0, 0.3)'
+                : '0 0 10px rgba(250, 182, 23, 0.5)',
+              fontSize: '0.875rem',
+            }}
+            >
+              {selectedCategory === 'gold' ? (goldView === 'total' ? 'Total Gold' : 'Gold/hr') : 'Total Gold'} 
+              {selectedCategory === 'gold' && (
+                <span className="ml-2 inline-block transition-transform duration-200"
+                  style={{ transform: showGoldSubmenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                >▼</span>
+              )}
+            </span>
           </div>
           {showGoldSubmenu && selectedCategory === 'gold' && (
-            <div className="absolute top-full mt-1 left-0 bg-gray-900/95 border border-yellow-400/30 rounded-lg overflow-hidden z-10">
+            <div className="absolute top-full mt-2 left-0 mek-card-industrial mek-border-sharp-gold rounded-lg overflow-hidden z-30"
+              style={{
+                minWidth: '150px',
+                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
               <div
                 role="button"
                 tabIndex={0}
@@ -601,9 +678,9 @@ export default function LeaderboardPage() {
                   setGoldView('total');
                   setShowGoldSubmenu(false);
                 }}
-                className={`block w-full px-4 py-2 text-left transition-all ${
+                className={`block w-full px-4 py-3 text-left transition-all font-medium uppercase tracking-wider text-sm ${
                   goldView === 'total' 
-                    ? 'bg-yellow-400/20 text-yellow-400' 
+                    ? 'bg-yellow-400/20 text-yellow-400 mek-text-shadow' 
                     : 'text-gray-400 hover:bg-yellow-400/10 hover:text-yellow-300'
                 }`}
               >
@@ -616,9 +693,9 @@ export default function LeaderboardPage() {
                   setGoldView('perHour');
                   setShowGoldSubmenu(false);
                 }}
-                className={`block w-full px-4 py-2 text-left transition-all ${
+                className={`block w-full px-4 py-3 text-left transition-all font-medium uppercase tracking-wider text-sm ${
                   goldView === 'perHour' 
-                    ? 'bg-yellow-400/20 text-yellow-400' 
+                    ? 'bg-yellow-400/20 text-yellow-400 mek-text-shadow' 
                     : 'text-gray-400 hover:bg-yellow-400/10 hover:text-yellow-300'
                 }`}
               >
@@ -628,24 +705,8 @@ export default function LeaderboardPage() {
           )}
         </div>
         
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            setSelectedCategory('meks');
-            setShowGoldSubmenu(false);
-            setShowEssenceSubmenu(false);
-          }}
-          className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-            selectedCategory === 'meks'
-              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-              : 'bg-gray-900/50 text-gray-400 hover:text-white'
-          }`}
-        >
-          Mek Count
-        </div>
-        
-        <div className="relative">
+        {/* Total Essence with Dropdown */}
+        <div className="relative group">
           <div
             role="button"
             tabIndex={0}
@@ -654,16 +715,67 @@ export default function LeaderboardPage() {
               setShowEssenceSubmenu(!showEssenceSubmenu);
               setShowGoldSubmenu(false);
             }}
-            className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-              selectedCategory === 'essence'
-                ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-                : 'bg-gray-900/50 text-gray-400 hover:text-white'
-            }`}
+            className={`
+              relative px-6 py-3 font-bold uppercase tracking-wider
+              transition-all duration-300 transform
+              ${selectedCategory === 'essence' 
+                ? 'mek-button-primary scale-105' 
+                : 'mek-button-secondary hover:scale-105'
+              }
+            `}
+            style={{
+              clipPath: selectedCategory === 'essence' 
+                ? 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%)' 
+                : 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+              background: selectedCategory === 'essence'
+                ? 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)'
+                : 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 20, 20, 0.8) 100%)',
+              boxShadow: selectedCategory === 'essence'
+                ? '0 0 30px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
+                : '0 0 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              border: selectedCategory === 'essence'
+                ? '2px solid #ffd700'
+                : '1px solid rgba(250, 182, 23, 0.3)',
+            }}
           >
-            {selectedCategory === 'essence' ? (essenceView === 'total' ? 'Total Essence' : 'Essence/hr') : 'Total Essence'} {selectedCategory === 'essence' && '▼'}
+            {selectedCategory === 'essence' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    width: '200%',
+                  }}
+                />
+              </div>
+            )}
+            <span className={`relative ${
+              selectedCategory === 'essence' 
+                ? 'text-black' 
+                : 'text-yellow-400 group-hover:text-yellow-300'
+            }`}
+            style={{
+              textShadow: selectedCategory === 'essence'
+                ? '0 0 10px rgba(0, 0, 0, 0.3)'
+                : '0 0 10px rgba(250, 182, 23, 0.5)',
+              fontSize: '0.875rem',
+            }}
+            >
+              {selectedCategory === 'essence' ? (essenceView === 'total' ? 'Total Essence' : 'Essence/hr') : 'Total Essence'} 
+              {selectedCategory === 'essence' && (
+                <span className="ml-2 inline-block transition-transform duration-200"
+                  style={{ transform: showEssenceSubmenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                >▼</span>
+              )}
+            </span>
           </div>
           {showEssenceSubmenu && selectedCategory === 'essence' && (
-            <div className="absolute top-full mt-1 left-0 bg-gray-900/95 border border-yellow-400/30 rounded-lg overflow-hidden z-10">
+            <div className="absolute top-full mt-2 left-0 mek-card-industrial mek-border-sharp-gold rounded-lg overflow-hidden z-30"
+              style={{
+                minWidth: '150px',
+                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
               <div
                 role="button"
                 tabIndex={0}
@@ -671,9 +783,9 @@ export default function LeaderboardPage() {
                   setEssenceView('total');
                   setShowEssenceSubmenu(false);
                 }}
-                className={`block w-full px-4 py-2 text-left transition-all ${
+                className={`block w-full px-4 py-3 text-left transition-all font-medium uppercase tracking-wider text-sm ${
                   essenceView === 'total' 
-                    ? 'bg-yellow-400/20 text-yellow-400' 
+                    ? 'bg-yellow-400/20 text-yellow-400 mek-text-shadow' 
                     : 'text-gray-400 hover:bg-yellow-400/10 hover:text-yellow-300'
                 }`}
               >
@@ -686,9 +798,9 @@ export default function LeaderboardPage() {
                   setEssenceView('perHour');
                   setShowEssenceSubmenu(false);
                 }}
-                className={`block w-full px-4 py-2 text-left transition-all ${
+                className={`block w-full px-4 py-3 text-left transition-all font-medium uppercase tracking-wider text-sm ${
                   essenceView === 'perHour' 
-                    ? 'bg-yellow-400/20 text-yellow-400' 
+                    ? 'bg-yellow-400/20 text-yellow-400 mek-text-shadow' 
                     : 'text-gray-400 hover:bg-yellow-400/10 hover:text-yellow-300'
                 }`}
               >
@@ -698,6 +810,70 @@ export default function LeaderboardPage() {
           )}
         </div>
         
+        {/* Mek Count Button */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            setSelectedCategory('meks');
+            setShowGoldSubmenu(false);
+            setShowEssenceSubmenu(false);
+          }}
+          className={`relative group ${
+            selectedCategory === 'meks' ? 'z-20' : 'z-10'
+          }`}
+        >
+          <div className={`
+            relative px-6 py-3 font-bold uppercase tracking-wider
+            transition-all duration-300 transform
+            ${selectedCategory === 'meks' 
+              ? 'mek-button-primary scale-105' 
+              : 'mek-button-secondary hover:scale-105'
+            }
+          `}
+          style={{
+            clipPath: selectedCategory === 'meks' 
+              ? 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%)' 
+              : 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+            background: selectedCategory === 'meks'
+              ? 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)'
+              : 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 20, 20, 0.8) 100%)',
+            boxShadow: selectedCategory === 'meks'
+              ? '0 0 30px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
+              : '0 0 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            border: selectedCategory === 'meks'
+              ? '2px solid #ffd700'
+              : '1px solid rgba(250, 182, 23, 0.3)',
+          }}
+          >
+            {selectedCategory === 'meks' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    width: '200%',
+                  }}
+                />
+              </div>
+            )}
+            <span className={`relative ${
+              selectedCategory === 'meks' 
+                ? 'text-black' 
+                : 'text-yellow-400 group-hover:text-yellow-300'
+            }`}
+            style={{
+              textShadow: selectedCategory === 'meks'
+                ? '0 0 10px rgba(0, 0, 0, 0.3)'
+                : '0 0 10px rgba(250, 182, 23, 0.5)',
+              fontSize: '0.875rem',
+            }}
+            >
+              Mek Count
+            </span>
+          </div>
+        </div>
+        
+        {/* Top Meks Button */}
         <div
           role="button"
           tabIndex={0}
@@ -706,13 +882,58 @@ export default function LeaderboardPage() {
             setShowGoldSubmenu(false);
             setShowEssenceSubmenu(false);
           }}
-          className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-            selectedCategory === 'topMeks'
-              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-              : 'bg-gray-900/50 text-gray-400 hover:text-white'
+          className={`relative group ${
+            selectedCategory === 'topMeks' ? 'z-20' : 'z-10'
           }`}
         >
-          Top Meks
+          <div className={`
+            relative px-6 py-3 font-bold uppercase tracking-wider
+            transition-all duration-300 transform
+            ${selectedCategory === 'topMeks' 
+              ? 'mek-button-primary scale-105' 
+              : 'mek-button-secondary hover:scale-105'
+            }
+          `}
+          style={{
+            clipPath: selectedCategory === 'topMeks' 
+              ? 'polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%)' 
+              : 'polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%)',
+            background: selectedCategory === 'topMeks'
+              ? 'linear-gradient(135deg, #fab617 0%, #ffd700 50%, #fab617 100%)'
+              : 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 20, 20, 0.8) 100%)',
+            boxShadow: selectedCategory === 'topMeks'
+              ? '0 0 30px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)'
+              : '0 0 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            border: selectedCategory === 'topMeks'
+              ? '2px solid #ffd700'
+              : '1px solid rgba(250, 182, 23, 0.3)',
+          }}
+          >
+            {selectedCategory === 'topMeks' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    width: '200%',
+                  }}
+                />
+              </div>
+            )}
+            <span className={`relative ${
+              selectedCategory === 'topMeks' 
+                ? 'text-black' 
+                : 'text-yellow-400 group-hover:text-yellow-300'
+            }`}
+            style={{
+              textShadow: selectedCategory === 'topMeks'
+                ? '0 0 10px rgba(0, 0, 0, 0.3)'
+                : '0 0 10px rgba(250, 182, 23, 0.5)',
+              fontSize: '0.875rem',
+            }}
+            >
+              Top Meks
+            </span>
+          </div>
         </div>
       </div>
 
@@ -784,9 +1005,9 @@ export default function LeaderboardPage() {
                     </td>
                     {selectedCategory === 'achievements' ? (
                       <>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800">
                               <MekImage
                                 src={undefined}
                                 assetId={"0000"}
@@ -893,9 +1114,9 @@ export default function LeaderboardPage() {
                     </td>
                     {selectedCategory === 'achievements' ? (
                       <>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800">
                               <MekImage
                                 src={undefined}
                                 assetId={"0000"}
@@ -923,9 +1144,9 @@ export default function LeaderboardPage() {
                       </>
                     ) : (
                       <>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800">
                               <MekImage
                                 src={undefined}
                                 assetId={"0000"}

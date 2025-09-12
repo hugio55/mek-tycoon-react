@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Navigation from '@/components/Navigation';
 import Image from 'next/image';
 
 interface ChipTier {
@@ -252,7 +251,6 @@ export default function UniChips2Page() {
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
-      <Navigation />
       
       <div className="container mx-auto px-4 pt-20 pb-12 relative">
         <div className="max-w-7xl mx-auto">
@@ -307,15 +305,15 @@ export default function UniChips2Page() {
                 </div>
                 
                 <div className="text-right">
-                  <div className="bg-black/60 border border-yellow-500/30 p-4 rounded-lg">
-                    <div className="text-xs text-gray-500 uppercase tracking-[0.3em] mb-2 font-bold">RECIPE RESET</div>
-                    <div className="text-3xl font-mono font-bold" style={{ 
+                  <div className="bg-black/60 border border-yellow-500/30 p-2 rounded">
+                    <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-1 font-bold">RECIPE RESET</div>
+                    <div className="text-xl font-mono font-bold" style={{ 
                       color: '#fab617',
-                      textShadow: '0 0 20px rgba(250,204,21,0.5)' 
+                      textShadow: '0 0 10px rgba(250,204,21,0.3)' 
                     }}>
                       {getTimeRemaining(dailyRecipes[0].expiresAt)}
                     </div>
-                    <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="mt-1 h-0.5 bg-gray-800 rounded-full overflow-hidden">
                       {mounted && (
                         <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 animate-pulse" style={{
                           width: `${((24 * 60 * 60 * 1000 - (dailyRecipes[0].expiresAt.getTime() - currentTime)) / (24 * 60 * 60 * 1000)) * 100}%`

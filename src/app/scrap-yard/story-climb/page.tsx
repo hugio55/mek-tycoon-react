@@ -26,6 +26,11 @@ export default function StoryClimbPage() {
   const [mounted, setMounted] = useState(false);
   const [nodeImages, setNodeImages] = useState<Map<string, HTMLImageElement>>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [eventImages, setEventImages] = useState<Map<string, HTMLImageElement>>(new Map());
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 }); // For panning the tree
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -61,6 +66,26 @@ export default function StoryClimbPage() {
     const index = Math.abs(hash) % mekImagesList.length;
     return mekImagesList[index];
   }, []);
+  
+  // Function to get a random event image for event nodes
+  const getEventImage = useCallback((nodeId: string): string => {
+    // Use node ID to deterministically select an event image
+    let hash = 0;
+    for (let i = 0; i < nodeId.length; i++) {
+      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    // There are 154 event images (blank resize.webp and blank resize_2.webp through blank resize_154.webp)
+    const totalEventImages = 154;
+    const index = Math.abs(hash) % totalEventImages;
+    
+    // Return the correct filename
+    if (index === 0) {
+      return 'blank resize.webp';
+    } else {
+      return `blank resize_${index + 1}.webp`;
+    }
+  }, []);
 
   // Load images for nodes and wait for them to load
   useEffect(() => {
@@ -68,11 +93,22 @@ export default function StoryClimbPage() {
     
     const loadImages = async () => {
       const imageMap = new Map<string, HTMLImageElement>();
+      const eventImageMap = new Map<string, HTMLImageElement>();
       const promises: Promise<void>[] = [];
       
       for (const node of treeData.nodes) {
-        // Only load images for normal, boss, and final_boss nodes
-        if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+        if (node.storyNodeType === 'final_boss') {
+          // Use rainbow.jpg for final boss
+          const img = new Image();
+          const promise = new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Still resolve on error to not block
+          });
+          img.src = '/random-images/rainbow.jpg';
+          imageMap.set(node.id, img);
+          promises.push(promise);
+        } else if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss') {
+          // Load mek images for normal and boss nodes
           const imageName = getNodeImage(node.id);
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
@@ -82,16 +118,29 @@ export default function StoryClimbPage() {
           img.src = `/mek-images/150px/${imageName}`;
           imageMap.set(node.id, img);
           promises.push(promise);
+        } else if (node.storyNodeType === 'event') {
+          // Load event images for event nodes
+          const eventImageName = getEventImage(node.id);
+          const img = new Image();
+          const promise = new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Still resolve on error to not block
+          });
+          // Note: The path needs to match the actual folder structure with spaces encoded
+          img.src = `/event-images/450px webp/${eventImageName.replace(/ /g, '%20')}`;
+          eventImageMap.set(node.id, img);
+          promises.push(promise);
         }
       }
       
       setNodeImages(imageMap);
+      setEventImages(eventImageMap);
       await Promise.all(promises);
       setImagesLoaded(true);
     };
     
     loadImages();
-  }, [treeData, getNodeImage]);
+  }, [treeData, getNodeImage, getEventImage]);
 
   // Handle client-side mounting
   useEffect(() => {
@@ -196,18 +245,40 @@ export default function StoryClimbPage() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Find bounds of all nodes
-    const nodes = treeData.nodes;
+    // Adjust positions for event/boss nodes - they need to be centered
+    const nodes = treeData.nodes.map(node => {
+      const adjustedNode = { ...node };
+      
+      // Event and boss nodes need position adjustment to center them
+      // Slightly less offset to move them toward upper-left
+      if (node.storyNodeType === 'event') {
+        // Event nodes: a bit less offset for upper-left positioning, plus 5px upward
+        adjustedNode.x = node.x + 25; // Reduced from 30
+        adjustedNode.y = node.y + 20; // Reduced by 5px more for upward shift
+      } else if (node.storyNodeType === 'boss') {
+        // Boss nodes: shifted 5px to the right
+        adjustedNode.x = node.x + 40; // Increased by 5px for rightward shift
+        adjustedNode.y = node.y + 35;
+      } else if (node.storyNodeType === 'final_boss') {
+        // Final boss: center it like START node (needs more rightward shift)
+        adjustedNode.x = node.x + 75; // Increased to center like START
+        adjustedNode.y = node.y + 20; // Move 40px higher up (reduced from 60)
+      }
+      // Normal nodes don't need adjustment
+      
+      return adjustedNode;
+    });
     // Calculate bounds INCLUDING node sizes
     let actualMinX = Infinity, actualMaxX = -Infinity;
     let actualMinY = Infinity, actualMaxY = -Infinity;
     
     // Calculate the actual bounds including node sizes
     nodes.forEach(node => {
-      let nodeSize = 25; // normal nodes
-      if (node.id === 'start') nodeSize = 40;
-      else if (node.storyNodeType === 'event') nodeSize = 60;
-      else if (node.storyNodeType === 'boss') nodeSize = 80;
-      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      let nodeSize = 26; // normal nodes 5% larger
+      if (node.id === 'start') nodeSize = 44; // 10% bigger
+      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
+      else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
+      else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
       
       actualMinX = Math.min(actualMinX, node.x - nodeSize);
       actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
@@ -232,10 +303,10 @@ export default function StoryClimbPage() {
     const treeHeight = maxY - minY;
     const actualTreeWidth = actualMaxX - actualMinX;
     
-    // Calculate scale to fit width INCLUDING node sizes
-    const padding = 60; // Increased padding to ensure nodes don't clip
-    const scaleX = (canvas.width - padding * 2) / actualTreeWidth;
-    const scale = scaleX * 0.85; // Reduced scale factor to ensure everything fits
+    // Calculate scale based on tree width, but we'll adjust positioning for centering
+    const padding = 30; // Slightly more padding for safety
+    const scaleX = (canvas.width - padding * 2) / treeWidth; // Scale based on node centers, not full width
+    const scale = scaleX * 0.75; // Compress width more by 20 pixels to ensure nodes stay within canvas
     
     // Calculate total tree height when scaled
     const scaledTreeHeight = treeHeight * scale;
@@ -245,8 +316,32 @@ export default function StoryClimbPage() {
       const scaledX = (x - minX) * scale;
       const scaledY = (y - minY) * scale;
       
-      // Center the tree horizontally accounting for node sizes
-      let offsetX = (canvas.width - treeWidth * scale) / 2;
+      // Center the START node horizontally in the canvas
+      let offsetX;
+      if (startNode) {
+        // Calculate where the start node would be after scaling
+        const startScaledX = (startNode.x - minX) * scale;
+        // Center it by placing it at canvas.width / 2
+        // Add a manual adjustment to compensate for visual centering
+        const centerAdjustment = -64; // Shifted left by 10 more pixels for narrower tree
+        offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
+        
+        // Debug logging
+        console.log("START centering debug:", {
+          canvasWidth: canvas.width,
+          canvasCenter: canvas.width / 2,
+          startNodeX: startNode.x,
+          minX: minX,
+          startScaledX: startScaledX,
+          offsetX: offsetX,
+          centerAdjustment: centerAdjustment,
+          finalStartX: startScaledX + offsetX
+        });
+      } else {
+        // Fallback to centering the whole tree if no start node
+        const leftOverflow = (minX - actualMinX) * scale;
+        offsetX = padding + leftOverflow;
+      }
       
       // Position the start node near the bottom of the canvas
       let offsetY;
@@ -261,8 +356,8 @@ export default function StoryClimbPage() {
       }
       
       return {
-        x: scaledX + offsetX,
-        y: scaledY + offsetY
+        x: scaledX + offsetX + panOffset.x,
+        y: scaledY + offsetY + panOffset.y
       };
     };
     
@@ -339,39 +434,47 @@ export default function StoryClimbPage() {
       // Check if node is completed
       const isCompleted = completedNodes.has(node.id);
       
-      // Set node sizes to match talent builder exactly
-      let nodeSize = 25; // normal nodes
+      // Set node sizes - make all nodes bigger
+      let nodeSize = 26; // normal nodes 5% larger (was 25)
       let fillColor = 'transparent'; // No fill for normal nodes
       let strokeColor = '#6b7280'; // gray for unavailable
       let strokeWidth = 2; // thin stroke
       
       if (node.id === 'start') {
-        nodeSize = 40; // start node
+        nodeSize = 44; // start node - 10% bigger (was 40)
         fillColor = '#10b981'; // green
         strokeColor = '#10b981';
         strokeWidth = 3;
       } else if (node.storyNodeType === 'event') {
-        nodeSize = 60; // MUCH bigger circles to match builder
+        nodeSize = 66; // Event nodes - 10% bigger (was 60)
         fillColor = '#8b5cf6'; // purple
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
       } else if (node.storyNodeType === 'boss') {
-        nodeSize = 80; // MUCH larger squares to match builder
-        fillColor = '#ef4444'; // red
+        nodeSize = 90; // Boss nodes - 12% bigger (was 80, then 88, now +2%)
+        fillColor = 'transparent'; // Will use custom rendering
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
       } else if (node.storyNodeType === 'final_boss') {
-        nodeSize = 100; // EXTRA large square to match builder
-        fillColor = '#fab617'; // gold
+        nodeSize = 150; // Final boss - 50% bigger total (was 100, then 125, now 150)
+        fillColor = 'transparent'; // Will use custom rendering
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
       }
       
       // Check if node is available (connected to a completed node)
       // Start node should never be "available" - it's the starting point
+      // Only allow upward progression (target node must have lower Y value than completed nodes)
       const isAvailable = node.id !== 'start' && !isCompleted && treeData.connections.some(conn => {
         const otherNodeId = conn.from === node.id ? conn.to : (conn.to === node.id ? conn.from : null);
-        return otherNodeId && completedNodes.has(otherNodeId);
+        if (!otherNodeId || !completedNodes.has(otherNodeId)) return false;
+        
+        // Find the Y value of the connected completed node
+        const connectedNode = nodes.find(n => n.id === otherNodeId);
+        if (!connectedNode) return false;
+        
+        // Only allow progression if target node is higher on screen (lower Y value)
+        return node.y < connectedNode.y;
       });
       
       // Update stroke color and width based on availability for non-mechanism nodes
@@ -422,15 +525,329 @@ export default function StoryClimbPage() {
         ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
         ctx.fillStyle = fillColor;
         ctx.fill();
+        
+        // Draw event image if available
+        if (eventImages.has(node.id)) {
+          const img = eventImages.get(node.id)!;
+          if (img.complete) {
+            ctx.save();
+            // Clip to circular shape
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, nodeSize - 3, 0, Math.PI * 2); // Slightly smaller to leave room for border
+            ctx.clip();
+            
+            // Draw the event image centered and cropped (not squashed)
+            // Use the image at its full height, center-cropped into circle
+            const imgAspect = img.width / img.height;
+            const circleSize = (nodeSize - 3) * 2;
+            
+            // Calculate source dimensions to maintain aspect ratio
+            let srcWidth = img.width;
+            let srcHeight = img.height;
+            let srcX = 0;
+            let srcY = 0;
+            
+            // If image is wider than tall, crop the sides
+            if (imgAspect > 1) {
+              srcWidth = img.height; // Make it square by using height
+              srcX = (img.width - srcWidth) / 2; // Center horizontally
+            } else if (imgAspect < 1) {
+              // If image is taller than wide, crop top/bottom
+              srcHeight = img.width; // Make it square by using width
+              srcY = (img.height - srcHeight) / 2; // Center vertically
+            }
+            
+            // Draw the image cropped and centered
+            ctx.drawImage(img, srcX, srcY, srcWidth, srcHeight,
+                         pos.x - nodeSize + 3, pos.y - nodeSize + 3, circleSize, circleSize);
+            
+            // Add overlay effects based on state
+            if (!isCompleted && !isAvailable) {
+              // Darken unavailable nodes
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+              ctx.arc(pos.x, pos.y, nodeSize - 3, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (isCompleted) {
+              // Green tint for completed
+              ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+              ctx.arc(pos.x, pos.y, nodeSize - 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+        }
+        
+        // Draw border
         ctx.strokeStyle = strokeColor;
         ctx.lineWidth = strokeWidth;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
         ctx.stroke();
+      } else if (node.storyNodeType === 'boss') {
+        // DESIGN OPTION 1: Holographic Energy Shield
+        const halfSize = nodeSize;
+        const time = Date.now() / 1000;
+        
+        // Draw dark metallic base
+        ctx.fillStyle = 'rgba(10, 10, 20, 0.9)';
+        ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+        
+        // Draw energy field layers
+        for (let i = 3; i >= 0; i--) {
+          const offset = i * 3;
+          const alpha = 0.15 - (i * 0.03);
+          
+          // Animated energy field
+          ctx.save();
+          ctx.strokeStyle = isCompleted ? `rgba(16, 185, 129, ${alpha})` : 
+                           isAvailable ? `rgba(239, 68, 68, ${alpha + Math.sin(time * 2) * 0.1})` : 
+                           `rgba(107, 114, 128, ${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([10, 5]);
+          ctx.lineDashOffset = time * 10;
+          ctx.strokeRect(pos.x - halfSize - offset, pos.y - halfSize - offset, 
+                        (halfSize + offset) * 2, (halfSize + offset) * 2);
+          ctx.restore();
+        }
+        
+        // Draw corner energy nodes
+        const corners = [
+          { x: pos.x - halfSize, y: pos.y - halfSize },
+          { x: pos.x + halfSize, y: pos.y - halfSize },
+          { x: pos.x + halfSize, y: pos.y + halfSize },
+          { x: pos.x - halfSize, y: pos.y + halfSize }
+        ];
+        
+        corners.forEach((corner, i) => {
+          const pulse = Math.sin(time * 3 + i) * 0.5 + 0.5;
+          ctx.save();
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = isCompleted ? 'rgba(16, 185, 129, 0.8)' :
+                           isAvailable ? `rgba(239, 68, 68, ${0.5 + pulse * 0.5})` :
+                           'rgba(107, 114, 128, 0.3)';
+          ctx.fillStyle = isCompleted ? '#10b981' :
+                         isAvailable ? '#ef4444' :
+                         '#6b7280';
+          ctx.beginPath();
+          ctx.arc(corner.x, corner.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw tech pattern overlay
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = isCompleted ? '#10b981' : isAvailable ? '#ef4444' : '#6b7280';
+        ctx.lineWidth = 0.5;
+        
+        // Circuit-like patterns
+        for (let i = 0; i < 3; i++) {
+          const y = pos.y - halfSize + (halfSize * 2 / 3) * (i + 0.5);
+          ctx.beginPath();
+          ctx.moveTo(pos.x - halfSize + 10, y);
+          ctx.lineTo(pos.x + halfSize - 10, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+        
+        // Inner border with energy glow
+        ctx.save();
+        if (isAvailable) {
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
+        }
+        ctx.strokeStyle = isCompleted ? '#10b981' :
+                         isAvailable ? '#ef4444' :
+                         '#4b5563';
+        ctx.lineWidth = isAvailable ? 2 : 1;
+        ctx.strokeRect(pos.x - halfSize + 5, pos.y - halfSize + 5, 
+                      halfSize * 2 - 10, halfSize * 2 - 10);
+        ctx.restore();
+        
+        // Draw boss mech image
+        if (nodeImages.has(node.id)) {
+          const img = nodeImages.get(node.id)!;
+          if (img.complete) {
+            ctx.save();
+            // Clip to inner rectangle
+            ctx.beginPath();
+            ctx.rect(pos.x - halfSize + 10, pos.y - halfSize + 10, 
+                    halfSize * 2 - 20, halfSize * 2 - 20);
+            ctx.clip();
+            
+            // Draw image
+            ctx.globalAlpha = isCompleted ? 1 : isAvailable ? 0.9 : 0.4;
+            ctx.drawImage(img, pos.x - halfSize + 10, pos.y - halfSize + 10, 
+                         halfSize * 2 - 20, halfSize * 2 - 20);
+            
+            // Add color overlay
+            if (isCompleted) {
+              ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+              ctx.fillRect(pos.x - halfSize + 10, pos.y - halfSize + 10, 
+                          halfSize * 2 - 20, halfSize * 2 - 20);
+            } else if (!isAvailable) {
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+              ctx.fillRect(pos.x - halfSize + 10, pos.y - halfSize + 10, 
+                          halfSize * 2 - 20, halfSize * 2 - 20);
+            }
+            ctx.restore();
+          }
+        }
+        
+      } else if (node.storyNodeType === 'final_boss') {
+        // DESIGN OPTION 1: Corrupted Core with Plasma Field
+        const halfSize = nodeSize;
+        const time = Date.now() / 1000;
+        
+        // Draw dark chrome base
+        const gradient = ctx.createLinearGradient(
+          pos.x - halfSize, pos.y - halfSize,
+          pos.x + halfSize, pos.y + halfSize
+        );
+        gradient.addColorStop(0, 'rgba(20, 20, 40, 0.95)');
+        gradient.addColorStop(0.5, 'rgba(40, 40, 80, 0.9)');
+        gradient.addColorStop(1, 'rgba(20, 20, 40, 0.95)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+        
+        // Draw final boss mech image
+        if (nodeImages.has(node.id)) {
+          const img = nodeImages.get(node.id)!;
+          if (img.complete) {
+            ctx.save();
+            // Clip to inner square
+            ctx.beginPath();
+            ctx.rect(pos.x - halfSize + 20, pos.y - halfSize + 20, 
+                    halfSize * 2 - 40, halfSize * 2 - 40);
+            ctx.clip();
+            
+            // Draw image
+            ctx.globalAlpha = isCompleted ? 1 : isAvailable ? 0.9 : 0.4;
+            ctx.drawImage(img, pos.x - halfSize + 20, pos.y - halfSize + 20, 
+                         halfSize * 2 - 40, halfSize * 2 - 40);
+            
+            // Add color overlay
+            if (isCompleted) {
+              ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+              ctx.fillRect(pos.x - halfSize + 20, pos.y - halfSize + 20, 
+                          halfSize * 2 - 40, halfSize * 2 - 40);
+            } else if (!isAvailable) {
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+              ctx.fillRect(pos.x - halfSize + 20, pos.y - halfSize + 20, 
+                          halfSize * 2 - 40, halfSize * 2 - 40);
+            }
+            ctx.restore();
+          }
+        }
+        
+        // Draw rotating plasma rings
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        
+        for (let ring = 0; ring < 3; ring++) {
+          ctx.save();
+          ctx.rotate((time + ring) * 0.5);
+          
+          const ringRadius = halfSize * (0.6 + ring * 0.2);
+          const segments = 8;
+          
+          ctx.strokeStyle = isCompleted ? `rgba(16, 185, 129, ${0.3 - ring * 0.08})` :
+                           isAvailable ? `rgba(250, 182, 23, ${0.4 - ring * 0.1})` :
+                           `rgba(107, 114, 128, ${0.2 - ring * 0.05})`;
+          ctx.lineWidth = 2 - ring * 0.5;
+          
+          ctx.beginPath();
+          for (let i = 0; i < segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const nextAngle = ((i + 1) / segments) * Math.PI * 2;
+            
+            if (i % 2 === 0) {
+              ctx.arc(0, 0, ringRadius, angle, nextAngle);
+            }
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.restore();
+        
+        // Draw corrupted data streams
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        const glitchOffset = Math.sin(time * 10) * 2;
+        
+        for (let i = 0; i < 5; i++) {
+          const y = pos.y - halfSize + (halfSize * 2 / 5) * i + halfSize * 0.2;
+          const width = Math.random() * halfSize * 0.6 + halfSize * 0.2;
+          const x = pos.x - width/2 + glitchOffset;
+          
+          ctx.fillStyle = isCompleted ? 'rgba(16, 185, 129, 0.3)' :
+                         isAvailable ? 'rgba(250, 182, 23, 0.3)' :
+                         'rgba(107, 114, 128, 0.2)';
+          ctx.fillRect(x, y, width, 2);
+        }
+        ctx.restore();
+        
+        // Draw hexagonal frame
+        ctx.save();
+        ctx.strokeStyle = isCompleted ? '#10b981' :
+                         isAvailable ? '#fab617' :
+                         '#4b5563';
+        ctx.lineWidth = isAvailable ? 3 : 2;
+        
+        if (isAvailable) {
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = 'rgba(250, 182, 23, 0.6)';
+        }
+        
+        // Draw hexagon
+        const hexRadius = halfSize * 0.9;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+          const x = pos.x + Math.cos(angle) * hexRadius;
+          const y = pos.y + Math.sin(angle) * hexRadius;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+        
+        // Draw power core center
+        ctx.save();
+        const coreSize = 15;
+        const pulseSize = coreSize + Math.sin(time * 2) * 5;
+        
+        // Outer glow
+        const coreGradient = ctx.createRadialGradient(
+          pos.x, pos.y, 0,
+          pos.x, pos.y, pulseSize
+        );
+        coreGradient.addColorStop(0, isCompleted ? 'rgba(16, 185, 129, 0.8)' :
+                                      isAvailable ? 'rgba(250, 182, 23, 0.8)' :
+                                      'rgba(107, 114, 128, 0.5)');
+        coreGradient.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, pulseSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner core
+        ctx.fillStyle = isCompleted ? '#10b981' :
+                        isAvailable ? '#fab617' :
+                        '#6b7280';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, coreSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
       } else {
         // All others are squares (normal, boss, final boss, start)
         const halfSize = nodeSize;
         
-        // Draw background only for non-normal nodes
-        if (node.storyNodeType !== 'normal') {
+        // Draw background only for non-normal nodes (including START node)
+        if (node.storyNodeType !== 'normal' || node.id === 'start') {
           ctx.fillStyle = fillColor;
           ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
         }
@@ -440,9 +857,19 @@ export default function StoryClimbPage() {
           const img = nodeImages.get(node.id)!;
           if (img.complete) {
             ctx.save();
-            // Clip to square shape
+            // Draw dark circular frame for mechanism nodes
             ctx.beginPath();
-            ctx.rect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            ctx.arc(pos.x, pos.y, halfSize, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(20, 20, 30, 0.8)';
+            ctx.fill();
+            // Green border for completed nodes, dark border for others
+            ctx.strokeStyle = isCompleted ? 'rgba(16, 185, 129, 0.8)' : 'rgba(60, 60, 80, 0.6)';
+            ctx.lineWidth = isCompleted ? 2 : 1;
+            ctx.stroke();
+            
+            // Clip to circular shape (slightly smaller for frame effect)
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
             ctx.clip();
             
             // Draw image at full opacity always
@@ -458,37 +885,93 @@ export default function StoryClimbPage() {
               ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
               ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
             }
+            
+            // Add green glow effect for completed mechanism nodes
+            if (isCompleted) {
+              ctx.save();
+              ctx.shadowBlur = 10;
+              ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
+              ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              ctx.restore();
+            }
             ctx.restore();
           }
         } else if ((node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') && nodeImages.has(node.id)) {
-          // Draw mechanism image for boss nodes too
+          // Draw mechanism image for boss nodes with special framing
           const img = nodeImages.get(node.id)!;
           if (img.complete) {
             ctx.save();
-            const padding = 8;
-            ctx.beginPath();
-            ctx.rect(pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
-            ctx.clip();
             
-            // Draw image at full opacity
-            ctx.drawImage(img, pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
+            if (node.storyNodeType === 'boss') {
+              // Boss: Draw image in center with tech frame
+              const imageSize = halfSize * 1.2;
+              
+              // Create hexagonal clip for boss image
+              ctx.beginPath();
+              ctx.rect(pos.x - imageSize/2, pos.y - imageSize/2, imageSize, imageSize);
+              ctx.clip();
+              
+              // Draw image
+              ctx.globalAlpha = isCompleted ? 1 : isAvailable ? 0.9 : 0.4;
+              ctx.drawImage(img, pos.x - imageSize/2, pos.y - imageSize/2, imageSize, imageSize);
+              
+              // Overlay effects
+              if (!isCompleted && !isAvailable) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(pos.x - imageSize/2, pos.y - imageSize/2, imageSize, imageSize);
+              } else if (isCompleted) {
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.fillRect(pos.x - imageSize/2, pos.y - imageSize/2, imageSize, imageSize);
+              } else if (isAvailable) {
+                // Red tint for available boss
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.fillRect(pos.x - imageSize/2, pos.y - imageSize/2, imageSize, imageSize);
+              }
+              
+            } else if (node.storyNodeType === 'final_boss') {
+              // Final Boss: Draw image with hexagonal mask
+              const imageSize = halfSize * 0.7;
+              
+              // Create hexagonal clip
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+                const x = pos.x + Math.cos(angle) * imageSize;
+                const y = pos.y + Math.sin(angle) * imageSize;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+              }
+              ctx.closePath();
+              ctx.clip();
+              
+              // Draw image
+              ctx.globalAlpha = isCompleted ? 1 : isAvailable ? 0.95 : 0.3;
+              ctx.drawImage(img, pos.x - imageSize, pos.y - imageSize, imageSize * 2, imageSize * 2);
+              
+              // Overlay effects
+              if (!isCompleted && !isAvailable) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillRect(pos.x - imageSize, pos.y - imageSize, imageSize * 2, imageSize * 2);
+              } else if (isCompleted) {
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
+                ctx.fillRect(pos.x - imageSize, pos.y - imageSize, imageSize * 2, imageSize * 2);
+              } else if (isAvailable) {
+                // Gold tint for available final boss
+                ctx.fillStyle = 'rgba(250, 182, 23, 0.2)';
+                ctx.fillRect(pos.x - imageSize, pos.y - imageSize, imageSize * 2, imageSize * 2);
+              }
+            }
             
-            // Draw darkening overlay for unavailable nodes
-            if (!isCompleted && !isAvailable) {
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-              ctx.fillRect(pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
-            }
-            // Draw green overlay for completed nodes
-            else if (isCompleted) {
-              ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
-              ctx.fillRect(pos.x - halfSize + padding, pos.y - halfSize + padding, halfSize * 2 - padding * 2, halfSize * 2 - padding * 2);
-            }
             ctx.restore();
           }
         }
         
-        // Draw border (but NOT for normal/mechanism nodes)
-        if (node.storyNodeType !== 'normal') {
+        // Draw border only for non-boss special nodes
+        if ((node.storyNodeType !== 'normal' && node.storyNodeType !== 'boss' && node.storyNodeType !== 'final_boss') || node.id === 'start') {
           ctx.strokeStyle = strokeColor;
           ctx.lineWidth = strokeWidth;
           ctx.strokeRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
@@ -514,12 +997,16 @@ export default function StoryClimbPage() {
       ctx.textBaseline = 'middle';
       
       if (node.id === 'start') {
-        ctx.fillText('START', pos.x, pos.y + nodeSize + 15);
+        // Make START text much larger and position it inside the node
+        ctx.font = 'bold 18px Orbitron';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('START', pos.x, pos.y);
+        // Reset font for other nodes
+        ctx.font = 'bold 10px Orbitron';
       } else if (node.storyNodeType === 'boss') {
         ctx.fillText('BOSS', pos.x, pos.y);
       } else if (node.storyNodeType === 'final_boss') {
-        ctx.fillStyle = '#000000';
-        ctx.fillText('WREN', pos.x, pos.y);
+        // No text for final boss - just the rainbow image
       } else if (node.storyNodeType === 'event') {
         ctx.fillText('EVENT', pos.x, pos.y);
       } else {
@@ -530,10 +1017,70 @@ export default function StoryClimbPage() {
     });
     
     console.log("Canvas render complete");
-  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, imagesLoaded]);
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom]);
 
-  // Handle canvas click
+  // Handle mouse events for panning
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsPanning(true);
+    setPanStart({ x: e.clientX, y: e.clientY });
+  }, []);
+  
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isPanning) return;
+    
+    // Only allow vertical panning (no horizontal movement)
+    const deltaY = e.clientY - panStart.y;
+    
+    setPanOffset(prev => {
+      const newY = prev.y + deltaY;
+      // For now, allow free scrolling. We can add limits later if needed
+      // Scrolling down (positive Y) moves the tree up, scrolling up (negative Y) moves tree down
+      return {
+        x: 0, // Always keep X at 0 - no horizontal panning
+        y: newY
+      };
+    });
+    setPanStart({ x: e.clientX, y: e.clientY });
+  }, [isPanning, panStart, treeData]);
+  
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+  
+  const handleMouseWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Calculate world position before zoom
+    const worldX = (mouseX - panOffset.x) / zoom;
+    const worldY = (mouseY - panOffset.y) / zoom;
+    
+    // Apply zoom
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.max(0.3, Math.min(3, zoom * delta));
+    
+    // Calculate new pan to keep mouse position fixed
+    const newPanX = mouseX - worldX * newZoom;
+    const newPanY = mouseY - worldY * newZoom;
+    
+    setZoom(newZoom);
+    setPanOffset({ 
+      x: newPanX, 
+      y: newPanY
+    });
+  }, [zoom, panOffset]);
+  
+  // Handle canvas click for node selection
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    // Don't process clicks if we're panning
+    if (isPanning) return;
+    
     if (!canvasRef.current || !treeData) return;
     
     const canvas = canvasRef.current;
@@ -541,18 +1088,34 @@ export default function StoryClimbPage() {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    const nodes = treeData.nodes;
+    // Apply same position adjustments as in draw function
+    const nodes = treeData.nodes.map(node => {
+      const adjustedNode = { ...node };
+      
+      if (node.storyNodeType === 'event') {
+        adjustedNode.x = node.x + 25; // Reduced for upper-left positioning
+        adjustedNode.y = node.y + 20; // 5px more upward than other nodes
+      } else if (node.storyNodeType === 'boss') {
+        adjustedNode.x = node.x + 40; // Shifted 5px to the right  
+        adjustedNode.y = node.y + 35;
+      } else if (node.storyNodeType === 'final_boss') {
+        adjustedNode.x = node.x + 75; // Center like START node
+        adjustedNode.y = node.y + 20; // Move 40px higher up
+      }
+      
+      return adjustedNode;
+    });
     
     // Calculate bounds INCLUDING node sizes (same as draw function)
     let actualMinX = Infinity, actualMaxX = -Infinity;
     let actualMinY = Infinity, actualMaxY = -Infinity;
     
     nodes.forEach(node => {
-      let nodeSize = 25;
-      if (node.id === 'start') nodeSize = 40;
-      else if (node.storyNodeType === 'event') nodeSize = 60;
-      else if (node.storyNodeType === 'boss') nodeSize = 80;
-      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      let nodeSize = 26; // normal nodes 5% larger
+      if (node.id === 'start') nodeSize = 44; // 10% bigger
+      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
+      else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
+      else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
       
       actualMinX = Math.min(actualMinX, node.x - nodeSize);
       actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
@@ -569,31 +1132,41 @@ export default function StoryClimbPage() {
     const treeHeight = maxY - minY;
     const actualTreeWidth = actualMaxX - actualMinX;
     
-    const padding = 60;
-    const scaleX = (canvas.width - padding * 2) / actualTreeWidth;
-    const scale = scaleX * 0.85;
+    const padding = 30;
+    const scaleX = (canvas.width - padding * 2) / treeWidth;
+    const scale = scaleX * 0.75;
     const scaledTreeHeight = treeHeight * scale;
+    
+    const startNodeInClick = nodes.find(n => n.id === 'start'); // Find start node first
     
     const transform = (nodeX: number, nodeY: number) => {
       const scaledX = (nodeX - minX) * scale;
       const scaledY = (nodeY - minY) * scale;
       
       // Use the same offset calculation as the draw function
-      let offsetX = (canvas.width - treeWidth * scale) / 2;
+      let offsetX;
+      if (startNodeInClick) {
+        const startScaledX = (startNodeInClick.x - minX) * scale;
+        const centerAdjustment = -64; // Shifted left by 10 more pixels for narrower tree
+        offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
+      } else {
+        const leftOverflow = (minX - actualMinX) * scale;
+        const padding = 30;
+        offsetX = padding + leftOverflow;
+      }
       
       // Position the start node near the bottom of the canvas
       let offsetY;
-      const startNode = nodes.find(n => n.id === 'start');
-      if (startNode) {
-        const startScaledY = (startNode.y - minY) * scale;
+      if (startNodeInClick) {
+        const startScaledY = (startNodeInClick.y - minY) * scale;
         offsetY = canvas.height * 0.75 - startScaledY + viewportOffset;
       } else {
         offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
       }
       
       return {
-        x: scaledX + offsetX,
-        y: scaledY + offsetY
+        x: scaledX + offsetX + panOffset.x,
+        y: scaledY + offsetY + panOffset.y
       };
     };
     
@@ -608,12 +1181,12 @@ export default function StoryClimbPage() {
       else if (node.storyNodeType === 'final_boss') nodeSize = 100; // Extra large
       
       let inBounds = false;
-      if (node.storyNodeType === 'event') {
-        // Circle hit detection
+      if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+        // Circle hit detection for events and normal mechanism nodes
         const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
         inBounds = distance <= nodeSize;
       } else {
-        // Square hit detection - nodeSize is already the half-size
+        // Square hit detection for boss/final_boss/start - nodeSize is already the half-size
         inBounds = Math.abs(x - pos.x) <= nodeSize && Math.abs(y - pos.y) <= nodeSize;
       }
       
@@ -623,15 +1196,52 @@ export default function StoryClimbPage() {
           break;
         }
         
-        setSelectedNode(node);
+        // Check if this node is adjacent to a completed node and allows upward progression
+        const isAdjacent = treeData.connections.some(conn => {
+          let connectedNodeId = null;
+          if (conn.from === node.id) {
+            connectedNodeId = conn.to;
+          } else if (conn.to === node.id) {
+            connectedNodeId = conn.from;
+          }
+          
+          if (!connectedNodeId || !completedNodes.has(connectedNodeId)) return false;
+          
+          // Find the connected completed node
+          const connectedNode = nodes.find(n => n.id === connectedNodeId);
+          if (!connectedNode) return false;
+          
+          // Only allow upward progression (higher Y values = further up the tree)
+          // Players can never unlock nodes below their current position
+          return node.y >= connectedNode.y;
+        });
         
-        // Toggle completion on click (for testing)
-        if (!completedNodes.has(node.id)) {
+        // Only allow clicking if node is adjacent to a completed node
+        if (!completedNodes.has(node.id) && isAdjacent) {
+          setSelectedNode(node);
           const newCompleted = new Set(completedNodes);
           newCompleted.add(node.id);
           setCompletedNodes(newCompleted);
-        } else {
-          // Allow uncompleting nodes
+          
+          // Auto-scroll to keep progressing nodes visible
+          // Find the highest completed node
+          let highestY = Infinity;
+          newCompleted.forEach(nodeId => {
+            const n = nodes.find(n => n.id === nodeId);
+            if (n && n.y < highestY) {
+              highestY = n.y;
+            }
+          });
+          
+          // Calculate if we need to scroll
+          const highestPos = transform(0, highestY);
+          if (highestPos.y < canvas.height * 0.25) {
+            // Scroll up to keep the highest node in the lower third
+            const scrollAmount = canvas.height * 0.5 - highestPos.y;
+            setViewportOffset(prev => Math.max(0, prev + scrollAmount));
+          }
+        } else if (completedNodes.has(node.id)) {
+          // Allow uncompleting nodes (for testing)
           const newCompleted = new Set(completedNodes);
           newCompleted.delete(node.id);
           setCompletedNodes(newCompleted);
@@ -639,7 +1249,7 @@ export default function StoryClimbPage() {
         break;
       }
     }
-  }, [treeData, viewportOffset, completedNodes, canvasSize]);
+  }, [treeData, viewportOffset, completedNodes, canvasSize, isPanning, panOffset, zoom]);
 
   // Handle mouse wheel scrolling with proper isolation
   const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -657,11 +1267,11 @@ export default function StoryClimbPage() {
     let actualMinY = Infinity, actualMaxY = -Infinity;
     
     nodes.forEach(node => {
-      let nodeSize = 25;
-      if (node.id === 'start') nodeSize = 40;
-      else if (node.storyNodeType === 'event') nodeSize = 60;
-      else if (node.storyNodeType === 'boss') nodeSize = 80;
-      else if (node.storyNodeType === 'final_boss') nodeSize = 100;
+      let nodeSize = 26; // normal nodes 5% larger
+      if (node.id === 'start') nodeSize = 44; // 10% bigger
+      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
+      else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
+      else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
       
       actualMinX = Math.min(actualMinX, node.x - nodeSize);
       actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
@@ -677,9 +1287,9 @@ export default function StoryClimbPage() {
     const treeHeight = maxY - minY;
     const actualTreeWidth = actualMaxX - actualMinX;
     
-    const padding = 60;
-    const scaleX = (canvasSize.width - padding * 2) / actualTreeWidth;
-    const scale = scaleX * 0.85;
+    const padding = 30;
+    const scaleX = (canvasSize.width - padding * 2) / treeWidth;
+    const scale = scaleX * 0.75;
     const scaledTreeHeight = treeHeight * scale;
     
     const maxPossibleOffset = Math.max(0, scaledTreeHeight - canvasSize.height + padding * 2);
@@ -751,8 +1361,13 @@ export default function StoryClimbPage() {
                 ref={canvasRef}
                 width={canvasSize.width}
                 height={canvasSize.height}
-                className="absolute inset-0 cursor-pointer"
+                className={`absolute inset-0 ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
                 onClick={handleCanvasClick}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleMouseWheel}
                 style={{ imageRendering: 'crisp-edges' }}
               />
               

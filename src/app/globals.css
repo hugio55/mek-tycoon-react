@@ -134,6 +134,11 @@ body {
   }
 }
 
+/* Slow pulse animation for insufficient ingredients */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* Particle flow animation for progress bars with fade in/out */
 @keyframes particleFlow {
   0% {
@@ -949,22 +954,39 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
-/* Float particle animation for contracts page */
+/* Float particle animation for contracts page - straight line drift like space debris */
 @keyframes floatParticle {
   0% { 
-    transform: translateY(0) translateX(0); 
+    transform: translateX(-50px);
+    opacity: 0;
   }
-  25% { 
-    transform: translateY(-20px) translateX(10px); 
+  10% {
+    opacity: 0.6;
   }
-  50% { 
-    transform: translateY(0) translateX(-10px); 
-  }
-  75% { 
-    transform: translateY(20px) translateX(5px); 
+  90% {
+    opacity: 0.6;
   }
   100% { 
-    transform: translateY(0) translateX(0); 
+    transform: translateX(calc(100vw + 50px));
+    opacity: 0;
+  }
+}
+
+/* Linear drift animation for space particles */
+@keyframes linearDrift {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.4;
+  }
+  95% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(var(--drift-x), var(--drift-y));
+    opacity: 0;
   }
 }
 

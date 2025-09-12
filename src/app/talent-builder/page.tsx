@@ -51,6 +51,9 @@ export default function TalentBuilderPage() {
   const [showStoryLoader, setShowStoryLoader] = useState(false);
   const [history, setHistory] = useState<{nodes: TalentNode[], connections: Connection[]}[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [unconnectedNodes, setUnconnectedNodes] = useState<Set<string>>(new Set());
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [currentSaveName, setCurrentSaveName] = useState<string | null>(null);
   
   // Convex queries and mutations
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
@@ -209,23 +212,10 @@ export default function TalentBuilderPage() {
     }
   }, [selectedNode, nodes, builderMode]);
   
-  const saveToLocalStorage = async (showStatus = true) => {
+  const saveToLocalStorage = async (saveName: string, isOverwrite: boolean = false) => {
     try {
-      // Get a name for this save
-      const saveName = prompt('Enter a name for this CiruTree save (leave blank for timestamp)') || 
-                      new Date().toLocaleString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      });
-      if (!saveName) return false;
-      
       // Load existing saves
       const existingSaves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
-      
-      // Check if this name already exists
-      const existingIndex = existingSaves.findIndex((s: any) => s.name === saveName);
       
       const saveData = {
         name: saveName,
@@ -233,9 +223,15 @@ export default function TalentBuilderPage() {
         isActive: false
       };
       
-      if (existingIndex >= 0) {
-        // Update existing save
-        existingSaves[existingIndex] = saveData;
+      if (isOverwrite) {
+        // Find and update existing save
+        const existingIndex = existingSaves.findIndex((s: any) => s.name === saveName);
+        if (existingIndex >= 0) {
+          existingSaves[existingIndex] = saveData;
+        } else {
+          // If not found, add as new
+          existingSaves.push(saveData);
+        }
       } else {
         // Add new save
         existingSaves.push(saveData);
@@ -247,20 +243,21 @@ export default function TalentBuilderPage() {
       // Also save as the current working tree
       localStorage.setItem('talentTreeData', JSON.stringify(saveData.data));
       setHasUnsavedChanges(false);
+      setCurrentSaveName(saveName);
       
-      if (showStatus) {
-        setSaveStatus("Saved as: " + saveName);
-        setTimeout(() => setSaveStatus(""), 2000);
-      }
+      setSaveStatus("Saved as: " + saveName);
+      setTimeout(() => setSaveStatus(""), 2000);
       return true;
     } catch (e) {
       console.error('Failed to save:', e);
-      if (showStatus) {
-        setSaveStatus("Save failed");
-        setTimeout(() => setSaveStatus(""), 3000);
-      }
+      setSaveStatus("Save failed");
+      setTimeout(() => setSaveStatus(""), 3000);
       return false;
     }
+  };
+
+  const handleSaveClick = () => {
+    setShowSaveDialog(true);
   };
   
   const loadFromLocalStorage = () => {
@@ -864,6 +861,40 @@ export default function TalentBuilderPage() {
     }
   };
 
+  const testConnections = () => {
+    const connectedNodes = new Set<string>();
+    
+    // Add all nodes that have connections
+    connections.forEach(conn => {
+      connectedNodes.add(conn.from);
+      connectedNodes.add(conn.to);
+    });
+    
+    // Find nodes that have no connections
+    const unconnected = new Set<string>();
+    nodes.forEach(node => {
+      if (!connectedNodes.has(node.id)) {
+        unconnected.add(node.id);
+      }
+    });
+    
+    setUnconnectedNodes(unconnected);
+    
+    if (unconnected.size > 0) {
+      setSaveStatus(`Found ${unconnected.size} unconnected node(s)`);
+      setTimeout(() => setSaveStatus(""), 3000);
+    } else {
+      setSaveStatus("All nodes are connected!");
+      setTimeout(() => setSaveStatus(""), 2000);
+    }
+  };
+
+  const clearConnectionTest = () => {
+    setUnconnectedNodes(new Set());
+    setSaveStatus("Cleared connection test");
+    setTimeout(() => setSaveStatus(""), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative">
       {/* Back to Site Button */}
@@ -1009,7 +1040,7 @@ export default function TalentBuilderPage() {
           {/* File Operations */}
           {builderMode === 'circutree' && (
             <>
-              <button onClick={() => saveToLocalStorage(true)} className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white">
+              <button onClick={handleSaveClick} className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white">
                 Save
               </button>
               <button onClick={() => setShowCiruTreeLoader(true)} className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white">
@@ -1018,6 +1049,21 @@ export default function TalentBuilderPage() {
               <button onClick={startNewTree} className="px-3 py-1 text-sm rounded bg-purple-600 hover:bg-purple-700 text-white">
                 New Tree
               </button>
+              <button 
+                onClick={testConnections} 
+                className="px-3 py-1 text-sm rounded bg-yellow-600 hover:bg-yellow-700 text-white"
+                title="Test if all nodes have connections"
+              >
+                Test Connections
+              </button>
+              {unconnectedNodes.size > 0 && (
+                <button 
+                  onClick={clearConnectionTest} 
+                  className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-gray-700 text-white"
+                >
+                  Clear Test
+                </button>
+              )}
             </>
           )}
           
@@ -1469,6 +1515,7 @@ export default function TalentBuilderPage() {
               const isSelected = selectedNode === node.id;
               const isConnecting = connectFrom === node.id;
               const isStart = node.id === 'start' || node.id.startsWith('start-');
+              const isUnconnected = unconnectedNodes.has(node.id);
               
               // Determine size based on story node type
               let nodeSize = '30px';
@@ -1524,10 +1571,12 @@ export default function TalentBuilderPage() {
                     top: `${node.y}px`,
                     background,
                     border: `3px solid ${
-                      isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
+                      isUnconnected ? '#ff0000' : isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
                     }`,
+                    animation: isUnconnected ? 'pulse-red 1.5s ease-in-out infinite' : 'none',
                     borderRadius,
-                    boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : 
+                    boxShadow: isUnconnected ? '0 0 30px rgba(255, 0, 0, 0.8)' :
+                              isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : 
                               isConnecting ? '0 0 20px rgba(16, 185, 129, 0.5)' :
                               isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 
                               node.storyNodeType === 'boss' ? '0 0 15px rgba(239, 68, 68, 0.5)' : 
@@ -2245,6 +2294,7 @@ export default function TalentBuilderPage() {
                                 setZoom(1);
                               }
                               
+                              setCurrentSaveName(save.name);
                               setShowCiruTreeLoader(false);
                               setSaveStatus('Loaded: ' + save.name);
                               setTimeout(() => setSaveStatus(''), 2000);
@@ -2477,6 +2527,118 @@ export default function TalentBuilderPage() {
           </div>
         </div>
       )}
+      
+      {/* Save Dialog Modal */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold text-yellow-400 mb-4">Save Tree</h2>
+            
+            {/* Check if we have existing saves */}
+            {(() => {
+              const existingSaves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
+              const hasSaves = existingSaves.length > 0;
+              
+              return (
+                <div className="space-y-4">
+                  {currentSaveName && (
+                    <div className="mb-4 p-3 bg-gray-800 rounded">
+                      <p className="text-sm text-gray-400">Current save: <span className="text-yellow-400">{currentSaveName}</span></p>
+                    </div>
+                  )}
+                  
+                  {hasSaves && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-300 mb-2">Overwrite existing save:</h3>
+                      <select
+                        className="w-full px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 focus:border-yellow-400 mb-2"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            saveToLocalStorage(e.target.value, true);
+                            setShowSaveDialog(false);
+                          }
+                        }}
+                        defaultValue=""
+                      >
+                        <option value="">Select a save to overwrite...</option>
+                        {existingSaves.map((save: any) => (
+                          <option key={save.name} value={save.name}>
+                            {save.name}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-700"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-gray-900 text-gray-400">OR</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-300 mb-2">Save as new file:</h3>
+                    <input
+                      type="text"
+                      placeholder="Enter save name..."
+                      className="w-full px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 focus:border-yellow-400"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value) {
+                          saveToLocalStorage(e.currentTarget.value, false);
+                          setShowSaveDialog(false);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Press Enter to save or leave blank for timestamp</p>
+                  </div>
+                  
+                  <div className="flex gap-2 justify-end mt-6">
+                    <button
+                      onClick={() => {
+                        const timestamp = new Date().toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        });
+                        saveToLocalStorage(timestamp, false);
+                        setShowSaveDialog(false);
+                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+                    >
+                      Quick Save (Timestamp)
+                    </button>
+                    <button
+                      onClick={() => setShowSaveDialog(false)}
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+      
+      {/* CSS for pulsing red animation */}
+      <style jsx>{`
+        @keyframes pulse-red {
+          0%, 100% {
+            opacity: 1;
+            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8));
+          }
+          50% {
+            opacity: 0.7;
+            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1));
+          }
+        }
+      `}</style>
     </div>
   );
 }

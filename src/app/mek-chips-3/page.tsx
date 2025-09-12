@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navigation from '@/components/Navigation';
 import Image from 'next/image';
 import RarityChart from '@/components/RarityChart';
 import theme from '@/lib/design-system';
@@ -53,12 +52,10 @@ export default function MekChips3Page() {
   const [biasTooltipPos, setBiasTooltipPos] = useState({ x: 0, y: 0 });
   const [hoveredCraftButton, setHoveredCraftButton] = useState<string | null>(null);
   const [craftTooltipPos, setCraftTooltipPos] = useState({ x: 0, y: 0 });
-  const [isClient, setIsClient] = useState(false);
 
-  // Update timer every second and set client flag
+  // Update timer every second
   useEffect(() => {
     setMounted(true);
-    setIsClient(true);
     const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -208,7 +205,6 @@ export default function MekChips3Page() {
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
-      {isClient && <Navigation />}
       
       <div className="container mx-auto px-4 pt-20 pb-12 relative">
         <div className="max-w-7xl mx-auto">
@@ -697,17 +693,23 @@ export default function MekChips3Page() {
                             {recipe.requirements.map((req, idx) => {
                               const isMet = req.current >= req.amount;
                               const progress = Math.min(100, (req.current / req.amount) * 100);
+                              const isHoveringCraft = hoveredCraftButton === recipe.id;
                               
                               return (
                                 <div key={idx} className={`relative group transition-all duration-300 ${
-                                  !isMet && hoveredCraftButton === recipe.id 
-                                    ? 'animate-pulse' 
+                                  !isMet 
+                                    ? isHoveringCraft
+                                      ? 'animate-pulse' 
+                                      : 'animate-pulse-slow'
                                     : ''
                                 }`}
                                   style={{
-                                    filter: !isMet && hoveredCraftButton === recipe.id 
-                                      ? 'drop-shadow(0 0 8px rgba(239,68,68,0.8))' 
-                                      : 'none'
+                                    filter: !isMet 
+                                      ? isHoveringCraft
+                                        ? 'drop-shadow(0 0 15px rgba(239,68,68,1)) drop-shadow(0 0 30px rgba(239,68,68,0.6))' 
+                                        : 'drop-shadow(0 0 6px rgba(239,68,68,0.5)) drop-shadow(0 0 12px rgba(239,68,68,0.3))'
+                                      : 'none',
+                                    animation: !isMet && !isHoveringCraft ? 'pulse-glow 2s ease-in-out infinite' : undefined
                                   }}
                                 >
                                   <div className="flex items-center gap-2">

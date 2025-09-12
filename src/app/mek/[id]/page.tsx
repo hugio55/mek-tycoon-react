@@ -9,6 +9,7 @@ import MekImage from "../../../components/MekImage";
 import { useState, useEffect, useRef } from "react";
 import BackgroundEffects from "@/components/BackgroundEffects";
 import { useClickSound } from "@/lib/useClickSound";
+import MekTalentTree from "@/components/MekTalentTree";
 
 // Helper function for animating numbers
 const AnimatedNumber = ({ value, prefix = "", suffix = "" }: { value: number, prefix?: string, suffix?: string }) => {
@@ -203,15 +204,12 @@ export default function MekProfilePage() {
     }
   };
   
-  const talentNodes = [
+  // Active buffs are now determined by the MEK 1 talent tree
+  const activeBuffs = [
     { id: 1, name: "Gold Rush", level: 1, unlocked: true, buff: "+2.5 gold/hr" },
     { id: 2, name: "Efficient Worker", level: 2, unlocked: true, buff: "+5% gold rate" },
     { id: 3, name: "Banker", level: 3, unlocked: true, buff: "+1% bank interest" },
-    { id: 4, name: "Essence Master", level: 4, unlocked: true, buff: "+1.4 global essence" },
-    { id: 5, name: "Speed Demon", level: 5, unlocked: false, buff: "+15% craft speed" }
-  ];
-  
-  const activeBuffs = talentNodes.filter(node => node.unlocked);
+  ].filter(node => node.unlocked);
   
   if (!mek) {
     return (
@@ -477,30 +475,9 @@ export default function MekProfilePage() {
               })}
             </div>
             
-            {/* Talent Tree Section */}
+            {/* MEK 1 Talent Tree */}
             <div className="mt-6">
-              <div className="relative border border-gray-800/50 bg-gray-950/30 backdrop-blur-[2px] p-4 overflow-hidden">
-                <div className="text-xs font-mono text-gray-500 mb-3">TALENT TREE</div>
-                <div className="grid grid-cols-5 gap-2">
-                  {talentNodes.map((node) => (
-                    <div key={node.id} className="text-center">
-                      <div className={`
-                        w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold mb-1
-                        ${
-                          node.unlocked
-                            ? 'border-yellow-400 bg-yellow-400/20 text-yellow-400'
-                            : 'border-gray-600 bg-gray-800/20 text-gray-600'
-                        }
-                      `}>
-                        {node.level}
-                      </div>
-                      <div className="text-[10px] text-gray-500 leading-tight">
-                        {node.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <MekTalentTree mekId={mekId} mekLevel={mek.level || 1} />
             </div>
           </div>
           
