@@ -5,102 +5,34 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import StoryMissionCard from '@/components/StoryMissionCard';
 
-// Mek images list
+// List of actual mekanism images from the 150px folder
 const mekImagesList = [
-  "/variation-images/1960s.png",
-  "/variation-images/24k.png",
-  "/variation-images/ace_of_spades.png",
-  "/variation-images/acrylic.png",
-  "/variation-images/aqua.png",
-  "/variation-images/arcade.png",
-  "/variation-images/baby.png",
-  "/variation-images/ballerina.png",
-  "/variation-images/bark.png",
-  "/variation-images/big_brother.png",
-  "/variation-images/bone_daddy.png",
-  "/variation-images/boss.png",
-  "/variation-images/bowling.png",
-  "/variation-images/bubblegum.png",
-  "/variation-images/bumblebee.png",
-  "/variation-images/business.png",
-  "/variation-images/butane.png",
-  "/variation-images/cadillac.png",
-  "/variation-images/camo.png",
-  "/variation-images/china.png",
-  "/variation-images/classic.png",
-  "/variation-images/coin.png",
-  "/variation-images/corroded.png",
-  "/variation-images/cotton_candy.png",
-  "/variation-images/cream.png",
-  "/variation-images/crimson.png",
-  "/variation-images/dazed_piggy.png",
-  "/variation-images/derelict.png",
-  "/variation-images/disco.png",
-  "/variation-images/discomania.png",
-  "/variation-images/dragonfly.png",
-  "/variation-images/drill.png",
-  "/variation-images/dualtone.png",
-  "/variation-images/electrik.png",
-  "/variation-images/ellie_mesh.png",
-  "/variation-images/exposed.png",
-  "/variation-images/flaked.png",
-  "/variation-images/frost_king.png",
-  "/variation-images/gold.png",
-  "/variation-images/grass.png",
-  "/variation-images/hacker.png",
-  "/variation-images/hades.png",
-  "/variation-images/hal.png",
-  "/variation-images/heatmap.png",
-  "/variation-images/ivory.png",
-  "/variation-images/kevlar.png",
-  "/variation-images/lazer.png",
-  "/variation-images/lich.png",
-  "/variation-images/lightning.png",
-  "/variation-images/liquid_lavender.png",
-  "/variation-images/log.png",
-  "/variation-images/magma.png",
-  "/variation-images/mahogany.png",
-  "/variation-images/mars_attacks.png",
-  "/variation-images/mesh.png",
-  "/variation-images/milk.png",
-  "/variation-images/mint.png",
-  "/variation-images/neon_flamingo.png",
-  "/variation-images/nightstalker.png",
-  "/variation-images/nuke.png",
-  "/variation-images/nyan.png",
-  "/variation-images/obliterator.png",
-  "/variation-images/ol_faithful.png",
-  "/variation-images/ornament.png",
-  "/variation-images/paul.png",
-  "/variation-images/pie.png",
-  "/variation-images/pizza.png",
-  "/variation-images/plastik.png",
-  "/variation-images/plate.png",
-  "/variation-images/polished.png",
-  "/variation-images/porcelain.png",
-  "/variation-images/projectionist.png",
-  "/variation-images/quilt.png",
-  "/variation-images/recon.png",
-  "/variation-images/ross.png",
-  "/variation-images/royal.png",
-  "/variation-images/sahara.png",
-  "/variation-images/shamrock.png",
-  "/variation-images/silent_film.png",
-  "/variation-images/silicon.png",
-  "/variation-images/sleet.png",
-  "/variation-images/snapshot.png",
-  "/variation-images/snow.png",
-  "/variation-images/stained_glass.png",
-  "/variation-images/sterling.png",
-  "/variation-images/sun.png",
-  "/variation-images/taser.png",
-  "/variation-images/terminator.png",
-  "/variation-images/the_lethal_dimension.png",
-  "/variation-images/the_ram.png",
-  "/variation-images/tron.png",
-  "/variation-images/whiskey.png",
-  "/variation-images/wires.png"
-];
+  '000-000-000.webp', '111-111-111.webp', '222-222-222.webp', '333-333-333.webp',
+  '444-444-444.webp', '555-555-555.webp', '666-666-666.webp', '777-777-777.webp',
+  '888-888-888.webp', '999-999-999.webp', 'aa1-aa1-cd1.webp', 'aa1-aa3-hn1.webp',
+  'aa1-aa4-gk1.webp', 'aa1-ak1-bc2.webp', 'aa1-ak1-de1.webp', 'aa1-ak1-ji2.webp',
+  'aa1-ak1-kq2.webp', 'aa1-ak1-mo1.webp', 'aa1-ak1-nm1.webp', 'aa1-ak2-lg1.webp',
+  'aa1-ak3-mt1.webp', 'aa1-at1-ji2.webp', 'aa1-at4-ey2.webp', 'aa1-bf1-cd1.webp',
+  'aa1-bf1-of2.webp', 'aa1-bf2-ap2.webp', 'aa1-bf2-il2.webp', 'aa1-bf3-fb2.webp',
+  'aa1-bf4-cu1.webp', 'aa1-bi1-ap1.webp', 'aa1-bi1-br2.webp', 'aa1-bi1-ji2.webp',
+  'aa1-bi1-nm1.webp', 'aa1-bi2-da3.webp', 'aa1-bi2-lg2.webp', 'aa1-bj1-fb1.webp',
+  'aa1-bj1-hn2.webp', 'aa1-bj2-cd2.webp', 'aa1-bj2-gk1.webp', 'aa1-bj2-ji1.webp',
+  'aa1-bj3-ap1.webp', 'aa1-bj3-mx1.webp', 'aa1-bl1-cd2.webp', 'aa1-bl1-eh1.webp',
+  'aa1-bl2-il2.webp', 'aa1-bl2-kq3.webp', 'aa1-bl2-of2.webp', 'aa1-bl3-mo1.webp',
+  'aa1-bl4-aw1.webp', 'aa1-bl5-as1.webp', 'aa1-bq1-fb1.webp', 'aa1-bq2-mo1.webp',
+  'aa1-bq5-gk1.webp', 'aa1-bw1-ji1.webp', 'aa1-bw3-fb2.webp', 'aa1-bw4-aj2.webp',
+  'aa1-cb1-cd2.webp', 'aa1-cb1-of1.webp', 'aa1-cb3-eh1.webp', 'aa1-cb3-fb1.webp',
+  'aa1-cu1-br1.webp', 'aa1-cu1-mo1.webp', 'aa1-cu2-of2.webp', 'aa1-cx1-aj2.webp',
+  'aa1-cx1-bc2.webp', 'aa1-cx1-il1.webp', 'aa1-cx1-nm1.webp', 'aa1-dc2-il1.webp',
+  'aa1-dc3-of2.webp', 'aa1-dh1-ap2.webp', 'aa1-dh1-as1.webp', 'aa1-dh1-aw1.webp',
+  'aa1-dh2-cd1.webp', 'aa1-dh2-fb2.webp', 'aa1-dh3-aj1.webp', 'aa1-dh3-hn1.webp',
+  'aa1-dm1-br2.webp', 'aa1-dm1-cu2.webp', 'aa1-dm1-de1.webp', 'aa1-dm1-eh3.webp',
+  'aa1-dm1-il1.webp', 'aa1-dm2-da2.webp', 'aa1-ds1-cu1.webp', 'aa1-ds1-de1.webp',
+  'aa1-ds1-ji1.webp', 'aa1-ds2-nm1.webp', 'aa1-ee1-da2.webp', 'aa1-ee1-de1.webp',
+  'aa1-ee1-il2.webp', 'aa1-ee1-mo1.webp', 'aa1-ee1-mt2.webp', 'aa1-ee2-aj3.webp',
+  'aa1-ee3-aw2.webp', 'aa1-ee3-kq2.webp', 'aa1-er1-as1.webp', 'aa1-er3-aj2.webp',
+  'aa1-ev1-bc2.webp', 'aa1-ev1-de2.webp', 'aa1-ev1-mt1.webp', 'aa1-ev2-hn1.webp'
+].map(filename => `/mek-images/150px/${filename}`);
 
 interface StoryNode {
   id: string;
@@ -225,13 +157,16 @@ export default function StoryClimbPage() {
   
   // Helper function to get a deterministic mek image for each node  
   const getMekImage = useCallback((nodeId: string): string => {
-    // Use node ID to deterministically select an image
+    // Better randomization using multiple hash operations for more distribution
     let hash = 0;
     for (let i = 0; i < nodeId.length; i++) {
       hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
-    const index = Math.abs(hash) % mekImagesList.length;
+    // Apply additional mixing for better distribution
+    const nodeNum = parseInt(nodeId.replace(/[^0-9]/g, '')) || 0;
+    const mixedHash = (hash * 7919 + nodeNum * 3571) % 10007; // Prime numbers for mixing
+    const index = Math.abs(mixedHash) % mekImagesList.length;
     return mekImagesList[index];
   }, []);
   
@@ -467,11 +402,11 @@ export default function StoryClimbPage() {
     
     // Calculate the actual bounds including node sizes
     nodes.forEach(node => {
-      let nodeSize = 26; // normal nodes 5% larger
+      let nodeSize = 30; // normal nodes 7% larger
       if (node.id === 'start') nodeSize = 44; // 10% bigger
       else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
-      else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
-      else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
+      else if (node.storyNodeType === 'boss') nodeSize = 88; // 10% bigger
+      else if (node.storyNodeType === 'final_boss') nodeSize = 130; // 30% bigger
       
       actualMinX = Math.min(actualMinX, node.x - nodeSize);
       actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
@@ -499,7 +434,7 @@ export default function StoryClimbPage() {
     // Calculate scale based on tree width, but we'll adjust positioning for centering
     const padding = 30; // Slightly more padding for safety
     const scaleX = (canvas.width - padding * 2) / treeWidth; // Scale based on node centers, not full width
-    const scale = scaleX * 0.85; // Slightly larger scale to make tree bigger
+    const scale = scaleX * 0.77; // Reduced by another 5% (was 0.81)
     
     // Calculate total tree height when scaled
     const scaledTreeHeight = treeHeight * scale;
@@ -516,7 +451,7 @@ export default function StoryClimbPage() {
         const startScaledX = (startNode.x - minX) * scale;
         // Center it by placing it at canvas.width / 2
         // Add a manual adjustment to compensate for visual centering
-        const centerAdjustment = -15; // Shift 5px right from previous position
+        const centerAdjustment = -55; // Shift LEFT another 10px to fit in canvas
         offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
         
         // Debug logging (only log once per render cycle)
@@ -613,6 +548,12 @@ export default function StoryClimbPage() {
       // Transform node position
       let pos = transform(node.x, node.y);
       
+      // Special positioning for event nodes - move 5px left and 3px up
+      if (node.storyNodeType === 'event') {
+        pos.x -= 5;
+        pos.y -= 3;
+      }
+      
       // Log START node position specifically
       if (node.id === 'start') {
         console.log(`START node transformed position: (${pos.x}, ${pos.y}), canvas height: ${canvas.height}`);
@@ -630,7 +571,7 @@ export default function StoryClimbPage() {
       const isCompleted = completedNodes.has(node.id);
       
       // Set node sizes - make all nodes bigger
-      let nodeSize = 26; // normal nodes 5% larger (was 25)
+      let nodeSize = 30; // normal nodes 7% larger (was 28)
       let fillColor = 'transparent'; // No fill for normal nodes
       let strokeColor = '#6b7280'; // gray for unavailable
       let strokeWidth = 2; // thin stroke
@@ -651,7 +592,7 @@ export default function StoryClimbPage() {
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
       } else if (node.storyNodeType === 'final_boss') {
-        nodeSize = 150; // Final boss - 50% bigger total (was 100, then 125, now 150)
+        nodeSize = 130; // Final boss - 30% bigger (was 100)
         fillColor = 'transparent'; // Will use custom rendering
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
@@ -724,7 +665,7 @@ export default function StoryClimbPage() {
         // Draw event image if available
         if (eventImages.has(node.id)) {
           const img = eventImages.get(node.id)!;
-          if (img.complete) {
+          if (img.complete && img.naturalWidth > 0) {
             ctx.save();
             // Clip to circular shape
             ctx.beginPath();
@@ -862,7 +803,7 @@ export default function StoryClimbPage() {
         // Draw boss mech image
         if (nodeImages.has(node.id)) {
           const img = nodeImages.get(node.id)!;
-          if (img.complete) {
+          if (img.complete && img.naturalWidth > 0) {
             ctx.save();
             // Clip to inner rectangle
             ctx.beginPath();
@@ -1000,7 +941,7 @@ export default function StoryClimbPage() {
         // Draw final boss image (rainbow.jpg)
         if (nodeImages.has(node.id)) {
           const img = nodeImages.get(node.id)!;
-          if (img.complete) {
+          if (img.complete && img.naturalWidth > 0) {
             ctx.save();
             // Clip to inner rectangle
             ctx.beginPath();
@@ -1057,7 +998,7 @@ export default function StoryClimbPage() {
         // Draw mechanism image for normal nodes (but NOT the start node)
         if (node.storyNodeType === 'normal' && node.id !== 'start' && nodeImages.has(node.id)) {
           const img = nodeImages.get(node.id)!;
-          if (img.complete) {
+          if (img.complete && img.naturalWidth > 0) { // Check image is loaded and not broken
             ctx.save();
             // Draw dark circular frame for mechanism nodes
             ctx.beginPath();
@@ -1206,17 +1147,95 @@ export default function StoryClimbPage() {
         // Reset font for other nodes
         ctx.font = 'bold 10px Orbitron';
       } else if (node.storyNodeType === 'boss') {
-        // Position text below the boss node
-        ctx.font = 'bold 12px Orbitron';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText('MINI BOSS', pos.x, pos.y + 90 + 20); // nodeSize + spacing
+        // Draw text INSIDE the boss square at the bottom
+        ctx.save();
+        
+        // Draw at bottom inside the square
+        ctx.font = 'bold 14px Impact';
+        ctx.fillStyle = isCompleted ? '#10b981' : isAvailable ? '#ef4444' : '#9ca3af';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('MINI BOSS', pos.x, pos.y + nodeSize - 15);
+        ctx.restore();
       } else if (node.storyNodeType === 'final_boss') {
-        // Position text below the final boss node
-        ctx.font = 'bold 14px Orbitron';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText('FINAL BOSS', pos.x, pos.y + 150 + 25); // nodeSize + spacing
+        // Draw text INSIDE the final boss square at the bottom
+        ctx.save();
+        ctx.font = 'bold 16px Impact';
+        ctx.fillStyle = isCompleted ? '#10b981' : isAvailable ? '#fab617' : '#9ca3af';
+        ctx.textAlign = 'center';
+        ctx.fillText('FINAL BOSS', pos.x, pos.y + nodeSize - 35);
+        
+        ctx.font = 'bold 12px Verdana';
+        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#10b981' : '#6b7280';
+        ctx.fillText('THE APEX MECHANISM', pos.x, pos.y + nodeSize - 15);
+        ctx.restore();
       } else if (node.storyNodeType === 'event') {
-        ctx.fillText('EVENT', pos.x, pos.y);
+        // Draw EVENT text inside the node with curved text along bottom inner edge
+        ctx.save();
+        const eventTitles = [
+          'The Lost Shadows', 'Frozen Echo', 'Binary Storm', 'Void Walker',
+          'Crystal Nexus', 'Shadow Protocol', 'Iron Forge', 'Plasma Core',
+          'Quantum Leap', 'Neural Link', 'Time Rift', 'Data Stream',
+          'The Talisman', 'Neon Dreams', 'Ghost Signal', 'Circuit Break'
+        ];
+        
+        // Get a deterministic title based on node ID
+        let titleHash = 0;
+        for (let i = 0; i < node.id.length; i++) {
+          titleHash = ((titleHash << 5) - titleHash) + node.id.charCodeAt(i);
+        }
+        const eventTitle = eventTitles[Math.abs(titleHash) % eventTitles.length];
+        
+        // Draw curved text INSIDE the circle along the bottom
+        ctx.font = 'bold 11px Verdana';
+        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#fab617' : '#9ca3af';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Calculate text arc parameters
+        const textRadius = nodeSize - 12; // Inside the circle, with padding from edge
+        const arcText = eventTitle.toUpperCase();
+        const letterSpacing = 0.12; // Spacing between letters in radians
+        const totalArc = letterSpacing * (arcText.length - 1);
+        const startAngle = Math.PI / 2 + totalArc / 2; // Start from bottom, centered
+        
+        // Draw each letter curved along the bottom inside of the circle
+        for (let i = 0; i < arcText.length; i++) {
+          const angle = startAngle - (i * letterSpacing);
+          const charX = pos.x + Math.cos(angle) * textRadius;
+          const charY = pos.y + Math.sin(angle) * textRadius;
+          
+          ctx.save();
+          ctx.translate(charX, charY);
+          ctx.rotate(angle - Math.PI / 2); // Rotate to follow the curve
+          ctx.fillText(arcText[i], 0, 0);
+          ctx.restore();
+        }
+        
+        // Draw "EVENT" curved at the top of the circle
+        ctx.font = 'bold 12px Impact';
+        ctx.fillStyle = '#8b5cf6';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const eventText = 'EVENT';
+        const topRadius = nodeSize - 15;
+        const topLetterSpacing = 0.15;
+        const topTotalArc = topLetterSpacing * (eventText.length - 1);
+        const topStartAngle = -Math.PI / 2 - topTotalArc / 2;
+        
+        for (let i = 0; i < eventText.length; i++) {
+          const angle = topStartAngle + (i * topLetterSpacing);
+          const charX = pos.x + Math.cos(angle) * topRadius;
+          const charY = pos.y + Math.sin(angle) * topRadius;
+          
+          ctx.save();
+          ctx.translate(charX, charY);
+          ctx.rotate(angle + Math.PI / 2);
+          ctx.fillText(eventText[i], 0, 0);
+          ctx.restore();
+        }
+        ctx.restore();
       } else {
         // Normal nodes - show number if available
         const nodeNumber = node.label.match(/\d+/) || [''];
@@ -1258,10 +1277,34 @@ export default function StoryClimbPage() {
     
     setPanOffset(prev => {
       const newY = prev.y + deltaY;
-      // For now, allow free scrolling. We can add limits later if needed
-      // Scrolling down (positive Y) moves the tree up, scrolling up (negative Y) moves tree down
+      
+      // Find the final boss node to set scroll limit
+      const finalBossNode = treeData?.nodes.find(n => n.storyNodeType === 'final_boss');
+      if (finalBossNode && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const nodes = treeData.nodes;
+        const minY = Math.min(...nodes.map(n => n.y));
+        const maxY = Math.max(...nodes.map(n => n.y));
+        
+        const treeHeight = maxY - minY;
+        const scale = 0.77; // Current scale factor
+        const scaledTreeHeight = treeHeight * scale;
+        
+        // Calculate where final boss would be
+        const finalBossRelativeY = (finalBossNode.y - minY) * scale;
+        
+        // Don't allow scrolling past the final boss (with some padding)
+        const maxScroll = scaledTreeHeight - finalBossRelativeY - 150; // 150px padding from top
+        const limitedY = Math.min(newY, maxScroll);
+        
+        return {
+          x: 0, // Always keep X at 0 - no horizontal panning
+          y: Math.max(limitedY, 0) // Also prevent scrolling below start
+        };
+      }
+      
       return {
-        x: 0, // Always keep X at 0 - no horizontal panning
+        x: 0,
         y: newY
       };
     });
@@ -1408,7 +1451,7 @@ export default function StoryClimbPage() {
       let offsetX;
       if (startNodeInClick) {
         const startScaledX = (startNodeInClick.x - minX) * scale;
-        const centerAdjustment = -15; // Match the render function offset
+        const centerAdjustment = -35; // Match the render function offset (shift LEFT)
         offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
       } else {
         const leftOverflow = (minX - actualMinX) * scale;

@@ -21,7 +21,7 @@ export default function TalentBuilderPage() {
     offsetY: 0
   });
   const [showGrid, setShowGrid] = useState(true);
-  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(false);
   const [editingNode, setEditingNode] = useState<string | null>(null);
   const [variationSearch, setVariationSearch] = useState("");
   const [showVariationPicker, setShowVariationPicker] = useState(false);
@@ -52,6 +52,8 @@ export default function TalentBuilderPage() {
   const [history, setHistory] = useState<{nodes: TalentNode[], connections: Connection[]}[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [unconnectedNodes, setUnconnectedNodes] = useState<Set<string>>(new Set());
+  const [highlightDisconnected, setHighlightDisconnected] = useState(false);
+  const [deadEndNodes, setDeadEndNodes] = useState<Set<string>>(new Set());
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [currentSaveName, setCurrentSaveName] = useState<string | null>(null);
   const [showStorySaveDialog, setShowStorySaveDialog] = useState(false);
@@ -908,6 +910,63 @@ export default function TalentBuilderPage() {
     setTimeout(() => setSaveStatus(""), 2000);
   };
 
+  const findDisconnectedAndDeadEndNodes = () => {
+    const connectedNodes = new Set<string>();
+    const hasUpwardConnection = new Set<string>();
+
+    // Build connection maps
+    connections.forEach(conn => {
+      connectedNodes.add(conn.from);
+      connectedNodes.add(conn.to);
+
+      // Track nodes that have upward connections (lower y means up in canvas)
+      const fromNode = nodes.find(n => n.id === conn.from);
+      const toNode = nodes.find(n => n.id === conn.to);
+
+      if (fromNode && toNode) {
+        // If 'from' connects to a node with lower y (upward), mark it as having upward connection
+        if (toNode.y < fromNode.y) {
+          hasUpwardConnection.add(conn.from);
+        }
+        // If 'to' connects to a node with lower y (upward), mark it as having upward connection
+        if (fromNode.y < toNode.y) {
+          hasUpwardConnection.add(conn.to);
+        }
+      }
+    });
+
+    // Find unconnected nodes (nodes with zero connections)
+    const unconnected = new Set<string>();
+    const deadEnds = new Set<string>();
+
+    nodes.forEach(node => {
+      // Check if node has no connections at all
+      if (!connectedNodes.has(node.id)) {
+        unconnected.add(node.id);
+      }
+      // Check if node is connected but has no upward path (dead-end)
+      else if (!hasUpwardConnection.has(node.id)) {
+        // Exception: Don't mark as dead-end if it's at the very top (lowest y value)
+        const isTopNode = !nodes.some(n => n.y < node.y - 50); // Allow some tolerance
+        if (!isTopNode) {
+          deadEnds.add(node.id);
+        }
+      }
+    });
+
+    setUnconnectedNodes(unconnected);
+    setDeadEndNodes(deadEnds);
+
+    const totalIssues = unconnected.size + deadEnds.size;
+    if (totalIssues > 0) {
+      setSaveStatus(`Found ${unconnected.size} unconnected, ${deadEnds.size} dead-end nodes`);
+      setTimeout(() => setSaveStatus(""), 3000);
+    } else {
+      setSaveStatus("All nodes properly connected!");
+      setTimeout(() => setSaveStatus(""), 2000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative">
       {/* Back to Site Button */}
@@ -1044,6 +1103,23 @@ export default function TalentBuilderPage() {
               className={`px-2 py-1 text-sm rounded ${snapToGrid ? 'bg-gray-600' : 'bg-gray-700'} hover:bg-gray-600 text-white`}
             >
               Snap: {snapToGrid ? 'ON' : 'OFF'}
+            </button>
+            <button
+              onClick={() => {
+                setHighlightDisconnected(!highlightDisconnected);
+                if (!highlightDisconnected) {
+                  // When turning on, calculate disconnected and dead-end nodes
+                  findDisconnectedAndDeadEndNodes();
+                } else {
+                  // When turning off, clear the sets
+                  setUnconnectedNodes(new Set());
+                  setDeadEndNodes(new Set());
+                }
+              }}
+              className={`px-2 py-1 text-sm rounded ${highlightDisconnected ? 'bg-orange-600' : 'bg-gray-700'} hover:bg-orange-600 text-white`}
+              title="Highlight nodes with no connections or dead-ends"
+            >
+              Highlight Issues: {highlightDisconnected ? 'ON' : 'OFF'}
             </button>
           </div>
         </div>
@@ -1513,7 +1589,10 @@ export default function TalentBuilderPage() {
               const isConnecting = connectFrom === node.id;
               const isStart = node.id === 'start' || node.id.startsWith('start-');
               const isUnconnected = unconnectedNodes.has(node.id);
-              
+              const isDeadEnd = deadEndNodes.has(node.id);
+              const hasIssue = isUnconnected || isDeadEnd;
+              const isDimmed = highlightDisconnected && !hasIssue && !isSelected;
+
               // Determine size based on story node type
               let nodeSize = '30px';
               if (isStart) nodeSize = '50px';
@@ -1580,18 +1659,24 @@ export default function TalentBuilderPage() {
                     left: `${node.x}px`,
                     top: `${node.y}px`,
                     background,
+                    opacity: isDimmed ? 0.3 : 1,
                     border: `3px solid ${
-                      isUnconnected ? '#ff0000' : isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
+                      isUnconnected ? '#ff0000' :
+                      isDeadEnd ? '#ff8c00' :
+                      isSelected ? '#fbbf24' :
+                      isConnecting ? '#10b981' :
+                      'transparent'
                     }`,
-                    animation: isUnconnected ? 'pulse-red 1.5s ease-in-out infinite' : 'none',
+                    animation: hasIssue ? (isUnconnected ? 'pulse-red 1.5s ease-in-out infinite' : 'pulse-orange 1.5s ease-in-out infinite') : 'none',
                     borderRadius,
                     boxShadow: isUnconnected ? '0 0 30px rgba(255, 0, 0, 0.8)' :
-                              isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : 
+                              isDeadEnd ? '0 0 30px rgba(255, 140, 0, 0.8)' :
+                              isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' :
                               isConnecting ? '0 0 20px rgba(16, 185, 129, 0.5)' :
-                              isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 
-                              node.storyNodeType === 'boss' ? '0 0 15px rgba(239, 68, 68, 0.5)' : 
+                              isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' :
+                              node.storyNodeType === 'boss' ? '0 0 15px rgba(239, 68, 68, 0.5)' :
                               node.storyNodeType === 'final_boss' ? '0 0 25px rgba(251, 191, 36, 0.8)' : 'none',
-                    zIndex: isSelected ? 20 : 10,
+                    zIndex: isSelected ? 20 : hasIssue ? 15 : 10,
                     transform: isSelected ? 'scale(1.1)' : 'scale(1)'
                   }}
                   onClick={(e) => handleNodeClick(node.id, e)}
@@ -2795,19 +2880,6 @@ export default function TalentBuilderPage() {
         </div>
       )}
       
-      {/* CSS for pulsing red animation */}
-      <style jsx>{`
-        @keyframes pulse-red {
-          0%, 100% {
-            opacity: 1;
-            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8));
-          }
-          50% {
-            opacity: 0.7;
-            filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1));
-          }
-        }
-      `}</style>
     </div>
   );
 }

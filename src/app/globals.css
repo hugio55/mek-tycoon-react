@@ -42,6 +42,29 @@ body {
   100% { transform: translateY(400px); }
 }
 
+/* Talent builder animations */
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8));
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1));
+  }
+}
+
+@keyframes pulse-orange {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(255, 140, 0, 0.8));
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 40px rgba(255, 140, 0, 1));
+  }
+}
+
 /* Industrial hazard stripe patterns */
 .bg-repeating-stripes-yellow {
   background-image: repeating-linear-gradient(
