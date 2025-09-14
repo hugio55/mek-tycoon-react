@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Test for Story Climb</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #111;
+            color: white;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; }
+        .error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; }
+        .info { background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; }
+        .warning { background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; }
+        .btn {
+            background: #fab617;
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        .btn:hover { background: #e6a515; }
+        #iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #fab617;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        #test-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔬 Story Climb Scroll Test</h1>
+        
+        <div class="test-result info">
+            <h3>Test Purpose</h3>
+            <p>This test verifies that the scrolling works properly to reach the final boss node at the top of the story tree.</p>
+            <p><strong>Expected behavior:</strong> User should be able to scroll up to see the "FINAL BOSS" node that sits above all other nodes in the tree.</p>
+        </div>
+
+        <button class="btn" onclick="loadStoryClimb()">Load Story Climb Page</button>
+        <button class="btn" onclick="testScroll()">Test Scroll to Top</button>
+        <button class="btn" onclick="checkFinalBoss()">Check Final Boss Visible</button>
+
+        <div id="iframe-container">
+            <iframe id="test-frame" src="about:blank"></iframe>
+        </div>
+
+        <div id="test-results">
+            <div class="test-result warning">
+                <h3>📋 Test Instructions</h3>
+                <ol>
+                    <li>Click "Load Story Climb Page" to load the page in the frame above</li>
+                    <li>Wait for the page to fully load</li>
+                    <li>Try scrolling up using your mouse wheel while hovering over the canvas</li>
+                    <li>Check if you can see the "FINAL BOSS" node at the top</li>
+                    <li>Use the test buttons to automate the scroll test</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadStoryClimb() {
+            const iframe = document.getElementById('test-frame');
+            iframe.src = 'http://localhost:3100/scrap-yard/story-climb';
+            
+            addTestResult('info', 'Loading Story Climb page...', 'Page should load within 5 seconds');
+            
+            iframe.onload = function() {
+                addTestResult('success', 'Page loaded successfully!', 'Story climb page is now loaded in the frame');
+            };
+        }
+
+        function testScroll() {
+            const iframe = document.getElementById('test-frame');
+            if (iframe.src === 'about:blank') {
+                addTestResult('error', 'Page not loaded', 'Please load the Story Climb page first');
+                return;
+            }
+
+            addTestResult('info', 'Testing scroll behavior...', 'Attempting to simulate scroll events');
+            
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const canvas = iframeDoc.querySelector('canvas');
+                
+                if (canvas) {
+                    // Simulate multiple scroll events to try to reach the top
+                    for (let i = 0; i < 10; i++) {
+                        const wheelEvent = new WheelEvent('wheel', {
+                            deltaY: -100, // Scroll up
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        canvas.dispatchEvent(wheelEvent);
+                    }
+                    
+                    addTestResult('success', 'Scroll simulation completed', 'Sent 10 scroll-up events to the canvas');
+                } else {
+                    addTestResult('error', 'Canvas not found', 'Could not locate the canvas element for scrolling');
+                }
+            } catch (err) {
+                addTestResult('error', 'Cross-origin error', 'Unable to access iframe content due to browser security restrictions');
+            }
+        }
+
+        function checkFinalBoss() {
+            addTestResult('info', 'Manual verification required', 'Look at the canvas above and check if you can see "FINAL BOSS" text at the top after scrolling');
+        }
+
+        function addTestResult(type, title, description) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <p>${description}</p>
+                <small>Time: ${new Date().toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            // Scroll to the new result
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

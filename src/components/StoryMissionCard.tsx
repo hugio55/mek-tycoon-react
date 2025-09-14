@@ -22,24 +22,25 @@ interface StoryMissionCardProps {
   mekImage?: string; // Path to the mek image
   mekName?: string;
   mekRank?: number;
-  
+
   // Rewards
   primaryReward?: number;
   experience?: number;
   potentialRewards?: MissionReward[];
-  
+
   // Variation buffs
   variationBuffs?: VariationBuff[];
-  
+  buffCategoryId?: number; // Total active contracts for buff category
+
   // Success and deployment
   successChance?: number;
   deploymentFee?: number;
   onDeploy?: () => void;
-  
+
   // Styling
   scale?: number;
   style?: React.CSSProperties;
-  
+
   // State
   isLocked?: boolean;
   isEmpty?: boolean;
@@ -67,6 +68,7 @@ export default function StoryMissionCard({
     { id: "nuke", name: "NUKE", bonus: "+10%" },
     { id: "exposed", name: "EXPOSED", bonus: "+10%" },
   ],
+  buffCategoryId = 0,
   successChance = 65,
   deploymentFee = 50000,
   onDeploy,
@@ -78,7 +80,7 @@ export default function StoryMissionCard({
   
   const formatGoldAmount = (amount: number): string => {
     if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `${(amount / 1000).toFixed(0)},000`;
+    if (amount >= 1000) return `${amount.toLocaleString()}`;
     return amount.toLocaleString();
   };
   
@@ -128,44 +130,69 @@ export default function StoryMissionCard({
       style={{ transform: `scale(${scale})`, transformOrigin: 'top center', ...style }}
     >
       <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
-        
-        {/* Mek Image Section */}
-        <div className="relative bg-black/80 p-4 border-b-2 border-yellow-500/30">
-          <div className="relative w-full h-48 bg-black/60 rounded-lg overflow-hidden mb-3">
+
+        {/* Mek Image Section with Hazard Stripe Header */}
+        <div className="relative">
+          {/* Mek Image - Full width, no padding */}
+          <div className="relative w-full aspect-square bg-black overflow-hidden">
             {mekImage && (
               <Image
                 src={mekImage}
                 alt={mekName}
                 fill
-                className="object-contain"
+                className="object-cover"
                 style={{ imageRendering: 'crisp-edges' }}
               />
             )}
           </div>
-          <div className="flex justify-between items-center">
-            <h2 className="mek-text-industrial text-xl font-black tracking-wider text-yellow-400">
-              {mekName}
-            </h2>
-            <div className="text-sm text-gray-400">
-              Rank <span className="text-yellow-400 font-bold">{mekRank}</span>
+
+          {/* Hazard Stripe Header Bar */}
+          <div className="relative h-12 bg-gradient-to-r from-black via-gray-900 to-black border-t-2 border-b-2 border-yellow-500/50 overflow-hidden">
+            {/* Diagonal hazard stripes */}
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  45deg,
+                  #fab617,
+                  #fab617 10px,
+                  #000000 10px,
+                  #000000 20px
+                )`,
+              }}
+            />
+
+            {/* Content overlay */}
+            <div className="relative h-full flex items-center justify-between px-4">
+              <h2 className="text-lg font-black tracking-wider text-yellow-400 uppercase">
+                {mekName}
+              </h2>
+              <div className="text-sm text-gray-300">
+                Rank <span className="text-yellow-400 font-bold text-base">{mekRank}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="p-4 relative">
-          {/* Primary Rewards Section */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-black/60 mek-border-sharp-gold p-3">
-              <div className="mek-value-primary text-2xl">{formatGoldAmount(primaryReward)}</div>
-              <div className="mek-label-uppercase text-[10px]">Gold</div>
-              <div className="text-[8px] text-gray-500 uppercase">Primary Reward</div>
+        {/* Gold and XP Bar - Clean Industrial Style */}
+        <div className="relative bg-gradient-to-r from-amber-900/60 via-amber-800/40 to-amber-900/60 border-y-2 border-yellow-500/40 overflow-hidden">
+          {/* Content - Single unified bar */}
+          <div className="relative flex items-center justify-between px-6 py-3 h-14">
+            {/* Gold Reward */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-yellow-400">{formatGoldAmount(primaryReward)}</span>
+              <span className="text-xs font-semibold text-yellow-400/70 uppercase tracking-wide">Gold</span>
             </div>
-            <div className="bg-black/60 mek-border-sharp-gold p-3">
-              <div className="mek-value-secondary text-2xl">+{formatGoldAmount(experience)}</div>
-              <div className="mek-label-uppercase text-[10px]">XP</div>
-              <div className="text-[8px] text-gray-500 uppercase">Experience</div>
+
+            {/* XP Reward */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-blue-400">+{formatGoldAmount(experience)}</span>
+              <span className="text-xs font-semibold text-blue-400/70 uppercase tracking-wide">XP</span>
             </div>
           </div>
+        </div>
+
+        <div className="p-3 relative">
 
           {/* Potential Rewards */}
           <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
@@ -190,51 +217,69 @@ export default function StoryMissionCard({
 
           {/* Variation Buffs */}
           <div className="mb-4">
-            <div className="mek-label-uppercase mb-2 text-[10px]">Variation Buffs</div>
-            <div className="text-[10px] text-gray-400 mb-3">Match Mek traits to these variations for success bonuses</div>
-            
-            {/* Two rows of buff indicators */}
-            <div className="grid grid-cols-5 gap-2 mb-2">
-              {['TASER', 'LOG', 'KEVLAR', 'NUKE', 'EXPOSED'].map((buff) => (
-                <div key={buff} className="relative">
-                  <div className="aspect-square rounded-full border-2 border-yellow-500/30 bg-black/60 flex flex-col items-center justify-center p-1">
-                    <span className="text-[8px] text-gray-400 font-bold">{buff}</span>
-                    <span className="text-[10px] text-yellow-400 font-bold">+10%</span>
-                  </div>
-                </div>
-              ))}
+            <div className="mb-3">
+              <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
+              <div className="text-[10px] text-gray-400 mt-1">
+                Match Mek traits to these variations for success bonuses
+              </div>
             </div>
-            
-            <div className="grid grid-cols-5 gap-2">
-              {['JADE', 'LOG', 'KEVLAR', 'NUKE', 'EXPOSED'].map((buff) => (
-                <div key={buff} className="relative">
-                  <div className="aspect-square rounded-full border-2 border-yellow-500/30 bg-black/60 flex flex-col items-center justify-center p-1">
-                    <span className="text-[8px] text-gray-400 font-bold">{buff}</span>
-                    <span className="text-[10px] text-yellow-400 font-bold">+10%</span>
-                  </div>
-                </div>
-              ))}
+
+            {/* Grid Layout for Variation Buffs - max 5 circular images */}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-5 gap-2 max-w-[400px]">
+                {variationBuffs.slice(0, 5).map((buff, index) => {
+                  // Map buff names to image paths
+                  const buffImageMap: Record<string, string> = {
+                    'TASER': '/variation-images/taser.png',
+                    'LOG': '/variation-images/log.png',
+                    'KEVLAR': '/variation-images/kevlar.png',
+                    'NUKE': '/variation-images/nuke.png',
+                    'EXPOSED': '/variation-images/exposed.png',
+                    'JADE': '/variation-images/jade.png',
+                    'SHAMROCK': '/variation-images/shamrock.png',
+                    'CLASSIC': '/variation-images/classic.png',
+                    'LIGHTNING': '/variation-images/lightning.png',
+                    'CORRODED': '/variation-images/corroded.png',
+                  };
+
+                  const imagePath = buffImageMap[buff.name] || '/variation-images/default.png';
+
+                  return (
+                    <div key={`${buff.id}-${index}`} className="relative">
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 border-gray-700 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400">
+                          <Image
+                            src={imagePath}
+                            alt={buff.name}
+                            fill
+                            className="object-cover opacity-80"
+                            style={{ imageRendering: 'crisp-edges' }}
+                          />
+                          {/* Dark overlay for better text visibility */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+
+                          {/* Text overlay centered */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-[9px] text-gray-300 font-bold uppercase">{buff.name}</span>
+                            <span className="text-[11px] text-yellow-400 font-bold">{buff.bonus}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
           
           {/* Mek Slots */}
           <div className="mb-4">
             <div className="grid grid-cols-4 gap-2">
-              {[1, 2, 3, 4].map((slot) => (
-                <div key={slot} className="aspect-square bg-black/60 border-2 border-yellow-500/30 border-dashed rounded-lg flex items-center justify-center">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
+                <div key={slot} className="mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/30 bg-black/40 flex items-center justify-center cursor-pointer hover:border-yellow-500/60 transition-all">
                   <div className="text-center">
-                    <div className="text-xl text-yellow-500/30">+</div>
-                    <div className="text-[8px] text-gray-500 uppercase">Empty</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {[5, 6].map((slot) => (
-                <div key={slot} className="aspect-square bg-black/60 border-2 border-yellow-500/30 border-dashed rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-xl text-yellow-500/30">+</div>
-                    <div className="text-[8px] text-gray-500 uppercase">Empty</div>
+                    <div className="text-2xl text-gray-600">+</div>
+                    <div className="text-[8px] text-gray-600 uppercase">Empty</div>
                   </div>
                 </div>
               ))}

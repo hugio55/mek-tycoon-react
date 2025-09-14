@@ -75,12 +75,13 @@ export default function StoryClimbPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Load the V1 story tree (primary) or Test 5 as fallback
+  // Load the V2 story tree (primary) with storyNodeType, or V1 as fallback
   const storyTrees = useQuery(api.storyTrees.getAllStoryTrees);
+  const v2Tree = storyTrees?.find(tree => tree.name === "V2");
   const v1Tree = storyTrees?.find(tree => tree.name === "V1");
   const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
   
-  const treeData = v1Tree || test5Tree; // Use V1 if available, otherwise fall back to Test 5
+  const treeData = v2Tree || v1Tree || test5Tree; // Use V2 if available, otherwise V1, then Test 5
   
   // Helper function to generate rewards based on node type and level
   const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
@@ -282,7 +283,7 @@ export default function StoryClimbPage() {
     const updateSize = () => {
       if (containerRef.current) {
         const container = containerRef.current;
-        const width = container.clientWidth;
+        const width = container.clientWidth - 20; // Reduce width by 20px to move right edge left
         const height = Math.floor(width * 1.5); // 2:3 aspect ratio
         console.log("Canvas size updated:", { width, height });
         setCanvasSize({ width, height });
@@ -402,11 +403,11 @@ export default function StoryClimbPage() {
     
     // Calculate the actual bounds including node sizes
     nodes.forEach(node => {
-      let nodeSize = 30; // normal nodes 7% larger
-      if (node.id === 'start') nodeSize = 44; // 10% bigger
-      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
-      else if (node.storyNodeType === 'boss') nodeSize = 88; // 10% bigger
-      else if (node.storyNodeType === 'final_boss') nodeSize = 130; // 30% bigger
+      let nodeSize = 30; // normal nodes
+      if (node.id === 'start') nodeSize = 60; // bigger for hemisphere
+      else if (node.storyNodeType === 'event') nodeSize = 67; // 12% bigger
+      else if (node.storyNodeType === 'boss') nodeSize = 88; // boss nodes
+      else if (node.storyNodeType === 'final_boss') nodeSize = 130; // final boss
       
       actualMinX = Math.min(actualMinX, node.x - nodeSize);
       actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
@@ -478,8 +479,9 @@ export default function StoryClimbPage() {
       if (startNode) {
         // Always position based on start node
         const startScaledY = (startNode.y - minY) * scale;
-        // Put start node at 85% down the canvas (lower position)
-        offsetY = canvas.height * 0.85 - startScaledY + viewportOffset;
+        // Put start node at the very bottom of the canvas
+        // The hemisphere should sit flush with the bottom edge
+        offsetY = canvas.height - startScaledY + viewportOffset + 45; // Move down 30 more pixels to touch bottom
       } else {
         // Fallback if no start node
         offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
@@ -502,8 +504,18 @@ export default function StoryClimbPage() {
       const toNode = nodes.find(n => n.id === conn.to);
       
       if (fromNode && toNode) {
-        const from = transform(fromNode.x, fromNode.y);
-        const to = transform(toNode.x, toNode.y);
+        let from = transform(fromNode.x, fromNode.y);
+        let to = transform(toNode.x, toNode.y);
+        
+        // Adjust connection points for event nodes since they're offset
+        if (fromNode.storyNodeType === 'event') {
+          from.x -= 7;
+          from.y -= 3;
+        }
+        if (toNode.storyNodeType === 'event') {
+          to.x -= 7;
+          to.y -= 3;
+        }
         
         // Only draw if at least one end is visible
         if (isInViewport(from.y) || isInViewport(to.y)) {
@@ -548,11 +560,14 @@ export default function StoryClimbPage() {
       // Transform node position
       let pos = transform(node.x, node.y);
       
-      // Special positioning for event nodes - move 5px left and 3px up
+      // Special positioning for event nodes - move 7px left and 3px up
       if (node.storyNodeType === 'event') {
-        pos.x -= 5;
+        pos.x -= 7;
         pos.y -= 3;
       }
+      
+      // REMOVED - Don't move nodes from their saved positions
+      // The spacing is handled by moving the entire tree down
       
       // Log START node position specifically
       if (node.id === 'start') {
@@ -571,18 +586,18 @@ export default function StoryClimbPage() {
       const isCompleted = completedNodes.has(node.id);
       
       // Set node sizes - make all nodes bigger
-      let nodeSize = 30; // normal nodes 7% larger (was 28)
+      let nodeSize = 30; // normal nodes (was 28)
       let fillColor = 'transparent'; // No fill for normal nodes
       let strokeColor = '#6b7280'; // gray for unavailable
       let strokeWidth = 2; // thin stroke
       
       if (node.id === 'start') {
-        nodeSize = 44; // start node - 10% bigger (was 40)
-        fillColor = '#10b981'; // green
-        strokeColor = '#10b981';
+        nodeSize = 75; // start node - 25% bigger for hemisphere effect
+        fillColor = '#fab617'; // yellow
+        strokeColor = '#000000';
         strokeWidth = 3;
       } else if (node.storyNodeType === 'event') {
-        nodeSize = 66; // Event nodes - 10% bigger (was 60)
+        nodeSize = 67; // Event nodes - 12% bigger (was 60)
         fillColor = '#8b5cf6'; // purple
         strokeColor = '#6b7280'; // Will be updated after isAvailable is calculated
         strokeWidth = 2;
@@ -622,8 +637,30 @@ export default function StoryClimbPage() {
         }
       }
       
-      // Draw glow for available or completed nodes (not for mechanism nodes)
-      if ((isAvailable || isCompleted) && node.storyNodeType !== 'normal' && node.id !== 'start') {
+      // Draw subtle glow for available nodes (all types)
+      if (isAvailable && node.id !== 'start') {
+        ctx.save();
+        const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2; // Subtle pulse
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
+        
+        // Draw shape for glow
+        if (node.storyNodeType === 'event') {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          ctx.strokeStyle = 'transparent';
+          ctx.stroke();
+        } else if (node.storyNodeType === 'normal') {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          ctx.strokeStyle = 'transparent';
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = 'transparent';
+          ctx.strokeRect(pos.x - nodeSize, pos.y - nodeSize, nodeSize * 2, nodeSize * 2);
+        }
+        ctx.restore();
+      } else if ((isAvailable || isCompleted) && node.storyNodeType !== 'normal' && node.id !== 'start') {
         ctx.save();
         if (isAvailable) {
           const glowIntensity = 0.5 + Math.sin(Date.now() / 500) * 0.3;
@@ -713,9 +750,11 @@ export default function StoryClimbPage() {
           }
         }
         
-        // Draw border
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = strokeWidth;
+        // Draw border with adjusted colors for availability
+        ctx.strokeStyle = isCompleted ? '#10b981' : 
+                         isAvailable ? '#fab617' : 
+                         '#3f3f46'; // Much darker gray when unavailable
+        ctx.lineWidth = isAvailable ? 2 : 1; // Thinner when not available
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
         ctx.stroke();
@@ -985,12 +1024,96 @@ export default function StoryClimbPage() {
                       halfSize * 2 - 16, halfSize * 2 - 16);
         ctx.restore();
         
+      } else if (node.id === 'start') {
+        // Draw special hemisphere start node - CORRECT ORIENTATION
+        ctx.save();
+        
+        const hemisphereRadius = nodeSize; // 25% larger size
+        
+        // Draw hemisphere with flat side DOWN (arc from 0 to PI goes top half)
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.closePath();
+        
+        // Industrial gradient fill with radial effect
+        const gradient = ctx.createRadialGradient(pos.x, pos.y - hemisphereRadius/3, 0, pos.x, pos.y, hemisphereRadius);
+        gradient.addColorStop(0, '#fbbf24');
+        gradient.addColorStop(0.3, '#fab617');
+        gradient.addColorStop(0.7, '#f59e0b');
+        gradient.addColorStop(1, '#d97706');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Add industrial metallic overlay
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.closePath();
+        ctx.clip();
+        
+        // Add metallic sheen effect
+        const sheenGradient = ctx.createLinearGradient(pos.x - hemisphereRadius, pos.y - hemisphereRadius, pos.x + hemisphereRadius, pos.y);
+        sheenGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        sheenGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
+        sheenGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
+        sheenGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
+        sheenGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sheenGradient;
+        ctx.fillRect(pos.x - hemisphereRadius, pos.y - hemisphereRadius, hemisphereRadius * 2, hemisphereRadius);
+        
+        // Add improved industrial pattern
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+        ctx.lineWidth = 1;
+        
+        // Concentric arcs
+        for (let r = 15; r < hemisphereRadius; r += 15) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, r, 0, Math.PI, true);
+          ctx.stroke();
+        }
+        
+        // Radial lines
+        for (let angle = 0; angle < Math.PI; angle += Math.PI / 12) {
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(pos.x + Math.cos(angle) * hemisphereRadius, pos.y - Math.sin(angle) * hemisphereRadius);
+          ctx.stroke();
+        }
+        
+        // Add subtle dots at intersections
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        for (let r = 30; r < hemisphereRadius; r += 30) {
+          for (let angle = Math.PI / 12; angle < Math.PI; angle += Math.PI / 12) {
+            ctx.beginPath();
+            ctx.arc(pos.x + Math.cos(angle) * r, pos.y - Math.sin(angle) * r, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+        
+        // Black border
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Add bottom edge highlight (flat part)
+        ctx.strokeStyle = 'rgba(250, 182, 23, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pos.x - hemisphereRadius, pos.y);
+        ctx.lineTo(pos.x + hemisphereRadius, pos.y);
+        ctx.stroke();
+        
+        ctx.restore();
       } else {
-        // All others are squares (normal, boss, final boss, start)
+        // All others are squares (normal, boss, final boss)
         const halfSize = nodeSize;
         
-        // Draw background only for non-normal nodes (including START node)
-        if (node.storyNodeType !== 'normal' || node.id === 'start') {
+        // Draw background only for non-normal nodes
+        if (node.storyNodeType !== 'normal') {
           ctx.fillStyle = fillColor;
           ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
         }
@@ -1005,9 +1128,11 @@ export default function StoryClimbPage() {
             ctx.arc(pos.x, pos.y, halfSize, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(20, 20, 30, 0.8)';
             ctx.fill();
-            // Green border for completed nodes, dark border for others
-            ctx.strokeStyle = isCompleted ? 'rgba(16, 185, 129, 0.8)' : 'rgba(60, 60, 80, 0.6)';
-            ctx.lineWidth = isCompleted ? 2 : 1;
+            // Green border for completed, white for available, dark for others
+            ctx.strokeStyle = isCompleted ? 'rgba(16, 185, 129, 0.8)' : 
+                             isAvailable ? 'rgba(255, 255, 255, 0.9)' : 
+                             'rgba(60, 60, 80, 0.6)';
+            ctx.lineWidth = isCompleted ? 2 : isAvailable ? 2 : 1;
             ctx.stroke();
             
             // Clip to circular shape (slightly smaller for frame effect)
@@ -1140,18 +1265,34 @@ export default function StoryClimbPage() {
       ctx.textBaseline = 'middle';
       
       if (node.id === 'start') {
-        // Make START text much larger and position it inside the node
-        ctx.font = 'bold 18px Orbitron';
+        // START text INSIDE the hemisphere with better design
+        ctx.save();
+        
+        // Create text with gradient effect
+        ctx.font = 'bold 28px Tahoma';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Add strong black outline
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        ctx.strokeText('START', pos.x, pos.y - 20);
+        
+        // White text with glow
+        ctx.shadowColor = 'rgba(250, 182, 23, 0.8)';
+        ctx.shadowBlur = 10;
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('START', pos.x, pos.y);
+        ctx.fillText('START', pos.x, pos.y - 20);
+        
+        ctx.restore();
         // Reset font for other nodes
         ctx.font = 'bold 10px Orbitron';
       } else if (node.storyNodeType === 'boss') {
         // Draw text INSIDE the boss square at the bottom
         ctx.save();
         
-        // Draw at bottom inside the square
-        ctx.font = 'bold 14px Impact';
+        // Draw at bottom inside the square with more readable font
+        ctx.font = 'bold 13px Arial';
         ctx.fillStyle = isCompleted ? '#10b981' : isAvailable ? '#ef4444' : '#9ca3af';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1186,20 +1327,30 @@ export default function StoryClimbPage() {
         }
         const eventTitle = eventTitles[Math.abs(titleHash) % eventTitles.length];
         
-        // Draw curved text INSIDE the circle along the bottom
+        // Draw curved text INSIDE the circle along the bottom with background
         ctx.font = 'bold 11px Verdana';
-        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#fab617' : '#9ca3af';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
         // Calculate text arc parameters
         const textRadius = nodeSize - 12; // Inside the circle, with padding from edge
         const arcText = eventTitle.toUpperCase();
-        const letterSpacing = 0.12; // Spacing between letters in radians
+        const letterSpacing = 0.14; // Increased spacing between letters in radians
         const totalArc = letterSpacing * (arcText.length - 1);
         const startAngle = Math.PI / 2 + totalArc / 2; // Start from bottom, centered
         
+        // Draw background arc for event title
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, textRadius, startAngle - totalArc - 0.1, startAngle + 0.1);
+        ctx.stroke();
+        ctx.restore();
+        
         // Draw each letter curved along the bottom inside of the circle
+        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#fab617' : '#9ca3af';
         for (let i = 0; i < arcText.length; i++) {
           const angle = startAngle - (i * letterSpacing);
           const charX = pos.x + Math.cos(angle) * textRadius;
@@ -1212,18 +1363,30 @@ export default function StoryClimbPage() {
           ctx.restore();
         }
         
-        // Draw "EVENT" curved at the top of the circle
-        ctx.font = 'bold 12px Impact';
-        ctx.fillStyle = '#8b5cf6';
+        // Draw "EVENT" curved at the top of the circle with background
+        ctx.font = 'bold 11px Trebuchet MS';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
+        // Add semi-transparent background for EVENT text
         const eventText = 'EVENT';
         const topRadius = nodeSize - 15;
         const topLetterSpacing = 0.15;
         const topTotalArc = topLetterSpacing * (eventText.length - 1);
         const topStartAngle = -Math.PI / 2 - topTotalArc / 2;
         
+        // Draw background arc for EVENT text
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, topRadius, topStartAngle - 0.1, topStartAngle + topTotalArc + 0.1);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Draw EVENT text
+        ctx.fillStyle = '#8b5cf6';
         for (let i = 0; i < eventText.length; i++) {
           const angle = topStartAngle + (i * topLetterSpacing);
           const charX = pos.x + Math.cos(angle) * topRadius;
@@ -1255,23 +1418,169 @@ export default function StoryClimbPage() {
   }, []);
   
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Handle hover detection when not dragging and no node is selected
+    if (!isMouseDown && !selectedNode && canvasRef.current && treeData) {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Apply same position adjustments as in draw function
+      const nodes = treeData.nodes.map(node => {
+        const adjustedNode = { ...node };
+
+        if (node.storyNodeType === 'event') {
+          adjustedNode.x = node.x + 25; // Reduced for upper-left positioning
+          adjustedNode.y = node.y + 20; // 5px more upward than other nodes
+        } else if (node.storyNodeType === 'boss') {
+          adjustedNode.x = node.x + 40; // Shifted 5px to the right
+          adjustedNode.y = node.y + 35;
+        } else if (node.storyNodeType === 'final_boss') {
+          adjustedNode.x = node.x + 75; // Center like START node
+          adjustedNode.y = node.y + 20; // Move 40px higher up
+        }
+
+        return adjustedNode;
+      });
+
+      // Calculate bounds INCLUDING node sizes (same as draw function)
+      let actualMinX = Infinity, actualMaxX = -Infinity;
+      let actualMinY = Infinity, actualMaxY = -Infinity;
+
+      nodes.forEach(node => {
+        let nodeSize = 26; // normal nodes 5% larger
+        if (node.id === 'start') nodeSize = 60; // bigger for hemisphere
+        else if (node.storyNodeType === 'event') nodeSize = 67; // 12% bigger
+        else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
+        else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
+
+        actualMinX = Math.min(actualMinX, node.x - nodeSize);
+        actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
+        actualMinY = Math.min(actualMinY, node.y - nodeSize);
+        actualMaxY = Math.max(actualMaxY, node.y + nodeSize);
+      });
+
+      const minX = Math.min(...nodes.map(n => n.x));
+      const maxX = Math.max(...nodes.map(n => n.x));
+      const minY = Math.min(...nodes.map(n => n.y));
+      const maxY = Math.max(...nodes.map(n => n.y));
+
+      const treeWidth = maxX - minX;
+      const treeHeight = maxY - minY;
+      const actualTreeWidth = actualMaxX - actualMinX;
+
+      const padding = 30;
+      const scaleX = (canvas.width - padding * 2) / treeWidth;
+      const scale = scaleX * 0.85; // Match the render function scale
+      const scaledTreeHeight = treeHeight * scale;
+
+      const startNodeInHover = nodes.find(n => n.id === 'start'); // Find start node first
+
+      const transform = (nodeX: number, nodeY: number) => {
+        const scaledX = (nodeX - minX) * scale;
+        const scaledY = (nodeY - minY) * scale;
+
+        // Use the same offset calculation as the draw function
+        let offsetX;
+        if (startNodeInHover) {
+          const startScaledX = (startNodeInHover.x - minX) * scale;
+          const centerAdjustment = -35; // Match the render function offset (shift LEFT)
+          offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
+        } else {
+          const leftOverflow = (minX - actualMinX) * scale;
+          const padding = 30;
+          offsetX = padding + leftOverflow;
+        }
+
+        // Position the start node near the bottom of the canvas
+        let offsetY;
+        if (startNodeInHover) {
+          const startScaledY = (startNodeInHover.y - minY) * scale;
+          offsetY = canvas.height * 0.85 - startScaledY + viewportOffset;
+        } else {
+          offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
+        }
+
+        return {
+          x: scaledX + offsetX + panOffset.x,
+          y: scaledY + offsetY + panOffset.y
+        };
+      };
+
+      // Check if hover is on any available node
+      let foundHoverNode = null;
+      for (const node of nodes) {
+        // Skip start node
+        if (node.id === 'start') continue;
+
+        // Only hover over available nodes (same logic as isNodeAvailable)
+        const isNodeAvailableForHover = treeData.connections.some(conn => {
+          let connectedNodeId = null;
+          if (conn.from === node.id) {
+            connectedNodeId = conn.to;
+          } else if (conn.to === node.id) {
+            connectedNodeId = conn.from;
+          }
+
+          if (!connectedNodeId || !completedNodes.has(connectedNodeId)) {
+            return false;
+          }
+
+          // Find the connected completed node
+          const connectedNode = nodes.find(n => n.id === connectedNodeId);
+          if (!connectedNode) return false;
+
+          // Only allow upward progression (lower Y values = further up the tree)
+          return node.y < connectedNode.y;
+        });
+
+        // Only process available nodes that aren't completed
+        if (!completedNodes.has(node.id) && isNodeAvailableForHover) {
+          const pos = transform(node.x, node.y);
+
+          let nodeSize = 26; // normal nodes - MUST match render function
+          if (node.id === 'start') nodeSize = 44;
+          else if (node.storyNodeType === 'event') nodeSize = 66;
+          else if (node.storyNodeType === 'boss') nodeSize = 90;
+          else if (node.storyNodeType === 'final_boss') nodeSize = 150;
+
+          let inBounds = false;
+          if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+            // Circle hit detection for events and normal mechanism nodes
+            const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+            inBounds = distance <= nodeSize;
+          } else {
+            // Square hit detection for boss/final_boss/start - nodeSize is already the half-size
+            inBounds = Math.abs(x - pos.x) <= nodeSize && Math.abs(y - pos.y) <= nodeSize;
+          }
+
+          if (inBounds) {
+            foundHoverNode = node;
+            break;
+          }
+        }
+      }
+
+      setHoveredNode(foundHoverNode);
+    }
+
     if (!isMouseDown) return;
-    
+
     // Check if mouse moved enough to start panning (5 pixel threshold)
     const distance = Math.sqrt(
-      Math.pow(e.clientX - mouseDownPos.x, 2) + 
+      Math.pow(e.clientX - mouseDownPos.x, 2) +
       Math.pow(e.clientY - mouseDownPos.y, 2)
     );
-    
+
     if (distance > 5) {
       setHasDragged(true);
       if (!isPanning) {
         setIsPanning(true);
       }
     }
-    
+
     if (!isPanning) return;
-    
+
     // Only allow vertical panning (no horizontal movement)
     const deltaY = e.clientY - panStart.y;
     
@@ -1286,20 +1595,21 @@ export default function StoryClimbPage() {
         const minY = Math.min(...nodes.map(n => n.y));
         const maxY = Math.max(...nodes.map(n => n.y));
         
+        // Simply allow scrolling the full height of the tree plus extra room
+        // This ensures we can always see the final boss at the top
         const treeHeight = maxY - minY;
         const scale = 0.77; // Current scale factor
         const scaledTreeHeight = treeHeight * scale;
         
-        // Calculate where final boss would be
-        const finalBossRelativeY = (finalBossNode.y - minY) * scale;
+        // Allow scrolling up by the full scaled tree height plus some extra
+        // This guarantees the final boss can reach the top of the viewport
+        const maxScroll = scaledTreeHeight + 500; // Very generous scroll limit
         
-        // Don't allow scrolling past the final boss (with some padding)
-        const maxScroll = scaledTreeHeight - finalBossRelativeY - 150; // 150px padding from top
         const limitedY = Math.min(newY, maxScroll);
         
         return {
           x: 0, // Always keep X at 0 - no horizontal panning
-          y: Math.max(limitedY, 0) // Also prevent scrolling below start
+          y: Math.max(limitedY, -100) // Allow slight negative scroll for better start view
         };
       }
       
@@ -1309,7 +1619,7 @@ export default function StoryClimbPage() {
       };
     });
     setPanStart({ x: e.clientX, y: e.clientY });
-  }, [isMouseDown, isPanning, mouseDownPos, panStart, treeData]);
+  }, [isMouseDown, isPanning, mouseDownPos, panStart, treeData, selectedNode, completedNodes, viewportOffset, panOffset]);
   
   const handleMouseUp = useCallback(() => {
     setIsMouseDown(false);
@@ -1416,8 +1726,8 @@ export default function StoryClimbPage() {
     
     nodes.forEach(node => {
       let nodeSize = 26; // normal nodes 5% larger
-      if (node.id === 'start') nodeSize = 44; // 10% bigger
-      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
+      if (node.id === 'start') nodeSize = 60; // bigger for hemisphere
+      else if (node.storyNodeType === 'event') nodeSize = 67; // 12% bigger
       else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
       else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
       
@@ -1543,6 +1853,7 @@ export default function StoryClimbPage() {
         
         // Only allow clicking if node is adjacent to a completed node
         if (!completedNodes.has(node.id) && isAdjacent) {
+          setHoveredNode(null); // Clear hover state when selecting a node
           setSelectedNode(node);
           const newCompleted = new Set(completedNodes);
           newCompleted.add(node.id);
@@ -1593,8 +1904,8 @@ export default function StoryClimbPage() {
     
     nodes.forEach(node => {
       let nodeSize = 26; // normal nodes 5% larger
-      if (node.id === 'start') nodeSize = 44; // 10% bigger
-      else if (node.storyNodeType === 'event') nodeSize = 66; // 10% bigger
+      if (node.id === 'start') nodeSize = 60; // bigger for hemisphere
+      else if (node.storyNodeType === 'event') nodeSize = 67; // 12% bigger
       else if (node.storyNodeType === 'boss') nodeSize = 90; // 12% bigger (was 88)
       else if (node.storyNodeType === 'final_boss') nodeSize = 150; // 50% bigger total
       
@@ -1614,10 +1925,11 @@ export default function StoryClimbPage() {
     
     const padding = 30;
     const scaleX = (canvasSize.width - padding * 2) / treeWidth;
-    const scale = scaleX * 0.75;
+    const scale = scaleX * 0.77; // Match the drawing scale!
     const scaledTreeHeight = treeHeight * scale;
     
-    const maxPossibleOffset = Math.max(0, scaledTreeHeight - canvasSize.height + padding * 2);
+    // Allow scrolling the full tree height plus extra room for final boss
+    const maxPossibleOffset = scaledTreeHeight + 500; // Very generous limit
     
     // Scroll with mouse wheel (inverted so scrolling down moves tree up)
     const scrollSpeed = 50;
@@ -1659,11 +1971,11 @@ export default function StoryClimbPage() {
       </div>
 
       {/* Main Content - Wider container for better layout */}
-      <div className="max-w-[1200px] mx-auto px-5">
+      <div className="max-w-[1600px] mx-auto pl-5">
         {/* Two Column Layout - adjusted to reduce gap */}
         <div className="flex gap-4">
-          {/* Left Column - Tree Canvas - keep same size */}
-          <div ref={containerRef} className="w-[63%] overflow-hidden">
+          {/* Left Column - Tree Canvas - fixed width */}
+          <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '500px' }}>
             {/* Canvas Container with Style Q background */}
             <div 
               className="relative rounded-lg" 
@@ -1700,75 +2012,58 @@ export default function StoryClimbPage() {
               {/* Fade gradient only at top */}
               <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/90 to-transparent pointer-events-none z-10" />
               
-              {/* Corner decorations */}
+              {/* Corner decorations - removed bottom left to not overlap with hemisphere */}
               <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-yellow-500/50" />
               <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-yellow-500/50" />
-              <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-yellow-500/50" />
               <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-yellow-500/50" />
             </div>
           </div>
 
           {/* Right Column - Mission Card Details */}
-          <div className="w-[37%] overflow-y-auto h-[850px]">
-            {selectedNode && selectedNode.storyNodeType !== 'normal' ? (
+          <div className="flex-grow pr-5">
+            {/* Show card for hovered node (if no node is selected) or selected node */}
+            {(hoveredNode || selectedNode) ? (
               <StoryMissionCard
-                title={`Mission ${selectedNode.id}`}
-                mekImage={getMekImage(selectedNode.id)}
+                title={`Mission ${(selectedNode || hoveredNode)!.id}`}
+                mekImage={getMekImage((selectedNode || hoveredNode)!.id)}
                 mekName={`MEK #${Math.floor(Math.random() * 9000) + 1000}`}
-                mekRank={selectedNode.storyNodeType === 'final_boss' ? 100 : 
-                        selectedNode.storyNodeType === 'boss' ? 75 : 
-                        selectedNode.storyNodeType === 'event' ? 50 : 34}
-                primaryReward={selectedNode.storyNodeType === 'final_boss' ? 1000000 : 
-                              selectedNode.storyNodeType === 'boss' ? 500000 : 
-                              selectedNode.storyNodeType === 'event' ? 300000 : 250000}
-                experience={selectedNode.storyNodeType === 'final_boss' ? 20000 : 
-                           selectedNode.storyNodeType === 'boss' ? 10000 : 
-                           selectedNode.storyNodeType === 'event' ? 7500 : 5000}
-                potentialRewards={getNodeRewards(selectedNode as ExtendedStoryNode)}
-                variationBuffs={getNodeVariationBuffs(selectedNode as ExtendedStoryNode)}
-                successChance={completedNodes.has(selectedNode.id) ? 100 :
-                              isNodeAvailable(selectedNode) ? 65 : 30}
-                deploymentFee={selectedNode.storyNodeType === 'final_boss' ? 200000 : 
-                              selectedNode.storyNodeType === 'boss' ? 100000 : 
-                              selectedNode.storyNodeType === 'event' ? 75000 : 50000}
-                onDeploy={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
-                scale={0.85}
-                isLocked={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
+                mekRank={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 100 :
+                        (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 75 :
+                        (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 50 : 34}
+                primaryReward={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 1000000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 500000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 300000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 150000 : 250000}
+                experience={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 20000 :
+                           (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 10000 :
+                           (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 7500 :
+                           (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 3000 : 5000}
+                potentialRewards={getNodeRewards((selectedNode || hoveredNode) as ExtendedStoryNode)}
+                variationBuffs={getNodeVariationBuffs((selectedNode || hoveredNode) as ExtendedStoryNode)}
+                buffCategoryId={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 12450 :
+                               (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 8320 :
+                               (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 5670 :
+                               (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 3250 : 4500}
+                successChance={completedNodes.has((selectedNode || hoveredNode)!.id) ? 100 :
+                              isNodeAvailable((selectedNode || hoveredNode)!) ? 65 : 0}
+                deploymentFee={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 200000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 100000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 75000 :
+                              (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 30000 : 50000}
+                onDeploy={() => handleNodeDeploy((selectedNode || hoveredNode) as ExtendedStoryNode)}
+                scale={0.95}
+                isLocked={!isNodeAvailable((selectedNode || hoveredNode)!) && !completedNodes.has((selectedNode || hoveredNode)!.id)}
               />
-            ) : selectedNode && selectedNode.storyNodeType === 'normal' ? (
-              // Show simple card for mechanism nodes
-              <div className="bg-black/80 border-2 border-yellow-500/30 rounded-lg p-4">
-                <h3 className="text-lg font-bold text-yellow-500 mb-3">MECHANISM NODE</h3>
-                <div className="aspect-square bg-black/60 rounded-lg mb-4 flex items-center justify-center">
-                  <img 
-                    src={getMekImage(selectedNode.id)} 
-                    alt="Mechanism"
-                    className="w-3/4 h-3/4 object-contain"
-                  />
-                </div>
-                <p className="text-gray-400 text-sm mb-4">
-                  This mechanism node must be activated to progress further up the tree.
-                </p>
-                <button 
-                  onClick={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
-                  disabled={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
-                  className={`w-full py-2 px-4 rounded font-bold transition-all ${
-                    completedNodes.has(selectedNode.id) ? 'bg-green-600 text-white' :
-                    isNodeAvailable(selectedNode) ? 'bg-yellow-500 text-black hover:bg-yellow-400' :
-                    'bg-gray-700 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {completedNodes.has(selectedNode.id) ? 'ACTIVATED' :
-                   isNodeAvailable(selectedNode) ? 'ACTIVATE' : 'LOCKED'}
-                </button>
-              </div>
             ) : (
-              // No node selected
+              // No node selected or hovered
               <div className="bg-black/80 border-2 border-yellow-500/30 rounded-lg p-8 h-full flex items-center justify-center">
                 <div className="text-center">
                   <h3 className="text-lg font-bold text-yellow-500 mb-3">SELECT A NODE</h3>
                   <p className="text-gray-400 text-sm">
-                    Click on any node in the tree to view mission details
+                    Hover over any available node to view mission details
+                  </p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Click to lock the details in place
                   </p>
                   <div className="mt-6 text-xs text-gray-500">
                     <p>Progress: {completedNodes.size} / {treeData?.nodes.length || 0} Nodes</p>
