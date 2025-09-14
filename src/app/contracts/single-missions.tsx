@@ -1690,16 +1690,46 @@ export default function ContractsLayoutOption11() {
       <div className="relative max-w-7xl mx-auto px-6 py-6">
         {/* Header */}
         <div className="mek-header-industrial mb-6">
-          <div className="relative z-10 flex justify-between items-center">
-            <h1 className="mek-text-industrial text-4xl font-black text-yellow-400 tracking-wider">SINGLE MISSIONS</h1>
-            <div className="flex items-center gap-4">
-              <ViewActiveContractsButton
-                activeContracts={6}
-                maxContracts={14}
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <h1 className="mek-text-industrial text-4xl font-black text-yellow-400 tracking-wider mb-3">SINGLE MISSIONS</h1>
+              <button 
                 onClick={() => console.log('Navigate to active contracts')}
-                variant={1}
-              />
+                className="group relative inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wider text-yellow-400 transition-all duration-300 hover:scale-105"
+              >
+                {/* Glow effect background */}
+                <div className="absolute inset-0 bg-yellow-500/10 rounded blur-sm transition-all duration-300 group-hover:bg-yellow-500/20 group-hover:blur-md" />
+                
+                {/* Button frame */}
+                <div className="absolute inset-0 border border-yellow-500/30 rounded transition-all duration-300 group-hover:border-yellow-500/60" />
+                
+                {/* Animated corner accents */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-yellow-500 transition-all duration-300 group-hover:w-3 group-hover:h-3" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-yellow-500 transition-all duration-300 group-hover:w-3 group-hover:h-3" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-yellow-500 transition-all duration-300 group-hover:w-3 group-hover:h-3" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-yellow-500 transition-all duration-300 group-hover:w-3 group-hover:h-3" />
+                
+                {/* Button text with underline animation */}
+                <span className="relative z-10 transition-all duration-300 group-hover:text-yellow-300">
+                  View Active Missions
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full" />
+                </span>
+                
+                {/* Arrow icon */}
+                <svg className="relative z-10 w-4 h-4 transition-all duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
+            
+            {/* Active Contracts Grid Button - Keep this as is */}
+            <ViewActiveContractsButton
+              activeContracts={6}
+              maxContracts={14}
+              onClick={() => console.log('Navigate to active contracts')}
+              variant={1}
+              hoverVariant={3}
+            />
           </div>
           {/* Add industrial overlays */}
           <div className="mek-overlay-scratches"></div>

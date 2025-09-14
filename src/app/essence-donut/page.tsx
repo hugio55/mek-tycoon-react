@@ -95,8 +95,13 @@ export default function EssenceDonutPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSlotting, setIsSlotting] = useState(false);
-  const [maxSliceFilter, setMaxSliceFilter] = useState(10); // Default to 10 (show all)
+  const [filterDesign, setFilterDesign] = useState<1 | 2 | 3 | 4 | 5>(1); // Select filter design
+  const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1); // Select hover effect style
   const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate the actual maximum essence amount first
+  const defaultMaxAmount = Math.max(...generateEssenceData().map(e => e.amount));
+  const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount); // Default to max (show all)
   
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
@@ -131,6 +136,11 @@ export default function EssenceDonutPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
+  // Calculate the actual maximum essence amount in the data
+  const maxEssenceAmount = useMemo(() => {
+    return Math.max(...essenceData.map(e => e.amount));
+  }, [essenceData]);
+  
   // Sort and slice essence data for display with filtering
   const displayedEssences = useMemo(() => {
     let filtered = [...essenceData]
@@ -139,12 +149,12 @@ export default function EssenceDonutPage() {
       .filter(e => e.amount > 0); // Only show essences with quantity
     
     // Apply max filter - only show essences below the threshold
-    if (viewCount === 100 && maxSliceFilter < 10) {
+    if (viewCount === 100 && maxSliceFilter < maxEssenceAmount) {
       filtered = filtered.filter(e => e.amount <= maxSliceFilter);
     }
     
     return filtered;
-  }, [essenceData, viewCount, maxSliceFilter]);
+  }, [essenceData, viewCount, maxSliceFilter, maxEssenceAmount]);
   
   // Calculate total stats
   const totalStats = useMemo(() => {
@@ -453,52 +463,200 @@ export default function EssenceDonutPage() {
                   </div>
                 </div>
                 
-                {/* Filter Slider - Only shows when viewing All */}
+                {/* Filter Design Selector - Only shows when viewing All */}
                 {viewCount === 100 && (
-                  <div className="mb-6 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-gray-400 uppercase tracking-widest">Filter by Maximum Amount</span>
-                      <span className="text-sm font-semibold text-yellow-400">
-                        {maxSliceFilter < 10 ? `Showing ≤ ${maxSliceFilter.toFixed(1)}` : 'Showing All'}
-                      </span>
-                    </div>
-                    
-                    <div className="relative">
-                      {/* Slider Track Background */}
-                      <div className="absolute inset-0 h-2 bg-gradient-to-r from-cyan-500/20 via-yellow-500/20 to-gray-700/20 rounded-full"></div>
-                      
-                      {/* Custom Slider */}
-                      <input
-                        type="range"
-                        min="0.1"
-                        max="10"
-                        step="0.1"
-                        value={maxSliceFilter}
-                        onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-transparent rounded-full appearance-none cursor-pointer relative z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-yellow-400/50 [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:scale-110 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
-                      />
-                      
-                      {/* Scale markers */}
-                      <div className="flex justify-between mt-2 text-xs text-gray-500">
-                        <span>0.1</span>
-                        <span>2</span>
-                        <span>4</span>
-                        <span>6</span>
-                        <span>8</span>
-                        <span>10</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-2 text-center">
-                      <p className="text-xs text-gray-400">
-                        Drag left to focus on smaller amounts • {displayedEssences.length} essences visible
-                      </p>
+                  <div className="mb-2 flex justify-center">
+                    <div className="bg-black/60 backdrop-blur-sm border border-yellow-500/30 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wider">Filter Style:</span>
+                      <select 
+                        value={filterDesign} 
+                        onChange={(e) => setFilterDesign(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                        className="bg-black/80 border border-yellow-500/20 rounded px-2 py-0.5 text-xs text-yellow-400 focus:outline-none focus:border-yellow-500/40"
+                      >
+                        <option value={1}>Ultra-Minimal</option>
+                        <option value={2}>Industrial Panel</option>
+                        <option value={3}>HUD Strip</option>
+                        <option value={4}>Minimalist Tech</option>
+                        <option value={5}>Command Strip</option>
+                      </select>
                     </div>
                   </div>
                 )}
                 
-                {/* Donut Chart */}
-                <div className="flex justify-center">
+                {/* Filter Option 1: Ultra-Minimal Inline Bar */}
+                {filterDesign === 1 && (
+                  <div className={`mb-3 h-10 bg-black/60 backdrop-blur-sm border-l-4 border-yellow-500 overflow-hidden transition-all duration-500 ease-out ${
+                    viewCount === 100 ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0'
+                  }`}>
+                  <div className="h-full px-4 flex items-center gap-4">
+                    {/* Compact Label */}
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-yellow-500/70 whitespace-nowrap">
+                      MAX
+                    </span>
+                    
+                    {/* Inline Slider with proper alignment */}
+                    <div className="flex-1 relative flex items-center">
+                      <div className="absolute inset-0 h-[2px] bg-gradient-to-r from-yellow-500/10 via-yellow-500/30 to-gray-700/20 rounded-full"></div>
+                      <input
+                        type="range"
+                        min="0"
+                        max={maxEssenceAmount}
+                        step="0.1"
+                        value={maxSliceFilter}
+                        onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
+                        className="w-full h-[2px] bg-transparent appearance-none cursor-pointer relative z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-br [&::-webkit-slider-thumb]:from-yellow-400 [&::-webkit-slider-thumb]:to-yellow-600 [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(250,182,23,0.5)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 [&::-webkit-slider-thumb]:-mt-[7px] [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-gradient-to-br [&::-moz-range-thumb]:from-yellow-400 [&::-moz-range-thumb]:to-yellow-600 [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
+                      />
+                      {/* Quick markers for reference */}
+                      <div className="absolute inset-x-0 top-full mt-0.5 flex justify-between pointer-events-none">
+                        <span className="text-[7px] text-gray-600">0</span>
+                        <span className="text-[7px] text-gray-600">{(maxEssenceAmount / 2).toFixed(1)}</span>
+                        <span className="text-[7px] text-gray-600">{maxEssenceAmount.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Live Value Display */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-gray-500">≤</span>
+                      <span className="text-sm font-mono font-bold text-yellow-400 min-w-[3ch]">
+                        {maxSliceFilter < maxEssenceAmount ? maxSliceFilter.toFixed(1) : 'ALL'}
+                      </span>
+                      <span className="text-[10px] text-gray-500">({displayedEssences.length})</span>
+                    </div>
+                  </div>
+                </div>
+                )}
+                
+                {/* Filter Option 2: Industrial Control Panel */}
+                {filterDesign === 2 && viewCount === 100 && (
+                  <div className="mb-4 h-14 relative overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-gray-900/60 to-black/80 backdrop-blur-md"></div>
+                    <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(250,182,23,0.03)_2px,rgba(250,182,23,0.03)_4px)]"></div>
+                    <div className="relative h-full border-y-2 border-yellow-500/30 flex items-center px-4">
+                      <div className="flex items-center gap-2 mr-4">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <span className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-[0.3em]">FILTER</span>
+                      </div>
+                      <div className="flex-1 relative px-2">
+                        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
+                          {[0, maxEssenceAmount * 0.2, maxEssenceAmount * 0.4, maxEssenceAmount * 0.6, maxEssenceAmount * 0.8, maxEssenceAmount].map((val, i) => (
+                            <div key={i} className="flex flex-col items-center">
+                              <div className={`w-[1px] h-3 ${i === 0 || i === 5 ? 'bg-yellow-500/50' : 'bg-gray-600/30'}`}></div>
+                              <span className="text-[8px] text-gray-600 mt-1">{val.toFixed(1)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="relative flex items-center h-6">
+                          <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-cyan-500/20 via-yellow-500/40 to-orange-500/20 rounded"></div>
+                          <input type="range" min="0" max={maxEssenceAmount} step="0.1" value={maxSliceFilter} onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))} className="w-full h-6 bg-transparent appearance-none cursor-pointer relative z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:shadow-[0_2px_8px_rgba(250,182,23,0.6)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:bg-yellow-300 [&::-webkit-slider-thumb]:active:scale-110" />
+                        </div>
+                      </div>
+                      <div className="ml-4 bg-black/60 border border-yellow-500/30 px-3 py-1 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-yellow-400 font-bold">{maxSliceFilter.toFixed(1)}</span>
+                          <span className="text-[9px] text-gray-500">MAX</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Filter Option 3: Compact HUD Strip */}
+                {filterDesign === 3 && viewCount === 100 && (
+                  <div className="mb-3 h-12 relative group transition-all duration-500 ease-out">
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-gray-900/30 to-black/40 backdrop-blur-sm" style={{clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 100%, 20px 100%)'}}></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-yellow-500 to-transparent"></div>
+                    <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-yellow-500 to-transparent"></div>
+                    <div className="relative h-full flex items-center px-6">
+                      <div className="flex items-center gap-3 mr-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-yellow-400/20 blur-lg"></div>
+                          <span className="relative text-[10px] font-black text-yellow-400 uppercase">LIMIT</span>
+                        </div>
+                        <span className="text-[11px] text-gray-400">{displayedEssences.length} shown</span>
+                      </div>
+                      <div className="flex-1 relative mx-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full h-[3px] bg-gradient-to-r from-gray-700/30 via-yellow-500/20 to-gray-700/30 rounded-full"></div>
+                        </div>
+                        <input type="range" min="0" max={maxEssenceAmount} step="0.1" value={maxSliceFilter} onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))} className="relative w-full h-[3px] bg-transparent appearance-none cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-gray-900 [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(250,182,23,0.7)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:shadow-[0_0_20px_rgba(250,182,23,1)]" />
+                        <div className="absolute inset-x-0 top-full mt-1 flex justify-between pointer-events-none">
+                          <span className="text-[8px] text-gray-600">0</span>
+                          <span className="text-[8px] text-gray-600">{(maxEssenceAmount / 2).toFixed(1)}</span>
+                          <span className="text-[8px] text-gray-600">{maxEssenceAmount.toFixed(1)}</span>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-yellow-400/30 blur-xl"></div>
+                        <div className="relative bg-black/80 border border-yellow-500/50 px-3 py-1 rounded-sm">
+                          <span className="text-sm font-mono font-bold text-yellow-400">≤{maxSliceFilter.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Filter Option 4: Minimalist Tech Bar */}
+                {filterDesign === 4 && viewCount === 100 && (
+                  <div className="mb-3 h-9 bg-gradient-to-r from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-sm border-t border-b border-yellow-500/10 transition-all duration-300 ease-out">
+                    <div className="h-full flex items-center px-4 gap-4">
+                      <span className="text-[11px] text-gray-500 font-medium min-w-fit">MAX:</span>
+                      <div className="flex-1 relative flex items-center">
+                        <div className="absolute w-full h-[1px] bg-gray-700/50"></div>
+                        <div className="absolute h-[1px] bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" style={{width: `${(maxSliceFilter / maxEssenceAmount) * 100}%`}}></div>
+                        <input type="range" min="0" max={maxEssenceAmount} step="0.1" value={maxSliceFilter} onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))} className="relative w-full h-4 bg-transparent appearance-none cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-150 [&::-webkit-slider-thumb]:active:scale-125" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-yellow-400/90">{maxSliceFilter.toFixed(1)}</span>
+                        <span className="text-[10px] text-gray-600">({displayedEssences.length})</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Filter Option 5: Floating Command Strip */}
+                {filterDesign === 5 && viewCount === 100 && (
+                  <div className="mb-4 relative animate-in fade-in slide-in-from-left-4 duration-500">
+                    <div className="h-11 relative group">
+                      <div className="absolute inset-0 bg-yellow-500/10 blur-2xl transform translate-y-2"></div>
+                      <div className="relative h-full bg-gradient-to-r from-gray-900/80 via-black/90 to-gray-900/80 backdrop-blur-md border border-yellow-500/20 rounded-sm overflow-hidden">
+                        <div className="absolute left-0 top-0 bottom-0 w-8 opacity-30" style={{background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(250,182,23,0.2) 4px, rgba(250,182,23,0.2) 8px)'}}></div>
+                        <div className="relative h-full flex items-center px-10">
+                          <div className="flex items-center gap-2 mr-6">
+                            <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                            </svg>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">FILTER</span>
+                          </div>
+                          <div className="flex-1 relative">
+                            <div className="relative h-5 flex items-center">
+                              <div className="absolute w-full h-[4px] bg-gray-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-cyan-500/50 to-yellow-500/50 transition-all duration-150" style={{width: `${(maxSliceFilter / maxEssenceAmount) * 100}%`}}></div>
+                              </div>
+                              <input type="range" min="0" max={maxEssenceAmount} step="0.1" value={maxSliceFilter} onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))} className="absolute w-full h-5 bg-transparent appearance-none cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:bg-gradient-to-br [&::-webkit-slider-thumb]:from-yellow-300 [&::-webkit-slider-thumb]:to-yellow-500 [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-black/50 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:from-yellow-200 [&::-webkit-slider-thumb]:hover:to-yellow-400 [&::-webkit-slider-thumb]:active:scale-90" />
+                            </div>
+                            <div className="absolute inset-x-0 -bottom-3 flex justify-between pointer-events-none">
+                              <span className="text-[8px] text-gray-600">0</span>
+                              <span className="text-[8px] text-gray-600">{(maxEssenceAmount / 2).toFixed(1)}</span>
+                              <span className="text-[8px] text-gray-600">{maxEssenceAmount.toFixed(1)}</span>
+                            </div>
+                          </div>
+                          <div className="ml-6 flex items-center gap-3">
+                            <div className="h-6 w-[1px] bg-gray-700"></div>
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs font-bold text-yellow-400">{maxSliceFilter < maxEssenceAmount ? `≤${maxSliceFilter.toFixed(1)}` : 'ALL'}</span>
+                              <span className="text-[9px] text-gray-500">{displayedEssences.length} items</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Donut Chart with smooth transition */}
+                <div className={`flex justify-center transition-all duration-500 ease-out ${
+                  viewCount === 100 ? 'transform translate-y-0' : 'transform -translate-y-3'
+                }`}>
                   <EssenceDonutChart
                     data={displayedEssences.map(e => ({
                       ...e,
@@ -511,7 +669,25 @@ export default function EssenceDonutPage() {
                     onSliceHover={setHoveredSlice}
                     onSliceClick={handleSliceClick}
                     selectedSlice={selectedSlice}
+                    hoverEffect={hoverEffect}
                   />
+                </div>
+                
+                {/* Hover Effect Selector */}
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-black/60 backdrop-blur-sm border border-yellow-500/30 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">Hover Effect:</span>
+                    <select 
+                      value={hoverEffect} 
+                      onChange={(e) => setHoverEffect(Number(e.target.value) as 1 | 2 | 3 | 4)}
+                      className="bg-black/80 border border-yellow-500/20 rounded px-2 py-0.5 text-xs text-yellow-400 focus:outline-none focus:border-yellow-500/40"
+                    >
+                      <option value={1}>Inner Glow</option>
+                      <option value={2}>Brightness Boost</option>
+                      <option value={3}>Radial Gradient</option>
+                      <option value={4}>Pulse Effect</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -572,13 +748,75 @@ export default function EssenceDonutPage() {
                       </div>
                       
                       {/* Ownership Section */}
-                      <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
+                      <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40 group/ownership">
                         <div className="flex justify-between items-center mb-2 relative z-10">
                           <span className="text-xs text-white uppercase tracking-widest">OWNERSHIP</span>
-                          <span className="text-xl font-normal">
-                            <span className="text-yellow-400">{slice.amount.toFixed(1)}</span>
-                            <span className="text-cyan-400">/{effectiveMax}</span>
-                          </span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="relative">
+                              <span className="text-3xl font-bold text-yellow-400" style={{
+                                textShadow: '0 0 20px rgba(250, 182, 23, 0.8), 0 0 40px rgba(250, 182, 23, 0.4)',
+                                filter: 'drop-shadow(0 0 10px rgba(250, 182, 23, 0.5))'
+                              }}>
+                                {slice.amount.toFixed(1)}
+                              </span>
+                              {/* Subtle pulse glow behind the number */}
+                              <span className="absolute inset-0 text-3xl font-bold text-yellow-400 animate-pulse opacity-50 blur-sm" aria-hidden="true">
+                                {slice.amount.toFixed(1)}
+                              </span>
+                            </span>
+                            <span className="text-xl font-normal">
+                              <span className="text-gray-400">/</span>
+                              <span className={slice.maxAmountBuffed && slice.maxAmountBuffed > 10 ? "text-green-400" : "text-white"}>
+                                {effectiveMax}
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Storage Modifications Tooltip */}
+                        <div className="absolute left-0 top-full mt-2 w-full opacity-0 pointer-events-none group-hover/ownership:opacity-100 group-hover/ownership:pointer-events-auto transition-opacity duration-200 z-50">
+                          <div className="bg-black/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-3 shadow-2xl">
+                            <div className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-2">Storage Modifications</div>
+                            <div className="space-y-1">
+                              {/* Base storage */}
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">Base Storage</span>
+                                <span className="text-white">10.0</span>
+                              </div>
+                              
+                              {/* Show buff sources if buffed */}
+                              {slice.maxAmountBuffed && slice.maxAmountBuffed > 10 && (
+                                <>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-400">Bumblebee Head (Mek #1560)</span>
+                                    <span className="text-green-400">+2.0</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-400">Mechanism Tree Node</span>
+                                    <span className="text-green-400">+{(slice.maxAmountBuffed - 12).toFixed(1)}</span>
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Total */}
+                              <div className="border-t border-gray-700 mt-1 pt-1 flex justify-between text-xs font-bold">
+                                <span className="text-yellow-400">Total Capacity</span>
+                                <span className={slice.maxAmountBuffed && slice.maxAmountBuffed > 10 ? "text-green-400" : "text-white"}>
+                                  {effectiveMax.toFixed(1)}
+                                </span>
+                              </div>
+                              
+                              {/* Current ownership info */}
+                              <div className="border-t border-gray-700 mt-1 pt-1 flex justify-between text-xs">
+                                <span className="text-gray-400">Current Stored</span>
+                                <span className="text-yellow-400">{slice.amount.toFixed(1)}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">Remaining Space</span>
+                                <span className="text-cyan-400">{(effectiveMax - slice.amount).toFixed(1)}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Progress Bar */}

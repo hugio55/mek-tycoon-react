@@ -10,6 +10,7 @@ export interface StoryNode {
   completed?: boolean;
   available?: boolean;
   current?: boolean;
+  challenger?: boolean; // Higher rank mechanism that's tougher
 }
 
 export interface Connection {

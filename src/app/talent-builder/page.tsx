@@ -54,6 +54,8 @@ export default function TalentBuilderPage() {
   const [unconnectedNodes, setUnconnectedNodes] = useState<Set<string>>(new Set());
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [currentSaveName, setCurrentSaveName] = useState<string | null>(null);
+  const [showStorySaveDialog, setShowStorySaveDialog] = useState(false);
+  const [storySaveName, setStorySaveName] = useState<string>("");
   
   // Convex queries and mutations
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
@@ -634,12 +636,23 @@ export default function TalentBuilderPage() {
           e.preventDefault();
           setStoryNodeEditMode('final_boss');
         }
+        
+        // Toggle challenger status with 'C' key
+        if ((e.key === 'c' || e.key === 'C') && selectedNode) {
+          e.preventDefault();
+          const node = nodes.find(n => n.id === selectedNode);
+          if (node && (node.storyNodeType === 'normal' || !node.storyNodeType)) {
+            updateNode(selectedNode, { challenger: !node.challenger });
+            setSaveStatus(`${node.challenger ? 'Removed' : 'Added'} challenger status`);
+            setTimeout(() => setSaveStatus(""), 2000);
+          }
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNode, editingNode, deleteNode, pushToHistory, undo, redo, builderMode, mode]);
+  }, [selectedNode, editingNode, deleteNode, pushToHistory, undo, redo, builderMode, mode, nodes, updateNode]);
 
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1142,6 +1155,29 @@ export default function TalentBuilderPage() {
           
           {builderMode === 'story' && (
             <div className="space-y-2">
+              {/* Node Counters */}
+              <div className="flex items-center gap-4 bg-gray-800/50 px-3 py-2 rounded">
+                <span className="text-xs text-gray-400">Nodes:</span>
+                <span className="text-xs text-blue-400">
+                  Normal: {nodes.filter(n => n.id !== 'start' && (n.storyNodeType === 'normal' || !n.storyNodeType) && !n.challenger).length}
+                </span>
+                <span className="text-xs text-orange-400">
+                  Challenger: {nodes.filter(n => n.id !== 'start' && (n.storyNodeType === 'normal' || !n.storyNodeType) && n.challenger).length}
+                </span>
+                <span className="text-xs text-purple-400">
+                  Event: {nodes.filter(n => n.storyNodeType === 'event').length}
+                </span>
+                <span className="text-xs text-red-400">
+                  Boss: {nodes.filter(n => n.storyNodeType === 'boss').length}
+                </span>
+                <span className="text-xs text-yellow-400">
+                  Final Boss: {nodes.filter(n => n.storyNodeType === 'final_boss').length}
+                </span>
+                <span className="text-xs text-gray-300 ml-2 border-l border-gray-600 pl-2">
+                  Total: {nodes.filter(n => n.id !== 'start').length}
+                </span>
+              </div>
+              
               {/* First Row */}
               <div className="flex items-center gap-4 flex-wrap">
                 {/* Chapter Selector */}
@@ -1208,48 +1244,9 @@ export default function TalentBuilderPage() {
               
               {/* Save/Load Buttons */}
               <button 
-                onClick={async () => {
-                  const name = prompt(`Save Chapter ${storyChapter} as:`, `Chapter ${storyChapter} Layout`);
-                  if (name) {
-                    const saved = [...savedStoryModes];
-                    saved.push({
-                      name,
-                      chapter: storyChapter,
-                      data: { nodes, connections }
-                    });
-                    setSavedStoryModes(saved);
-                    localStorage.setItem('savedStoryModes', JSON.stringify(saved));
-                    
-                    // Also save to database for permanent backup
-                    try {
-                      // Convert nodes to match database schema (name -> label)
-                      const dbNodes = nodes.map(node => ({
-                        id: node.id,
-                        x: node.x,
-                        y: node.y,
-                        label: node.name || node.label || 'Node', // Use name field as label
-                        index: node.index,
-                        storyNodeType: node.storyNodeType || 'normal',
-                        completed: node.completed,
-                        available: node.available,
-                        current: node.current
-                      }));
-                      
-                      await saveStoryToDatabase({
-                        name: name,
-                        chapter: storyChapter,
-                        nodes: dbNodes,
-                        connections: connections
-                      });
-                      setSaveStatus(`✅ Saved "${name}" locally & to cloud`);
-                      console.log(`☁️ Backed up "${name}" to database`);
-                    } catch (dbError) {
-                      console.error('Database save error:', dbError);
-                      setSaveStatus(`⚠️ Saved "${name}" locally (cloud backup failed)`);
-                    }
-                    
-                    setTimeout(() => setSaveStatus(""), 3000);
-                  }
+                onClick={() => {
+                  setStorySaveName(`Chapter ${storyChapter} Layout`);
+                  setShowStorySaveDialog(true);
                 }}
                 className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white ml-4"
               >
@@ -1536,7 +1533,12 @@ export default function TalentBuilderPage() {
               } else if (builderMode === 'story' && node.storyNodeType) {
                 if (node.storyNodeType === 'normal') {
                   borderRadius = '8px'; // Square for normal mek nodes
-                  background = '#3b82f6'; // Blue
+                  // Check if it's a challenger node
+                  if (node.challenger) {
+                    background = 'linear-gradient(135deg, #ff8c00, #ffa500)'; // Orange gradient for challenger
+                  } else {
+                    background = '#3b82f6'; // Blue for regular
+                  }
                 } else if (node.storyNodeType === 'event') {
                   borderRadius = '50%'; // Round for event nodes
                   background = 'linear-gradient(135deg, #a855f7, #c084fc)'; // Purple gradient
@@ -1546,6 +1548,14 @@ export default function TalentBuilderPage() {
                 } else if (node.storyNodeType === 'final_boss') {
                   borderRadius = '12px'; // Square for final boss
                   background = 'linear-gradient(135deg, #f97316, #fbbf24, #f97316)'; // Orange/Gold gradient
+                }
+              } else if (builderMode === 'story' && !node.storyNodeType) {
+                // Default to normal node style if in story mode but no type set
+                borderRadius = '8px';
+                if (node.challenger) {
+                  background = 'linear-gradient(135deg, #ff8c00, #ffa500)'; // Orange gradient for challenger
+                } else {
+                  background = '#3b82f6'; // Blue for regular
                 }
               } else if (node.isSpell) {
                 borderRadius = '4px';
@@ -1601,6 +1611,8 @@ export default function TalentBuilderPage() {
                       ) : builderMode === 'story' && node.storyNodeType === 'boss' ? (
                         <span className="text-lg">👑</span>
                       ) : builderMode === 'story' && node.storyNodeType === 'event' ? (
+                        <span className="text-base">❓</span>
+                      ) : builderMode === 'story' && (node.storyNodeType === 'normal' || !node.storyNodeType) && node.challenger ? (
                         <span className="text-base">⚡</span>
                       ) : (
                         node.tier
@@ -2069,6 +2081,25 @@ export default function TalentBuilderPage() {
                       {node.storyNodeType === 'final_boss' && ' (6x Size - WREN)'}
                     </div>
                   </div>
+                  
+                  {/* Challenger checkbox - only show for normal (mechanism) nodes */}
+                  {(node.storyNodeType === 'normal' || !node.storyNodeType) && (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`challenger-${node.id}`}
+                          checked={node.challenger || false}
+                          onChange={(e) => updateNode(node.id, { challenger: e.target.checked })}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                        />
+                        <label htmlFor={`challenger-${node.id}`} className="text-sm text-orange-400 cursor-pointer">
+                          Challenger (Higher Rank)
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 ml-6">Press 'C' to toggle</p>
+                    </div>
+                  )}
                   
                   {/* Gold Reward */}
                   <div>
@@ -2615,6 +2646,144 @@ export default function TalentBuilderPage() {
                     <button
                       onClick={() => setShowSaveDialog(false)}
                       className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+      
+      {/* Story Save Dialog Modal */}
+      {showStorySaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-yellow-400/30">
+            <h2 className="text-xl font-bold text-yellow-400 mb-4">Save Story Mode - Chapter {storyChapter}</h2>
+            
+            {/* Get the most recent save name for this chapter */}
+            {(() => {
+              const recentSave = savedStoryModes
+                .filter(s => s.chapter === storyChapter)
+                .sort((a, b) => savedStoryModes.indexOf(b) - savedStoryModes.indexOf(a))[0];
+              const currentSaveName = recentSave?.name || `Chapter ${storyChapter} Layout`;
+              
+              return (
+                <div className="space-y-4">
+                  {recentSave && (
+                    <div className="p-3 bg-gray-800 rounded">
+                      <p className="text-sm text-gray-400">Current save: <span className="text-white">{currentSaveName}</span></p>
+                    </div>
+                  )}
+                  
+                  {/* Action buttons */}
+                  <div className="flex gap-3">
+                    {recentSave && (
+                      <button
+                        onClick={async () => {
+                          // Update existing save
+                          const saved = savedStoryModes.filter(s => s.name !== currentSaveName);
+                          saved.push({
+                            name: currentSaveName,
+                            chapter: storyChapter,
+                            data: { nodes, connections }
+                          });
+                          setSavedStoryModes(saved);
+                          localStorage.setItem('savedStoryModes', JSON.stringify(saved));
+                          
+                          // Save to database
+                          try {
+                            const dbNodes = nodes.map(node => ({
+                              id: node.id,
+                              x: node.x,
+                              y: node.y,
+                              label: node.name || node.label || 'Node',
+                              index: node.index,
+                              storyNodeType: node.storyNodeType || 'normal',
+                              challenger: node.challenger,
+                              completed: node.completed,
+                              available: node.available,
+                              current: node.current
+                            }));
+                            
+                            await saveStoryToDatabase({
+                              name: currentSaveName,
+                              chapter: storyChapter,
+                              nodes: dbNodes,
+                              connections: connections
+                            });
+                            setSaveStatus(`✅ Updated "${currentSaveName}"`);
+                          } catch (dbError) {
+                            console.error('Database save error:', dbError);
+                            setSaveStatus(`⚠️ Updated locally (cloud backup failed)`);
+                          }
+                          
+                          setShowStorySaveDialog(false);
+                          setTimeout(() => setSaveStatus(""), 3000);
+                        }}
+                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
+                      >
+                        Update
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        // Create new save with timestamp
+                        const timestamp = new Date().toLocaleString('en-US', { 
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                        const newName = `Chapter ${storyChapter} - ${timestamp}`;
+                        const saved = [...savedStoryModes];
+                        saved.push({
+                          name: newName,
+                          chapter: storyChapter,
+                          data: { nodes, connections }
+                        });
+                        setSavedStoryModes(saved);
+                        localStorage.setItem('savedStoryModes', JSON.stringify(saved));
+                        
+                        // Save to database
+                        try {
+                          const dbNodes = nodes.map(node => ({
+                            id: node.id,
+                            x: node.x,
+                            y: node.y,
+                            label: node.name || node.label || 'Node',
+                            index: node.index,
+                            storyNodeType: node.storyNodeType || 'normal',
+                            challenger: node.challenger,
+                            completed: node.completed,
+                            available: node.available,
+                            current: node.current
+                          }));
+                          
+                          await saveStoryToDatabase({
+                            name: newName,
+                            chapter: storyChapter,
+                            nodes: dbNodes,
+                            connections: connections
+                          });
+                          setSaveStatus(`✅ Saved as "${newName}"`);
+                        } catch (dbError) {
+                          console.error('Database save error:', dbError);
+                          setSaveStatus(`⚠️ Saved locally (cloud backup failed)`);
+                        }
+                        
+                        setShowStorySaveDialog(false);
+                        setTimeout(() => setSaveStatus(""), 3000);
+                      }}
+                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium"
+                    >
+                      Make New Save
+                    </button>
+                    <button
+                      onClick={() => setShowStorySaveDialog(false)}
+                      className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
                     >
                       Cancel
                     </button>

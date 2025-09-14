@@ -3,7 +3,104 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import mekImagesList from './mek-images.json';
+import StoryMissionCard from '@/components/StoryMissionCard';
+
+// Mek images list
+const mekImagesList = [
+  "/variation-images/1960s.png",
+  "/variation-images/24k.png",
+  "/variation-images/ace_of_spades.png",
+  "/variation-images/acrylic.png",
+  "/variation-images/aqua.png",
+  "/variation-images/arcade.png",
+  "/variation-images/baby.png",
+  "/variation-images/ballerina.png",
+  "/variation-images/bark.png",
+  "/variation-images/big_brother.png",
+  "/variation-images/bone_daddy.png",
+  "/variation-images/boss.png",
+  "/variation-images/bowling.png",
+  "/variation-images/bubblegum.png",
+  "/variation-images/bumblebee.png",
+  "/variation-images/business.png",
+  "/variation-images/butane.png",
+  "/variation-images/cadillac.png",
+  "/variation-images/camo.png",
+  "/variation-images/china.png",
+  "/variation-images/classic.png",
+  "/variation-images/coin.png",
+  "/variation-images/corroded.png",
+  "/variation-images/cotton_candy.png",
+  "/variation-images/cream.png",
+  "/variation-images/crimson.png",
+  "/variation-images/dazed_piggy.png",
+  "/variation-images/derelict.png",
+  "/variation-images/disco.png",
+  "/variation-images/discomania.png",
+  "/variation-images/dragonfly.png",
+  "/variation-images/drill.png",
+  "/variation-images/dualtone.png",
+  "/variation-images/electrik.png",
+  "/variation-images/ellie_mesh.png",
+  "/variation-images/exposed.png",
+  "/variation-images/flaked.png",
+  "/variation-images/frost_king.png",
+  "/variation-images/gold.png",
+  "/variation-images/grass.png",
+  "/variation-images/hacker.png",
+  "/variation-images/hades.png",
+  "/variation-images/hal.png",
+  "/variation-images/heatmap.png",
+  "/variation-images/ivory.png",
+  "/variation-images/kevlar.png",
+  "/variation-images/lazer.png",
+  "/variation-images/lich.png",
+  "/variation-images/lightning.png",
+  "/variation-images/liquid_lavender.png",
+  "/variation-images/log.png",
+  "/variation-images/magma.png",
+  "/variation-images/mahogany.png",
+  "/variation-images/mars_attacks.png",
+  "/variation-images/mesh.png",
+  "/variation-images/milk.png",
+  "/variation-images/mint.png",
+  "/variation-images/neon_flamingo.png",
+  "/variation-images/nightstalker.png",
+  "/variation-images/nuke.png",
+  "/variation-images/nyan.png",
+  "/variation-images/obliterator.png",
+  "/variation-images/ol_faithful.png",
+  "/variation-images/ornament.png",
+  "/variation-images/paul.png",
+  "/variation-images/pie.png",
+  "/variation-images/pizza.png",
+  "/variation-images/plastik.png",
+  "/variation-images/plate.png",
+  "/variation-images/polished.png",
+  "/variation-images/porcelain.png",
+  "/variation-images/projectionist.png",
+  "/variation-images/quilt.png",
+  "/variation-images/recon.png",
+  "/variation-images/ross.png",
+  "/variation-images/royal.png",
+  "/variation-images/sahara.png",
+  "/variation-images/shamrock.png",
+  "/variation-images/silent_film.png",
+  "/variation-images/silicon.png",
+  "/variation-images/sleet.png",
+  "/variation-images/snapshot.png",
+  "/variation-images/snow.png",
+  "/variation-images/stained_glass.png",
+  "/variation-images/sterling.png",
+  "/variation-images/sun.png",
+  "/variation-images/taser.png",
+  "/variation-images/terminator.png",
+  "/variation-images/the_lethal_dimension.png",
+  "/variation-images/the_ram.png",
+  "/variation-images/tron.png",
+  "/variation-images/whiskey.png",
+  "/variation-images/wires.png"
+];
 
 interface StoryNode {
   id: string;
@@ -11,11 +108,18 @@ interface StoryNode {
   storyNodeType: "normal" | "boss" | "event" | "final_boss";
   x: number;
   y: number;
+  challenger?: boolean;
 }
 
 interface Connection {
   from: string;
   to: string;
+}
+
+interface ExtendedStoryNode extends StoryNode {
+  level?: number;
+  nodeType?: 'normal' | 'boss' | 'elite' | 'event' | 'final_boss';
+  title?: string;
 }
 
 export default function StoryClimbPage() {
@@ -34,9 +138,10 @@ export default function StoryClimbPage() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hasDragged, setHasDragged] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [hoveredNode, setHoveredNode] = useState<StoryNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const autoScrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const autoScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Load the V1 story tree (primary) or Test 5 as fallback
   const storyTrees = useQuery(api.storyTrees.getAllStoryTrees);
@@ -44,6 +149,91 @@ export default function StoryClimbPage() {
   const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
   
   const treeData = v1Tree || test5Tree; // Use V1 if available, otherwise fall back to Test 5
+  
+  // Helper function to generate rewards based on node type and level
+  const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
+    const baseRewards = [
+      { name: "Common Power Chip", quantity: 2, chance: 75 },
+      { name: "Bumblebee Essence", quantity: 1.5, chance: 45 },
+      { name: "Paul Essence", quantity: 2, chance: 30 },
+      { name: "DMT Canister", quantity: 1, chance: 15 },
+      { name: "Rare Power Chip", quantity: 1, chance: 8 },
+      { name: "Legendary Frame", quantity: 1, chance: 1 }
+    ];
+    
+    // Adjust rewards based on node type
+    if (node.storyNodeType === 'final_boss') {
+      return baseRewards.map(r => ({
+        ...r,
+        quantity: (r.quantity || 1) * 3,
+        chance: Math.min(100, r.chance * 1.5)
+      }));
+    } else if (node.storyNodeType === 'boss') {
+      return baseRewards.map(r => ({
+        ...r,
+        quantity: (r.quantity || 1) * 2,
+        chance: Math.min(100, r.chance * 1.2)
+      }));
+    } else if (node.storyNodeType === 'event') {
+      return baseRewards.slice(0, 4); // Only first 4 rewards for events
+    }
+    
+    return baseRewards;
+  }, []);
+  
+  // Helper function to generate variation buffs based on node
+  const getNodeVariationBuffs = useCallback((node: ExtendedStoryNode) => {
+    const allBuffs = [
+      "TASER", "LOG", "KEVLAR", "NUKE", "EXPOSED",
+      "JADE", "SHAMROCK", "CLASSIC", "LIGHTNING", "CORRODED"
+    ];
+    
+    // Use node ID to deterministically select buffs
+    let hash = 0;
+    for (let i = 0; i < node.id.length; i++) {
+      hash = ((hash << 5) - hash) + node.id.charCodeAt(i);
+      hash = hash & hash;
+    }
+    
+    const startIndex = Math.abs(hash) % allBuffs.length;
+    const buffCount = node.storyNodeType === 'final_boss' ? 10 : 
+                      node.storyNodeType === 'boss' ? 8 : 
+                      node.storyNodeType === 'event' ? 6 : 5;
+    
+    const selectedBuffs = [];
+    for (let i = 0; i < buffCount; i++) {
+      const buffName = allBuffs[(startIndex + i) % allBuffs.length];
+      selectedBuffs.push({
+        id: buffName.toLowerCase(),
+        name: buffName,
+        bonus: node.storyNodeType === 'final_boss' ? "+20%" :
+               node.storyNodeType === 'boss' ? "+15%" : "+10%"
+      });
+    }
+    
+    return selectedBuffs;
+  }, []);
+  
+  // Helper function to handle node deployment
+  const handleNodeDeploy = useCallback((node: ExtendedStoryNode) => {
+    if (!completedNodes.has(node.id)) {
+      const newCompleted = new Set(completedNodes);
+      newCompleted.add(node.id);
+      setCompletedNodes(newCompleted);
+    }
+  }, [completedNodes]);
+  
+  // Helper function to get a deterministic mek image for each node  
+  const getMekImage = useCallback((nodeId: string): string => {
+    // Use node ID to deterministically select an image
+    let hash = 0;
+    for (let i = 0; i < nodeId.length; i++) {
+      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    const index = Math.abs(hash) % mekImagesList.length;
+    return mekImagesList[index];
+  }, []);
   
   // Debug logging
   useEffect(() => {
@@ -112,13 +302,13 @@ export default function StoryClimbPage() {
           promises.push(promise);
         } else if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss') {
           // Load mek images for normal and boss nodes
-          const imageName = getNodeImage(node.id);
+          const imageName = getMekImage(node.id);
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
             img.onload = () => resolve();
             img.onerror = () => resolve(); // Still resolve on error to not block
           });
-          img.src = `/mek-images/150px/${imageName}`;
+          img.src = imageName; // Already has the full path from getMekImage
           imageMap.set(node.id, img);
           promises.push(promise);
         } else if (node.storyNodeType === 'event') {
@@ -1114,6 +1304,34 @@ export default function StoryClimbPage() {
     });
   }, [zoom, panOffset]);
   
+  // Helper function to check if a node is available to play
+  const isNodeAvailable = useCallback((node: StoryNode | null) => {
+    if (!node || !treeData) return false;
+    if (node.id === 'start') return false;
+    if (completedNodes.has(node.id)) return true; // Already completed nodes can be replayed
+    
+    // Check if this node is adjacent to a completed node and allows upward progression
+    return treeData.connections.some(conn => {
+      let connectedNodeId = null;
+      if (conn.from === node.id) {
+        connectedNodeId = conn.to;
+      } else if (conn.to === node.id) {
+        connectedNodeId = conn.from;
+      }
+      
+      if (!connectedNodeId || !completedNodes.has(connectedNodeId)) {
+        return false;
+      }
+      
+      // Find the connected completed node
+      const connectedNode = treeData.nodes.find(n => n.id === connectedNodeId);
+      if (!connectedNode) return false;
+      
+      // Only allow upward progression (lower Y values = further up the tree)
+      return node.y < connectedNode.y;
+    });
+  }, [treeData, completedNodes]);
+  
   // Handle canvas click for node selection
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
     console.log("Click handler called, hasDragged:", hasDragged);
@@ -1397,12 +1615,12 @@ export default function StoryClimbPage() {
         </h1>
       </div>
 
-      {/* Main Content - Normal width container */}
-      <div className="max-w-[900px] mx-auto px-5">
-        {/* Two Column Layout */}
+      {/* Main Content - Wider container for better layout */}
+      <div className="max-w-[1200px] mx-auto px-5">
+        {/* Two Column Layout - adjusted to reduce gap */}
         <div className="flex gap-4">
-          {/* Left Column - Tree Canvas */}
-          <div ref={containerRef} className="flex-1">
+          {/* Left Column - Tree Canvas - keep same size */}
+          <div ref={containerRef} className="w-[63%] overflow-hidden">
             {/* Canvas Container with Style Q background */}
             <div 
               className="relative rounded-lg" 
@@ -1447,76 +1665,74 @@ export default function StoryClimbPage() {
             </div>
           </div>
 
-          {/* Right Column - Details Pane */}
-          <div className="w-[300px]">
-            {/* Single frame for details */}
-            <div className="bg-black/80 border-2 border-yellow-500/30 rounded-lg p-4 h-full overflow-y-auto">
-                <h2 className="text-lg font-bold text-yellow-500 mb-3 font-orbitron tracking-wider">
-                  MISSION DETAILS
-                </h2>
-                
-                {/* Progress Counter */}
-                <div className="mb-4 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded">
-                  <span className="text-xs text-gray-400 uppercase">Progress</span>
-                  <p className="text-yellow-500 font-bold">
-                    {completedNodes.size} / {treeData?.nodes.length || 0} Nodes
-                  </p>
+          {/* Right Column - Mission Card Details */}
+          <div className="w-[37%] overflow-y-auto h-[850px]">
+            {selectedNode && selectedNode.storyNodeType !== 'normal' ? (
+              <StoryMissionCard
+                title={`Mission ${selectedNode.id}`}
+                mekImage={getMekImage(selectedNode.id)}
+                mekName={`MEK #${Math.floor(Math.random() * 9000) + 1000}`}
+                mekRank={selectedNode.storyNodeType === 'final_boss' ? 100 : 
+                        selectedNode.storyNodeType === 'boss' ? 75 : 
+                        selectedNode.storyNodeType === 'event' ? 50 : 34}
+                primaryReward={selectedNode.storyNodeType === 'final_boss' ? 1000000 : 
+                              selectedNode.storyNodeType === 'boss' ? 500000 : 
+                              selectedNode.storyNodeType === 'event' ? 300000 : 250000}
+                experience={selectedNode.storyNodeType === 'final_boss' ? 20000 : 
+                           selectedNode.storyNodeType === 'boss' ? 10000 : 
+                           selectedNode.storyNodeType === 'event' ? 7500 : 5000}
+                potentialRewards={getNodeRewards(selectedNode as ExtendedStoryNode)}
+                variationBuffs={getNodeVariationBuffs(selectedNode as ExtendedStoryNode)}
+                successChance={completedNodes.has(selectedNode.id) ? 100 :
+                              isNodeAvailable(selectedNode) ? 65 : 30}
+                deploymentFee={selectedNode.storyNodeType === 'final_boss' ? 200000 : 
+                              selectedNode.storyNodeType === 'boss' ? 100000 : 
+                              selectedNode.storyNodeType === 'event' ? 75000 : 50000}
+                onDeploy={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
+                scale={0.85}
+                isLocked={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
+              />
+            ) : selectedNode && selectedNode.storyNodeType === 'normal' ? (
+              // Show simple card for mechanism nodes
+              <div className="bg-black/80 border-2 border-yellow-500/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-yellow-500 mb-3">MECHANISM NODE</h3>
+                <div className="aspect-square bg-black/60 rounded-lg mb-4 flex items-center justify-center">
+                  <img 
+                    src={getMekImage(selectedNode.id)} 
+                    alt="Mechanism"
+                    className="w-3/4 h-3/4 object-contain"
+                  />
                 </div>
-                
-                {selectedNode ? (
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="text-gray-400 text-xs uppercase tracking-wider">Node ID</span>
-                      <p className="text-white font-bold">{selectedNode.id}</p>
-                    </div>
-                    
-                    <div>
-                      <span className="text-gray-400 text-xs uppercase tracking-wider">Status</span>
-                      <p className={`font-bold ${completedNodes.has(selectedNode.id) ? 'text-green-500' : 'text-gray-400'}`}>
-                        {completedNodes.has(selectedNode.id) ? '✓ COMPLETED' : 'INCOMPLETE'}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <span className="text-gray-400 text-xs uppercase tracking-wider">Type</span>
-                      <p className="text-yellow-500 font-bold capitalize">
-                        {selectedNode.storyNodeType.replace('_', ' ')}
-                      </p>
-                    </div>
-                    
-                    {selectedNode.storyNodeType === 'boss' && (
-                      <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
-                        <p className="text-red-400 font-bold text-xs">⚠️ BOSS ENCOUNTER</p>
-                        <p className="text-gray-300 text-xs mt-1">
-                          Prepare for battle!
-                        </p>
-                      </div>
-                    )}
-                    
-                    {selectedNode.storyNodeType === 'final_boss' && (
-                      <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded">
-                        <p className="text-yellow-400 font-bold text-xs">🔥 FINAL BOSS</p>
-                        <p className="text-gray-300 text-xs mt-1">
-                          The ultimate challenge!
-                        </p>
-                      </div>
-                    )}
-                    
-                    {selectedNode.storyNodeType === 'event' && (
-                      <div className="mt-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded">
-                        <p className="text-purple-400 font-bold text-xs">⚡ SPECIAL EVENT</p>
-                        <p className="text-gray-300 text-xs mt-1">
-                          Special rewards await!
-                        </p>
-                      </div>
-                    )}
+                <p className="text-gray-400 text-sm mb-4">
+                  This mechanism node must be activated to progress further up the tree.
+                </p>
+                <button 
+                  onClick={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
+                  disabled={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
+                  className={`w-full py-2 px-4 rounded font-bold transition-all ${
+                    completedNodes.has(selectedNode.id) ? 'bg-green-600 text-white' :
+                    isNodeAvailable(selectedNode) ? 'bg-yellow-500 text-black hover:bg-yellow-400' :
+                    'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {completedNodes.has(selectedNode.id) ? 'ACTIVATED' :
+                   isNodeAvailable(selectedNode) ? 'ACTIVATE' : 'LOCKED'}
+                </button>
+              </div>
+            ) : (
+              // No node selected
+              <div className="bg-black/80 border-2 border-yellow-500/30 rounded-lg p-8 h-full flex items-center justify-center">
+                <div className="text-center">
+                  <h3 className="text-lg font-bold text-yellow-500 mb-3">SELECT A NODE</h3>
+                  <p className="text-gray-400 text-sm">
+                    Click on any node in the tree to view mission details
+                  </p>
+                  <div className="mt-6 text-xs text-gray-500">
+                    <p>Progress: {completedNodes.size} / {treeData?.nodes.length || 0} Nodes</p>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-400 text-sm">Click on a node to view details</p>
-                  </div>
-                )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

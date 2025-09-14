@@ -247,8 +247,19 @@ body {
 
 /* View Active Contracts Button Animations */
 @keyframes scanline {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(4px); }
+  0% { top: -20%; }
+  100% { top: 100%; }
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
 }
 
 @keyframes grid-move {
@@ -398,6 +409,31 @@ body {
 @keyframes redPulse {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
+}
+
+@keyframes hex-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(15px, 26px); }
+}
+
+@keyframes diagonal-slide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(20px); }
+}
+
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.08; }
+}
+
+@keyframes mesh-shift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(15px, 15px); }
+}
+
+@keyframes chevron-march {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(12px); }
 }
 
 /* Particle Button Styles */
@@ -1140,4 +1176,318 @@ body {
     transparent 10px,
     transparent 20px
   );
+}
+
+/* Enhanced ViewActiveContractsButton Animations */
+
+/* Plasma Pulse Variant */
+@keyframes plasma-morph {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  50% { 
+    transform: scale(1.1) rotate(180deg);
+    filter: hue-rotate(10deg);
+  }
+}
+
+@keyframes electric-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+}
+
+@keyframes energy-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes plasma-glow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 15px currentColor);
+  }
+}
+
+@keyframes plasma-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.95; }
+  50% { opacity: 1; }
+  75% { opacity: 0.98; }
+}
+
+@keyframes energy-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulse-bar {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+/* Holographic Matrix Variant */
+@keyframes holo-grid {
+  0% {
+    transform: perspective(400px) rotateX(0deg) translateZ(0);
+  }
+  100% {
+    transform: perspective(400px) rotateX(0deg) translateZ(20px);
+  }
+}
+
+@keyframes data-stream {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes holo-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes holo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.5);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    top: -20%;
+  }
+  100% {
+    top: 120%;
+  }
+}
+
+@keyframes holo-glitch {
+  0%, 100% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+  20% {
+    transform: translateX(-2px);
+    filter: hue-rotate(90deg);
+  }
+  40% {
+    transform: translateX(2px);
+    filter: hue-rotate(-90deg);
+  }
+  60% {
+    transform: translateX(-1px);
+    filter: hue-rotate(45deg);
+  }
+  80% {
+    transform: translateX(1px);
+    filter: hue-rotate(-45deg);
+  }
+}
+
+@keyframes holo-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+@keyframes shimmer-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Quantum Flux Variant */
+@keyframes quantum-warp {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+  25% {
+    transform: scale(1.05) rotate(90deg);
+    filter: blur(1px);
+  }
+  50% {
+    transform: scale(0.95) rotate(180deg);
+    filter: blur(2px);
+  }
+  75% {
+    transform: scale(1.02) rotate(270deg);
+    filter: blur(1px);
+  }
+}
+
+@keyframes quantum-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes quantum-interference {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(5px) translateY(-5px);
+  }
+}
+
+@keyframes quantum-phase {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes quantum-link {
+  0%, 100% {
+    opacity: 0.2;
+    stroke-width: 1;
+  }
+  50% {
+    opacity: 0.8;
+    stroke-width: 2;
+  }
+}
+
+@keyframes quantum-breathe {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes quantum-fluctuate {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+@keyframes quantum-glitch {
+  0%, 100% {
+    transform: translateX(0) scaleX(1);
+  }
+  25% {
+    transform: translateX(-3px) scaleX(0.98);
+  }
+  50% {
+    transform: translateX(3px) scaleX(1.02);
+  }
+  75% {
+    transform: translateX(-1px) scaleX(0.99);
+  }
+}
+
+@keyframes quantum-fade {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes quantum-flow {
+  0% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    background-position: -200% 50%;
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes quantum-collapse {
+  0%, 100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scaleX(0.95);
+  }
+}
+
+@keyframes quantum-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes quantum-text {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }

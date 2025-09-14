@@ -310,7 +310,16 @@ export default function IndustrialMissionCard({
               }}>
                 {missionTitle}
               </h2>
-              <div className="text-xs text-gray-300 uppercase tracking-wider font-medium">
+              <div className={`text-xs uppercase tracking-wider font-medium ${
+                contractType === "Daily Global Contract" 
+                  ? "text-green-400" 
+                  : "text-gray-300"
+              }`}
+              style={{
+                textShadow: contractType === "Daily Global Contract" 
+                  ? "0 0 10px rgba(74, 222, 128, 0.5), 0 0 20px rgba(74, 222, 128, 0.3)" 
+                  : "none"
+              }}>
                 {contractType}
               </div>
             </div>

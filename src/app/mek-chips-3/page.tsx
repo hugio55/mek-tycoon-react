@@ -726,13 +726,36 @@ export default function MekChips3Page() {
                                           {req.name}
                                         </span>
                                         <span className={`text-[10px] font-mono font-bold ${
+                                          !isMet && isHoveringCraft ? 'animate-pulse' : ''
+                                        } ${
                                           isMet ? 'text-green-400' : 'text-red-400'
-                                        }`}>
+                                        }`}
+                                          style={{
+                                            filter: !isMet 
+                                              ? isHoveringCraft
+                                                ? 'drop-shadow(0 0 8px rgba(239,68,68,1))'
+                                                : 'drop-shadow(0 0 4px rgba(239,68,68,0.8))'
+                                              : 'none',
+                                            animation: !isMet && !isHoveringCraft ? 'pulse-slow 3s ease-in-out infinite' : undefined
+                                          }}
+                                        >
                                           {req.current.toLocaleString()}/{req.amount.toLocaleString()}
                                         </span>
                                       </div>
                                       
-                                      <div className="relative w-full h-1.5 bg-black/60 border border-gray-700 overflow-hidden">
+                                      <div className={`relative w-full h-1.5 bg-black/60 border overflow-hidden ${
+                                        !isMet && isHoveringCraft ? 'animate-pulse' : ''
+                                      }`}
+                                        style={{
+                                          borderColor: isMet ? 'rgb(107,114,128)' : 'rgba(239,68,68,0.5)',
+                                          filter: !isMet 
+                                            ? isHoveringCraft
+                                              ? 'drop-shadow(0 0 10px rgba(239,68,68,0.8))'
+                                              : 'drop-shadow(0 0 5px rgba(239,68,68,0.6))'
+                                            : 'none',
+                                          animation: !isMet && !isHoveringCraft ? 'pulse-slow 3s ease-in-out infinite' : undefined
+                                        }}
+                                      >
                                         <div 
                                           className={`h-full transition-all duration-500 ${
                                             isMet 
@@ -741,7 +764,11 @@ export default function MekChips3Page() {
                                           }`}
                                           style={{ 
                                             width: `${progress}%`,
-                                            boxShadow: isMet ? `0 0 6px rgba(34,197,94,0.4)` : '0 0 4px rgba(239,68,68,0.4)'
+                                            boxShadow: isMet 
+                                              ? `0 0 6px rgba(34,197,94,0.4)` 
+                                              : isHoveringCraft
+                                                ? '0 0 12px rgba(239,68,68,0.8)'
+                                                : '0 0 6px rgba(239,68,68,0.6)'
                                           }}
                                         />
                                       </div>

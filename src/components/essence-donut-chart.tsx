@@ -29,6 +29,7 @@ interface DonutChartProps {
   onSliceHover?: (sliceId: string | null) => void;
   onSliceClick?: (sliceId: string) => void;
   selectedSlice?: string | null;
+  hoverEffect?: 1 | 2 | 3 | 4;
 }
 
 // Industrial color palette for essence types
@@ -56,12 +57,19 @@ export default function EssenceDonutChart({
   onSliceHover,
   onSliceClick,
   selectedSlice,
+  hoverEffect = 1,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [centerDisplay, setCenterDisplay] = useState({ value: 0, label: "TOTAL ESSENCE" });
   const [showMarketTooltip, setShowMarketTooltip] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+  
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Calculate chart dimensions with fixed thickness
   const innerRadiusRatio = 0.65; // Fixed at 35% thickness
@@ -97,8 +105,10 @@ export default function EssenceDonutChart({
     });
   }, [data]);
 
-  // Animation effect - Start immediately
+  // Animation effect - Run only once on mount
   useEffect(() => {
+    if (!isClient) return; // Don't animate on server
+    
     // Start with a small initial value to show something immediately
     setAnimationProgress(0.01);
     
@@ -118,7 +128,7 @@ export default function EssenceDonutChart({
     
     // Start animation on next frame
     requestAnimationFrame(animate);
-  }, [animationDuration, data]);
+  }, [isClient, animationDuration]); // Remove data dependency to prevent re-animation
 
   // Update center display
   useEffect(() => {
@@ -139,35 +149,40 @@ export default function EssenceDonutChart({
     }
   }, [hoveredSlice, processedData]);
 
-  // Create SVG path for donut slice
+  // Create SVG path for donut slice with fixed precision
   const createSlicePath = (startAngle: number, endAngle: number, animProgress: number = 1) => {
     const actualEndAngle = startAngle + (endAngle - startAngle) * animProgress;
     
     const startAngleRad = (startAngle * Math.PI) / 180;
     const endAngleRad = (actualEndAngle * Math.PI) / 180;
     
-    const x1 = center + outerRadius * Math.cos(startAngleRad);
-    const y1 = center + outerRadius * Math.sin(startAngleRad);
-    const x2 = center + outerRadius * Math.cos(endAngleRad);
-    const y2 = center + outerRadius * Math.sin(endAngleRad);
+    // Round to 2 decimal places to avoid floating point differences
+    const x1 = parseFloat((center + outerRadius * Math.cos(startAngleRad)).toFixed(2));
+    const y1 = parseFloat((center + outerRadius * Math.sin(startAngleRad)).toFixed(2));
+    const x2 = parseFloat((center + outerRadius * Math.cos(endAngleRad)).toFixed(2));
+    const y2 = parseFloat((center + outerRadius * Math.sin(endAngleRad)).toFixed(2));
     
-    const x3 = center + innerRadius * Math.cos(startAngleRad);
-    const y3 = center + innerRadius * Math.sin(startAngleRad);
-    const x4 = center + innerRadius * Math.cos(endAngleRad);
-    const y4 = center + innerRadius * Math.sin(endAngleRad);
+    const x3 = parseFloat((center + innerRadius * Math.cos(startAngleRad)).toFixed(2));
+    const y3 = parseFloat((center + innerRadius * Math.sin(startAngleRad)).toFixed(2));
+    const x4 = parseFloat((center + innerRadius * Math.cos(endAngleRad)).toFixed(2));
+    const y4 = parseFloat((center + innerRadius * Math.sin(endAngleRad)).toFixed(2));
     
     const largeArcFlag = actualEndAngle - startAngle > 180 ? 1 : 0;
     
-    return `
-      M ${x3} ${y3}
-      L ${x1} ${y1}
-      A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2}
-      L ${x4} ${y4}
-      A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x3} ${y3}
-      Z
-    `;
+    return `M ${x3} ${y3} L ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x3} ${y3} Z`;
   };
 
+
+  // Don't render on server to avoid hydration mismatches
+  if (!isClient) {
+    return (
+      <div className={`relative inline-block ${className}`} style={{ width: size, height: size }}>
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+          <div className="text-yellow-400 animate-pulse">Loading chart...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative inline-block ${className}`}>
@@ -193,6 +208,36 @@ export default function EssenceDonutChart({
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
+              
+              {/* Hover Effect 1: Inner Glow */}
+              <filter id="inner-glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feOffset dx="0" dy="0" result="offsetblur"/>
+                <feFlood floodColor="#fab617" floodOpacity="0.5"/>
+                <feComposite in2="offsetblur" operator="in"/>
+                <feMerge>
+                  <feMergeNode/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              
+              {/* Hover Effect 2: Brightness Boost */}
+              <filter id="brightness-boost">
+                <feComponentTransfer>
+                  <feFuncR type="linear" slope="1.4"/>
+                  <feFuncG type="linear" slope="1.4"/>
+                  <feFuncB type="linear" slope="1.4"/>
+                </feComponentTransfer>
+              </filter>
+              
+              {/* Hover Effect 3: Radial Gradient Overlay */}
+              {processedData.map((slice) => (
+                <radialGradient key={`radial-${slice.id}`} id={`radial-gradient-${slice.id}`}>
+                  <stop offset="0%" stopColor={slice.color} stopOpacity="1"/>
+                  <stop offset="50%" stopColor={slice.color} stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor={slice.color} stopOpacity="0.6"/>
+                </radialGradient>
+              ))}
 
               {/* Create gradients for each slice */}
               {processedData.map((slice, index) => (
@@ -253,23 +298,58 @@ export default function EssenceDonutChart({
               {processedData.map((slice, index) => {
                 const isHovered = hoveredSlice === slice.id;
                 const isSelected = selectedSlice === slice.id;
-                const scale = isHovered || isSelected ? 1.05 : 1;
-                const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.5 : 1;
+                const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.6 : 1;
+                
+                // Determine hover effect based on selection
+                let hoverFilter = 'none';
+                let fillUrl = `url(#slice-gradient-${slice.id})`;
+                let additionalStyle = {};
+                
+                if (isHovered || isSelected) {
+                  switch(hoverEffect) {
+                    case 1: // Inner Glow
+                      hoverFilter = 'url(#inner-glow)';
+                      break;
+                    case 2: // Brightness Boost
+                      hoverFilter = 'url(#brightness-boost)';
+                      break;
+                    case 3: // Radial Gradient
+                      fillUrl = `url(#radial-gradient-${slice.id})`;
+                      break;
+                    case 4: // Pulse Effect
+                      additionalStyle = {
+                        animation: 'pulse-slice 1s ease-in-out infinite',
+                        transformOrigin: `${center}px ${center}px`
+                      };
+                      break;
+                  }
+                }
                 
                 return (
                   <g key={slice.id}>
+                    {/* Hover highlight layer (for effect 1 & 2) */}
+                    {(isHovered || isSelected) && (hoverEffect === 1 || hoverEffect === 2) && (
+                      <path
+                        d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
+                        fill={slice.color}
+                        opacity={0.3}
+                        filter={hoverFilter}
+                        pointerEvents="none"
+                        style={{ transition: 'opacity 0.3s ease' }}
+                      />
+                    )}
+                    
                     {/* Main slice */}
                     <path
                       d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
-                      fill={`url(#slice-gradient-${slice.id})`}
+                      fill={fillUrl}
                       stroke={isHovered || isSelected ? theme.colors.primary.yellow : 'rgba(0, 0, 0, 0.5)'}
-                      strokeWidth={isHovered || isSelected ? 3 : 1}
+                      strokeWidth={isHovered || isSelected ? 2 : 1}
                       opacity={opacity}
-                      transform={`scale(${scale}) translate(${(1 - scale) * center}px, ${(1 - scale) * center}px)`}
                       style={{
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transition: 'opacity 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease, fill 0.2s ease',
                         cursor: 'pointer',
-                        filter: isHovered || isSelected ? `drop-shadow(0 0 20px ${slice.color}80)` : 'none'
+                        ...additionalStyle
                       }}
                       onMouseEnter={() => {
                         setHoveredSlice(slice.id);
@@ -350,6 +430,18 @@ export default function EssenceDonutChart({
 
           </svg>
       </div>
+      
+      {/* CSS for pulse animation */}
+      <style jsx>{`
+        @keyframes pulse-slice {
+          0%, 100% {
+            filter: brightness(1) drop-shadow(0 0 5px currentColor);
+          }
+          50% {
+            filter: brightness(1.3) drop-shadow(0 0 15px currentColor);
+          }
+        }
+      `}</style>
     </div>
   );
 }

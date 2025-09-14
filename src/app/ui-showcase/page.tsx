@@ -18,6 +18,7 @@ import {
   SearchBar,
   InlineSearch
 } from '@/components/ui';
+import ViewActiveContractsButtonEnhanced from '@/components/ViewActiveContractsButtonEnhanced';
 
 export default function UIShowcase() {
   const [showModal, setShowModal] = useState(false);
@@ -25,10 +26,13 @@ export default function UIShowcase() {
   const [searchValue, setSearchValue] = useState('');
   const [inlineSearchValue, setInlineSearchValue] = useState('');
   const [progressValue, setProgressValue] = useState(65);
+  const [scifiButtonVariant, setScifiButtonVariant] = useState<'plasma' | 'holographic' | 'quantum' | 'holographic-yellow' | 'quantum-yellow' | 'holographic-yellow-active' | 'quantum-yellow-active'>('plasma');
   const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
+  const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
+    setMounted(true);
     // Generate background effects - matching shop page
     const generatedParticles = [...Array(20)].map((_, i) => ({
       id: i,
@@ -90,7 +94,7 @@ export default function UIShowcase() {
         />
         
         {/* Stars */}
-        {stars.map((star) => (
+        {mounted && stars.map((star) => (
           <div
             key={star.id}
             className="absolute rounded-full bg-white"
@@ -107,7 +111,7 @@ export default function UIShowcase() {
         ))}
         
         {/* Floating particles */}
-        {particles.map((particle) => (
+        {mounted && particles.map((particle) => (
           <div
             key={particle.id}
             className="absolute w-1.5 h-1.5 bg-yellow-400 rounded-full"
@@ -213,18 +217,17 @@ export default function UIShowcase() {
               {/* Particle Button */}
               <div className="pt-6 border-t border-gray-800/50 mt-6">
                 <p className="text-gray-400 mb-4">Style P - Special Effects Button (from Crafting):</p>
-                <div className="particle-button-wrapper" suppressHydrationWarning>
+                <div className="particle-button-wrapper">
                   <button 
                     className="btn-particles relative"
                     onClick={(e) => {
                       e.currentTarget.classList.add('clicked');
                       setTimeout(() => e.currentTarget.classList.remove('clicked'), 600);
                     }}
-                    suppressHydrationWarning
                   >
                     <div className="particles-bg"></div>
                     <span className="particles-text">CRAFT WITH PARTICLES</span>
-                    {typeof window !== 'undefined' && (
+                    {mounted && (
                       <div className="particle-container">
                         {[...Array(30)].map((_, i) => (
                           <div
@@ -244,6 +247,89 @@ export default function UIShowcase() {
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* Sci-Fi Action Buttons Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Sci-Fi Action Buttons</h2>
+          
+          <Card padding="lg">
+            <div className="space-y-8">
+              <div className="flex gap-4 mb-4">
+                <button
+                  onClick={() => setScifiButtonVariant('plasma')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'plasma' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Plasma Pulse
+                </button>
+                <button
+                  onClick={() => setScifiButtonVariant('holographic')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic' ? 'bg-cyan-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Holographic Matrix (Blue)
+                </button>
+                <button
+                  onClick={() => setScifiButtonVariant('quantum')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum' ? 'bg-purple-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Quantum Flux (Purple)
+                </button>
+              </div>
+              
+              <div className="flex gap-4 mb-4">
+                <button
+                  onClick={() => setScifiButtonVariant('holographic-yellow')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic-yellow' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Holographic Matrix (Yellow)
+                </button>
+                <button
+                  onClick={() => setScifiButtonVariant('quantum-yellow')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum-yellow' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Quantum Flux (Yellow)
+                </button>
+              </div>
+              
+              <div className="flex gap-4 mb-4">
+                <button
+                  onClick={() => setScifiButtonVariant('holographic-yellow-active')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic-yellow-active' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Holographic Matrix (Yellow - Always Active)
+                </button>
+                <button
+                  onClick={() => setScifiButtonVariant('quantum-yellow-active')}
+                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum-yellow-active' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Quantum Flux (Yellow - Always Active)
+                </button>
+              </div>
+              
+              <div className="flex justify-center">
+                <ViewActiveContractsButtonEnhanced
+                  activeContracts={6}
+                  maxContracts={14}
+                  variant={scifiButtonVariant}
+                  buttonText={
+                    scifiButtonVariant === 'holographic-yellow' || scifiButtonVariant === 'holographic-yellow-active' ? 'SUBMIT' : 
+                    scifiButtonVariant === 'quantum-yellow' || scifiButtonVariant === 'quantum-yellow-active' ? 'DEPLOY' : 
+                    undefined
+                  }
+                />
+              </div>
+              
+              <div className="text-center text-sm text-gray-400">
+                {scifiButtonVariant === 'plasma' && 'Pulsing energy field with electric particles'}
+                {scifiButtonVariant === 'holographic' && 'Holographic shimmer with data streams (blue)'}
+                {scifiButtonVariant === 'quantum' && 'Reality-warping effect with quantum particles (purple)'}
+                {scifiButtonVariant === 'holographic-yellow' && 'Holographic shimmer with golden data streams'}
+                {scifiButtonVariant === 'quantum-yellow' && 'Reality-warping effect with golden quantum particles'}
+                {scifiButtonVariant === 'holographic-yellow-active' && 'Always-active holographic effects with golden shimmer (25% slower, brightens on hover)'}
+                {scifiButtonVariant === 'quantum-yellow-active' && 'Always-active quantum distortion with golden particles (25% slower, brightens on hover)'}
               </div>
             </div>
           </Card>
@@ -1168,7 +1254,7 @@ export default function UIShowcase() {
                     <div className="ultra-gleam"></div>
                     <span className="ultra-text">ULTRA BUTTON</span>
                     <div className="ultra-particles">
-                      {typeof window !== 'undefined' && [...Array(20)].map((_, i) => {
+                      {mounted && [...Array(20)].map((_, i) => {
                         const angle = (360 / 20) * i;
                         const radian = (angle * Math.PI) / 180;
                         return (

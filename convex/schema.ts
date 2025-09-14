@@ -970,6 +970,7 @@ export default defineSchema({
       label: v.string(),
       index: v.optional(v.number()),
       storyNodeType: v.optional(v.string()),
+      challenger: v.optional(v.boolean()), // Higher rank mechanism that's tougher
       completed: v.optional(v.boolean()),
       available: v.optional(v.boolean()),
       current: v.optional(v.boolean()),

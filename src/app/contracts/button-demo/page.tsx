@@ -4,24 +4,20 @@ import { useState } from "react";
 import ViewActiveContractsButton from "@/components/ViewActiveContractsButton";
 
 export default function ButtonDemoPage() {
-  const [activeContracts, setActiveContracts] = useState(5);
-  const [maxContracts, setMaxContracts] = useState(14);
-
-  const handleButtonClick = (variant: number) => {
-    alert(`Button variant ${variant} clicked! Would navigate to active contracts view.`);
-  };
+  const [activeContracts, setActiveContracts] = useState(13);
+  const [maxContracts, setMaxContracts] = useState(22);
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 pointer-events-none" />
       
-      <div className="relative max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
-          View Active Contracts Button Designs
+      <div className="relative max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-4 text-yellow-400 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+          Active Contracts Button - 5 Hover Effect Variations
         </h1>
         <p className="text-gray-400 mb-8">
-          Three distinct sci-fi UI approaches for the contracts button with slot counter
+          Same layout and design, 5 different hover rollover effects
         </p>
 
         {/* Controls */}
@@ -33,9 +29,9 @@ export default function ButtonDemoPage() {
               <input
                 type="range"
                 min="0"
-                max={maxContracts}
+                max="50"
                 value={activeContracts}
-                onChange={(e) => setActiveContracts(Number(e.target.value))}
+                onChange={(e) => setActiveContracts(parseInt(e.target.value))}
                 className="w-full"
               />
             </div>
@@ -44,130 +40,153 @@ export default function ButtonDemoPage() {
               <input
                 type="range"
                 min="1"
-                max="20"
+                max="50"
                 value={maxContracts}
-                onChange={(e) => setMaxContracts(Number(e.target.value))}
+                onChange={(e) => setMaxContracts(parseInt(e.target.value))}
                 className="w-full"
               />
             </div>
           </div>
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-4 text-center text-yellow-400">
             Capacity: {Math.round((activeContracts / maxContracts) * 100)}% 
             {activeContracts >= maxContracts && <span className="text-red-400 ml-2">(FULL)</span>}
             {activeContracts / maxContracts >= 0.9 && activeContracts < maxContracts && <span className="text-orange-400 ml-2">(Nearly Full)</span>}
           </div>
         </div>
 
-        {/* Button Variants */}
-        <div className="space-y-12">
-          {/* Variant 1: Military HUD */}
+        {/* 5 Hover Effect Variations */}
+        <div className="space-y-8">
+          {/* Hover Variant 1: Subtle Inner Glow */}
           <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-lg p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Option 1: Military HUD Style</h3>
-                <p className="text-gray-400 max-w-2xl">
-                  Tactical display inspired by military interfaces and aviation HUDs. Features angled corners, 
-                  scan line effects on hover, and a multi-segment capacity indicator. The color dynamically 
-                  changes based on capacity (yellow → orange → red).
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Hover Effect 1: Subtle Inner Glow</h3>
+                <p className="text-gray-400 mb-4">
+                  Border brightens to yellow-400 with a soft inner shadow glow. Active squares scale up slightly (1.1x).
                 </p>
-                <ul className="mt-4 text-sm text-gray-500 space-y-1">
-                  <li>• Polygon clip-path for angled corners</li>
-                  <li>• Scan line animation on hover</li>
-                  <li>• 5-segment capacity indicator</li>
-                  <li>• Dynamic color based on usage</li>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• Border color transition to brighter yellow</li>
+                  <li>• Inner shadow glow effect</li>
+                  <li>• Active squares scale to 110%</li>
+                  <li>• Smooth 200ms transition</li>
                 </ul>
               </div>
               <ViewActiveContractsButton
                 activeContracts={activeContracts}
                 maxContracts={maxContracts}
-                onClick={() => handleButtonClick(1)}
+                onClick={() => console.log('View contracts clicked')}
                 variant={1}
+                hoverVariant={1}
               />
             </div>
           </div>
 
-          {/* Variant 2: Holographic Data Card */}
+          {/* Hover Variant 2: Scanline Effect */}
           <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-lg p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Option 2: Holographic Data Card</h3>
-                <p className="text-gray-400 max-w-2xl">
-                  Sci-fi terminal interface with animated grid background and holographic shimmer effect. 
-                  Includes a live status indicator and progress bar visualization. Inspired by cyberpunk 
-                  UI and futuristic data terminals.
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Hover Effect 2: Scanline</h3>
+                <p className="text-gray-400 mb-4">
+                  A yellow scanline continuously sweeps down across the button. No scaling on squares.
                 </p>
-                <ul className="mt-4 text-sm text-gray-500 space-y-1">
-                  <li>• Animated grid background on hover</li>
-                  <li>• Holographic shimmer effect</li>
-                  <li>• Live/standby status indicator</li>
-                  <li>• Gradient progress bar with glow</li>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• Animated scanline moving top to bottom</li>
+                  <li>• Yellow gradient sweep effect</li>
+                  <li>• No square scaling (stays crisp)</li>
+                  <li>• 2-second animation loop</li>
                 </ul>
               </div>
               <ViewActiveContractsButton
                 activeContracts={activeContracts}
                 maxContracts={maxContracts}
-                onClick={() => handleButtonClick(2)}
-                variant={2}
+                onClick={() => console.log('View contracts clicked')}
+                variant={1}
+                hoverVariant={2}
               />
             </div>
           </div>
 
-          {/* Variant 3: Brutalist Industrial */}
+          {/* Hover Variant 3: Pulse Ring */}
           <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-lg p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Option 3: Brutalist Industrial</h3>
-                <p className="text-gray-400 max-w-2xl">
-                  Heavy machinery interface with hazard stripes and industrial gauge visualization. 
-                  Features rivet details, metal texture overlay, and a segmented capacity meter. 
-                  Inspired by construction equipment and industrial control panels.
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Hover Effect 3: Pulse Ring</h3>
+                <p className="text-gray-400 mb-4">
+                  An expanding yellow ring pulses outward from the button. Entire button scales slightly (1.02x).
                 </p>
-                <ul className="mt-4 text-sm text-gray-500 space-y-1">
-                  <li>• Hazard stripe header</li>
-                  <li>• Digital counter with zero-padding</li>
-                  <li>• Individual slot indicators</li>
-                  <li>• Rivet corner details</li>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• Expanding ring animation</li>
+                  <li>• Entire button scales to 102%</li>
+                  <li>• Active squares scale to 105%</li>
+                  <li>• 1-second pulse cycle</li>
                 </ul>
               </div>
               <ViewActiveContractsButton
                 activeContracts={activeContracts}
                 maxContracts={maxContracts}
-                onClick={() => handleButtonClick(3)}
-                variant={3}
+                onClick={() => console.log('View contracts clicked')}
+                variant={1}
+                hoverVariant={3}
               />
             </div>
           </div>
-        </div>
 
-        {/* Integration Example */}
-        <div className="mt-12 bg-gray-900/50 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">Integration Example</h3>
-          <p className="text-gray-400 mb-4">
-            To integrate into the single-missions page header, replace the current element with:
-          </p>
-          <pre className="bg-black/80 border border-gray-700 rounded p-4 overflow-x-auto">
-            <code className="text-green-400 text-sm">{`import ViewActiveContractsButton from '@/components/ViewActiveContractsButton';
+          {/* Hover Variant 4: Corner Highlights */}
+          <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-lg p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Hover Effect 4: Corner Brackets</h3>
+                <p className="text-gray-400 mb-4">
+                  Yellow corner brackets appear at all four corners. Active squares get stronger glow.
+                </p>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• Corner bracket highlights</li>
+                  <li>• No button scaling</li>
+                  <li>• Enhanced square glow (6px spread)</li>
+                  <li>• Industrial targeting aesthetic</li>
+                </ul>
+              </div>
+              <ViewActiveContractsButton
+                activeContracts={activeContracts}
+                maxContracts={maxContracts}
+                onClick={() => console.log('View contracts clicked')}
+                variant={1}
+                hoverVariant={4}
+              />
+            </div>
+          </div>
 
-// In the header section, replace:
-<div className="bg-black/60 mek-border-sharp-gold px-4 py-2">
-  <div className="mek-label-uppercase">Active Contracts</div>
-  <div className="text-xl font-bold text-yellow-400">6</div>
-</div>
-
-// With:
-<ViewActiveContractsButton
-  activeContracts={6}
-  maxContracts={14}
-  onClick={() => router.push('/contracts/active')}
-  variant={1} // or 2 or 3
-/>`}</code>
-          </pre>
+          {/* Hover Variant 5: Warning Stripes */}
+          <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-lg p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Hover Effect 5: Hazard Stripes</h3>
+                <p className="text-gray-400 mb-4">
+                  Diagonal yellow warning stripes overlay appears. Industrial hazard zone aesthetic.
+                </p>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• 45-degree warning stripes</li>
+                  <li>• Subtle overlay opacity</li>
+                  <li>• No square scaling</li>
+                  <li>• Industrial safety theme</li>
+                </ul>
+              </div>
+              <ViewActiveContractsButton
+                activeContracts={activeContracts}
+                maxContracts={maxContracts}
+                onClick={() => console.log('View contracts clicked')}
+                variant={1}
+                hoverVariant={5}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Design Notes */}
-        <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>All designs feature hover states, press animations, and dynamic color coding based on capacity.</p>
-          <p className="mt-2">Choose the variant that best matches your desired aesthetic and user experience.</p>
+        <div className="mt-12 text-center text-gray-500 text-sm">
+          <p>All hover effects use the same base layout: 5x10 grid (50 total slots)</p>
+          <p className="mt-2">Three-state coloring: Yellow = Active | Gray = Available | Dark Gray = Locked</p>
+          <p className="mt-2">Each hover effect provides different visual feedback without changing layout</p>
         </div>
       </div>
     </div>

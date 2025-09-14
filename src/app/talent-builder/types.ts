@@ -50,6 +50,7 @@ export type TalentNode = {
   passiveEffect?: string;
   // Story Mode fields
   storyNodeType?: 'normal' | 'event' | 'boss' | 'final_boss';
+  challenger?: boolean; // Higher rank mechanism that's tougher (for normal nodes)
   goldReward?: number;
   essenceRewards?: { type: string; amount: number }[];
   otherRewards?: { item: string; quantity: number }[]; // For event and boss nodes

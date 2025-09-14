@@ -12,6 +12,7 @@ interface NavCategory {
   items: {
     label: string;
     href: string;
+    onClick?: () => void;
   }[];
 }
 
@@ -96,7 +97,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Uni-Chips", href: "/uni-chips" },
       { label: "Chip Builder", href: "/admin/chip-builder" },
       { label: "Essence Donut", href: "/essence-donut" },
-      { label: "Dev Toolbar", href: "/dev-toolbar.html" },
+      { label: "Dev Toolbar", href: "/dev-toolbar.html", onClick: () => window.open("/dev-toolbar.html", "devToolbar") },
     ],
   },
 ];
@@ -273,9 +274,13 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
                       key={item.href}
                       href={item.href}
                       className="relative px-3 py-1.5 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-[0.65rem] font-medium uppercase tracking-wider rounded hover:from-gray-700 hover:to-gray-800 hover:border-gray-500 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,0,0,0.4)] transition-all text-center overflow-hidden group"
-                      onClick={() => {
+                      onClick={(e) => {
                         playClickSound();
                         setExpandedCategory(null);
+                        if (item.onClick) {
+                          e.preventDefault();
+                          item.onClick();
+                        }
                       }}
                     >
                       {/* Shimmer effect on hover */}

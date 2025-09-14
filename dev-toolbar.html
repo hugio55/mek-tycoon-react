@@ -242,6 +242,54 @@
             margin-bottom: 10px;
         }
         
+        .context-menu {
+            position: fixed;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+        }
+        
+        .context-menu.show {
+            display: block;
+        }
+        
+        .context-menu-item {
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .context-menu-item:hover {
+            background: rgba(250, 182, 23, 0.2);
+        }
+        
+        .context-menu-item.separator {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 4px 0;
+            padding: 0;
+            cursor: default;
+        }
+        
+        .context-menu-item:hover.separator {
+            background: none;
+        }
+        
+        .context-menu-icon {
+            width: 16px;
+            text-align: center;
+        }
+        
         .instructions {
             background: rgba(255, 255, 255, 0.05);
             padding: 15px;
@@ -270,13 +318,36 @@
         <ul>
             <li>Click "Edit Mode" to configure your buttons</li>
             <li>Add button names and URLs (e.g., http://localhost:3100)</li>
-            <li>Click any button to open/replace the current Chrome tab</li>
+            <li><strong>Left-click</strong> any button to open/replace the current Chrome tab</li>
+            <li><strong>Right-click</strong> any button for more options:
+                <ul style="margin-top: 5px; margin-left: 20px; font-size: 13px;">
+                    <li>Open in main tab (same as left-click)</li>
+                    <li>Open in new tab</li>
+                    <li>Open as floating button (small draggable window)</li>
+                </ul>
+            </li>
             <li>Your configuration is automatically saved</li>
             <li>To run as a desktop app: Save this file and double-click to open in Chrome</li>
         </ul>
     </div>
     
     <div class="status" id="status"></div>
+    
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="openInMainTab()">
+            <span class="context-menu-icon">🔗</span>
+            Open in Main Tab
+        </div>
+        <div class="context-menu-item" onclick="openInNewTab()">
+            <span class="context-menu-icon">🆕</span>
+            Open in New Tab
+        </div>
+        <div class="context-menu-item separator"></div>
+        <div class="context-menu-item" onclick="openAsFloatingButton()">
+            <span class="context-menu-icon">🎯</span>
+            Open as Floating Button
+        </div>
+    </div>
 
     <script>
         // Default buttons configuration - All pages from navigation
@@ -333,27 +404,44 @@
         
         let editMode = false;
         let chromeTab = null;
+        let currentContextButton = null;
         
         // Load saved configuration
         function loadConfig() {
-            const saved = localStorage.getItem('devToolbarButtons');
-            if (saved) {
-                try {
-                    const savedButtons = JSON.parse(saved);
-                    // Migrate old format if needed
-                    if (savedButtons.length > 0 && savedButtons[0].favorite === undefined) {
-                        savedButtons.forEach(btn => btn.favorite = false);
-                    }
-                    // Only use saved config if it has the favorite property
-                    if (savedButtons.length > 0 && savedButtons[0].hasOwnProperty('favorite')) {
-                        buttons = savedButtons;
-                    } else {
-                        // Clear old config and use new default
+            try {
+                const saved = localStorage.getItem('devToolbarButtons');
+                if (saved) {
+                    try {
+                        const savedButtons = JSON.parse(saved);
+                        // Validate saved buttons
+                        if (Array.isArray(savedButtons) && savedButtons.length > 0) {
+                            // Migrate old format if needed
+                            if (savedButtons[0].favorite === undefined) {
+                                savedButtons.forEach(btn => btn.favorite = false);
+                            }
+                            // Only use saved config if it has required properties
+                            if (savedButtons[0].hasOwnProperty('name') && savedButtons[0].hasOwnProperty('url')) {
+                                buttons = savedButtons;
+                                console.log('Loaded', buttons.length, 'buttons from storage');
+                            } else {
+                                // Clear invalid config
+                                localStorage.removeItem('devToolbarButtons');
+                                console.log('Cleared invalid config, using defaults');
+                            }
+                        } else {
+                            // Clear invalid config
+                            localStorage.removeItem('devToolbarButtons');
+                            console.log('Invalid config format, using defaults');
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse saved config:', e);
                         localStorage.removeItem('devToolbarButtons');
                     }
-                } catch (e) {
-                    console.error('Failed to load saved config:', e);
+                } else {
+                    console.log('No saved config, using defaults');
                 }
+            } catch (e) {
+                console.error('Failed to access localStorage:', e);
             }
         }
         
@@ -385,9 +473,14 @@
         // Render toolbar buttons
         function renderToolbar() {
             const toolbar = document.getElementById('toolbar');
+            if (!toolbar) {
+                console.error('Toolbar element not found!');
+                return;
+            }
             toolbar.innerHTML = '';
             
             const sortedButtons = getSortedButtons();
+            console.log('Rendering', sortedButtons.length, 'buttons');
             
             sortedButtons.forEach((button) => {
                 const originalIndex = buttons.indexOf(button);
@@ -402,6 +495,11 @@
                 
                 if (!editMode) {
                     btn.onclick = () => openInChrome(button.url, button.name);
+                    btn.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        showContextMenu(e, button);
+                        return false;
+                    };
                 }
                 
                 container.appendChild(btn);
@@ -418,7 +516,7 @@
             
             // If we don't have a reference to the Chrome tab, or it's closed, open a new one
             if (!chromeTab || chromeTab.closed) {
-                chromeTab = window.open(url, 'devToolbarTarget');
+                chromeTab = window.open(url, 'mainDevToolbarTarget');
                 showStatus(`Opened: ${name}`);
             } else {
                 // Replace the URL in the existing tab
@@ -516,15 +614,194 @@
             renderToolbar();
         }
         
-        // Initialize
-        loadConfig();
-        renderToolbar();
+        // Show context menu
+        function showContextMenu(event, button) {
+            currentContextButton = button;
+            const menu = document.getElementById('contextMenu');
+            
+            // Position the menu at cursor
+            menu.style.left = event.pageX + 'px';
+            menu.style.top = event.pageY + 'px';
+            
+            // Make sure menu doesn't go off screen
+            setTimeout(() => {
+                const rect = menu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+                }
+                if (rect.bottom > window.innerHeight) {
+                    menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+                }
+            }, 0);
+            
+            menu.classList.add('show');
+        }
+        
+        // Hide context menu
+        function hideContextMenu() {
+            const menu = document.getElementById('contextMenu');
+            menu.classList.remove('show');
+        }
+        
+        // Context menu actions
+        function openInMainTab() {
+            if (currentContextButton) {
+                openInChrome(currentContextButton.url, currentContextButton.name);
+            }
+            hideContextMenu();
+        }
+        
+        function openInNewTab() {
+            if (currentContextButton) {
+                window.open(currentContextButton.url, '_blank');
+                showStatus(`Opened in new tab: ${currentContextButton.name}`);
+            }
+            hideContextMenu();
+        }
+        
+        function openAsFloatingButton() {
+            if (currentContextButton) {
+                createFloatingButton(currentContextButton);
+            }
+            hideContextMenu();
+        }
+        
+        // Create floating button window
+        function createFloatingButton(button) {
+            const floatingHTML = '<!DOCTYPE html>' +
+                '<html>' +
+                '<head>' +
+                    '<title>' + button.name + '</title>' +
+                    '<style>' +
+                        '* {' +
+                            'margin: 0;' +
+                            'padding: 0;' +
+                            'box-sizing: border-box;' +
+                        '}' +
+                        'body {' +
+                            'background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);' +
+                            'display: flex;' +
+                            'justify-content: center;' +
+                            'align-items: center;' +
+                            'height: 100vh;' +
+                            'overflow: hidden;' +
+                            '-webkit-app-region: drag;' +
+                        '}' +
+                        '.floating-button {' +
+                            'padding: 20px 30px;' +
+                            'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);' +
+                            'border: none;' +
+                            'border-radius: 12px;' +
+                            'color: white;' +
+                            'font-size: 16px;' +
+                            'font-weight: 700;' +
+                            'cursor: pointer;' +
+                            'box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);' +
+                            'transition: all 0.3s ease;' +
+                            'text-align: center;' +
+                            '-webkit-app-region: no-drag;' +
+                            'font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;' +
+                            'min-width: 100px;' +
+                        '}' +
+                        '.floating-button:hover {' +
+                            'transform: scale(1.05);' +
+                            'box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);' +
+                        '}' +
+                        '.floating-button:active {' +
+                            'transform: scale(0.98);' +
+                        '}' +
+                        '.floating-button.favorite {' +
+                            'background: linear-gradient(135deg, #28a745 0%, #218838 100%);' +
+                        '}' +
+                        '.close-hint {' +
+                            'position: absolute;' +
+                            'top: 5px;' +
+                            'right: 5px;' +
+                            'color: rgba(255, 255, 255, 0.5);' +
+                            'font-size: 10px;' +
+                            'font-family: "Segoe UI", sans-serif;' +
+                            '-webkit-app-region: no-drag;' +
+                        '}' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<div class="close-hint">Alt+F4 to close</div>' +
+                    '<button class="floating-button ' + (button.favorite ? 'favorite' : '') + '" onclick="navigateTo(\'' + button.url.replace(/'/g, "\\'") + '\')">' +
+                        button.name +
+                    '</button>' +
+                    '<script>' +
+                        'let targetTab = null;' +
+                        'function navigateTo(url) {' +
+                            'if (!targetTab || targetTab.closed) {' +
+                                'targetTab = window.open(url, "mainDevToolbarTarget");' +
+                            '} else {' +
+                                'targetTab.location.href = url;' +
+                                'targetTab.focus();' +
+                            '}' +
+                        '}' +
+                        'document.addEventListener("DOMContentLoaded", () => {' +
+                            '// Window is draggable via CSS -webkit-app-region' +
+                        '});' +
+                    '</' + 'script>' +
+                '</body>' +
+                '</html>';
+            
+            // Create a blob URL for the HTML
+            const blob = new Blob([floatingHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            // Open as a small floating window
+            const width = Math.max(150, button.name.length * 10 + 60);
+            const height = 100;
+            const left = window.screen.width - width - 50;
+            const top = 50;
+            
+            // Use popup type for cleaner window (though Chrome may still show some UI)
+            const features = `popup=yes,width=${width},height=${height},left=${left},top=${top}`;
+            
+            const floatingWindow = window.open(url, `floating_${button.name.replace(/\s+/g, '_')}`, features);
+            
+            if (floatingWindow) {
+                showStatus(`Created floating button: ${button.name}`);
+                
+                // Clean up blob URL after window loads
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            }
+        }
+        
+        // Click outside to close context menu
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.context-menu')) {
+                hideContextMenu();
+            }
+        });
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM loaded, initializing toolbar...');
+                loadConfig();
+                renderToolbar();
+            });
+        } else {
+            // DOM is already loaded
+            console.log('Initializing toolbar...');
+            loadConfig();
+            renderToolbar();
+        }
         
         // Save config when page unloads
         window.addEventListener('beforeunload', () => {
             if (editMode) {
                 saveConfig();
             }
+        });
+        
+        // Add error handler
+        window.addEventListener('error', (e) => {
+            console.error('JavaScript error:', e);
         });
     </script>
 </body>

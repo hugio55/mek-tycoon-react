@@ -48,7 +48,26 @@ export default function MissionCard({ nodeData, onStartMission, simulateProgress
   const goldReward = (nodeData.index || 1) * (nodeData.storyNodeType === 'boss' ? 500 : 100);
   const xpReward = (nodeData.index || 1) * 50;
   const enemyPower = (nodeData.index || 1) * (nodeData.storyNodeType === 'boss' ? 150 : 50) + 100;
-  const mekImageId = String((parseInt(nodeData.id.split('-')[1]) * 137 % 1000) + 1).padStart(4, '0');
+  // Simplified image selection with small hardcoded list
+  const getNodeImage = (nodeId: string): string => {
+    // Sample of available .webp images from the directory
+    const availableImages = [
+      '000-000-000.webp', '111-111-111.webp', '222-222-222.webp', '333-333-333.webp',
+      'aa1-aa1-cd1.webp', 'aa1-ak1-bc2.webp', 'bc1-aa1-nm1.webp', 'dp1-aa1-fb1.webp',
+      'hb1-aa1-ap1.webp', 'ku1-ak1-ap1.webp', 'lz1-aa1-nm1.webp', 'ae1-ak1-bc1.webp'
+    ];
+    
+    // Use node ID to deterministically select an image
+    let hash = 0;
+    for (let i = 0; i < nodeId.length; i++) {
+      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    const index = Math.abs(hash) % availableImages.length;
+    return availableImages[index];
+  };
+
+  const mekImageName = getNodeImage(nodeData.id);
 
   return (
     <>
@@ -125,7 +144,7 @@ export default function MissionCard({ nodeData, onStartMission, simulateProgress
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-gray-700">
                     <Image
-                      src={`/mek-images/150px/mek${mekImageId}.png`}
+                      src={`/${mekImageName}`}
                       alt="Enemy Mek"
                       width={80}
                       height={80}
@@ -136,7 +155,7 @@ export default function MissionCard({ nodeData, onStartMission, simulateProgress
                     <p className="font-bold text-white text-sm">
                       {nodeData.storyNodeType === 'boss' ? 'Boss Mek Guardian' : 
                        nodeData.storyNodeType === 'final_boss' ? 'Final Boss Overlord' :
-                       `Mek Opponent #${mekImageId}`}
+                       `Mek Opponent #${mekImageName.replace('.webp', '')}`}
                     </p>
                     <div className="mt-2 space-y-1">
                       <div className="flex items-center justify-between text-sm">

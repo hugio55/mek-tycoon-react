@@ -157,6 +157,18 @@ export default function StoryTreeBuilder({
     }
   };
 
+  const toggleChallenger = () => {
+    if (selectedNode) {
+      const updatedNodes = nodes.map(node => {
+        if (node.id === selectedNode) {
+          return { ...node, challenger: !node.challenger };
+        }
+        return node;
+      });
+      onNodesChange(updatedNodes);
+    }
+  };
+
   return (
     <div className="relative h-full">
       {/* Toolbar */}
@@ -195,6 +207,18 @@ export default function StoryTreeBuilder({
                 </button>
               ))}
             </div>
+            {/* Challenger checkbox - only show for normal (mechanism) nodes */}
+            {nodes.find(n => n.id === selectedNode)?.storyNodeType === 'normal' && (
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nodes.find(n => n.id === selectedNode)?.challenger || false}
+                  onChange={toggleChallenger}
+                  className="w-4 h-4 rounded border-gray-600 bg-black/50 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                />
+                <span className="text-xs text-orange-400">Challenger</span>
+              </label>
+            )}
             <button
               onClick={deleteSelectedNode}
               className="w-full mt-2 px-2 py-1 bg-red-600/20 hover:bg-red-600/30 border border-red-600 rounded text-xs text-red-400"
@@ -285,13 +309,23 @@ export default function StoryTreeBuilder({
           const nodeType = nodeTypes.find(nt => nt.type === node.storyNodeType) || nodeTypes[0];
           const x = canvasWidth / 2 + node.x - 40;
           const y = canvasHeight - node.y - 40;
+          
+          // Determine color based on challenger status
+          let nodeColor = nodeType.color;
+          let borderColor = selectedNode === node.id ? 'border-yellow-400' : 'border-gray-600';
+          
+          // If it's a normal node and challenger, use orange color
+          if (node.storyNodeType === 'normal' && node.challenger) {
+            nodeColor = 'from-orange-500 to-orange-600';
+            borderColor = selectedNode === node.id ? 'border-yellow-400' : 'border-orange-500';
+          }
 
           return (
             <div
               key={node.id}
               className={`absolute w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center cursor-move select-none transition-all
-                bg-gradient-to-br ${nodeType.color}
-                ${selectedNode === node.id ? 'border-yellow-400 ring-4 ring-yellow-400/30' : 'border-gray-600'}
+                bg-gradient-to-br ${nodeColor}
+                ${selectedNode === node.id ? 'border-yellow-400 ring-4 ring-yellow-400/30' : borderColor}
                 ${draggingNode === node.id ? 'opacity-50' : ''}
                 hover:border-yellow-400/50
               `}
@@ -309,6 +343,11 @@ export default function StoryTreeBuilder({
               {node.id === 'start' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-green-500 rounded text-xs font-bold">
                   START
+                </div>
+              )}
+              {node.challenger && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-1 py-0.5 bg-orange-500 rounded text-xs font-bold text-black">
+                  ⚡
                 </div>
               )}
             </div>
