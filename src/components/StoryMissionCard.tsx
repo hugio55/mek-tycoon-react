@@ -36,10 +36,13 @@ interface StoryMissionCardProps {
   successChance?: number;
   deploymentFee?: number;
   onDeploy?: () => void;
+  onMekSlotClick?: (slotIndex: number) => void;
+  availableSlots?: number; // Number of available mek slots (1-8)
 
   // Styling
   scale?: number;
   style?: React.CSSProperties;
+  rewardBarStyle?: 1 | 2 | 3; // For different reward bar designs
 
   // State
   isLocked?: boolean;
@@ -72,8 +75,11 @@ export default function StoryMissionCard({
   successChance = 65,
   deploymentFee = 50000,
   onDeploy,
+  onMekSlotClick,
+  availableSlots = 8,
   scale = 1.0,
   style,
+  rewardBarStyle = 1,
   isLocked = false,
   isEmpty = false
 }: StoryMissionCardProps) {
@@ -148,9 +154,9 @@ export default function StoryMissionCard({
 
           {/* Hazard Stripe Header Bar */}
           <div className="relative h-12 bg-gradient-to-r from-black via-gray-900 to-black border-t-2 border-b-2 border-yellow-500/50 overflow-hidden">
-            {/* Diagonal hazard stripes */}
+            {/* Diagonal hazard stripes - darkened */}
             <div
-              className="absolute inset-0 opacity-30"
+              className="absolute inset-0 opacity-15"
               style={{
                 backgroundImage: `repeating-linear-gradient(
                   45deg,
@@ -168,29 +174,37 @@ export default function StoryMissionCard({
                 {mekName}
               </h2>
               <div className="text-sm text-gray-300">
-                Rank <span className="text-yellow-400 font-bold text-base">{mekRank}</span>
+                Rank <span className="text-yellow-400 font-bold text-lg">{mekRank}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Gold and XP Bar - Clean Industrial Style */}
-        <div className="relative bg-gradient-to-r from-amber-900/60 via-amber-800/40 to-amber-900/60 border-y-2 border-yellow-500/40 overflow-hidden">
-          {/* Content - Single unified bar */}
-          <div className="relative flex items-center justify-between px-6 py-3 h-14">
-            {/* Gold Reward */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-yellow-400">{formatGoldAmount(primaryReward)}</span>
-              <span className="text-xs font-semibold text-yellow-400/70 uppercase tracking-wide">Gold</span>
+        {/* Gold and XP Bar - Compact side-by-side */}
+        <div className="relative bg-black/90 border-y border-yellow-500/30 overflow-hidden">
+          {/* Content */}
+          <div className="relative flex items-center justify-center gap-8 py-3 h-12">
+            {/* Gold Section */}
+            <div className="flex items-center gap-1">
+              <span className="text-[22px] font-semibold text-yellow-400" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+                {formatGoldAmount(primaryReward)}
+              </span>
+              <span className="text-[11px] text-yellow-400/80" style={{ fontFamily: 'Segoe UI, sans-serif' }}>GOLD</span>
             </div>
 
-            {/* XP Reward */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-blue-400">+{formatGoldAmount(experience)}</span>
-              <span className="text-xs font-semibold text-blue-400/70 uppercase tracking-wide">XP</span>
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-600/50" />
+
+            {/* XP Section */}
+            <div className="flex items-center gap-1">
+              <span className="text-[22px] font-semibold text-blue-400" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+                +{formatGoldAmount(experience)}
+              </span>
+              <span className="text-[11px] text-blue-400/80" style={{ fontFamily: 'Segoe UI, sans-serif' }}>XP</span>
             </div>
           </div>
         </div>
+
 
         <div className="p-3 relative">
 
@@ -219,15 +233,15 @@ export default function StoryMissionCard({
           <div className="mb-4">
             <div className="mb-3">
               <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-              <div className="text-[10px] text-gray-400 mt-1">
+              <div className="text-xs text-gray-400 mt-1">
                 Match Mek traits to these variations for success bonuses
               </div>
             </div>
 
-            {/* Grid Layout for Variation Buffs - max 5 circular images */}
+            {/* Grid Layout for Variation Buffs - Dynamic sizing based on count */}
             <div className="flex justify-center">
-              <div className="grid grid-cols-5 gap-2 max-w-[400px]">
-                {variationBuffs.slice(0, 5).map((buff, index) => {
+              <div className={`grid ${variationBuffs.length <= 4 ? 'grid-cols-4' : 'grid-cols-4'} gap-3 max-w-[350px]`}>
+                {variationBuffs.map((buff, index) => {
                   // Map buff names to image paths
                   const buffImageMap: Record<string, string> = {
                     'TASER': '/variation-images/taser.png',
@@ -245,26 +259,27 @@ export default function StoryMissionCard({
                   const imagePath = buffImageMap[buff.name] || '/variation-images/default.png';
 
                   return (
-                    <div key={`${buff.id}-${index}`} className="relative">
-                      <div className="flex flex-col items-center">
-                        <div className="relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 border-gray-700 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400">
-                          <Image
-                            src={imagePath}
-                            alt={buff.name}
-                            fill
-                            className="object-cover opacity-80"
-                            style={{ imageRendering: 'crisp-edges' }}
-                          />
-                          {/* Dark overlay for better text visibility */}
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
-
-                          {/* Text overlay centered */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-[9px] text-gray-300 font-bold uppercase">{buff.name}</span>
-                            <span className="text-[11px] text-yellow-400 font-bold">{buff.bonus}</span>
-                          </div>
-                        </div>
+                    <div key={`${buff.id}-${index}`} className="flex flex-col items-center gap-1">
+                      {/* Circle with variation image - increased by ~4% */}
+                      <div className="relative w-[58px] h-[58px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50">
+                        <Image
+                          src={imagePath}
+                          alt={buff.name}
+                          fill
+                          className="object-cover"
+                          style={{ imageRendering: 'crisp-edges' }}
+                        />
                       </div>
+
+                      {/* Name below the circle */}
+                      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">
+                        {buff.name}
+                      </span>
+
+                      {/* Percentage buff below the name */}
+                      <span className="text-[11px] text-yellow-400 font-bold -mt-0.5">
+                        {buff.bonus}
+                      </span>
                     </div>
                   );
                 })}
@@ -274,15 +289,30 @@ export default function StoryMissionCard({
           
           {/* Mek Slots */}
           <div className="mb-4">
-            <div className="grid grid-cols-4 gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
-                <div key={slot} className="mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/30 bg-black/40 flex items-center justify-center cursor-pointer hover:border-yellow-500/60 transition-all">
-                  <div className="text-center">
-                    <div className="text-2xl text-gray-600">+</div>
-                    <div className="text-[8px] text-gray-600 uppercase">Empty</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => {
+                const isAvailable = slot <= availableSlots;
+                return (
+                  <div
+                    key={slot}
+                    className={`aspect-square p-2 border-2 flex items-center justify-center transition-all ${
+                      isAvailable
+                        ? 'mek-slot-empty border-dashed border-yellow-500/30 bg-black/40 cursor-pointer hover:border-yellow-500/60'
+                        : 'border-solid border-gray-800/30 bg-black/80 cursor-not-allowed opacity-30'
+                    }`}
+                    onClick={isAvailable && onMekSlotClick ? () => onMekSlotClick(slot - 1) : undefined}
+                  >
+                    <div className="text-center">
+                      <div className={`text-2xl ${isAvailable ? 'text-gray-600' : 'text-gray-800'}`}>
+                        {isAvailable ? '+' : '×'}
+                      </div>
+                      <div className={`text-[8px] uppercase ${isAvailable ? 'text-gray-600' : 'text-gray-800'}`}>
+                        {isAvailable ? 'Empty' : 'Locked'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

@@ -436,29 +436,6 @@ export default function MekTreeTablesPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-yellow-400">{currentTable.category}</h2>
-                    <div className="mt-1 text-sm text-gray-400">
-                      Total Active Contracts: <span className="text-yellow-400 font-bold">
-                        {(() => {
-                          // Calculate total based on category type
-                          const categoryLower = currentTable.category.toLowerCase();
-                          if (categoryLower.includes('scrap') || categoryLower.includes('loot')) {
-                            return '8,234';
-                          } else if (categoryLower.includes('rarity')) {
-                            return '12,450';
-                          } else if (categoryLower.includes('cooldown') || categoryLower.includes('timer')) {
-                            return '5,672';
-                          } else if (categoryLower.includes('xp')) {
-                            return '9,876';
-                          } else if (categoryLower.includes('glyph')) {
-                            return '3,250';
-                          } else if (categoryLower.includes('mek slot')) {
-                            return '4,500';
-                          } else {
-                            return '6,789';
-                          }
-                        })()}
-                      </span>
-                    </div>
                   </div>
 
                   <div className="flex gap-2">

@@ -47,6 +47,7 @@ export const seedAll = mutation({
       
       // Other buffs
       { name: "Mek Slots", description: "Additional Mek equipment slots", category: "mek_slot", unitType: "flat_number", applicationType: "attachable", tierStart: 1, tierEnd: 10, isActive: true },
+      { name: "Total Active Contracts", description: "Additional active contract slots for scrap yard missions", category: "mek_slot", unitType: "flat_number", applicationType: "universal", tierStart: 1, tierEnd: 10, isActive: true },
     ];
 
     // First check if categories already exist to avoid duplicates
