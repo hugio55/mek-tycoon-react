@@ -36,6 +36,7 @@ export const create = mutation({
     tierStart: v.optional(v.number()),
     tierEnd: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
+    enabledForUniversalChips: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Validate tier range if provided
@@ -57,6 +58,7 @@ export const create = mutation({
       tierStart: args.tierStart,
       tierEnd: args.tierEnd,
       isActive: args.isActive !== false,
+      enabledForUniversalChips: args.enabledForUniversalChips !== false, // Default to true
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -91,6 +93,7 @@ export const update = mutation({
     tierStart: v.optional(v.number()),
     tierEnd: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
+    enabledForUniversalChips: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -122,6 +125,24 @@ export const remove = mutation({
   },
 });
 
+// Toggle universal chip enabled status
+export const toggleUniversalChipEnabled = mutation({
+  args: {
+    id: v.id("buffCategories"),
+  },
+  handler: async (ctx, args) => {
+    const category = await ctx.db.get(args.id);
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    return await ctx.db.patch(args.id, {
+      enabledForUniversalChips: !category.enabledForUniversalChips,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
 // Clear all buff categories
 export const clearAll = mutation({
   args: {},
@@ -131,6 +152,39 @@ export const clearAll = mutation({
       await ctx.db.delete(category._id);
     }
     return { deleted: allCategories.length };
+  },
+});
+
+// Set default enabled status for universal chips
+export const setDefaultEnabledStatus = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const categories = await ctx.db.query("buffCategories").collect();
+
+    // Categories that should be disabled for universal chips (one-time effects)
+    const disabledForChips = [
+      "Gold Flat", // One-time gold reward
+      "Flat Rewards of Essence", // One-time essence reward
+    ];
+
+    let updatedCount = 0;
+    for (const cat of categories) {
+      // Set enabledForUniversalChips if not already set
+      if (cat.enabledForUniversalChips === undefined) {
+        const shouldDisable = disabledForChips.includes(cat.name);
+        await ctx.db.patch(cat._id, {
+          enabledForUniversalChips: !shouldDisable,
+          updatedAt: Date.now(),
+        });
+        updatedCount++;
+      }
+    }
+
+    return {
+      success: true,
+      updatedCount,
+      message: `Updated ${updatedCount} categories with default enabled status`
+    };
   },
 });
 

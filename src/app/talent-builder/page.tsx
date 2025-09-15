@@ -912,25 +912,37 @@ export default function TalentBuilderPage() {
 
   const findDisconnectedAndDeadEndNodes = () => {
     const connectedNodes = new Set<string>();
-    const hasUpwardConnection = new Set<string>();
+    const nodeConnections = new Map<string, Set<string>>();
 
-    // Build connection maps
+    // Build a map of all connections for each node
     connections.forEach(conn => {
       connectedNodes.add(conn.from);
       connectedNodes.add(conn.to);
 
-      // Track nodes that have upward connections (lower y means up in canvas)
-      const fromNode = nodes.find(n => n.id === conn.from);
-      const toNode = nodes.find(n => n.id === conn.to);
+      // Track bidirectional connections
+      if (!nodeConnections.has(conn.from)) {
+        nodeConnections.set(conn.from, new Set());
+      }
+      if (!nodeConnections.has(conn.to)) {
+        nodeConnections.set(conn.to, new Set());
+      }
+      nodeConnections.get(conn.from)!.add(conn.to);
+      nodeConnections.get(conn.to)!.add(conn.from);
+    });
 
-      if (fromNode && toNode) {
-        // If 'from' connects to a node with lower y (upward), mark it as having upward connection
-        if (toNode.y < fromNode.y) {
-          hasUpwardConnection.add(conn.from);
-        }
-        // If 'to' connects to a node with lower y (upward), mark it as having upward connection
-        if (fromNode.y < toNode.y) {
-          hasUpwardConnection.add(conn.to);
+    // Find nodes that have upward connections
+    const hasUpwardConnection = new Set<string>();
+
+    nodes.forEach(node => {
+      const connections = nodeConnections.get(node.id);
+      if (connections) {
+        // Check if any connected node has a lower y value (is above this node)
+        for (const connectedId of connections) {
+          const connectedNode = nodes.find(n => n.id === connectedId);
+          if (connectedNode && connectedNode.y < node.y - 10) { // Small tolerance for alignment
+            hasUpwardConnection.add(node.id);
+            break;
+          }
         }
       }
     });
@@ -939,6 +951,9 @@ export default function TalentBuilderPage() {
     const unconnected = new Set<string>();
     const deadEnds = new Set<string>();
 
+    // Find the topmost nodes (lowest y values)
+    const minY = Math.min(...nodes.map(n => n.y));
+
     nodes.forEach(node => {
       // Check if node has no connections at all
       if (!connectedNodes.has(node.id)) {
@@ -946,8 +961,8 @@ export default function TalentBuilderPage() {
       }
       // Check if node is connected but has no upward path (dead-end)
       else if (!hasUpwardConnection.has(node.id)) {
-        // Exception: Don't mark as dead-end if it's at the very top (lowest y value)
-        const isTopNode = !nodes.some(n => n.y < node.y - 50); // Allow some tolerance
+        // Exception: Don't mark as dead-end if it's at the very top
+        const isTopNode = Math.abs(node.y - minY) < 100; // Allow 100px tolerance for top nodes
         if (!isTopNode) {
           deadEnds.add(node.id);
         }

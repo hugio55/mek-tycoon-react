@@ -53,6 +53,10 @@ export const createOrUpdate = mutation({
       lastGoldCollection: Date.now(),
       pendingGold: 0,
       craftingSlots: 1, // Start with 1 slot
+      // Base slot values
+      baseContractSlots: 2,        // Can run 2 contracts at once to start
+      baseChipSlots: 3,            // 3 chips per Mek
+      inventoryTabsUnlocked: 1,    // Start with 1 tab (20 slots)
       level: 1,
       experience: 0,
       lastLogin: Date.now(),
@@ -113,6 +117,10 @@ export const getOrCreateUser = mutation({
       lastGoldCollection: Date.now(),
       pendingGold: 0,
       craftingSlots: 1, // Start with 1 slot
+      // Base slot values
+      baseContractSlots: 2,        // Can run 2 contracts at once to start
+      baseChipSlots: 3,            // 3 chips per Mek
+      inventoryTabsUnlocked: 1,    // Start with 1 tab (20 slots)
       level: 1,
       experience: 0,
       lastLogin: Date.now(),

@@ -8,14 +8,16 @@ interface ViewActiveContractsButtonEnhancedProps {
   onClick?: () => void;
   variant?: "plasma" | "holographic" | "quantum" | "holographic-yellow" | "quantum-yellow" | "holographic-yellow-active" | "quantum-yellow-active";
   buttonText?: string;
+  isActive?: boolean;
 }
 
-export default function ViewActiveContractsButtonEnhanced({ 
-  activeContracts = 5, 
-  maxContracts = 14, 
+export default function ViewActiveContractsButtonEnhanced({
+  activeContracts = 5,
+  maxContracts = 14,
   onClick,
   variant = "plasma",
-  buttonText
+  buttonText,
+  isActive = true
 }: ViewActiveContractsButtonEnhancedProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -147,9 +149,9 @@ export default function ViewActiveContractsButtonEnhanced({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Add new particles
-      const isAlwaysActive = variant === 'holographic-yellow-active' || variant === 'quantum-yellow-active';
+      const isAlwaysActive = (variant === 'holographic-yellow-active' || variant === 'quantum-yellow-active') && isActive;
       const particleSpeed = isHovered && isAlwaysActive ? 0.48 : isAlwaysActive ? 0.1125 : 0.3; // 62.5% slower base rate (was 0.225), 20% faster on hover (was 0.4)
-      
+
       if (isHovered || particlesRef.current.length > 0 || isAlwaysActive) {
         if ((isHovered || isAlwaysActive) && Math.random() < particleSpeed) {
           const x = Math.random() * canvas.width;
@@ -176,7 +178,7 @@ export default function ViewActiveContractsButtonEnhanced({
       }
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, [isHovered, variant]);
+  }, [isHovered, variant, isActive]);
 
   // Calculate fill percentage
   const fillPercentage = (activeContracts / maxContracts) * 100;
@@ -1066,59 +1068,73 @@ export default function ViewActiveContractsButtonEnhanced({
         className={`
           relative group overflow-hidden
           ${isPressed ? 'scale-95' : ''}
-          transition-transform duration-100
+          transition-all duration-300
+          ${!isActive ? 'grayscale opacity-60' : ''}
         `}
       >
         <div className="relative">
           <div className={`
-            relative bg-gradient-to-br from-gray-900/90 via-amber-950/90 to-black/90
+            relative bg-gradient-to-br
+            ${isActive
+              ? 'from-gray-900/90 via-amber-950/90 to-black/90'
+              : 'from-gray-900/90 via-gray-800/90 to-black/90'
+            }
             backdrop-blur-md
             border-2 transition-all duration-300
-            ${isHovered 
-              ? 'border-yellow-300 shadow-[0_0_50px_rgba(252,211,77,0.6)]' 
-              : 'border-yellow-400 shadow-[0_0_40px_rgba(250,182,23,0.5)]'
+            ${isActive
+              ? isHovered
+                ? 'border-yellow-300 shadow-[0_0_50px_rgba(252,211,77,0.6)]'
+                : 'border-yellow-400 shadow-[0_0_40px_rgba(250,182,23,0.5)]'
+              : 'border-gray-600 shadow-[0_0_10px_rgba(156,163,175,0.2)]'
             }
             px-8 py-6
           `}>
-            {/* Holographic grid background - always visible */}
-            <div 
+            {/* Holographic grid background - dimmed when inactive */}
+            <div
               className="absolute inset-0 opacity-20"
               style={{
-                backgroundImage: `linear-gradient(0deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent),
-                  linear-gradient(90deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent)`,
+                backgroundImage: isActive
+                  ? `linear-gradient(0deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent),
+                    linear-gradient(90deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent)`
+                  : `linear-gradient(0deg, transparent 24%, rgba(156,163,175,0.03) 25%, rgba(156,163,175,0.03) 26%, transparent 27%, transparent 74%, rgba(156,163,175,0.03) 75%, rgba(156,163,175,0.03) 76%, transparent 77%, transparent),
+                    linear-gradient(90deg, transparent 24%, rgba(156,163,175,0.03) 25%, rgba(156,163,175,0.03) 26%, transparent 27%, transparent 74%, rgba(156,163,175,0.03) 75%, rgba(156,163,175,0.03) 76%, transparent 77%, transparent)`,
                 backgroundSize: '20px 20px',
-                animation: `holo-grid ${isHovered ? '7.5s' : '10s'} linear infinite`
+                animation: isActive ? `holo-grid ${isHovered ? '7.5s' : '10s'} linear infinite` : 'none'
               }}
             />
 
-            {/* Data stream effect - always active, faster on hover */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {Array.from({ length: 5 }, (_, i) => (
-                <div
-                  key={i}
-                  className="absolute top-0 w-px bg-gradient-to-b from-transparent via-yellow-400 to-transparent h-full opacity-50"
-                  style={{
-                    left: `${20 * (i + 1)}%`,
-                    animation: `data-stream ${isHovered ? (1.5 + i * 0.375) : (2 + i * 0.5)}s linear infinite ${i * 0.2}s`
-                  }}
-                />
-              ))}
-            </div>
+            {/* Data stream effect - stopped when inactive */}
+            {isActive && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-0 w-px bg-gradient-to-b from-transparent via-yellow-400 to-transparent h-full opacity-50"
+                    style={{
+                      left: `${20 * (i + 1)}%`,
+                      animation: `data-stream ${isHovered ? (1.5 + i * 0.375) : (2 + i * 0.5)}s linear infinite ${i * 0.2}s`
+                    }}
+                  />
+                ))}
+              </div>
+            )}
 
-            {/* Holographic shimmer - always visible, brighter on hover */}
-            <div 
-              className={`absolute inset-0 pointer-events-none transition-opacity duration-500`}
-              style={{
-                opacity: isHovered ? 1 : 0.7,
-                background: `linear-gradient(105deg, 
-                  transparent 30%, 
-                  rgba(250,182,23,0.2) 40%,
-                  rgba(251,191,36,0.2) 50%,
-                  rgba(250,182,23,0.2) 60%,
-                  transparent 70%)`,
-                animation: `holo-shimmer ${isHovered ? '2.25s' : '3s'} ease-in-out infinite`
-              }}
-            />
+            {/* Holographic shimmer - hidden when inactive */}
+            {isActive && (
+              <div
+                className={`absolute inset-0 pointer-events-none transition-opacity duration-500`}
+                style={{
+                  opacity: isHovered ? 1 : 0.7,
+                  background: `linear-gradient(105deg,
+                    transparent 30%,
+                    rgba(250,182,23,0.2) 40%,
+                    rgba(251,191,36,0.2) 50%,
+                    rgba(250,182,23,0.2) 60%,
+                    transparent 70%)`,
+                  animation: `holo-shimmer ${isHovered ? '2.25s' : '3s'} ease-in-out infinite`
+                }}
+              />
+            )}
 
             {/* Particle canvas - always active */}
             <canvas 
@@ -1129,68 +1145,74 @@ export default function ViewActiveContractsButtonEnhanced({
 
             {/* Content - Simplified single word */}
             <div className="relative z-10 flex items-center justify-center">
-              <span 
-                className="text-4xl font-bold text-yellow-400 uppercase" 
-                style={{ 
+              <span
+                className={`text-4xl font-bold uppercase ${
+                  isActive ? 'text-yellow-400' : 'text-gray-500'
+                }`}
+                style={{
                   fontFamily: 'Orbitron, monospace',
                   letterSpacing: '0.2em',
-                  filter: isHovered 
-                    ? 'drop-shadow(0 0 25px rgba(252,211,77,0.9)) brightness(1.1)' 
-                    : 'drop-shadow(0 0 20px rgba(250,182,23,0.8))',
-                  textShadow: isHovered
-                    ? '0 0 30px rgba(252,211,77,0.9), 0 0 60px rgba(252,211,77,0.5)'
-                    : '0 0 20px rgba(250,182,23,0.8), 0 0 40px rgba(250,182,23,0.4)'
+                  filter: isActive
+                    ? isHovered
+                      ? 'drop-shadow(0 0 25px rgba(252,211,77,0.9)) brightness(1.1)'
+                      : 'drop-shadow(0 0 20px rgba(250,182,23,0.8))'
+                    : 'none',
+                  textShadow: isActive
+                    ? isHovered
+                      ? '0 0 30px rgba(252,211,77,0.9), 0 0 60px rgba(252,211,77,0.5)'
+                      : '0 0 20px rgba(250,182,23,0.8), 0 0 40px rgba(250,182,23,0.4)'
+                    : 'none'
                 }}
               >
                 {buttonText || 'SUBMIT'}
               </span>
             </div>
 
-            {/* Holographic frame corners - always glowing */}
+            {/* Holographic frame corners - grey when inactive */}
             <svg className="absolute top-0 left-0 w-8 h-8" viewBox="0 0 32 32">
-              <path 
-                d="M0 8 L0 0 L8 0" 
-                stroke={isHovered ? "#fcd34d" : "#fab617"} 
-                strokeWidth="2" 
+              <path
+                d="M0 8 L0 0 L8 0"
+                stroke={isActive ? (isHovered ? "#fcd34d" : "#fab617") : "#6b7280"}
+                strokeWidth="2"
                 fill="none"
                 style={{
-                  filter: `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})`,
+                  filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})` : 'none',
                   transition: 'all 0.3s ease'
                 }}
               />
             </svg>
             <svg className="absolute top-0 right-0 w-8 h-8" viewBox="0 0 32 32">
-              <path 
-                d="M24 0 L32 0 L32 8" 
-                stroke={isHovered ? "#fcd34d" : "#fab617"} 
-                strokeWidth="2" 
+              <path
+                d="M24 0 L32 0 L32 8"
+                stroke={isActive ? (isHovered ? "#fcd34d" : "#fab617") : "#6b7280"}
+                strokeWidth="2"
                 fill="none"
                 style={{
-                  filter: `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})`,
+                  filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})` : 'none',
                   transition: 'all 0.3s ease'
                 }}
               />
             </svg>
             <svg className="absolute bottom-0 left-0 w-8 h-8" viewBox="0 0 32 32">
-              <path 
-                d="M0 24 L0 32 L8 32" 
-                stroke={isHovered ? "#fcd34d" : "#fab617"} 
-                strokeWidth="2" 
+              <path
+                d="M0 24 L0 32 L8 32"
+                stroke={isActive ? (isHovered ? "#fcd34d" : "#fab617") : "#6b7280"}
+                strokeWidth="2"
                 fill="none"
                 style={{
-                  filter: `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})`,
+                  filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})` : 'none',
                   transition: 'all 0.3s ease'
                 }}
               />
             </svg>
             <svg className="absolute bottom-0 right-0 w-8 h-8" viewBox="0 0 32 32">
-              <path 
-                d="M24 32 L32 32 L32 24" 
-                stroke={isHovered ? "#fcd34d" : "#fab617"} 
-                strokeWidth="2" 
+              <path
+                d="M24 32 L32 32 L32 24"
+                stroke={isActive ? (isHovered ? "#fcd34d" : "#fab617") : "#6b7280"}
+                strokeWidth="2"
                 fill="none"
                 style={{
-                  filter: `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})`,
+                  filter: isActive ? `drop-shadow(0 0 ${isHovered ? '8px' : '5px'} ${isHovered ? '#fcd34d' : '#fab617'})` : 'none',
                   transition: 'all 0.3s ease'
                 }}
               />
@@ -1361,48 +1383,63 @@ export default function ViewActiveContractsButtonEnhanced({
         className={`
           relative group overflow-hidden
           ${isPressed ? 'scale-95' : ''}
-          transition-transform duration-100
+          transition-all duration-300
+          ${!isActive ? 'grayscale opacity-60' : ''}
         `}
       >
         <div className="relative">
           <div className={`
-            relative bg-gradient-to-br from-amber-950/90 via-black/90 to-yellow-950/90
+            relative bg-gradient-to-br
+            ${isActive
+              ? 'from-amber-950/90 via-black/90 to-yellow-950/90'
+              : 'from-gray-900/90 via-black/90 to-gray-800/90'
+            }
             backdrop-blur-lg
             border-2 transition-all duration-300
-            ${isHovered 
-              ? 'border-yellow-300 shadow-[0_0_60px_rgba(252,211,77,0.6)]' 
-              : 'border-yellow-400 shadow-[0_0_50px_rgba(250,182,23,0.5)]'
+            ${isActive
+              ? isHovered
+                ? 'border-yellow-300 shadow-[0_0_60px_rgba(252,211,77,0.6)]'
+                : 'border-yellow-400 shadow-[0_0_50px_rgba(250,182,23,0.5)]'
+              : 'border-gray-600 shadow-[0_0_10px_rgba(156,163,175,0.2)]'
             }
             px-8 py-6
           `}>
-            {/* Quantum distortion field - always active */}
-            <div 
+            {/* Quantum distortion field - inactive aware */}
+            <div
               className="absolute inset-0"
               style={{
-                background: `radial-gradient(circle at 50% 50%, 
-                  rgba(250,182,23,0.2) 0%, 
-                  transparent 60%)`,
+                background: isActive
+                  ? `radial-gradient(circle at 50% 50%,
+                    rgba(250,182,23,0.2) 0%,
+                    transparent 60%)`
+                  : `radial-gradient(circle at 50% 50%,
+                    rgba(156,163,175,0.1) 0%,
+                    transparent 60%)`,
                 filter: 'blur(0px)',
-                animation: `quantum-warp ${isHovered ? '3s' : '6s'} ease-in-out infinite`,
+                animation: isActive ? `quantum-warp ${isHovered ? '3s' : '6s'} ease-in-out infinite` : 'none',
                 transition: 'all 0.5s ease'
               }}
             />
 
-            {/* Reality distortion waves - always active, much slower idle, faster on hover */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: 'conic-gradient(from 0deg, transparent, rgba(250,182,23,0.1), transparent, rgba(251,191,36,0.1), transparent)',
-                animation: `quantum-spin ${isHovered ? '2.25s' : '5s'} linear infinite`
-              }}
-            />
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: 'conic-gradient(from 180deg, transparent, rgba(245,158,11,0.1), transparent, rgba(250,182,23,0.1), transparent)',
-                animation: `quantum-spin ${isHovered ? '3s' : '6s'} linear infinite reverse`
-              }}
-            />
+            {/* Reality distortion waves - stopped when inactive */}
+            {isActive && (
+              <>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent, rgba(250,182,23,0.1), transparent, rgba(251,191,36,0.1), transparent)',
+                    animation: `quantum-spin ${isHovered ? '2.25s' : '5s'} linear infinite`
+                  }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'conic-gradient(from 180deg, transparent, rgba(245,158,11,0.1), transparent, rgba(250,182,23,0.1), transparent)',
+                    animation: `quantum-spin ${isHovered ? '3s' : '6s'} linear infinite reverse`
+                  }}
+                />
+              </>
+            )}
 
             {/* Particle canvas for quantum particles - always active */}
             <canvas 
@@ -1415,48 +1452,58 @@ export default function ViewActiveContractsButtonEnhanced({
               }}
             />
 
-            {/* Quantum interference pattern - always visible, brighter on hover */}
-            <div 
-              className={`absolute inset-0 pointer-events-none transition-opacity duration-500`}
-              style={{
-                opacity: isHovered ? 0.4 : 0.3,
-                backgroundImage: `repeating-linear-gradient(
-                  45deg,
-                  transparent,
-                  transparent 10px,
-                  rgba(250,182,23,0.1) 10px,
-                  rgba(250,182,23,0.1) 20px
-                ), repeating-linear-gradient(
-                  -45deg,
-                  transparent,
-                  transparent 10px,
-                  rgba(245,158,11,0.1) 10px,
-                  rgba(245,158,11,0.1) 20px
-                )`,
-                animation: `quantum-interference ${isHovered ? '1.5s' : '3.5s'} linear infinite`
-              }}
-            />
+            {/* Quantum interference pattern - hidden when inactive */}
+            {isActive && (
+              <div
+                className={`absolute inset-0 pointer-events-none transition-opacity duration-500`}
+                style={{
+                  opacity: isHovered ? 0.4 : 0.3,
+                  backgroundImage: `repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(250,182,23,0.1) 10px,
+                    rgba(250,182,23,0.1) 20px
+                  ), repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(245,158,11,0.1) 10px,
+                    rgba(245,158,11,0.1) 20px
+                  )`,
+                  animation: `quantum-interference ${isHovered ? '1.5s' : '3.5s'} linear infinite`
+                }}
+              />
+            )}
 
             {/* Content - Simplified single word */}
             <div className="relative z-10 flex items-center justify-center">
               <div className="relative">
-                {/* Quantum glow effect - always active */}
-                <div className="absolute -inset-3 bg-gradient-to-r from-yellow-500/30 via-amber-500/30 to-yellow-500/30 blur-xl" 
+                {/* Quantum glow effect - dimmed when inactive */}
+                {isActive && (
+                  <div className="absolute -inset-3 bg-gradient-to-r from-yellow-500/30 via-amber-500/30 to-yellow-500/30 blur-xl"
+                    style={{
+                      animation: `quantum-breathe ${isHovered ? '1.5s' : '3.5s'} ease-in-out infinite`,
+                      opacity: isHovered ? 1 : 0.8
+                    }}
+                  />
+                )}
+
+                <span
+                  className={`relative text-4xl font-bold uppercase ${
+                    isActive
+                      ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent'
+                      : 'text-gray-500'
+                  }`}
                   style={{
-                    animation: `quantum-breathe ${isHovered ? '1.5s' : '3.5s'} ease-in-out infinite`,
-                    opacity: isHovered ? 1 : 0.8
-                  }}
-                />
-                
-                <span 
-                  className="relative text-4xl font-bold bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent uppercase" 
-                  style={{ 
                     fontFamily: 'Orbitron, monospace',
                     letterSpacing: '0.2em',
-                    filter: isHovered 
-                      ? 'drop-shadow(0 0 30px rgba(252,211,77,1)) brightness(1.15)' 
-                      : 'drop-shadow(0 0 25px rgba(250,182,23,0.9))',
-                    animation: `quantum-glitch ${isHovered ? '1.5s' : '4s'} steps(3) infinite`
+                    filter: isActive
+                      ? isHovered
+                        ? 'drop-shadow(0 0 30px rgba(252,211,77,1)) brightness(1.15)'
+                        : 'drop-shadow(0 0 25px rgba(250,182,23,0.9))'
+                      : 'none',
+                    animation: isActive ? `quantum-glitch ${isHovered ? '1.5s' : '4s'} steps(3) infinite` : 'none'
                   }}
                 >
                   {buttonText || 'DEPLOY'}
@@ -1464,30 +1511,46 @@ export default function ViewActiveContractsButtonEnhanced({
               </div>
             </div>
 
-            {/* Quantum field distortion corners - always pulsing */}
+            {/* Quantum field distortion corners - grey when inactive */}
             <div className={`absolute -top-1 -left-1 w-6 h-6 transition-all duration-500 opacity-100`}>
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md animate-pulse" 
-                style={{ animationDuration: isHovered ? '0.75s' : '2s' }} />
-              <div className="absolute inset-1 bg-amber-500 rounded-full" 
-                style={{ filter: isHovered ? 'brightness(1.2)' : 'none' }} />
+              <div className={`absolute inset-0 rounded-full blur-md ${
+                isActive ? 'bg-yellow-400 animate-pulse' : 'bg-gray-500'
+              }`}
+                style={{ animationDuration: isActive ? (isHovered ? '0.75s' : '2s') : '0s' }} />
+              <div className={`absolute inset-1 rounded-full ${
+                isActive ? 'bg-amber-500' : 'bg-gray-600'
+              }`}
+                style={{ filter: isActive && isHovered ? 'brightness(1.2)' : 'none' }} />
             </div>
             <div className={`absolute -top-1 -right-1 w-6 h-6 transition-all duration-500 opacity-100`}>
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md animate-pulse" 
-                style={{ animationDuration: isHovered ? '0.75s' : '2s', animationDelay: '0.5s' }} />
-              <div className="absolute inset-1 bg-amber-500 rounded-full" 
-                style={{ filter: isHovered ? 'brightness(1.2)' : 'none' }} />
+              <div className={`absolute inset-0 rounded-full blur-md ${
+                isActive ? 'bg-yellow-400 animate-pulse' : 'bg-gray-500'
+              }`}
+                style={{ animationDuration: isActive ? (isHovered ? '0.75s' : '2s') : '0s', animationDelay: isActive ? '0.5s' : '0s' }} />
+              <div className={`absolute inset-1 rounded-full ${
+                isActive ? 'bg-amber-500' : 'bg-gray-600'
+              }`}
+                style={{ filter: isActive && isHovered ? 'brightness(1.2)' : 'none' }} />
             </div>
             <div className={`absolute -bottom-1 -left-1 w-6 h-6 transition-all duration-500 opacity-100`}>
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md animate-pulse" 
-                style={{ animationDuration: isHovered ? '0.75s' : '2s', animationDelay: '1s' }} />
-              <div className="absolute inset-1 bg-amber-500 rounded-full" 
-                style={{ filter: isHovered ? 'brightness(1.2)' : 'none' }} />
+              <div className={`absolute inset-0 rounded-full blur-md ${
+                isActive ? 'bg-yellow-400 animate-pulse' : 'bg-gray-500'
+              }`}
+                style={{ animationDuration: isActive ? (isHovered ? '0.75s' : '2s') : '0s', animationDelay: isActive ? '1s' : '0s' }} />
+              <div className={`absolute inset-1 rounded-full ${
+                isActive ? 'bg-amber-500' : 'bg-gray-600'
+              }`}
+                style={{ filter: isActive && isHovered ? 'brightness(1.2)' : 'none' }} />
             </div>
             <div className={`absolute -bottom-1 -right-1 w-6 h-6 transition-all duration-500 opacity-100`}>
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md animate-pulse" 
-                style={{ animationDuration: isHovered ? '0.75s' : '2s', animationDelay: '1.5s' }} />
-              <div className="absolute inset-1 bg-amber-500 rounded-full" 
-                style={{ filter: isHovered ? 'brightness(1.2)' : 'none' }} />
+              <div className={`absolute inset-0 rounded-full blur-md ${
+                isActive ? 'bg-yellow-400 animate-pulse' : 'bg-gray-500'
+              }`}
+                style={{ animationDuration: isActive ? (isHovered ? '0.75s' : '2s') : '0s', animationDelay: isActive ? '1.5s' : '0s' }} />
+              <div className={`absolute inset-1 rounded-full ${
+                isActive ? 'bg-amber-500' : 'bg-gray-600'
+              }`}
+                style={{ filter: isActive && isHovered ? 'brightness(1.2)' : 'none' }} />
             </div>
           </div>
         </div>

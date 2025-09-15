@@ -74,14 +74,14 @@ export default function ShopWoWPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Get marketplace listings
-  const listings = useQuery(
-    api.marketplace.getActiveListings,
-    { 
-      itemType: selectedCategory === "all" ? undefined : selectedCategory,
-      searchTerm: searchTerm || undefined,
-    }
-  );
+  // Get marketplace listings - PAUSED TO SAVE BANDWIDTH
+  const listings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   {
+  //     itemType: selectedCategory === "all" ? undefined : selectedCategory,
+  //     searchTerm: searchTerm || undefined,
+  //   }
+  // );
   
   // Get user's own listings
   const myListings = useQuery(

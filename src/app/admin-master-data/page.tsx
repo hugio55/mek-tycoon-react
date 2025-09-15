@@ -4,27 +4,28 @@ import { useState, useEffect } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
+import GameDataLightbox from '@/components/GameDataLightbox';
+import StoryClimbConfig from '@/components/StoryClimbConfig';
 
 // Data system definitions
 const DATA_SYSTEMS = [
   { id: 'mek-talent-tree', name: 'Mek Talent Tree Nodes', icon: '🌳', implemented: false },
   { id: 'mech-power-chips', name: 'Mech Power Chips', icon: '⚡', implemented: false },
   { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: true },
-  { id: 'events', name: 'Events System', icon: '📅', implemented: false },
-  { id: 'bosses', name: 'Bosses', icon: '👹', implemented: false },
-  { id: 'final-bosses', name: 'Final Bosses', icon: '🐉', implemented: false },
-  { id: 'story-mechanisms', name: 'Story Mode Mechanisms', icon: '⚙️', implemented: false },
+  { id: 'story-climb-mechanics', name: 'Story Climb Mechanics', icon: '🏔️', implemented: false },
   { id: 'daily-recipes', name: 'Daily Recipes (Universal Chips)', icon: '📖', implemented: false },
   { id: 'salvage-materials', name: 'Salvage Materials', icon: '🔧', implemented: false },
   { id: 'circuitry-costs', name: 'Circuitry Crafting Costs', icon: '💰', implemented: false },
   { id: 'mech-chip-recipes', name: 'Mech Chip Crafting Recipes', icon: '🔨', implemented: false },
-  { id: 'single-missions', name: 'Single Missions Formulation', icon: '🎯', implemented: false }
+  { id: 'single-missions', name: 'Single Missions Formulation', icon: '🎯', implemented: false },
+  { id: 'global-game-data', name: 'Global Game Data', icon: '🌐', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
   const convex = useConvex();
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
   
   // Master Range Controls
   const [globalMultiplier, setGlobalMultiplier] = useState(1);
@@ -84,7 +85,13 @@ export default function AdminMasterDataPage() {
             {DATA_SYSTEMS.map((system) => (
               <button
                 key={system.id}
-                onClick={() => setActiveSystem(system.id)}
+                onClick={() => {
+                  if (system.id === 'global-game-data') {
+                    setShowGameDataLightbox(true);
+                  } else {
+                    setActiveSystem(system.id);
+                  }
+                }}
                 className={`
                   relative p-4 rounded-lg border-2 transition-all
                   ${system.implemented 
@@ -232,90 +239,25 @@ export default function AdminMasterDataPage() {
             )}
           </div>
 
-          {/* Events System */}
+          {/* Story Climb Mechanics */}
           <div className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
             <button
-              onClick={() => toggleSection('events')}
+              onClick={() => toggleSection('story-climb-mechanics')}
               className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">📅</span>
-                <h3 className="text-lg font-bold text-yellow-400">Events System</h3>
+                <span className="text-2xl">🏔️</span>
+                <h3 className="text-lg font-bold text-yellow-400">Story Climb Mechanics</h3>
               </div>
-              <span className="text-gray-400">{expandedSections.has('events') ? '▼' : '▶'}</span>
+              <span className="text-gray-400">{expandedSections.has('story-climb-mechanics') ? '▼' : '▶'}</span>
             </button>
-            {expandedSections.has('events') && (
+            {expandedSections.has('story-climb-mechanics') && (
               <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Random events and triggers configuration</p>
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Bosses */}
-          <div className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
-            <button
-              onClick={() => toggleSection('bosses')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">👹</span>
-                <h3 className="text-lg font-bold text-yellow-400">Bosses</h3>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('bosses') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('bosses') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Boss stats, abilities, and loot tables</p>
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Final Bosses */}
-          <div className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
-            <button
-              onClick={() => toggleSection('final-bosses')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🐉</span>
-                <h3 className="text-lg font-bold text-yellow-400">Final Bosses</h3>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('final-bosses') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('final-bosses') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">End-game boss configuration</p>
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Story Mode Mechanisms */}
-          <div className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
-            <button
-              onClick={() => toggleSection('story-mechanisms')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚙️</span>
-                <h3 className="text-lg font-bold text-yellow-400">Story Mode Mechanisms</h3>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('story-mechanisms') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('story-mechanisms') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Story progression nodes and mechanics</p>
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
-                </div>
+                <p className="text-gray-400 mb-4">
+                  Unified system for story progression, events, mechanisms, bosses, and final bosses.
+                  Controls how mechanisms are distributed across story nodes.
+                </p>
+                <StoryClimbConfig />
               </div>
             )}
           </div>
@@ -431,6 +373,12 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
       </div>
+
+      {/* Game Data Lightbox */}
+      <GameDataLightbox
+        isOpen={showGameDataLightbox}
+        onClose={() => setShowGameDataLightbox(false)}
+      />
     </div>
   );
 }

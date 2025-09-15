@@ -81,52 +81,52 @@ export default function ShopPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Get marketplace listings
-  const listingsData = useQuery(
-    api.marketplace.getActiveListings,
-    { 
-      itemType: selectedCategory,
-      searchTerm: searchTerm || undefined,
-      limit: 100,
-      offset: 0,
-    }
-  );
+  // Get marketplace listings - PAUSED TO SAVE BANDWIDTH
+  const listingsData = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   {
+  //     itemType: selectedCategory,
+  //     searchTerm: searchTerm || undefined,
+  //     limit: 100,
+  //     offset: 0,
+  //   }
+  // );
   
   const listings = listingsData?.listings;
   
-  // Check listings for each category to enable auto-selection
-  const headsListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "head", limit: 1, offset: 0 }
-  );
-  const bodiesListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "body", limit: 1, offset: 0 }
-  );
-  const traitsListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "trait", limit: 1, offset: 0 }
-  );
-  const essenceListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "essence", limit: 1, offset: 0 }
-  );
-  const oeListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "overexposed", limit: 1, offset: 0 }
-  );
-  const universalListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "universal-chips", limit: 1, offset: 0 }
-  );
-  const oemListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "oem", limit: 1, offset: 0 }
-  );
-  const framesListings = useQuery(
-    api.marketplace.getActiveListings,
-    { itemType: "frames", limit: 1, offset: 0 }
-  );
+  // Check listings for each category to enable auto-selection - PAUSED TO SAVE BANDWIDTH
+  const headsListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "head", limit: 1, offset: 0 }
+  // );
+  const bodiesListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "body", limit: 1, offset: 0 }
+  // );
+  const traitsListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "trait", limit: 1, offset: 0 }
+  // );
+  const essenceListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "essence", limit: 1, offset: 0 }
+  // );
+  const oeListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "overexposed", limit: 1, offset: 0 }
+  // );
+  const universalListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "universal-chips", limit: 1, offset: 0 }
+  // );
+  const oemListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "oem", limit: 1, offset: 0 }
+  // );
+  const framesListings = null; // useQuery(
+  //   api.marketplace.getActiveListings,
+  //   { itemType: "frames", limit: 1, offset: 0 }
+  // );
   
   // Auto-select first category with items if current has none
   useEffect(() => {

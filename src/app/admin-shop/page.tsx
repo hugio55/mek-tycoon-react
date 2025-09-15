@@ -101,11 +101,11 @@ export default function AdminShopPage() {
     setStars(generatedStars);
   }, [getOrCreateUser]);
 
-  // Get active listings with pagination
-  const listingsData = useQuery(api.marketplace.getActiveListings, {
-    limit: 100,
-    offset: 0,
-  });
+  // Get active listings with pagination - PAUSED TO SAVE BANDWIDTH
+  const listingsData = null; // useQuery(api.marketplace.getActiveListings, {
+  //   limit: 100,
+  //   offset: 0,
+  // });
   
   const listings = listingsData?.listings;
   

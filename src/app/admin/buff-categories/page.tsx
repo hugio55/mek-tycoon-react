@@ -31,14 +31,15 @@ interface MechanismTier {
 
 export default function BuffCategoriesPage() {
   const [editingId, setEditingId] = useState<Id<"buffCategories"> | null>(null);
-  
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const categories = useQuery(api.buffCategories.getAll);
   const createCategory = useMutation(api.buffCategories.create);
   const updateCategory = useMutation(api.buffCategories.update);
   const deleteCategory = useMutation(api.buffCategories.remove);
   const seedCategories = useMutation(api.seedBuffCategories.seedAll);
   const removeCategoryFromConfigs = useMutation(api.chipConfigurations.removeCategoryFromConfigs);
-  
+
   const mechanismTiers = useQuery(api.mechanismTiers.getAll);
   const updateMechanismTier = useMutation(api.mechanismTiers.updateTier);
   const initializeTiers = useMutation(api.mechanismTiers.initializeDefaults);
@@ -74,6 +75,7 @@ export default function BuffCategoriesPage() {
       isActive: true,
     });
     setEditingId(null);
+    setShowEditModal(false);
   };
 
   const categoryOptions = [
@@ -144,6 +146,7 @@ export default function BuffCategoriesPage() {
       tierEnd: category.tierEnd || 1,
       isActive: category.isActive !== false,
     });
+    setShowEditModal(true);
   };
 
   const handleDelete = async (id: Id<"buffCategories">) => {
@@ -930,6 +933,162 @@ export default function BuffCategoriesPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Category Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+          <div className="bg-gray-900 border-2 border-yellow-500/50 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-yellow-400">
+                {editingId ? 'Edit Category' : 'New Category'}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as BuffCategory["category"] })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  >
+                    {categoryOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Unit Type</label>
+                  <select
+                    value={formData.unitType}
+                    onChange={(e) => setFormData({ ...formData, unitType: e.target.value as BuffCategory["unitType"] })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  >
+                    {unitTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Application Type</label>
+                  <select
+                    value={formData.applicationType}
+                    onChange={(e) => setFormData({ ...formData, applicationType: e.target.value as BuffCategory["applicationType"] })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  >
+                    {applicationTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Tier Start</label>
+                  <select
+                    value={formData.tierStart}
+                    onChange={(e) => setFormData({ ...formData, tierStart: Number(e.target.value) })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  >
+                    {tierOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Tier End</label>
+                  <select
+                    value={formData.tierEnd}
+                    onChange={(e) => setFormData({ ...formData, tierEnd: Number(e.target.value) })}
+                    className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  >
+                    {tierOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-white focus:border-yellow-500 transition-colors"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm text-gray-300">Active</span>
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-700">
+                <button
+                  type="submit"
+                  className="bg-yellow-500 text-black font-bold px-6 py-2 rounded hover:bg-yellow-400 transition-colors"
+                >
+                  {editingId ? 'Update' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-gray-700 text-white font-bold px-6 py-2 rounded hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(editingId)}
+                    className="bg-red-600 text-white font-bold px-6 py-2 rounded hover:bg-red-500 transition-colors ml-auto"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

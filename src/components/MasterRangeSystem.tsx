@@ -62,6 +62,8 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
   const setAllMasterRanges = useMutation(api.chipConfigurations.setAllMasterRanges);
   const saveAllChipConfigs = useMutation(api.chipConfigurations.saveAllChipConfigs);
   const initializeMasterRanges = useMutation(api.chipConfigurations.initializeMasterRanges);
+  const toggleUniversalChipEnabled = useMutation(api.buffCategories.toggleUniversalChipEnabled);
+  const setDefaultEnabledStatus = useMutation(api.buffCategories.setDefaultEnabledStatus);
   
   // Master range system - local state for editing
   const [masterRanges, setMasterRanges] = useState<{[buffId: string]: {min: number, max: number}}>({});
@@ -94,6 +96,17 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
       initializeMasterRanges();
     }
   }, [buffCategories, masterRangesData, initializeMasterRanges]);
+
+  // Run migration for enabledForUniversalChips on mount
+  useEffect(() => {
+    if (buffCategories && buffCategories.length > 0) {
+      // Check if any categories don't have enabledForUniversalChips set
+      const needsMigration = buffCategories.some(cat => cat.enabledForUniversalChips === undefined);
+      if (needsMigration) {
+        setDefaultEnabledStatus();
+      }
+    }
+  }, [buffCategories, setDefaultEnabledStatus]);
 
   // Initialize curve powers for categories that don't have them
   useEffect(() => {
@@ -199,6 +212,7 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
         
         buffCategories.forEach(category => {
           if (!category.isActive) return; // Skip inactive categories
+          if (category.enabledForUniversalChips === false) return; // Skip disabled for universal chips
           
           const masterRange = masterRanges[category._id];
           if (!masterRange) return;
@@ -345,8 +359,10 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
               
               return (
                 <div key={category._id} className="bg-black/50 border border-gray-700">
-                  <div 
-                    className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-800/30 transition-colors"
+                  <div
+                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-800/30 transition-colors ${
+                      category.enabledForUniversalChips === false ? 'opacity-50' : ''
+                    }`}
                     onClick={() => setExpandedCategory(isExpanded ? null : category._id)}
                   >
                     {/* Expand/Collapse Indicator */}
@@ -354,17 +370,33 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                       {isExpanded ? '▼' : '▶'}
                     </span>
                     <span className="text-2xl">{icon}</span>
-                    <h3 className="text-xl font-bold text-yellow-400">{category.name}</h3>
+                    <h3 className={`text-xl font-bold ${
+                      category.enabledForUniversalChips === false ? 'text-gray-500' : 'text-yellow-400'
+                    }`}>{category.name}</h3>
                     <span className="text-sm text-gray-400">({unit || 'points'})</span>
                     
                     {/* Quick Preview when collapsed */}
                     {!isExpanded && (
-                      <div className="ml-auto flex items-center gap-2 text-sm">
-                        <span className="text-gray-500">Range:</span>
-                        <span className="text-green-400">{masterRange.min}</span>
-                        <span className="text-gray-500">-</span>
-                        <span className="text-blue-400">{masterRange.max}</span>
-                        <span className="text-gray-400">{unit}</span>
+                      <div className="ml-auto flex items-center gap-4">
+                        {/* Enable/Disable Toggle */}
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <label className="text-xs text-gray-400 uppercase">Enabled:</label>
+                          <input
+                            type="checkbox"
+                            checked={category.enabledForUniversalChips !== false}
+                            onChange={async () => {
+                              await toggleUniversalChipEnabled({ id: category._id });
+                            }}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-500">Range:</span>
+                          <span className="text-green-400">{masterRange.min}</span>
+                          <span className="text-gray-500">-</span>
+                          <span className="text-blue-400">{masterRange.max}</span>
+                          <span className="text-gray-400">{unit}</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -372,6 +404,26 @@ export default function MasterRangeSystem({ onApplyRanges, className = '' }: Mas
                 {/* Expandable Content */}
                 {isExpanded && (
                   <div className="p-4">
+                    {/* Enable/Disable Toggle in expanded view */}
+                    <div className="mb-4 p-3 bg-gray-800/50 border border-gray-600 rounded flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-bold text-gray-300">Enable for Universal Power Chips:</label>
+                        <input
+                          type="checkbox"
+                          checked={category.enabledForUniversalChips !== false}
+                          onChange={async () => {
+                            await toggleUniversalChipEnabled({ id: category._id });
+                          }}
+                          className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                        {category.enabledForUniversalChips === false && (
+                          <span className="text-xs text-red-400 italic">
+                            (This buff will NOT appear on universal power chips)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Master Range Input */}
                     <div className="mb-4 p-4 bg-green-900/30 border-2 border-green-500 rounded">
                       <div className="flex items-center gap-4 mb-3">

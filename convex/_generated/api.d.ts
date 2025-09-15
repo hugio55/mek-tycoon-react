@@ -14,6 +14,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as accordionCraftingTree from "../accordionCraftingTree.js";
+import type * as addTotalActiveContracts from "../addTotalActiveContracts.js";
+import type * as adminUsers from "../adminUsers.js";
 import type * as bank from "../bank.js";
 import type * as buffCategories from "../buffCategories.js";
 import type * as buffManager from "../buffManager.js";
@@ -25,6 +27,7 @@ import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
 import type * as eventNodeRewards from "../eventNodeRewards.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
+import type * as gameConstants from "../gameConstants.js";
 import type * as gameItemsSearch from "../gameItemsSearch.js";
 import type * as getAllSourceKeys from "../getAllSourceKeys.js";
 import type * as goldTracking from "../goldTracking.js";
@@ -74,6 +77,8 @@ import type * as walletAuth from "../walletAuth.js";
  */
 declare const fullApi: ApiFromModules<{
   accordionCraftingTree: typeof accordionCraftingTree;
+  addTotalActiveContracts: typeof addTotalActiveContracts;
+  adminUsers: typeof adminUsers;
   bank: typeof bank;
   buffCategories: typeof buffCategories;
   buffManager: typeof buffManager;
@@ -85,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   eventNodeRewards: typeof eventNodeRewards;
   fixMek3412To000: typeof fixMek3412To000;
+  gameConstants: typeof gameConstants;
   gameItemsSearch: typeof gameItemsSearch;
   getAllSourceKeys: typeof getAllSourceKeys;
   goldTracking: typeof goldTracking;

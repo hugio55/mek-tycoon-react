@@ -7,35 +7,8 @@ import StoryMissionCard from '@/components/StoryMissionCard';
 import { StyleK } from '@/components/ui/ShowcaseCards';
 import MekRecruitmentModalV4 from '@/app/contracts/components/MekRecruitmentModalV4';
 import { generateSampleMeks } from '@/app/contracts/utils/helpers';
+import { leastRareMechanisms } from './least-rare-mechanisms';
 
-// List of actual mekanism images from the 500px folder for better quality
-const mekImagesList = [
-  '000-000-000.webp', '111-111-111.webp', '222-222-222.webp', '333-333-333.webp',
-  '444-444-444.webp', '555-555-555.webp', '666-666-666.webp', '777-777-777.webp',
-  '888-888-888.webp', '999-999-999.webp', 'aa1-aa1-cd1.webp', 'aa1-aa3-hn1.webp',
-  'aa1-aa4-gk1.webp', 'aa1-ak1-bc2.webp', 'aa1-ak1-de1.webp', 'aa1-ak1-ji2.webp',
-  'aa1-ak1-kq2.webp', 'aa1-ak1-mo1.webp', 'aa1-ak1-nm1.webp', 'aa1-ak2-lg1.webp',
-  'aa1-ak3-mt1.webp', 'aa1-at1-ji2.webp', 'aa1-at4-ey2.webp', 'aa1-bf1-cd1.webp',
-  'aa1-bf1-of2.webp', 'aa1-bf2-ap2.webp', 'aa1-bf2-il2.webp', 'aa1-bf3-fb2.webp',
-  'aa1-bf4-cu1.webp', 'aa1-bi1-ap1.webp', 'aa1-bi1-br2.webp', 'aa1-bi1-ji2.webp',
-  'aa1-bi1-nm1.webp', 'aa1-bi2-da3.webp', 'aa1-bi2-lg2.webp', 'aa1-bj1-fb1.webp',
-  'aa1-bj1-hn2.webp', 'aa1-bj2-cd2.webp', 'aa1-bj2-gk1.webp', 'aa1-bj2-ji1.webp',
-  'aa1-bj3-ap1.webp', 'aa1-bj3-mx1.webp', 'aa1-bl1-cd2.webp', 'aa1-bl1-eh1.webp',
-  'aa1-bl2-il2.webp', 'aa1-bl2-kq3.webp', 'aa1-bl2-of2.webp', 'aa1-bl3-mo1.webp',
-  'aa1-bl4-aw1.webp', 'aa1-bl5-as1.webp', 'aa1-bq1-fb1.webp', 'aa1-bq2-mo1.webp',
-  'aa1-bq5-gk1.webp', 'aa1-bw1-ji1.webp', 'aa1-bw3-fb2.webp', 'aa1-bw4-aj2.webp',
-  'aa1-cb1-cd2.webp', 'aa1-cb1-of1.webp', 'aa1-cb3-eh1.webp', 'aa1-cb3-fb1.webp',
-  'aa1-cu1-br1.webp', 'aa1-cu1-mo1.webp', 'aa1-cu2-of2.webp', 'aa1-cx1-aj2.webp',
-  'aa1-cx1-bc2.webp', 'aa1-cx1-il1.webp', 'aa1-cx1-nm1.webp', 'aa1-dc2-il1.webp',
-  'aa1-dc3-of2.webp', 'aa1-dh1-ap2.webp', 'aa1-dh1-as1.webp', 'aa1-dh1-aw1.webp',
-  'aa1-dh2-cd1.webp', 'aa1-dh2-fb2.webp', 'aa1-dh3-aj1.webp', 'aa1-dh3-hn1.webp',
-  'aa1-dm1-br2.webp', 'aa1-dm1-cu2.webp', 'aa1-dm1-de1.webp', 'aa1-dm1-eh3.webp',
-  'aa1-dm1-il1.webp', 'aa1-dm2-da2.webp', 'aa1-ds1-cu1.webp', 'aa1-ds1-de1.webp',
-  'aa1-ds1-ji1.webp', 'aa1-ds2-nm1.webp', 'aa1-ee1-da2.webp', 'aa1-ee1-de1.webp',
-  'aa1-ee1-il2.webp', 'aa1-ee1-mo1.webp', 'aa1-ee1-mt2.webp', 'aa1-ee2-aj3.webp',
-  'aa1-ee3-aw2.webp', 'aa1-ee3-kq2.webp', 'aa1-er1-as1.webp', 'aa1-er3-aj2.webp',
-  'aa1-ev1-bc2.webp', 'aa1-ev1-de2.webp', 'aa1-ev1-mt1.webp', 'aa1-ev2-hn1.webp'
-].map(filename => `/mek-images/500px/${filename}`);
 
 interface StoryNode {
   id: string;
@@ -72,9 +45,14 @@ export default function StoryClimbPage() {
   const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hasDragged, setHasDragged] = useState(false);
+  const [showJumpButton, setShowJumpButton] = useState(false);
+  const [isJumping, setIsJumping] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [hoveredNode, setHoveredNode] = useState<StoryNode | null>(null);
-  const [rewardBarStyle, setRewardBarStyle] = useState<1 | 2 | 3 | 4 | 5>(1); // For switching between layout options
+  const [hoverEffectStyle, setHoverEffectStyle] = useState<1 | 2 | 3 | 4>(1); // For hover effect options
+  const [challengerEffect, setChallengerEffect] = useState<'quantum1' | 'quantum2' | 'quantum3'>('quantum1'); // Challenger quantum variations
+  const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
+  const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
   const [selectedMekSlot, setSelectedMekSlot] = useState<{ missionId: string; slotIndex: number } | null>(null);
   const [selectedMeks, setSelectedMeks] = useState<Record<string, any[]>>({});
@@ -183,12 +161,12 @@ export default function StoryClimbPage() {
 
   // Handle mek slot click - opens the recruitment modal
   const handleMekSlotClick = useCallback((slotIndex: number) => {
-    const nodeId = (selectedNode || hoveredNode)?.id;
+    const nodeId = selectedNode?.id;
     if (nodeId) {
       setShowMekModal(nodeId);
       setSelectedMekSlot({ missionId: nodeId, slotIndex });
     }
-  }, [selectedNode, hoveredNode]);
+  }, [selectedNode]);
 
   // Handle mek selection from modal
   const handleMekSelection = useCallback((mek: any, matchedTraits: any[], hasMatch: boolean) => {
@@ -196,37 +174,71 @@ export default function StoryClimbPage() {
       const { missionId, slotIndex } = selectedMekSlot;
       const meksForMission = selectedMeks[missionId] || [];
       const updatedMeks = [...meksForMission];
-      updatedMeks[slotIndex] = mek;
+      // Store the mek with matched traits for success calculation
+      updatedMeks[slotIndex] = { ...mek, matchedTraits };
       setSelectedMeks({ ...selectedMeks, [missionId]: updatedMeks });
     }
     setShowMekModal(null);
     setSelectedMekSlot(null);
   }, [selectedMekSlot, selectedMeks]);
+
+  // Handle mek removal from slot
+  const handleMekRemove = useCallback((slotIndex: number) => {
+    const nodeId = selectedNode?.id;
+    if (nodeId) {
+      const meksForMission = selectedMeks[nodeId] || [];
+      const updatedMeks = [...meksForMission];
+      updatedMeks[slotIndex] = undefined;
+      setSelectedMeks({ ...selectedMeks, [nodeId]: updatedMeks });
+    }
+  }, [selectedNode, selectedMeks]);
+
+  // Calculate success chance based on selected meks and matched traits
+  const calculateSuccessChance = useCallback((nodeId: string, baseChance: number, variationBuffs: any[]) => {
+    const meksForMission = selectedMeks[nodeId] || [];
+    let totalChance = baseChance;
+
+    // Each mek with matched traits adds bonus to success chance
+    meksForMission.forEach(mek => {
+      if (mek?.matchedTraits?.length > 0) {
+        // Each matched trait adds 10% to success chance
+        totalChance += mek.matchedTraits.length * 10;
+      }
+    });
+
+    // Cap at 95% max success chance
+    return Math.min(95, totalChance);
+  }, [selectedMeks]);
   
   // Helper function to get a deterministic mek image for each node
-  const getMekImage = useCallback((nodeId: string): string => {
-    // Much better randomization to ensure variety as we go up the tree
-    let hash = 0;
-    for (let i = 0; i < nodeId.length; i++) {
-      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
+  const getMekImage = useCallback((nodeId: string, isForDetails: boolean = false): string => {
+    // Find the node to get its Y position
+    const node = treeData?.nodes?.find(n => n.id === nodeId);
+    if (!node || node.storyNodeType !== 'normal') {
+      // For non-mechanism nodes, use a default or return empty
+      return '';
     }
 
-    // Extract Y position from node ID if available (e.g., "node-2-5" -> 5)
-    const parts = nodeId.split('-');
-    const yComponent = parts.length > 2 ? parseInt(parts[2]) || 0 : 0;
-
-    // Apply multiple mixing operations for better distribution
-    const nodeNum = parseInt(nodeId.replace(/[^0-9]/g, '')) || 0;
-    // Use different prime multipliers and add Y component for vertical variety
-    const mixedHash = (hash * 31337 + nodeNum * 7919 + yComponent * 13337) % 65537;
-
-    // Further scramble by using a different approach for different node ranges
-    const scrambledIndex = (mixedHash * mixedHash + yComponent * 97) % mekImagesList.length;
-    const index = Math.abs(scrambledIndex) % mekImagesList.length;
-
-    return mekImagesList[index];
-  }, []);
+    // Get all mechanism nodes sorted by Y position (bottom to top)
+    const mechanismNodes = treeData?.nodes
+      ?.filter(n => n.storyNodeType === 'normal')
+      ?.sort((a, b) => a.y - b.y) || [];
+    
+    // Find the index of this node in the sorted list
+    const nodeIndex = mechanismNodes.findIndex(n => n.id === nodeId);
+    
+    // Map to the least rare mechanisms (we have 400 of them)
+    // If we have more nodes than mechanisms, wrap around
+    const mechanismIndex = nodeIndex % leastRareMechanisms.length;
+    const filename = leastRareMechanisms[mechanismIndex];
+    
+    // Return appropriate size based on usage
+    if (isForDetails) {
+      return `/mek-images/500px/${filename}`;
+    } else {
+      return `/mek-images/150px/${filename}`;
+    }
+  }, [treeData]);
   
   // Debug logging
   useEffect(() => {
@@ -241,16 +253,11 @@ export default function StoryClimbPage() {
     }
   }, [storyTrees, v1Tree, test5Tree, treeData]);
 
-  // Function to get a deterministic image for each node
+  // Function to get a deterministic image for each node (fallback)
   const getNodeImage = useCallback((nodeId: string): string => {
-    // Use node ID to deterministically select an image
-    let hash = 0;
-    for (let i = 0; i < nodeId.length; i++) {
-      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    const index = Math.abs(hash) % mekImagesList.length;
-    return mekImagesList[index];
+    // This is a fallback for non-mechanism nodes
+    // Just return a default image path
+    return '/mek-images/150px/000-000-000.webp';
   }, []);
   
   // Function to get a random event image for event nodes
@@ -295,7 +302,7 @@ export default function StoryClimbPage() {
           promises.push(promise);
         } else if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss') {
           // Load mek images for normal and boss nodes
-          const imageName = getMekImage(node.id);
+          const imageName = getMekImage(node.id, false); // 150px for nodes
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
             img.onload = () => resolve();
@@ -665,11 +672,156 @@ export default function StoryClimbPage() {
       
       // Draw subtle glow for available nodes (all types)
       if (isAvailable && node.id !== 'start') {
-        // First draw a subtle white backglow
+        // Enhanced glow for hovered node - fixed to compare IDs properly
+        const isHovered = hoveredNode && hoveredNode.id === node.id;
+        
+        // Debug logging for hover detection
+        if (node.id === 'node-1' || node.id === 'node-2' || node.id === 'node-3') {
+          if (hoveredNode) {
+            console.log(`Node ${node.id}: hoveredNode.id=${hoveredNode.id}, isHovered=${isHovered}`);
+          }
+        }
+
+        // Apply different hover effects based on selected style
+        if (isHovered) {
+          switch (hoverEffectStyle) {
+            case 1: // Pulse Glow
+              ctx.save();
+              const pulseIntensity = 0.6 + Math.sin(Date.now() / 300) * 0.4;
+              ctx.shadowBlur = 40;
+              ctx.shadowColor = `rgba(250, 182, 23, ${pulseIntensity})`;
+              // Double glow effect
+              for (let i = 0; i < 2; i++) {
+                if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+                  ctx.beginPath();
+                  ctx.arc(pos.x, pos.y, nodeSize + i * 5, 0, Math.PI * 2);
+                  ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+                  ctx.lineWidth = 2;
+                  ctx.stroke();
+                } else {
+                  ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+                  ctx.lineWidth = 2;
+                  ctx.strokeRect(pos.x - nodeSize - i * 5, pos.y - nodeSize - i * 5, (nodeSize + i * 5) * 2, (nodeSize + i * 5) * 2);
+                }
+              }
+              ctx.restore();
+              break;
+              
+            case 2: // Energy Ring
+              ctx.save();
+              const ringTime = Date.now() / 1000;
+              const ringRadius = nodeSize + 10 + Math.sin(ringTime * 3) * 5;
+              ctx.strokeStyle = '#fab617';
+              ctx.lineWidth = 3;
+              ctx.shadowBlur = 20;
+              ctx.shadowColor = '#fab617';
+              // Rotating energy ring
+              ctx.setLineDash([8, 4]);
+              ctx.lineDashOffset = -ringTime * 20;
+              if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, ringRadius, 0, Math.PI * 2);
+                ctx.stroke();
+              } else {
+                ctx.strokeRect(pos.x - ringRadius, pos.y - ringRadius, ringRadius * 2, ringRadius * 2);
+              }
+              ctx.setLineDash([]);
+              ctx.restore();
+              break;
+              
+            case 3: // Particle Burst
+              ctx.save();
+              const particleTime = Date.now() / 100;
+              // Draw multiple small particles around the node
+              for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 / 8) * i + particleTime * 0.1;
+                const distance = nodeSize + 15 + Math.sin(particleTime * 0.5 + i) * 8;
+                const px = pos.x + Math.cos(angle) * distance;
+                const py = pos.y + Math.sin(angle) * distance;
+                const particleOpacity = 0.5 + Math.sin(particleTime + i) * 0.5;
+                
+                ctx.fillStyle = `rgba(250, 182, 23, ${particleOpacity})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#fab617';
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              ctx.restore();
+              break;
+              
+            case 4: // Lightning Arc - Rotating
+              ctx.save();
+              const lightningTime = Date.now() / 600; // Slightly faster rotation
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              
+              // Draw rotating lightning arcs with enhanced visibility
+              for (let i = 0; i < 4; i++) { // 4 arcs instead of 3
+                const baseAngle = (Math.PI * 2 / 4) * i + lightningTime * 1.5; // Rotation speed
+                const arcLength = Math.PI / 2.5; // Longer arcs for better visibility
+                const startAngle = baseAngle;
+                const endAngle = baseAngle + arcLength;
+                const arcRadius = nodeSize + 8; // Slightly further out
+                
+                // Pulsing alpha and intensity
+                const pulseIntensity = 0.6 + Math.sin(lightningTime * 4 + i * 0.5) * 0.4;
+                ctx.globalAlpha = pulseIntensity;
+                
+                // Enhanced glow effect
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#5dd4ff';
+                ctx.strokeStyle = `rgba(93, 212, 255, ${pulseIntensity})`;
+                ctx.lineWidth = 4; // Thicker for better visibility
+                
+                // Each arc needs its own path
+                ctx.beginPath();
+                if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+                  // Draw the main arc
+                  ctx.arc(pos.x, pos.y, arcRadius, startAngle, endAngle, false);
+                  ctx.stroke();
+                  
+                  // Add crackling effect - small additional arcs
+                  ctx.beginPath();
+                  ctx.lineWidth = 2;
+                  ctx.arc(pos.x, pos.y, arcRadius - 3, startAngle + 0.1, endAngle - 0.1, false);
+                  ctx.stroke();
+                  
+                  // Add lightning tail effect
+                  ctx.beginPath();
+                  ctx.lineWidth = 3;
+                  const midAngle = startAngle + arcLength * 0.5;
+                  const tailRadius = arcRadius + 4;
+                  ctx.arc(pos.x, pos.y, tailRadius, midAngle - 0.1, midAngle + 0.1, false);
+                  ctx.stroke();
+                } else {
+                  // For square nodes, draw corner arcs
+                  const numPoints = 8;
+                  for (let j = 0; j <= numPoints; j++) {
+                    const t = j / numPoints;
+                    const angle = startAngle + (endAngle - startAngle) * t;
+                    const x = pos.x + Math.cos(angle) * arcRadius;
+                    const y = pos.y + Math.sin(angle) * arcRadius;
+                    if (j === 0) {
+                      ctx.moveTo(x, y);
+                    } else {
+                      ctx.lineTo(x, y);
+                    }
+                  }
+                  ctx.stroke();
+                }
+              }
+              ctx.globalAlpha = 1;
+              ctx.restore();
+              break;
+          }
+        }
+
+        // Base glow for available nodes (always present)
         ctx.save();
-        const whiteGlowIntensity = 0.2 + Math.sin(Date.now() / 800) * 0.1; // Very subtle pulse
+        const baseGlowIntensity = 0.2 + Math.sin(Date.now() / 800) * 0.1;
         ctx.shadowBlur = 25;
-        ctx.shadowColor = `rgba(255, 255, 255, ${whiteGlowIntensity})`;
+        ctx.shadowColor = `rgba(255, 255, 255, ${baseGlowIntensity})`;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         
@@ -685,9 +837,9 @@ export default function StoryClimbPage() {
         }
         ctx.restore();
         
-        // Then draw the yellow glow on top
+        // Yellow glow on top (base level)
         ctx.save();
-        const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2; // Subtle pulse
+        const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2;
         ctx.shadowBlur = 15;
         ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
         
@@ -698,8 +850,14 @@ export default function StoryClimbPage() {
           ctx.strokeStyle = 'transparent';
           ctx.stroke();
         } else if (node.storyNodeType === 'normal') {
+          const isChallenger = (node as any).challenger === true;
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          // Enhanced glow for Challenger nodes
+          if (isChallenger) {
+            ctx.shadowColor = `rgba(255, 100, 50, ${glowIntensity * 1.5})`;
+            ctx.shadowBlur = 25;
+          }
           ctx.strokeStyle = 'transparent';
           ctx.stroke();
         } else {
@@ -1170,25 +1328,277 @@ export default function StoryClimbPage() {
           const img = nodeImages.get(node.id)!;
           if (img.complete && img.naturalWidth > 0) { // Check image is loaded and not broken
             ctx.save();
-            // Draw dark circular frame for mechanism nodes
+            // Draw circular frame for mechanism nodes
+            const isChallenger = (node as any).challenger === true;
+            
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, halfSize, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(20, 20, 30, 0.8)';
+            
+            // Background color - darker for Challenger nodes
+            if (isChallenger) {
+              ctx.fillStyle = 'rgba(40, 15, 15, 0.9)'; // Dark red/brown background
+            } else {
+              ctx.fillStyle = 'rgba(20, 20, 30, 0.8)';
+            }
             ctx.fill();
-            // Green border for completed, yellow for available, dark for others
-            ctx.strokeStyle = isCompleted ? 'rgba(16, 185, 129, 0.8)' : 
-                             isAvailable ? 'rgba(250, 182, 23, 0.9)' : 
-                             'rgba(60, 60, 80, 0.6)';
-            ctx.lineWidth = isCompleted ? 2 : isAvailable ? 2 : 1;
+            
+            // Border styling with Challenger-specific colors
+            let borderColor;
+            let borderWidth;
+            
+            if (isChallenger) {
+              // Challenger nodes: style-specific colors with pulsing effect
+              const challengerPulse = 0.6 + Math.sin(Date.now() / 400) * 0.4;
+              if (isCompleted) {
+                borderColor = `rgba(16, 185, 129, ${challengerPulse})`; // Still green when completed
+                borderWidth = 3;
+              } else if (isAvailable) {
+                borderColor = `rgba(255, 100, 50, ${challengerPulse})`; // Pulsing orange-red
+                borderWidth = 3;
+              } else {
+                borderColor = `rgba(140, 40, 40, ${challengerPulse * 0.7})`; // Darker red pulse
+                borderWidth = 2;
+              }
+            } else {
+              // Normal node colors
+              borderColor = isCompleted ? 'rgba(16, 185, 129, 0.8)' : 
+                           isAvailable ? 'rgba(250, 182, 23, 0.9)' : 
+                           'rgba(60, 60, 80, 0.6)';
+              borderWidth = isCompleted ? 2 : isAvailable ? 2 : 1;
+            }
+            
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = borderWidth;
             ctx.stroke();
+            
+            // Add extra glow effect for Challenger nodes
+            if (isChallenger && (isAvailable || isCompleted)) {
+              ctx.save();
+              const glowIntensity = 0.4 + Math.sin(Date.now() / 350) * 0.3;
+              ctx.shadowBlur = 25;
+              
+              // Glow color based on completion
+              if (isCompleted) {
+                ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
+              } else {
+                ctx.shadowColor = 'rgba(255, 100, 50, 0.6)'; // Orange-red glow
+              }
+              
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, halfSize + 5, 0, Math.PI * 2);
+              ctx.strokeStyle = 'transparent';
+              ctx.stroke();
+              ctx.restore();
+            }
             
             // Clip to circular shape (slightly smaller for frame effect)
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
             ctx.clip();
             
-            // Draw image at full opacity always
-            ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            // Apply hover effect to image
+            const isHovered = hoveredNode && hoveredNode.id === node.id;
+            if (isHovered) {
+              ctx.save();
+              // Scale effect on hover
+              const hoverScale = 1.05 + Math.sin(Date.now() / 300) * 0.02; // Subtle pulse
+              const scaledSize = halfSize * hoverScale;
+              // Brightness effect
+              ctx.filter = 'brightness(1.2) contrast(1.1)';
+              ctx.drawImage(img, pos.x - scaledSize, pos.y - scaledSize, scaledSize * 2, scaledSize * 2);
+              ctx.filter = 'none';
+              ctx.restore();
+            } else if (isChallenger && !isCompleted) {
+              // Apply selected challenger effect
+              ctx.save();
+              
+              // Create unique offset for each node based on its ID
+              let nodeHash = 0;
+              for (let i = 0; i < node.id.length; i++) {
+                nodeHash = ((nodeHash << 5) - nodeHash) + node.id.charCodeAt(i);
+              }
+              const nodeOffset = (Math.abs(nodeHash) % 1000) / 100; // Unique offset 0-10
+              const time = Date.now() + nodeOffset * 1000; // Add node-specific time offset
+              
+              switch (challengerEffect) {
+                case 'quantum1': // Ripple Wave effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Continuous ripple waves emanating from multiple points
+                  ctx.globalCompositeOperation = 'screen';
+                  const rippleCount = 5;
+                  
+                  for (let i = 0; i < rippleCount; i++) {
+                    // Use continuous sine/cosine for seamless motion
+                    const rippleTime = time * 0.0008 + i * 2.4 + nodeOffset * 0.7;
+                    const centerX = pos.x + Math.sin(rippleTime * 1.3) * halfSize * 0.5;
+                    const centerY = pos.y + Math.cos(rippleTime * 0.9) * halfSize * 0.5;
+                    
+                    // Multiple expanding rings per ripple source
+                    for (let ring = 0; ring < 3; ring++) {
+                      const ringTime = time * 0.001 + ring * 0.8;
+                      const radius = ((ringTime * 30) % (halfSize * 2)) + 10;
+                      const alpha = Math.max(0, 1 - (radius / (halfSize * 2))) * 0.3;
+                      
+                      const gradient = ctx.createRadialGradient(
+                        centerX, centerY, Math.max(0, radius - 10),
+                        centerX, centerY, radius
+                      );
+                      gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+                      gradient.addColorStop(0.5, `rgba(0, 255, 255, ${alpha})`);
+                      gradient.addColorStop(0.8, `rgba(255, 0, 255, ${alpha * 0.5})`);
+                      gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+                      
+                      ctx.fillStyle = gradient;
+                      ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                    }
+                  }
+                  
+                  // Subtle wave distortion
+                  ctx.globalCompositeOperation = 'difference';
+                  ctx.globalAlpha = 0.2;
+                  for (let y = 0; y < halfSize * 2; y += 6) {
+                    const waveOffset = Math.sin(time * 0.001 + y * 0.05) * 3;
+                    ctx.drawImage(
+                      img,
+                      pos.x - halfSize, pos.y - halfSize + y,
+                      halfSize * 2, 6,
+                      pos.x - halfSize + waveOffset, pos.y - halfSize + y,
+                      halfSize * 2, 6
+                    );
+                  }
+                  break;
+                  
+                case 'quantum2': // Phase Shift effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Phasing layers - image shifts between dimensions
+                  ctx.globalCompositeOperation = 'screen';
+                  const phaseCount = 4;
+                  
+                  for (let p = 0; p < phaseCount; p++) {
+                    const phaseTime = time * 0.0006 + p * Math.PI * 0.5 + nodeOffset;
+                    const phaseAlpha = (Math.sin(phaseTime) + 1) * 0.35;
+                    const phaseX = Math.sin(phaseTime * 1.7) * 8;
+                    const phaseY = Math.cos(phaseTime * 1.3) * 8;
+                    
+                    ctx.globalAlpha = phaseAlpha;
+                    
+                    // Draw phase-shifted copies with color tints
+                    ctx.save();
+                    if (p % 2 === 0) {
+                      ctx.filter = 'hue-rotate(180deg)';
+                    } else {
+                      ctx.filter = 'hue-rotate(-60deg)';
+                    }
+                    ctx.drawImage(
+                      img,
+                      pos.x - halfSize + phaseX,
+                      pos.y - halfSize + phaseY,
+                      halfSize * 2, halfSize * 2
+                    );
+                    ctx.restore();
+                  }
+                  
+                  // Quantum interference pattern
+                  ctx.globalCompositeOperation = 'overlay';
+                  ctx.globalAlpha = 0.3;
+                  const interferenceTime = time * 0.0008;
+                  
+                  for (let x = 0; x < halfSize * 2; x += 4) {
+                    for (let y = 0; y < halfSize * 2; y += 4) {
+                      const dist1 = Math.sqrt(Math.pow(x - halfSize * 0.3, 2) + Math.pow(y - halfSize * 0.3, 2));
+                      const dist2 = Math.sqrt(Math.pow(x - halfSize * 1.7, 2) + Math.pow(y - halfSize * 1.7, 2));
+                      const interference = Math.sin(dist1 * 0.1 - interferenceTime) * Math.sin(dist2 * 0.1 + interferenceTime);
+                      
+                      if (interference > 0.5) {
+                        const brightness = interference * 255;
+                        ctx.fillStyle = `rgba(0, ${brightness}, ${brightness}, 0.5)`;
+                        ctx.fillRect(pos.x - halfSize + x, pos.y - halfSize + y, 4, 4);
+                      }
+                    }
+                  }
+                  break;
+                  
+                case 'quantum3': // Dimensional Tear effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Dimensional tears - vertical rifts
+                  ctx.globalCompositeOperation = 'screen';
+                  for (let i = 0; i < 4; i++) {
+                    const tearTime = time * 0.0005 + i * 1.7 + nodeOffset;
+                    const tearX = pos.x + Math.sin(tearTime) * halfSize * 0.8;
+                    const tearY = pos.y + Math.cos(tearTime * 0.7) * halfSize * 0.3;
+                    
+                    // Create vertical tear gradient
+                    const tearGradient = ctx.createLinearGradient(
+                      tearX - 2, tearY - halfSize,
+                      tearX + 2, tearY - halfSize
+                    );
+                    tearGradient.addColorStop(0, 'rgba(255, 0, 255, 0)');
+                    tearGradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.8)');
+                    tearGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+                    
+                    ctx.fillStyle = tearGradient;
+                    const tearHeight = halfSize * 1.5 + Math.sin(tearTime * 3) * halfSize * 0.3;
+                    ctx.fillRect(tearX - 2, tearY - tearHeight/2, 4, tearHeight);
+                  }
+                  
+                  // Reality distortion waves
+                  ctx.globalCompositeOperation = 'difference';
+                  ctx.globalAlpha = 0.4;
+                  const waveCount = 3;
+                  for (let w = 0; w < waveCount; w++) {
+                    const waveTime = time * 0.001 + w * 2.1 + nodeOffset * 0.5;
+                    const waveRadius = (Math.sin(waveTime) + 1) * halfSize;
+                    
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, waveRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 0, 255, ${0.3 - w * 0.1})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                  }
+                  
+                  // Pixel displacement effect
+                  ctx.globalCompositeOperation = 'source-over';
+                  ctx.globalAlpha = 0.6;
+                  const gridSize = 8;
+                  for (let gx = 0; gx < halfSize * 2; gx += gridSize) {
+                    for (let gy = 0; gy < halfSize * 2; gy += gridSize) {
+                      const distortTime = time * 0.002 + (gx + gy) * 0.01;
+                      if (Math.sin(distortTime) > 0.7) {
+                        const offsetX = Math.sin(distortTime * 2) * 3;
+                        const offsetY = Math.cos(distortTime * 2) * 3;
+                        
+                        ctx.drawImage(
+                          img,
+                          pos.x - halfSize + gx, pos.y - halfSize + gy,
+                          gridSize, gridSize,
+                          pos.x - halfSize + gx + offsetX, pos.y - halfSize + gy + offsetY,
+                          gridSize, gridSize
+                        );
+                      }
+                    }
+                  }
+                  break;
+              }
+              
+              ctx.globalAlpha = 1;
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.restore();
+            } else {
+              // Draw image at full opacity always
+              ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            }
             
             // Draw darkening overlay for unavailable/non-completed nodes
             if (!isCompleted && !isAvailable) {
@@ -1199,6 +1609,27 @@ export default function StoryClimbPage() {
             else if (isCompleted) {
               ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
               ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            }
+            
+            // Add Challenger skull overlay
+            if (isChallenger && !isCompleted) {
+              ctx.save();
+              const pulseTime = Date.now() / 500;
+              
+              // Draw skull symbol
+              ctx.font = 'bold 24px Arial';
+              ctx.fillStyle = `rgba(255, 100, 50, ${0.5 + Math.sin(pulseTime) * 0.2})`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('☠', pos.x, pos.y);
+              
+              // Add "CHALLENGER" text at top
+              ctx.font = 'bold 10px Orbitron';
+              ctx.fillStyle = 'rgba(255, 100, 50, 0.9)';
+              ctx.textAlign = 'center';
+              ctx.fillText('CHALLENGER', pos.x, pos.y - halfSize - 10);
+              
+              ctx.restore();
             }
             
             // Add green glow effect for completed mechanism nodes
@@ -1473,7 +1904,54 @@ export default function StoryClimbPage() {
     });
     
     console.log("Canvas render complete");
-  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom]);
+    // Check if start node is visible to show/hide jump button
+    if (treeData) {
+      const startNode = treeData.nodes.find(n => n.id === 'start');
+      if (startNode) {
+        // Simple check: if we've scrolled up more than 100 pixels, show the button
+        // Show button when scrolled up from the start position
+        const isScrolledUp = viewportOffset > -200 || panOffset.y > 50;
+        setShowJumpButton(isScrolledUp);
+      }
+    }
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, hoverEffectStyle, animationTick, challengerEffect]);
+
+  // Animation loop for continuous hover effects and challenger glitch
+  useEffect(() => {
+    // Clear any existing animation
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current);
+      animationIdRef.current = null;
+    }
+    
+    // Check if there are any challenger nodes that need animation
+    const hasChallenger = treeData?.nodes?.some(node => 
+      node.challenger === true && node.storyNodeType === 'normal'
+    ) || false;
+    
+    const animate = () => {
+      // Animate for hover effects OR if there are challenger nodes
+      if ((hoveredNode && (hoverEffectStyle === 4 || hoverEffectStyle === 1 || hoverEffectStyle === 3)) || hasChallenger) {
+        // Force a redraw by updating animation tick (throttled to ~30 FPS)
+        setAnimationTick(prev => prev + 1);
+        animationIdRef.current = requestAnimationFrame(animate);
+      } else {
+        animationIdRef.current = null;
+      }
+    };
+    
+    // Start animation if needed
+    if ((hoveredNode && (hoverEffectStyle === 4 || hoverEffectStyle === 1 || hoverEffectStyle === 3)) || hasChallenger) {
+      animate();
+    }
+    
+    return () => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = null;
+      }
+    };
+  }, [hoveredNode, hoverEffectStyle, treeData]);
 
   // Handle mouse events for panning
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1657,6 +2135,7 @@ export default function StoryClimbPage() {
       if (foundHoverNode !== hoveredNode) {
         console.log('Hover changed to:', foundHoverNode?.id || 'none', 'Available nodes checked:', nodes.filter(n => completedNodes.has(n.id) || n.id === 'start').map(n => n.id));
       }
+      // Always set hoveredNode for animation purposes
       setHoveredNode(foundHoverNode);
     }
 
@@ -1699,7 +2178,7 @@ export default function StoryClimbPage() {
         
         // Allow scrolling up by the full scaled tree height plus some extra
         // This guarantees the final boss can reach the top of the viewport
-        const maxScroll = scaledTreeHeight + 2500; // Maximum scroll limit for complete tree navigation
+        const maxScroll = scaledTreeHeight + 10000; // Increased scroll limit to ensure final boss is reachable
         
         const limitedY = Math.min(newY, maxScroll);
         
@@ -1972,9 +2451,7 @@ export default function StoryClimbPage() {
         if (!completedNodes.has(node.id) && isAdjacent) {
           setHoveredNode(null); // Clear hover state when selecting a node
           setSelectedNode(node);
-          const newCompleted = new Set(completedNodes);
-          newCompleted.add(node.id);
-          setCompletedNodes(newCompleted);
+          // Don't auto-complete the node anymore - let user click Complete button
           // Auto-scroll removed - camera stays where user positioned it
         } else if (completedNodes.has(node.id)) {
           // Allow uncompleting nodes (for testing)
@@ -2029,7 +2506,7 @@ export default function StoryClimbPage() {
     const scaledTreeHeight = treeHeight * scale;
     
     // Allow scrolling the full tree height plus extra room for final boss
-    const maxPossibleOffset = scaledTreeHeight + 500; // Very generous limit
+    const maxPossibleOffset = scaledTreeHeight + 10000; // Increased to match pan handler limit - ensures final boss is accessible
     
     // Minimum offset to allow scrolling closer to the actual bottom
     // Less restrictive to reduce the gap below the start node
@@ -2074,21 +2551,6 @@ export default function StoryClimbPage() {
             STORY MODE - CHAPTER 1
           </h1>
 
-          {/* Style Selector Dropdown */}
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-400">Reward Bar Style:</label>
-            <select
-              value={rewardBarStyle}
-              onChange={(e) => setRewardBarStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-              className="bg-black/80 border border-yellow-500/30 text-yellow-400 px-3 py-1 rounded cursor-pointer hover:border-yellow-500/50 transition-colors"
-            >
-              <option value={1}>Horizontal (labels after)</option>
-              <option value={2}>Vertical (labels below)</option>
-              <option value={3}>Centered columns</option>
-              <option value={4}>Compact side-by-side</option>
-              <option value={5}>Stacked vertical</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -2132,49 +2594,156 @@ export default function StoryClimbPage() {
                 style={{ imageRendering: 'crisp-edges' }}
               />
               
-              {/* Fade gradient only at top */}
-              <div className="absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-black/80 via-black/70 to-transparent pointer-events-none z-10" />
+              {/* Fade gradient with blur at top */}
+              <div className="absolute inset-x-0 top-0 h-60 pointer-events-none z-10">
+                {/* Progressive blur layers - reduced by 25% and moved higher */}
+                <div className="absolute inset-x-0 top-0 h-12 backdrop-blur-md" />
+                <div className="absolute inset-x-0 top-0 h-20 backdrop-blur-sm" />
+                <div className="absolute inset-x-0 top-0 h-28 backdrop-blur-[3px]" />
+                <div className="absolute inset-x-0 top-0 h-36 backdrop-blur-[2px]" />
+                <div className="absolute inset-x-0 top-0 h-44 backdrop-blur-[1px]" />
+                {/* Gradient overlay - back to original size */}
+                <div className="absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-black/85 via-black/75 to-transparent" />
+              </div>
+              
+              {/* Effect Selectors */}
+              <div className="absolute top-4 right-4 z-30 flex gap-2">
+                {/* Hover Effect Selector */}
+                <select
+                  value={hoverEffectStyle}
+                  onChange={(e) => setHoverEffectStyle(Number(e.target.value) as 1 | 2 | 3 | 4)}
+                  className="px-3 py-1 bg-black/60 border border-yellow-500/40 rounded-md text-yellow-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-yellow-500/20 hover:border-yellow-500/60 transition-all duration-200"
+                >
+                  <option value={1}>Hover: Pulse Glow</option>
+                  <option value={2}>Hover: Energy Ring</option>
+                  <option value={3}>Hover: Particle Burst</option>
+                  <option value={4}>Hover: Lightning Arc</option>
+                </select>
+                
+                {/* Challenger Effect Selector */}
+                <select
+                  value={challengerEffect}
+                  onChange={(e) => setChallengerEffect(e.target.value as 'quantum1' | 'quantum2' | 'quantum3')}
+                  className="px-3 py-1 bg-black/60 border border-cyan-500/40 rounded-md text-cyan-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-cyan-500/20 hover:border-cyan-500/60 transition-all duration-200"
+                >
+                  <option value="quantum1">Quantum: Ripple Wave</option>
+                  <option value="quantum2">Quantum: Phase Shift</option>
+                  <option value="quantum3">Quantum: Dimensional Tear</option>
+                </select>
+              </div>
               
               {/* Corner decorations - removed bottom left to not overlap with hemisphere */}
               <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-yellow-500/50" />
               <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-yellow-500/50" />
               <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-yellow-500/50" />
             </div>
+            
+            {/* Jump to Start Button */}
+            {showJumpButton && !isJumping && (
+              <button
+                onClick={() => {
+                  setIsJumping(true);
+                  // Smooth animation to return to start position
+                  const startOffset = viewportOffset;
+                  const startPanY = panOffset.y;
+                  const targetOffset = -250; // Original start position
+                  const targetPanY = 0;
+                  const duration = 800; // 800ms animation
+                  const startTime = Date.now();
+                  
+                  const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // Ease-in-out curve
+                    const eased = progress < 0.5 
+                      ? 2 * progress * progress 
+                      : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                    
+                    setViewportOffset(startOffset + (targetOffset - startOffset) * eased);
+                    setPanOffset({ x: 0, y: startPanY + (targetPanY - startPanY) * eased });
+                    
+                    if (progress < 1) {
+                      requestAnimationFrame(animate);
+                    } else {
+                      setIsJumping(false);
+                    }
+                  };
+                  
+                  requestAnimationFrame(animate);
+                }}
+                className="absolute top-32 left-1/3 transform -translate-x-1/2 px-3 py-1 bg-black/60 border border-yellow-500/40 rounded-md text-yellow-500 text-xs font-orbitron uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500/60 transition-all duration-200 flex items-center gap-1 z-20 cursor-pointer"
+                style={{
+                  animation: 'fadeIn 0.3s ease-out forwards',
+                }}
+              >
+                Jump Down
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="animate-bounce">
+                  <path d="M6 2L6 9M6 9L3 6M6 9L9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+            
+            {/* Easter Egg Text - shows when scrolled down below start */}
+            {viewportOffset < -300 && (
+              <div className="absolute -bottom-48 left-1/2 transform -translate-x-1/2 w-96 text-center text-gray-600 text-xs font-mono tracking-wide opacity-50"
+                style={{
+                  animation: 'fadeIn 1s ease-out forwards',
+                }}>
+                <p className="mb-2">// SYSTEM BREACH DETECTED //</p>
+                <p className="mb-4 text-gray-700">Unauthorized access to restricted memory sector 0x7F3A9</p>
+                <p className="text-gray-800 italic">
+                  "The mechanisms remember what we have forgotten. 
+                  Deep beneath the surface, where the roots of the tree 
+                  extend into the void, lies the first protocol - 
+                  the one that started it all. Some say it still whispers 
+                  in binary, waiting for someone brave enough to decode 
+                  its forgotten purpose."
+                </p>
+                <p className="mt-4 text-gray-600">// END TRANSMISSION //</p>
+              </div>
+            )}
+            
           </div>
 
           {/* Right Column - Mission Card Details */}
           <div className="flex-grow pr-5">
-            {/* Show card for selected node or hovered node */}
-            {(selectedNode || hoveredNode) ? (
+            {/* Show card for selected node */}
+            {selectedNode ? (
               <StoryMissionCard
-                title={`Mission ${(selectedNode || hoveredNode)!.id}`}
-                mekImage={getMekImage((selectedNode || hoveredNode)!.id)}
+                title={`Mission ${selectedNode.id}`}
+                mekImage={getMekImage(selectedNode.id, true)}
                 mekName={`MEK #${Math.floor(Math.random() * 9000) + 1000}`}
-                mekRank={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 100 :
-                        (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 75 :
-                        (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 50 : 34}
-                primaryReward={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 1000000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 500000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 300000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 150000 : 250000}
-                experience={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 20000 :
-                           (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 10000 :
-                           (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 7500 :
-                           (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 3000 : 5000}
-                potentialRewards={getNodeRewards((selectedNode || hoveredNode) as ExtendedStoryNode)}
-                variationBuffs={getNodeVariationBuffs((selectedNode || hoveredNode) as ExtendedStoryNode)}
-                successChance={completedNodes.has((selectedNode || hoveredNode)!.id) ? 100 :
-                              isNodeAvailable((selectedNode || hoveredNode)!) ? 65 : 0}
-                deploymentFee={(selectedNode || hoveredNode)!.storyNodeType === 'final_boss' ? 200000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'boss' ? 100000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'event' ? 75000 :
-                              (selectedNode || hoveredNode)!.storyNodeType === 'normal' ? 30000 : 50000}
-                availableSlots={getNodeAvailableSlots((selectedNode || hoveredNode) as ExtendedStoryNode)}
-                onDeploy={() => handleNodeDeploy((selectedNode || hoveredNode) as ExtendedStoryNode)}
+                mekRank={selectedNode.storyNodeType === 'final_boss' ? 100 :
+                        selectedNode.storyNodeType === 'boss' ? 75 :
+                        selectedNode.storyNodeType === 'event' ? 50 : 34}
+                primaryReward={selectedNode.storyNodeType === 'final_boss' ? 1000000 :
+                              selectedNode.storyNodeType === 'boss' ? 500000 :
+                              selectedNode.storyNodeType === 'event' ? 300000 :
+                              selectedNode.storyNodeType === 'normal' ? 150000 : 250000}
+                experience={selectedNode.storyNodeType === 'final_boss' ? 20000 :
+                           selectedNode.storyNodeType === 'boss' ? 10000 :
+                           selectedNode.storyNodeType === 'event' ? 7500 :
+                           selectedNode.storyNodeType === 'normal' ? 3000 : 5000}
+                potentialRewards={getNodeRewards(selectedNode as ExtendedStoryNode)}
+                variationBuffs={getNodeVariationBuffs(selectedNode as ExtendedStoryNode)}
+                successChance={completedNodes.has(selectedNode.id) ? 100 :
+                              isNodeAvailable(selectedNode) ?
+                                calculateSuccessChance(
+                                  selectedNode.id,
+                                  65,
+                                  getNodeVariationBuffs(selectedNode as ExtendedStoryNode)
+                                ) : 0}
+                deploymentFee={selectedNode.storyNodeType === 'final_boss' ? 200000 :
+                              selectedNode.storyNodeType === 'boss' ? 100000 :
+                              selectedNode.storyNodeType === 'event' ? 75000 :
+                              selectedNode.storyNodeType === 'normal' ? 30000 : 50000}
+                availableSlots={getNodeAvailableSlots(selectedNode as ExtendedStoryNode)}
+                selectedMeks={selectedMeks[selectedNode.id] || []}
+                onDeploy={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
                 onMekSlotClick={handleMekSlotClick}
+                onMekRemove={handleMekRemove}
                 scale={0.95}
-                rewardBarStyle={rewardBarStyle}
-                isLocked={!isNodeAvailable((selectedNode || hoveredNode)!) && !completedNodes.has((selectedNode || hoveredNode)!.id)}
+                isLocked={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
               />
             ) : (
               // No node selected or hovered - Using Style K from UI Showcase
@@ -2182,10 +2751,7 @@ export default function StoryClimbPage() {
                 <div className="text-center">
                   <h3 className="text-2xl font-orbitron font-bold text-yellow-500 mb-3 uppercase tracking-wider">Select A Node</h3>
                   <p className="text-gray-400 text-sm">
-                    Hover over any available node to view mission details
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Click to lock the details in place
+                    Click any available node to view mission details
                   </p>
 
                   <div className="mt-8 text-xs text-gray-500">
@@ -2193,6 +2759,24 @@ export default function StoryClimbPage() {
                   </div>
                 </div>
               </StyleK>
+            )}
+
+            {/* Complete button - outside the card for easy removal later */}
+            {selectedNode && isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id) && (
+              <div className="mt-4 px-4">
+                <button
+                  onClick={() => {
+                    const newCompleted = new Set(completedNodes);
+                    newCompleted.add(selectedNode.id);
+                    setCompletedNodes(newCompleted);
+                    setSelectedNode(null); // Clear selection after completing
+                  }}
+                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wider transition-colors duration-200 border-2 border-green-400/50"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%)' }}
+                >
+                  Complete Mission
+                </button>
+              </div>
             )}
           </div>
         </div>

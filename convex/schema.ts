@@ -216,6 +216,7 @@ export default defineSchema({
     displayNameSet: v.optional(v.boolean()), // Whether the user has set their display name
     avatar: v.optional(v.string()),
     bio: v.optional(v.string()),
+    profileFrame: v.optional(v.string()), // Which frame they're using on profile page
     
     // Game resources
     totalEssence: v.object({
@@ -237,6 +238,22 @@ export default defineSchema({
     }),
     gold: v.number(),
     craftingSlots: v.number(),
+
+    // Base slot values (before buffs)
+    baseContractSlots: v.optional(v.number()),        // How many contracts can run at once (default: 2)
+    baseChipSlots: v.optional(v.number()),            // How many chips per Mek (default: 3)
+
+    // Inventory system - WoW style tabs
+    inventoryTabsUnlocked: v.optional(v.number()),    // How many tabs unlocked (1-5, default: 1)
+    inventoryTabCosts: v.optional(v.object({          // Cost paid for each tab
+      tab2: v.optional(v.number()),
+      tab3: v.optional(v.number()),
+      tab4: v.optional(v.number()),
+      tab5: v.optional(v.number()),
+    })),
+
+    // Calculated totals (with buffs applied) - computed at runtime
+    totalContractSlots: v.optional(v.number()),       // Base + buffs from talent tree, chips, etc.
     
     // Gold generation tracking
     goldPerHour: v.optional(v.number()), // Total gold per hour from all sources
@@ -1010,6 +1027,7 @@ export default defineSchema({
     )),
     tierStart: v.optional(v.number()), // 1-10 for chip/mechanism tiers
     tierEnd: v.optional(v.number()), // 1-10 for chip/mechanism tiers
+    enabledForUniversalChips: v.optional(v.boolean()), // Whether this buff can appear on universal power chips
     // Old fields (deprecated - for migration)
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
@@ -1056,4 +1074,15 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_tier_rank", ["tier", "rank"]),
+
+  // Game constants and configuration
+  gameConstants: defineTable({
+    category: v.string(),
+    setting: v.string(),
+    value: v.union(v.string(), v.number()),
+    description: v.string(),
+    configurable: v.boolean(),
+    updatedAt: v.number(),
+  })
+    .index("by_category", ["category"]),
 });

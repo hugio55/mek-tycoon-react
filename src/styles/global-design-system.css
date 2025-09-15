@@ -376,6 +376,32 @@
   100% { transform: translateY(100%); }
 }
 
+@keyframes mek-particle-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes mek-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
 .mek-scan-effect::after {
   content: '';
   position: absolute;
@@ -383,11 +409,200 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(250, 182, 23, 0.8), 
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(250, 182, 23, 0.8),
     transparent);
   animation: mek-scan-line 3s linear infinite;
+}
+
+/* Success bar particle effects */
+.mek-success-bar-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mek-success-bar-particles::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent 100%);
+  animation: mek-particle-sweep 3s linear infinite;
+}
+
+.mek-success-bar-particles::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    transparent 100%);
+  animation: mek-particle-sweep 2s linear infinite;
+  animation-delay: 1s;
+}
+
+.mek-success-bar-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 60%);
+  background-size: 200% 100%;
+  animation: mek-shimmer 3s linear infinite;
+}
+
+/* Holographic Matrix Button */
+.holographic-matrix-button {
+  position: relative;
+  width: 100%;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border: 2px solid;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Inactive state - Gray */
+.holographic-matrix-button.inactive {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-color: #404040;
+  color: #606060;
+  cursor: not-allowed;
+}
+
+/* Active state - Yellow/Gold illuminated */
+.holographic-matrix-button.active {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-color: #fab617;
+  color: #fab617;
+  box-shadow:
+    0 0 20px rgba(250, 182, 23, 0.3),
+    inset 0 0 20px rgba(250, 182, 23, 0.1);
+}
+
+/* Matrix effect overlay */
+.holographic-matrix-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(250, 182, 23, 0.4),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.holographic-matrix-button.active::before {
+  animation: matrix-sweep 3s linear infinite;
+}
+
+@keyframes matrix-sweep {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Holographic shimmer effect */
+.holographic-matrix-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(250, 182, 23, 0.1) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.holographic-matrix-button.active::after {
+  opacity: 1;
+  animation: holographic-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes holographic-shimmer {
+  0%, 100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+}
+
+/* Hover state for active button */
+.holographic-matrix-button.active:hover {
+  background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+  border-color: #ffc843;
+  color: #ffc843;
+  box-shadow:
+    0 0 30px rgba(250, 182, 23, 0.5),
+    inset 0 0 30px rgba(250, 182, 23, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Text positioning */
+.holographic-matrix-button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Lightbox animations */
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-in {
+  animation: animate-in 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.zoom-in-95 {
+  --tw-scale-x: 0.95;
+  --tw-scale-y: 0.95;
 }
 
 /* ===========================

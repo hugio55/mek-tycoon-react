@@ -30,6 +30,7 @@ export default function UIShowcase() {
   const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string}>>([]);
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [mounted, setMounted] = useState(false);
+  const [isButtonActive, setIsButtonActive] = useState(true);
   
   useEffect(() => {
     setMounted(true);
@@ -308,15 +309,32 @@ export default function UIShowcase() {
                   Quantum Flux (Yellow - Always Active)
                 </button>
               </div>
-              
+
+              {/* Active/Inactive Toggle for Always-Active variants */}
+              {(scifiButtonVariant === 'holographic-yellow-active' || scifiButtonVariant === 'quantum-yellow-active') && (
+                <div className="flex justify-center mb-4">
+                  <button
+                    onClick={() => setIsButtonActive(!isButtonActive)}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      isButtonActive
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
+                    }`}
+                  >
+                    {isButtonActive ? '✓ Active' : '✗ Inactive'}
+                  </button>
+                </div>
+              )}
+
               <div className="flex justify-center">
                 <ViewActiveContractsButtonEnhanced
                   activeContracts={6}
                   maxContracts={14}
                   variant={scifiButtonVariant}
+                  isActive={isButtonActive}
                   buttonText={
-                    scifiButtonVariant === 'holographic-yellow' || scifiButtonVariant === 'holographic-yellow-active' ? 'SUBMIT' : 
-                    scifiButtonVariant === 'quantum-yellow' || scifiButtonVariant === 'quantum-yellow-active' ? 'DEPLOY' : 
+                    scifiButtonVariant === 'holographic-yellow' || scifiButtonVariant === 'holographic-yellow-active' ? 'SUBMIT' :
+                    scifiButtonVariant === 'quantum-yellow' || scifiButtonVariant === 'quantum-yellow-active' ? 'DEPLOY' :
                     undefined
                   }
                 />

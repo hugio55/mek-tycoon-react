@@ -76,6 +76,8 @@ const navCategories: readonly NavCategory[] = [
     icon: "⚡",
     items: [
       { label: "Admin Dashboard", href: "/admin" },
+      { label: "User Management", href: "/admin/users" },
+      { label: "Master Data Systems", href: "/admin-master-data" },
       { label: "Save System", href: "/admin-save" },
       // { label: "Mek Assignment", href: "/mek-assignment" },
       { label: "Mek Selector", href: "/mek-selector" },
@@ -95,7 +97,6 @@ const navCategories: readonly NavCategory[] = [
       { label: "Event Node Rewards", href: "/event-node-rewards" },
       { label: "Sphere Selector", href: "/admin-sphere" },
       { label: "Uni-Chips", href: "/uni-chips" },
-      { label: "Chip Builder", href: "/admin/chip-builder" },
       { label: "Essence Donut", href: "/essence-donut" },
       { label: "Dev Toolbar", href: "/dev-toolbar.html", onClick: () => window.open("/dev-toolbar.html", "devToolbar") },
     ],
