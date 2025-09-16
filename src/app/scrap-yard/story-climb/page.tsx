@@ -30,6 +30,17 @@ interface ExtendedStoryNode extends StoryNode {
   title?: string;
 }
 
+// Simple hash function to generate consistent values from node IDs
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
 export default function StoryClimbPage() {
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
   const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set(['start'])); // Start is always completed
@@ -49,7 +60,7 @@ export default function StoryClimbPage() {
   const [isJumping, setIsJumping] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [hoveredNode, setHoveredNode] = useState<StoryNode | null>(null);
-  const [hoverEffectStyle, setHoverEffectStyle] = useState<1 | 2 | 3 | 4>(1); // For hover effect options
+  const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   const [challengerEffect, setChallengerEffect] = useState<'quantum1' | 'quantum2' | 'quantum3'>('quantum1'); // Challenger quantum variations
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
@@ -682,139 +693,28 @@ export default function StoryClimbPage() {
           }
         }
 
-        // Apply different hover effects based on selected style
+        // Apply pulse glow hover effect
         if (isHovered) {
-          switch (hoverEffectStyle) {
-            case 1: // Pulse Glow
-              ctx.save();
-              const pulseIntensity = 0.6 + Math.sin(Date.now() / 300) * 0.4;
-              ctx.shadowBlur = 40;
-              ctx.shadowColor = `rgba(250, 182, 23, ${pulseIntensity})`;
-              // Double glow effect
-              for (let i = 0; i < 2; i++) {
-                if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
-                  ctx.beginPath();
-                  ctx.arc(pos.x, pos.y, nodeSize + i * 5, 0, Math.PI * 2);
-                  ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
-                  ctx.lineWidth = 2;
-                  ctx.stroke();
-                } else {
-                  ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
-                  ctx.lineWidth = 2;
-                  ctx.strokeRect(pos.x - nodeSize - i * 5, pos.y - nodeSize - i * 5, (nodeSize + i * 5) * 2, (nodeSize + i * 5) * 2);
-                }
-              }
-              ctx.restore();
-              break;
-              
-            case 2: // Energy Ring
-              ctx.save();
-              const ringTime = Date.now() / 1000;
-              const ringRadius = nodeSize + 10 + Math.sin(ringTime * 3) * 5;
-              ctx.strokeStyle = '#fab617';
-              ctx.lineWidth = 3;
-              ctx.shadowBlur = 20;
-              ctx.shadowColor = '#fab617';
-              // Rotating energy ring
-              ctx.setLineDash([8, 4]);
-              ctx.lineDashOffset = -ringTime * 20;
-              if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, ringRadius, 0, Math.PI * 2);
-                ctx.stroke();
-              } else {
-                ctx.strokeRect(pos.x - ringRadius, pos.y - ringRadius, ringRadius * 2, ringRadius * 2);
-              }
-              ctx.setLineDash([]);
-              ctx.restore();
-              break;
-              
-            case 3: // Particle Burst
-              ctx.save();
-              const particleTime = Date.now() / 100;
-              // Draw multiple small particles around the node
-              for (let i = 0; i < 8; i++) {
-                const angle = (Math.PI * 2 / 8) * i + particleTime * 0.1;
-                const distance = nodeSize + 15 + Math.sin(particleTime * 0.5 + i) * 8;
-                const px = pos.x + Math.cos(angle) * distance;
-                const py = pos.y + Math.sin(angle) * distance;
-                const particleOpacity = 0.5 + Math.sin(particleTime + i) * 0.5;
-                
-                ctx.fillStyle = `rgba(250, 182, 23, ${particleOpacity})`;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#fab617';
-                ctx.beginPath();
-                ctx.arc(px, py, 3, 0, Math.PI * 2);
-                ctx.fill();
-              }
-              ctx.restore();
-              break;
-              
-            case 4: // Lightning Arc - Rotating
-              ctx.save();
-              const lightningTime = Date.now() / 600; // Slightly faster rotation
-              ctx.lineCap = 'round';
-              ctx.lineJoin = 'round';
-              
-              // Draw rotating lightning arcs with enhanced visibility
-              for (let i = 0; i < 4; i++) { // 4 arcs instead of 3
-                const baseAngle = (Math.PI * 2 / 4) * i + lightningTime * 1.5; // Rotation speed
-                const arcLength = Math.PI / 2.5; // Longer arcs for better visibility
-                const startAngle = baseAngle;
-                const endAngle = baseAngle + arcLength;
-                const arcRadius = nodeSize + 8; // Slightly further out
-                
-                // Pulsing alpha and intensity
-                const pulseIntensity = 0.6 + Math.sin(lightningTime * 4 + i * 0.5) * 0.4;
-                ctx.globalAlpha = pulseIntensity;
-                
-                // Enhanced glow effect
-                ctx.shadowBlur = 30;
-                ctx.shadowColor = '#5dd4ff';
-                ctx.strokeStyle = `rgba(93, 212, 255, ${pulseIntensity})`;
-                ctx.lineWidth = 4; // Thicker for better visibility
-                
-                // Each arc needs its own path
-                ctx.beginPath();
-                if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
-                  // Draw the main arc
-                  ctx.arc(pos.x, pos.y, arcRadius, startAngle, endAngle, false);
-                  ctx.stroke();
-                  
-                  // Add crackling effect - small additional arcs
-                  ctx.beginPath();
-                  ctx.lineWidth = 2;
-                  ctx.arc(pos.x, pos.y, arcRadius - 3, startAngle + 0.1, endAngle - 0.1, false);
-                  ctx.stroke();
-                  
-                  // Add lightning tail effect
-                  ctx.beginPath();
-                  ctx.lineWidth = 3;
-                  const midAngle = startAngle + arcLength * 0.5;
-                  const tailRadius = arcRadius + 4;
-                  ctx.arc(pos.x, pos.y, tailRadius, midAngle - 0.1, midAngle + 0.1, false);
-                  ctx.stroke();
-                } else {
-                  // For square nodes, draw corner arcs
-                  const numPoints = 8;
-                  for (let j = 0; j <= numPoints; j++) {
-                    const t = j / numPoints;
-                    const angle = startAngle + (endAngle - startAngle) * t;
-                    const x = pos.x + Math.cos(angle) * arcRadius;
-                    const y = pos.y + Math.sin(angle) * arcRadius;
-                    if (j === 0) {
-                      ctx.moveTo(x, y);
-                    } else {
-                      ctx.lineTo(x, y);
-                    }
-                  }
-                  ctx.stroke();
-                }
-              }
-              ctx.globalAlpha = 1;
-              ctx.restore();
-              break;
+          // Pulse Glow effect only
+          ctx.save();
+          const pulseIntensity = 0.6 + Math.sin(Date.now() / 300) * 0.4;
+          ctx.shadowBlur = 40;
+          ctx.shadowColor = `rgba(250, 182, 23, ${pulseIntensity})`;
+          // Double glow effect
+          for (let i = 0; i < 2; i++) {
+            if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + i * 5, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            } else {
+              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+              ctx.lineWidth = 2;
+              ctx.strokeRect(pos.x - nodeSize - i * 5, pos.y - nodeSize - i * 5, (nodeSize + i * 5) * 2, (nodeSize + i * 5) * 2);
+            }
           }
+          ctx.restore();
         }
 
         // Base glow for available nodes (always present)
@@ -1611,17 +1511,148 @@ export default function StoryClimbPage() {
               ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
             }
             
-            // Add Challenger skull overlay
+            // Add Challenger frame effects
             if (isChallenger && !isCompleted) {
               ctx.save();
               const pulseTime = Date.now() / 500;
+              const nodeOffset = hashCode(node.id) % 1000;
               
-              // Draw skull symbol
-              ctx.font = 'bold 24px Arial';
-              ctx.fillStyle = `rgba(255, 100, 50, ${0.5 + Math.sin(pulseTime) * 0.2})`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText('☠', pos.x, pos.y);
+              // Draw special frame based on selected style
+              switch (challengerFrameStyle) {
+                case 'spikes':
+                  // Draw jagged spikes around the circle
+                  ctx.strokeStyle = `rgba(255, 50, 50, ${0.7 + Math.sin(pulseTime) * 0.3})`;
+                  ctx.lineWidth = 2;
+                  const spikeCount = 16;
+                  for (let i = 0; i < spikeCount; i++) {
+                    const angle = (i / spikeCount) * Math.PI * 2;
+                    const innerRadius = halfSize + 2;
+                    const outerRadius = halfSize + 8 + Math.sin(pulseTime + i) * 2;
+                    const x1 = pos.x + Math.cos(angle) * innerRadius;
+                    const y1 = pos.y + Math.sin(angle) * innerRadius;
+                    const x2 = pos.x + Math.cos(angle) * outerRadius;
+                    const y2 = pos.y + Math.sin(angle) * outerRadius;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                  }
+                  break;
+                  
+                case 'lightning':
+                  // Draw electric arcs around the circle
+                  ctx.strokeStyle = `rgba(100, 200, 255, ${0.6 + Math.sin(pulseTime) * 0.4})`;
+                  ctx.lineWidth = 1.5;
+                  const arcCount = 8;
+                  for (let i = 0; i < arcCount; i++) {
+                    const startAngle = (i / arcCount) * Math.PI * 2 + pulseTime * 0.002;
+                    const endAngle = startAngle + Math.PI / 6;
+                    const radius = halfSize + 5;
+                    ctx.beginPath();
+                    const steps = 5;
+                    for (let j = 0; j <= steps; j++) {
+                      const t = j / steps;
+                      const angle = startAngle + (endAngle - startAngle) * t;
+                      const jitter = Math.random() * 4 - 2;
+                      const r = radius + jitter;
+                      const x = pos.x + Math.cos(angle) * r;
+                      const y = pos.y + Math.sin(angle) * r;
+                      if (j === 0) ctx.moveTo(x, y);
+                      else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                  }
+                  break;
+                  
+                case 'sawblade':
+                  // Draw rotating sawblade teeth
+                  ctx.fillStyle = `rgba(200, 200, 200, ${0.5 + Math.sin(pulseTime) * 0.2})`;
+                  const teeth = 24;
+                  const rotation = pulseTime * 0.002;
+                  ctx.beginPath();
+                  for (let i = 0; i < teeth; i++) {
+                    const angle = (i / teeth) * Math.PI * 2 + rotation;
+                    const nextAngle = ((i + 1) / teeth) * Math.PI * 2 + rotation;
+                    const innerRadius = halfSize;
+                    const outerRadius = halfSize + (i % 2 === 0 ? 8 : 4);
+                    const x1 = pos.x + Math.cos(angle) * innerRadius;
+                    const y1 = pos.y + Math.sin(angle) * innerRadius;
+                    const x2 = pos.x + Math.cos(angle) * outerRadius;
+                    const y2 = pos.y + Math.sin(angle) * outerRadius;
+                    const x3 = pos.x + Math.cos(nextAngle) * outerRadius;
+                    const y3 = pos.y + Math.sin(nextAngle) * outerRadius;
+                    const x4 = pos.x + Math.cos(nextAngle) * innerRadius;
+                    const y4 = pos.y + Math.sin(nextAngle) * innerRadius;
+                    if (i === 0) ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(x3, y3);
+                    ctx.lineTo(x4, y4);
+                  }
+                  ctx.closePath();
+                  ctx.fill();
+                  break;
+                  
+                case 'flames':
+                  // Draw animated flames around the circle
+                  const flameCount = 12;
+                  for (let i = 0; i < flameCount; i++) {
+                    const angle = (i / flameCount) * Math.PI * 2;
+                    const flameHeight = 12 + Math.sin(pulseTime + i * 0.5) * 4;
+                    const baseX = pos.x + Math.cos(angle) * halfSize;
+                    const baseY = pos.y + Math.sin(angle) * halfSize;
+                    const tipX = pos.x + Math.cos(angle) * (halfSize + flameHeight);
+                    const tipY = pos.y + Math.sin(angle) * (halfSize + flameHeight);
+                    
+                    // Gradient for flame
+                    const gradient = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
+                    gradient.addColorStop(0, `rgba(255, 100, 0, ${0.8})`);  
+                    gradient.addColorStop(0.5, `rgba(255, 200, 0, ${0.6})`);
+                    gradient.addColorStop(1, `rgba(255, 255, 100, ${0.2})`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.moveTo(baseX, baseY);
+                    const controlX1 = baseX + Math.cos(angle - 0.2) * flameHeight * 0.3;
+                    const controlY1 = baseY + Math.sin(angle - 0.2) * flameHeight * 0.3;
+                    const controlX2 = baseX + Math.cos(angle + 0.2) * flameHeight * 0.3;
+                    const controlY2 = baseY + Math.sin(angle + 0.2) * flameHeight * 0.3;
+                    ctx.quadraticCurveTo(controlX1, controlY1, tipX, tipY);
+                    ctx.quadraticCurveTo(controlX2, controlY2, baseX, baseY);
+                    ctx.fill();
+                  }
+                  break;
+                  
+                case 'crystals':
+                  // Draw crystalline shards around the circle
+                  ctx.fillStyle = `rgba(150, 50, 255, ${0.4 + Math.sin(pulseTime) * 0.2})`;
+                  ctx.strokeStyle = `rgba(200, 100, 255, ${0.7})`;
+                  ctx.lineWidth = 1;
+                  const crystalCount = 8;
+                  for (let i = 0; i < crystalCount; i++) {
+                    const angle = (i / crystalCount) * Math.PI * 2 + Math.sin(pulseTime * 0.001 + i) * 0.1;
+                    const innerRadius = halfSize;
+                    const outerRadius = halfSize + 10 + Math.sin(pulseTime * 0.002 + i * 2) * 2;
+                    const width = 4;
+                    
+                    const baseX = pos.x + Math.cos(angle) * innerRadius;
+                    const baseY = pos.y + Math.sin(angle) * innerRadius;
+                    const tipX = pos.x + Math.cos(angle) * outerRadius;
+                    const tipY = pos.y + Math.sin(angle) * outerRadius;
+                    const leftX = baseX + Math.cos(angle + Math.PI/2) * width;
+                    const leftY = baseY + Math.sin(angle + Math.PI/2) * width;
+                    const rightX = baseX + Math.cos(angle - Math.PI/2) * width;
+                    const rightY = baseY + Math.sin(angle - Math.PI/2) * width;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(leftX, leftY);
+                    ctx.lineTo(tipX, tipY);
+                    ctx.lineTo(rightX, rightY);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                  break;
+              }
               
               // Add "CHALLENGER" text at top
               ctx.font = 'bold 10px Orbitron';
@@ -1904,7 +1935,10 @@ export default function StoryClimbPage() {
     });
     
     console.log("Canvas render complete");
-    // Check if start node is visible to show/hide jump button
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerEffect, challengerFrameStyle]);
+
+  // Separate effect for jump button visibility to avoid infinite loop
+  useEffect(() => {
     if (treeData) {
       const startNode = treeData.nodes.find(n => n.id === 'start');
       if (startNode) {
@@ -1914,7 +1948,7 @@ export default function StoryClimbPage() {
         setShowJumpButton(isScrolledUp);
       }
     }
-  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, hoverEffectStyle, animationTick, challengerEffect]);
+  }, [treeData, viewportOffset, panOffset.y]);
 
   // Animation loop for continuous hover effects and challenger glitch
   useEffect(() => {
@@ -1931,7 +1965,7 @@ export default function StoryClimbPage() {
     
     const animate = () => {
       // Animate for hover effects OR if there are challenger nodes
-      if ((hoveredNode && (hoverEffectStyle === 4 || hoverEffectStyle === 1 || hoverEffectStyle === 3)) || hasChallenger) {
+      if (hoveredNode || hasChallenger) {
         // Force a redraw by updating animation tick (throttled to ~30 FPS)
         setAnimationTick(prev => prev + 1);
         animationIdRef.current = requestAnimationFrame(animate);
@@ -1951,7 +1985,7 @@ export default function StoryClimbPage() {
         animationIdRef.current = null;
       }
     };
-  }, [hoveredNode, hoverEffectStyle, treeData]);
+  }, [hoveredNode, treeData]);
 
   // Handle mouse events for panning
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -2608,16 +2642,17 @@ export default function StoryClimbPage() {
               
               {/* Effect Selectors */}
               <div className="absolute top-4 right-4 z-30 flex gap-2">
-                {/* Hover Effect Selector */}
+                {/* Challenger Frame Selector */}
                 <select
-                  value={hoverEffectStyle}
-                  onChange={(e) => setHoverEffectStyle(Number(e.target.value) as 1 | 2 | 3 | 4)}
-                  className="px-3 py-1 bg-black/60 border border-yellow-500/40 rounded-md text-yellow-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-yellow-500/20 hover:border-yellow-500/60 transition-all duration-200"
+                  value={challengerFrameStyle}
+                  onChange={(e) => setChallengerFrameStyle(e.target.value as 'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals')}
+                  className="px-3 py-1 bg-black/60 border border-red-500/40 rounded-md text-red-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-red-500/20 hover:border-red-500/60 transition-all duration-200"
                 >
-                  <option value={1}>Hover: Pulse Glow</option>
-                  <option value={2}>Hover: Energy Ring</option>
-                  <option value={3}>Hover: Particle Burst</option>
-                  <option value={4}>Hover: Lightning Arc</option>
+                  <option value="spikes">Frame: Spikes</option>
+                  <option value="lightning">Frame: Lightning</option>
+                  <option value="sawblade">Frame: Sawblade</option>
+                  <option value="flames">Frame: Flames</option>
+                  <option value="crystals">Frame: Crystals</option>
                 </select>
                 
                 {/* Challenger Effect Selector */}

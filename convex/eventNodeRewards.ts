@@ -20,7 +20,24 @@ export const saveConfiguration = mutation({
       createdAt: Date.now(),
     });
 
-    return configId;
+    return { success: true, _id: configId };
+  },
+});
+
+// Update existing configuration
+export const updateConfiguration = mutation({
+  args: {
+    configId: v.id("eventNodeConfigs"),
+    data: v.string(),
+    timestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.configId, {
+      data: args.data,
+      timestamp: args.timestamp,
+    });
+
+    return { success: true };
   },
 });
 

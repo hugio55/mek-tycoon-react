@@ -46,6 +46,7 @@ import type * as meks from "../meks.js";
 import type * as migrateBuffCategories from "../migrateBuffCategories.js";
 import type * as migrationUtils from "../migrationUtils.js";
 import type * as migrations from "../migrations.js";
+import type * as normalMekRewards from "../normalMekRewards.js";
 import type * as optimizedQueries from "../optimizedQueries.js";
 import type * as saves from "../saves.js";
 import type * as seedBuffCategories from "../seedBuffCategories.js";
@@ -109,6 +110,7 @@ declare const fullApi: ApiFromModules<{
   migrateBuffCategories: typeof migrateBuffCategories;
   migrationUtils: typeof migrationUtils;
   migrations: typeof migrations;
+  normalMekRewards: typeof normalMekRewards;
   optimizedQueries: typeof optimizedQueries;
   saves: typeof saves;
   seedBuffCategories: typeof seedBuffCategories;

@@ -532,7 +532,7 @@ export default function StoryMissionCard({
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={mekImage}
+              src={mekImage.replace('/mek-images/', '/mek-images/1000px/')}
               alt={mekName}
               width={2000}
               height={2000}

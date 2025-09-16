@@ -925,6 +925,12 @@ export default defineSchema({
     .index("by_end_time", ["endTime"]),
 
   // Event Node Rewards configuration saves
+  normalMekRewardConfigs: defineTable({
+    name: v.string(),
+    data: v.string(),
+    timestamp: v.number(),
+  }),
+
   eventNodeConfigs: defineTable({
     userId: v.string(),
     name: v.string(),
