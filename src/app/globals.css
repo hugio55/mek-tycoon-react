@@ -22,6 +22,9 @@ body {
 /* Import the global design system */
 @import '../styles/global-design-system.css';
 
+/* Import the advanced typography system */
+@import '../styles/typography-system.css';
+
 /* Leaderboard animations */
 @keyframes goldPulse {
   0%, 100% { 

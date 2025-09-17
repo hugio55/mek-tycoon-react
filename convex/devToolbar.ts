@@ -28,6 +28,7 @@ export const saveSettings = mutation({
       favorite: v.boolean(),
       color: v.string(),
       order: v.optional(v.number()),
+      isDivider: v.optional(v.boolean()),
     })),
   },
   handler: async (ctx, args) => {

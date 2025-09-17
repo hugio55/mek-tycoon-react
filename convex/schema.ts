@@ -940,6 +940,30 @@ export default defineSchema({
   })
     .index("by_user", ["userId"]),
 
+  // Deployed Story Climb node data - live configuration
+  deployedStoryClimbData: defineTable({
+    deploymentId: v.string(), // Unique deployment ID
+    deployedAt: v.number(), // Timestamp
+    deployedBy: v.string(), // User ID who deployed
+    version: v.number(), // Version number for tracking
+    status: v.union(v.literal("pending"), v.literal("active"), v.literal("archived")),
+
+    // JSON stringified node data arrays
+    eventNodes: v.string(), // EventNodeData[]
+    normalNodes: v.optional(v.string()), // NormalMekNodeData[]
+    challengerNodes: v.optional(v.string()), // ChallengerNodeData[]
+    miniBossNodes: v.optional(v.string()), // MiniBossNodeData[]
+    finalBossNodes: v.optional(v.string()), // FinalBossNodeData[]
+
+    // Metadata
+    configurationName: v.optional(v.string()),
+    configurationId: v.optional(v.string()),
+    notes: v.optional(v.string()),
+  })
+    .index("by_status", ["status"])
+    .index("by_deployed_by", ["deployedBy"])
+    .index("by_deployment_id", ["deploymentId"]),
+
   // Chip Definitions - templates for all possible chips
   chipDefinitions: defineTable({
     name: v.string(),
@@ -1100,6 +1124,7 @@ export default defineSchema({
       favorite: v.boolean(),
       color: v.string(),
       order: v.optional(v.number()),
+      isDivider: v.optional(v.boolean()),
     })),
     updatedAt: v.number(),
   }),

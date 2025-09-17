@@ -5,6 +5,8 @@ import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import mekRarityMaster from '../../convex/mekRarityMaster.json';
+import { calculateChipRewardsForEvent, MODIFIER_COLORS, TIER_COLORS } from '@/lib/chipRewardCalculator';
+import { DeploymentStatus, ValidationResult } from '@/types/deployedNodeData';
 
 interface EventNode {
   eventNumber: number;
@@ -71,7 +73,7 @@ export default function EventNodeEditor() {
   const [currentConfigId, setCurrentConfigId] = useState<Id<"eventNodeConfigs"> | null>(null);
   const [currentConfigName, setCurrentConfigName] = useState<string>('');
   const [saveName, setSaveName] = useState('');
-  const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set([1]));
+  const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   const [bulkNames, setBulkNames] = useState('');
   const [showLoadLightbox, setShowLoadLightbox] = useState(false);
   const [previewImage, setPreviewImage] = useState<number | null>(null);
@@ -81,6 +83,13 @@ export default function EventNodeEditor() {
     type: 'frame' | 'canister' | 'gear' | 'other';
     description: string;
   }>({ name: '', type: 'frame', description: '' });
+
+  // Deployment state
+  const [showDeploymentModal, setShowDeploymentModal] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus>({
+    isDeploying: false,
+  });
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
   // Global ranges for all 200 events
   const [globalRanges, setGlobalRanges] = useState({
@@ -92,22 +101,7 @@ export default function EventNodeEditor() {
     xpRounding: 'none' as 'none' | '5' | '10'
   });
 
-  const saveConfiguration = useMutation(api.eventNodeRewards.saveConfiguration);
-  const updateConfiguration = useMutation(api.eventNodeRewards.updateConfiguration);
-  const deleteConfiguration = useMutation(api.eventNodeRewards.deleteConfiguration);
-  const savedConfigs = useQuery(api.eventNodeRewards.getConfigurations);
-  const selectedConfig = useQuery(
-    api.eventNodeRewards.loadConfiguration,
-    currentConfigId ? { configId: currentConfigId } : "skip"
-  );
-
-  // Get search results for the active search
-  const activeSearchTerm = activeSearchIndex !== null ? (itemSearchTerms[activeSearchIndex] || '') : '';
-  const searchResults = useQuery(
-    api.gameItemsSearch.searchGameItems,
-    activeSearchTerm.length >= 2 ? { searchTerm: activeSearchTerm } : "skip"
-  );
-
+  // Initialize eventsData before using it in queries
   const [eventsData, setEventsData] = useState<EventNode[]>(() => {
     // Initialize with 200 events (20 per chapter × 10 chapters)
     const initialData: EventNode[] = [];
@@ -122,6 +116,30 @@ export default function EventNodeEditor() {
     }
     return initialData;
   });
+
+  const saveConfiguration = useMutation(api.eventNodeRewards.saveConfiguration);
+  const updateConfiguration = useMutation(api.eventNodeRewards.updateConfiguration);
+  const deleteConfiguration = useMutation(api.eventNodeRewards.deleteConfiguration);
+  const savedConfigs = useQuery(api.eventNodeRewards.getConfigurations);
+  const selectedConfig = useQuery(
+    api.eventNodeRewards.loadConfiguration,
+    currentConfigId ? { configId: currentConfigId } : "skip"
+  );
+
+  // Deployment mutations and queries
+  const deployEventNodes = useMutation(api.deployedNodeData.deployEventNodes);
+  const validateDeploymentData = useQuery(
+    api.deployedNodeData.validateDeploymentData,
+    showDeploymentModal ? { eventData: JSON.stringify(eventsData) } : "skip"
+  );
+  const deploymentHistory = useQuery(api.deployedNodeData.getDeploymentHistory, { limit: 5 });
+
+  // Get search results for the active search
+  const activeSearchTerm = activeSearchIndex !== null ? (itemSearchTerms[activeSearchIndex] || '') : '';
+  const searchResults = useQuery(
+    api.gameItemsSearch.searchGameItems,
+    activeSearchTerm.length >= 2 ? { searchTerm: activeSearchTerm } : "skip"
+  );
 
   // Load selected configuration
   useEffect(() => {
@@ -139,6 +157,13 @@ export default function EventNodeEditor() {
       }
     }
   }, [selectedConfig]);
+
+  // Update validation result when deployment data is validated
+  useEffect(() => {
+    if (validateDeploymentData) {
+      setValidationResult(validateDeploymentData);
+    }
+  }, [validateDeploymentData]);
 
   // Auto-load last used configuration on mount
   useEffect(() => {
@@ -354,6 +379,59 @@ export default function EventNodeEditor() {
     localStorage.setItem('lastEventNodeConfigName', configName);
   };
 
+  // Handle deployment to Story Climb
+  const handleDeployment = async () => {
+    if (!validationResult?.isValid) {
+      alert('Please fix validation errors before deploying');
+      return;
+    }
+
+    setDeploymentStatus({ isDeploying: true });
+
+    try {
+      // Add chip rewards to each event before deployment
+      const eventsWithChips = eventsData.map(event => ({
+        ...event,
+        chipRewards: calculateChipRewardsForEvent(event.eventNumber).rewards
+      }));
+
+      const result = await deployEventNodes({
+        configurationId: currentConfigId || undefined,
+        configurationName: currentConfigName || undefined,
+        eventData: JSON.stringify(eventsWithChips),
+        notes: `Deployed from ${currentConfigName || 'Unsaved Configuration'}`,
+      });
+
+      if (result.success) {
+        setDeploymentStatus({
+          isDeploying: false,
+          lastDeployment: {
+            timestamp: Date.now(),
+            success: true,
+            message: result.message,
+            deploymentId: result.deploymentId,
+          },
+        });
+        alert(`Success! ${result.message}`);
+        setShowDeploymentModal(false);
+      } else {
+        throw new Error(result.error || 'Unknown deployment error');
+      }
+    } catch (error) {
+      console.error('Deployment failed:', error);
+      setDeploymentStatus({
+        isDeploying: false,
+        lastDeployment: {
+          timestamp: Date.now(),
+          success: false,
+          message: error instanceof Error ? error.message : 'Deployment failed',
+        },
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      alert(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   // Round-robin distribution table - Event 1 gets less rare, Event 20 gets most rare
   const ROUND_ROBIN_TABLE = [
     [20, 40, 60, 80], // Event 1 - less rare of the 80 least abundant
@@ -549,6 +627,12 @@ export default function EventNodeEditor() {
               className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-sm transition-colors"
             >
               Load
+            </button>
+            <button
+              onClick={() => setShowDeploymentModal(true)}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded text-sm transition-colors font-semibold"
+            >
+              🚀 Deploy to Story Climb
             </button>
           </div>
         </div>
@@ -802,6 +886,32 @@ export default function EventNodeEditor() {
                                     />
                                   </div>
 
+                                  {/* Chip Rewards */}
+                                  {(() => {
+                                    const chipData = calculateChipRewardsForEvent(leftEvent.eventNumber);
+                                    return (
+                                      <div className="mt-2 p-1 bg-black/20 rounded border border-purple-500/10">
+                                        <div className="text-xs text-purple-400/60 mb-1">
+                                          <span className="font-semibold">Power Chips</span>
+                                          <span className="ml-1 text-[10px] text-purple-400/40">({chipData.distributionType})</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                          {chipData.rewards.map((reward, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-[10px]">
+                                              <span className="text-gray-400">{reward.probability}%</span>
+                                              <span className="font-mono">
+                                                <span style={{ color: TIER_COLORS[reward.tier - 1] }}>T{reward.tier}</span>
+                                                <span style={{ color: MODIFIER_COLORS[reward.modifier] }} className="ml-1 font-bold">
+                                                  {reward.modifier}
+                                                </span>
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+
                                   {leftEvent.essenceRewards && leftEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
                                       <div className="font-semibold">Essences:</div>
@@ -903,6 +1013,32 @@ export default function EventNodeEditor() {
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-blue-400/20 rounded text-xs text-blue-400"
                                     />
                                   </div>
+
+                                  {/* Chip Rewards */}
+                                  {(() => {
+                                    const chipData = calculateChipRewardsForEvent(rightEvent.eventNumber);
+                                    return (
+                                      <div className="mt-2 p-1 bg-black/20 rounded border border-purple-500/10">
+                                        <div className="text-xs text-purple-400/60 mb-1">
+                                          <span className="font-semibold">Power Chips</span>
+                                          <span className="ml-1 text-[10px] text-purple-400/40">({chipData.distributionType})</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                          {chipData.rewards.map((reward, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-[10px]">
+                                              <span className="text-gray-400">{reward.probability}%</span>
+                                              <span className="font-mono">
+                                                <span style={{ color: TIER_COLORS[reward.tier - 1] }}>T{reward.tier}</span>
+                                                <span style={{ color: MODIFIER_COLORS[reward.modifier] }} className="ml-1 font-bold">
+                                                  {reward.modifier}
+                                                </span>
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   {rightEvent.essenceRewards && rightEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
@@ -1073,6 +1209,166 @@ export default function EventNodeEditor() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deployment Modal */}
+      {showDeploymentModal && (
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+          style={{ position: 'fixed', top: 0, left: 0 }}
+          onClick={() => !deploymentStatus.isDeploying && setShowDeploymentModal(false)}
+        >
+          <div
+            className="bg-gray-900 border-2 border-orange-500/50 rounded-lg p-6 m-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-orange-400 mb-4 flex items-center gap-2">
+              🚀 Deploy Event Configuration to Story Climb
+            </h2>
+
+            {/* Configuration Info */}
+            <div className="bg-black/50 border border-orange-500/20 rounded p-4 mb-4">
+              <div className="text-sm space-y-1">
+                <div>
+                  <span className="text-gray-400">Configuration: </span>
+                  <span className="text-orange-300 font-semibold">
+                    {currentConfigName || 'Unsaved Configuration'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Total Events: </span>
+                  <span className="text-white font-semibold">{eventsData.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Total Gold: </span>
+                  <span className="text-yellow-400 font-semibold">{totalGold.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Total XP: </span>
+                  <span className="text-blue-400 font-semibold">{totalXP.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Validation Results */}
+            {validationResult && (
+              <div className="mb-4 space-y-3">
+                {/* Errors */}
+                {validationResult.errors.length > 0 && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded p-3">
+                    <h4 className="text-red-400 font-semibold mb-2">❌ Errors (Must Fix)</h4>
+                    <ul className="text-sm text-red-300 space-y-1">
+                      {validationResult.errors.map((error, i) => (
+                        <li key={i}>• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Warnings */}
+                {validationResult.warnings.length > 0 && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-3">
+                    <h4 className="text-yellow-400 font-semibold mb-2">⚠️ Warnings</h4>
+                    <ul className="text-sm text-yellow-300 space-y-1">
+                      {validationResult.warnings.map((warning, i) => (
+                        <li key={i}>• {warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Success */}
+                {validationResult.isValid && validationResult.warnings.length === 0 && (
+                  <div className="bg-green-500/10 border border-green-500/30 rounded p-3">
+                    <h4 className="text-green-400 font-semibold mb-2">✅ Ready to Deploy</h4>
+                    <p className="text-sm text-green-300">
+                      All validation checks passed. Your configuration is ready to deploy.
+                    </p>
+                  </div>
+                )}
+
+                {/* Summary */}
+                <div className="bg-black/30 border border-gray-600 rounded p-3">
+                  <h4 className="text-gray-300 font-semibold mb-2">📊 Summary</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-400">Events with custom names: </span>
+                      <span className={validationResult.summary.hasAllEventNames ? "text-green-400" : "text-yellow-400"}>
+                        {validationResult.summary.hasAllEventNames ? "✅ All" : "⚠️ Some missing"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Events with rewards: </span>
+                      <span className={validationResult.summary.hasAllRewards ? "text-green-400" : "text-yellow-400"}>
+                        {validationResult.summary.hasAllRewards ? "✅ All" : "⚠️ Some missing"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Deployments */}
+            {deploymentHistory && deploymentHistory.length > 0 && (
+              <div className="mb-4 bg-black/30 border border-gray-600 rounded p-3">
+                <h4 className="text-gray-300 font-semibold mb-2">📜 Recent Deployments</h4>
+                <div className="space-y-1 text-xs">
+                  {deploymentHistory.map((deployment) => (
+                    <div key={deployment._id} className="flex justify-between text-gray-400">
+                      <span>v{deployment.version} - {deployment.configurationName || 'Unknown'}</span>
+                      <span>{new Date(deployment.deployedAt).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deployment Warning */}
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded p-4 mb-4">
+              <p className="text-sm text-orange-300">
+                <strong>⚠️ Important:</strong> Deploying will immediately update the Story Climb page for all players.
+                The previous configuration will be archived and can be rolled back if needed.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeployment}
+                disabled={deploymentStatus.isDeploying || !validationResult?.isValid}
+                className={`flex-1 px-6 py-3 rounded font-semibold transition-colors ${
+                  deploymentStatus.isDeploying || !validationResult?.isValid
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-orange-600 hover:bg-orange-500 text-white'
+                }`}
+              >
+                {deploymentStatus.isDeploying ? '⏳ Deploying...' : '🚀 Deploy Now'}
+              </button>
+              <button
+                onClick={() => setShowDeploymentModal(false)}
+                disabled={deploymentStatus.isDeploying}
+                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Deployment Status */}
+            {deploymentStatus.lastDeployment && (
+              <div className={`mt-4 p-3 rounded ${
+                deploymentStatus.lastDeployment.success
+                  ? 'bg-green-500/10 border border-green-500/30'
+                  : 'bg-red-500/10 border border-red-500/30'
+              }`}>
+                <p className={`text-sm ${
+                  deploymentStatus.lastDeployment.success ? 'text-green-300' : 'text-red-300'
+                }`}>
+                  {deploymentStatus.lastDeployment.message}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

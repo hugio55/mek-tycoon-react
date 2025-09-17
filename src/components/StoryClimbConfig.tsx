@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import EventNodeEditor from './EventNodeEditor';
 import NormalMekRewards from './NormalMekRewards';
-import EventChipDistribution from './EventChipDistribution';
 import PreviewTreeModal from './PreviewTreeModal';
 
 interface ChapterConfig {
@@ -204,10 +203,7 @@ export default function StoryClimbConfig() {
       </div>
 
 
-      {/* Universal Chip Distribution for Events */}
-      <EventChipDistribution />
-
-      {/* Event Node Editor - moved here so essence distribution is above it */}
+      {/* Event Node Editor with integrated chip rewards */}
       <EventNodeEditor />
 
       {/* Normal Mek Node Rewards */}

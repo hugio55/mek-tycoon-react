@@ -1,0 +1,580 @@
+/*
+  MEK TYCOON ADVANCED TYPOGRAPHY SYSTEM
+  =====================================
+  Multi-font system for visual variety and contextual typography
+  Designed for sci-fi industrial aesthetic with maximum readability
+*/
+
+/* ===========================
+   FONT IMPORTS
+   =========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&family=Michroma&family=Exo+2:ital,wght@0,100..900;1,100..900&family=Audiowide&family=Black+Ops+One&family=Russo+One&family=Saira:wght@100;200;300;400;500;600;700;800;900&family=Teko:wght@300;400;500;600;700&family=Oxanium:wght@200;300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
+/* ===========================
+   FONT ROLES & HIERARCHY
+   =========================== */
+
+:root {
+  /* Primary Display Fonts */
+  --font-hero: 'Michroma', 'Orbitron', sans-serif;        /* Page titles, hero text */
+  --font-heading: 'Audiowide', 'Russo One', sans-serif;   /* Section headers */
+  --font-subheading: 'Exo 2', 'Rajdhani', sans-serif;     /* Subheadings, card titles */
+
+  /* UI & Interface Fonts */
+  --font-ui-primary: 'Saira', 'Rajdhani', sans-serif;     /* Primary UI text */
+  --font-ui-secondary: 'Space Grotesk', sans-serif;       /* Secondary UI, descriptions */
+  --font-label: 'Oxanium', 'Saira', sans-serif;           /* Labels, tags, badges */
+
+  /* Data & Technical Fonts */
+  --font-data: 'JetBrains Mono', 'Share Tech Mono', monospace;  /* Numbers, stats, data */
+  --font-code: 'JetBrains Mono', monospace;               /* Code, technical info */
+  --font-timer: 'Teko', 'Bebas Neue', sans-serif;         /* Timers, countdowns */
+
+  /* Special Effect Fonts */
+  --font-military: 'Black Ops One', 'Russo One', cursive; /* Military/combat text */
+  --font-impact: 'Bebas Neue', 'Teko', impact;            /* High impact, alerts */
+  --font-tech: 'Share Tech Mono', 'Audiowide', monospace; /* Technical readouts */
+
+  /* Contextual Font Stacks */
+  --font-stack-hero: var(--font-hero);
+  --font-stack-body: var(--font-ui-secondary);
+  --font-stack-data: var(--font-data);
+  --font-stack-label: var(--font-label);
+}
+
+/* ===========================
+   TYPOGRAPHY CLASSES BY PURPOSE
+   =========================== */
+
+/* HERO & DISPLAY TEXT */
+.typo-hero-title {
+  font-family: var(--font-hero);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  /* Michroma is naturally bold, doesn't need high weight */
+}
+
+.typo-page-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.typo-section-header {
+  font-family: 'Russo One', var(--font-heading);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* CARD & COMPONENT HEADERS */
+.typo-card-title {
+  font-family: var(--font-subheading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.typo-card-subtitle {
+  font-family: 'Saira', var(--font-ui-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* UI TEXT VARIATIONS */
+.typo-ui-primary {
+  font-family: var(--font-ui-primary);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+.typo-ui-secondary {
+  font-family: var(--font-ui-secondary);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1.6;
+}
+
+.typo-description {
+  font-family: 'Space Grotesk', var(--font-ui-secondary);
+  font-size: 0.875rem;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* LABELS & TAGS */
+.typo-label {
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.typo-label-subtle {
+  font-family: 'Oxanium', var(--font-label);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.typo-badge {
+  font-family: 'Saira', var(--font-label);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* DATA & NUMBERS */
+.typo-data-large {
+  font-family: var(--font-data);
+  font-size: 2.5rem;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.typo-data-medium {
+  font-family: var(--font-data);
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.typo-data-small {
+  font-family: var(--font-data);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.typo-stat-value {
+  font-family: 'JetBrains Mono', var(--font-data);
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.typo-stat-label {
+  font-family: 'Oxanium', var(--font-label);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* TIMERS & COUNTDOWNS */
+.typo-timer {
+  font-family: var(--font-timer);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+
+.typo-countdown {
+  font-family: 'Teko', var(--font-timer);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* SPECIAL CONTEXT FONTS */
+.typo-military {
+  font-family: var(--font-military);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.typo-alert {
+  font-family: var(--font-impact);
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.typo-warning {
+  font-family: 'Russo One', var(--font-military);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.typo-tech-readout {
+  font-family: var(--font-tech);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* BUTTON TEXT VARIATIONS */
+.typo-button-primary {
+  font-family: 'Russo One', var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.typo-button-secondary {
+  font-family: 'Saira', var(--font-ui-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.typo-button-small {
+  font-family: 'Oxanium', var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ===========================
+   CONTEXTUAL VARIATIONS BY PAGE
+   =========================== */
+
+/* HUB PAGE - Command Center Feel */
+.page-hub {
+  --font-primary: 'Michroma', 'Audiowide', sans-serif;
+  --font-secondary: 'Saira', sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+}
+
+/* COMBAT/MISSIONS - Military Aesthetic */
+.page-combat {
+  --font-primary: 'Black Ops One', 'Russo One', sans-serif;
+  --font-secondary: 'Russo One', sans-serif;
+  --font-data: 'Share Tech Mono', monospace;
+}
+
+/* SHOP/MARKET - Clean Commercial */
+.page-shop {
+  --font-primary: 'Exo 2', sans-serif;
+  --font-secondary: 'Space Grotesk', sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+}
+
+/* CRAFTING - Technical Workshop */
+.page-crafting {
+  --font-primary: 'Audiowide', 'Orbitron', sans-serif;
+  --font-secondary: 'Oxanium', sans-serif;
+  --font-data: 'Share Tech Mono', monospace;
+}
+
+/* LEADERBOARD - Competitive Arena */
+.page-leaderboard {
+  --font-primary: 'Bebas Neue', 'Teko', sans-serif;
+  --font-secondary: 'Saira', sans-serif;
+  --font-data: 'Teko', sans-serif;
+}
+
+/* ===========================
+   SPECIAL EFFECTS & ANIMATIONS
+   =========================== */
+
+/* Glitch Text Effect */
+.typo-glitch {
+  position: relative;
+  animation: glitch-skew 1s infinite linear alternate-reverse;
+}
+
+.typo-glitch::before,
+.typo-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.typo-glitch::before {
+  animation: glitch-1 0.2s infinite;
+  color: #00ffff;
+  z-index: -1;
+}
+
+.typo-glitch::after {
+  animation: glitch-2 0.2s infinite;
+  color: #ff00ff;
+  z-index: -2;
+}
+
+@keyframes glitch-1 {
+  0% {
+    clip-path: inset(20% 0 30% 0);
+    transform: translate(-2px, -2px);
+  }
+  20% {
+    clip-path: inset(65% 0 5% 0);
+    transform: translate(2px, 2px);
+  }
+  40% {
+    clip-path: inset(45% 0 35% 0);
+    transform: translate(-2px, 2px);
+  }
+  60% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(2px, -2px);
+  }
+  80% {
+    clip-path: inset(80% 0 10% 0);
+    transform: translate(-2px, 0);
+  }
+  100% {
+    clip-path: inset(20% 0 30% 0);
+    transform: translate(0);
+  }
+}
+
+@keyframes glitch-2 {
+  0% {
+    clip-path: inset(65% 0 5% 0);
+    transform: translate(2px, -2px);
+  }
+  20% {
+    clip-path: inset(20% 0 30% 0);
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(0, -2px);
+  }
+  60% {
+    clip-path: inset(45% 0 35% 0);
+    transform: translate(2px, 0);
+  }
+  80% {
+    clip-path: inset(80% 0 10% 0);
+    transform: translate(-2px, 2px);
+  }
+  100% {
+    clip-path: inset(65% 0 5% 0);
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes glitch-skew {
+  0% {
+    transform: skew(0deg);
+  }
+  20% {
+    transform: skew(-2deg);
+  }
+  40% {
+    transform: skew(1deg);
+  }
+  60% {
+    transform: skew(-1deg);
+  }
+  80% {
+    transform: skew(0.5deg);
+  }
+  100% {
+    transform: skew(0deg);
+  }
+}
+
+/* Distortion Effect */
+.typo-distort {
+  animation: distort 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes distort {
+  0%, 100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  25% {
+    transform: scaleX(1.02) scaleY(0.98);
+  }
+  50% {
+    transform: scaleX(0.98) scaleY(1.02);
+  }
+  75% {
+    transform: scaleX(1.01) scaleY(0.99);
+  }
+}
+
+/* Scan Line Text */
+.typo-scan {
+  position: relative;
+  overflow: hidden;
+}
+
+.typo-scan::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  animation: scan-text 8s linear infinite;
+}
+
+@keyframes scan-text {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 200%;
+  }
+}
+
+/* Typewriter Effect */
+.typo-typewriter {
+  overflow: hidden;
+  border-right: 2px solid;
+  white-space: nowrap;
+  animation:
+    typewriter 3s steps(30) 1s 1 normal both,
+    blink-cursor 1s step-end infinite;
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-cursor {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: currentColor;
+  }
+}
+
+/* Variable Weight Animation */
+.typo-variable-weight {
+  font-family: 'Exo 2', sans-serif;
+  animation: variable-weight 3s ease-in-out infinite;
+}
+
+@keyframes variable-weight {
+  0%, 100% {
+    font-variation-settings: 'wght' 200;
+  }
+  50% {
+    font-variation-settings: 'wght' 800;
+  }
+}
+
+/* ===========================
+   RESPONSIVE TYPOGRAPHY
+   =========================== */
+
+@media (max-width: 640px) {
+  .typo-hero-title {
+    font-size: 2rem;
+  }
+
+  .typo-page-title {
+    font-size: 1.75rem;
+  }
+
+  .typo-data-large {
+    font-size: 2rem;
+  }
+
+  .typo-timer {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .typo-hero-title {
+    font-size: 5rem;
+  }
+
+  .typo-page-title {
+    font-size: 3.5rem;
+  }
+
+  .typo-data-large {
+    font-size: 3rem;
+  }
+}
+
+/* ===========================
+   UTILITY CLASSES
+   =========================== */
+
+/* Quick Font Family Switches */
+.font-michroma { font-family: 'Michroma', sans-serif !important; }
+.font-audiowide { font-family: 'Audiowide', sans-serif !important; }
+.font-russo { font-family: 'Russo One', sans-serif !important; }
+.font-exo { font-family: 'Exo 2', sans-serif !important; }
+.font-saira { font-family: 'Saira', sans-serif !important; }
+.font-space { font-family: 'Space Grotesk', sans-serif !important; }
+.font-oxanium { font-family: 'Oxanium', sans-serif !important; }
+.font-jetbrains { font-family: 'JetBrains Mono', monospace !important; }
+.font-sharetech { font-family: 'Share Tech Mono', monospace !important; }
+.font-teko { font-family: 'Teko', sans-serif !important; }
+.font-bebas { font-family: 'Bebas Neue', sans-serif !important; }
+.font-blackops { font-family: 'Black Ops One', cursive !important; }
+.font-orbitron { font-family: 'Orbitron', sans-serif !important; }
+.font-rajdhani { font-family: 'Rajdhani', sans-serif !important; }
+
+/* Text Shadow Utilities */
+.text-glow-yellow { text-shadow: 0 0 20px rgba(250, 182, 23, 0.5); }
+.text-glow-blue { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+.text-glow-red { text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+.text-glow-green { text-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
+.text-glow-cyan { text-shadow: 0 0 20px rgba(34, 211, 238, 0.5); }
+.text-shadow-hard { text-shadow: 2px 2px 0 #000; }
+.text-shadow-soft { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+/* Letter Spacing Utilities */
+.tracking-tightest { letter-spacing: -0.05em; }
+.tracking-tighter { letter-spacing: -0.025em; }
+.tracking-tight { letter-spacing: -0.01em; }
+.tracking-wide { letter-spacing: 0.05em; }
+.tracking-wider { letter-spacing: 0.1em; }
+.tracking-widest { letter-spacing: 0.2em; }

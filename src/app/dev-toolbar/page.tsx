@@ -10,6 +10,7 @@ type Button = {
   favorite: boolean;
   color: string;
   order?: number;
+  isDivider?: boolean;
 };
 
 export default function DevToolbarPage() {
@@ -155,9 +156,30 @@ export default function DevToolbarPage() {
       name: `Button ${buttons.length + 1}`,
       url: 'http://localhost:3100/',
       favorite: false,
-      color: 'default'
+      color: 'default',
+      isDivider: false
     };
     handleSave([...buttons, newButton]);
+  };
+
+  // Add divider
+  const addDivider = (afterIndex?: number) => {
+    const divider = {
+      name: '---',
+      url: '',
+      favorite: false,
+      color: 'default',
+      isDivider: true
+    };
+
+    if (afterIndex !== undefined) {
+      const sortedButtons = getSortedButtons();
+      const newButtons = [...sortedButtons];
+      newButtons.splice(afterIndex + 1, 0, divider);
+      handleSave(newButtons);
+    } else {
+      handleSave([...buttons, divider]);
+    }
   };
 
   // Update button in edit mode
@@ -204,30 +226,53 @@ export default function DevToolbarPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-4">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 p-4 bg-black/50 backdrop-blur-lg rounded-lg border border-white/10 mb-6">
+      <div className="flex flex-wrap items-center gap-3 p-4 bg-black/50 backdrop-blur-lg rounded-lg border border-white/10 mb-6">
         {sortedButtons.map((button, index) => (
-          <button
-            key={button.url}
-            className={`
-              px-6 py-3 rounded-lg font-semibold transition-all transform
-              hover:scale-105 hover:shadow-xl cursor-move
-              ${getButtonColorClass(button.color)}
-              ${button.favorite ? 'ring-2 ring-yellow-400' : ''}
-              ${draggedIndex === index ? 'opacity-50' : ''}
-              ${dragOverIndex === index ? 'scale-110' : ''}
-              ${editMode ? 'opacity-70 cursor-not-allowed' : ''}
-            `}
-            draggable={!editMode}
-            onDragStart={(e) => !editMode && handleDragStart(e, button, index)}
-            onDragEnd={handleDragEnd}
-            onDragOver={(e) => !editMode && handleDragOver(e, index)}
-            onDrop={(e) => !editMode && handleDrop(e, index)}
-            onClick={() => !editMode && openInChrome(button.url, button.name)}
-            onContextMenu={(e) => !editMode && handleContextMenu(e, button)}
-          >
-            {button.favorite && <span className="mr-2">★</span>}
-            {button.name}
-          </button>
+          button.isDivider ? (
+            <div
+              key={`divider-${index}`}
+              className={`
+                w-full basis-full h-4 relative group
+                ${draggedIndex === index ? 'bg-yellow-400/20' : ''}
+                ${dragOverIndex === index ? 'bg-yellow-400/30' : ''}
+                ${editMode ? 'bg-white/5 hover:bg-white/10' : ''}
+              `}
+              draggable={!editMode}
+              onDragStart={(e) => !editMode && handleDragStart(e, button, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => !editMode && handleDragOver(e, index)}
+              onDrop={(e) => !editMode && handleDrop(e, index)}
+            >
+              {editMode && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs text-gray-600">Line Break</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              key={button.url || `button-${index}`}
+              className={`
+                px-6 py-3 rounded-lg font-semibold transition-all transform
+                hover:scale-105 hover:shadow-xl cursor-move
+                ${getButtonColorClass(button.color)}
+                ${button.favorite ? 'ring-2 ring-yellow-400' : ''}
+                ${draggedIndex === index ? 'opacity-50' : ''}
+                ${dragOverIndex === index ? 'scale-110' : ''}
+                ${editMode ? 'opacity-70 cursor-not-allowed' : ''}
+              `}
+              draggable={!editMode}
+              onDragStart={(e) => !editMode && handleDragStart(e, button, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => !editMode && handleDragOver(e, index)}
+              onDrop={(e) => !editMode && handleDrop(e, index)}
+              onClick={() => !editMode && !button.isDivider && openInChrome(button.url, button.name)}
+              onContextMenu={(e) => !editMode && !button.isDivider && handleContextMenu(e, button)}
+            >
+              {button.favorite && <span className="mr-2">★</span>}
+              {button.name}
+            </button>
+          )
         ))}
       </div>
 
@@ -235,14 +280,22 @@ export default function DevToolbarPage() {
       <div className="bg-black/50 backdrop-blur-lg rounded-lg border border-white/10 p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-yellow-400">Button Configuration</h2>
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className={`px-6 py-2 rounded font-semibold transition-colors ${
-              editMode ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-500 hover:bg-yellow-600'
-            }`}
-          >
-            Edit Mode: {editMode ? 'ON' : 'OFF'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => addDivider()}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold transition-colors"
+            >
+              + Add Line Break
+            </button>
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`px-6 py-2 rounded font-semibold transition-colors ${
+                editMode ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-500 hover:bg-yellow-600'
+              }`}
+            >
+              Edit Mode: {editMode ? 'ON' : 'OFF'}
+            </button>
+          </div>
         </div>
 
         {/* Edit Mode */}
@@ -250,37 +303,52 @@ export default function DevToolbarPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto mb-4">
               {sortedButtons.map((button, index) => (
-                <div key={button.url} className="bg-white/5 p-4 rounded-lg">
-                  <input
-                    type="text"
-                    value={button.name}
-                    onChange={(e) => updateButton(index, 'name', e.target.value)}
-                    className="w-full p-2 mb-2 bg-white/10 rounded"
-                    placeholder="Button Name"
-                  />
-                  <input
-                    type="text"
-                    value={button.url}
-                    onChange={(e) => updateButton(index, 'url', e.target.value)}
-                    className="w-full p-2 mb-2 bg-white/10 rounded"
-                    placeholder="URL"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateButton(index, 'favorite', !button.favorite)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        button.favorite ? 'bg-yellow-600' : 'bg-gray-600'
-                      }`}
-                    >
-                      {button.favorite ? '★ Favorited' : '☆ Favorite'}
-                    </button>
-                    <button
-                      onClick={() => removeButton(index)}
-                      className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                <div key={`edit-${index}`} className="bg-white/5 p-4 rounded-lg">
+                  {button.isDivider ? (
+                    <div className="text-center">
+                      <div className="text-gray-400 mb-2">📐 Line Break</div>
+                      <div className="text-xs text-gray-500 mb-2">Creates a new row</div>
+                      <button
+                        onClick={() => removeButton(index)}
+                        className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-700 w-full"
+                      >
+                        Remove Line Break
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={button.name}
+                        onChange={(e) => updateButton(index, 'name', e.target.value)}
+                        className="w-full p-2 mb-2 bg-white/10 rounded"
+                        placeholder="Button Name"
+                      />
+                      <input
+                        type="text"
+                        value={button.url}
+                        onChange={(e) => updateButton(index, 'url', e.target.value)}
+                        className="w-full p-2 mb-2 bg-white/10 rounded"
+                        placeholder="URL"
+                      />
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => updateButton(index, 'favorite', !button.favorite)}
+                          className={`px-3 py-1 rounded text-sm ${
+                            button.favorite ? 'bg-yellow-600' : 'bg-gray-600'
+                          }`}
+                        >
+                          {button.favorite ? '★ Favorited' : '☆ Favorite'}
+                        </button>
+                        <button
+                          onClick={() => removeButton(index)}
+                          className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

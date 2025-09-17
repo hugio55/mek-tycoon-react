@@ -10,7 +10,6 @@ import MekRecruitmentModalV4 from '@/app/contracts/components/MekRecruitmentModa
 import { generateSampleMeks } from '@/app/contracts/utils/helpers';
 import { leastRareMechanisms } from './least-rare-mechanisms';
 import { createSeededRandomFromString } from '@/lib/seeded-random';
-import { calculateChipRewardsForEvent } from '@/lib/chipRewardCalculator';
 
 
 interface StoryNode {
@@ -89,8 +88,7 @@ export default function StoryClimbPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [hoverEffectStyle, setHoverEffectStyle] = useState(0); // Add missing hover effect style
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
-  // Challenger effect locked to Phase Shift (quantum2)
-  const [debugMode, setDebugMode] = useState(false); // Debug mode to allow clicking any node
+  const [challengerEffect, setChallengerEffect] = useState<'quantum1' | 'quantum2' | 'quantum3'>('quantum1'); // Challenger quantum variations
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
@@ -148,224 +146,9 @@ export default function StoryClimbPage() {
 
   // Always use database tree data (V2, V1, or test5)
   const treeData = v2Tree || v1Tree || test5Tree; // Use V2 if available, otherwise V1, then Test 5
-
-  // Fetch deployed event data
-  const activeDeployment = useQuery(api.deployedNodeData.getActiveDeployment);
-  const [deployedEventNodes, setDeployedEventNodes] = useState<Map<string, any>>(new Map());
-  const [deployedNormalNodes, setDeployedNormalNodes] = useState<any[]>([]);
-  const [deployedChallengerNodes, setDeployedChallengerNodes] = useState<any[]>([]);
-  const [deployedMiniBossNodes, setDeployedMiniBossNodes] = useState<any[]>([]);
-  const [deployedFinalBossNodes, setDeployedFinalBossNodes] = useState<any[]>([]);
-
-  // Process deployed event data into a Map for easy lookups
-  useEffect(() => {
-    console.log('Active deployment:', activeDeployment);
-
-    // Load event nodes
-    if (activeDeployment?.eventNodes) {
-      try {
-        const eventData = typeof activeDeployment.eventNodes === 'string'
-          ? JSON.parse(activeDeployment.eventNodes)
-          : activeDeployment.eventNodes;
-        console.log('Parsed event data:', eventData.length, 'events');
-        const nodeMap = new Map();
-
-        eventData.forEach((event: any) => {
-          // Map by global event number (1-200)
-          const eventNumber = event.eventNumber || event.globalEventNumber;
-          if (eventNumber) {
-            // Calculate which chapter and local event number
-            const chapter = Math.ceil(eventNumber / 20);
-            const localEventNumber = ((eventNumber - 1) % 20) + 1;
-
-            // Calculate chip rewards for this event
-            const chipRewards = calculateChipRewardsForEvent(eventNumber);
-
-            // Store both by event number and potential node IDs
-            const eventData = {
-              ...event,
-              chapter,
-              localEventNumber,
-              chipRewards,
-              globalEventNumber: eventNumber
-            };
-
-            // Add many possible key formats to increase chance of matching
-            nodeMap.set(`event_${eventNumber}`, eventData);
-            nodeMap.set(`E${localEventNumber}`, eventData); // Also map by local event format
-            nodeMap.set(`E${chapter}_${localEventNumber}`, eventData); // And chapter-specific format
-            nodeMap.set(`${eventNumber}`, eventData); // Just the number
-            nodeMap.set(eventNumber, eventData); // Number as number
-
-            // Log what we're storing
-            console.log(`Storing event ${eventNumber} with keys:`, [
-              `event_${eventNumber}`,
-              `E${localEventNumber}`,
-              `E${chapter}_${localEventNumber}`,
-              `${eventNumber}`
-            ]);
-          }
-        });
-
-        setDeployedEventNodes(nodeMap);
-        console.log('Loaded deployed event data:', nodeMap.size, 'events');
-        console.log('Map keys:', Array.from(nodeMap.keys()));
-      } catch (error) {
-        console.error('Failed to parse deployed event data:', error);
-      }
-    }
-
-    // Load normal nodes
-    if (activeDeployment?.normalNodes) {
-      try {
-        const normalData = typeof activeDeployment.normalNodes === 'string'
-          ? JSON.parse(activeDeployment.normalNodes)
-          : activeDeployment.normalNodes;
-        setDeployedNormalNodes(normalData);
-        console.log('Loaded normal nodes:', normalData.length);
-      } catch (error) {
-        console.error('Failed to parse normal nodes:', error);
-      }
-    }
-
-    // Load challenger nodes
-    if (activeDeployment?.challengerNodes) {
-      try {
-        const challengerData = typeof activeDeployment.challengerNodes === 'string'
-          ? JSON.parse(activeDeployment.challengerNodes)
-          : activeDeployment.challengerNodes;
-        setDeployedChallengerNodes(challengerData);
-        console.log('Loaded challenger nodes:', challengerData.length);
-      } catch (error) {
-        console.error('Failed to parse challenger nodes:', error);
-      }
-    }
-
-    // Load mini-boss nodes
-    if (activeDeployment?.miniBossNodes) {
-      try {
-        const miniBossData = typeof activeDeployment.miniBossNodes === 'string'
-          ? JSON.parse(activeDeployment.miniBossNodes)
-          : activeDeployment.miniBossNodes;
-        setDeployedMiniBossNodes(miniBossData);
-        console.log('Loaded mini-boss nodes:', miniBossData.length);
-      } catch (error) {
-        console.error('Failed to parse mini-boss nodes:', error);
-      }
-    }
-
-    // Load final boss nodes
-    if (activeDeployment?.finalBossNodes) {
-      try {
-        const finalBossData = typeof activeDeployment.finalBossNodes === 'string'
-          ? JSON.parse(activeDeployment.finalBossNodes)
-          : activeDeployment.finalBossNodes;
-        setDeployedFinalBossNodes(finalBossData);
-        console.log('Loaded final boss nodes:', finalBossData.length);
-      } catch (error) {
-        console.error('Failed to parse final boss nodes:', error);
-      }
-    }
-
-    if (!activeDeployment) {
-      console.log('No active deployment found');
-    }
-  }, [activeDeployment]);
-
-  // Helper to get deployed mek data for a node
-  const getDeployedMekForNode = useCallback((node: StoryNode) => {
-    // Parse chapter from node ID (e.g., "node_C1_N5" -> chapter 1)
-    const chapterMatch = node.id?.match(/C(\d+)/);
-    const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
-
-    // Parse node number for indexing
-    const nodeMatch = node.id?.match(/[N|E|B|MB|FB](\d+)/);
-    const nodeIndex = nodeMatch ? parseInt(nodeMatch[1]) - 1 : 0; // -1 for 0-based array
-
-    switch (node.storyNodeType) {
-      case 'normal':
-        // Filter normal nodes for this chapter and pick based on node index
-        const normalMeksForChapter = deployedNormalNodes.filter(m => m.chapter === chapter);
-        if (normalMeksForChapter.length > 0) {
-          return normalMeksForChapter[nodeIndex % normalMeksForChapter.length];
-        }
-        break;
-      case 'challenger':
-        const challengerMeksForChapter = deployedChallengerNodes.filter(m => m.chapter === chapter);
-        if (challengerMeksForChapter.length > 0) {
-          return challengerMeksForChapter[nodeIndex % challengerMeksForChapter.length];
-        }
-        break;
-      case 'boss':
-        const miniBossMeksForChapter = deployedMiniBossNodes.filter(m => m.chapter === chapter);
-        if (miniBossMeksForChapter.length > 0) {
-          return miniBossMeksForChapter[nodeIndex % miniBossMeksForChapter.length];
-        }
-        break;
-      case 'final_boss':
-        const finalBossMekForChapter = deployedFinalBossNodes.find(m => m.chapter === chapter);
-        if (finalBossMekForChapter) {
-          return finalBossMekForChapter;
-        }
-        break;
-    }
-    return null;
-  }, [deployedNormalNodes, deployedChallengerNodes, deployedMiniBossNodes, deployedFinalBossNodes]);
-
-  // Helper to get event data for a node
-  const getEventDataForNode = useCallback((node: StoryNode) => {
-    if (node.storyNodeType !== 'event') return null;
-
-    console.log('Looking for event data for node:', {
-      id: node.id,
-      label: node.label,
-      type: node.storyNodeType
-    });
-    console.log('Available deployed event keys:', Array.from(deployedEventNodes.keys()));
-
-    // Try various ID formats to find the matching event
-    const possibleIds = [
-      node.id,
-      node.label,
-      node.id.replace('event_', ''),
-      // Extract event number from label like "E1", "E2", etc.
-      node.label?.match(/E(\d+)/)?.[1]
-    ];
-
-    console.log('Trying to match with IDs:', possibleIds);
-
-    for (const id of possibleIds) {
-      if (id && deployedEventNodes.has(id)) {
-        console.log('Found match with ID:', id);
-        return deployedEventNodes.get(id);
-      }
-      // Also try with "E" prefix
-      if (id && deployedEventNodes.has(`E${id}`)) {
-        console.log('Found match with E prefix:', `E${id}`);
-        return deployedEventNodes.get(`E${id}`);
-      }
-    }
-
-    console.log('No match found for event node');
-    return null;
-  }, [deployedEventNodes]);
-
+  
   // Helper function to generate rewards based on node type and level
   const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
-    // For event nodes, use deployed chip rewards
-    if (node.storyNodeType === 'event') {
-      const eventData = getEventDataForNode(node);
-      if (eventData?.chipRewards) {
-        // Convert chip rewards to the format expected by StoryMissionCard
-        return eventData.chipRewards.map((chip: any) => ({
-          name: `T${chip.tier} ${chip.modifier} Power Chip`,
-          quantity: 1,
-          chance: chip.probability
-        }));
-      }
-    }
-
-    // Default rewards for non-event nodes
     const baseRewards = [
       { name: "Common Power Chip", quantity: 2, chance: 75 },
       { name: "Bumblebee Essence", quantity: 1.5, chance: 45 },
@@ -374,7 +157,7 @@ export default function StoryClimbPage() {
       { name: "Rare Power Chip", quantity: 1, chance: 8 },
       { name: "Legendary Frame", quantity: 1, chance: 1 }
     ];
-
+    
     // Adjust rewards based on node type
     if (node.storyNodeType === 'final_boss') {
       return baseRewards.map(r => ({
@@ -391,9 +174,9 @@ export default function StoryClimbPage() {
     } else if (node.storyNodeType === 'event') {
       return baseRewards.slice(0, 4); // Only first 4 rewards for events
     }
-
+    
     return baseRewards;
-  }, [getEventDataForNode]);
+  }, []);
   
   // Helper function to generate variation buffs based on node
   const getNodeVariationBuffs = useCallback((node: ExtendedStoryNode) => {
@@ -1604,10 +1387,242 @@ export default function StoryClimbPage() {
               ctx.stroke();
               ctx.restore();
             }
-
-
             
-            // Add Challenger frame effects BEFORE clipping (so they appear behind the node)
+            // Clip to circular shape (slightly smaller for frame effect)
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // Apply hover effect to image
+            const isHovered = hoveredNode && hoveredNode.id === node.id;
+            if (isHovered) {
+              ctx.save();
+              // Scale effect on hover
+              const hoverScale = 1.05 + Math.sin(Date.now() / 300) * 0.02; // Subtle pulse
+              const scaledSize = halfSize * hoverScale;
+              // Brightness effect
+              ctx.filter = 'brightness(1.2) contrast(1.1)';
+              ctx.drawImage(img, pos.x - scaledSize, pos.y - scaledSize, scaledSize * 2, scaledSize * 2);
+              ctx.filter = 'none';
+              ctx.restore();
+            } else if (isChallenger && !isCompleted) {
+              // Apply selected challenger effect
+              ctx.save();
+              
+              // Create unique offset for each node based on its ID
+              let nodeHash = 0;
+              for (let i = 0; i < node.id.length; i++) {
+                nodeHash = ((nodeHash << 5) - nodeHash) + node.id.charCodeAt(i);
+              }
+              const nodeOffset = (Math.abs(nodeHash) % 1000) / 100; // Unique offset 0-10
+              const time = Date.now() + nodeOffset * 1000; // Add node-specific time offset
+              
+              switch (challengerEffect) {
+                case 'quantum1': // Ripple Wave effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Continuous ripple waves emanating from multiple points
+                  ctx.globalCompositeOperation = 'screen';
+                  const rippleCount = 5;
+                  
+                  for (let i = 0; i < rippleCount; i++) {
+                    // Use continuous sine/cosine for seamless motion
+                    const rippleTime = time * 0.0008 + i * 2.4 + nodeOffset * 0.7;
+                    const centerX = pos.x + Math.sin(rippleTime * 1.3) * halfSize * 0.5;
+                    const centerY = pos.y + Math.cos(rippleTime * 0.9) * halfSize * 0.5;
+                    
+                    // Multiple expanding rings per ripple source
+                    for (let ring = 0; ring < 3; ring++) {
+                      const ringTime = time * 0.001 + ring * 0.8;
+                      const radius = ((ringTime * 30) % (halfSize * 2)) + 10;
+                      const alpha = Math.max(0, 1 - (radius / (halfSize * 2))) * 0.3;
+                      
+                      const gradient = ctx.createRadialGradient(
+                        centerX, centerY, Math.max(0, radius - 10),
+                        centerX, centerY, radius
+                      );
+                      gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+                      gradient.addColorStop(0.5, `rgba(0, 255, 255, ${alpha})`);
+                      gradient.addColorStop(0.8, `rgba(255, 0, 255, ${alpha * 0.5})`);
+                      gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+                      
+                      ctx.fillStyle = gradient;
+                      ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                    }
+                  }
+                  
+                  // Subtle wave distortion
+                  ctx.globalCompositeOperation = 'difference';
+                  ctx.globalAlpha = 0.2;
+                  for (let y = 0; y < halfSize * 2; y += 6) {
+                    const waveOffset = Math.sin(time * 0.001 + y * 0.05) * 3;
+                    ctx.drawImage(
+                      img,
+                      pos.x - halfSize, pos.y - halfSize + y,
+                      halfSize * 2, 6,
+                      pos.x - halfSize + waveOffset, pos.y - halfSize + y,
+                      halfSize * 2, 6
+                    );
+                  }
+                  break;
+                  
+                case 'quantum2': // Phase Shift effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Phasing layers - image shifts between dimensions
+                  ctx.globalCompositeOperation = 'screen';
+                  const phaseCount = 4;
+                  
+                  for (let p = 0; p < phaseCount; p++) {
+                    const phaseTime = time * 0.0006 + p * Math.PI * 0.5 + nodeOffset;
+                    const phaseAlpha = (Math.sin(phaseTime) + 1) * 0.35;
+                    const phaseX = Math.sin(phaseTime * 1.7) * 8;
+                    const phaseY = Math.cos(phaseTime * 1.3) * 8;
+                    
+                    ctx.globalAlpha = phaseAlpha;
+                    
+                    // Draw phase-shifted copies with color tints
+                    ctx.save();
+                    if (p % 2 === 0) {
+                      ctx.filter = 'hue-rotate(180deg)';
+                    } else {
+                      ctx.filter = 'hue-rotate(-60deg)';
+                    }
+                    ctx.drawImage(
+                      img,
+                      pos.x - halfSize + phaseX,
+                      pos.y - halfSize + phaseY,
+                      halfSize * 2, halfSize * 2
+                    );
+                    ctx.restore();
+                  }
+                  
+                  // Quantum interference pattern
+                  ctx.globalCompositeOperation = 'overlay';
+                  ctx.globalAlpha = 0.3;
+                  const interferenceTime = time * 0.0008;
+                  
+                  for (let x = 0; x < halfSize * 2; x += 4) {
+                    for (let y = 0; y < halfSize * 2; y += 4) {
+                      const dist1 = Math.sqrt(Math.pow(x - halfSize * 0.3, 2) + Math.pow(y - halfSize * 0.3, 2));
+                      const dist2 = Math.sqrt(Math.pow(x - halfSize * 1.7, 2) + Math.pow(y - halfSize * 1.7, 2));
+                      const interference = Math.sin(dist1 * 0.1 - interferenceTime) * Math.sin(dist2 * 0.1 + interferenceTime);
+                      
+                      if (interference > 0.5) {
+                        const brightness = interference * 255;
+                        ctx.fillStyle = `rgba(0, ${brightness}, ${brightness}, 0.5)`;
+                        ctx.fillRect(pos.x - halfSize + x, pos.y - halfSize + y, 4, 4);
+                      }
+                    }
+                  }
+                  break;
+                  
+                case 'quantum3': // Dimensional Tear effect
+                  // Draw base blurred image
+                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
+                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+                  ctx.filter = 'none';
+                  
+                  // Dimensional tears - vertical rifts
+                  ctx.globalCompositeOperation = 'screen';
+                  for (let i = 0; i < 4; i++) {
+                    const tearTime = time * 0.0005 + i * 1.7 + nodeOffset;
+                    const tearX = pos.x + Math.sin(tearTime) * halfSize * 0.8;
+                    const tearY = pos.y + Math.cos(tearTime * 0.7) * halfSize * 0.3;
+                    
+                    // Create vertical tear gradient
+                    const tearGradient = ctx.createLinearGradient(
+                      tearX - 2, tearY - halfSize,
+                      tearX + 2, tearY - halfSize
+                    );
+                    tearGradient.addColorStop(0, 'rgba(255, 0, 255, 0)');
+                    tearGradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.8)');
+                    tearGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+                    
+                    ctx.fillStyle = tearGradient;
+                    const tearHeight = halfSize * 1.5 + Math.sin(tearTime * 3) * halfSize * 0.3;
+                    ctx.fillRect(tearX - 2, tearY - tearHeight/2, 4, tearHeight);
+                  }
+                  
+                  // Reality distortion waves
+                  ctx.globalCompositeOperation = 'difference';
+                  ctx.globalAlpha = 0.4;
+                  const waveCount = 3;
+                  for (let w = 0; w < waveCount; w++) {
+                    const waveTime = time * 0.001 + w * 2.1 + nodeOffset * 0.5;
+                    const waveRadius = (Math.sin(waveTime) + 1) * halfSize;
+                    
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, waveRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 0, 255, ${0.3 - w * 0.1})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                  }
+                  
+                  // Pixel displacement effect
+                  ctx.globalCompositeOperation = 'source-over';
+                  ctx.globalAlpha = 0.6;
+                  const gridSize = 8;
+                  for (let gx = 0; gx < halfSize * 2; gx += gridSize) {
+                    for (let gy = 0; gy < halfSize * 2; gy += gridSize) {
+                      const distortTime = time * 0.002 + (gx + gy) * 0.01;
+                      if (Math.sin(distortTime) > 0.7) {
+                        const offsetX = Math.sin(distortTime * 2) * 3;
+                        const offsetY = Math.cos(distortTime * 2) * 3;
+                        
+                        ctx.drawImage(
+                          img,
+                          pos.x - halfSize + gx, pos.y - halfSize + gy,
+                          gridSize, gridSize,
+                          pos.x - halfSize + gx + offsetX, pos.y - halfSize + gy + offsetY,
+                          gridSize, gridSize
+                        );
+                      }
+                    }
+                  }
+                  break;
+              }
+              
+              ctx.globalAlpha = 1;
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.restore();
+            } else {
+              // Draw image at full opacity always
+              ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            }
+            
+            // Draw darkening overlay for unavailable/non-completed nodes
+            if (!isCompleted && !isAvailable) {
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+              ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            }
+            // Draw green overlay for completed nodes
+            else if (isCompleted) {
+              ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+              ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
+            }
+            
+            // Add green glow effect for completed mechanism nodes
+            if (isCompleted) {
+              ctx.save();
+              ctx.shadowBlur = 10;
+              ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
+              ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              ctx.restore();
+            }
+            ctx.restore();
+            
+            // Add Challenger frame effects AFTER clipping is removed
             if (isChallenger && !isCompleted) {
               ctx.save();
               const pulseTime = Date.now() / 500;
@@ -1623,8 +1638,8 @@ export default function StoryClimbPage() {
                   
                   // Single path for all spikes for better performance
                   ctx.save();
-                  ctx.fillStyle = `rgba(120, 35, 35, ${baseAlpha * 0.7})`; // Much more muted red with reduced alpha
-                  ctx.strokeStyle = `rgba(100, 20, 20, ${0.6})`; // Very dark, subtle stroke
+                  ctx.fillStyle = `rgba(255, 50, 50, ${baseAlpha})`;
+                  ctx.strokeStyle = `rgba(200, 30, 30, ${0.9})`;
                   ctx.lineWidth = 1.5;
                   
                   ctx.beginPath();
@@ -1774,121 +1789,6 @@ export default function StoryClimbPage() {
               
               ctx.restore();
             }
-            
-            // Clip to circular shape (slightly smaller for frame effect)
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
-            ctx.clip();
-            
-            // Apply hover effect to image
-            const isHovered = hoveredNode && hoveredNode.id === node.id;
-            if (isHovered) {
-              ctx.save();
-              // Scale effect on hover
-              const hoverScale = 1.05 + Math.sin(Date.now() / 300) * 0.02; // Subtle pulse
-              const scaledSize = halfSize * hoverScale;
-              // Brightness effect
-              ctx.filter = 'brightness(1.2) contrast(1.1)';
-              ctx.drawImage(img, pos.x - scaledSize, pos.y - scaledSize, scaledSize * 2, scaledSize * 2);
-              ctx.filter = 'none';
-              ctx.restore();
-            } else if (isChallenger && !isCompleted) {
-              // Apply selected challenger effect
-              ctx.save();
-              
-              // Create unique offset for each node based on its ID
-              let nodeHash = 0;
-              for (let i = 0; i < node.id.length; i++) {
-                nodeHash = ((nodeHash << 5) - nodeHash) + node.id.charCodeAt(i);
-              }
-              const nodeOffset = (Math.abs(nodeHash) % 1000) / 100; // Unique offset 0-10
-              const time = Date.now() + nodeOffset * 1000; // Add node-specific time offset
-              
-              // Always use Phase Shift effect for challengers // Phase Shift effect
-                  // Draw base blurred image
-                  ctx.filter = 'blur(2px) brightness(0.7) contrast(1.2)';
-                  ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
-                  ctx.filter = 'none';
-                  
-                  // Phasing layers - image shifts between dimensions
-                  ctx.globalCompositeOperation = 'screen';
-                  const phaseCount = 4;
-                  
-                  for (let p = 0; p < phaseCount; p++) {
-                    const phaseTime = time * 0.0006 + p * Math.PI * 0.5 + nodeOffset;
-                    const phaseAlpha = (Math.sin(phaseTime) + 1) * 0.35;
-                    const phaseX = Math.sin(phaseTime * 1.7) * 8;
-                    const phaseY = Math.cos(phaseTime * 1.3) * 8;
-                    
-                    ctx.globalAlpha = phaseAlpha;
-                    
-                    // Draw phase-shifted copies with color tints
-                    ctx.save();
-                    if (p % 2 === 0) {
-                      ctx.filter = 'hue-rotate(180deg)';
-                    } else {
-                      ctx.filter = 'hue-rotate(-60deg)';
-                    }
-                    ctx.drawImage(
-                      img,
-                      pos.x - halfSize + phaseX,
-                      pos.y - halfSize + phaseY,
-                      halfSize * 2, halfSize * 2
-                    );
-                    ctx.restore();
-                  }
-                  
-                  // Quantum interference pattern
-                  ctx.globalCompositeOperation = 'overlay';
-                  ctx.globalAlpha = 0.3;
-                  const interferenceTime = time * 0.0008;
-                  
-                  for (let x = 0; x < halfSize * 2; x += 4) {
-                    for (let y = 0; y < halfSize * 2; y += 4) {
-                      const dist1 = Math.sqrt(Math.pow(x - halfSize * 0.3, 2) + Math.pow(y - halfSize * 0.3, 2));
-                      const dist2 = Math.sqrt(Math.pow(x - halfSize * 1.7, 2) + Math.pow(y - halfSize * 1.7, 2));
-                      const interference = Math.sin(dist1 * 0.1 - interferenceTime) * Math.sin(dist2 * 0.1 + interferenceTime);
-                      
-                      if (interference > 0.5) {
-                        const brightness = interference * 255;
-                        ctx.fillStyle = `rgba(0, ${brightness}, ${brightness}, 0.5)`;
-                        ctx.fillRect(pos.x - halfSize + x, pos.y - halfSize + y, 4, 4);
-                      }
-                    }
-                  }
-              
-              ctx.globalAlpha = 1;
-              ctx.globalCompositeOperation = 'source-over';
-              ctx.restore();
-            } else {
-              // Draw image at full opacity always
-              ctx.drawImage(img, pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
-            }
-            
-            // Draw darkening overlay for unavailable/non-completed nodes
-            if (!isCompleted && !isAvailable) {
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-              ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
-            }
-            // Draw green overlay for completed nodes
-            else if (isCompleted) {
-              ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
-              ctx.fillRect(pos.x - halfSize, pos.y - halfSize, halfSize * 2, halfSize * 2);
-            }
-            
-            // Add green glow effect for completed mechanism nodes
-            if (isCompleted) {
-              ctx.save();
-              ctx.shadowBlur = 10;
-              ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
-              ctx.beginPath();
-              ctx.arc(pos.x, pos.y, halfSize - 2, 0, Math.PI * 2);
-              ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-              ctx.restore();
-            }
-            ctx.restore();
           }
         } else if ((node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') && nodeImages.has(node.id)) {
           // Draw mechanism image for boss nodes with special framing
@@ -2148,7 +2048,7 @@ export default function StoryClimbPage() {
     });
     
     console.log("Canvas render complete");
-  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerFrameStyle]);
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerEffect, challengerFrameStyle]);
 
   // Separate effect for jump button visibility to avoid infinite loop
   useEffect(() => {
@@ -2339,9 +2239,9 @@ export default function StoryClimbPage() {
         // Skip start node
         if (node.id === 'start') continue;
 
-        // In preview mode or debug mode, allow hovering over all nodes
-        if (previewMode || debugMode) {
-          // Allow hover on all nodes in preview/debug mode
+        // In preview mode, allow hovering over all nodes
+        if (previewMode) {
+          // Allow hover on all nodes in preview mode
         } else {
           // Only hover over available nodes (same logic as isNodeAvailable)
           const isNodeAvailableForHover = treeData.connections.some(conn => {
@@ -2366,7 +2266,7 @@ export default function StoryClimbPage() {
 
           // Process nodes that are either completed or available to play
           if (!completedNodes.has(node.id) && !isNodeAvailableForHover) {
-            continue; // Skip this node if not available in normal mode
+            return; // Skip this node if not available in normal mode
           }
         }
 
@@ -2481,7 +2381,7 @@ export default function StoryClimbPage() {
       };
     });
     setPanStart({ x: e.clientX, y: e.clientY });
-  }, [isMouseDown, isPanning, mouseDownPos, panStart, treeData, completedNodes, viewportOffset, panOffset, hoveredNode, previewMode, debugMode]);
+  }, [isMouseDown, isPanning, mouseDownPos, panStart, treeData, completedNodes, viewportOffset, panOffset, hoveredNode]);
   
   const handleMouseUp = useCallback(() => {
     setIsMouseDown(false);
@@ -2526,7 +2426,6 @@ export default function StoryClimbPage() {
   const isNodeAvailable = useCallback((node: StoryNode | null) => {
     if (!node || !treeData) return false;
     if (node.id === 'start') return false;
-    if (debugMode) return true; // In debug mode, all nodes are available
     if (completedNodes.has(node.id)) return true; // Already completed nodes can be replayed
     
     // Check if this node is adjacent to a completed node and allows upward progression
@@ -2549,7 +2448,7 @@ export default function StoryClimbPage() {
       // Only allow upward progression (lower Y values = further up the tree)
       return node.y < connectedNode.y;
     });
-  }, [treeData, completedNodes, debugMode]);
+  }, [treeData, completedNodes]);
   
   // Handle canvas click for node selection
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -2692,11 +2591,11 @@ export default function StoryClimbPage() {
           break;
         }
         
-        // In preview mode or debug mode, allow clicking any node
-        if (previewMode || debugMode) {
+        // In preview mode, allow clicking any node
+        if (previewMode) {
           setHoveredNode(null);
           setSelectedNode(node);
-          console.log(`${debugMode ? 'Debug' : 'Preview'} mode - selected node:`, node);
+          console.log('Preview mode - selected node:', node);
           break;
         }
 
@@ -2756,7 +2655,7 @@ export default function StoryClimbPage() {
         break;
       }
     }
-  }, [treeData, viewportOffset, completedNodes, canvasSize, hasDragged, panOffset, zoom, previewMode, debugMode]);
+  }, [treeData, viewportOffset, completedNodes, canvasSize, hasDragged, panOffset, zoom]);
 
   // Handle mouse wheel scrolling with proper isolation
   const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -2916,14 +2815,15 @@ export default function StoryClimbPage() {
                   <option value="crystals">Frame: Crystals</option>
                 </select>
                 
-                {/* Debug Mode Selector */}
+                {/* Challenger Effect Selector */}
                 <select
-                  value={debugMode ? 'debug' : 'normal'}
-                  onChange={(e) => setDebugMode(e.target.value === 'debug')}
-                  className="px-3 py-1 bg-black/60 border border-purple-500/40 rounded-md text-purple-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-purple-500/20 hover:border-purple-500/60 transition-all duration-200"
+                  value={challengerEffect}
+                  onChange={(e) => setChallengerEffect(e.target.value as 'quantum1' | 'quantum2' | 'quantum3')}
+                  className="px-3 py-1 bg-black/60 border border-cyan-500/40 rounded-md text-cyan-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-cyan-500/20 hover:border-cyan-500/60 transition-all duration-200"
                 >
-                  <option value="normal">Normal Mode</option>
-                  <option value="debug">Debug: Click Any Node</option>
+                  <option value="quantum1">Quantum: Ripple Wave</option>
+                  <option value="quantum2">Quantum: Phase Shift</option>
+                  <option value="quantum3">Quantum: Dimensional Tear</option>
                 </select>
               </div>
               
@@ -3152,82 +3052,20 @@ export default function StoryClimbPage() {
             {/* Show card for selected node */}
             {selectedNode ? (
               <StoryMissionCard
-                title={(() => {
-                  if (selectedNode.storyNodeType === 'event') {
-                    const eventData = getEventDataForNode(selectedNode);
-                    // Use deployed name if available, otherwise show a better default
-                    if (eventData?.name && eventData.name !== 'EVENT NODE') {
-                      return eventData.name;
-                    }
-                    // Extract event number from label or ID for a better fallback
-                    const eventNum = selectedNode.label?.match(/\d+/)?.[0] ||
-                                    selectedNode.id?.match(/\d+/)?.[0];
-                    return eventNum ? `Event ${eventNum}` : `Event ${selectedNode.label || selectedNode.id}`;
-                  }
-                  return `Mission ${selectedNode.id}`;
-                })()}
-                mekImage={(() => {
-                  if (selectedNode.storyNodeType === 'event') {
-                    const eventData = getEventDataForNode(selectedNode);
-                    // For events, we could use a special event icon or keep the generated image
-                    return getMekImage(selectedNode.id, true);
-                  }
-                  return getMekImage(selectedNode.id, true);
-                })()}
-                mekName={(() => {
-                  if (selectedNode.storyNodeType === 'event') {
-                    const eventData = getEventDataForNode(selectedNode);
-                    return eventData?.name || `Event ${selectedNode.label || selectedNode.id}`;
-                  }
-                  // Get deployed mek for non-event nodes
-                  const deployedMek = getDeployedMekForNode(selectedNode);
-                  if (deployedMek?.assetId) {
-                    return `MEK #${deployedMek.assetId}`;
-                  }
-                  // Fallback to node ID if no mek found
-                  return `Mission ${selectedNode.id}`;
-                })()}
-                mekRank={(() => {
-                  if (selectedNode.storyNodeType === 'event') return undefined;
-                  // Use actual deployed mek rank
-                  const deployedMek = getDeployedMekForNode(selectedNode);
-                  if (deployedMek?.rank) {
-                    return deployedMek.rank;
-                  }
-                  // Fallback ranks
-                  return selectedNode.storyNodeType === 'final_boss' ? 100 :
-                         selectedNode.storyNodeType === 'boss' ? 75 : 34;
-                })()}
-                primaryReward={(() => {
-                  if (selectedNode.storyNodeType === 'event') {
-                    const eventData = getEventDataForNode(selectedNode);
-                    return eventData?.goldReward || 300000;
-                  }
-                  // Use actual deployed mek rewards
-                  const deployedMek = getDeployedMekForNode(selectedNode);
-                  if (deployedMek?.goldReward) {
-                    return deployedMek.goldReward;
-                  }
-                  // Fallback values
-                  return selectedNode.storyNodeType === 'final_boss' ? 1000000 :
-                         selectedNode.storyNodeType === 'boss' ? 500000 :
-                         selectedNode.storyNodeType === 'normal' ? 150000 : 250000;
-                })()}
-                experience={(() => {
-                  if (selectedNode.storyNodeType === 'event') {
-                    const eventData = getEventDataForNode(selectedNode);
-                    return eventData?.xpReward || 7500;
-                  }
-                  // Use actual deployed mek XP
-                  const deployedMek = getDeployedMekForNode(selectedNode);
-                  if (deployedMek?.xpReward) {
-                    return deployedMek.xpReward;
-                  }
-                  // Fallback values
-                  return selectedNode.storyNodeType === 'final_boss' ? 20000 :
-                         selectedNode.storyNodeType === 'boss' ? 10000 :
-                         selectedNode.storyNodeType === 'normal' ? 3000 : 5000;
-                })()}
+                title={`Mission ${selectedNode.id}`}
+                mekImage={getMekImage(selectedNode.id, true)}
+                mekName={`MEK #${Math.floor(Math.random() * 9000) + 1000}`}
+                mekRank={selectedNode.storyNodeType === 'final_boss' ? 100 :
+                        selectedNode.storyNodeType === 'boss' ? 75 :
+                        selectedNode.storyNodeType === 'event' ? 50 : 34}
+                primaryReward={selectedNode.storyNodeType === 'final_boss' ? 1000000 :
+                              selectedNode.storyNodeType === 'boss' ? 500000 :
+                              selectedNode.storyNodeType === 'event' ? 300000 :
+                              selectedNode.storyNodeType === 'normal' ? 150000 : 250000}
+                experience={selectedNode.storyNodeType === 'final_boss' ? 20000 :
+                           selectedNode.storyNodeType === 'boss' ? 10000 :
+                           selectedNode.storyNodeType === 'event' ? 7500 :
+                           selectedNode.storyNodeType === 'normal' ? 3000 : 5000}
                 potentialRewards={getNodeRewards(selectedNode as ExtendedStoryNode)}
                 variationBuffs={getNodeVariationBuffs(selectedNode as ExtendedStoryNode)}
                 successChance={completedNodes.has(selectedNode.id) ? 100 :
@@ -3247,7 +3085,7 @@ export default function StoryClimbPage() {
                 onMekSlotClick={handleMekSlotClick}
                 onMekRemove={handleMekRemove}
                 scale={0.95}
-                isLocked={debugMode ? false : (!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id))}
+                isLocked={!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id)}
               />
             ) : (
               // No node selected or hovered - Using Style K from UI Showcase

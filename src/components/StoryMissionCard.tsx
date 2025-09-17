@@ -57,7 +57,7 @@ export default function StoryMissionCard({
   title = "MEK #1432",
   mekImage = "/variation-images/camera.png",
   mekName = "MEK #1432",
-  mekRank = 34,
+  mekRank,
   primaryReward = 250000,
   experience = 5000,
   potentialRewards = [
@@ -228,9 +228,11 @@ export default function StoryMissionCard({
               <h2 className="text-lg font-black tracking-wider text-yellow-400 uppercase">
                 {mekName}
               </h2>
-              <div className="text-sm text-gray-300">
-                Rank <span className="text-yellow-400 font-bold text-lg">{mekRank}</span>
-              </div>
+              {mekRank !== undefined && mekRank !== null && (
+                <div className="text-sm text-gray-300">
+                  Rank <span className="text-yellow-400 font-bold text-lg">{mekRank}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

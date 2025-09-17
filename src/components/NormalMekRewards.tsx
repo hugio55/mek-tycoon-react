@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 interface RewardConfig {
   goldRange: { min: number; max: number };
   goldCurve: number;
-  goldRounding: 'none' | '10' | '100' | '1000';
+  goldRounding: 'none' | '5' | '10' | '100' | '1000';
   xpRange: { min: number; max: number };
   xpCurve: number;
   xpRounding: 'none' | '10' | '100' | '1000';
@@ -16,58 +16,61 @@ interface RewardConfig {
   essenceRounding: 'none' | '0.1' | '0.5' | '1';
 }
 
-// Sample variation counts for demonstration
-// In production, this would come from your actual mek database
-const VARIATION_COUNTS: Record<string, number> = {
-  // Heads (102 total)
-  'Bumblebee': 15,
-  'Camera': 8,
-  'Classic': 20,
-  'Golden': 5,
-  'Diamond': 3,
-  'Stone': 12,
-  'Cartoon': 10,
-
-  // Bodies (112 total)
-  'Shee': 18,
-  'Tank': 15,
-  'Speed': 22,
-  'Armor': 10,
-  'Light': 25,
-  'Heavy': 8,
-
-  // Traits (95 total)
-  'Golden Guns': 6,
-  'Silver Sword': 12,
-  'Energy Shield': 20,
-  'Rocket Launcher': 8,
-  'Plasma Cannon': 4,
-  'Basic Weapon': 30,
-};
-
 export default function NormalMekRewards() {
-  const [config, setConfig] = useState<RewardConfig>({
-    goldRange: { min: 100, max: 10000 },
-    goldCurve: 0,
-    goldRounding: '100',
-    xpRange: { min: 10, max: 1000 },
-    xpCurve: 0,
-    xpRounding: '10',
-    essenceRange: { min: 1, max: 5 },
-    essenceCurve: 0,
-    essenceRounding: '0.1',
-  });
+  // Load config from localStorage or use defaults
+  const getInitialConfig = (): RewardConfig => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('normalMekRewardConfig');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved config:', e);
+        }
+      }
+    }
+    return {
+      goldRange: { min: 100, max: 10000 },
+      goldCurve: 0,
+      goldRounding: '100',
+      xpRange: { min: 10, max: 1000 },
+      xpCurve: 0,
+      xpRounding: '10',
+      essenceRange: { min: 1, max: 5 },
+      essenceCurve: 0,
+      essenceRounding: '0.1',
+    };
+  };
+
+  const [config, setConfig] = useState<RewardConfig>(getInitialConfig());
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
 
   const [selectedMekRank, setSelectedMekRank] = useState(2250);
-  const [selectedMekParts, setSelectedMekParts] = useState({
-    head: 'Bumblebee',
-    body: 'Shee',
-    trait: 'Golden Guns'
-  });
+  const [searchValue, setSearchValue] = useState('2250');
+  const [searchType, setSearchType] = useState<'rank' | 'assetId'>('rank');
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [deploymentMessage, setDeploymentMessage] = useState('');
+
+  // Auto-save config to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('normalMekRewardConfig', JSON.stringify(config));
+    }
+  }, [config]);
 
   const saveConfiguration = useMutation(api.normalMekRewards.saveConfiguration);
+  const updateConfiguration = useMutation(api.normalMekRewards.updateConfiguration);
   const savedConfigs = useQuery(api.normalMekRewards.getConfigurations);
+  const deployAllMekanisms = useMutation(api.deployedNodeData.deployAllMekanisms);
   const [saveName, setSaveName] = useState('');
+
+  // Query backend for real mek variation data
+  const mekBySearch = useQuery(api.normalMekRewards.getMekByRankOrId, {
+    value: searchValue,
+    searchType: searchType
+  });
+  const allVariationCounts = useQuery(api.normalMekRewards.getAllVariationCounts);
 
   // Apply rounding based on rounding setting
   const applyRounding = (value: number, rounding: string): number => {
@@ -80,6 +83,8 @@ export default function NormalMekRewards() {
         return Math.round(value * 2) / 2;
       case '1':
         return Math.round(value);
+      case '5':
+        return Math.round(value / 5) * 5;
       case '10':
         return Math.round(value / 10) * 10;
       case '100':
@@ -91,20 +96,20 @@ export default function NormalMekRewards() {
     }
   };
 
-  // Calculate reward based on rank and curve
+  // Calculate reward based on rank and curve (rank 1 = highest rewards, rank 4000 = lowest)
   const calculateReward = (rank: number, min: number, max: number, curve: number, rounding: string = 'none'): number => {
-    // Normalize rank (501-4000) to 0-1, but inverted (lower rank = higher reward)
-    const normalizedRank = 1 - ((rank - 501) / (4000 - 501));
+    // Normalize rank (1-4000) to 0-1, where rank 1 = 1 and rank 4000 = 0
+    const normalizedRank = 1 - ((rank - 1) / (4000 - 1));
 
     // Apply curve (-1 to 1, where 0 is linear)
     let curvedValue = normalizedRank;
     if (curve !== 0) {
       const factor = Math.abs(curve) * 2; // Scale curve effect
       if (curve > 0) {
-        // Exponential curve (more rewards at higher ranks)
+        // Exponential curve (more rewards at top ranks)
         curvedValue = Math.pow(normalizedRank, 1 / (1 + factor));
       } else {
-        // Logarithmic curve (more rewards at lower ranks)
+        // Logarithmic curve (flatter distribution)
         curvedValue = Math.pow(normalizedRank, 1 + factor);
       }
     }
@@ -113,28 +118,6 @@ export default function NormalMekRewards() {
     return applyRounding(result, rounding);
   };
 
-  // Calculate essence probabilities based on rarity
-  const calculateEssenceProbabilities = () => {
-    const parts = [
-      { name: selectedMekParts.head, count: VARIATION_COUNTS[selectedMekParts.head] || 10 },
-      { name: selectedMekParts.body, count: VARIATION_COUNTS[selectedMekParts.body] || 10 },
-      { name: selectedMekParts.trait, count: VARIATION_COUNTS[selectedMekParts.trait] || 10 }
-    ];
-
-    // Invert counts (rarer = higher chance)
-    const invertedCounts = parts.map(p => ({
-      ...p,
-      inverseCount: 1 / p.count
-    }));
-
-    const totalInverse = invertedCounts.reduce((sum, p) => sum + p.inverseCount, 0);
-
-    return invertedCounts.map(p => ({
-      name: p.name,
-      count: p.count,
-      probability: (p.inverseCount / totalInverse) * 100
-    }));
-  };
 
   const handleSave = async () => {
     if (!saveName.trim()) {
@@ -143,12 +126,23 @@ export default function NormalMekRewards() {
     }
 
     try {
-      await saveConfiguration({
+      const result = await saveConfiguration({
         name: saveName,
         data: JSON.stringify(config),
         timestamp: Date.now(),
       });
-      alert('Reward configuration saved successfully!');
+
+      if (result.updated) {
+        alert('Configuration updated successfully!');
+      } else {
+        alert('New configuration saved successfully!');
+      }
+
+      // Track the saved config ID for updates
+      if (result.id) {
+        setSelectedConfigId(result.id);
+      }
+
       setSaveName('');
     } catch (error) {
       console.error('Failed to save configuration:', error);
@@ -156,24 +150,73 @@ export default function NormalMekRewards() {
     }
   };
 
-  const goldReward = calculateReward(selectedMekRank, config.goldRange.min, config.goldRange.max, config.goldCurve, config.goldRounding);
-  const xpReward = calculateReward(selectedMekRank, config.xpRange.min, config.xpRange.max, config.xpCurve, config.xpRounding);
-  const essenceReward = calculateReward(selectedMekRank, config.essenceRange.min, config.essenceRange.max, config.essenceCurve, config.essenceRounding);
-  const essenceProbabilities = calculateEssenceProbabilities();
+  const handleUpdate = async () => {
+    if (!selectedConfigId) {
+      alert('Please select a configuration to update');
+      return;
+    }
+
+    try {
+      await updateConfiguration({
+        configId: selectedConfigId as any,
+        data: JSON.stringify(config),
+        timestamp: Date.now(),
+      });
+      alert('Configuration updated successfully!');
+    } catch (error) {
+      console.error('Failed to update configuration:', error);
+      alert('Failed to update configuration');
+    }
+  };
+
+  // Use the actual rank from the found mek or fallback to default
+  const actualRank = mekBySearch?.mek?.rank || selectedMekRank;
+
+  const goldReward = calculateReward(actualRank, config.goldRange.min, config.goldRange.max, config.goldCurve, config.goldRounding);
+  const xpReward = calculateReward(actualRank, config.xpRange.min, config.xpRange.max, config.xpCurve, config.xpRounding);
+  const essenceReward = calculateReward(actualRank, config.essenceRange.min, config.essenceRange.max, config.essenceCurve, config.essenceRounding);
+
+  // Use backend data for essence probabilities
+  const essenceProbabilities = mekBySearch?.probabilities || [];
 
   return (
     <div className="mt-6 space-y-6">
       <div className="bg-gray-800/30 rounded-lg p-4">
         <h4 className="text-sm font-bold text-yellow-500/80 mb-3">Normal Mek Node Rewards</h4>
 
+        {/* Variation Statistics */}
+        {allVariationCounts && (
+          <div className="mb-4 bg-black/30 rounded p-3">
+            <h5 className="text-cyan-400 text-sm font-bold mb-2">Mek Database Statistics</h5>
+            <div className="grid grid-cols-4 gap-4 text-xs">
+              <div>
+                <span className="text-gray-400">Total Meks:</span>
+                <span className="text-cyan-300 font-bold ml-2">{allVariationCounts.totalMeks}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Unique Heads:</span>
+                <span className="text-yellow-300 font-bold ml-2">{allVariationCounts.uniqueHeads}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Unique Bodies:</span>
+                <span className="text-blue-300 font-bold ml-2">{allVariationCounts.uniqueBodies}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Unique Traits:</span>
+                <span className="text-purple-300 font-bold ml-2">{allVariationCounts.uniqueTraits}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Master Ranges */}
         <div className="space-y-4">
           {/* Gold Range */}
           <div className="bg-black/30 rounded p-3">
-            <h5 className="text-yellow-400 text-sm font-bold mb-2">Gold Rewards (Ranks 501-4000)</h5>
+            <h5 className="text-yellow-400 text-sm font-bold mb-2">Gold Rewards (Ranks 1-4000)</h5>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-gray-400">Min (Rank 4000)</label>
+                <label className="text-xs text-gray-400">Min (Lowest Rank)</label>
                 <input
                   type="number"
                   value={config.goldRange.min}
@@ -182,7 +225,7 @@ export default function NormalMekRewards() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400">Max (Rank 501)</label>
+                <label className="text-xs text-gray-400">Max (Rank 1)</label>
                 <input
                   type="number"
                   value={config.goldRange.max}
@@ -213,6 +256,7 @@ export default function NormalMekRewards() {
                   className="w-full px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-sm text-yellow-400"
                 >
                   <option value="none">None</option>
+                  <option value="5">5</option>
                   <option value="10">10</option>
                   <option value="100">100</option>
                   <option value="1000">1000</option>
@@ -223,10 +267,10 @@ export default function NormalMekRewards() {
 
           {/* XP Range */}
           <div className="bg-black/30 rounded p-3">
-            <h5 className="text-blue-400 text-sm font-bold mb-2">XP Rewards (Ranks 501-4000)</h5>
+            <h5 className="text-blue-400 text-sm font-bold mb-2">XP Rewards (Ranks 1-4000)</h5>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-gray-400">Min (Rank 4000)</label>
+                <label className="text-xs text-gray-400">Min (Lowest Rank)</label>
                 <input
                   type="number"
                   value={config.xpRange.min}
@@ -235,7 +279,7 @@ export default function NormalMekRewards() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400">Max (Rank 501)</label>
+                <label className="text-xs text-gray-400">Max (Rank 1)</label>
                 <input
                   type="number"
                   value={config.xpRange.max}
@@ -276,10 +320,10 @@ export default function NormalMekRewards() {
 
           {/* Essence Range */}
           <div className="bg-black/30 rounded p-3">
-            <h5 className="text-purple-400 text-sm font-bold mb-2">Essence Amount (Ranks 501-4000)</h5>
+            <h5 className="text-purple-400 text-sm font-bold mb-2">Essence Amount (Ranks 1-4000)</h5>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-gray-400">Min (Rank 4000)</label>
+                <label className="text-xs text-gray-400">Min (Lowest Rank)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -289,7 +333,7 @@ export default function NormalMekRewards() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400">Max (Rank 501)</label>
+                <label className="text-xs text-gray-400">Max (Rank 1)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -334,58 +378,59 @@ export default function NormalMekRewards() {
         <div className="mt-6 bg-black/30 rounded p-3">
           <h5 className="text-green-400 text-sm font-bold mb-3">Reward Preview Calculator</h5>
 
-          {/* Mek Rank Selector */}
+          {/* Search Type Toggle */}
+          <div className="mb-3 flex gap-2">
+            <button
+              onClick={() => setSearchType('rank')}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                searchType === 'rank'
+                  ? 'bg-green-500/30 text-green-400 border border-green-400/50'
+                  : 'bg-black/30 text-gray-400 border border-gray-600/30 hover:border-gray-400/30'
+              }`}
+            >
+              Search by Rank
+            </button>
+            <button
+              onClick={() => setSearchType('assetId')}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                searchType === 'assetId'
+                  ? 'bg-green-500/30 text-green-400 border border-green-400/50'
+                  : 'bg-black/30 text-gray-400 border border-gray-600/30 hover:border-gray-400/30'
+              }`}
+            >
+              Search by Mek ID
+            </button>
+          </div>
+
+          {/* Mek Search Input */}
           <div className="mb-3">
-            <label className="text-xs text-gray-400">Test Mek Rank (501-4000)</label>
+            <label className="text-xs text-gray-400">
+              {searchType === 'rank' ? 'Mek Rank (1-4000)' : 'Mekanism ID (e.g., 2254)'}
+            </label>
             <input
-              type="number"
-              min="501"
-              max="4000"
-              value={selectedMekRank}
-              onChange={(e) => setSelectedMekRank(Number(e.target.value))}
+              type={searchType === 'rank' ? "number" : "text"}
+              min={searchType === 'rank' ? "1" : undefined}
+              max={searchType === 'rank' ? "4000" : undefined}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder={searchType === 'rank' ? "Enter rank..." : "Enter Mek ID..."}
               className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-sm text-green-400"
             />
           </div>
 
-          {/* Mek Parts Selector */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div>
-              <label className="text-xs text-gray-400">Head</label>
-              <select
-                value={selectedMekParts.head}
-                onChange={(e) => setSelectedMekParts({...selectedMekParts, head: e.target.value})}
-                className="w-full px-2 py-1 bg-black/50 border border-gray-600 rounded text-xs text-gray-300"
-              >
-                {Object.keys(VARIATION_COUNTS).filter(k => ['Bumblebee', 'Camera', 'Classic', 'Golden', 'Diamond', 'Stone', 'Cartoon'].includes(k)).map(v => (
-                  <option key={v} value={v}>{v} ({VARIATION_COUNTS[v]} total)</option>
-                ))}
-              </select>
+          {/* Display Mek Info if Found */}
+          {mekBySearch?.mek && (
+            <div className="mb-3 bg-black/50 rounded p-2 text-xs">
+              <div className="text-cyan-300 mb-1">Found Mekanism:</div>
+              <div className="grid grid-cols-2 gap-2 text-gray-300">
+                <div><span className="text-gray-400">Mek ID:</span> #{mekBySearch.mek.assetId}</div>
+                <div><span className="text-gray-400">Rank:</span> {mekBySearch.mek.rank}</div>
+                <div><span className="text-gray-400">Head:</span> {mekBySearch.mek.head}</div>
+                <div><span className="text-gray-400">Body:</span> {mekBySearch.mek.body}</div>
+                <div className="col-span-2"><span className="text-gray-400">Trait:</span> {mekBySearch.mek.trait}</div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-gray-400">Body</label>
-              <select
-                value={selectedMekParts.body}
-                onChange={(e) => setSelectedMekParts({...selectedMekParts, body: e.target.value})}
-                className="w-full px-2 py-1 bg-black/50 border border-gray-600 rounded text-xs text-gray-300"
-              >
-                {Object.keys(VARIATION_COUNTS).filter(k => ['Shee', 'Tank', 'Speed', 'Armor', 'Light', 'Heavy'].includes(k)).map(v => (
-                  <option key={v} value={v}>{v} ({VARIATION_COUNTS[v]} total)</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-400">Trait</label>
-              <select
-                value={selectedMekParts.trait}
-                onChange={(e) => setSelectedMekParts({...selectedMekParts, trait: e.target.value})}
-                className="w-full px-2 py-1 bg-black/50 border border-gray-600 rounded text-xs text-gray-300"
-              >
-                {Object.keys(VARIATION_COUNTS).filter(k => ['Golden Guns', 'Silver Sword', 'Energy Shield', 'Rocket Launcher', 'Plasma Cannon', 'Basic Weapon'].includes(k)).map(v => (
-                  <option key={v} value={v}>{v} ({VARIATION_COUNTS[v]} total)</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           {/* Calculated Rewards */}
           <div className="bg-black/50 rounded p-3 space-y-2">
@@ -401,13 +446,26 @@ export default function NormalMekRewards() {
 
             {/* Essence Probabilities */}
             <div className="mt-3 pt-3 border-t border-gray-700">
-              <div className="text-xs text-gray-400 mb-2">Essence Drop Probabilities (based on rarity):</div>
-              {essenceProbabilities.map((essence, idx) => (
-                <div key={idx} className="flex justify-between text-xs">
-                  <span className="text-gray-300">{essence.name} ({essence.count} variations)</span>
-                  <span className="text-purple-400 font-bold">{essence.probability.toFixed(1)}%</span>
+              <div className="text-xs text-gray-400 mb-2">
+                Essence Drop Probabilities {mekBySearch?.mek ? `for Mek #${mekBySearch.mek.assetId} (Rank ${mekBySearch.mek.rank})` : ''}:
+              </div>
+              {essenceProbabilities.length > 0 ? (
+                essenceProbabilities.map((essence, idx) => (
+                  <div key={idx} className="flex justify-between text-xs">
+                    <span className="text-gray-300">
+                      {essence.type}: {essence.name}
+                      <span className="text-gray-500"> (appears {essence.count}x in ranks 1-4000)</span>
+                    </span>
+                    <span className="text-purple-400 font-bold">{essence.probability.toFixed(2)}%</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-gray-500">
+                  {searchType === 'rank'
+                    ? `No mek found at rank ${searchValue}`
+                    : `No mek found with ID ${searchValue}`}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -479,32 +537,174 @@ export default function NormalMekRewards() {
               onClick={handleSave}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-sm transition-colors"
             >
-              Save Config
+              Save New
             </button>
+            {selectedConfigId && (
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
+              >
+                Update Current
+              </button>
+            )}
           </div>
 
           {savedConfigs && savedConfigs.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {savedConfigs.map((cfg) => (
-                <button
-                  key={cfg._id}
-                  onClick={() => {
-                    try {
-                      const loaded = JSON.parse(cfg.data);
-                      setConfig(loaded);
-                    } catch (error) {
-                      console.error('Failed to load config:', error);
-                    }
-                  }}
-                  className="px-3 py-1 bg-black/30 text-purple-400 border border-purple-500/30 hover:bg-purple-500/20 rounded text-xs transition-colors"
-                >
-                  {cfg.name}
-                </button>
-              ))}
+            <div>
+              <div className="text-xs text-gray-400 mb-2">Saved Configurations:</div>
+              <div className="flex flex-wrap gap-2">
+                {savedConfigs.map((cfg) => (
+                  <button
+                    key={cfg._id}
+                    onClick={() => {
+                      try {
+                        const loaded = JSON.parse(cfg.data);
+                        setConfig(loaded);
+                        setSelectedConfigId(cfg._id);
+                        setSaveName(cfg.name);
+                      } catch (error) {
+                        console.error('Failed to load config:', error);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded text-xs transition-colors ${
+                      selectedConfigId === cfg._id
+                        ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
+                        : 'bg-black/30 text-purple-400 border border-purple-500/30 hover:bg-purple-500/20'
+                    }`}
+                  >
+                    {cfg.name}
+                  </button>
+                ))}
+              </div>
+              {selectedConfigId && (
+                <div className="text-xs text-gray-400 mt-2">
+                  Currently loaded: <span className="text-purple-400 font-semibold">
+                    {savedConfigs.find(c => c._id === selectedConfigId)?.name}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Deploy to All Chapters Button */}
+        <div className="mt-6 pt-6 border-t border-gray-700">
+          <button
+            onClick={() => setShowDeployModal(true)}
+            className="w-full px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold rounded-lg text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+          >
+            🚀 Deploy Mekanisms to All 10 Chapters
+          </button>
+        </div>
       </div>
+
+      {/* Deployment Modal */}
+      {showDeployModal && (
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+          onClick={() => !isDeploying && setShowDeployModal(false)}
+        >
+          <div
+            className="bg-gray-900 border-2 border-orange-500/50 rounded-lg p-6 max-w-2xl w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-orange-400 mb-4">🚀 Deploy All Mekanisms</h3>
+
+            <div className="space-y-4">
+              <div className="bg-black/30 rounded p-4">
+                <h4 className="text-yellow-400 font-bold mb-2">Deployment Summary</h4>
+                <p className="text-sm text-gray-300 mb-3">
+                  This will deploy mekanisms to all 10 chapters with the following configuration:
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-400 mb-2">Normal Meks (350 per chapter):</div>
+                    <div className="pl-3 space-y-1">
+                      <div><span className="text-yellow-400">Gold:</span> {config.goldRange.min} - {config.goldRange.max}</div>
+                      <div><span className="text-blue-400">XP:</span> {config.xpRange.min} - {config.xpRange.max}</div>
+                      <div><span className="text-purple-400">Essence:</span> {config.essenceRange.min} - {config.essenceRange.max}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-gray-400 mb-2">Total Nodes to Deploy:</div>
+                    <div className="pl-3 space-y-1">
+                      <div><span className="text-gray-300">Normal:</span> 3,500</div>
+                      <div><span className="text-orange-400">Challengers:</span> 400</div>
+                      <div><span className="text-red-400">Mini-Bosses:</span> 90</div>
+                      <div><span className="text-yellow-500">Final Bosses:</span> 10</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded p-4">
+                <p className="text-sm text-orange-300">
+                  <strong>⚠️ Warning:</strong> This will immediately update ALL mekanisms across ALL chapters in Story Climb.
+                  The current configuration will be archived and can be rolled back if needed.
+                </p>
+              </div>
+
+              {deploymentMessage && (
+                <div className={`p-3 rounded ${
+                  deploymentMessage.includes('Success')
+                    ? 'bg-green-500/10 border border-green-500/30 text-green-300'
+                    : 'bg-red-500/10 border border-red-500/30 text-red-300'
+                }`}>
+                  {deploymentMessage}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={async () => {
+                  setIsDeploying(true);
+                  setDeploymentMessage('');
+
+                  try {
+                    const result = await deployAllMekanisms({
+                      normalNodeConfig: JSON.stringify(config),
+                      notes: `Deployed with config: Gold ${config.goldRange.min}-${config.goldRange.max}, XP ${config.xpRange.min}-${config.xpRange.max}, Essence ${config.essenceRange.min}-${config.essenceRange.max}`
+                    });
+
+                    if (result.success) {
+                      setDeploymentMessage(`✅ Success! ${result.message}`);
+                      setTimeout(() => {
+                        setShowDeployModal(false);
+                        setDeploymentMessage('');
+                      }, 3000);
+                    } else {
+                      setDeploymentMessage(`❌ Error: ${result.error}`);
+                    }
+                  } catch (error) {
+                    console.error('Deployment failed:', error);
+                    setDeploymentMessage(`❌ Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                  } finally {
+                    setIsDeploying(false);
+                  }
+                }}
+                disabled={isDeploying}
+                className={`flex-1 px-6 py-3 rounded font-semibold transition-colors ${
+                  isDeploying
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-orange-600 hover:bg-orange-500 text-white'
+                }`}
+              >
+                {isDeploying ? '⏳ Deploying...' : '🚀 Deploy Now'}
+              </button>
+              <button
+                onClick={() => setShowDeployModal(false)}
+                disabled={isDeploying}
+                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
