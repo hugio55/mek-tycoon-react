@@ -26,36 +26,71 @@ interface ChapterDistribution {
   bodyVariations: VariationCount[];
   traitVariations: VariationCount[];
   allVariationsSorted: VariationCount[]; // Combined list sorted by abundance
+  missingVariations: VariationCount[]; // Variations NOT in this chapter
   eventEssenceDistribution: Array<{
     eventNumber: number;
     essences: VariationCount[];
   }>;
 }
 
-// Round-robin distribution table from the documentation
-// Using the 80 LEAST abundant variations (sorted most to least, so we take from the end)
-const ROUND_ROBIN_TABLE = [
-  [1, 21, 41, 61], // Event 1
-  [2, 22, 42, 62], // Event 2
-  [3, 23, 43, 63], // Event 3
-  [4, 24, 44, 64], // Event 4
-  [5, 25, 45, 65], // Event 5
-  [6, 26, 46, 66], // Event 6
-  [7, 27, 47, 67], // Event 7
-  [8, 28, 48, 68], // Event 8
-  [9, 29, 49, 69], // Event 9
-  [10, 30, 50, 70], // Event 10
-  [11, 31, 51, 71], // Event 11
-  [12, 32, 52, 72], // Event 12
-  [13, 33, 53, 73], // Event 13
-  [14, 34, 54, 74], // Event 14
-  [15, 35, 55, 75], // Event 15
-  [16, 36, 56, 76], // Event 16
-  [17, 37, 57, 77], // Event 17
-  [18, 38, 58, 78], // Event 18
-  [19, 39, 59, 79], // Event 19
-  [20, 40, 60, 80], // Event 20
-];
+// Rarity Buckets System
+// Divides the 80 rarest variations into 4 buckets of 20 each
+const RARITY_BUCKETS = {
+  ULTRA_RARE: { start: 0, end: 20 },    // Indices 0-19 (ranks 1-20)
+  VERY_RARE: { start: 20, end: 40 },    // Indices 20-39 (ranks 21-40)
+  RARE: { start: 40, end: 60 },         // Indices 40-59 (ranks 41-60)
+  UNCOMMON: { start: 60, end: 80 }      // Indices 60-79 (ranks 61-80)
+};
+
+// Generate dynamic tiers based on available variations
+function generateDynamicTiers(availableCount: number) {
+  // Divide available variations into 4 tiers as evenly as possible
+  const tiersCount = 4;
+  const baseSize = Math.floor(availableCount / tiersCount);
+  const remainder = availableCount % tiersCount;
+
+  const tiers: Array<{ start: number; end: number; name: string; color: string }> = [];
+  let currentStart = 0;
+
+  const tierNames = ['ULTRA RARE', 'VERY RARE', 'RARE', 'UNCOMMON'];
+  const tierColors = ['text-red-400', 'text-orange-400', 'text-yellow-400', 'text-green-400'];
+
+  for (let i = 0; i < tiersCount; i++) {
+    // Give extra variations to the earlier tiers if there's a remainder
+    const tierSize = baseSize + (i < remainder ? 1 : 0);
+
+    if (tierSize > 0) {
+      tiers.push({
+        start: currentStart,
+        end: currentStart + tierSize,
+        name: tierNames[i],
+        color: tierColors[i]
+      });
+      currentStart += tierSize;
+    }
+  }
+
+  return tiers;
+}
+
+// Boss variations from ranks 1-10 that should not be available as event rewards
+const BOSS_VARIATIONS = {
+  heads: new Set([
+    'Derelict', 'Obliterator', 'Ace of Spades Ultimate', 'Discomania',
+    'Paul Ultimate', 'Frost King', 'Pie', 'Projectionist',
+    'Ellie Mesh', 'Nyan Ultimate'
+  ]),
+  bodies: new Set([
+    'Gatsby Ultimate', 'Luxury Ultimate', 'Plush Ultimate', 'X Ray Ultimate',
+    'Burnt Ultimate', 'Frost Cage', 'Carving Ultimate', 'Cousin Itt',
+    'Chrome Ultimate', 'Heatwave Ultimate'
+  ]),
+  traits: new Set([
+    'Stolen', 'Golden Guns Ultimate', 'Linkinator 3000', 'Oompah',
+    'Peacock Ultimate', 'None', 'Null', 'Nil', 'Gone', 'Vanished'
+    // These are all from final bosses (ranks 1-10)
+  ])
+};
 
 export default function MekChapterDistributionActual() {
   const [distributions, setDistributions] = useState<ChapterDistribution[]>([]);
@@ -144,29 +179,288 @@ export default function MekChapterDistributionActual() {
         .sort((a, b) => b.count - a.count);
 
       // Combine all variations and sort by abundance (most to least)
-      // Exclude "None", "Nothing", "Nil", "Null" from essence distribution
+      // This is for display purposes
       const allVariationsSorted = [
         ...headVariations,
         ...bodyVariations,
         ...traitVariations.filter(t => !['None', 'Nothing', 'Nil', 'Null', 'Vanished', 'Gone'].includes(t.name))
       ].sort((a, b) => b.count - a.count);
 
-      // Get the 80 least abundant variations
-      const leastAbundant80 = [...allVariationsSorted].reverse().slice(0, 80);
+      // NEW LOGIC: Find variations NOT in this chapter for event essences
+      const chapterHeadSet = new Set(headVariations.map(v => v.name));
+      const chapterBodySet = new Set(bodyVariations.map(v => v.name));
+      const chapterTraitSet = new Set(traitVariations.map(v => v.name));
 
-      // Apply round-robin distribution to events
-      const eventEssenceDistribution = ROUND_ROBIN_TABLE.map((essenceRanks, eventIndex) => {
-        const essences = essenceRanks.map(rank => {
-          // Rank 1 = least abundant (index 0), Rank 80 = 80th least abundant (index 79)
-          const variationIndex = rank - 1;
-          return leastAbundant80[variationIndex] || null;
-        }).filter(Boolean) as VariationCount[];
+      // Count ALL variations globally
+      const globalCounts: Record<string, { count: number, type: 'head' | 'body' | 'trait' }> = {};
 
-        return {
-          eventNumber: eventIndex + 1 + (range.chapter - 1) * 20,
-          essences
-        };
+      meks.forEach(mek => {
+        if (!globalCounts[mek.head]) {
+          globalCounts[mek.head] = { count: 0, type: 'head' };
+        }
+        globalCounts[mek.head].count++;
+
+        if (!globalCounts[mek.body]) {
+          globalCounts[mek.body] = { count: 0, type: 'body' };
+        }
+        globalCounts[mek.body].count++;
+
+        if (!globalCounts[mek.trait]) {
+          globalCounts[mek.trait] = { count: 0, type: 'trait' };
+        }
+        globalCounts[mek.trait].count++;
       });
+
+      // Find variations NOT in this chapter
+      const missingVariations: VariationCount[] = [];
+
+      Object.entries(globalCounts).forEach(([name, data]) => {
+        const isHead = data.type === 'head' && !chapterHeadSet.has(name);
+        const isBody = data.type === 'body' && !chapterBodySet.has(name);
+        const isTrait = data.type === 'trait' && !chapterTraitSet.has(name);
+        // No longer filtering out None, Nil, etc. - they'll be shown as boss variations
+
+        if (isHead || isBody || isTrait) {
+          missingVariations.push({
+            name,
+            count: data.count,
+            type: data.type,
+            percentage: (data.count / 4000) * 100
+          });
+        }
+      });
+
+      // Filter out boss variations and sort by global rarity (rarest first)
+      const bossVariationsFound: string[] = [];
+      const eligibleMissingVariations = missingVariations.filter(v => {
+        if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) {
+          bossVariationsFound.push(`Head: ${v.name}`);
+          return false;
+        }
+        if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) {
+          bossVariationsFound.push(`Body: ${v.name}`);
+          return false;
+        }
+        if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) {
+          bossVariationsFound.push(`Trait: ${v.name}`);
+          return false;
+        }
+        return true;
+      });
+
+      if (bossVariationsFound.length > 0 && range.chapter === 1) {
+        console.log(`Chapter ${range.chapter}: Filtered out ${bossVariationsFound.length} boss variations:`, bossVariationsFound);
+      }
+
+      // Sort all eligible missing variations by rarity (rarest first)
+      const sortedMissingVariations = eligibleMissingVariations
+        .sort((a, b) => a.count - b.count);
+
+      // Create dynamic tiers based on how many variations we have
+      const availableCount = sortedMissingVariations.length;
+      const tiers = generateDynamicTiers(Math.min(availableCount, 80)); // Cap at 80 for distribution
+
+      // Track tier indices for round-robin
+      const tierIndices = tiers.map(() => 0);
+
+      // Get all global variations for potential filling (excluding boss variations)
+      const allAvailableVariations: VariationCount[] = [];
+      Object.entries(globalCounts).forEach(([name, data]) => {
+        const isBoss = (data.type === 'head' && BOSS_VARIATIONS.heads.has(name)) ||
+                      (data.type === 'body' && BOSS_VARIATIONS.bodies.has(name)) ||
+                      (data.type === 'trait' && BOSS_VARIATIONS.traits.has(name));
+
+        if (!isBoss) {
+          allAvailableVariations.push({
+            name,
+            count: data.count,
+            type: data.type,
+            percentage: (data.count / 4000) * 100
+          });
+        }
+      });
+
+      // Sort all available variations by global rarity for filling
+      allAvailableVariations.sort((a, b) => a.count - b.count);
+
+      // Track all variations used across the chapter
+      const usedInChapter = new Set<string>();
+
+      // Apply distribution strategy based on chapter
+      const eventEssenceDistribution = [];
+
+      // Special handling for Chapter 10: Prioritize true global rarity
+      if (range.chapter === 10) {
+        // Helper to determine tier name based on global count
+        function getTierName(count: number): string {
+          if (count <= 5) return 'ULTRA RARE';
+          if (count <= 15) return 'VERY RARE';
+          if (count <= 30) return 'RARE';
+          return 'UNCOMMON';
+        }
+
+        // Create a pool of variations to use (80 total needed)
+        const variationPool: Array<VariationCount & { isFilled?: boolean; tierName?: string }> = [];
+        const usedVariationNames = new Set<string>();
+
+        // First, add all available native variations from this chapter (sorted by rarity)
+        sortedMissingVariations.forEach(v => {
+          variationPool.push({
+            ...v,
+            isFilled: false,
+            tierName: getTierName(v.count)
+          });
+          usedVariationNames.add(v.name);
+        });
+
+        const nativeCount = variationPool.length;
+
+        // Then add borrowed variations to reach 80 total
+        const neededTotal = 80;
+        let borrowedCount = 0;
+
+        for (const fillVariation of allAvailableVariations) {
+          if (variationPool.length >= neededTotal) break;
+
+          // Don't duplicate variations already in the pool
+          if (!usedVariationNames.has(fillVariation.name)) {
+            variationPool.push({
+              ...fillVariation,
+              isFilled: true,
+              tierName: getTierName(fillVariation.count)
+            });
+            usedVariationNames.add(fillVariation.name);
+            borrowedCount++;
+          }
+        }
+
+        console.log(`Chapter 10: Using ${nativeCount} native variations + ${borrowedCount} borrowed = ${variationPool.length} total`);
+
+        // Show the rarest variations for debugging
+        console.log(`Chapter 10 rarest variations (for Event 20):`,
+          variationPool.slice(0, 4).map(v => `${v.name} (${v.count}x, ${v.isFilled ? 'borrowed' : 'native'})`));
+
+        // Distribute variations progressively across events
+        // The pool is already sorted by rarity (rarest first)
+        // We'll reverse it so the most common are first, then assign progressively
+        const reversedPool = [...variationPool].reverse();
+
+        for (let eventIdx = 0; eventIdx < 20; eventIdx++) {
+          const essences: Array<VariationCount & { isFilled?: boolean; tierName?: string }> = [];
+
+          // Calculate which 4 variations this event gets
+          // Event 1 gets indices 0-3 (most common)
+          // Event 2 gets indices 4-7
+          // ...
+          // Event 20 gets indices 76-79 (rarest)
+          const startIdx = eventIdx * 4;
+
+          for (let i = 0; i < 4; i++) {
+            const idx = startIdx + i;
+            if (idx < reversedPool.length) {
+              essences.push(reversedPool[idx]);
+            } else {
+              // This shouldn't happen since we ensured 80 variations
+              console.error(`Event ${eventIdx + 1}: Missing variation at index ${idx}`);
+            }
+          }
+
+          // For Event 20, reverse the essences to show rarest first
+          if (eventIdx === 19) {
+            essences.reverse();
+          }
+
+          eventEssenceDistribution.push({
+            eventNumber: eventIdx + 1 + (range.chapter - 1) * 20,
+            essences,
+            tiers: tiers
+          });
+        }
+
+        // Verify all events have 4 essences
+        const emptyEvents = eventEssenceDistribution.filter(e => e.essences.length !== 4);
+        if (emptyEvents.length > 0) {
+          console.error(`Chapter 10: Events with missing essences:`,
+            emptyEvents.map(e => `Event ${(e.eventNumber - 1) % 20 + 1} (${e.essences.length} essences)`));
+        } else {
+          console.log(`Chapter 10: ✓ All 20 events have 4 essences each`);
+        }
+      } else {
+        // For other chapters, use the round-robin greedy approach
+        for (let eventIdx = 0; eventIdx < 20; eventIdx++) {
+          const essences: Array<VariationCount & { isFilled?: boolean; tierName?: string }> = [];
+
+          // Try to get one variation from each tier
+          tiers.forEach((tier, tierIdx) => {
+            const currentIndex = tier.start + tierIndices[tierIdx];
+
+            if (currentIndex < tier.end && currentIndex < sortedMissingVariations.length) {
+              // We have a variation available in this tier
+              const variation = sortedMissingVariations[currentIndex];
+              if (!usedInChapter.has(variation.name)) {
+                essences.push({
+                  ...variation,
+                  isFilled: false,
+                  tierName: tier.name
+                });
+                usedInChapter.add(variation.name);
+                tierIndices[tierIdx]++; // Move to next variation in this tier
+              } else {
+                // Shouldn't happen, but handle it
+                const fillVariation = findUnusedVariation();
+                if (fillVariation) {
+                  essences.push({
+                    ...fillVariation,
+                    isFilled: true,
+                    tierName: tier.name
+                  });
+                }
+              }
+            } else {
+              // This tier is exhausted, need to borrow
+              const fillVariation = findUnusedVariation();
+              if (fillVariation) {
+                essences.push({
+                  ...fillVariation,
+                  isFilled: true,
+                  tierName: tier.name
+              });
+            }
+          }
+        });
+
+        // Helper function to find an unused variation for filling
+        function findUnusedVariation() {
+          for (const variation of allAvailableVariations) {
+            if (!usedInChapter.has(variation.name)) {
+              usedInChapter.add(variation.name);
+              return variation;
+            }
+          }
+          return null;
+        }
+
+        // Safety: ensure we have exactly 4 essences
+        while (essences.length < 4) {
+          const fillVariation = findUnusedVariation();
+          if (fillVariation) {
+            essences.push({
+              ...fillVariation,
+              isFilled: true,
+              tierName: 'FILL'
+            });
+          } else {
+            break; // No more variations available
+          }
+        }
+
+        eventEssenceDistribution.push({
+          eventNumber: eventIdx + 1 + (range.chapter - 1) * 20,
+          essences,
+          tiers: tiers // Include tier info for visualization
+        });
+      }
+    }
 
       newDistributions.push({
         chapter: range.chapter,
@@ -175,6 +469,7 @@ export default function MekChapterDistributionActual() {
         bodyVariations,
         traitVariations,
         allVariationsSorted,
+        missingVariations: missingVariations.sort((a, b) => a.count - b.count), // All missing variations sorted by rarity
         eventEssenceDistribution
       });
     });
@@ -377,39 +672,272 @@ export default function MekChapterDistributionActual() {
             </div>
           </div>
 
+          {/* Missing Variations List */}
+          <div className="bg-gray-800/30 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-yellow-500/80 mb-3">
+              Variations NOT in Chapter {selectedChapter} (Ordered by Global Rarity)
+            </h4>
+            <div className="text-xs text-gray-400 mb-3">
+              These {currentChapter.missingVariations.length} variations don't appear in this chapter's 400 meks. Listed from rarest to most common globally.
+            </div>
+            <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              <div>
+                <h5 className="text-xs font-bold text-blue-400 mb-2 sticky top-0 bg-gray-800/30 pb-1">
+                  Missing Heads ({currentChapter.missingVariations.filter(v => v.type === 'head').length})
+                </h5>
+                <div className="space-y-1">
+                  {currentChapter.missingVariations.filter(v => v.type === 'head').map((variation, i) => {
+                    const isBossVariation = BOSS_VARIATIONS.heads.has(variation.name);
+                    return (
+                      <div key={i} className={`flex justify-between text-xs ${isBossVariation ? 'opacity-40' : ''}`}>
+                        <span
+                          className={`truncate ${isBossVariation ? 'text-gray-600 line-through' : 'text-gray-400'}`}
+                          title={`${variation.name}${isBossVariation ? ' (Boss - Not Available)' : ''}`}
+                        >
+                          {i + 1}. {variation.name}
+                          {isBossVariation && <span className="text-red-500 ml-1">(Boss)</span>}
+                        </span>
+                        <span className={isBossVariation ? 'text-blue-400/40 ml-2' : 'text-blue-400 ml-2'}>
+                          {variation.count}x
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <h5 className="text-xs font-bold text-green-400 mb-2 sticky top-0 bg-gray-800/30 pb-1">
+                  Missing Bodies ({currentChapter.missingVariations.filter(v => v.type === 'body').length})
+                </h5>
+                <div className="space-y-1">
+                  {currentChapter.missingVariations.filter(v => v.type === 'body').map((variation, i) => {
+                    const isBossVariation = BOSS_VARIATIONS.bodies.has(variation.name);
+                    return (
+                      <div key={i} className={`flex justify-between text-xs ${isBossVariation ? 'opacity-40' : ''}`}>
+                        <span
+                          className={`truncate ${isBossVariation ? 'text-gray-600 line-through' : 'text-gray-400'}`}
+                          title={`${variation.name}${isBossVariation ? ' (Boss - Not Available)' : ''}`}
+                        >
+                          {i + 1}. {variation.name}
+                          {isBossVariation && <span className="text-red-500 ml-1">(Boss)</span>}
+                        </span>
+                        <span className={isBossVariation ? 'text-green-400/40 ml-2' : 'text-green-400 ml-2'}>
+                          {variation.count}x
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <h5 className="text-xs font-bold text-purple-400 mb-2 sticky top-0 bg-gray-800/30 pb-1">
+                  Missing Traits ({currentChapter.missingVariations.filter(v => v.type === 'trait').length})
+                </h5>
+                <div className="space-y-1">
+                  {currentChapter.missingVariations.filter(v => v.type === 'trait').map((variation, i) => {
+                    const isBossVariation = BOSS_VARIATIONS.traits.has(variation.name);
+                    return (
+                      <div key={i} className={`flex justify-between text-xs ${isBossVariation ? 'opacity-40' : ''}`}>
+                        <span
+                          className={`truncate ${isBossVariation ? 'text-gray-600 line-through' : 'text-gray-400'}`}
+                          title={`${variation.name}${isBossVariation ? ' (Boss - Not Available)' : ''}`}
+                        >
+                          {i + 1}. {variation.name}
+                          {isBossVariation && <span className="text-red-500 ml-1">(Boss)</span>}
+                        </span>
+                        <span className={isBossVariation ? 'text-purple-400/40 ml-2' : 'text-purple-400 ml-2'}>
+                          {variation.count}x
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-500">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div>Total Missing: {currentChapter.missingVariations.length} variations</div>
+                  <div>Boss Variations (crossed out): Not available for events</div>
+                </div>
+                <div>
+                  <div>Rarest Eligible: {currentChapter.missingVariations.find(v => {
+                    if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+                    if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+                    if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+                    return true;
+                  })?.name || 'N/A'}</div>
+                  <div>Used for Events: Top 80 rarest (excluding boss variations)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Tier System Visualization */}
+          <div className="bg-gray-800/30 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-yellow-500/80 mb-3">
+              🎯 Dynamic Tier System (Round-Robin Greedy)
+            </h4>
+            <div className="text-xs text-gray-400 mb-4">
+              Chapter {selectedChapter} has {currentChapter.missingVariations.filter(v => {
+                if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+                if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+                if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+                return true;
+              }).length} missing variations (excluding boss).
+              These are divided into 4 dynamic tiers for balanced distribution.
+            </div>
+
+            {/* Dynamic Tier Visualization */}
+            {currentChapter.eventEssenceDistribution[0] && (
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                {generateDynamicTiers(Math.min(
+                  currentChapter.missingVariations.filter(v => {
+                    if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+                    if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+                    if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+                    return true;
+                  }).length,
+                  80
+                )).map((tier, idx) => {
+                  const colors = [
+                    'bg-red-500/10 border-red-500/30 text-red-400',
+                    'bg-orange-500/10 border-orange-500/30 text-orange-400',
+                    'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
+                    'bg-green-500/10 border-green-500/30 text-green-400'
+                  ];
+                  const tierSize = tier.end - tier.start;
+
+                  return (
+                    <div key={idx} className={`${colors[idx].split(' ').slice(0, 2).join(' ')} border rounded p-3`}>
+                      <div className={`font-bold text-sm mb-1 ${colors[idx].split(' ')[2]}`}>
+                        {tier.name}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Variations {tier.start + 1}-{tier.end}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {tierSize} variation{tierSize !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Distribution Explanation */}
+            <div className="bg-black/30 rounded p-3 mb-3">
+              <div className="text-xs font-bold text-purple-400 mb-2">How it works:</div>
+              <div className="text-xs text-gray-400 space-y-1">
+                <div>• Each event gets one variation from each tier (round-robin)</div>
+                <div>• All available variations are used before any borrowing</div>
+                <div>• When a tier runs out, variations are borrowed from the global pool</div>
+                <div>• Ensures balanced rarity distribution across all 20 events</div>
+              </div>
+            </div>
+          </div>
+
           {/* Round-Robin Event Essence Distribution */}
           <div className="bg-gray-800/30 rounded-lg p-4">
             <h4 className="text-sm font-bold text-yellow-500/80 mb-3">
-              Event Essence Distribution (Round-Robin from 80 Least Abundant)
+              Event Essence Distribution (Dynamic Round-Robin)
             </h4>
             <div className="text-xs text-gray-400 mb-3">
-              Using round-robin table where Event 1 gets ranks 1, 21, 41, 61 (counting from least to most abundant)
+              Each event gets 4 essences: one from each dynamic tier. Borrowed essences (when tier is exhausted) are marked with ⚠️.
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {currentChapter.eventEssenceDistribution.map(event => (
-                <div key={event.eventNumber} className="bg-black/30 rounded p-2 border border-purple-500/20">
-                  <div className="font-bold text-purple-400 mb-1">
-                    Event {event.eventNumber % 20 || 20}
-                  </div>
-                  <div className="space-y-0.5">
-                    {event.essences.map((essence, idx) => {
-                      const rankNumber = ROUND_ROBIN_TABLE[(event.eventNumber - 1) % 20][idx];
-                      return (
-                        <div key={idx} className="flex justify-between text-xs">
-                          <span className="text-gray-500">Rank {rankNumber}:</span>
-                          <span className={`
-                            ${essence.type === 'head' ? 'text-blue-400' :
+            <div className="grid grid-cols-4 gap-3">
+              {currentChapter.eventEssenceDistribution.map((event: any, eventIdx) => {
+                const tierColors: Record<string, string> = {
+                  'ULTRA RARE': 'text-red-400',
+                  'VERY RARE': 'text-orange-400',
+                  'RARE': 'text-yellow-400',
+                  'UNCOMMON': 'text-green-400',
+                  'FILL': 'text-gray-400'
+                };
+                const tierAbbrev: Record<string, string> = {
+                  'ULTRA RARE': 'ULTRA',
+                  'VERY RARE': 'VERY',
+                  'RARE': 'RARE',
+                  'UNCOMMON': 'UNCOM',
+                  'FILL': 'FILL'
+                };
+
+                return (
+                  <div key={event.eventNumber} className="bg-black/30 rounded p-2 border border-purple-500/20">
+                    <div className="font-bold text-purple-400 mb-1">
+                      Event {(event.eventNumber - 1) % 20 + 1}
+                    </div>
+                    <div className="space-y-0.5">
+                      {event.essences.map((essence: any, idx: number) => {
+                        const tierName = essence.tierName || 'FILL';
+                        const tierColor = tierColors[tierName] || 'text-gray-400';
+                        const abbrev = tierAbbrev[tierName] || 'FILL';
+
+                        return (
+                          <div key={idx} className="flex justify-between text-xs">
+                            <span className={`${tierColor} text-[10px] font-bold`}>
+                              {abbrev}:
+                            </span>
+                            <span className={`truncate ml-1 ${
+                              essence.type === 'head' ? 'text-blue-400' :
                               essence.type === 'body' ? 'text-green-400' :
-                              'text-purple-400'}
-                          `}>
-                            {essence.name} ({essence.count})
-                          </span>
-                        </div>
-                      );
-                    })}
+                              'text-purple-400'
+                            }`} title={`${essence.name} (${essence.count} total)`}>
+                              {essence.isFilled && '⚠️ '}
+                              {essence.name} ({essence.count})
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <div className="text-gray-500 mb-1">Dynamic Tiers:</div>
+                  <div className="space-y-0.5 text-[10px]">
+                    <div><span className="text-red-400">ULTRA</span> = Tier 1 (Rarest)</div>
+                    <div><span className="text-orange-400">VERY</span> = Tier 2</div>
+                    <div><span className="text-yellow-400">RARE</span> = Tier 3</div>
+                    <div><span className="text-green-400">UNCOM</span> = Tier 4 (Most Common)</div>
                   </div>
                 </div>
-              ))}
+                <div>
+                  <div className="text-gray-500 mb-1">Symbols:</div>
+                  <div className="space-y-0.5 text-[10px]">
+                    <div>⚠️ = Borrowed essence (tier exhausted)</div>
+                    <div className="text-blue-400">Blue = Head variation</div>
+                    <div className="text-green-400">Green = Body variation</div>
+                    <div className="text-purple-400">Purple = Trait variation</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                <div>Chapter {selectedChapter} Distribution:</div>
+                <div className="text-[10px] mt-1">
+                  • Available: {currentChapter.missingVariations.filter(v => {
+                    if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+                    if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+                    if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+                    return true;
+                  }).length} variations
+                  • Needed: 80 (4 per event × 20 events)
+                  • Borrowed: {Math.max(0, 80 - currentChapter.missingVariations.filter(v => {
+                    if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+                    if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+                    if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+                    return true;
+                  }).length)} variations
+                </div>
+              </div>
             </div>
           </div>
         </>

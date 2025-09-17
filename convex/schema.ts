@@ -1091,4 +1091,16 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_category", ["category"]),
+
+  // Dev toolbar settings
+  devToolbarSettings: defineTable({
+    buttons: v.array(v.object({
+      name: v.string(),
+      url: v.string(),
+      favorite: v.boolean(),
+      color: v.string(),
+      order: v.optional(v.number()),
+    })),
+    updatedAt: v.number(),
+  }),
 });

@@ -259,6 +259,7 @@ Example transformation:
 - **Suggest better solutions**: If there's a better approach than what's requested, propose it with clear reasoning
 - **Be matter-of-fact**: Present pros/cons objectively without sugar-coating issues
 - **It's OK to say "I don't know"**: Better to admit uncertainty than implement something potentially harmful
+- **MINIMIZE CODE OUTPUT**: User is not a coder - avoid showing raw code snippets, diffs, or technical readouts unless specifically requested. Instead, describe changes made in simple terms like "I updated the file to fix X" or "I added feature Y to the page"
 
 ## Understanding This User's Communication Style (Learned From Experience)
 *This section was written based on actual working experience with this user - for future Claude iterations*

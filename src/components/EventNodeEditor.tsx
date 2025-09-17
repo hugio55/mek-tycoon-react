@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import mekRarityMaster from '../../convex/mekRarityMaster.json';
 
 interface EventNode {
   eventNumber: number;
@@ -13,6 +14,14 @@ interface EventNode {
   essenceRewards?: Array<{
     variation: string;
     abundanceRank: number; // 1-80, where 1 is least abundant
+    count: number; // How many times this variation appears in the chapter
+    type: 'head' | 'body' | 'trait';
+  }>;
+  customRewards?: Array<{
+    id: string;
+    name: string;
+    type: 'frame' | 'canister' | 'gear' | 'other';
+    description?: string;
   }>;
   items?: Array<{
     id: string;
@@ -21,6 +30,39 @@ interface EventNode {
     category?: string;
   }>;
 }
+
+interface MekData {
+  rank: number;
+  assetId: string;
+  sourceKey: string;
+  head: string;
+  body: string;
+  trait: string;
+}
+
+interface VariationCount {
+  name: string;
+  count: number;
+  type: 'head' | 'body' | 'trait';
+}
+
+// Boss variations from ranks 1-10 that should not be available as event rewards
+const BOSS_VARIATIONS = {
+  heads: new Set([
+    'Derelict', 'Obliterator', 'Ace of Spades Ultimate', 'Discomania',
+    'Paul Ultimate', 'Frost King', 'Pie', 'Projectionist',
+    'Ellie Mesh', 'Nyan Ultimate'
+  ]),
+  bodies: new Set([
+    'Gatsby Ultimate', 'Luxury Ultimate', 'Plush Ultimate', 'X Ray Ultimate',
+    'Burnt Ultimate', 'Frost Cage', 'Carving Ultimate', 'Cousin Itt',
+    'Chrome Ultimate', 'Heatwave Ultimate'
+  ]),
+  traits: new Set([
+    'Stolen', 'Golden Guns Ultimate', 'Linkinator 3000', 'Oompah',
+    'Peacock Ultimate', 'None', 'Null', 'Nil', 'Gone', 'Vanished'
+  ])
+};
 
 export default function EventNodeEditor() {
   const [itemSearchTerms, setItemSearchTerms] = useState<{ [key: number]: string }>({});
@@ -33,6 +75,12 @@ export default function EventNodeEditor() {
   const [bulkNames, setBulkNames] = useState('');
   const [showLoadLightbox, setShowLoadLightbox] = useState(false);
   const [previewImage, setPreviewImage] = useState<number | null>(null);
+  const [showAddRewardModal, setShowAddRewardModal] = useState<number | null>(null);
+  const [newReward, setNewReward] = useState<{
+    name: string;
+    type: 'frame' | 'canister' | 'gear' | 'other';
+    description: string;
+  }>({ name: '', type: 'frame', description: '' });
 
   // Global ranges for all 200 events
   const [globalRanges, setGlobalRanges] = useState({
@@ -91,6 +139,30 @@ export default function EventNodeEditor() {
       }
     }
   }, [selectedConfig]);
+
+  // Auto-load last used configuration on mount
+  useEffect(() => {
+    // Try to load the last used config from localStorage
+    const lastConfigId = localStorage.getItem('lastEventNodeConfigId');
+    const lastConfigName = localStorage.getItem('lastEventNodeConfigName');
+
+    if (lastConfigId && lastConfigName && !currentConfigId) {
+      setCurrentConfigId(lastConfigId as Id<"eventNodeConfigs">);
+      setCurrentConfigName(lastConfigName);
+    } else if (!currentConfigId && savedConfigs && savedConfigs.length > 0) {
+      // If no last config but there are saved configs, load the most recent one
+      const mostRecent = savedConfigs.reduce((latest, current) => {
+        return !latest || current._creationTime > latest._creationTime ? current : latest;
+      }, savedConfigs[0]);
+
+      if (mostRecent) {
+        setCurrentConfigId(mostRecent._id);
+        setCurrentConfigName(mostRecent.name);
+        localStorage.setItem('lastEventNodeConfigId', mostRecent._id);
+        localStorage.setItem('lastEventNodeConfigName', mostRecent.name);
+      }
+    }
+  }, [savedConfigs]);
 
   // Apply rounding based on setting
   const applyRounding = (value: number, rounding: 'none' | '5' | '10'): number => {
@@ -175,6 +247,40 @@ export default function EventNodeEditor() {
     setEventsData(newEventsData);
   };
 
+  // Add custom reward to event
+  const addCustomReward = (eventIndex: number) => {
+    if (!newReward.name) {
+      alert('Please enter a reward name');
+      return;
+    }
+
+    const newEventsData = [...eventsData];
+    if (!newEventsData[eventIndex].customRewards) {
+      newEventsData[eventIndex].customRewards = [];
+    }
+
+    newEventsData[eventIndex].customRewards.push({
+      id: `custom-${Date.now()}-${Math.random()}`,
+      name: newReward.name,
+      type: newReward.type,
+      description: newReward.description || undefined
+    });
+
+    setEventsData(newEventsData);
+    setShowAddRewardModal(null);
+    setNewReward({ name: '', type: 'frame', description: '' });
+  };
+
+  // Remove custom reward from event
+  const removeCustomReward = (eventIndex: number, rewardId: string) => {
+    const newEventsData = [...eventsData];
+    newEventsData[eventIndex].customRewards =
+      newEventsData[eventIndex].customRewards?.filter(
+        reward => reward.id !== rewardId
+      ) || [];
+    setEventsData(newEventsData);
+  };
+
   // Toggle chapter expansion
   const toggleChapter = (chapter: number) => {
     const newExpanded = new Set(expandedChapters);
@@ -205,6 +311,9 @@ export default function EventNodeEditor() {
       if (result && result._id) {
         setCurrentConfigId(result._id);
         setCurrentConfigName(saveName);
+        // Save to localStorage for auto-load next time
+        localStorage.setItem('lastEventNodeConfigId', result._id);
+        localStorage.setItem('lastEventNodeConfigName', saveName);
       }
     } catch (error) {
       console.error('Failed to save configuration:', error);
@@ -226,6 +335,9 @@ export default function EventNodeEditor() {
         timestamp: Date.now(),
       });
       alert('Configuration updated successfully!');
+      // Ensure localStorage stays current
+      localStorage.setItem('lastEventNodeConfigId', currentConfigId);
+      localStorage.setItem('lastEventNodeConfigName', currentConfigName);
     } catch (error) {
       console.error('Failed to update configuration:', error);
       alert('Failed to update configuration');
@@ -237,29 +349,142 @@ export default function EventNodeEditor() {
     setCurrentConfigId(configId);
     setCurrentConfigName(configName);
     setShowLoadLightbox(false);
+    // Save to localStorage for auto-load next time
+    localStorage.setItem('lastEventNodeConfigId', configId);
+    localStorage.setItem('lastEventNodeConfigName', configName);
   };
 
-  // Calculate and distribute essence rewards for a chapter
+  // Round-robin distribution table - Event 1 gets less rare, Event 20 gets most rare
+  const ROUND_ROBIN_TABLE = [
+    [20, 40, 60, 80], // Event 1 - less rare of the 80 least abundant
+    [19, 39, 59, 79], // Event 2
+    [18, 38, 58, 78], // Event 3
+    [17, 37, 57, 77], // Event 4
+    [16, 36, 56, 76], // Event 5
+    [15, 35, 55, 75], // Event 6
+    [14, 34, 54, 74], // Event 7
+    [13, 33, 53, 73], // Event 8
+    [12, 32, 52, 72], // Event 9
+    [11, 31, 51, 71], // Event 10
+    [10, 30, 50, 70], // Event 11
+    [9, 29, 49, 69],  // Event 12
+    [8, 28, 48, 68],  // Event 13
+    [7, 27, 47, 67],  // Event 14
+    [6, 26, 46, 66],  // Event 15
+    [5, 25, 45, 65],  // Event 16
+    [4, 24, 44, 64],  // Event 17
+    [3, 23, 43, 63],  // Event 18
+    [2, 22, 42, 62],  // Event 19
+    [1, 21, 41, 61],  // Event 20 - most rare of the 80 least abundant
+  ];
+
+  // Calculate and distribute essence rewards for a chapter using variations NOT in chapter
   const calculateEssenceDistribution = (chapterNumber: number) => {
-    // This would normally analyze the 380 mek nodes in the chapter
-    // For now, we'll use placeholder data for the 80 least abundant variations
-    // In production, this would come from analyzing the actual mek distribution
+    const typedMekData = mekRarityMaster as MekData[];
+
+    // Define chapter ranges
+    const chapterRanges: Record<number, number[][]> = {
+      1: [[3651, 4000], [461, 500], [92, 100], [10, 10]],
+      2: [[3301, 3650], [421, 460], [83, 91], [9, 9]],
+      3: [[2951, 3300], [381, 420], [74, 82], [8, 8]],
+      4: [[2601, 2950], [341, 380], [65, 73], [7, 7]],
+      5: [[2251, 2600], [301, 340], [56, 64], [6, 6]],
+      6: [[1901, 2250], [261, 300], [47, 55], [5, 5]],
+      7: [[1551, 1900], [221, 260], [38, 46], [4, 4]],
+      8: [[1201, 1550], [181, 220], [29, 37], [3, 3]],
+      9: [[851, 1200], [141, 180], [20, 28], [2, 2]],
+      10: [[501, 850], [101, 140], [11, 19], [1, 1]],
+    };
+
+    // Get all meks for the selected chapter
+    const ranges = chapterRanges[chapterNumber];
+    const chapterMeks: MekData[] = [];
+
+    ranges.forEach(([start, end]) => {
+      const rangeData = typedMekData.filter(mek => mek.rank >= start && mek.rank <= end);
+      chapterMeks.push(...rangeData);
+    });
+
+    // Create sets of variations that appear in this chapter
+    const chapterHeads = new Set<string>();
+    const chapterBodies = new Set<string>();
+    const chapterTraits = new Set<string>();
+
+    chapterMeks.forEach(mek => {
+      chapterHeads.add(mek.head);
+      chapterBodies.add(mek.body);
+      chapterTraits.add(mek.trait);
+    });
+
+    // Now count ALL variations across the entire 4000 mek collection
+    const globalHeadCounts: Record<string, number> = {};
+    const globalBodyCounts: Record<string, number> = {};
+    const globalTraitCounts: Record<string, number> = {};
+
+    typedMekData.forEach(mek => {
+      globalHeadCounts[mek.head] = (globalHeadCounts[mek.head] || 0) + 1;
+      globalBodyCounts[mek.body] = (globalBodyCounts[mek.body] || 0) + 1;
+      globalTraitCounts[mek.trait] = (globalTraitCounts[mek.trait] || 0) + 1;
+    });
+
+    // Find variations NOT in this chapter
+    const missingHeads: VariationCount[] = [];
+    const missingBodies: VariationCount[] = [];
+    const missingTraits: VariationCount[] = [];
+
+    // Check all global variations and add those not in chapter
+    Object.entries(globalHeadCounts).forEach(([name, count]) => {
+      if (!chapterHeads.has(name)) {
+        missingHeads.push({ name, count, type: 'head' });
+      }
+    });
+
+    Object.entries(globalBodyCounts).forEach(([name, count]) => {
+      if (!chapterBodies.has(name)) {
+        missingBodies.push({ name, count, type: 'body' });
+      }
+    });
+
+    Object.entries(globalTraitCounts).forEach(([name, count]) => {
+      if (!chapterTraits.has(name)) {
+        // Now including None, Nil, etc. - they'll be filtered as boss variations
+        missingTraits.push({ name, count, type: 'trait' });
+      }
+    });
+
+    // Combine all missing variations and sort by global rarity (least common first)
+    const allMissingVariations = [
+      ...missingHeads,
+      ...missingBodies,
+      ...missingTraits
+    ].sort((a, b) => a.count - b.count); // Sort by count ascending (rarest first)
+
+    // Filter out boss variations (from top 10 final bosses)
+    const eligibleMissingVariations = allMissingVariations.filter(v => {
+      if (v.type === 'head' && BOSS_VARIATIONS.heads.has(v.name)) return false;
+      if (v.type === 'body' && BOSS_VARIATIONS.bodies.has(v.name)) return false;
+      if (v.type === 'trait' && BOSS_VARIATIONS.traits.has(v.name)) return false;
+      return true;
+    });
+
+    // Take up to 80 of the rarest eligible missing variations
+    const rarest80Missing = eligibleMissingVariations.slice(0, 80);
 
     const startIndex = (chapterNumber - 1) * 20;
-    const endIndex = startIndex + 20;
-    const chapterEvents = eventsData.slice(startIndex, endIndex);
+    const chapterEvents = eventsData.slice(startIndex, startIndex + 20);
 
-    // Apply the round-robin distribution pattern from the image
+    // Apply the round-robin distribution
     const updatedEvents = chapterEvents.map((event, index) => {
-      const eventNum = index + 1; // 1-20
-
-      // Calculate essence ranks based on the pattern shown in the image
-      const essenceRewards = [
-        { variation: `Essence_${80 - index}`, abundanceRank: 80 - index }, // Most common of the 4
-        { variation: `Essence_${60 - index}`, abundanceRank: 60 - index }, // Second tier
-        { variation: `Essence_${40 - index}`, abundanceRank: 40 - index }, // Third tier
-        { variation: `Essence_${20 - index}`, abundanceRank: 20 - index }, // Rarest of the 4
-      ];
+      const essenceRanks = ROUND_ROBIN_TABLE[index];
+      const essenceRewards = essenceRanks.map(rank => {
+        const variation = rarest80Missing[rank - 1];
+        return variation ? {
+          variation: variation.name,
+          abundanceRank: rank,
+          count: variation.count, // This is now the global count
+          type: variation.type
+        } : null;
+      }).filter(Boolean) as EventNode['essenceRewards'];
 
       return {
         ...event,
@@ -274,6 +499,9 @@ export default function EventNodeEditor() {
     });
 
     setEventsData(newEventsData);
+
+    console.log(`Chapter ${chapterNumber}: Found ${allMissingVariations.length} variations NOT in chapter (${missingHeads.length} heads, ${missingBodies.length} bodies, ${missingTraits.length} traits)`);
+    console.log(`After filtering boss variations: ${eligibleMissingVariations.length} eligible variations`);
   };
 
   // Calculate total rewards
@@ -576,9 +804,45 @@ export default function EventNodeEditor() {
 
                                   {leftEvent.essenceRewards && leftEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
-                                      Essences: {leftEvent.essenceRewards.map(e => e.abundanceRank).join(', ')}
+                                      <div className="font-semibold">Essences:</div>
+                                      {leftEvent.essenceRewards.map((e, i) => (
+                                        <div key={i} className="ml-2">
+                                          <span className={e.type === 'head' ? 'text-blue-400' : e.type === 'body' ? 'text-green-400' : 'text-purple-400'}>
+                                            {e.variation} ({e.count})
+                                          </span>
+                                        </div>
+                                      ))}
                                     </div>
                                   )}
+
+                                  {leftEvent.customRewards && leftEvent.customRewards.length > 0 && (
+                                    <div className="text-xs text-orange-400/80 mt-1">
+                                      <div className="font-semibold">Custom Rewards:</div>
+                                      {leftEvent.customRewards.map((r) => (
+                                        <div key={r.id} className="ml-2 flex items-center gap-1">
+                                          <span className="text-orange-400">
+                                            [{r.type}] {r.name}
+                                          </span>
+                                          <button
+                                            onClick={() => removeCustomReward((chapter - 1) * 20 + leftIndex, r.id)}
+                                            className="text-red-400 hover:text-red-300 text-xs"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  <button
+                                    onClick={() => {
+                                      setShowAddRewardModal((chapter - 1) * 20 + leftIndex);
+                                      setNewReward({ name: '', type: 'frame', description: '' });
+                                    }}
+                                    className="mt-1 px-2 py-0.5 bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 rounded text-xs transition-colors"
+                                  >
+                                    + Add Reward
+                                  </button>
 
                                   {leftEvent.items && leftEvent.items.length > 0 && (
                                     <div className="text-xs text-purple-300/60">
@@ -642,9 +906,45 @@ export default function EventNodeEditor() {
 
                                   {rightEvent.essenceRewards && rightEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
-                                      Essences: {rightEvent.essenceRewards.map(e => e.abundanceRank).join(', ')}
+                                      <div className="font-semibold">Essences:</div>
+                                      {rightEvent.essenceRewards.map((e, i) => (
+                                        <div key={i} className="ml-2">
+                                          <span className={e.type === 'head' ? 'text-blue-400' : e.type === 'body' ? 'text-green-400' : 'text-purple-400'}>
+                                            {e.variation} ({e.count})
+                                          </span>
+                                        </div>
+                                      ))}
                                     </div>
                                   )}
+
+                                  {rightEvent.customRewards && rightEvent.customRewards.length > 0 && (
+                                    <div className="text-xs text-orange-400/80 mt-1">
+                                      <div className="font-semibold">Custom Rewards:</div>
+                                      {rightEvent.customRewards.map((r) => (
+                                        <div key={r.id} className="ml-2 flex items-center gap-1">
+                                          <span className="text-orange-400">
+                                            [{r.type}] {r.name}
+                                          </span>
+                                          <button
+                                            onClick={() => removeCustomReward((chapter - 1) * 20 + rightIndex, r.id)}
+                                            className="text-red-400 hover:text-red-300 text-xs"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  <button
+                                    onClick={() => {
+                                      setShowAddRewardModal((chapter - 1) * 20 + rightIndex);
+                                      setNewReward({ name: '', type: 'frame', description: '' });
+                                    }}
+                                    className="mt-1 px-2 py-0.5 bg-orange-600/30 hover:bg-orange-600/50 text-orange-400 rounded text-xs transition-colors"
+                                  >
+                                    + Add Reward
+                                  </button>
 
                                   {rightEvent.items && rightEvent.items.length > 0 && (
                                     <div className="text-xs text-purple-300/60">
@@ -705,6 +1005,73 @@ export default function EventNodeEditor() {
             <div className="text-center mt-3">
               <div className="text-purple-400 font-bold">Event {previewImage}</div>
               <div className="text-gray-400 text-sm">{eventsData[previewImage - 1]?.name || `Event ${previewImage}`}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Custom Reward Modal */}
+      {showAddRewardModal !== null && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          style={{ position: 'fixed', top: 0, left: 0 }}
+          onClick={() => setShowAddRewardModal(null)}
+        >
+          <div className="bg-gray-900 border border-orange-500/50 rounded-lg p-6 m-4 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-orange-400 mb-4">
+              Add Custom Reward to Event {showAddRewardModal + 1}
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400">Reward Name*</label>
+                <input
+                  type="text"
+                  value={newReward.name}
+                  onChange={(e) => setNewReward({...newReward, name: e.target.value})}
+                  placeholder="e.g., Golden Frame, Power Chip Mk II"
+                  className="w-full px-3 py-2 bg-black/50 border border-orange-500/30 rounded text-sm text-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Reward Type</label>
+                <select
+                  value={newReward.type}
+                  onChange={(e) => setNewReward({...newReward, type: e.target.value as any})}
+                  className="w-full px-3 py-2 bg-black/50 border border-orange-500/30 rounded text-sm text-gray-300"
+                >
+                  <option value="frame">Frame</option>
+                  <option value="canister">Canister (OE Signatures)</option>
+                  <option value="gear">Gear (Power Chip, etc.)</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Description (Optional)</label>
+                <textarea
+                  value={newReward.description}
+                  onChange={(e) => setNewReward({...newReward, description: e.target.value})}
+                  placeholder="Brief description of the reward..."
+                  className="w-full px-3 py-2 bg-black/50 border border-orange-500/30 rounded text-sm text-gray-300 h-20 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => addCustomReward(showAddRewardModal)}
+                className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded text-sm transition-colors"
+              >
+                Add Reward
+              </button>
+              <button
+                onClick={() => setShowAddRewardModal(null)}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -1,57 +1,61 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { SeededRandom } from "@/lib/seeded-random";
 
 export default function GlobalBackground() {
-  const [particles, setParticles] = useState<Array<{id: number, left: string, top: string, delay: string, duration: string, size: number, driftAngle: number}>>([]);
-  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, fastPulse?: boolean}>>([]);
-  const [satellites, setSatellites] = useState<Array<{id: number, startX: string, startY: string, endX: string, endY: string, delay: string, duration: string}>>([]);
-
-  useEffect(() => {
-    // Generate particles that drift in straight lines like space debris
-    const generatedParticles = [...Array(25)].map((_, i) => {
-      // Random drift angle between -20 and 20 degrees from horizontal
-      const driftAngle = -20 + Math.random() * 40;
-      
+  // Use useMemo to generate deterministic values that are consistent between server and client
+  const particles = useMemo(() => {
+    const rng = new SeededRandom(12345); // Fixed seed for particles
+    return [...Array(25)].map((_, i) => {
+      const driftAngle = -20 + rng.random() * 40;
       return {
         id: i,
-        left: `${-10 + Math.random() * 120}%`, // Can start slightly off-screen
-        top: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 30}s`, // Stagger over 30 seconds
-        duration: `${20 + Math.random() * 15}s`, // 20-35 seconds to cross
-        size: 0.8 + Math.random() * 0.8, // Size between 0.8px and 1.6px
+        left: `${-10 + rng.random() * 120}%`,
+        top: `${rng.random() * 100}%`,
+        delay: `${rng.random() * 30}s`,
+        duration: `${20 + rng.random() * 15}s`,
+        size: 0.8 + rng.random() * 0.8,
         driftAngle: driftAngle,
       };
     });
-    setParticles(generatedParticles);
-    
-    // Generate twinkling stars (35% more = 81 stars)
-    const generatedStars = [...Array(81)].map((_, i) => ({
+  }, []);
+
+  const stars = useMemo(() => {
+    const rng = new SeededRandom(67890); // Different seed for stars
+    return [...Array(81)].map((_, i) => ({
       id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      size: Math.random() * 3 + 0.5,
-      opacity: Math.random() * 0.8 + 0.2,
-      twinkle: Math.random() > 0.5,
-      fastPulse: i < 5 && Math.random() > 0.5, // Only first 5 stars can pulse fast, and only 50% chance
+      left: `${rng.random() * 100}%`,
+      top: `${rng.random() * 100}%`,
+      size: rng.random() * 3 + 0.5,
+      opacity: rng.random() * 0.8 + 0.2,
+      twinkle: rng.boolean(0.5),
+      fastPulse: i < 5 && rng.boolean(0.5),
     }));
-    setStars(generatedStars);
-    
-    // Generate occasional satellites (3-4 that move diagonally across screen)
-    const generatedSatellites = [...Array(4)].map((_, i) => {
-      const goingRight = Math.random() > 0.5;
-      const goingDown = Math.random() > 0.5;
+  }, []);
+
+  const satellites = useMemo(() => {
+    const rng = new SeededRandom(11111); // Different seed for satellites
+    return [...Array(4)].map((_, i) => {
+      const goingRight = rng.boolean(0.5);
+      const goingDown = rng.boolean(0.5);
       return {
         id: i,
         startX: goingRight ? '-5%' : '105%',
         startY: goingDown ? '-5%' : '105%',
         endX: goingRight ? '105%' : '-5%',
         endY: goingDown ? '105%' : '-5%',
-        delay: `${i * 15 + Math.random() * 20}s`, // Stagger them significantly
-        duration: `${40 + Math.random() * 20}s`, // 40-60 seconds to cross
+        delay: `${i * 15 + rng.random() * 20}s`,
+        duration: `${40 + rng.random() * 20}s`,
       };
     });
-    setSatellites(generatedSatellites);
+  }, []);
+
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state to handle animations that should only run on client
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   return (
@@ -162,9 +166,16 @@ export default function GlobalBackground() {
               width: `${star.size}px`,
               height: `${star.size}px`,
               opacity: star.opacity,
-              animation: star.fastPulse ? `starTwinkle ${0.8 + Math.random() * 0.4}s ease-in-out infinite` : 
-                       star.twinkle ? `starTwinkle ${2 + Math.random() * 2}s ease-in-out infinite` : 'none',
-              animationDelay: star.twinkle || star.fastPulse ? `${Math.random() * 2}s` : '0s',
+              // Use deterministic animation durations based on star id
+              // Using separate animation properties to avoid React warning
+              animationName: mounted && (star.fastPulse || star.twinkle) ? 'starTwinkle' : 'none',
+              animationDuration: mounted ? (
+                star.fastPulse ? `${0.8 + (star.id % 5) * 0.1}s` :
+                star.twinkle ? `${2 + (star.id % 8) * 0.25}s` : '0s'
+              ) : '0s',
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: mounted && (star.fastPulse || star.twinkle) ? 'infinite' : 1,
+              animationDelay: mounted && (star.twinkle || star.fastPulse) ? `${(star.id % 4) * 0.5}s` : '0s',
             }}
           />
         ))}

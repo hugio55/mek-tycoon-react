@@ -25,6 +25,7 @@ import type * as chips from "../chips.js";
 import type * as contracts from "../contracts.js";
 import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
+import type * as devToolbar from "../devToolbar.js";
 import type * as eventNodeRewards from "../eventNodeRewards.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
 import type * as gameConstants from "../gameConstants.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   contracts: typeof contracts;
   crafting: typeof crafting;
   crons: typeof crons;
+  devToolbar: typeof devToolbar;
   eventNodeRewards: typeof eventNodeRewards;
   fixMek3412To000: typeof fixMek3412To000;
   gameConstants: typeof gameConstants;

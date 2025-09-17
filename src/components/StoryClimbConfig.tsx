@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import EventNodeEditor from './EventNodeEditor';
 import NormalMekRewards from './NormalMekRewards';
-import MekChapterDistributionActual from './MekChapterDistributionActual';
+import EventChipDistribution from './EventChipDistribution';
+import PreviewTreeModal from './PreviewTreeModal';
 
 interface ChapterConfig {
   chapter: number;
@@ -15,8 +17,11 @@ interface ChapterConfig {
 }
 
 export default function StoryClimbConfig() {
+  const router = useRouter();
   const [seedType, setSeedType] = useState<'wallet' | 'custom'>('wallet');
-  const [customSeed, setCustomSeed] = useState('');
+  const [customSeed, setCustomSeed] = useState('1');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedChapter, setSelectedChapter] = useState(1);
 
   // Define the chapter configurations based on the documentation
   const chapterConfigs: ChapterConfig[] = [
@@ -35,7 +40,16 @@ export default function StoryClimbConfig() {
   const handleGeneratePreview = () => {
     const seed = seedType === 'wallet' ? 'wallet_address_here' : customSeed;
     console.log('Generating preview with seed:', seed);
-    // This would call the actual generation logic
+
+    // Navigate to Story Climb page in preview mode
+    const params = new URLSearchParams({
+      preview: 'true',
+      seed: seed,
+      chapter: selectedChapter.toString()
+    });
+
+    // Open in new tab for easy comparison
+    window.open(`/scrap-yard/story-climb?${params.toString()}`, '_blank');
   };
 
   return (
@@ -153,28 +167,59 @@ export default function StoryClimbConfig() {
               type="text"
               value={customSeed}
               onChange={(e) => setCustomSeed(e.target.value)}
-              placeholder="Enter custom seed..."
+              placeholder="Enter custom seed (e.g., 1)"
               className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded text-sm text-gray-300"
             />
           )}
-          <button
-            onClick={handleGeneratePreview}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded text-sm transition-colors"
-          >
-            Generate Preview Tree
-          </button>
+
+          {/* Chapter Selection */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-300">Preview Chapter:</label>
+            <select
+              value={selectedChapter}
+              onChange={(e) => setSelectedChapter(parseInt(e.target.value))}
+              className="px-3 py-2 bg-black/50 border border-gray-700 rounded text-sm text-gray-300"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(ch => (
+                <option key={ch} value={ch}>Chapter {ch}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleGeneratePreview}
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded text-sm transition-colors"
+            >
+              Open Preview in Story Climb
+            </button>
+            <button
+              onClick={() => setShowPreviewModal(true)}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded text-sm transition-colors"
+            >
+              Quick Preview (Modal)
+            </button>
+          </div>
         </div>
       </div>
 
 
-      {/* Mek Chapter Distribution */}
-      <MekChapterDistributionActual />
+      {/* Universal Chip Distribution for Events */}
+      <EventChipDistribution />
+
+      {/* Event Node Editor - moved here so essence distribution is above it */}
+      <EventNodeEditor />
 
       {/* Normal Mek Node Rewards */}
       <NormalMekRewards />
 
-      {/* Event Node Editor */}
-      <EventNodeEditor />
+      {/* Preview Tree Modal */}
+      <PreviewTreeModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        seed={seedType === 'wallet' ? 'wallet_address_here' : customSeed}
+        chapter={selectedChapter}
+      />
     </div>
   );
 }

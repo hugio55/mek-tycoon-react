@@ -56,9 +56,34 @@
             background: linear-gradient(135deg, #28a745 0%, #218838 100%);
             box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
         }
-        
+
         .toolbar-button.favorite:hover {
             box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Button color variations */
+        .toolbar-button.color-green {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+
+        .toolbar-button.color-blue {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+
+        .toolbar-button.color-red {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .toolbar-button.color-yellow {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+
+        .toolbar-button.color-cyan {
+            background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+        }
+
+        .toolbar-button.color-orange {
+            background: linear-gradient(135deg, #fd7e14 0%, #e56202 100%);
         }
         
         .toolbar-button:hover {
@@ -68,6 +93,36 @@
         
         .toolbar-button:active {
             transform: translateY(0);
+        }
+
+        .toolbar-button.draggable {
+            cursor: move;
+        }
+
+        .toolbar-button.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .button-container.drag-over {
+            position: relative;
+        }
+
+        .button-container.drag-over::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #fab617;
+            border-radius: 2px;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         .edit-mode .toolbar-button {
@@ -289,6 +344,52 @@
             width: 16px;
             text-align: center;
         }
+
+        .context-menu-item.has-submenu::after {
+            content: '▶';
+            position: absolute;
+            right: 10px;
+            opacity: 0.5;
+        }
+
+        .submenu {
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 150px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: none;
+            margin-left: 5px;
+        }
+
+        .context-menu-item:hover .submenu {
+            display: block;
+        }
+
+        .color-option {
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .color-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
         
         .instructions {
             background: rgba(255, 255, 255, 0.05);
@@ -343,6 +444,50 @@
             Open in New Tab
         </div>
         <div class="context-menu-item separator"></div>
+        <div class="context-menu-item" onclick="toggleContextFavorite()">
+            <span class="context-menu-icon" id="favoriteIcon">☆</span>
+            <span id="favoriteText">Set as Favorite</span>
+        </div>
+        <div class="context-menu-item has-submenu">
+            <span class="context-menu-icon">🎨</span>
+            Set Color
+            <div class="submenu">
+                <div class="color-option" onclick="setButtonColor('default')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+                    Default (Purple)
+                </div>
+                <div class="color-option" onclick="setButtonColor('green')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%)"></div>
+                    Green
+                </div>
+                <div class="color-option" onclick="setButtonColor('blue')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%)"></div>
+                    Blue
+                </div>
+                <div class="color-option" onclick="setButtonColor('red')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%)"></div>
+                    Red
+                </div>
+                <div class="color-option" onclick="setButtonColor('yellow')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%)"></div>
+                    Yellow
+                </div>
+                <div class="color-option" onclick="setButtonColor('cyan')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%)"></div>
+                    Cyan
+                </div>
+                <div class="color-option" onclick="setButtonColor('orange')">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #fd7e14 0%, #e56202 100%)"></div>
+                    Orange
+                </div>
+            </div>
+        </div>
+        <div class="context-menu-item separator"></div>
+        <div class="context-menu-item" onclick="copyUrl()">
+            <span class="context-menu-icon">📋</span>
+            Copy URL
+        </div>
+        <div class="context-menu-item separator"></div>
         <div class="context-menu-item" onclick="openAsFloatingButton()">
             <span class="context-menu-icon">🎯</span>
             Open as Floating Button
@@ -350,95 +495,194 @@
     </div>
 
     <script>
+        // Version number - increment this to force refresh of buttons
+        const TOOLBAR_VERSION = 7; // Force refresh to remove deleted pages
+
         // Default buttons configuration - All pages from navigation
         let buttons = [
-            // Main
-            { name: "Hub", url: "http://localhost:3100/hub", favorite: false },
-            
-            // Operations
-            { name: "Essence", url: "http://localhost:3100/essence", favorite: false },
-            
-            // Production
-            { name: "Crafting", url: "http://localhost:3100/crafting", favorite: false },
-            { name: "Incinerator", url: "http://localhost:3100/incinerator", favorite: false },
-            { name: "Shop", url: "http://localhost:3100/shop", favorite: false },
-            { name: "Bank", url: "http://localhost:3100/bank", favorite: false },
-            { name: "Inventory", url: "http://localhost:3100/inventory", favorite: false },
-            
-            // Meks
-            { name: "CiruTree", url: "http://localhost:3100/cirutree", favorite: false },
-            { name: "Achievements", url: "http://localhost:3100/achievements", favorite: false },
-            { name: "XP Allocation", url: "http://localhost:3100/xp-allocation", favorite: false },
-            { name: "Spell Caster", url: "http://localhost:3100/spell-caster", favorite: false },
-            
-            // Management
-            { name: "Profile", url: "http://localhost:3100/profile", favorite: false },
-            { name: "Search", url: "http://localhost:3100/search", favorite: false },
-            { name: "Leaderboard", url: "http://localhost:3100/leaderboard", favorite: false },
-            
-            // Scrap Yard
-            { name: "Contracts", url: "http://localhost:3100/contracts", favorite: false },
-            { name: "Single Missions", url: "http://localhost:3100/contracts/single-missions", favorite: false },
-            { name: "Story Mode", url: "http://localhost:3100/contracts/chapters", favorite: false },
-            { name: "Story Climb", url: "http://localhost:3100/scrap-yard/story-climb", favorite: false },
-            
-            // Admin
-            { name: "Admin Dashboard", url: "http://localhost:3100/admin", favorite: false },
-            { name: "Save System", url: "http://localhost:3100/admin-save", favorite: false },
-            { name: "Mek Selector", url: "http://localhost:3100/mek-selector", favorite: false },
-            { name: "Shop Manager", url: "http://localhost:3100/admin-shop", favorite: false },
-            { name: "UI Showcase", url: "http://localhost:3100/ui-showcase", favorite: false },
-            { name: "Rarity Bias", url: "http://localhost:3100/rarity-bias", favorite: false },
-            { name: "Talent Builder", url: "http://localhost:3100/talent-builder", favorite: false },
-            { name: "Mek Tree Tables", url: "http://localhost:3100/admin-mek-tree-tables", favorite: false },
-            { name: "Spell Designer", url: "http://localhost:3100/admin-spells", favorite: false },
-            { name: "Spell Caster 3D", url: "http://localhost:3100/spell-caster-3d", favorite: false },
-            { name: "Plinko", url: "http://localhost:3100/admin-plinko", favorite: false },
-            { name: "Story Rewards", url: "http://localhost:3100/story-rewards", favorite: false },
-            { name: "Event Node Rewards", url: "http://localhost:3100/event-node-rewards", favorite: false },
-            { name: "Sphere Selector", url: "http://localhost:3100/admin-sphere", favorite: false },
-            { name: "Uni-Chips", url: "http://localhost:3100/uni-chips", favorite: false },
-            { name: "Chip Builder", url: "http://localhost:3100/admin/chip-builder", favorite: false },
-            { name: "Essence Donut", url: "http://localhost:3100/essence-donut", favorite: false }
+            // === MAIN PAGES ===
+            { name: "Home", url: "http://localhost:3100/", favorite: false, color: 'default' },
+            { name: "Hub", url: "http://localhost:3100/hub", favorite: false, color: 'default' },
+            { name: "Hub2", url: "http://localhost:3100/hub2", favorite: false, color: 'default' },
+
+            // === OPERATIONS ===
+            { name: "Essence Donut", url: "http://localhost:3100/essence-donut", favorite: false, color: 'default' },
+
+            // === PRODUCTION ===
+            { name: "Crafting", url: "http://localhost:3100/crafting", favorite: false, color: 'default' },
+            { name: "Incinerator", url: "http://localhost:3100/incinerator", favorite: false, color: 'default' },
+            { name: "Shop", url: "http://localhost:3100/shop", favorite: false, color: 'default' },
+            { name: "Shop WOW", url: "http://localhost:3100/shop-wow", favorite: false, color: 'default' },
+            { name: "Bank", url: "http://localhost:3100/bank", favorite: false, color: 'default' },
+            { name: "Inventory", url: "http://localhost:3100/inventory", favorite: false, color: 'default' },
+
+            // === MEKS & TALENTS ===
+            { name: "CiruTree", url: "http://localhost:3100/cirutree", favorite: false, color: 'default' },
+            { name: "Achievements", url: "http://localhost:3100/achievements", favorite: false, color: 'default' },
+            { name: "XP Allocation", url: "http://localhost:3100/xp-allocation", favorite: false, color: 'default' },
+            { name: "Talent Builder", url: "http://localhost:3100/talent-builder", favorite: false, color: 'default' },
+
+            // === MANAGEMENT ===
+            { name: "Profile", url: "http://localhost:3100/profile", favorite: false, color: 'default' },
+            { name: "Search", url: "http://localhost:3100/search", favorite: false, color: 'default' },
+            { name: "Leaderboard", url: "http://localhost:3100/leaderboard", favorite: false, color: 'default' },
+            { name: "Mek Selector", url: "http://localhost:3100/mek-selector", favorite: false, color: 'default' },
+
+            // === CONTRACTS & MISSIONS ===
+            { name: "Contracts", url: "http://localhost:3100/contracts", favorite: false, color: 'default' },
+            { name: "Contracts Active", url: "http://localhost:3100/contracts/active", favorite: false, color: 'default' },
+            { name: "Single Missions", url: "http://localhost:3100/contracts/single-missions", favorite: false, color: 'default' },
+            { name: "Story Chapters", url: "http://localhost:3100/contracts/chapters", favorite: false, color: 'default' },
+            { name: "Contracts Button Demo", url: "http://localhost:3100/contracts/button-demo", favorite: false, color: 'default' },
+
+            // === SCRAP YARD & GAMES ===
+            { name: "Scrapyard", url: "http://localhost:3100/scrapyard", favorite: false, color: 'default' },
+            { name: "Story Climb", url: "http://localhost:3100/scrap-yard/story-climb", favorite: false, color: 'default' },
+            { name: "Block Game", url: "http://localhost:3100/scrap-yard/block-game", favorite: false, color: 'default' },
+
+            // === CHIPS & SPECIAL ===
+            { name: "Mek Chips 3", url: "http://localhost:3100/mek-chips-3", favorite: false, color: 'default' },
+            { name: "Chip Builder", url: "http://localhost:3100/admin/chip-builder", favorite: false, color: 'default' },
+            { name: "Sphere Selector", url: "http://localhost:3100/sphere-selector", favorite: false, color: 'default' },
+
+            // === ADMIN TOOLS ===
+            { name: "Admin Dashboard", url: "http://localhost:3100/admin", favorite: false, color: 'default' },
+            { name: "Admin Save System", url: "http://localhost:3100/admin-save", favorite: false, color: 'default' },
+            { name: "Admin Shop Manager", url: "http://localhost:3100/admin-shop", favorite: false, color: 'default' },
+            { name: "Admin Sphere", url: "http://localhost:3100/admin-sphere", favorite: false, color: 'default' },
+            { name: "Admin Master Data", url: "http://localhost:3100/admin-master-data", favorite: false, color: 'default' },
+            { name: "Admin Mek Tree Tables", url: "http://localhost:3100/admin-mek-tree-tables", favorite: false, color: 'default' },
+            { name: "Admin Users", url: "http://localhost:3100/admin/users", favorite: false, color: 'default' },
+            { name: "Admin Buff Categories", url: "http://localhost:3100/admin/buff-categories", favorite: false, color: 'default' },
+            { name: "Admin Buff Seed", url: "http://localhost:3100/admin/buff-categories/seed", favorite: false, color: 'default' },
+            { name: "Admin Frames", url: "http://localhost:3100/admin/frames", favorite: false, color: 'default' },
+
+            // === UI & TESTING ===
+            { name: "UI Showcase", url: "http://localhost:3100/ui-showcase", favorite: false, color: 'default' },
+            { name: "Rarity Bias", url: "http://localhost:3100/rarity-bias", favorite: false, color: 'default' }
         ];
         
         let editMode = false;
         let chromeTab = null;
         let currentContextButton = null;
+        let draggedButton = null;
+        let draggedIndex = null;
         
         // Load saved configuration
         function loadConfig() {
             try {
+                // ALWAYS try to preserve favorites and colors from saved config
                 const saved = localStorage.getItem('devToolbarButtons');
+                const savedSettings = {};
+
                 if (saved) {
                     try {
                         const savedButtons = JSON.parse(saved);
+                        // Create a map of saved button settings indexed by URL
+                        savedButtons.forEach(btn => {
+                            savedSettings[btn.url] = {
+                                favorite: btn.favorite || false,
+                                color: btn.color || 'default',
+                                customOrder: savedButtons.indexOf(btn) // Preserve custom order
+                            };
+                        });
+                        console.log('Loaded settings for', Object.keys(savedSettings).length, 'buttons');
+                    } catch (e) {
+                        console.error('Failed to parse saved settings:', e);
+                    }
+                }
+
+                // Check version to see if we need to update button list
+                const savedVersion = localStorage.getItem('devToolbarVersion');
+                if (savedVersion !== String(TOOLBAR_VERSION)) {
+                    console.log('Toolbar version changed from', savedVersion, 'to', TOOLBAR_VERSION);
+
+                    // PRESERVE USER'S CUSTOM ORDER
+                    const orderedButtons = [];
+
+                    if (saved) {
+                        try {
+                            const savedButtons = JSON.parse(saved);
+
+                            // First, add all saved buttons that still exist in the default list (preserving order)
+                            savedButtons.forEach(savedBtn => {
+                                const defaultBtn = buttons.find(btn => btn.url === savedBtn.url);
+                                if (defaultBtn) {
+                                    // Button still exists in defaults, preserve its settings and position
+                                    orderedButtons.push({
+                                        ...defaultBtn,
+                                        favorite: savedBtn.favorite || false,
+                                        color: savedBtn.color || 'default'
+                                    });
+                                } else if (savedBtn.name && savedBtn.url) {
+                                    // Custom button not in defaults, preserve it
+                                    orderedButtons.push(savedBtn);
+                                }
+                            });
+
+                            // Then add any new buttons from defaults that weren't in saved (at the end)
+                            buttons.forEach(defaultBtn => {
+                                const alreadyAdded = orderedButtons.some(btn => btn.url === defaultBtn.url);
+                                if (!alreadyAdded) {
+                                    orderedButtons.push(defaultBtn);
+                                    console.log('Added new button:', defaultBtn.name);
+                                }
+                            });
+
+                            // Replace buttons with the ordered list
+                            buttons = orderedButtons;
+                            console.log('Preserved custom order with', buttons.length, 'buttons');
+
+                        } catch (e) {
+                            console.error('Failed to preserve order:', e);
+                            // Fall back to just preserving settings without order
+                            buttons.forEach(btn => {
+                                if (savedSettings[btn.url]) {
+                                    btn.favorite = savedSettings[btn.url].favorite;
+                                    btn.color = savedSettings[btn.url].color;
+                                }
+                            });
+                        }
+                    } else {
+                        // No saved config, just apply settings
+                        buttons.forEach(btn => {
+                            if (savedSettings[btn.url]) {
+                                btn.favorite = savedSettings[btn.url].favorite;
+                                btn.color = savedSettings[btn.url].color;
+                            }
+                        });
+                    }
+
+                    localStorage.setItem('devToolbarVersion', String(TOOLBAR_VERSION));
+                    saveConfig(); // Save the merged config
+                    return;
+                }
+
+                // Version matches, so load the full saved config including custom order
+                const savedConfig = localStorage.getItem('devToolbarButtons');
+                if (savedConfig) {
+                    try {
+                        const savedButtons = JSON.parse(savedConfig);
                         // Validate saved buttons
                         if (Array.isArray(savedButtons) && savedButtons.length > 0) {
-                            // Migrate old format if needed
-                            if (savedButtons[0].favorite === undefined) {
-                                savedButtons.forEach(btn => btn.favorite = false);
-                            }
-                            // Only use saved config if it has required properties
-                            if (savedButtons[0].hasOwnProperty('name') && savedButtons[0].hasOwnProperty('url')) {
-                                buttons = savedButtons;
-                                console.log('Loaded', buttons.length, 'buttons from storage');
-                            } else {
-                                // Clear invalid config
-                                localStorage.removeItem('devToolbarButtons');
-                                console.log('Cleared invalid config, using defaults');
-                            }
+                            // Use the saved button order and settings
+                            buttons = savedButtons;
+                            console.log('Loaded', buttons.length, 'buttons from storage (including custom order)');
                         } else {
-                            // Clear invalid config
-                            localStorage.removeItem('devToolbarButtons');
-                            console.log('Invalid config format, using defaults');
+                            console.log('Invalid saved config format, using defaults');
                         }
                     } catch (e) {
                         console.error('Failed to parse saved config:', e);
-                        localStorage.removeItem('devToolbarButtons');
                     }
                 } else {
-                    console.log('No saved config, using defaults');
+                    // No saved config yet, apply any previously saved settings to defaults
+                    buttons.forEach(btn => {
+                        if (savedSettings[btn.url]) {
+                            btn.favorite = savedSettings[btn.url].favorite;
+                            btn.color = savedSettings[btn.url].color;
+                        }
+                    });
+                    console.log('No saved config, using defaults with preserved settings');
                 }
             } catch (e) {
                 console.error('Failed to access localStorage:', e);
@@ -478,30 +722,51 @@
                 return;
             }
             toolbar.innerHTML = '';
-            
+
             const sortedButtons = getSortedButtons();
             console.log('Rendering', sortedButtons.length, 'buttons');
-            
-            sortedButtons.forEach((button) => {
+
+            sortedButtons.forEach((button, index) => {
                 const originalIndex = buttons.indexOf(button);
                 const container = document.createElement('div');
                 container.className = 'button-container';
-                
+                container.dataset.index = index;
+
                 const btn = document.createElement('button');
-                btn.className = button.favorite ? 'toolbar-button favorite' : 'toolbar-button';
+                // Apply color class if set
+                let classes = ['toolbar-button'];
+                if (!editMode) classes.push('draggable');
+                if (button.favorite) classes.push('favorite');
+                if (button.color && button.color !== 'default') {
+                    classes.push(`color-${button.color}`);
+                }
+                btn.className = classes.join(' ');
+
                 btn.textContent = button.name;
                 btn.dataset.url = button.url;
                 btn.dataset.index = originalIndex;
-                
+
+                // Make draggable when not in edit mode
                 if (!editMode) {
+                    btn.draggable = true;
+
                     btn.onclick = () => openInChrome(button.url, button.name);
                     btn.oncontextmenu = (e) => {
                         e.preventDefault();
                         showContextMenu(e, button);
                         return false;
                     };
+
+                    // Drag events on button
+                    btn.ondragstart = (e) => handleDragStart(e, index, button);
+                    btn.ondragend = handleDragEnd;
+
+                    // Drop events on container
+                    container.ondragover = handleDragOver;
+                    container.ondrop = (e) => handleDrop(e, index);
+                    container.ondragleave = handleDragLeave;
                 }
-                
+
                 container.appendChild(btn);
                 toolbar.appendChild(container);
             });
@@ -608,7 +873,8 @@
             buttons.push({
                 name: `Button ${buttons.length + 1}`,
                 url: 'http://localhost:3100/',
-                favorite: false
+                favorite: false,
+                color: 'default'
             });
             renderEditor();
             renderToolbar();
@@ -618,11 +884,22 @@
         function showContextMenu(event, button) {
             currentContextButton = button;
             const menu = document.getElementById('contextMenu');
-            
+
+            // Update favorite icon and text
+            const favoriteIcon = document.getElementById('favoriteIcon');
+            const favoriteText = document.getElementById('favoriteText');
+            if (button.favorite) {
+                favoriteIcon.textContent = '★';
+                favoriteText.textContent = 'Remove from Favorites';
+            } else {
+                favoriteIcon.textContent = '☆';
+                favoriteText.textContent = 'Set as Favorite';
+            }
+
             // Position the menu at cursor
             menu.style.left = event.pageX + 'px';
             menu.style.top = event.pageY + 'px';
-            
+
             // Make sure menu doesn't go off screen
             setTimeout(() => {
                 const rect = menu.getBoundingClientRect();
@@ -633,7 +910,7 @@
                     menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
                 }
             }, 0);
-            
+
             menu.classList.add('show');
         }
         
@@ -662,6 +939,59 @@
         function openAsFloatingButton() {
             if (currentContextButton) {
                 createFloatingButton(currentContextButton);
+            }
+            hideContextMenu();
+        }
+
+        function copyUrl() {
+            if (currentContextButton) {
+                // Copy to clipboard
+                navigator.clipboard.writeText(currentContextButton.url).then(() => {
+                    showStatus(`Copied URL: ${currentContextButton.url}`);
+                }).catch(err => {
+                    // Fallback method for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentContextButton.url;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showStatus(`Copied URL: ${currentContextButton.url}`);
+                    } catch (err) {
+                        showStatus('Failed to copy URL');
+                    }
+                    document.body.removeChild(textArea);
+                });
+            }
+            hideContextMenu();
+        }
+
+        function toggleContextFavorite() {
+            if (currentContextButton) {
+                const index = buttons.indexOf(currentContextButton);
+                if (index !== -1) {
+                    buttons[index].favorite = !buttons[index].favorite;
+                    renderToolbar();
+                    saveConfig();
+                    showStatus(buttons[index].favorite ? 'Added to favorites' : 'Removed from favorites');
+                }
+            }
+            hideContextMenu();
+        }
+
+        function setButtonColor(color) {
+            if (currentContextButton) {
+                const index = buttons.indexOf(currentContextButton);
+                if (index !== -1) {
+                    buttons[index].color = color;
+                    renderToolbar();
+                    saveConfig();
+                    showStatus(`Color changed to ${color}`);
+                }
             }
             hideContextMenu();
         }
@@ -771,6 +1101,103 @@
             }
         }
         
+        // Drag and drop handlers
+        function handleDragStart(e, index, button) {
+            draggedButton = button;
+            draggedIndex = index;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedButton = null;
+            draggedIndex = null;
+
+            // Remove all drag-over classes
+            document.querySelectorAll('.button-container').forEach(container => {
+                container.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            const container = e.target.closest('.button-container');
+            if (container && !container.querySelector('.dragging')) {
+                // Remove drag-over from all containers
+                document.querySelectorAll('.button-container').forEach(c => {
+                    c.classList.remove('drag-over');
+                });
+                // Add to current container
+                container.classList.add('drag-over');
+            }
+
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const container = e.target.closest('.button-container');
+            if (container) {
+                container.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e, dropIndex) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            e.preventDefault();
+
+            const container = e.target.closest('.button-container');
+            if (container) {
+                container.classList.remove('drag-over');
+            }
+
+            if (draggedButton && draggedIndex !== null && draggedIndex !== dropIndex) {
+                // Get the sorted buttons array
+                const sortedButtons = getSortedButtons();
+
+                // Remove dragged button from its original position
+                const [removed] = sortedButtons.splice(draggedIndex, 1);
+
+                // Insert at new position
+                sortedButtons.splice(dropIndex, 0, removed);
+
+                // Now we need to update the main buttons array to match this new order
+                // We'll create a new array with the sorted order
+                const newButtons = [];
+
+                // First add all favorites in their new order
+                sortedButtons.forEach(btn => {
+                    if (btn.favorite) {
+                        newButtons.push(btn);
+                    }
+                });
+
+                // Then add all non-favorites in their new order
+                sortedButtons.forEach(btn => {
+                    if (!btn.favorite) {
+                        newButtons.push(btn);
+                    }
+                });
+
+                // Replace the buttons array
+                buttons = newButtons;
+
+                // Save and re-render
+                saveConfig();
+                renderToolbar();
+                showStatus('Button order updated');
+            }
+
+            return false;
+        }
+
         // Click outside to close context menu
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.context-menu')) {
@@ -794,9 +1221,7 @@
         
         // Save config when page unloads
         window.addEventListener('beforeunload', () => {
-            if (editMode) {
-                saveConfig();
-            }
+            saveConfig(); // Always save config when closing, not just in edit mode
         });
         
         // Add error handler

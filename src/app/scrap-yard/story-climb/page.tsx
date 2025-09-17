@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import StoryMissionCard from '@/components/StoryMissionCard';
 import { StyleK } from '@/components/ui/ShowcaseCards';
 import MekRecruitmentModalV4 from '@/app/contracts/components/MekRecruitmentModalV4';
 import { generateSampleMeks } from '@/app/contracts/utils/helpers';
 import { leastRareMechanisms } from './least-rare-mechanisms';
+import { createSeededRandomFromString } from '@/lib/seeded-random';
 
 
 interface StoryNode {
@@ -42,6 +44,29 @@ function hashCode(str: string): number {
 }
 
 export default function StoryClimbPage() {
+  // Check for preview mode from URL params
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewSeed, setPreviewSeed] = useState('1');
+  const [previewChapter, setPreviewChapter] = useState(1);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('preview');
+      const seed = params.get('seed');
+      const chapter = params.get('chapter');
+
+      if (mode === 'true') {
+        setPreviewMode(true);
+        setPreviewSeed(seed || '1');
+        setPreviewChapter(parseInt(chapter || '1'));
+        // Start at normal zoom to see nodes properly
+        setZoom(1);
+        setViewportOffset(-250); // Start at bottom like normal
+      }
+    }
+  }, []);
+
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
   const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set(['start'])); // Start is always completed
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 900 }); // 2:3 aspect ratio
@@ -60,6 +85,8 @@ export default function StoryClimbPage() {
   const [isJumping, setIsJumping] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [hoveredNode, setHoveredNode] = useState<StoryNode | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [hoverEffectStyle, setHoverEffectStyle] = useState(0); // Add missing hover effect style
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   const [challengerEffect, setChallengerEffect] = useState<'quantum1' | 'quantum2' | 'quantum3'>('quantum1'); // Challenger quantum variations
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
@@ -76,7 +103,48 @@ export default function StoryClimbPage() {
   const v2Tree = storyTrees?.find(tree => tree.name === "V2");
   const v1Tree = storyTrees?.find(tree => tree.name === "V1");
   const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
+
+  // Load event node configurations to get actual gold/XP values
+  const eventConfigs = useQuery(api.eventNodeRewards.getConfigurations);
+  const attempt2Config = eventConfigs?.find(config => config.name === "attempt 2!");
+
+  // Parse configuration data once
+  const [parsedConfig, setParsedConfig] = useState<any>(null);
+  useEffect(() => {
+    if (attempt2Config?.data) {
+      try {
+        const parsed = JSON.parse(attempt2Config.data);
+        setParsedConfig(parsed);
+        console.log('Parsed attempt 2! configuration:', parsed);
+        // Log the structure to understand how to access the data
+        if (parsed) {
+          console.log('Config keys:', Object.keys(parsed));
+          if (parsed.events) {
+            console.log('Sample event:', parsed.events[0]);
+          }
+          if (parsed.nodes) {
+            console.log('Sample node:', parsed.nodes[0]);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse configuration:', e);
+      }
+    }
+  }, [attempt2Config]);
   
+  const [previewNodes, setPreviewNodes] = useState<StoryNode[] | null>(null);
+  const [previewConnections, setPreviewConnections] = useState<Connection[] | null>(null);
+
+  // Don't generate preview data - we'll use actual database trees
+  useEffect(() => {
+    if (previewMode) {
+      // In preview mode, we just use the actual database trees (V2, V1, or test5)
+      // The treeData will be set from the database queries below
+      console.log('Preview mode active - using database tree data');
+    }
+  }, [previewMode]);
+
+  // Always use database tree data (V2, V1, or test5)
   const treeData = v2Tree || v1Tree || test5Tree; // Use V2 if available, otherwise V1, then Test 5
   
   // Helper function to generate rewards based on node type and level
@@ -223,6 +291,11 @@ export default function StoryClimbPage() {
   
   // Helper function to get a deterministic mek image for each node
   const getMekImage = useCallback((nodeId: string, isForDetails: boolean = false): string => {
+    // In preview mode, return a simple placeholder
+    if (previewMode) {
+      return '/mek-images/150px/000-000-000.webp';
+    }
+
     // Find the node to get its Y position
     const node = treeData?.nodes?.find(n => n.id === nodeId);
     if (!node || node.storyNodeType !== 'normal') {
@@ -234,35 +307,44 @@ export default function StoryClimbPage() {
     const mechanismNodes = treeData?.nodes
       ?.filter(n => n.storyNodeType === 'normal')
       ?.sort((a, b) => a.y - b.y) || [];
-    
+
     // Find the index of this node in the sorted list
     const nodeIndex = mechanismNodes.findIndex(n => n.id === nodeId);
-    
+
     // Map to the least rare mechanisms (we have 400 of them)
     // If we have more nodes than mechanisms, wrap around
     const mechanismIndex = nodeIndex % leastRareMechanisms.length;
     const filename = leastRareMechanisms[mechanismIndex];
-    
+
     // Return appropriate size based on usage
     if (isForDetails) {
       return `/mek-images/500px/${filename}`;
     } else {
       return `/mek-images/150px/${filename}`;
     }
-  }, [treeData]);
+  }, [treeData?.nodes?.length, previewMode]); // Use stable dependencies
   
   // Debug logging
   useEffect(() => {
     console.log("Story trees from database:", storyTrees);
     console.log("V1 tree:", v1Tree);
+    console.log("V2 tree:", v2Tree);
     console.log("Test 5 tree:", test5Tree);
     console.log("Selected tree data:", treeData);
     if (treeData) {
       console.log("Number of nodes:", treeData.nodes?.length);
       console.log("Number of connections:", treeData.connections?.length);
-      console.log("First few nodes:", treeData.nodes?.slice(0, 3));
+      console.log("Node types breakdown:", {
+        normal: treeData.nodes?.filter(n => n.storyNodeType === 'normal').length,
+        event: treeData.nodes?.filter(n => n.storyNodeType === 'event').length,
+        boss: treeData.nodes?.filter(n => n.storyNodeType === 'boss').length,
+        final_boss: treeData.nodes?.filter(n => n.storyNodeType === 'final_boss').length,
+        challenger: treeData.nodes?.filter(n => n.challenger).length
+      });
+      console.log("First few nodes:", treeData.nodes?.slice(0, 10));
     }
-  }, [storyTrees, v1Tree, test5Tree, treeData]);
+    console.log("Preview mode:", previewMode);
+  }, [storyTrees, v1Tree, v2Tree, test5Tree, treeData, previewMode]);
 
   // Function to get a deterministic image for each node (fallback)
   const getNodeImage = useCallback((nodeId: string): string => {
@@ -293,13 +375,14 @@ export default function StoryClimbPage() {
 
   // Load images for nodes and wait for them to load
   useEffect(() => {
-    if (!treeData) return;
-    
+    // Skip image loading in preview mode
+    if (!treeData || previewMode) return;
+
     const loadImages = async () => {
       const imageMap = new Map<string, HTMLImageElement>();
       const eventImageMap = new Map<string, HTMLImageElement>();
       const promises: Promise<void>[] = [];
-      
+
       for (const node of treeData.nodes) {
         if (node.storyNodeType === 'final_boss') {
           // Use rainbow.jpg for final boss
@@ -336,15 +419,16 @@ export default function StoryClimbPage() {
           promises.push(promise);
         }
       }
-      
+
       setNodeImages(imageMap);
       setEventImages(eventImageMap);
       await Promise.all(promises);
       setImagesLoaded(true);
     };
-    
+
     loadImages();
-  }, [treeData, getNodeImage, getEventImage]);
+    // Remove callback dependencies that cause loops - use stable dependencies instead
+  }, [treeData?.nodes?.length, previewMode]);
 
   // Handle client-side mounting
   useEffect(() => {
@@ -462,16 +546,22 @@ export default function StoryClimbPage() {
     // Calculate scale based on tree width, but we'll adjust positioning for centering
     const padding = 30; // Slightly more padding for safety
     const scaleX = (canvas.width - padding * 2) / treeWidth; // Scale based on node centers, not full width
-    const scale = scaleX * 0.77; // Reduced by another 5% (was 0.81)
+    const scale = previewMode
+      ? Math.min(
+          (canvas.width - 100) / treeWidth,
+          (canvas.height - 100) / treeHeight
+        ) * 0.15  // Much smaller scale for preview to fit all nodes
+      : scaleX * 0.77; // Original scale for normal mode
     
     // Calculate total tree height when scaled
     const scaledTreeHeight = treeHeight * scale;
     
     // Transform function - position tree for viewport
     const transform = (x: number, y: number) => {
+      // Use the same scaling for both preview and normal modes
       const scaledX = (x - minX) * scale;
       const scaledY = (y - minY) * scale;
-      
+
       // Center the START node horizontally in the canvas
       let offsetX;
       if (startNode) {
@@ -481,7 +571,7 @@ export default function StoryClimbPage() {
         // Add a manual adjustment to compensate for visual centering
         const centerAdjustment = -55; // Shift LEFT another 10px to fit in canvas
         offsetX = (canvas.width / 2) - startScaledX + centerAdjustment;
-        
+
         // Debug logging (only log once per render cycle)
         if (Math.random() > 0.99) {
           console.log("START centering debug:", {
@@ -503,7 +593,14 @@ export default function StoryClimbPage() {
       
       // Position the start node near the bottom of the canvas
       let offsetY;
-      if (startNode) {
+      if (previewMode) {
+        // In preview mode, fit the whole tree in view
+        const treeScale = Math.min(
+          (canvas.width - 100) / treeWidth,
+          (canvas.height - 100) / treeHeight
+        ) * 0.8;
+        offsetY = canvas.height - 50;
+      } else if (startNode) {
         // Always position based on start node
         const startScaledY = (startNode.y - minY) * scale;
         // Put start node at the very bottom of the canvas
@@ -1520,21 +1617,32 @@ export default function StoryClimbPage() {
               // Draw special frame based on selected style
               switch (challengerFrameStyle) {
                 case 'spikes':
-                  // Draw jagged spikes around the circle
-                  ctx.strokeStyle = `rgba(255, 50, 50, ${0.7 + Math.sin(pulseTime) * 0.3})`;
+                  // Draw jagged spikes around the circle - more prominent
+                  const spikeCount = 20;
+                  ctx.fillStyle = `rgba(255, 50, 50, ${0.8 + Math.sin(pulseTime) * 0.2})`;
+                  ctx.strokeStyle = `rgba(200, 30, 30, ${0.9})`;
                   ctx.lineWidth = 2;
-                  const spikeCount = 16;
+                  
                   for (let i = 0; i < spikeCount; i++) {
                     const angle = (i / spikeCount) * Math.PI * 2;
-                    const innerRadius = halfSize + 2;
-                    const outerRadius = halfSize + 8 + Math.sin(pulseTime + i) * 2;
-                    const x1 = pos.x + Math.cos(angle) * innerRadius;
-                    const y1 = pos.y + Math.sin(angle) * innerRadius;
+                    const nextAngle = ((i + 0.5) / spikeCount) * Math.PI * 2;
+                    const innerRadius = halfSize - 1;
+                    const outerRadius = halfSize + 12 + Math.sin(pulseTime * 2 + i * 0.5) * 3;
+                    
+                    // Create triangular spikes
+                    ctx.beginPath();
+                    const x1 = pos.x + Math.cos(angle - 0.05) * innerRadius;
+                    const y1 = pos.y + Math.sin(angle - 0.05) * innerRadius;
                     const x2 = pos.x + Math.cos(angle) * outerRadius;
                     const y2 = pos.y + Math.sin(angle) * outerRadius;
-                    ctx.beginPath();
+                    const x3 = pos.x + Math.cos(angle + 0.05) * innerRadius;
+                    const y3 = pos.y + Math.sin(angle + 0.05) * innerRadius;
+                    
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
+                    ctx.lineTo(x3, y3);
+                    ctx.closePath();
+                    ctx.fill();
                     ctx.stroke();
                   }
                   break;
@@ -1952,40 +2060,54 @@ export default function StoryClimbPage() {
 
   // Animation loop for continuous hover effects and challenger glitch
   useEffect(() => {
+    // Skip animation in preview mode to prevent performance issues
+    if (previewMode) return;
+
     // Clear any existing animation
     if (animationIdRef.current) {
       cancelAnimationFrame(animationIdRef.current);
       animationIdRef.current = null;
     }
-    
+
     // Check if there are any challenger nodes that need animation
-    const hasChallenger = treeData?.nodes?.some(node => 
+    const hasChallenger = treeData?.nodes?.some(node =>
       node.challenger === true && node.storyNodeType === 'normal'
     ) || false;
-    
-    const animate = () => {
+
+    let lastTime = 0;
+    const targetFPS = 30;
+    const frameDelay = 1000 / targetFPS;
+
+    const animate = (currentTime: number) => {
+      // Throttle to target FPS
+      if (currentTime - lastTime < frameDelay) {
+        animationIdRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastTime = currentTime;
+
       // Animate for hover effects OR if there are challenger nodes
       if (hoveredNode || hasChallenger) {
-        // Force a redraw by updating animation tick (throttled to ~30 FPS)
+        // Force a redraw by updating animation tick
         setAnimationTick(prev => prev + 1);
         animationIdRef.current = requestAnimationFrame(animate);
       } else {
         animationIdRef.current = null;
       }
     };
-    
+
     // Start animation if needed
     if ((hoveredNode && (hoverEffectStyle === 4 || hoverEffectStyle === 1 || hoverEffectStyle === 3)) || hasChallenger) {
-      animate();
+      animationIdRef.current = requestAnimationFrame(animate);
     }
-    
+
     return () => {
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
         animationIdRef.current = null;
       }
     };
-  }, [hoveredNode, treeData]);
+  }, [hoveredNode, treeData, hoverEffectStyle, previewMode]);
 
   // Handle mouse events for panning
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1996,6 +2118,20 @@ export default function StoryClimbPage() {
   }, []);
   
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Store mouse position for tooltip - only update if changed significantly
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      const newX = e.clientX - rect.left;
+      const newY = e.clientY - rect.top;
+      // Only update if mouse moved more than 5 pixels to prevent re-render loops
+      setMousePosition(prev => {
+        if (Math.abs(prev.x - newX) > 5 || Math.abs(prev.y - newY) > 5) {
+          return { x: newX, y: newY };
+        }
+        return prev;
+      });
+    }
+
     // Handle hover detection when not dragging
     if (!isMouseDown && canvasRef.current && treeData) {
       const canvas = canvasRef.current;
@@ -2098,29 +2234,39 @@ export default function StoryClimbPage() {
         // Skip start node
         if (node.id === 'start') continue;
 
-        // Only hover over available nodes (same logic as isNodeAvailable)
-        const isNodeAvailableForHover = treeData.connections.some(conn => {
-          let connectedNodeId = null;
-          if (conn.from === node.id) {
-            connectedNodeId = conn.to;
-          } else if (conn.to === node.id) {
-            connectedNodeId = conn.from;
+        // In preview mode, allow hovering over all nodes
+        if (previewMode) {
+          // Allow hover on all nodes in preview mode
+        } else {
+          // Only hover over available nodes (same logic as isNodeAvailable)
+          const isNodeAvailableForHover = treeData.connections.some(conn => {
+            let connectedNodeId = null;
+            if (conn.from === node.id) {
+              connectedNodeId = conn.to;
+            } else if (conn.to === node.id) {
+              connectedNodeId = conn.from;
+            }
+
+            if (!connectedNodeId || !completedNodes.has(connectedNodeId)) {
+              return false;
+            }
+
+            // Find the connected completed node
+            const connectedNode = nodes.find(n => n.id === connectedNodeId);
+            if (!connectedNode) return false;
+
+            // Only allow upward progression (lower Y values = further up the tree)
+            return node.y < connectedNode.y;
+          });
+
+          // Process nodes that are either completed or available to play
+          if (!completedNodes.has(node.id) && !isNodeAvailableForHover) {
+            return; // Skip this node if not available in normal mode
           }
+        }
 
-          if (!connectedNodeId || !completedNodes.has(connectedNodeId)) {
-            return false;
-          }
-
-          // Find the connected completed node
-          const connectedNode = nodes.find(n => n.id === connectedNodeId);
-          if (!connectedNode) return false;
-
-          // Only allow upward progression (lower Y values = further up the tree)
-          return node.y < connectedNode.y;
-        });
-
-        // Process nodes that are either completed or available to play
-        if (completedNodes.has(node.id) || isNodeAvailableForHover) {
+        // Process hover detection for this node
+        {
           let pos = transform(node.x, node.y);
 
           // Apply the EXACT same position adjustments as in the render function
@@ -2440,12 +2586,20 @@ export default function StoryClimbPage() {
           break;
         }
         
+        // In preview mode, allow clicking any node
+        if (previewMode) {
+          setHoveredNode(null);
+          setSelectedNode(node);
+          console.log('Preview mode - selected node:', node);
+          break;
+        }
+
         // Debug: Check what connections exist for this node
-        const nodeConnections = treeData.connections.filter(conn => 
+        const nodeConnections = treeData.connections.filter(conn =>
           conn.from === node.id || conn.to === node.id
         );
         console.log(`Connections for ${node.id}:`, nodeConnections.length, nodeConnections);
-        
+
         // Check if this node is adjacent to a completed node and allows upward progression
         const isAdjacent = treeData.connections.some(conn => {
           let connectedNodeId = null;
@@ -2552,7 +2706,8 @@ export default function StoryClimbPage() {
     setViewportOffset(newOffset);
   }, [treeData, viewportOffset, canvasSize]);
 
-  if (!mounted) {
+  // Show loading only briefly on initial mount
+  if (!mounted && !previewMode) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-yellow-500 text-xl">Loading Story Mode...</div>
@@ -2667,6 +2822,153 @@ export default function StoryClimbPage() {
                 </select>
               </div>
               
+              {/* Hover Tooltip - Show in both preview and normal mode when admin data is loaded */}
+              {(previewMode || attempt2Config) && hoveredNode && (
+                <div
+                  className="absolute z-40 bg-gray-900/95 border-2 border-yellow-500/50 rounded-lg p-3 pointer-events-none"
+                  style={{
+                    left: `${Math.min(mousePosition.x + 10, canvasSize.width - 250)}px`,
+                    top: `${Math.min(mousePosition.y + 10, canvasSize.height - 150)}px`,
+                    minWidth: '200px'
+                  }}
+                >
+                  <div className="text-sm">
+                    <div className="font-bold text-yellow-400 mb-2">
+                      {hoveredNode.label || hoveredNode.id}
+                      <span className="text-gray-400 ml-1 text-xs">
+                        (Y: {hoveredNode.y.toFixed(0)})
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Money:</span>
+                        <span className="text-green-400 font-bold">
+                          💰 {(() => {
+                            // Try to get actual values from parsed config
+                            if (parsedConfig && hoveredNode.storyNodeType === 'event') {
+                              // Find matching event data
+                              const eventData = parsedConfig.events?.find((e: any) => {
+                                // Match by various criteria
+                                return e.nodeId === hoveredNode.id ||
+                                       e.id === hoveredNode.id ||
+                                       (e.name && hoveredNode.label?.includes(e.name));
+                              });
+                              if (eventData?.gold !== undefined) {
+                                return eventData.gold.toLocaleString();
+                              }
+                            }
+
+                            // Fallback to calculated values
+                            const maxY = treeData?.nodes?.reduce((max, n) => Math.max(max, n.y), 0) || 850;
+                            const minY = treeData?.nodes?.reduce((min, n) => Math.min(min, n.y), 850) || 0;
+                            const progression = 1 - ((hoveredNode.y - minY) / (maxY - minY));
+
+                            const baseMoney = hoveredNode.storyNodeType === 'final_boss' ? 1000000 :
+                                             hoveredNode.storyNodeType === 'boss' ? 500000 :
+                                             hoveredNode.storyNodeType === 'event' ? 300000 :
+                                             hoveredNode.challenger ? 250000 : 150000;
+
+                            const scaledMoney = Math.floor(baseMoney * (1 + progression * 2));
+                            return scaledMoney.toLocaleString();
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">XP:</span>
+                        <span className="text-blue-400 font-bold">
+                          ⭐ {(() => {
+                            // Try to get actual values from parsed config
+                            if (parsedConfig && hoveredNode.storyNodeType === 'event') {
+                              // Find matching event data
+                              const eventData = parsedConfig.events?.find((e: any) => {
+                                return e.nodeId === hoveredNode.id ||
+                                       e.id === hoveredNode.id ||
+                                       (e.name && hoveredNode.label?.includes(e.name));
+                              });
+                              if (eventData?.xp !== undefined) {
+                                return eventData.xp.toLocaleString();
+                              }
+                            }
+
+                            // Fallback to calculated values
+                            const maxY = treeData?.nodes?.reduce((max, n) => Math.max(max, n.y), 0) || 850;
+                            const minY = treeData?.nodes?.reduce((min, n) => Math.min(min, n.y), 850) || 0;
+                            const progression = 1 - ((hoveredNode.y - minY) / (maxY - minY));
+
+                            const baseXP = hoveredNode.storyNodeType === 'final_boss' ? 20000 :
+                                          hoveredNode.storyNodeType === 'boss' ? 10000 :
+                                          hoveredNode.storyNodeType === 'event' ? 7500 :
+                                          hoveredNode.challenger ? 5000 : 3000;
+
+                            const scaledXP = Math.floor(baseXP * (1 + progression * 1.5));
+                            return scaledXP.toLocaleString();
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Type:</span>
+                        <span className="text-purple-400 font-bold">
+                          {hoveredNode.storyNodeType === 'final_boss' ? '👑 Final Boss' :
+                           hoveredNode.storyNodeType === 'boss' ? '💀 Boss' :
+                           hoveredNode.storyNodeType === 'event' ? '❓ Event' :
+                           hoveredNode.challenger ? '⚔️ Challenger' : '🔷 Normal'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Progression:</span>
+                        <span className="text-yellow-400">
+                          {(() => {
+                            const maxY = treeData?.nodes?.reduce((max, n) => Math.max(max, n.y), 0) || 850;
+                            const minY = treeData?.nodes?.reduce((min, n) => Math.min(min, n.y), 850) || 0;
+                            const progression = 1 - ((hoveredNode.y - minY) / (maxY - minY));
+                            return `${(progression * 100).toFixed(1)}%`;
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Power Chip Rewards */}
+                    {parsedConfig && hoveredNode.storyNodeType === 'event' && (() => {
+                      const eventData = parsedConfig.events?.find((e: any) => {
+                        return e.nodeId === hoveredNode.id ||
+                               e.id === hoveredNode.id ||
+                               (e.name && hoveredNode.label?.includes(e.name));
+                      });
+                      if (eventData?.chips && eventData.chips.length > 0) {
+                        return (
+                          <div className="mt-2 pt-2 border-t border-gray-700">
+                            <div className="text-xs text-gray-400 mb-1">Power Chips:</div>
+                            {eventData.chips.map((chip: any, idx: number) => (
+                              <div key={idx} className="flex justify-between text-xs">
+                                <span className="text-gray-300">{chip.type || chip.name}</span>
+                                <span className="text-cyan-400">
+                                  {chip.quantity || 1}x {chip.rarity || ''}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {hoveredNode.id && (
+                      <div className="mt-2 pt-2 border-t border-gray-700">
+                        <div className="text-xs text-gray-400">Node ID: {hoveredNode.id}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Preview Mode Indicator */}
+              {previewMode && (
+                <div className="absolute top-4 left-4 z-30 bg-yellow-900/80 border border-yellow-500/50 rounded px-3 py-1">
+                  <div className="text-yellow-400 font-bold text-xs uppercase tracking-wider">Preview Mode</div>
+                  <div className="text-yellow-300 text-xs">Chapter {previewChapter} | Seed: {previewSeed}</div>
+                </div>
+              )}
+
               {/* Corner decorations - removed bottom left to not overlap with hemisphere */}
               <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-yellow-500/50" />
               <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-yellow-500/50" />
