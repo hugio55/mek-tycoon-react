@@ -96,12 +96,20 @@ export default function GameDataLightbox({ isOpen, onClose }: GameDataLightboxPr
     setIsLoading(true);
     try {
       const data = await getConstants();
-      setConstants(data);
+      // Filter out Convex system fields
+      const cleanedData = data.map((item: any) => ({
+        category: item.category,
+        setting: item.setting,
+        value: item.value,
+        description: item.description,
+        configurable: item.configurable
+      }));
+      setConstants(cleanedData);
       setHasLoadedOnce(true);
       setHasUnsavedChanges(false);
 
       // Calculate bandwidth used
-      const dataSize = new TextEncoder().encode(JSON.stringify(data)).length;
+      const dataSize = new TextEncoder().encode(JSON.stringify(cleanedData)).length;
       setLastLoadSize(dataSize);
       console.log(`📊 Load bandwidth: ${(dataSize / 1024).toFixed(2)} KB`);
 

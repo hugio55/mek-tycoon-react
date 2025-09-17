@@ -282,6 +282,57 @@ export const deployAllMekanisms = mutation({
         return Math.round(min + (max - min) * curvedValue);
       };
 
+      // Seeded random number generator for consistent but varied distribution
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+
+      // Distribution algorithm for normal meks
+      const distributeNormalMeks = (mekPool: any[], chapter: number, count: number) => {
+        const distributed: any[] = [];
+        const poolCopy = [...mekPool];
+
+        for (let i = 0; i < count && poolCopy.length > 0; i++) {
+          const position = i / count; // 0 to 1 (bottom to top)
+
+          // Base weight favors rarer meks towards the top
+          let baseWeight = position * 0.4 + 0.3;
+
+          // Add anomalies (30% chance)
+          const anomalySeed = chapter * 1000 + i;
+          if (seededRandom(anomalySeed) < 0.3) {
+            const anomalyType = seededRandom(anomalySeed * 2);
+            if (anomalyType < 0.33) {
+              // Spike: Very rare at unexpected position
+              baseWeight = 0.9;
+            } else if (anomalyType < 0.66) {
+              // Valley: Common cluster at high position
+              baseWeight = 0.1;
+            } else {
+              // Chaos: Pure random
+              baseWeight = seededRandom(anomalySeed * 3);
+            }
+          }
+
+          // Apply smooth curve
+          baseWeight = Math.pow(baseWeight, 0.7); // Gentle curve
+
+          // Select mek based on weight (higher weight = lower rank number = rarer)
+          const targetIndex = Math.floor((1 - baseWeight) * poolCopy.length);
+          const selectedIndex = Math.max(0, Math.min(poolCopy.length - 1, targetIndex));
+
+          // Add some randomness to avoid patterns
+          const randomOffset = Math.floor((seededRandom(anomalySeed * 4) - 0.5) * Math.min(10, poolCopy.length * 0.1));
+          const finalIndex = Math.max(0, Math.min(poolCopy.length - 1, selectedIndex + randomOffset));
+
+          const selectedMek = poolCopy.splice(finalIndex, 1)[0];
+          distributed.push(selectedMek);
+        }
+
+        return distributed;
+      };
+
       // Build all node data
       const allNormalNodes: any[] = [];
       const allChallengerNodes: any[] = [];
@@ -289,17 +340,21 @@ export const deployAllMekanisms = mutation({
       const allFinalBossNodes: any[] = [];
 
       chapterConfigs.forEach(chapter => {
-        // Normal Meks (350 per chapter)
-        const normalMeks = meks.filter(m =>
+        // Normal Meks (350 per chapter) - use distribution algorithm
+        const normalMekPool = meks.filter(m =>
           m.rank >= chapter.normalMekRange[0] &&
           m.rank <= chapter.normalMekRange[1]
-        );
+        ).sort((a, b) => b.rank - a.rank); // Sort by rank descending (rarest first)
 
-        normalMeks.forEach(mek => {
+        const distributedNormalMeks = distributeNormalMeks(normalMekPool, chapter.chapter, 350);
+
+        distributedNormalMeks.forEach((mek, index) => {
           allNormalNodes.push({
             chapter: chapter.chapter,
+            nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
+            sourceKey: mek.sourceKey,
             head: mek.head,
             body: mek.body,
             trait: mek.trait,
@@ -309,17 +364,26 @@ export const deployAllMekanisms = mutation({
           });
         });
 
-        // Challengers (40 per chapter)
-        const challengerMeks = meks.filter(m =>
+        // Challengers (40 per chapter) - shuffle for variety
+        const challengerMekPool = meks.filter(m =>
           m.rank >= chapter.challengerRange[0] &&
           m.rank <= chapter.challengerRange[1]
         );
 
-        challengerMeks.forEach(mek => {
+        // Shuffle challengers using seeded random
+        const shuffledChallengers = [...challengerMekPool];
+        for (let i = shuffledChallengers.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom(chapter.chapter * 2000 + i) * (i + 1));
+          [shuffledChallengers[i], shuffledChallengers[j]] = [shuffledChallengers[j], shuffledChallengers[i]];
+        }
+
+        shuffledChallengers.slice(0, 40).forEach((mek, index) => {
           allChallengerNodes.push({
             chapter: chapter.chapter,
+            nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
+            sourceKey: mek.sourceKey,
             head: mek.head,
             body: mek.body,
             trait: mek.trait,
@@ -329,17 +393,26 @@ export const deployAllMekanisms = mutation({
           });
         });
 
-        // Mini-Bosses (9 per chapter)
-        const miniBossMeks = meks.filter(m =>
+        // Mini-Bosses (9 per chapter) - select strategically
+        const miniBossMekPool = meks.filter(m =>
           m.rank >= chapter.miniBossRange[0] &&
           m.rank <= chapter.miniBossRange[1]
         );
 
-        miniBossMeks.slice(0, 9).forEach(mek => {
+        // Shuffle mini-bosses for variety
+        const shuffledMiniBosses = [...miniBossMekPool];
+        for (let i = shuffledMiniBosses.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom(chapter.chapter * 3000 + i) * (i + 1));
+          [shuffledMiniBosses[i], shuffledMiniBosses[j]] = [shuffledMiniBosses[j], shuffledMiniBosses[i]];
+        }
+
+        shuffledMiniBosses.slice(0, 9).forEach((mek, index) => {
           allMiniBossNodes.push({
             chapter: chapter.chapter,
+            nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
+            sourceKey: mek.sourceKey,
             head: mek.head,
             body: mek.body,
             trait: mek.trait,
@@ -356,6 +429,7 @@ export const deployAllMekanisms = mutation({
             chapter: chapter.chapter,
             rank: finalBoss.rank,
             assetId: finalBoss.assetId,
+            sourceKey: finalBoss.sourceKey,
             head: finalBoss.head,
             body: finalBoss.body,
             trait: finalBoss.trait,

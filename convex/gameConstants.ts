@@ -55,11 +55,16 @@ function getDefaultConstants() {
     // Inventory System
     { category: 'Inventory', setting: 'Max Stack Size', value: 99, description: 'Maximum quantity per stackable item slot', configurable: false },
     { category: 'Inventory', setting: 'Slots Per Tab', value: 20, description: 'Number of inventory slots in each tab', configurable: false },
-    { category: 'Inventory', setting: 'Max Tabs', value: 5, description: 'Maximum inventory tabs a player can unlock', configurable: false },
+    { category: 'Inventory', setting: 'Max Tabs', value: 10, description: 'Maximum inventory tabs a player can unlock', configurable: false },
     { category: 'Inventory', setting: 'Tab 2 Cost', value: 100, description: 'Gold cost to unlock second tab', configurable: true },
     { category: 'Inventory', setting: 'Tab 3 Cost', value: 500, description: 'Gold cost to unlock third tab', configurable: true },
     { category: 'Inventory', setting: 'Tab 4 Cost', value: 2000, description: 'Gold cost to unlock fourth tab', configurable: true },
     { category: 'Inventory', setting: 'Tab 5 Cost', value: 10000, description: 'Gold cost to unlock fifth tab', configurable: true },
+    { category: 'Inventory', setting: 'Tab 6 Cost', value: 50000, description: 'Gold cost to unlock sixth tab', configurable: true },
+    { category: 'Inventory', setting: 'Tab 7 Cost', value: 200000, description: 'Gold cost to unlock seventh tab', configurable: true },
+    { category: 'Inventory', setting: 'Tab 8 Cost', value: 1000000, description: 'Gold cost to unlock eighth tab', configurable: true },
+    { category: 'Inventory', setting: 'Tab 9 Cost', value: 5000000, description: 'Gold cost to unlock ninth tab', configurable: true },
+    { category: 'Inventory', setting: 'Tab 10 Cost', value: 25000000, description: 'Gold cost to unlock tenth tab', configurable: true },
 
     // Starting Resources
     { category: 'New Player', setting: 'Starting Gold', value: 100, description: 'Gold given to new players', configurable: true },

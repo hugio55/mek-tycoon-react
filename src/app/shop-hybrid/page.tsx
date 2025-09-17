@@ -5,7 +5,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import CreateListingModal from "@/components/CreateListingModal";
+import MakeOfferModal from "@/components/MakeOfferModal";
 import GlobalBackground from "@/components/GlobalBackground";
+import ShopSystem from "@/lib/shopSystem";
 
 const CATEGORIES = [
   { id: "mek-chips", name: "MEK CHIPS", hasDropdown: true, subcategories: [
@@ -14,18 +16,25 @@ const CATEGORIES = [
     { id: "trait", name: "TRAITS" },
   ]},
   { id: "essence", name: "ESSENCE" },
-  { id: "frames", name: "FRAMES" },
   { id: "oem", name: "OEM" },
-  { id: "universal-chips", name: "UNIVERSAL" },
+  { id: "uni-chips", name: "UNI CHIPS", hasTiers: true },
 ];
 
-// Quick filter chips for common searches
-const QUICK_FILTERS = [
-  { id: "affordable", name: "AFFORDABLE", maxPrice: 5000 },
-  { id: "rare", name: "RARE", rarity: ["epic", "legendary"] },
-  { id: "new", name: "NEW TODAY", hoursAgo: 24 },
-  { id: "ending", name: "ENDING SOON", hoursLeft: 2 },
+const UNI_CHIP_TIERS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10'];
+
+// Available essence images
+const ESSENCE_IMAGES = [
+  '/essence-images/75px/webp/bumblebee 1_tn1.webp',
+  '/essence-images/75px/webp/bumblebee 2_tn1.webp',
+  '/essence-images/75px/webp/bumblebee 3_tn1.webp'
 ];
+
+// Function to get essence image based on a stable index (no randomness)
+const getEssenceImage = (index: number) => {
+  return ESSENCE_IMAGES[index % ESSENCE_IMAGES.length];
+};
+
+// Quick filter chips removed - moved to sort dropdown
 
 // Item rarity definitions
 const ITEM_RARITIES = {
@@ -38,9 +47,13 @@ const ITEM_RARITIES = {
 
 const SORT_OPTIONS = [
   { id: "recent", name: "Most Recent" },
+  { id: "new_today", name: "New Today" },
+  { id: "rare_filter", name: "Rare" },
   { id: "price_asc", name: "Price: Low to High" },
   { id: "price_desc", name: "Price: High to Low" },
   { id: "ending_soon", name: "Ending Soon" },
+  { id: "most_rare", name: "Most Rare" },
+  { id: "least_rare", name: "Least Rare" },
 ];
 
 interface Listing {
@@ -74,14 +87,17 @@ export default function ShopHybridPage() {
   const [sortBy, setSortBy] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateListing, setShowCreateListing] = useState(false);
+  const [showMakeOffer, setShowMakeOffer] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showMekChipsDropdown, setShowMekChipsDropdown] = useState(false);
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
   const [showOnlyAffordable, setShowOnlyAffordable] = useState(false);
-  const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [hoveredListing, setHoveredListing] = useState<string | null>(null);
+  const [selectedUniChipTier, setSelectedUniChipTier] = useState<string>("T1");
+  const [showUniChipDropdown, setShowUniChipDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const uniChipDropdownRef = useRef<HTMLDivElement>(null);
 
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
@@ -99,10 +115,13 @@ export default function ShopHybridPage() {
   }, [getOrCreateUser]);
 
   // Get user profile
-  const userProfile = useQuery(
+  const userProfileQuery = useQuery(
     api.users.getUserProfile,
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
+
+  // Override gold for testing UI with insufficient funds
+  const userProfile = userProfileQuery ? { ...userProfileQuery, gold: 1000 } : null;
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -161,16 +180,19 @@ export default function ShopHybridPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowMekChipsDropdown(false);
       }
+      if (uniChipDropdownRef.current && !uniChipDropdownRef.current.contains(event.target as Node)) {
+        setShowUniChipDropdown(false);
+      }
     };
 
-    if (showMekChipsDropdown) {
+    if (showMekChipsDropdown || showUniChipDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showMekChipsDropdown]);
+  }, [showMekChipsDropdown, showUniChipDropdown]);
 
   // Mock data for demonstration with enhanced attributes
   const mockListings: Listing[] = [
@@ -632,6 +654,11 @@ export default function ShopHybridPage() {
     // Category filter
     if (selectedCategory === "head" || selectedCategory === "body" || selectedCategory === "trait") {
       if (listing.itemType !== selectedCategory) return false;
+    } else if (selectedCategory === "uni-chips") {
+      // For uni-chips, check both "universal-chips" (legacy) and "uni-chips"
+      if (listing.itemType !== "universal-chips" && listing.itemType !== "uni-chips") return false;
+      // Optionally filter by tier if you want to implement tier filtering
+      // if (listing.itemVariation && !listing.itemVariation.includes(selectedUniChipTier)) return false;
     } else if (listing.itemType !== selectedCategory) return false;
 
     // Search filter
@@ -649,29 +676,20 @@ export default function ShopHybridPage() {
       return false;
     }
 
-    // Quick filters
-    if (quickFilter) {
-      const filter = QUICK_FILTERS.find(f => f.id === quickFilter);
-      if (filter) {
-        if (filter.maxPrice && listing.pricePerUnit > filter.maxPrice) return false;
-        if (filter.hoursAgo) {
-          const hoursOld = (Date.now() - listing.listedAt) / (1000 * 60 * 60);
-          if (hoursOld > filter.hoursAgo) return false;
-        }
-        if (filter.hoursLeft && listing.expiresAt) {
-          const hoursRemaining = (listing.expiresAt - Date.now()) / (1000 * 60 * 60);
-          if (hoursRemaining > filter.hoursLeft) return false;
-        }
-        if (filter.rarity && listing.rarity) {
-          if (!filter.rarity.includes(listing.rarity)) return false;
-        }
-      }
+    // Apply sort-based filtering for New Today and Rare
+    if (sortBy === "new_today") {
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      if (listing.listedAt < oneDayAgo) return false;
+    }
+
+    if (sortBy === "rare_filter") {
+      if (listing.rarity !== "epic" && listing.rarity !== "legendary") return false;
     }
 
     return true;
   });
 
-  // Sort listings
+  // Sort listings using ShopSystem
   const sortedListings = [...filteredListings].sort((a, b) => {
     switch (sortBy) {
       case "price_asc":
@@ -684,6 +702,13 @@ export default function ShopHybridPage() {
         const aExpiry = a.expiresAt || Number.MAX_VALUE;
         const bExpiry = b.expiresAt || Number.MAX_VALUE;
         return aExpiry - bExpiry;
+      case "most_rare":
+        return ShopSystem.compareRarity(a.rarity || 'common', b.rarity || 'common', false);
+      case "least_rare":
+        return ShopSystem.compareRarity(a.rarity || 'common', b.rarity || 'common', true);
+      case "new_today":
+      case "rare_filter":
+        return b.listedAt - a.listedAt;
       default:
         return 0;
     }
@@ -782,40 +807,6 @@ export default function ShopHybridPage() {
     <div className="min-h-screen text-white overflow-hidden relative">
       <GlobalBackground />
 
-      {/* Custom Styles for Slider */}
-      <style jsx global>{`
-        input[type="range"]::-webkit-slider-thumb {
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          background: #fab617;
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 0 10px rgba(250, 182, 23, 0.5);
-          transition: all 0.2s;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 20px rgba(250, 182, 23, 0.8);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          background: #fab617;
-          border-radius: 50%;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 0 10px rgba(250, 182, 23, 0.5);
-          transition: all 0.2s;
-        }
-
-        input[type="range"]::-moz-range-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 20px rgba(250, 182, 23, 0.8);
-        }
-      `}</style>
 
       {/* Main Content */}
       <div className="relative z-10 h-screen flex flex-col">
@@ -878,163 +869,53 @@ export default function ShopHybridPage() {
                 MY LISTINGS
               </button>
 
-              {/* Search Terminal */}
+              {/* Category Grid - 2x2 */}
               <div className="mb-6">
-                <div className="mek-label-uppercase text-yellow-400/70 mb-2 text-[10px]">SEARCH PARAMETERS</div>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500/50">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="ENTER KEYWORDS..."
-                    className="w-full pl-10 pr-3 py-2 bg-black/60 backdrop-blur-sm border border-yellow-500/30 text-yellow-400 placeholder-gray-600 font-mono text-xs uppercase tracking-wider focus:border-yellow-500/50 focus:outline-none transition-all rounded"
-                    style={{
-                      boxShadow: searchTerm ? '0 0 15px rgba(250, 182, 23, 0.2), inset 0 0 8px rgba(250, 182, 23, 0.1)' : 'none'
-                    }}
-                  />
+                <div className="mek-label-uppercase text-yellow-400/70 mb-2 text-[10px]">CATEGORIES</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSelectedCategory('head')}
+                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                      selectedCategory === 'head' || selectedCategory === 'body' || selectedCategory === 'trait'
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    MEK CHIPS
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('essence')}
+                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                      selectedCategory === 'essence'
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    ESSENCE
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('oem')}
+                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                      selectedCategory === 'oem'
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    OEM
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory('uni-chips')}
+                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                      selectedCategory === 'uni-chips'
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    UNI CHIPS
+                  </button>
                 </div>
               </div>
 
-              {/* Price Range Slider */}
-              <div className="mb-6">
-                <div className="mek-label-uppercase text-yellow-400/70 mb-3 text-[10px] flex items-center justify-between">
-                  <span>PRICE RANGE</span>
-                  <span className="text-yellow-400">{priceRange.min.toLocaleString()} - {priceRange.max.toLocaleString()}g</span>
-                </div>
-                <div className="relative">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100000"
-                    step="1000"
-                    value={priceRange.max}
-                    onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #fab617 0%, #fab617 ${(priceRange.max / 100000) * 100}%, #374151 ${(priceRange.max / 100000) * 100}%, #374151 100%)`
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="affordable"
-                    checked={showOnlyAffordable}
-                    onChange={(e) => setShowOnlyAffordable(e.target.checked)}
-                    className="w-4 h-4 bg-black/60 border-2 border-yellow-500/50 rounded text-yellow-400 focus:ring-yellow-500"
-                  />
-                  <label htmlFor="affordable" className="text-xs text-gray-400 uppercase">
-                    Only show affordable
-                  </label>
-                </div>
-              </div>
-
-              {/* Quick Filters */}
-              <div className="mb-6">
-                <div className="mek-label-uppercase text-yellow-400/70 mb-2 text-[10px]">QUICK FILTERS</div>
-                <div className="space-y-1">
-                  {QUICK_FILTERS.map((filter) => (
-                    <button
-                      key={filter.id}
-                      onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
-                      className={`w-full text-left px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-all rounded ${
-                        quickFilter === filter.id
-                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                          : 'bg-black/40 text-gray-500 border border-gray-700/50 hover:text-yellow-400 hover:border-yellow-500/30'
-                      }`}
-                    >
-                      {filter.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Category Filters - Tactical Selector */}
-              <div className="mb-6">
-                <div className="mek-label-uppercase text-yellow-400/70 mb-3 text-[10px]">EQUIPMENT CATEGORIES</div>
-                <div className="space-y-1">
-                  {CATEGORIES.map((cat) => {
-                    const isMekChips = cat.id === 'mek-chips';
-                    const isActive = isMekChips
-                      ? ['head', 'body', 'trait'].includes(selectedCategory)
-                      : selectedCategory === cat.id;
-
-                    if (isMekChips) {
-                      return (
-                        <div key={cat.id} className="relative" ref={dropdownRef}>
-                          <button
-                            onClick={() => setShowMekChipsDropdown(!showMekChipsDropdown)}
-                            className={`relative w-full text-left px-3 py-2 font-bold uppercase tracking-wider transition-all flex items-center justify-between group text-xs rounded-md backdrop-blur-sm ${
-                              isActive
-                                ? 'bg-yellow-400/90 text-black shadow-lg shadow-yellow-500/30'
-                                : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
-                            }`}
-                          >
-                            <span className="relative z-10">{cat.name}</span>
-                            <svg className={`w-3 h-3 transition-transform ${showMekChipsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-
-                          {/* Dropdown Menu */}
-                          {showMekChipsDropdown && (
-                            <div className="absolute top-full mt-1 left-0 right-0 z-50">
-                              <div className="relative bg-black/95 border-2 border-yellow-500/50 rounded-md overflow-hidden">
-                                <div className="bg-yellow-500/20 px-3 py-1 border-b border-yellow-500/30">
-                                  <div className="mek-label-uppercase text-yellow-400 text-[9px]">SELECT TYPE</div>
-                                </div>
-                                <div className="relative">
-                                  <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10 pointer-events-none" />
-                                  {cat.subcategories?.map((sub, index) => (
-                                    <button
-                                      key={sub.id}
-                                      onClick={() => {
-                                        setSelectedCategory(sub.id);
-                                        setShowMekChipsDropdown(false);
-                                      }}
-                                      className={`relative w-full px-3 py-2 text-left transition-all text-xs font-bold uppercase tracking-wider ${
-                                        selectedCategory === sub.id
-                                          ? 'bg-yellow-500/20 text-yellow-400'
-                                          : 'text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-400'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${
-                                          selectedCategory === sub.id ? 'bg-yellow-400' : 'bg-gray-600'
-                                        }`} />
-                                        <span>{sub.name}</span>
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`relative w-full text-left px-3 py-2 font-bold uppercase tracking-wider transition-all text-xs rounded-md backdrop-blur-sm ${
-                          isActive
-                            ? 'bg-yellow-400/90 text-black shadow-lg shadow-yellow-500/30 border-l-4 border-yellow-400'
-                            : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50 border-l-4 border-transparent'
-                        }`}
-                      >
-                        <span className="relative z-10">{cat.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
 
               {/* Create Listing Button */}
@@ -1093,6 +974,129 @@ export default function ShopHybridPage() {
               </div>
             </div>
 
+            {/* Category Buttons - Horizontal Layout */}
+            <div className="px-4 py-2 bg-black/60 border-b border-yellow-500/20 flex items-center gap-2">
+              {CATEGORIES.map((cat) => {
+                const isMekChips = cat.id === 'mek-chips';
+                const isUniChips = cat.id === 'uni-chips';
+                const isActive = isMekChips
+                  ? ['head', 'body', 'trait'].includes(selectedCategory)
+                  : selectedCategory === cat.id;
+
+                if (isMekChips) {
+                  return (
+                    <div key={cat.id} className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => {
+                          setShowMekChipsDropdown(!showMekChipsDropdown);
+                          setShowUniChipDropdown(false); // Close other dropdown
+                        }}
+                        className={`px-3 py-1.5 font-bold uppercase text-xs tracking-wider transition-all rounded flex items-center gap-1 ${
+                          isActive
+                            ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                            : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        {cat.name}
+                        <svg className={`w-3 h-3 transition-transform ${showMekChipsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {showMekChipsDropdown && (
+                        <div className="absolute top-full mt-1 left-0 z-50 bg-black/95 border border-yellow-500/50 rounded-md min-w-[120px]">
+                          {cat.subcategories?.map((sub) => (
+                            <button
+                              key={sub.id}
+                              onClick={() => {
+                                setSelectedCategory(sub.id);
+                                setShowMekChipsDropdown(false);
+                              }}
+                              className={`block w-full px-3 py-1.5 text-left text-xs font-bold uppercase tracking-wider ${
+                                selectedCategory === sub.id
+                                  ? 'bg-yellow-500/20 text-yellow-400'
+                                  : 'text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-400'
+                              }`}
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                if (isUniChips) {
+                  return (
+                    <div key={cat.id} className="relative flex items-center gap-1">
+                      <button
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3 py-1.5 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                          isActive
+                            ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                            : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                      {isActive && (
+                        <div className="relative" ref={uniChipDropdownRef}>
+                          <button
+                            onClick={() => {
+                              setShowUniChipDropdown(!showUniChipDropdown);
+                              setShowMekChipsDropdown(false); // Close other dropdown
+                            }}
+                            className="px-2 py-1.5 bg-gray-900/80 border border-gray-700 rounded text-yellow-400 text-xs font-medium hover:border-yellow-500/50 flex items-center gap-1"
+                          >
+                            {selectedUniChipTier}
+                            <svg className={`w-3 h-3 transition-transform ${showUniChipDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          {showUniChipDropdown && (
+                            <div className="absolute top-full mt-1 right-0 z-50 bg-black/95 border border-yellow-500/50 rounded-md">
+                              <div className="max-h-60 overflow-y-auto">
+                                {UNI_CHIP_TIERS.map((tier) => (
+                                  <button
+                                    key={tier}
+                                    onClick={() => {
+                                      setSelectedUniChipTier(tier);
+                                      setShowUniChipDropdown(false);
+                                    }}
+                                    className={`block w-full px-3 py-1 text-left text-xs font-bold ${
+                                      selectedUniChipTier === tier
+                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                        : 'text-gray-400 hover:bg-yellow-500/10 hover:text-yellow-400'
+                                    }`}
+                                  >
+                                    {tier}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3 py-1.5 font-bold uppercase text-xs tracking-wider transition-all rounded ${
+                      isActive
+                        ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="relative flex-1 overflow-auto">
               <div className="absolute inset-0 mek-overlay-metal-texture opacity-5 pointer-events-none" />
 
@@ -1100,20 +1104,19 @@ export default function ShopHybridPage() {
               <table className="w-full">
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/30">
-                    <th className="py-3 px-3 text-left text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Type</th>
-                    <th className="py-3 px-3 text-left text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Item Name</th>
-                    <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Seller</th>
-                    <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Qty</th>
+                    <th className="py-2 px-2 text-left text-gray-400 text-[10px] font-semibold uppercase tracking-wider"></th>
+                    <th className="py-2 px-2 text-left text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Item Name</th>
+                    <th className="py-2 px-2 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Seller</th>
+                    <th className="py-2 px-2 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Qty</th>
                     {selectedCategory === "essence" ? (
                       <>
-                        <th className="py-3 px-3 text-right text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Per Unit</th>
-                        <th className="py-3 px-3 text-right text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Total</th>
+                        <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Per Unit</th>
+                        <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Total</th>
                       </>
                     ) : (
-                      <th className="py-3 px-3 text-right text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Price</th>
+                      <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Price</th>
                     )}
-                    <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Weekly Avg</th>
-                    <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Time Left</th>
+                    <th className="py-3 px-3 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Time Left</th>
                     <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider"></th>
                   </tr>
                 </thead>
@@ -1133,7 +1136,9 @@ export default function ShopHybridPage() {
                       const totalPrice = listing.pricePerUnit * listing.quantity;
                       const rarity = listing.rarity || 'common';
                       const rarityStyle = ITEM_RARITIES[rarity];
-                      const isGoodDeal = false; // TODO: Implement deal detection logic
+                      const isGoodDeal = listing.marketAverage
+                        ? ShopSystem.isGoodDeal(listing.pricePerUnit, listing.marketAverage)
+                        : false;
 
                       // Format time remaining
                       const formatTimeRemaining = (expiresAt: number | undefined) => {
@@ -1142,36 +1147,28 @@ export default function ShopHybridPage() {
                         if (remaining <= 0) return 'Expired';
                         const hours = Math.floor(remaining / (1000 * 60 * 60));
                         const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                        return `${hours}h ${minutes}m`;
+                        return `${hours}h${minutes}m`;
                       };
 
                       return (
                         <tr
                           key={listing._id}
-                          className="border-b border-gray-800/50 hover:bg-yellow-500/5 transition-all group cursor-pointer relative"
+                          className={`border-b transition-all group cursor-pointer relative ${
+                            isOwn
+                              ? 'bg-gradient-to-r from-green-500/15 to-green-500/5 border-green-500/30 hover:from-green-500/20 hover:to-green-500/10'
+                              : 'border-gray-800/50 hover:bg-yellow-500/5'
+                          }`}
                           onClick={() => setSelectedListing(listing)}
                         >
                           {/* Item Icon with Rarity */}
                           <td className="py-1.5 px-3">
                             <div className="relative">
-                              {/* Rarity Glow */}
-                              {listing.rarity && listing.rarity !== 'common' && (
-                                <div
-                                  className={`absolute -inset-1 rounded-full blur-md opacity-50`}
-                                  style={{ backgroundColor: rarityStyle.color }}
-                                />
-                              )}
-
                               {listing.itemType === 'essence' ? (
-                                <div
-                                  className={`w-8 h-8 rounded-full relative border-2 ${rarityStyle.border}`}
-                                  style={{
-                                    background: `linear-gradient(135deg, ${getEssenceColor(listing.essenceType || 'stone')} 0%, ${getEssenceColor(listing.essenceType || 'stone')}80 100%)`,
-                                    boxShadow: `0 0 15px ${getEssenceColor(listing.essenceType || 'stone')}40, inset 0 0 10px rgba(255,255,255,0.2)`
-                                  }}
-                                >
-                                  <div className="absolute top-1 left-1 w-2 h-3 bg-white/30 rounded-full blur-sm" />
-                                </div>
+                                <img
+                                  src={getEssenceImage(parseInt(listing._id, 36))}
+                                  alt="Essence"
+                                  className="w-12 h-12 object-contain"
+                                />
                               ) : (
                                 <div
                                   className={`w-8 h-8 rounded flex items-center justify-center font-bold text-black border-2 ${rarityStyle.border}`}
@@ -1194,7 +1191,7 @@ export default function ShopHybridPage() {
 
                           {/* Name */}
                           <td className="py-1.5 px-3">
-                            <div className="font-bold text-yellow-400 uppercase tracking-wide text-xs">
+                            <div className="text-gray-200 text-[11px] font-medium">
                               {listing.itemVariation || listing.itemType}
                             </div>
                           </td>
@@ -1239,20 +1236,10 @@ export default function ShopHybridPage() {
                             </td>
                           )}
 
-                          {/* Weekly Average */}
-                          <td className="py-1.5 px-3 text-center">
-                            {listing.marketAverage ? (
-                              <div className="text-gray-300 text-xs">
-                                {listing.marketAverage.toLocaleString()}g
-                              </div>
-                            ) : (
-                              <span className="text-gray-600">—</span>
-                            )}
-                          </td>
 
                           {/* Time Remaining */}
                           <td className="py-1.5 px-3 text-center">
-                            <div className="text-gray-400 text-xs font-medium">
+                            <div className="text-gray-400 text-[11px] font-medium whitespace-nowrap">
                               {formatTimeRemaining(listing.expiresAt || Date.now() + 86400000)}
                             </div>
                           </td>
@@ -1265,9 +1252,9 @@ export default function ShopHybridPage() {
                                     e.stopPropagation();
                                     handleCancelListing(listing._id);
                                   }}
-                                  className="px-2 py-0.5 bg-orange-600/20 border border-orange-500/50 hover:bg-orange-600/30 hover:border-orange-400 text-orange-400 font-bold uppercase tracking-wider transition-all text-[10px] rounded"
+                                  className="px-2 py-0.5 bg-green-500/30 border-2 border-green-400 text-green-300 font-bold uppercase tracking-wider transition-all text-[10px] rounded shadow-lg shadow-green-500/40 animate-pulse hover:bg-green-500/40 hover:border-green-300"
                                 >
-                                  CANCEL
+                                  YOUR LISTING
                                 </button>
                               ) : (
                                 <button
@@ -1284,7 +1271,7 @@ export default function ShopHybridPage() {
                                       : 'bg-gray-900/60 border border-gray-700/50 text-gray-600 cursor-not-allowed'
                                   }`}
                                 >
-                                  {canAfford ? 'BUY NOW' : 'NO GOLD'}
+                                  {canAfford ? 'BUY' : 'NO GOLD'}
                                 </button>
                               )}
                           </td>
@@ -1354,15 +1341,11 @@ export default function ShopHybridPage() {
                         </div>
                       )}
                       {selectedListing.itemType === 'essence' ? (
-                        <div
-                          className="w-24 h-24 rounded-full relative"
-                          style={{
-                            background: `linear-gradient(135deg, ${getEssenceColor(selectedListing.essenceType || 'stone')} 0%, ${getEssenceColor(selectedListing.essenceType || 'stone')}80 100%)`,
-                            boxShadow: `0 0 30px ${getEssenceColor(selectedListing.essenceType || 'stone')}60, inset 0 0 20px rgba(255,255,255,0.3)`
-                          }}
-                        >
-                          <div className="absolute top-3 left-3 w-5 h-8 bg-white/30 rounded-full blur-md" />
-                        </div>
+                        <img
+                          src={getEssenceImage(parseInt(selectedListing._id, 36))}
+                          alt="Essence"
+                          className="w-24 h-24 object-contain"
+                        />
                       ) : (
                         <div
                           className="w-24 h-24 rounded-lg flex items-center justify-center text-4xl font-bold text-black"
@@ -1605,6 +1588,20 @@ export default function ShopHybridPage() {
           userEssence={userProfile?.totalEssence}
           userGold={userProfile?.gold}
         />
+
+        {/* Make Offer Modal */}
+        {showMakeOffer && selectedListing && (
+          <MakeOfferModal
+            listing={selectedListing}
+            userGold={userProfile?.gold || 0}
+            onClose={() => setShowMakeOffer(false)}
+            onSubmit={(offer) => {
+              console.log('Offer submitted:', offer);
+              // TODO: Implement offer submission to backend
+              setShowMakeOffer(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );

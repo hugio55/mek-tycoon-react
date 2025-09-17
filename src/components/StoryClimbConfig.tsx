@@ -100,6 +100,92 @@ export default function StoryClimbConfig() {
         </div>
       </div>
 
+      {/* Mek Distribution Algorithm Info */}
+      <div className="bg-gradient-to-br from-purple-900/20 via-black/50 to-blue-900/20 rounded-lg p-4 border border-purple-500/30">
+        <h4 className="text-sm font-bold text-purple-400 mb-3 flex items-center gap-2">
+          <span className="text-lg">🎲</span>
+          Normal Mek Distribution Algorithm
+        </h4>
+
+        <div className="space-y-3 text-xs">
+          <div className="bg-black/30 rounded p-3">
+            <h5 className="text-yellow-300 font-semibold mb-2">Core Concept: Gentle Rarity Gradient with Anomalies</h5>
+            <p className="text-gray-400 leading-relaxed">
+              The 350 normal meks per chapter are distributed with a <span className="text-cyan-400">subtle upward trend</span> in rarity,
+              appearing mostly random at first glance but statistically favoring more rare meks toward the top of the tree.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-black/30 rounded p-3">
+              <h5 className="text-green-400 font-semibold mb-1">Base Distribution (70%)</h5>
+              <div className="text-gray-400 space-y-1">
+                <div>• <span className="text-gray-300">Bottom 30%:</span> 80% common, 20% rare</div>
+                <div>• <span className="text-gray-300">Middle 40%:</span> 60% common, 40% rare</div>
+                <div>• <span className="text-gray-300">Top 30%:</span> 40% common, 60% rare</div>
+              </div>
+            </div>
+
+            <div className="bg-black/30 rounded p-3">
+              <h5 className="text-orange-400 font-semibold mb-1">Anomaly Layer (30%)</h5>
+              <div className="text-gray-400 space-y-1">
+                <div>• <span className="text-yellow-300">Random spikes:</span> Ultra-rare at bottom</div>
+                <div>• <span className="text-blue-300">Valleys:</span> Common clusters at top</div>
+                <div>• <span className="text-purple-300">Chaos zones:</span> Completely random sections</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/30 rounded p-3">
+            <h5 className="text-blue-400 font-semibold mb-2">Implementation Details</h5>
+            <div className="font-mono text-[10px] text-gray-500 bg-black/50 p-2 rounded">
+              <div>function distributeMeks(chapter, position) {'{'}</div>
+              <div className="ml-2">// Base weight: position 0-1 (bottom to top)</div>
+              <div className="ml-2">baseWeight = position * 0.4 + 0.3;</div>
+              <div className="ml-2"></div>
+              <div className="ml-2">// Anomaly chance (30%)</div>
+              <div className="ml-2">if (random() {'<'} 0.3) {'{'}</div>
+              <div className="ml-4">// Spike (10%): Very rare at unexpected position</div>
+              <div className="ml-4">// Valley (10%): Common cluster at high position</div>
+              <div className="ml-4">// Chaos (10%): Pure random selection</div>
+              <div className="ml-2">{'}'}</div>
+              <div className="ml-2"></div>
+              <div className="ml-2">// Apply gentle curve (not too obvious)</div>
+              <div className="ml-2">finalWeight = smoothCurve(baseWeight, 0.3);</div>
+              <div className="ml-2">return selectMekByWeight(finalWeight);</div>
+              <div>{'}'}</div>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="flex-1 bg-gradient-to-t from-green-500/20 to-red-500/20 rounded p-2">
+              <div className="text-center text-[10px] text-gray-400">Visual Gradient</div>
+              <div className="text-center mt-1">
+                <span className="text-red-400 text-xs">↑ Rare</span>
+                <div className="text-gray-500 text-[10px] my-1">Gentle Trend</div>
+                <span className="text-green-400 text-xs">↓ Common</span>
+              </div>
+            </div>
+            <div className="flex-1 bg-black/30 rounded p-2">
+              <div className="text-center text-[10px] text-gray-400">Player Experience</div>
+              <div className="text-gray-300 text-[10px] mt-1 space-y-1">
+                <div>✓ Feels random</div>
+                <div>✓ Exciting anomalies</div>
+                <div>✓ Subtle progression</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-2">
+            <p className="text-yellow-400 text-[10px] leading-relaxed">
+              <strong>Design Goal:</strong> Players should feel the distribution is random with lucky/unlucky streaks,
+              but statistically they encounter slightly better meks as they progress upward, creating a subtle sense of accomplishment
+              without making it feel predetermined or predictable.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Chapter Rarity Breakdown */}
       <div className="bg-gray-800/30 rounded-lg p-4">
         <h4 className="text-sm font-bold text-yellow-500/80 mb-3">Chapter Rarity Distribution</h4>

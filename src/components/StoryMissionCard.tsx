@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import { TIER_COLORS, MODIFIER_COLORS } from '@/lib/chipRewardCalculator';
 
 // Type definitions
 interface MissionReward {
@@ -273,20 +274,55 @@ export default function StoryMissionCard({
           <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
             <div className="mek-label-uppercase mb-2 text-[10px]">Potential Rewards</div>
             <div className="space-y-1">
-              {potentialRewards.slice(0, 6).map((reward, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-yellow-500/20 rounded" />
-                    <span className={`text-xs ${getRarityTier(reward.chance).color}`}>{reward.name}</span>
-                    {reward.quantity && (
-                      <span className="text-[10px] text-gray-500">x{reward.quantity}</span>
-                    )}
+              {potentialRewards.slice(0, 6).map((reward, i) => {
+                // Check if this is a chip reward (format: "T[tier] [modifier] Power Chip")
+                const chipMatch = reward.name.match(/T(\d+)\s+(\w+)\s+Power Chip/);
+                const isChipReward = !!chipMatch;
+                let chipColor = 'text-gray-300';
+                let chipIcon = null;
+
+                if (isChipReward && chipMatch) {
+                  const tier = parseInt(chipMatch[1]);
+                  const modifier = chipMatch[2].toLowerCase();
+
+                  // Get color from TIER_COLORS array (0-indexed)
+                  if (tier >= 1 && tier <= 10) {
+                    chipColor = TIER_COLORS[tier - 1];
+                  }
+
+                  // Build chip icon path
+                  const chipFileName = `${tier}${modifier}.webp`;
+                  chipIcon = `/chip-images/uni-chips/uni chips 75px webp/${chipFileName}`;
+                }
+
+                return (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isChipReward && chipIcon ? (
+                        <div className="w-5 h-5 relative">
+                          <Image
+                            src={chipIcon}
+                            alt={reward.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 bg-yellow-500/20 rounded" />
+                      )}
+                      <span className="text-xs" style={{ color: isChipReward ? chipColor : getRarityTier(reward.chance).color }}>
+                        {reward.name}
+                      </span>
+                      {reward.quantity && (
+                        <span className="text-[10px] text-gray-500">x{reward.quantity}</span>
+                      )}
+                    </div>
+                    <span className="text-xs font-bold" style={{ color: isChipReward ? chipColor : getRarityTier(reward.chance).color }}>
+                      {reward.chance}%
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold ${getRarityTier(reward.chance).color}`}>
-                    {reward.chance}%
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

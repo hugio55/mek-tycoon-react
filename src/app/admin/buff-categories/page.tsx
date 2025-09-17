@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import SuccessBuffConfig from "@/components/SuccessBuffConfig";
 
 interface BuffCategory {
   _id: Id<"buffCategories">;
   name: string;
   description?: string;
-  category: "gold" | "essence" | "rarity_bias" | "xp" | "mek_slot" | "market" | "reward_chance";
+  category: "gold" | "essence" | "rarity_bias" | "xp" | "mek_slot" | "market" | "reward_chance" | "success";
   unitType: "flat_number" | "rate_change" | "rate_percentage" | "flat_percentage";
   applicationType?: "universal" | "attachable";
   tierStart?: number;
@@ -32,6 +33,8 @@ interface MechanismTier {
 export default function BuffCategoriesPage() {
   const [editingId, setEditingId] = useState<Id<"buffCategories"> | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSuccessConfig, setShowSuccessConfig] = useState(false);
+  const [selectedSuccessBuffId, setSelectedSuccessBuffId] = useState<string | undefined>();
 
   const categories = useQuery(api.buffCategories.getAll);
   const createCategory = useMutation(api.buffCategories.create);
@@ -86,6 +89,7 @@ export default function BuffCategoriesPage() {
     { value: "mek_slot", label: "Mek Slot" },
     { value: "market", label: "Market" },
     { value: "reward_chance", label: "Reward Chance" },
+    { value: "success", label: "Success Rate" },
   ];
 
   const unitTypeOptions = [
@@ -475,6 +479,7 @@ export default function BuffCategoriesPage() {
                   {/* Group categories by type */}
                   {(() => {
                     const groupedCategories = {
+                      success: categories.filter(c => c.category === "success"),
                       gold: categories.filter(c => c.category === "gold" || c.category === "market"),
                       essence: categories.filter(c => c.category === "essence"),
                       looter: categories.filter(c => c.category === "rarity_bias" || c.category === "reward_chance" || c.category === "xp"),
@@ -483,6 +488,110 @@ export default function BuffCategoriesPage() {
 
                     return (
                       <>
+                        {/* Success Rate Buffs (NEW!) */}
+                        {groupedCategories.success.length > 0 && (
+                          <>
+                            <tr>
+                              <td colSpan={8} className="bg-green-500/10 px-3 py-1 border-y border-green-500/30">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-green-500 font-bold text-xs uppercase">Success Rate (Contract Probability)</span>
+                                  <button
+                                    onClick={() => setShowSuccessConfig(true)}
+                                    className="bg-green-600/30 hover:bg-green-600/50 text-green-400 text-xs px-3 py-1 rounded font-semibold transition-colors"
+                                  >
+                                    Configure Curve
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {groupedCategories.success.map((category) => {
+                              const categoryLabel = categoryOptions.find(c => c.value === category.category)?.label || category.category || "-";
+                              const unitTypeLabel = unitTypeOptions.find(u => u.value === category.unitType)?.label || category.unitType || "-";
+                              const applicationLabel = applicationTypeOptions.find(a => a.value === category.applicationType)?.label || category.applicationType || "Universal";
+
+                              return (
+                                <tr key={category._id} className="border-b border-gray-800 hover:bg-gray-800/30">
+                                  <td className="py-2 px-3 font-semibold text-sm whitespace-nowrap">
+                                    <button
+                                      onClick={() => handleEdit(category)}
+                                      className="text-yellow-500 hover:text-yellow-400 text-left"
+                                    >
+                                      {category.name}
+                                    </button>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className="px-2 py-1 bg-green-700/30 rounded text-xs text-green-400">
+                                      {categoryLabel}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 text-sm whitespace-nowrap">
+                                    <span className={category.unitType ? "text-yellow-500" : "text-gray-500"}>
+                                      {unitTypeLabel}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className={`px-2 py-1 rounded text-xs ${
+                                      category.applicationType === "universal"
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-orange-500/20 text-orange-400"
+                                    }`}>
+                                      {applicationLabel}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    {category.tierStart === 1 && category.tierEnd === 10 ? (
+                                      <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
+                                        All Tiers (1-10)
+                                      </span>
+                                    ) : category.tierStart && category.tierEnd ? (
+                                      <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                                        T{category.tierStart}-T{category.tierEnd}
+                                      </span>
+                                    ) : category.tierStart ? (
+                                      <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                                        T{category.tierStart}+
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-500 text-xs">T1-T1</span>
+                                    )}
+                                  </td>
+                                  <td className="py-2 px-3 text-sm text-gray-400" title={category.description || "-"}>
+                                    <div className="truncate max-w-lg">{category.description || "-"}</div>
+                                  </td>
+                                  <td className="py-2 px-3 text-center">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                                        category.isActive
+                                          ? "bg-green-500/20 text-green-400"
+                                          : "bg-red-500/20 text-red-400"
+                                      }`}
+                                    >
+                                      {category.isActive ? "✓" : "✗"}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 flex gap-2">
+                                    <button
+                                      onClick={() => handleEdit(category)}
+                                      className="text-yellow-500 hover:text-yellow-400 text-sm font-medium"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedSuccessBuffId(category._id);
+                                        setShowSuccessConfig(true);
+                                      }}
+                                      className="text-green-500 hover:text-green-400 text-sm font-medium"
+                                    >
+                                      Configure
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </>
+                        )}
+
                         {/* Gold & Market Buffs */}
                         {groupedCategories.gold.length > 0 && (
                           <>
@@ -1089,6 +1198,16 @@ export default function BuffCategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Success Buff Configuration Modal */}
+      <SuccessBuffConfig
+        isOpen={showSuccessConfig}
+        onClose={() => {
+          setShowSuccessConfig(false);
+          setSelectedSuccessBuffId(undefined);
+        }}
+        buffCategoryId={selectedSuccessBuffId}
+      />
     </div>
   );
 }

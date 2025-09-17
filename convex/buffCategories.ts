@@ -21,7 +21,8 @@ export const create = mutation({
       v.literal("xp"),
       v.literal("mek_slot"),
       v.literal("market"),
-      v.literal("reward_chance")
+      v.literal("reward_chance"),
+      v.literal("success")
     ),
     unitType: v.union(
       v.literal("flat_number"),
@@ -78,7 +79,8 @@ export const update = mutation({
       v.literal("xp"),
       v.literal("mek_slot"),
       v.literal("market"),
-      v.literal("reward_chance")
+      v.literal("reward_chance"),
+      v.literal("success")
     )),
     unitType: v.optional(v.union(
       v.literal("flat_number"),

@@ -539,14 +539,18 @@ export default function NormalMekRewards() {
             >
               Save New
             </button>
-            {selectedConfigId && (
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm transition-colors"
-              >
-                Update Current
-              </button>
-            )}
+            <button
+              onClick={handleUpdate}
+              disabled={!selectedConfigId}
+              className={`px-4 py-2 rounded text-sm transition-colors ${
+                selectedConfigId
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                  : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              }`}
+              title={!selectedConfigId ? 'Click a saved config first to update it' : 'Update the currently loaded configuration'}
+            >
+              Update Current
+            </button>
           </div>
 
           {savedConfigs && savedConfigs.length > 0 && (

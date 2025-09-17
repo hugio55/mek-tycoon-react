@@ -1169,54 +1169,189 @@ export default function UIShowcase() {
           </Card>
         </section>
 
-        {/* Typography Section */}
+        {/* Typography Section - Complete Font Library */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Typography & Fonts</h2>
-          
+          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Typography & Fonts - Complete Library (14 Fonts)</h2>
+
           <Card padding="lg">
-            <div className="space-y-6">
-              <div>
-                <p className="text-gray-400 mb-3">Style A - Monospace (Preferred for labels/stats):</p>
-                <div className="text-2xl text-yellow-400" style={{ fontFamily: "'Consolas', 'Courier New', monospace", letterSpacing: '0.1em' }}>
-                  Consolas Font Display
-                </div>
-                <div className="text-lg text-gray-300 mt-2" style={{ fontFamily: "'Consolas', 'Courier New', monospace", textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                  Earnings to Collect
+            <div className="space-y-8">
+              {/* Display Fonts */}
+              <div className="border-b border-gray-800 pb-6">
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">DISPLAY FONTS</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">1. Michroma - Hero Titles</p>
+                    <div className="text-3xl text-yellow-400 font-michroma">
+                      MICHROMA FUTURISTIC
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-michroma">
+                      Natural weight, wide spacing
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">2. Audiowide - Technical Headers</p>
+                    <div className="text-3xl text-yellow-400 font-audiowide">
+                      AUDIOWIDE TECHNICAL
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-audiowide">
+                      Wide expanded letterforms
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">3. Russo One - Condensed Military</p>
+                    <div className="text-3xl text-yellow-400 font-russo">
+                      RUSSO ONE MILITARY
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-russo">
+                      Condensed strong presence
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">4. Black Ops One - Military Stencil</p>
+                    <div className="text-3xl text-yellow-400 font-blackops">
+                      BLACK OPS STENCIL
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-blackops">
+                      Combat warning style
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <div>
-                <p className="text-gray-400 mb-3">Style B - Large Numbers (Shop Balance Style):</p>
-                <div className="gold-display-large">
-                  1,234,567
+
+              {/* UI Fonts */}
+              <div className="border-b border-gray-800 pb-6">
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">UI & INTERFACE FONTS</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">5. Exo 2 - Variable Weight UI</p>
+                    <div className="text-2xl text-yellow-400 font-exo" style={{ fontWeight: 300 }}>
+                      Exo 2 Light Variable
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-exo" style={{ fontWeight: 700 }}>
+                      Exo 2 Bold Variable Weight
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">6. Saira - Versatile UI Text</p>
+                    <div className="text-2xl text-yellow-400 font-saira" style={{ fontWeight: 400 }}>
+                      Saira Interface Text
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-saira" style={{ fontWeight: 600 }}>
+                      Saira Semi Bold Variant
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">7. Space Grotesk - Clean Descriptions</p>
+                    <div className="text-2xl text-yellow-400 font-space">
+                      Space Grotesk Modern
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-space">
+                      Excellent readability for body text
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">8. Oxanium - Compact Labels</p>
+                    <div className="text-2xl text-yellow-400 font-oxanium" style={{ fontWeight: 600 }}>
+                      OXANIUM LABELS
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-oxanium">
+                      Perfect for tags and badges
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Ultra-light weight for large numbers</div>
               </div>
-              
-              <div>
-                <p className="text-gray-400 mb-3">Style C - Headers (Orbitron - Preferred for HUB titles):</p>
-                <div className="text-2xl text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: '0.1em' }}>
-                  ORBITRON HEADER DISPLAY
-                </div>
-                <div className="text-lg text-gray-300 mt-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  Used for major section titles
+
+              {/* Data & Technical Fonts */}
+              <div className="border-b border-gray-800 pb-6">
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">DATA & TECHNICAL FONTS</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">9. JetBrains Mono - Precise Numbers</p>
+                    <div className="text-2xl text-yellow-400 font-jetbrains">
+                      1,234,567.89
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-jetbrains">
+                      console.log("Monospace precision");
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">10. Share Tech Mono - Retro Terminal</p>
+                    <div className="text-2xl text-yellow-400 font-sharetech">
+                      SYSTEM READOUT: OK
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-sharetech">
+                      Terminal output display
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">11. Teko - Tall Condensed Numbers</p>
+                    <div className="text-4xl text-yellow-400 font-teko">
+                      99:59:59
+                    </div>
+                    <div className="text-2xl text-gray-300 mt-1 font-teko">
+                      COUNTDOWN TIMER DISPLAY
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">12. Bebas Neue - High Impact</p>
+                    <div className="text-3xl text-yellow-400 font-bebas tracking-wider">
+                      BEBAS NEUE IMPACT
+                    </div>
+                    <div className="text-xl text-gray-300 mt-1 font-bebas">
+                      Headlines and announcements
+                    </div>
+                  </div>
                 </div>
               </div>
-              
+
+              {/* Legacy Fonts */}
               <div>
-                <p className="text-gray-400 mb-3">Style D & E - Alternative Headers:</p>
-                <div className="text-2xl text-yellow-400" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
-                  Style D: Rajdhani Header Display
-                </div>
-                <div className="text-xl text-gray-300 mt-2" style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.05em' }}>
-                  STYLE E: BEBAS NEUE ALTERNATIVE
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">LEGACY FONTS (Still Available)</h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">13. Orbitron - Original Header Font</p>
+                    <div className="text-2xl text-yellow-400 font-orbitron" style={{ fontWeight: 700 }}>
+                      ORBITRON CLASSIC
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-orbitron">
+                      Maintained for compatibility
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">14. Rajdhani - Alternative UI</p>
+                    <div className="text-2xl text-yellow-400 font-rajdhani">
+                      Rajdhani Alternative
+                    </div>
+                    <div className="text-lg text-gray-300 mt-1 font-rajdhani" style={{ fontWeight: 600 }}>
+                      Secondary UI option
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <div>
-                <p className="text-gray-400 mb-3">Style F - Body Text (Light Weight):</p>
-                <div className="text-base" style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", fontWeight: 300 }}>
-                  This is lighter body text using Inter or Segoe UI with reduced font weight for a more refined appearance in longer paragraphs.
+
+              {/* Font Usage Guide */}
+              <div className="bg-gray-900/50 rounded-lg p-4 mt-6">
+                <h4 className="text-sm font-bold text-yellow-300 mb-2">QUICK USAGE GUIDE</h4>
+                <div className="text-xs text-gray-400 space-y-1">
+                  <p>• <span className="text-yellow-400">Hero Text:</span> Michroma, Audiowide</p>
+                  <p>• <span className="text-yellow-400">UI Text:</span> Exo 2, Saira, Space Grotesk, Oxanium</p>
+                  <p>• <span className="text-yellow-400">Numbers/Data:</span> JetBrains Mono, Share Tech Mono</p>
+                  <p>• <span className="text-yellow-400">Timers:</span> Teko, Bebas Neue</p>
+                  <p>• <span className="text-yellow-400">Military/Combat:</span> Black Ops One, Russo One</p>
                 </div>
               </div>
             </div>

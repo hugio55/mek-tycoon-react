@@ -90,7 +90,7 @@ export default function StoryClimbPage() {
   const [hoverEffectStyle, setHoverEffectStyle] = useState(0); // Add missing hover effect style
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   // Challenger effect locked to Phase Shift (quantum2)
-  const [debugMode, setDebugMode] = useState(false); // Debug mode to allow clicking any node
+  const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
@@ -215,56 +215,40 @@ export default function StoryClimbPage() {
       }
     }
 
-    // Load normal nodes
+    // Load normal nodes (already parsed from the query)
     if (activeDeployment?.normalNodes) {
-      try {
-        const normalData = typeof activeDeployment.normalNodes === 'string'
-          ? JSON.parse(activeDeployment.normalNodes)
-          : activeDeployment.normalNodes;
-        setDeployedNormalNodes(normalData);
-        console.log('Loaded normal nodes:', normalData.length);
-      } catch (error) {
-        console.error('Failed to parse normal nodes:', error);
-      }
+      setDeployedNormalNodes(activeDeployment.normalNodes);
+      console.log('Loaded normal nodes:', activeDeployment.normalNodes.length);
+    } else {
+      setDeployedNormalNodes([]);
+      console.log('No normal nodes found in deployment');
     }
 
-    // Load challenger nodes
+    // Load challenger nodes (already parsed from the query)
     if (activeDeployment?.challengerNodes) {
-      try {
-        const challengerData = typeof activeDeployment.challengerNodes === 'string'
-          ? JSON.parse(activeDeployment.challengerNodes)
-          : activeDeployment.challengerNodes;
-        setDeployedChallengerNodes(challengerData);
-        console.log('Loaded challenger nodes:', challengerData.length);
-      } catch (error) {
-        console.error('Failed to parse challenger nodes:', error);
-      }
+      setDeployedChallengerNodes(activeDeployment.challengerNodes);
+      console.log('Loaded challenger nodes:', activeDeployment.challengerNodes.length);
+    } else {
+      setDeployedChallengerNodes([]);
+      console.log('No challenger nodes found in deployment');
     }
 
-    // Load mini-boss nodes
+    // Load mini-boss nodes (already parsed from the query)
     if (activeDeployment?.miniBossNodes) {
-      try {
-        const miniBossData = typeof activeDeployment.miniBossNodes === 'string'
-          ? JSON.parse(activeDeployment.miniBossNodes)
-          : activeDeployment.miniBossNodes;
-        setDeployedMiniBossNodes(miniBossData);
-        console.log('Loaded mini-boss nodes:', miniBossData.length);
-      } catch (error) {
-        console.error('Failed to parse mini-boss nodes:', error);
-      }
+      setDeployedMiniBossNodes(activeDeployment.miniBossNodes);
+      console.log('Loaded mini-boss nodes:', activeDeployment.miniBossNodes.length);
+    } else {
+      setDeployedMiniBossNodes([]);
+      console.log('No mini-boss nodes found in deployment');
     }
 
-    // Load final boss nodes
+    // Load final boss nodes (already parsed from the query)
     if (activeDeployment?.finalBossNodes) {
-      try {
-        const finalBossData = typeof activeDeployment.finalBossNodes === 'string'
-          ? JSON.parse(activeDeployment.finalBossNodes)
-          : activeDeployment.finalBossNodes;
-        setDeployedFinalBossNodes(finalBossData);
-        console.log('Loaded final boss nodes:', finalBossData.length);
-      } catch (error) {
-        console.error('Failed to parse final boss nodes:', error);
-      }
+      setDeployedFinalBossNodes(activeDeployment.finalBossNodes);
+      console.log('Loaded final boss nodes:', activeDeployment.finalBossNodes.length);
+    } else {
+      setDeployedFinalBossNodes([]);
+      console.log('No final boss nodes found in deployment');
     }
 
     if (!activeDeployment) {
@@ -274,37 +258,135 @@ export default function StoryClimbPage() {
 
   // Helper to get deployed mek data for a node
   const getDeployedMekForNode = useCallback((node: StoryNode) => {
-    // Parse chapter from node ID (e.g., "node_C1_N5" -> chapter 1)
-    const chapterMatch = node.id?.match(/C(\d+)/);
+    // First, let's see what the actual node ID looks like
+    // console.log('Raw node ID:', node.id, 'Node type:', node.storyNodeType);
+
+    // If no deployment data, return early
+    if (!deployedNormalNodes.length && !deployedChallengerNodes.length &&
+        !deployedMiniBossNodes.length && !deployedFinalBossNodes.length) {
+      console.log('No deployed data available');
+      return null;
+    }
+
+    // Parse chapter from node ID (e.g., "ch1_node_..." -> chapter 1)
+    const chapterMatch = node.id?.match(/ch(\d+)/);
     const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
 
-    // Parse node number for indexing
-    const nodeMatch = node.id?.match(/[N|E|B|MB|FB](\d+)/);
-    const nodeIndex = nodeMatch ? parseInt(nodeMatch[1]) - 1 : 0; // -1 for 0-based array
+    // FIXED: Better indexing algorithm that ensures unique indices for each node
+    // Use both X and Y positions plus the unique node ID hash for variety
+    const nodeHash = hashCode(node.id);
+
+    // Combine X, Y positions and hash for better distribution
+    // X position provides horizontal variation (different paths)
+    // Y position provides vertical variation (progression through tree)
+    // Hash ensures uniqueness even for nodes at same position
+    const xFactor = Math.floor(node.x / 10); // Use X position for variety
+    const yFactor = Math.floor((6000 - node.y) / 30); // Use Y for progression
+
+    // Create index with better distribution - hash has more weight
+    // This ensures each unique node ID gets a unique index
+    let nodeIndex: number;
+    nodeIndex = Math.abs((nodeHash * 13 + xFactor * 7 + yFactor * 3) % 350);
+
+    // Debug logging
+    // console.log('Parsed node data:', {
+    //   nodeId: node.id,
+    //   nodeType: node.storyNodeType,
+    //   chapter,
+    //   nodeX: node.x,
+    //   nodeY: node.y,
+    //   xFactor,
+    //   yFactor,
+    //   nodeHash,
+    //   nodeIndex,
+    //   normalNodesCount: deployedNormalNodes.length,
+    //   challengerNodesCount: deployedChallengerNodes.length,
+    //   miniBossCount: deployedMiniBossNodes.length,
+    //   finalBossCount: deployedFinalBossNodes.length,
+    // });
 
     switch (node.storyNodeType) {
       case 'normal':
-        // Filter normal nodes for this chapter and pick based on node index
-        const normalMeksForChapter = deployedNormalNodes.filter(m => m.chapter === chapter);
-        if (normalMeksForChapter.length > 0) {
-          return normalMeksForChapter[nodeIndex % normalMeksForChapter.length];
+        // Check if this is a challenger node
+        const isChallenger = (node as any).challenger === true;
+
+        if (isChallenger) {
+          // Look in challenger nodes (40 per chapter)
+          const challengerMeksForChapter = deployedChallengerNodes.filter(m => m.chapter === chapter);
+          // console.log(`Found ${challengerMeksForChapter.length} challenger meks for chapter ${chapter}`);
+
+          // Adjust index for challenger nodes (0-39) with better distribution
+          const challengerIndex = Math.abs((nodeHash * 11 + xFactor * 5 + yFactor * 2) % 40);
+          // console.log('Looking for challenger at calculated index:', challengerIndex);
+
+          // Sort by nodeIndex to ensure consistent ordering
+          const sortedChallengerMeks = challengerMeksForChapter.sort((a, b) => a.nodeIndex - b.nodeIndex);
+
+          // Use the calculated index to select from available meks
+          if (sortedChallengerMeks.length > 0) {
+            const selectedIndex = challengerIndex % sortedChallengerMeks.length;
+            const selectedMek = sortedChallengerMeks[selectedIndex];
+            // console.log('Selected challenger mek at position:', selectedIndex, selectedMek);
+            return selectedMek;
+          }
+        } else {
+          // Look in normal nodes
+          const normalMeksForChapter = deployedNormalNodes.filter(m => m.chapter === chapter);
+          // console.log(`Found ${normalMeksForChapter.length} normal meks for chapter ${chapter}`);
+          // console.log('Looking for normal node at calculated index:', nodeIndex);
+
+          // Sort by nodeIndex to ensure consistent ordering
+          const sortedNormalMeks = normalMeksForChapter.sort((a, b) => a.nodeIndex - b.nodeIndex);
+
+          // Use the calculated nodeIndex to select from available meks
+          // This ensures each node gets a consistent, unique mek
+          if (sortedNormalMeks.length > 0) {
+            // Use modulo to ensure we stay within bounds
+            const selectedIndex = nodeIndex % sortedNormalMeks.length;
+            const selectedMek = sortedNormalMeks[selectedIndex];
+            // console.log('Selected normal mek at position:', selectedIndex, selectedMek);
+            return selectedMek;
+          }
         }
+        // console.log('No meks found for this chapter!');
         break;
       case 'challenger':
         const challengerMeksForChapter = deployedChallengerNodes.filter(m => m.chapter === chapter);
+        // Adjust index for challenger nodes (0-39) with better distribution
+        const challengerIdx = Math.abs((nodeHash * 11 + xFactor * 5 + yFactor * 2) % 40);
+        const challengerMek = challengerMeksForChapter.find(m => m.nodeIndex === challengerIdx);
+        if (challengerMek) return challengerMek;
+        // Fallback
         if (challengerMeksForChapter.length > 0) {
-          return challengerMeksForChapter[nodeIndex % challengerMeksForChapter.length];
+          return challengerMeksForChapter[challengerIdx % challengerMeksForChapter.length];
         }
         break;
       case 'boss':
         const miniBossMeksForChapter = deployedMiniBossNodes.filter(m => m.chapter === chapter);
-        if (miniBossMeksForChapter.length > 0) {
-          return miniBossMeksForChapter[nodeIndex % miniBossMeksForChapter.length];
+        console.log(`Found ${miniBossMeksForChapter.length} mini-boss meks for chapter ${chapter}`);
+
+        // Adjust index for mini-boss nodes (0-8, 9 per chapter) with better distribution
+        const bossIndex = Math.abs((nodeHash * 7 + xFactor * 3 + yFactor) % 9);
+        console.log('Looking for mini-boss at calculated index:', bossIndex);
+
+        // Sort by nodeIndex to ensure consistent ordering
+        const sortedMiniBossMeks = miniBossMeksForChapter.sort((a, b) => a.nodeIndex - b.nodeIndex);
+
+        // Use the calculated index to select from available meks
+        if (sortedMiniBossMeks.length > 0) {
+          const selectedIndex = bossIndex % sortedMiniBossMeks.length;
+          const selectedMek = sortedMiniBossMeks[selectedIndex];
+          console.log('Selected mini-boss mek at position:', selectedIndex, selectedMek);
+          return selectedMek;
         }
         break;
       case 'final_boss':
+        console.log(`Looking for final boss for chapter ${chapter}`);
+        console.log('Available final bosses:', deployedFinalBossNodes.map(m => ({ chapter: m.chapter, rank: m.rank, assetId: m.assetId })));
+
         const finalBossMekForChapter = deployedFinalBossNodes.find(m => m.chapter === chapter);
         if (finalBossMekForChapter) {
+          console.log('Found final boss match:', finalBossMekForChapter);
           return finalBossMekForChapter;
         }
         break;
@@ -352,28 +434,108 @@ export default function StoryClimbPage() {
 
   // Helper function to generate rewards based on node type and level
   const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
-    // For event nodes, use deployed chip rewards
+    // Only log for event nodes to reduce spam
+    if (node.storyNodeType === 'event') {
+      console.log('Getting rewards for EVENT node:', {
+        id: node.id,
+        label: node.label,
+        storyNodeType: node.storyNodeType
+      });
+    }
+
+    // For event nodes, calculate chip rewards
     if (node.storyNodeType === 'event') {
       const eventData = getEventDataForNode(node);
+      console.log('Event node detected, eventData:', eventData);
+
       if (eventData?.chipRewards) {
-        // Convert chip rewards to the format expected by StoryMissionCard
+        // Use deployed chip rewards if available
+        console.log('Using deployed chip rewards:', eventData.chipRewards);
         return eventData.chipRewards.map((chip: any) => ({
           name: `T${chip.tier} ${chip.modifier} Power Chip`,
           quantity: 1,
           chance: chip.probability
         }));
       }
+
+      // If no deployed data, calculate chip rewards based on event position
+      // Parse chapter and event number from node ID
+      const chapterMatch = node.id?.match(/ch(\d+)/);
+      const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+
+      // Count event nodes to determine this event's position
+      let eventNumber = 1;
+      if (node.label) {
+        const labelMatch = node.label.match(/E(\d+)/);
+        if (labelMatch) {
+          eventNumber = parseInt(labelMatch[1]);
+        }
+      }
+
+      // Calculate global event number (events 1-200)
+      const globalEventNumber = (chapter - 1) * 20 + eventNumber;
+      console.log('Calculating chip rewards for event:', { chapter, eventNumber, globalEventNumber });
+
+      // Import and use the chip calculator
+      const { calculateChipRewardsForEvent } = require('@/lib/chipRewardCalculator');
+      const chipData = calculateChipRewardsForEvent(globalEventNumber);
+      console.log('Calculated chip data:', chipData);
+
+      return chipData.rewards.map((chip: any) => ({
+        name: `T${chip.tier} ${chip.modifier} Power Chip`,
+        quantity: 1,
+        chance: chip.probability
+      }));
     }
 
-    // Default rewards for non-event nodes
-    const baseRewards = [
-      { name: "Common Power Chip", quantity: 2, chance: 75 },
-      { name: "Bumblebee Essence", quantity: 1.5, chance: 45 },
-      { name: "Paul Essence", quantity: 2, chance: 30 },
-      { name: "DMT Canister", quantity: 1, chance: 15 },
-      { name: "Rare Power Chip", quantity: 1, chance: 8 },
-      { name: "Legendary Frame", quantity: 1, chance: 1 }
-    ];
+    // Get deployed mek to determine reward tier
+    const deployedMek = getDeployedMekForNode(node);
+    const rank = deployedMek?.rank || 2000; // Default to mid-tier if no rank
+
+    // Determine reward tier based on rank (1-4000, where 1 is best)
+    let rewardTier: 'legendary' | 'rare' | 'uncommon' | 'common';
+    if (rank <= 100) rewardTier = 'legendary';
+    else if (rank <= 500) rewardTier = 'rare';
+    else if (rank <= 2000) rewardTier = 'uncommon';
+    else rewardTier = 'common';
+
+    // Define rewards based on tier
+    const rewardsByTier = {
+      legendary: [
+        { name: "Legendary Power Chip", quantity: 3, chance: 75 },
+        { name: "Rare Essence", quantity: 5, chance: 45 },
+        { name: "Epic Frame", quantity: 2, chance: 30 },
+        { name: "SSS Canister", quantity: 2, chance: 15 },
+        { name: "Mythic Core", quantity: 1, chance: 8 },
+        { name: "Divine Spark", quantity: 1, chance: 1 }
+      ],
+      rare: [
+        { name: "Rare Power Chip", quantity: 3, chance: 75 },
+        { name: "Golden Essence", quantity: 3, chance: 45 },
+        { name: "Rare Frame", quantity: 2, chance: 30 },
+        { name: "S Canister", quantity: 1, chance: 15 },
+        { name: "Epic Core", quantity: 1, chance: 8 },
+        { name: "Legendary Spark", quantity: 1, chance: 1 }
+      ],
+      uncommon: [
+        { name: "Uncommon Power Chip", quantity: 2, chance: 75 },
+        { name: "Silver Essence", quantity: 2, chance: 45 },
+        { name: "Uncommon Frame", quantity: 1, chance: 30 },
+        { name: "A Canister", quantity: 1, chance: 15 },
+        { name: "Rare Core", quantity: 1, chance: 8 },
+        { name: "Epic Spark", quantity: 1, chance: 1 }
+      ],
+      common: [
+        { name: "Common Power Chip", quantity: 2, chance: 75 },
+        { name: "Bumblebee Essence", quantity: 1.5, chance: 45 },
+        { name: "Paul Essence", quantity: 2, chance: 30 },
+        { name: "DMT Canister", quantity: 1, chance: 15 },
+        { name: "Rare Power Chip", quantity: 1, chance: 8 },
+        { name: "Legendary Frame", quantity: 1, chance: 1 }
+      ]
+    };
+
+    const baseRewards = rewardsByTier[rewardTier];
 
     // Adjust rewards based on node type
     if (node.storyNodeType === 'final_boss') {
@@ -395,41 +557,79 @@ export default function StoryClimbPage() {
     return baseRewards;
   }, [getEventDataForNode]);
   
-  // Helper function to generate variation buffs based on node
+  // Helper function to get variation buffs (traits) from deployed mek
   const getNodeVariationBuffs = useCallback((node: ExtendedStoryNode) => {
-    const allBuffs = [
-      "TASER", "LOG", "KEVLAR", "NUKE", "EXPOSED",
-      "JADE", "SHAMROCK", "CLASSIC", "LIGHTNING", "CORRODED"
+    // For event nodes, calculate and return chip rewards as buffs
+    if (node.storyNodeType === 'event') {
+      const eventData = getEventDataForNode(node);
+      if (eventData?.chipRewards) {
+        return eventData.chipRewards.map((chip: any) => ({
+          id: `chip-${chip.tier}-${chip.modifier}`,
+          name: `T${chip.tier} ${chip.modifier}`,
+          bonus: `${chip.probability}%`
+        }));
+      }
+
+      // Calculate chip rewards if no deployed data
+      const chapterMatch = node.id?.match(/ch(\d+)/);
+      const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+
+      let eventNumber = 1;
+      if (node.label) {
+        const labelMatch = node.label.match(/E(\d+)/);
+        if (labelMatch) {
+          eventNumber = parseInt(labelMatch[1]);
+        }
+      }
+
+      const globalEventNumber = (chapter - 1) * 20 + eventNumber;
+      const { calculateChipRewardsForEvent } = require('@/lib/chipRewardCalculator');
+      const chipData = calculateChipRewardsForEvent(globalEventNumber);
+
+      return chipData.rewards.map((chip: any) => ({
+        id: `chip-${chip.tier}-${chip.modifier}`,
+        name: `T${chip.tier} ${chip.modifier}`,
+        bonus: `${chip.probability}%`
+      }));
+    }
+
+    // For mek nodes, get the deployed mek's traits
+    const deployedMek = getDeployedMekForNode(node);
+    if (deployedMek && deployedMek.head && deployedMek.body && deployedMek.trait) {
+      // Return the three traits from the deployed mek
+      return [
+        { id: 'head', name: deployedMek.head, bonus: '+10%' },
+        { id: 'body', name: deployedMek.body, bonus: '+10%' },
+        { id: 'trait', name: deployedMek.trait, bonus: '+10%' }
+      ];
+    }
+
+    // Fallback for nodes without deployed data
+    const fallbackTraits = [
+      { id: 'default1', name: 'STANDARD', bonus: '+5%' },
+      { id: 'default2', name: 'BASIC', bonus: '+5%' },
+      { id: 'default3', name: 'COMMON', bonus: '+5%' }
     ];
-    
-    // Use node ID to deterministically select buffs
+
+    // Use node ID to deterministically select number of traits
     let hash = 0;
     for (let i = 0; i < node.id.length; i++) {
       hash = ((hash << 5) - hash) + node.id.charCodeAt(i);
       hash = hash & hash;
     }
-    
-    const startIndex = Math.abs(hash) % allBuffs.length;
-    // For testing: randomly assign 3 or 8 buffs to see dynamic resizing
-    const randomChoice = Math.abs(hash) % 3; // Use hash for deterministic "randomness"
-    const buffCount = node.storyNodeType === 'final_boss' ? 8 :
-                      node.storyNodeType === 'boss' ? 8 :
-                      node.storyNodeType === 'event' ? (randomChoice === 0 ? 3 : 8) :
-                      (randomChoice === 1 ? 3 : 8); // Mix of 3 and 8 for normal nodes
-    
+
+    const randomChoice = Math.abs(hash) % 3;
+    // Return 3 or 8 traits based on deterministic "randomness"
+    const buffCount = randomChoice === 0 ? 3 : 8;
+
+    // Return the appropriate number of fallback traits
     const selectedBuffs = [];
-    for (let i = 0; i < buffCount; i++) {
-      const buffName = allBuffs[(startIndex + i) % allBuffs.length];
-      selectedBuffs.push({
-        id: buffName.toLowerCase(),
-        name: buffName,
-        bonus: node.storyNodeType === 'final_boss' ? "+20%" :
-               node.storyNodeType === 'boss' ? "+15%" : "+10%"
-      });
+    for (let i = 0; i < Math.min(buffCount, fallbackTraits.length); i++) {
+      selectedBuffs.push(fallbackTraits[i]);
     }
-    
+
     return selectedBuffs;
-  }, []);
+  }, [getDeployedMekForNode, getEventDataForNode]);
   
   // Helper function to get available slots for a node (for testing)
   const getNodeAvailableSlots = useCallback((node: ExtendedStoryNode) => {
@@ -507,39 +707,64 @@ export default function StoryClimbPage() {
   }, [selectedMeks]);
   
   // Helper function to get a deterministic mek image for each node
-  const getMekImage = useCallback((nodeId: string, isForDetails: boolean = false): string => {
+  const getMekImage = useCallback((nodeOrId: string | StoryNode, isForDetails: boolean = false): string => {
     // In preview mode, return a simple placeholder
     if (previewMode) {
       return '/mek-images/150px/000-000-000.webp';
     }
 
-    // Find the node to get its Y position
-    const node = treeData?.nodes?.find(n => n.id === nodeId);
-    if (!node || node.storyNodeType !== 'normal') {
-      // For non-mechanism nodes, use a default or return empty
+    // Get the node object
+    const node = typeof nodeOrId === 'string'
+      ? treeData?.nodes?.find(n => n.id === nodeOrId)
+      : nodeOrId;
+    if (!node) {
       return '';
     }
 
-    // Get all mechanism nodes sorted by Y position (bottom to top)
-    const mechanismNodes = treeData?.nodes
-      ?.filter(n => n.storyNodeType === 'normal')
-      ?.sort((a, b) => a.y - b.y) || [];
+    // Get the deployed mek data for this node
+    const deployedMek = getDeployedMekForNode(node);
 
-    // Find the index of this node in the sorted list
-    const nodeIndex = mechanismNodes.findIndex(n => n.id === nodeId);
+    if (deployedMek) {
+      if (deployedMek.sourceKey) {
+        // Process the sourceKey to match the actual filename format:
+        // 1. Convert to lowercase
+        // 2. Remove any trailing -B suffix
+        let processedKey = deployedMek.sourceKey.toLowerCase();
+        if (processedKey.endsWith('-b')) {
+          processedKey = processedKey.slice(0, -2);
+        }
+        const filename = `${processedKey}.webp`;
+        console.log('Using image for node:', node.id, {
+          assetId: deployedMek.assetId,
+          sourceKey: deployedMek.sourceKey,
+          processedKey: processedKey,
+          filename: filename,
+        });
 
-    // Map to the least rare mechanisms (we have 400 of them)
-    // If we have more nodes than mechanisms, wrap around
-    const mechanismIndex = nodeIndex % leastRareMechanisms.length;
-    const filename = leastRareMechanisms[mechanismIndex];
-
-    // Return appropriate size based on usage
-    if (isForDetails) {
-      return `/mek-images/500px/${filename}`;
-    } else {
-      return `/mek-images/150px/${filename}`;
+        // Return appropriate size based on usage
+        if (isForDetails) {
+          return `/mek-images/500px/${filename}`;
+        } else {
+          return `/mek-images/150px/${filename}`;
+        }
+      } else {
+        console.warn('No sourceKey found for deployed mek:', deployedMek);
+      }
     }
-  }, [treeData?.nodes?.length, previewMode]); // Use stable dependencies
+
+    // Fallback for nodes without deployed mek data (e.g., boss nodes without specific mek assignment)
+    // Use a simple deterministic fallback based on node ID
+    const nodeId = typeof nodeOrId === 'string' ? nodeOrId : nodeOrId.id;
+    console.warn('Using fallback image for node without sourceKey:', nodeId);
+    const fallbackIndex = Math.abs(hashCode(nodeId)) % leastRareMechanisms.length;
+    const fallbackFilename = leastRareMechanisms[fallbackIndex];
+
+    if (isForDetails) {
+      return `/mek-images/500px/${fallbackFilename}`;
+    } else {
+      return `/mek-images/150px/${fallbackFilename}`;
+    }
+  }, [treeData, previewMode, getDeployedMekForNode, leastRareMechanisms, deployedNormalNodes, deployedChallengerNodes, deployedMiniBossNodes, deployedFinalBossNodes]); // Include all deployment data dependencies
   
   // Debug logging
   useEffect(() => {
@@ -613,7 +838,7 @@ export default function StoryClimbPage() {
           promises.push(promise);
         } else if (node.storyNodeType === 'normal' || node.storyNodeType === 'boss') {
           // Load mek images for normal and boss nodes
-          const imageName = getMekImage(node.id, false); // 150px for nodes
+          const imageName = getMekImage(node, false); // Pass full node object
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
             img.onload = () => resolve();
@@ -645,7 +870,7 @@ export default function StoryClimbPage() {
 
     loadImages();
     // Remove callback dependencies that cause loops - use stable dependencies instead
-  }, [treeData?.nodes?.length, previewMode]);
+  }, [treeData?.nodes?.length, previewMode, getMekImage]);
 
   // Handle client-side mounting
   useEffect(() => {
@@ -661,7 +886,7 @@ export default function StoryClimbPage() {
         const container = containerRef.current;
         const width = container.clientWidth - 20; // Reduce width by 20px to move right edge left
         const height = Math.floor(width * 1.5); // 2:3 aspect ratio
-        console.log("Canvas size updated:", { width, height });
+        // console.log("Canvas size updated:", { width, height });
         setCanvasSize({ width, height });
       }
     };
@@ -676,17 +901,17 @@ export default function StoryClimbPage() {
 
   // Draw the tree on canvas
   useEffect(() => {
-    console.log("Canvas draw effect:", {
-      hasCanvas: !!canvasRef.current,
-      hasTreeData: !!treeData,
-      canvasWidth: canvasSize.width,
-      canvasHeight: canvasSize.height,
-      imagesLoaded: imagesLoaded
-    });
+    // console.log("Canvas draw effect:", {
+    //   hasCanvas: !!canvasRef.current,
+    //   hasTreeData: !!treeData,
+    //   canvasWidth: canvasSize.width,
+    //   canvasHeight: canvasSize.height,
+    //   imagesLoaded: imagesLoaded
+    // });
     
     // Don't require images to be loaded - render without them if needed
     if (!canvasRef.current || !treeData || canvasSize.width === 0) {
-      console.log("Canvas draw skipped - missing core requirements");
+      // console.log("Canvas draw skipped - missing core requirements");
       return;
     }
     
@@ -751,9 +976,9 @@ export default function StoryClimbPage() {
     // Find the start node position
     const startNode = nodes.find(n => n.id === 'start');
     if (startNode) {
-      console.log("Start node position:", { x: startNode.x, y: startNode.y });
-      console.log("Tree bounds:", { minX, maxX, minY, maxY });
-      console.log("Actual bounds with node sizes:", { actualMinX, actualMaxX, actualMinY, actualMaxY });
+      // console.log("Start node position:", { x: startNode.x, y: startNode.y });
+      // console.log("Tree bounds:", { minX, maxX, minY, maxY });
+      // console.log("Actual bounds with node sizes:", { actualMinX, actualMaxX, actualMinY, actualMaxY });
     }
     
     const treeWidth = maxX - minX;
@@ -791,16 +1016,16 @@ export default function StoryClimbPage() {
 
         // Debug logging (only log once per render cycle)
         if (Math.random() > 0.99) {
-          console.log("START centering debug:", {
-            canvasWidth: canvas.width,
-            canvasCenter: canvas.width / 2,
-            startNodeX: startNode.x,
-            minX: minX,
-            startScaledX: startScaledX,
-            offsetX: offsetX,
-            centerAdjustment: centerAdjustment,
-            finalStartX: startScaledX + offsetX
-          });
+          // console.log("START centering debug:", {
+          //   canvasWidth: canvas.width,
+          //   canvasCenter: canvas.width / 2,
+          //   startNodeX: startNode.x,
+          //   minX: minX,
+          //   startScaledX: startScaledX,
+          //   offsetX: offsetX,
+          //   centerAdjustment: centerAdjustment,
+          //   finalStartX: startScaledX + offsetX
+          // });
         }
       } else {
         // Fallback to centering the whole tree if no start node
@@ -904,7 +1129,7 @@ export default function StoryClimbPage() {
     });
     
     // Second pass: draw nodes
-    console.log(`Drawing ${nodes.length} nodes`);
+    // console.log(`Drawing ${nodes.length} nodes`);
     nodes.forEach((node, index) => {
       // Transform node position
       let pos = transform(node.x, node.y);
@@ -934,7 +1159,7 @@ export default function StoryClimbPage() {
         return;
       }
       
-      if (index < 5 || node.id === 'start') console.log(`Drawing node ${node.id} at (${pos.x}, ${pos.y})`)
+      // if (index < 5 || node.id === 'start') console.log(`Drawing node ${node.id} at (${pos.x}, ${pos.y})`)
       
       // Check if node is completed
       const isCompleted = completedNodes.has(node.id);
@@ -982,12 +1207,16 @@ export default function StoryClimbPage() {
         return node.y < connectedNode.y;
       });
       
+      // Check if this is the selected node
+      const isSelected = selectedNode && selectedNode.id === node.id;
+
       // Update stroke color and width based on availability for non-mechanism nodes
       if (node.id !== 'start' && node.storyNodeType !== 'normal') {
-        strokeColor = isCompleted ? '#10b981' : (isAvailable ? '#fab617' : '#6b7280');
-        strokeWidth = isAvailable ? 3 : 2;
+        // White ring for available nodes, yellow for selected, green for completed
+        strokeColor = isCompleted ? '#10b981' : (isSelected ? '#fab617' : (isAvailable ? '#ffffff' : '#6b7280'));
+        strokeWidth = isSelected ? 4 : (isAvailable ? 3 : 2);
         if (node.storyNodeType === 'final_boss' && isAvailable) {
-          strokeWidth = 4; // Thicker stroke for final boss
+          strokeWidth = isSelected ? 5 : 4; // Thicker stroke for final boss
         }
         // Update event node fill color based on availability
         if (node.storyNodeType === 'event') {
@@ -1007,35 +1236,60 @@ export default function StoryClimbPage() {
           }
         }
 
-        // Apply pulse glow hover effect
-        if (isHovered) {
-          // Pulse Glow effect only
+        // Check if this is the selected node
+        const isNodeSelected = selectedNode && selectedNode.id === node.id;
+
+        // Apply strong pulsating yellow glow for selected node
+        if (isNodeSelected) {
+          // Strong pulsating yellow glow for selected node
           ctx.save();
-          const pulseIntensity = 0.6 + Math.sin(Date.now() / 300) * 0.4;
-          ctx.shadowBlur = 40;
+          const pulseIntensity = 0.7 + Math.sin(Date.now() / 400) * 0.3; // Stronger pulse
+          ctx.shadowBlur = 50; // Bigger blur
           ctx.shadowColor = `rgba(250, 182, 23, ${pulseIntensity})`;
+          // Triple glow effect for selected
+          for (let i = 0; i < 3; i++) {
+            if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + i * 7, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.25)})`;
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            } else {
+              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.25)})`;
+              ctx.lineWidth = 3;
+              ctx.strokeRect(pos.x - nodeSize - i * 7, pos.y - nodeSize - i * 7, (nodeSize + i * 7) * 2, (nodeSize + i * 7) * 2);
+            }
+          }
+          ctx.restore();
+        } else if (isHovered) {
+          // Hover effect (subtle white glow)
+          ctx.save();
+          const pulseIntensity = 0.5 + Math.sin(Date.now() / 300) * 0.3;
+          ctx.shadowBlur = 30;
+          ctx.shadowColor = `rgba(255, 255, 255, ${pulseIntensity})`;
           // Double glow effect
           for (let i = 0; i < 2; i++) {
             if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
               ctx.beginPath();
-              ctx.arc(pos.x, pos.y, nodeSize + i * 5, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+              ctx.arc(pos.x, pos.y, nodeSize + i * 4, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(255, 255, 255, ${pulseIntensity * (1 - i * 0.3)})`;
               ctx.lineWidth = 2;
               ctx.stroke();
             } else {
-              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.3)})`;
+              ctx.strokeStyle = `rgba(255, 255, 255, ${pulseIntensity * (1 - i * 0.3)})`;
               ctx.lineWidth = 2;
-              ctx.strokeRect(pos.x - nodeSize - i * 5, pos.y - nodeSize - i * 5, (nodeSize + i * 5) * 2, (nodeSize + i * 5) * 2);
+              ctx.strokeRect(pos.x - nodeSize - i * 4, pos.y - nodeSize - i * 4, (nodeSize + i * 4) * 2, (nodeSize + i * 4) * 2);
             }
           }
           ctx.restore();
         }
 
-        // Base glow for available nodes (always present)
+        // Base glow for available nodes (subtle white glow, stronger yellow for selected)
         ctx.save();
-        const baseGlowIntensity = 0.2 + Math.sin(Date.now() / 800) * 0.1;
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = `rgba(255, 255, 255, ${baseGlowIntensity})`;
+        const isSelectedGlow = selectedNode && selectedNode.id === node.id;
+        const baseGlowIntensity = isSelectedGlow ? 0.4 + Math.sin(Date.now() / 400) * 0.3 : 0.15 + Math.sin(Date.now() / 1000) * 0.05;
+        ctx.shadowBlur = isSelectedGlow ? 35 : 20;
+        ctx.shadowColor = isSelectedGlow ? `rgba(250, 182, 23, ${baseGlowIntensity})` : `rgba(255, 255, 255, ${baseGlowIntensity})`;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         
@@ -1051,11 +1305,12 @@ export default function StoryClimbPage() {
         }
         ctx.restore();
         
-        // Yellow glow on top (base level)
+        // Additional glow layer (yellow for selected, subtle white for others)
         ctx.save();
-        const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
+        const isNodeSelectedGlow = selectedNode && selectedNode.id === node.id;
+        const glowIntensity = isNodeSelectedGlow ? 0.5 + Math.sin(Date.now() / 400) * 0.3 : 0.2 + Math.sin(Date.now() / 1000) * 0.1;
+        ctx.shadowBlur = isNodeSelectedGlow ? 25 : 10;
+        ctx.shadowColor = isNodeSelectedGlow ? `rgba(250, 182, 23, ${glowIntensity})` : `rgba(255, 255, 255, ${glowIntensity * 0.5})`;
         
         // Draw shape for glow
         if (node.storyNodeType === 'event') {
@@ -1081,10 +1336,17 @@ export default function StoryClimbPage() {
         ctx.restore();
       } else if ((isAvailable || isCompleted) && node.storyNodeType !== 'normal' && node.id !== 'start') {
         ctx.save();
+        const isNodeSelectedHere = selectedNode && selectedNode.id === node.id;
         if (isAvailable) {
-          const glowIntensity = 0.5 + Math.sin(Date.now() / 500) * 0.3;
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
+          if (isNodeSelectedHere) {
+            const glowIntensity = 0.6 + Math.sin(Date.now() / 400) * 0.4;
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
+          } else {
+            const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = `rgba(255, 255, 255, ${glowIntensity})`;
+          }
         } else if (isCompleted) {
           ctx.shadowBlur = 15;
           ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
@@ -1095,11 +1357,13 @@ export default function StoryClimbPage() {
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
           ctx.fillStyle = 'transparent';
-          ctx.strokeStyle = isCompleted ? '#10b981' : '#fab617';
+          const isNodeSelectedStroke = selectedNode && selectedNode.id === node.id;
+          ctx.strokeStyle = isCompleted ? '#10b981' : (isNodeSelectedStroke ? '#fab617' : '#ffffff');
           ctx.lineWidth = strokeWidth;
           ctx.stroke();
         } else {
-          ctx.strokeStyle = isCompleted ? '#10b981' : '#fab617';
+          const isNodeSelectedStroke = selectedNode && selectedNode.id === node.id;
+          ctx.strokeStyle = isCompleted ? '#10b981' : (isNodeSelectedStroke ? '#fab617' : '#ffffff');
           ctx.lineWidth = strokeWidth;
           ctx.strokeRect(pos.x - nodeSize, pos.y - nodeSize, nodeSize * 2, nodeSize * 2);
         }
@@ -2147,7 +2411,7 @@ export default function StoryClimbPage() {
       }
     });
     
-    console.log("Canvas render complete");
+    // console.log("Canvas render complete");
   }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerFrameStyle]);
 
   // Separate effect for jump button visibility to avoid infinite loop
@@ -2839,6 +3103,48 @@ export default function StoryClimbPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Debug Panel - Temporary for troubleshooting */}
+      <div className="fixed top-4 left-4 z-50 bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
+        <h3 className="text-yellow-500 font-bold mb-2">🔧 Debug Panel</h3>
+        <div className="text-xs text-gray-300 space-y-2">
+          <div className="border-b border-gray-700 pb-2">
+            <div className="text-green-400">Deployment Status:</div>
+            <div>Normal Nodes: {deployedNormalNodes.length}</div>
+            <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
+            <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
+            <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
+          </div>
+          {selectedNode && (
+            <div className="border-b border-gray-700 pb-2">
+              <div className="text-yellow-400 font-semibold">Selected Node:</div>
+              <div>ID: {selectedNode.id}</div>
+              <div>Type: {selectedNode.storyNodeType}</div>
+              <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
+              {(() => {
+                const deployedMek = getDeployedMekForNode(selectedNode);
+                if (deployedMek) {
+                  return (
+                    <>
+                      <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
+                      <div className="pl-2">
+                        <div>Asset ID: #{deployedMek.assetId}</div>
+                        <div>Rank: {deployedMek.rank}</div>
+                        <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
+                        <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
+                      </div>
+                    </>
+                  );
+                }
+                return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
+              })()}
+            </div>
+          )}
+          {!selectedNode && (
+            <div className="text-gray-500 italic">Click a node to see debug info</div>
+          )}
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/50 p-4 mb-6">
         <div className="flex items-center justify-between max-w-[1600px] mx-auto px-5">
@@ -3169,8 +3475,9 @@ export default function StoryClimbPage() {
                 mekImage={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    // For events, we could use a special event icon or keep the generated image
-                    return getMekImage(selectedNode.id, true);
+                    // For events, use the event image
+                    const eventImageName = getEventImage(selectedNode.id);
+                    return `/event-images/450px webp/${eventImageName.replace(/ /g, '%20')}`;
                   }
                   return getMekImage(selectedNode.id, true);
                 })()}
@@ -3201,7 +3508,13 @@ export default function StoryClimbPage() {
                 primaryReward={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    return eventData?.goldReward || 300000;
+                    if (eventData?.goldReward) return eventData.goldReward;
+
+                    // Calculate based on event number if no deployed data
+                    const labelMatch = selectedNode.label?.match(/E(\d+)/);
+                    const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
+                    // Base reward 100g for event 1, scaling up
+                    return 100 + (eventNum - 1) * 50;
                   }
                   // Use actual deployed mek rewards
                   const deployedMek = getDeployedMekForNode(selectedNode);
@@ -3216,7 +3529,13 @@ export default function StoryClimbPage() {
                 experience={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    return eventData?.xpReward || 7500;
+                    if (eventData?.xpReward) return eventData.xpReward;
+
+                    // Calculate based on event number if no deployed data
+                    const labelMatch = selectedNode.label?.match(/E(\d+)/);
+                    const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
+                    // Base reward 10xp for event 1, scaling up
+                    return 10 + (eventNum - 1) * 10;
                   }
                   // Use actual deployed mek XP
                   const deployedMek = getDeployedMekForNode(selectedNode);
