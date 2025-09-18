@@ -1132,6 +1132,13 @@ export default defineSchema({
 
   // Difficulty system configuration
   difficultyConfigs: defineTable({
+    nodeType: v.optional(v.union(
+      v.literal("normal"),
+      v.literal("challenger"),
+      v.literal("event"),
+      v.literal("miniboss"),
+      v.literal("final_boss")
+    )),
     difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
 
     // Success thresholds
@@ -1141,11 +1148,6 @@ export default defineSchema({
     goldMultiplier: v.number(), // Base gold reward multiplier
     xpMultiplier: v.number(), // Base XP reward multiplier
     essenceAmountMultiplier: v.number(), // Amount of essence received multiplier
-
-    // Mek slot configuration
-    minSlots: v.number(), // Minimum number of Mek slots
-    maxSlots: v.number(), // Maximum number of Mek slots
-    singleSlotChance: v.number(), // Percentage chance for single slot (0-100)
 
     // Cost modifiers
     deploymentFeeMultiplier: v.number(), // Entry cost multiplier
@@ -1167,5 +1169,7 @@ export default defineSchema({
     isActive: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_difficulty", ["difficulty"]),
+  })
+    .index("by_node_and_difficulty", ["nodeType", "difficulty"])
+    .index("by_difficulty", ["difficulty"]),
 });

@@ -11,8 +11,6 @@ import { generateSampleMeks } from '@/app/contracts/utils/helpers';
 import { leastRareMechanisms } from './least-rare-mechanisms';
 import { createSeededRandomFromString } from '@/lib/seeded-random';
 import { calculateChipRewardsForEvent } from '@/lib/chipRewardCalculator';
-import DifficultySelector from '@/components/DifficultySelector';
-import SuccessBar from '@/components/SuccessBar';
 import { DifficultyLevel, DifficultyConfig, calculateRewards, calculateMekSlots } from '@/lib/difficultyModifiers';
 
 
@@ -100,7 +98,7 @@ export default function StoryClimbPage() {
   const [selectedMekSlot, setSelectedMekSlot] = useState<{ missionId: string; slotIndex: number } | null>(null);
   const [selectedMeks, setSelectedMeks] = useState<Record<string, any[]>>({});
   const [nodeFadeStates, setNodeFadeStates] = useState<Map<string, number>>(new Map()); // Track fade animation for each node
-  const [inactiveNodeTooltip, setInactiveNodeTooltip] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
+  const [inactiveNodeTooltip, setInactiveNodeTooltip] = useState<{ x: number; y: number; visible: boolean; fading: boolean }>({ x: 0, y: 0, visible: false, fading: false });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -366,11 +364,21 @@ export default function StoryClimbPage() {
           // Use the calculated nodeIndex to select from available meks
           // This ensures each node gets a consistent, unique mek
           if (sortedNormalMeks.length > 0) {
-            // Use modulo to ensure we stay within bounds
-            const selectedIndex = nodeIndex % sortedNormalMeks.length;
-            const selectedMek = sortedNormalMeks[selectedIndex];
-            // console.log('Selected normal mek at position:', selectedIndex, selectedMek);
-            return selectedMek;
+            // IMPORTANT: Each normal node should get a unique Mek
+            // Since we have exactly 350 normal Meks deployed for 350 normal nodes,
+            // the nodeIndex should directly map to a unique Mek
+            if (nodeIndex < sortedNormalMeks.length) {
+              const selectedMek = sortedNormalMeks[nodeIndex];
+              // console.log('Selected normal mek at position:', nodeIndex, selectedMek);
+              return selectedMek;
+            } else {
+              // Fallback: if somehow we have more nodes than Meks, use modulo
+              // This should not happen in normal operation
+              console.warn(`Warning: Node index ${nodeIndex} exceeds available meks (${sortedNormalMeks.length})`);
+              const selectedIndex = nodeIndex % sortedNormalMeks.length;
+              const selectedMek = sortedNormalMeks[selectedIndex];
+              return selectedMek;
+            }
           }
         }
         // console.log('No meks found for this chapter!');
@@ -2533,8 +2541,12 @@ export default function StoryClimbPage() {
         // Hide tooltip when not hovering over an inactive node
         if (!hoveredNode || completedNodes.has(hoveredNode.id)) {
           setInactiveNodeTooltip(prevTooltip => {
-            if (prevTooltip.visible) {
-              return { ...prevTooltip, visible: false };
+            if (prevTooltip.visible && !prevTooltip.fading) {
+              // Start fade out animation
+              setTimeout(() => {
+                setInactiveNodeTooltip(prev => ({ ...prev, visible: false, fading: false }));
+              }, 200); // Match animation duration
+              return { ...prevTooltip, fading: true };
             }
             return prevTooltip;
           });
@@ -3109,7 +3121,7 @@ export default function StoryClimbPage() {
         if (!completedNodes.has(node.id) && isAdjacent) {
           setHoveredNode(null); // Clear hover state when selecting a node
           setSelectedNode(node);
-          setInactiveNodeTooltip({ x: 0, y: 0, visible: false }); // Hide tooltip
+          setInactiveNodeTooltip({ x: 0, y: 0, visible: false, fading: false }); // Hide tooltip
           // Don't auto-complete the node anymore - let user click Complete button
           // Auto-scroll removed - camera stays where user positioned it
         } else if (completedNodes.has(node.id)) {
@@ -3117,7 +3129,7 @@ export default function StoryClimbPage() {
           const newCompleted = new Set(completedNodes);
           newCompleted.delete(node.id);
           setCompletedNodes(newCompleted);
-          setInactiveNodeTooltip({ x: 0, y: 0, visible: false }); // Hide tooltip
+          setInactiveNodeTooltip({ x: 0, y: 0, visible: false, fading: false }); // Hide tooltip
         } else if (!completedNodes.has(node.id) && !isAdjacent) {
           // Show tooltip for inactive nodes
           const rect = canvas.getBoundingClientRect();
@@ -3150,7 +3162,8 @@ export default function StoryClimbPage() {
           setInactiveNodeTooltip({
             x: tooltipX,
             y: tooltipY,
-            visible: true
+            visible: true,
+            fading: false
           });
           // Don't auto-hide - tooltip stays until mouse moves away
         }
@@ -3339,9 +3352,10 @@ export default function StoryClimbPage() {
                   style={{
                     left: `${inactiveNodeTooltip.x}px`,
                     top: `${inactiveNodeTooltip.y}px`,
-                    transform: 'translateX(-50%)',
-                    animation: 'fadeIn 0.2s ease-out',
-                    boxShadow: '0 2px 8px rgba(250, 182, 23, 0.2)'
+                    boxShadow: '0 2px 8px rgba(250, 182, 23, 0.2)',
+                    animation: inactiveNodeTooltip.fading
+                      ? 'tooltipFadeOut 0.2s ease-out forwards'
+                      : 'tooltipSlideIn 0.15s ease-out forwards'
                   }}
                 >
                   <div className="text-yellow-500/90 text-xs font-medium tracking-wide">
@@ -3351,6 +3365,31 @@ export default function StoryClimbPage() {
                   <div className="absolute bottom-0 left-2 right-2 h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
                 </div>
               )}
+
+              {/* CSS for tooltip animations */}
+              <style>{`
+                @keyframes tooltipSlideIn {
+                  0% {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(8px);
+                  }
+                  100% {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                  }
+                }
+
+                @keyframes tooltipFadeOut {
+                  0% {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                  }
+                  100% {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(0);
+                  }
+                }
+              `}</style>
 
               {/* Fade gradient with blur at top */}
               <div className="absolute inset-x-0 top-0 h-60 pointer-events-none z-10">
@@ -3612,70 +3651,6 @@ export default function StoryClimbPage() {
 
           {/* Right Column - Mission Card Details */}
           <div className="flex-grow pr-5">
-            {/* Difficulty Selector */}
-            {selectedNode && difficultyConfigs && difficultyConfigs.length > 0 && (
-              <div className="mb-4">
-                <DifficultySelector
-                  currentDifficulty={selectedDifficulty}
-                  onDifficultyChange={setSelectedDifficulty}
-                  configs={difficultyConfigs as DifficultyConfig[]}
-                  baseRewards={{
-                    gold: (() => {
-                      if (selectedNode.storyNodeType === 'event') {
-                        const eventData = getEventDataForNode(selectedNode);
-                        if (eventData?.goldReward) return eventData.goldReward;
-                        const labelMatch = selectedNode.label?.match(/E(\d+)/);
-                        const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
-                        return 100 + (eventNum - 1) * 50;
-                      }
-                      const deployedMek = getDeployedMekForNode(selectedNode);
-                      if (deployedMek?.goldReward) return deployedMek.goldReward;
-                      return selectedNode.storyNodeType === 'final_boss' ? 1000000 :
-                             selectedNode.storyNodeType === 'boss' ? 500000 :
-                             selectedNode.storyNodeType === 'normal' ? 150000 : 250000;
-                    })(),
-                    xp: (() => {
-                      if (selectedNode.storyNodeType === 'event') {
-                        const eventData = getEventDataForNode(selectedNode);
-                        if (eventData?.xpReward) return eventData.xpReward;
-                        const labelMatch = selectedNode.label?.match(/E(\d+)/);
-                        const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
-                        return 10 + (eventNum - 1) * 10;
-                      }
-                      const deployedMek = getDeployedMekForNode(selectedNode);
-                      if (deployedMek?.xpReward) return deployedMek.xpReward;
-                      return selectedNode.storyNodeType === 'final_boss' ? 20000 :
-                             selectedNode.storyNodeType === 'boss' ? 10000 :
-                             selectedNode.storyNodeType === 'normal' ? 3000 : 5000;
-                    })()
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Success Bar */}
-            {selectedNode && currentDifficultyConfig && (
-              <div className="mb-4">
-                <SuccessBar
-                  currentSuccess={completedNodes.has(selectedNode.id) ? 100 :
-                                isNodeAvailable(selectedNode) ?
-                                  calculateSuccessChance(
-                                    selectedNode.id,
-                                    65,
-                                    getNodeVariationBuffs(selectedNode as ExtendedStoryNode)
-                                  ) : 0}
-                  difficultyConfig={currentDifficultyConfig}
-                  mekContributions={selectedMeks[selectedNode.id]?.map((mek: any, idx: number) => ({
-                    mekId: mek.id || `mek-${idx}`,
-                    name: mek.name || `MEK ${idx + 1}`,
-                    rank: mek.rank || 1000,
-                    contribution: 10 // Base contribution per Mek
-                  }))}
-                  showDetails={true}
-                />
-              </div>
-            )}
-
             {/* Show card for selected node */}
             {selectedNode ? (
               <StoryMissionCard
@@ -3802,13 +3777,23 @@ export default function StoryClimbPage() {
                   return currentDifficultyConfig ?
                     Math.round(baseFee * currentDifficultyConfig.deploymentFeeMultiplier) : baseFee;
                 })()}
-                availableSlots={currentDifficultyConfig ? calculateMekSlots(currentDifficultyConfig) : getNodeAvailableSlots(selectedNode as ExtendedStoryNode)}
+                availableSlots={currentDifficultyConfig ? calculateMekSlots(currentDifficultyConfig, selectedNode.id) : getNodeAvailableSlots(selectedNode as ExtendedStoryNode)}
                 selectedMeks={selectedMeks[selectedNode.id] || []}
                 onDeploy={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
                 onMekSlotClick={handleMekSlotClick}
                 onMekRemove={handleMekRemove}
                 scale={0.95}
                 isLocked={debugMode ? false : (!isNodeAvailable(selectedNode) && !completedNodes.has(selectedNode.id))}
+                currentDifficulty={selectedDifficulty}
+                onDifficultyChange={setSelectedDifficulty}
+                showDifficultySelector={true}
+                difficultyConfig={currentDifficultyConfig}
+                mekContributions={selectedMeks[selectedNode.id]?.map((mek: any, idx: number) => ({
+                  mekId: mek.id || `mek-${idx}`,
+                  name: mek.name || `MEK ${idx + 1}`,
+                  rank: mek.rank || 1000,
+                  contribution: 10 // Base contribution per Mek
+                }))}
               />
             ) : (
               // No node selected or hovered - Using Style K from UI Showcase

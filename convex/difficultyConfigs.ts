@@ -11,14 +11,23 @@ export const getAll = query({
 });
 
 // Get a specific difficulty configuration
-export const getByDifficulty = query({
+export const getByNodeAndDifficulty = query({
   args: {
+    nodeType: v.union(
+      v.literal("normal"),
+      v.literal("challenger"),
+      v.literal("event"),
+      v.literal("miniboss"),
+      v.literal("final_boss")
+    ),
     difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty))
+      .withIndex("by_node_and_difficulty", (q) =>
+        q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
+      )
       .first();
   },
 });
@@ -26,14 +35,18 @@ export const getByDifficulty = query({
 // Create or update difficulty configuration
 export const upsert = mutation({
   args: {
+    nodeType: v.union(
+      v.literal("normal"),
+      v.literal("challenger"),
+      v.literal("event"),
+      v.literal("miniboss"),
+      v.literal("final_boss")
+    ),
     difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
     successGreenLine: v.number(),
     goldMultiplier: v.number(),
     xpMultiplier: v.number(),
     essenceAmountMultiplier: v.number(),
-    minSlots: v.number(),
-    maxSlots: v.number(),
-    singleSlotChance: v.number(),
     deploymentFeeMultiplier: v.number(),
     commonEssenceBoost: v.number(),
     rareEssencePenalty: v.number(),
@@ -48,7 +61,9 @@ export const upsert = mutation({
     // Check if configuration already exists
     const existing = await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty))
+      .withIndex("by_node_and_difficulty", (q) =>
+        q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
+      )
       .first();
 
     const data = {
@@ -74,35 +89,30 @@ export const upsert = mutation({
 export const initializeDefaults = mutation({
   args: {},
   handler: async (ctx) => {
-    const defaults = [
-      {
-        difficulty: "easy" as const,
+    const nodeTypes = ["normal", "challenger", "event", "miniboss", "final_boss"] as const;
+    const difficulties = ["easy", "medium", "hard"] as const;
+
+    // Base configurations for each difficulty
+    const difficultyBase = {
+      easy: {
         successGreenLine: 5,
         goldMultiplier: 0.6,
         xpMultiplier: 0.5,
         essenceAmountMultiplier: 1.0,
-        minSlots: 1,
-        maxSlots: 2,
-        singleSlotChance: 75,
         deploymentFeeMultiplier: 0.5,
-        commonEssenceBoost: 15,
-        rareEssencePenalty: -66,
+        commonEssenceBoost: 20,
+        rareEssencePenalty: -50,
         overshootBonusRate: 0.5,
         maxOvershootBonus: 50,
         colorTheme: "green",
         displayName: "EASY",
-        description: "Lower risk, guaranteed success at 5%, fewer slots, reduced rewards",
-        isActive: true,
+        description: "Lower risk, guaranteed success at 5%, reduced rewards",
       },
-      {
-        difficulty: "medium" as const,
+      medium: {
         successGreenLine: 30,
         goldMultiplier: 1.0,
         xpMultiplier: 1.0,
         essenceAmountMultiplier: 1.2,
-        minSlots: 3,
-        maxSlots: 6,
-        singleSlotChance: 0,
         deploymentFeeMultiplier: 1.0,
         commonEssenceBoost: 0,
         rareEssencePenalty: 0,
@@ -110,37 +120,58 @@ export const initializeDefaults = mutation({
         maxOvershootBonus: 100,
         colorTheme: "yellow",
         displayName: "MEDIUM",
-        description: "Balanced risk and reward, success at 30%, standard slot count",
-        isActive: true,
+        description: "Balanced risk and reward, success at 30%",
       },
-      {
-        difficulty: "hard" as const,
+      hard: {
         successGreenLine: 75,
         goldMultiplier: 2.5,
         xpMultiplier: 3.0,
         essenceAmountMultiplier: 1.5,
-        minSlots: 7,
-        maxSlots: 8,
-        singleSlotChance: 0,
         deploymentFeeMultiplier: 2.0,
-        commonEssenceBoost: -20,
+        commonEssenceBoost: -30,
         rareEssencePenalty: 100,
         overshootBonusRate: 2.0,
         maxOvershootBonus: 200,
         colorTheme: "red",
         displayName: "HARD",
-        description: "High risk, massive rewards, success at 75%, maximum slots",
-        isActive: true,
+        description: "High risk, massive rewards, success at 75%",
       },
-    ];
+    };
+
+    // Node type specific multipliers
+    const nodeMultipliers = {
+      normal: { goldMult: 1.0, xpMult: 1.0 },
+      challenger: { goldMult: 1.3, xpMult: 1.3 },
+      event: { goldMult: 0.8, xpMult: 0.8 },
+      miniboss: { goldMult: 2.0, xpMult: 2.0 },
+      final_boss: { goldMult: 5.0, xpMult: 5.0 },
+    };
+
+    const defaults = [];
+    for (const nodeType of nodeTypes) {
+      for (const difficulty of difficulties) {
+        const base = difficultyBase[difficulty];
+        const mult = nodeMultipliers[nodeType];
+        defaults.push({
+          nodeType,
+          difficulty,
+          ...base,
+          goldMultiplier: base.goldMultiplier * mult.goldMult,
+          xpMultiplier: base.xpMultiplier * mult.xpMult,
+          isActive: true,
+        });
+      }
+    }
 
     let created = 0;
 
     for (const config of defaults) {
-      // Check if this difficulty already exists
+      // Check if this config already exists
       const existing = await ctx.db
         .query("difficultyConfigs")
-        .withIndex("by_difficulty", (q) => q.eq("difficulty", config.difficulty))
+        .withIndex("by_node_and_difficulty", (q) =>
+          q.eq("nodeType", config.nodeType).eq("difficulty", config.difficulty)
+        )
         .first();
 
       if (!existing) {
@@ -164,6 +195,13 @@ export const initializeDefaults = mutation({
 // Update a specific field for a difficulty
 export const updateField = mutation({
   args: {
+    nodeType: v.union(
+      v.literal("normal"),
+      v.literal("challenger"),
+      v.literal("event"),
+      v.literal("miniboss"),
+      v.literal("final_boss")
+    ),
     difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
     field: v.string(),
     value: v.any(),
@@ -171,7 +209,9 @@ export const updateField = mutation({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query("difficultyConfigs")
-      .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty))
+      .withIndex("by_node_and_difficulty", (q) =>
+        q.eq("nodeType", args.nodeType).eq("difficulty", args.difficulty)
+      )
       .first();
 
     if (!config) {
@@ -205,36 +245,30 @@ export const resetToDefaults = mutation({
       await ctx.db.delete(config._id);
     }
 
-    // Re-initialize defaults by inserting them directly
-    const defaults = [
-      {
-        difficulty: "easy" as const,
+    // Re-initialize defaults using same logic as initializeDefaults
+    const nodeTypes = ["normal", "challenger", "event", "miniboss", "final_boss"] as const;
+    const difficulties = ["easy", "medium", "hard"] as const;
+
+    const difficultyBase = {
+      easy: {
         successGreenLine: 5,
         goldMultiplier: 0.6,
         xpMultiplier: 0.5,
         essenceAmountMultiplier: 1.0,
-        minSlots: 1,
-        maxSlots: 2,
-        singleSlotChance: 75,
         deploymentFeeMultiplier: 0.5,
-        commonEssenceBoost: 15,
-        rareEssencePenalty: -66,
+        commonEssenceBoost: 20,
+        rareEssencePenalty: -50,
         overshootBonusRate: 0.5,
         maxOvershootBonus: 50,
         colorTheme: "green",
         displayName: "EASY",
-        description: "Lower risk, guaranteed success at 5%, fewer slots, reduced rewards",
-        isActive: true,
+        description: "Lower risk, guaranteed success at 5%, reduced rewards",
       },
-      {
-        difficulty: "medium" as const,
+      medium: {
         successGreenLine: 30,
         goldMultiplier: 1.0,
         xpMultiplier: 1.0,
         essenceAmountMultiplier: 1.2,
-        minSlots: 3,
-        maxSlots: 6,
-        singleSlotChance: 0,
         deploymentFeeMultiplier: 1.0,
         commonEssenceBoost: 0,
         rareEssencePenalty: 0,
@@ -242,29 +276,47 @@ export const resetToDefaults = mutation({
         maxOvershootBonus: 100,
         colorTheme: "yellow",
         displayName: "MEDIUM",
-        description: "Balanced risk and reward, success at 30%, standard slot count",
-        isActive: true,
+        description: "Balanced risk and reward, success at 30%",
       },
-      {
-        difficulty: "hard" as const,
+      hard: {
         successGreenLine: 75,
         goldMultiplier: 2.5,
         xpMultiplier: 3.0,
         essenceAmountMultiplier: 1.5,
-        minSlots: 7,
-        maxSlots: 8,
-        singleSlotChance: 0,
         deploymentFeeMultiplier: 2.0,
-        commonEssenceBoost: -20,
+        commonEssenceBoost: -30,
         rareEssencePenalty: 100,
         overshootBonusRate: 2.0,
         maxOvershootBonus: 200,
         colorTheme: "red",
         displayName: "HARD",
-        description: "High risk, massive rewards, success at 75%, maximum slots",
-        isActive: true,
+        description: "High risk, massive rewards, success at 75%",
       },
-    ];
+    };
+
+    const nodeMultipliers = {
+      normal: { goldMult: 1.0, xpMult: 1.0 },
+      challenger: { goldMult: 1.3, xpMult: 1.3 },
+      event: { goldMult: 0.8, xpMult: 0.8 },
+      miniboss: { goldMult: 2.0, xpMult: 2.0 },
+      final_boss: { goldMult: 5.0, xpMult: 5.0 },
+    };
+
+    const defaults = [];
+    for (const nodeType of nodeTypes) {
+      for (const difficulty of difficulties) {
+        const base = difficultyBase[difficulty];
+        const mult = nodeMultipliers[nodeType];
+        defaults.push({
+          nodeType,
+          difficulty,
+          ...base,
+          goldMultiplier: base.goldMultiplier * mult.goldMult,
+          xpMultiplier: base.xpMultiplier * mult.xpMult,
+          isActive: true,
+        });
+      }
+    }
 
     for (const config of defaults) {
       await ctx.db.insert("difficultyConfigs", {

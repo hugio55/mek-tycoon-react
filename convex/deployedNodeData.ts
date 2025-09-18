@@ -235,8 +235,8 @@ export const rollbackDeployment = mutation({
   },
 });
 
-// Deploy all mekanisms to all 10 chapters at once
-export const deployAllMekanisms = mutation({
+// Initiate a deployment session for batched chapter deployment
+export const initiateDeploymentSession = mutation({
   args: {
     normalNodeConfig: v.optional(v.string()), // JSON string with gold/xp/essence configs
     notes: v.optional(v.string()),
@@ -246,8 +246,82 @@ export const deployAllMekanisms = mutation({
     const userId = identity?.subject || "anonymous";
 
     try {
+      // Generate session ID
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Get the next version number
+      const allDeployments = await ctx.db
+        .query("deployedStoryClimbData")
+        .order("desc")
+        .take(1);
+
+      const latestVersion = allDeployments.length > 0 ? (allDeployments[0].version || 0) : 0;
+      const newVersion = latestVersion + 1;
+
+      // Get current active deployment to preserve event nodes
+      const activeDeployment = await ctx.db
+        .query("deployedStoryClimbData")
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      // Create a new pending deployment record
+      const deploymentRecord = await ctx.db.insert("deployedStoryClimbData", {
+        deploymentId: sessionId,
+        deployedAt: Date.now(),
+        deployedBy: userId,
+        version: newVersion,
+        status: "pending", // Start as pending
+        eventNodes: activeDeployment?.eventNodes || JSON.stringify([]), // Preserve existing event nodes
+        normalNodes: JSON.stringify([]),
+        challengerNodes: JSON.stringify([]),
+        miniBossNodes: JSON.stringify([]),
+        finalBossNodes: JSON.stringify([]),
+        configurationName: "All Mekanisms Deployment (In Progress)",
+        notes: args.notes || `Batched deployment initiated`,
+      });
+
+      return {
+        success: true,
+        sessionId,
+        deploymentId: deploymentRecord,
+        version: newVersion,
+        message: `Deployment session initiated. Session ID: ${sessionId}`,
+      };
+    } catch (error) {
+      console.error("Session initiation error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  },
+});
+
+// Deploy mekanisms for a single chapter
+export const deployMekanismsChapter = mutation({
+  args: {
+    sessionId: v.string(),
+    chapter: v.number(),
+    normalNodeConfig: v.optional(v.string()), // JSON string with gold/xp/essence configs
+  },
+  handler: async (ctx, args) => {
+    try {
       // Use the imported mekRarityMaster data
       const meks = mekRarityMaster as any[];
+
+      // Find the deployment session
+      const deployment = await ctx.db
+        .query("deployedStoryClimbData")
+        .filter((q) => q.eq(q.field("deploymentId"), args.sessionId))
+        .first();
+
+      if (!deployment) {
+        throw new Error("Deployment session not found");
+      }
+
+      if (deployment.status !== "pending") {
+        throw new Error("Deployment session is not in pending state");
+      }
 
       // Chapter configurations
       const chapterConfigs = [
@@ -262,6 +336,11 @@ export const deployAllMekanisms = mutation({
         { chapter: 9, normalMekRange: [851, 1200], challengerRange: [141, 180], miniBossRange: [20, 28], finalBossRank: 2 },
         { chapter: 10, normalMekRange: [501, 850], challengerRange: [101, 140], miniBossRange: [11, 19], finalBossRank: 1 },
       ];
+
+      const chapterConfig = chapterConfigs.find(c => c.chapter === args.chapter);
+      if (!chapterConfig) {
+        throw new Error(`Invalid chapter number: ${args.chapter}`);
+      }
 
       // Parse config if provided
       let config = {
@@ -304,6 +383,13 @@ export const deployAllMekanisms = mutation({
         const distributed: any[] = [];
         const poolCopy = [...mekPool];
 
+        // If we have exactly the right amount or fewer, just use them all in order
+        if (poolCopy.length <= count) {
+          console.log(`Chapter ${chapter}: Using all ${poolCopy.length} available meks (requested ${count})`);
+          return poolCopy;
+        }
+
+        // If we have more than needed, distribute them with variety
         for (let i = 0; i < count && poolCopy.length > 0; i++) {
           const position = i / count; // 0 to 1 (bottom to top)
 
@@ -341,27 +427,27 @@ export const deployAllMekanisms = mutation({
           distributed.push(selectedMek);
         }
 
+        console.log(`Chapter ${chapter}: Distributed ${distributed.length} meks out of ${count} requested`);
         return distributed;
       };
 
-      // Build all node data
-      const allNormalNodes: any[] = [];
-      const allChallengerNodes: any[] = [];
-      const allMiniBossNodes: any[] = [];
-      const allFinalBossNodes: any[] = [];
+      // Process only this chapter
+      const chapterNormalNodes: any[] = [];
+      const chapterChallengerNodes: any[] = [];
+      const chapterMiniBossNodes: any[] = [];
+      const chapterFinalBossNodes: any[] = [];
 
-      chapterConfigs.forEach(chapter => {
-        // Normal Meks (350 per chapter) - use distribution algorithm
-        const normalMekPool = meks.filter(m =>
-          m.rank >= chapter.normalMekRange[0] &&
-          m.rank <= chapter.normalMekRange[1]
-        ).sort((a, b) => b.rank - a.rank); // Sort by rank descending (rarest first)
+      // Normal Meks (350 per chapter) - use distribution algorithm
+      const normalMekPool = meks.filter(m =>
+        m.rank >= chapterConfig.normalMekRange[0] &&
+        m.rank <= chapterConfig.normalMekRange[1]
+      ).sort((a, b) => b.rank - a.rank); // Sort by rank descending (rarest first)
 
-        const distributedNormalMeks = distributeNormalMeks(normalMekPool, chapter.chapter, 350);
+      const distributedNormalMeks = distributeNormalMeks(normalMekPool, args.chapter, 350);
 
-        distributedNormalMeks.forEach((mek, index) => {
-          allNormalNodes.push({
-            chapter: chapter.chapter,
+      distributedNormalMeks.forEach((mek, index) => {
+        chapterNormalNodes.push({
+          chapter: args.chapter,
             nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
@@ -372,25 +458,25 @@ export const deployAllMekanisms = mutation({
             goldReward: calculateReward(mek.rank, config.goldRange.min, config.goldRange.max, config.goldCurve),
             xpReward: calculateReward(mek.rank, config.xpRange.min, config.xpRange.max, config.xpCurve),
             essenceReward: calculateReward(mek.rank, config.essenceRange.min, config.essenceRange.max, config.essenceCurve),
-          });
         });
+      });
 
-        // Challengers (40 per chapter) - shuffle for variety
-        const challengerMekPool = meks.filter(m =>
-          m.rank >= chapter.challengerRange[0] &&
-          m.rank <= chapter.challengerRange[1]
-        );
+      // Challengers (40 per chapter) - shuffle for variety
+      const challengerMekPool = meks.filter(m =>
+        m.rank >= chapterConfig.challengerRange[0] &&
+        m.rank <= chapterConfig.challengerRange[1]
+      );
 
-        // Shuffle challengers using seeded random
-        const shuffledChallengers = [...challengerMekPool];
-        for (let i = shuffledChallengers.length - 1; i > 0; i--) {
-          const j = Math.floor(seededRandom(chapter.chapter * 2000 + i) * (i + 1));
-          [shuffledChallengers[i], shuffledChallengers[j]] = [shuffledChallengers[j], shuffledChallengers[i]];
-        }
+      // Shuffle challengers using seeded random
+      const shuffledChallengers = [...challengerMekPool];
+      for (let i = shuffledChallengers.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(args.chapter * 2000 + i) * (i + 1));
+        [shuffledChallengers[i], shuffledChallengers[j]] = [shuffledChallengers[j], shuffledChallengers[i]];
+      }
 
-        shuffledChallengers.slice(0, 40).forEach((mek, index) => {
-          allChallengerNodes.push({
-            chapter: chapter.chapter,
+      shuffledChallengers.slice(0, 40).forEach((mek, index) => {
+        chapterChallengerNodes.push({
+          chapter: args.chapter,
             nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
@@ -401,25 +487,25 @@ export const deployAllMekanisms = mutation({
             goldReward: calculateReward(mek.rank, config.goldRange.min * 2, config.goldRange.max * 2, config.goldCurve),
             xpReward: calculateReward(mek.rank, config.xpRange.min * 2, config.xpRange.max * 2, config.xpCurve),
             essenceReward: calculateReward(mek.rank, config.essenceRange.min * 1.5, config.essenceRange.max * 1.5, config.essenceCurve),
-          });
         });
+      });
 
-        // Mini-Bosses (9 per chapter) - select strategically
-        const miniBossMekPool = meks.filter(m =>
-          m.rank >= chapter.miniBossRange[0] &&
-          m.rank <= chapter.miniBossRange[1]
-        );
+      // Mini-Bosses (9 per chapter) - select strategically
+      const miniBossMekPool = meks.filter(m =>
+        m.rank >= chapterConfig.miniBossRange[0] &&
+        m.rank <= chapterConfig.miniBossRange[1]
+      );
 
-        // Shuffle mini-bosses for variety
-        const shuffledMiniBosses = [...miniBossMekPool];
-        for (let i = shuffledMiniBosses.length - 1; i > 0; i--) {
-          const j = Math.floor(seededRandom(chapter.chapter * 3000 + i) * (i + 1));
-          [shuffledMiniBosses[i], shuffledMiniBosses[j]] = [shuffledMiniBosses[j], shuffledMiniBosses[i]];
-        }
+      // Shuffle mini-bosses for variety
+      const shuffledMiniBosses = [...miniBossMekPool];
+      for (let i = shuffledMiniBosses.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(args.chapter * 3000 + i) * (i + 1));
+        [shuffledMiniBosses[i], shuffledMiniBosses[j]] = [shuffledMiniBosses[j], shuffledMiniBosses[i]];
+      }
 
-        shuffledMiniBosses.slice(0, 9).forEach((mek, index) => {
-          allMiniBossNodes.push({
-            chapter: chapter.chapter,
+      shuffledMiniBosses.slice(0, 9).forEach((mek, index) => {
+        chapterMiniBossNodes.push({
+          chapter: args.chapter,
             nodeIndex: index,
             rank: mek.rank,
             assetId: mek.assetId,
@@ -430,14 +516,14 @@ export const deployAllMekanisms = mutation({
             goldReward: calculateReward(mek.rank, config.goldRange.min * 5, config.goldRange.max * 5, config.goldCurve),
             xpReward: calculateReward(mek.rank, config.xpRange.min * 5, config.xpRange.max * 5, config.xpCurve),
             essenceReward: calculateReward(mek.rank, config.essenceRange.min * 3, config.essenceRange.max * 3, config.essenceCurve),
-          });
         });
+      });
 
-        // Final Boss (1 per chapter)
-        const finalBoss = meks.find(m => m.rank === chapter.finalBossRank);
-        if (finalBoss) {
-          allFinalBossNodes.push({
-            chapter: chapter.chapter,
+      // Final Boss (1 per chapter)
+      const finalBoss = meks.find(m => m.rank === chapterConfig.finalBossRank);
+      if (finalBoss) {
+        chapterFinalBossNodes.push({
+          chapter: args.chapter,
             rank: finalBoss.rank,
             assetId: finalBoss.assetId,
             sourceKey: finalBoss.sourceKey,
@@ -447,15 +533,74 @@ export const deployAllMekanisms = mutation({
             goldReward: calculateReward(finalBoss.rank, config.goldRange.min * 10, config.goldRange.max * 10, config.goldCurve),
             xpReward: calculateReward(finalBoss.rank, config.xpRange.min * 10, config.xpRange.max * 10, config.xpCurve),
             essenceReward: calculateReward(finalBoss.rank, config.essenceRange.min * 5, config.essenceRange.max * 5, config.essenceCurve),
-          });
-        }
+        });
+      }
+
+      // Update the deployment session with this chapter's data
+      const existingNormal = deployment.normalNodes ? JSON.parse(deployment.normalNodes) : [];
+      const existingChallenger = deployment.challengerNodes ? JSON.parse(deployment.challengerNodes) : [];
+      const existingMiniBoss = deployment.miniBossNodes ? JSON.parse(deployment.miniBossNodes) : [];
+      const existingFinalBoss = deployment.finalBossNodes ? JSON.parse(deployment.finalBossNodes) : [];
+
+      // Add this chapter's nodes to the existing ones
+      const updatedNormal = [...existingNormal.filter((n: any) => n.chapter !== args.chapter), ...chapterNormalNodes];
+      const updatedChallenger = [...existingChallenger.filter((n: any) => n.chapter !== args.chapter), ...chapterChallengerNodes];
+      const updatedMiniBoss = [...existingMiniBoss.filter((n: any) => n.chapter !== args.chapter), ...chapterMiniBossNodes];
+      const updatedFinalBoss = [...existingFinalBoss.filter((n: any) => n.chapter !== args.chapter), ...chapterFinalBossNodes];
+
+      // Update the deployment record
+      await ctx.db.patch(deployment._id, {
+        normalNodes: JSON.stringify(updatedNormal),
+        challengerNodes: JSON.stringify(updatedChallenger),
+        miniBossNodes: JSON.stringify(updatedMiniBoss),
+        finalBossNodes: JSON.stringify(updatedFinalBoss),
       });
 
-      // Get current active deployment to preserve event nodes
-      const activeDeployment = await ctx.db
+      return {
+        success: true,
+        sessionId: args.sessionId,
+        chapter: args.chapter,
+        counts: {
+          normalNodes: chapterNormalNodes.length,
+          challengerNodes: chapterChallengerNodes.length,
+          miniBossNodes: chapterMiniBossNodes.length,
+          finalBossNodes: chapterFinalBossNodes.length,
+        },
+        message: `Successfully deployed ${chapterNormalNodes.length} normal nodes, ${chapterChallengerNodes.length} challengers, ${chapterMiniBossNodes.length} mini-bosses, and ${chapterFinalBossNodes.length} final bosses to chapter ${args.chapter}`,
+      };
+    } catch (error) {
+      console.error("Chapter deployment error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  },
+});
+
+// Finalize deployment session by making it active
+export const finalizeDeployment = mutation({
+  args: {
+    sessionId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      // Find the deployment session
+      const deployment = await ctx.db
         .query("deployedStoryClimbData")
-        .filter((q) => q.eq(q.field("status"), "active"))
+        .filter((q) => q.eq(q.field("deploymentId"), args.sessionId))
         .first();
+
+      if (!deployment) {
+        throw new Error("Deployment session not found");
+      }
+
+      if (deployment.status === "active") {
+        return {
+          success: true,
+          message: "Deployment is already active",
+        };
+      }
 
       // Archive any currently active deployments
       const activeDeployments = await ctx.db
@@ -463,57 +608,82 @@ export const deployAllMekanisms = mutation({
         .filter((q) => q.eq(q.field("status"), "active"))
         .collect();
 
-      for (const deployment of activeDeployments) {
-        await ctx.db.patch(deployment._id, { status: "archived" });
+      for (const activeDeployment of activeDeployments) {
+        await ctx.db.patch(activeDeployment._id, { status: "archived" });
       }
 
-      // Generate deployment ID
-      const deploymentId = `deploy_all_meks_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // Get the next version number
-      const allDeployments = await ctx.db
-        .query("deployedStoryClimbData")
-        .order("desc")
-        .take(1);
-
-      const latestVersion = allDeployments.length > 0 ? (allDeployments[0].version || 0) : 0;
-      const newVersion = latestVersion + 1;
-
-      // Create new deployment with all node types
-      const deploymentRecord = await ctx.db.insert("deployedStoryClimbData", {
-        deploymentId,
-        deployedAt: Date.now(),
-        deployedBy: userId,
-        version: newVersion,
+      // Make this deployment active
+      await ctx.db.patch(deployment._id, {
         status: "active",
-        eventNodes: activeDeployment?.eventNodes || JSON.stringify([]), // Preserve existing event nodes
-        normalNodes: JSON.stringify(allNormalNodes),
-        challengerNodes: JSON.stringify(allChallengerNodes),
-        miniBossNodes: JSON.stringify(allMiniBossNodes),
-        finalBossNodes: JSON.stringify(allFinalBossNodes),
         configurationName: "All Mekanisms Deployment",
-        notes: args.notes || `Deployed all mekanisms to all 10 chapters`,
       });
+
+      // Get counts for summary
+      const normalNodes = JSON.parse(deployment.normalNodes || "[]");
+      const challengerNodes = JSON.parse(deployment.challengerNodes || "[]");
+      const miniBossNodes = JSON.parse(deployment.miniBossNodes || "[]");
+      const finalBossNodes = JSON.parse(deployment.finalBossNodes || "[]");
 
       return {
         success: true,
-        deploymentId,
-        version: newVersion,
+        deploymentId: deployment.deploymentId,
+        version: deployment.version,
         counts: {
-          normalNodes: allNormalNodes.length,
-          challengerNodes: allChallengerNodes.length,
-          miniBossNodes: allMiniBossNodes.length,
-          finalBossNodes: allFinalBossNodes.length,
+          normalNodes: normalNodes.length,
+          challengerNodes: challengerNodes.length,
+          miniBossNodes: miniBossNodes.length,
+          finalBossNodes: finalBossNodes.length,
         },
-        message: `Successfully deployed ${allNormalNodes.length} normal nodes, ${allChallengerNodes.length} challengers, ${allMiniBossNodes.length} mini-bosses, and ${allFinalBossNodes.length} final bosses across all 10 chapters (Version ${newVersion})`,
+        message: `Successfully activated deployment with ${normalNodes.length} normal nodes, ${challengerNodes.length} challengers, ${miniBossNodes.length} mini-bosses, and ${finalBossNodes.length} final bosses across all 10 chapters`,
       };
     } catch (error) {
-      console.error("Deployment error:", error);
+      console.error("Finalize deployment error:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
+  },
+});
+
+// Query deployment progress
+export const getDeploymentProgress = query({
+  args: {
+    sessionId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const deployment = await ctx.db
+      .query("deployedStoryClimbData")
+      .filter((q) => q.eq(q.field("deploymentId"), args.sessionId))
+      .first();
+
+    if (!deployment) {
+      return null;
+    }
+
+    const normalNodes = JSON.parse(deployment.normalNodes || "[]");
+    const challengerNodes = JSON.parse(deployment.challengerNodes || "[]");
+    const miniBossNodes = JSON.parse(deployment.miniBossNodes || "[]");
+    const finalBossNodes = JSON.parse(deployment.finalBossNodes || "[]");
+
+    // Count chapters deployed
+    const chaptersDeployed = new Set<number>();
+    [...normalNodes, ...challengerNodes, ...miniBossNodes, ...finalBossNodes].forEach((node: any) => {
+      if (node.chapter) chaptersDeployed.add(node.chapter);
+    });
+
+    return {
+      sessionId: deployment.deploymentId,
+      status: deployment.status,
+      chaptersCompleted: Array.from(chaptersDeployed).sort((a, b) => a - b),
+      totalChapters: 10,
+      counts: {
+        normalNodes: normalNodes.length,
+        challengerNodes: challengerNodes.length,
+        miniBossNodes: miniBossNodes.length,
+        finalBossNodes: finalBossNodes.length,
+      },
+    };
   },
 });
 

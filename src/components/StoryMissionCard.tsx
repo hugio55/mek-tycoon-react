@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
 import { TIER_COLORS, MODIFIER_COLORS } from '@/lib/chipRewardCalculator';
+import SuccessBar from '@/components/SuccessBar';
 
 // Type definitions
 interface MissionReward {
@@ -52,6 +53,18 @@ interface StoryMissionCardProps {
   // State
   isLocked?: boolean;
   isEmpty?: boolean;
+
+  // Difficulty system
+  currentDifficulty?: 'easy' | 'medium' | 'hard';
+  onDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  showDifficultySelector?: boolean;
+  difficultyConfig?: any; // DifficultyConfig from difficultyModifiers
+  mekContributions?: Array<{
+    mekId: string;
+    name: string;
+    rank: number;
+    contribution: number;
+  }>;
 }
 
 export default function StoryMissionCard({
@@ -88,7 +101,12 @@ export default function StoryMissionCard({
   style,
   rewardBarStyle = 1,
   isLocked = false,
-  isEmpty = false
+  isEmpty = false,
+  currentDifficulty = 'medium',
+  onDifficultyChange,
+  showDifficultySelector = false,
+  difficultyConfig,
+  mekContributions = []
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -239,6 +257,41 @@ export default function StoryMissionCard({
             </div>
           </div>
         </div>
+
+        {/* Compact Difficulty Selector - between rank bar and gold/XP */}
+        {showDifficultySelector && (
+          <div className="bg-black/80 border-b border-yellow-500/30 px-2 py-2">
+            <div className="flex gap-1 justify-center">
+              {(['easy', 'medium', 'hard'] as const).map(difficulty => {
+                const isSelected = currentDifficulty === difficulty;
+                const colors = {
+                  easy: { bg: 'bg-green-900/50', border: 'border-green-500/50', text: 'text-green-400', selectedBg: 'bg-green-900/80' },
+                  medium: { bg: 'bg-yellow-900/50', border: 'border-yellow-500/50', text: 'text-yellow-400', selectedBg: 'bg-yellow-900/80' },
+                  hard: { bg: 'bg-red-900/50', border: 'border-red-500/50', text: 'text-red-400', selectedBg: 'bg-red-900/80' }
+                };
+                const config = colors[difficulty];
+                const thresholds = { easy: '5%', medium: '30%', hard: '75%' };
+
+                return (
+                  <button
+                    key={difficulty}
+                    onClick={() => onDifficultyChange?.(difficulty)}
+                    className={`
+                      flex-1 px-2 py-1.5 border transition-all duration-200
+                      ${isSelected ? `${config.selectedBg} ${config.border} ring-1 ring-offset-1 ring-offset-black ${config.text.replace('400', '300')}` : `${config.bg} ${config.border} hover:${config.selectedBg}`}
+                      ${config.text} text-xs font-bold uppercase
+                    `}
+                  >
+                    <div className="text-center">
+                      <div className="text-[10px] opacity-60">REQ</div>
+                      <div className="font-mono">{thresholds[difficulty]}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Gold and XP Bar - Compact side-by-side */}
         <div className="relative bg-black/90 border-y border-yellow-500/30 overflow-hidden">
@@ -503,34 +556,47 @@ export default function StoryMissionCard({
             </div>
           </div>
 
-          {/* Success Chance Bar */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="mek-label-uppercase text-[10px]">Success Chance</span>
-              <span className={`text-lg font-bold ${
-                successChance >= 80 ? 'text-green-400' : 
-                successChance >= 50 ? 'text-yellow-400' : 
-                'text-orange-400'
-              }`}>
-                {successChance}%
-              </span>
+          {/* Success Chance Bar - using new SuccessBar component */}
+          {difficultyConfig ? (
+            <div className="mb-4">
+              <SuccessBar
+                currentSuccess={successChance}
+                difficultyConfig={difficultyConfig}
+                mekContributions={mekContributions}
+                showDetails={false}
+                height="h-8"
+              />
             </div>
-            <div className="bg-black/60 rounded-full h-6 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ease-out relative overflow-hidden ${
-                  successChance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
-                  successChance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
-                  'bg-gradient-to-r from-orange-500 to-orange-400'
-                }`}
-                style={{ width: `${successChance}%` }}
-              >
-                {/* Particle effects layers */}
-                <div className="mek-success-bar-particles" />
-                <div className="mek-success-bar-shimmer" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent mek-scan-effect" />
+          ) : (
+            // Fallback to old bar if no difficulty config
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="mek-label-uppercase text-[10px]">Success Chance</span>
+                <span className={`text-lg font-bold ${
+                  successChance >= 80 ? 'text-green-400' :
+                  successChance >= 50 ? 'text-yellow-400' :
+                  'text-orange-400'
+                }`}>
+                  {successChance}%
+                </span>
+              </div>
+              <div className="bg-black/60 rounded-full h-6 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ease-out relative overflow-hidden ${
+                    successChance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
+                    successChance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
+                    'bg-gradient-to-r from-orange-500 to-orange-400'
+                  }`}
+                  style={{ width: `${successChance}%` }}
+                >
+                  {/* Particle effects layers */}
+                  <div className="mek-success-bar-particles" />
+                  <div className="mek-success-bar-shimmer" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent mek-scan-effect" />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Deploy Section */}
           <div className="text-center relative">

@@ -47,19 +47,43 @@ export interface CalculatedRewards {
 
 /**
  * Calculate the number of Mek slots for a mission based on difficulty
+ * @param config - The difficulty configuration
+ * @param nodeId - Optional node ID for deterministic calculation
  */
-export function calculateMekSlots(config: DifficultyConfig): number {
+export function calculateMekSlots(config: DifficultyConfig, nodeId?: string): number {
+  // Generate a deterministic "random" value based on node ID if provided
+  let randomValue: number;
+  let hash = 0;
+
+  if (nodeId) {
+    // Create a hash from the node ID for deterministic behavior
+    for (let i = 0; i < nodeId.length; i++) {
+      hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+      hash = hash & hash;
+    }
+    // Convert hash to a value between 0 and 1
+    randomValue = Math.abs(hash % 1000) / 1000;
+  } else {
+    // Fall back to random if no nodeId provided
+    randomValue = Math.random();
+  }
+
   // For easy mode, check if it should be single slot
   if (config.difficulty === 'easy' && config.singleSlotChance > 0) {
-    const roll = Math.random() * 100;
+    const roll = randomValue * 100;
     if (roll < config.singleSlotChance) {
       return 1; // 75% chance for single slot on easy
     }
   }
 
-  // Otherwise, random between min and max
+  // Otherwise, calculate between min and max using the same random value
   const range = config.maxSlots - config.minSlots;
-  return config.minSlots + Math.floor(Math.random() * (range + 1));
+  // Use a different part of the hash for the range calculation
+  const rangeRandom = nodeId ?
+    Math.abs((hash >> 8) % 1000) / 1000 :
+    Math.random();
+
+  return config.minSlots + Math.floor(rangeRandom * (range + 1));
 }
 
 /**

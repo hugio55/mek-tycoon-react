@@ -14,6 +14,11 @@ interface EventNode {
   goldReward: number;
   xpReward: number;
   image?: string; // Path to the event image
+  mekSlots?: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
   variationBuffs?: string[]; // 4 variation buffs for this event
   essenceRewards?: Array<{
     variation: string;
@@ -69,6 +74,39 @@ const BOSS_VARIATIONS = {
 };
 
 export default function EventNodeEditor() {
+  // Calculate mek slots for an event using round-robin distribution
+  const calculateEventMekSlots = (eventNumber: number): { easy: number; medium: number; hard: number } => {
+    // Event numbers are 1-based
+    const index = eventNumber - 1;
+    const eventInChapter = ((eventNumber - 1) % 20) + 1; // 1-20 within each chapter
+
+    // Easy mode (2-3 slots): alternate 2,3,2,3... but event 20 is always 3
+    let easy: number;
+    if (eventInChapter === 20) {
+      easy = 3; // Event 20 always gets max
+    } else {
+      easy = 2 + (index % 2); // Alternates 2,3,2,3...
+    }
+
+    // Medium mode (4-6 slots): round robin 4,5,6,4,5,6... but event 20 is always 6
+    let medium: number;
+    if (eventInChapter === 20) {
+      medium = 6; // Event 20 always gets max
+    } else {
+      medium = 4 + (index % 3); // Round robin 4,5,6,4,5,6...
+    }
+
+    // Hard mode (7-8 slots): alternate 7,8,7,8... but event 20 is always 8
+    let hard: number;
+    if (eventInChapter === 20) {
+      hard = 8; // Event 20 always gets max
+    } else {
+      hard = 7 + (index % 2); // Alternates 7,8,7,8...
+    }
+
+    return { easy, medium, hard };
+  };
+
   const [itemSearchTerms, setItemSearchTerms] = useState<{ [key: number]: string }>({});
   const [showItemSearch, setShowItemSearch] = useState<{ [key: number]: boolean }>({});
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
@@ -121,11 +159,22 @@ export default function EventNodeEditor() {
     // Initialize with 200 events (20 per chapter × 10 chapters)
     const initialData: EventNode[] = [];
     for (let i = 1; i <= 200; i++) {
+      const eventInChapter = ((i - 1) % 20) + 1; // 1-20 within each chapter
+      const index = i - 1;
+
+      // Calculate mek slots with round-robin distribution
+      const mekSlots = {
+        easy: eventInChapter === 20 ? 3 : 2 + (index % 2),
+        medium: eventInChapter === 20 ? 6 : 4 + (index % 3),
+        hard: eventInChapter === 20 ? 8 : 7 + (index % 2)
+      };
+
       initialData.push({
         eventNumber: i,
         name: `Event ${i}`,
         goldReward: 100,
         xpReward: 10,
+        mekSlots,
         items: []
       });
     }
@@ -162,7 +211,12 @@ export default function EventNodeEditor() {
       try {
         const loadedData = JSON.parse(selectedConfig.data);
         if (loadedData.events) {
-          setEventsData(loadedData.events);
+          // Apply mek slots to loaded events (in case they don't have them)
+          const eventsWithSlots = loadedData.events.map((event: EventNode) => ({
+            ...event,
+            mekSlots: event.mekSlots || calculateEventMekSlots(event.eventNumber)
+          }));
+          setEventsData(eventsWithSlots);
         }
         if (loadedData.globalRanges) {
           setGlobalRanges(loadedData.globalRanges);
@@ -535,10 +589,10 @@ export default function EventNodeEditor() {
       }
     });
 
-    // Convert to sorted arrays - SORTED BY RARITY (least common first)
-    const sortedHeads = Array.from(headVariations.entries()).sort((a, b) => a[1] - b[1]);
-    const sortedBodies = Array.from(bodyVariations.entries()).sort((a, b) => a[1] - b[1]);
-    const sortedTraits = Array.from(traitVariations.entries()).sort((a, b) => a[1] - b[1]);
+    // Convert to sorted arrays - SORTED BY COMMONALITY (most common first, rarest last)
+    const sortedHeads = Array.from(headVariations.entries()).sort((a, b) => b[1] - a[1]);
+    const sortedBodies = Array.from(bodyVariations.entries()).sort((a, b) => b[1] - a[1]);
+    const sortedTraits = Array.from(traitVariations.entries()).sort((a, b) => b[1] - a[1]);
 
     const newBuffs: {[eventNumber: number]: VariationBuffInfo[]} = {};
     const usedCombinations = new Set<string>();
@@ -578,20 +632,20 @@ export default function EventNodeEditor() {
 
           if (slotIndex === 0) {
             // FIRST SLOT: Guarantee at least one relatively rare variation
-            // Early events get moderately rare (15-40% range of rarity)
-            // Late events get very rare (0-20% range of rarity)
-            const maxRarePercent = 0.4 - (overallProgress * 0.35); // 40% -> 5%
-            const minRarePercent = 0.15 - (overallProgress * 0.14); // 15% -> 1%
+            // Early events get moderately rare (60-85% position = moderately rare)
+            // Late events get very rare (80-99% position = very rare)
+            const minRarePercent = 0.6 + (overallProgress * 0.2); // 60% -> 80%
+            const maxRarePercent = 0.85 + (overallProgress * 0.14); // 85% -> 99%
 
             rarityIndex = Math.floor(
               sourceArray.length * (minRarePercent + Math.random() * (maxRarePercent - minRarePercent))
             );
           } else {
             // SLOTS 2-3: Mix of common and uncommon
-            // Early events: mostly common (50-90% range)
-            // Late events: more varied (20-70% range)
-            const minPercent = 0.5 - (overallProgress * 0.3); // 50% -> 20%
-            const maxPercent = 0.9 - (overallProgress * 0.2); // 90% -> 70%
+            // Early events: mostly common (10-50% range)
+            // Late events: more varied (30-80% range)
+            const minPercent = 0.1 + (overallProgress * 0.2); // 10% -> 30%
+            const maxPercent = 0.5 + (overallProgress * 0.3); // 50% -> 80%
 
             rarityIndex = Math.floor(
               sourceArray.length * (minPercent + Math.random() * (maxPercent - minPercent))
@@ -619,14 +673,14 @@ export default function EventNodeEditor() {
         const roll = Math.random();
 
         if (roll < 0.1 + overallProgress * 0.2) {
-          // Very rare (0-15% range) - more likely in later events
-          rarityIndex = Math.floor(Math.random() * sourceArray.length * 0.15);
+          // Very rare (85-100% range) - more likely in later events
+          rarityIndex = Math.floor(sourceArray.length * (0.85 + Math.random() * 0.15));
         } else if (roll < 0.5) {
           // Middle rarity (30-70% range)
           rarityIndex = Math.floor(sourceArray.length * (0.3 + Math.random() * 0.4));
         } else {
-          // Common (60-100% range)
-          rarityIndex = Math.floor(sourceArray.length * (0.6 + Math.random() * 0.4));
+          // Common (0-40% range)
+          rarityIndex = Math.floor(Math.random() * sourceArray.length * 0.4);
         }
 
         const [name, count] = sourceArray[rarityIndex];
@@ -1196,6 +1250,24 @@ export default function EventNodeEditor() {
                                     />
                                   </div>
 
+                                  {/* Mek Slots Display */}
+                                  {leftEvent.mekSlots && (
+                                    <div className="mb-1 text-[10px] space-y-0.5">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-green-400/70">Easy:</span>
+                                        <span className="text-green-300">{leftEvent.mekSlots.easy} slots</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-yellow-400/70">Med:</span>
+                                        <span className="text-yellow-300">{leftEvent.mekSlots.medium} slots</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-red-400/70">Hard:</span>
+                                        <span className="text-red-300">{leftEvent.mekSlots.hard} slots</span>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Event Image Path Display */}
                                   <div className="mb-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded">
                                     <span className="text-[10px] text-purple-400/60">
@@ -1363,6 +1435,24 @@ export default function EventNodeEditor() {
                                       className="w-20 px-1 py-0.5 bg-black/30 border border-blue-400/20 rounded text-xs text-blue-400"
                                     />
                                   </div>
+
+                                  {/* Mek Slots Display */}
+                                  {rightEvent.mekSlots && (
+                                    <div className="mb-1 text-[10px] space-y-0.5">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-green-400/70">Easy:</span>
+                                        <span className="text-green-300">{rightEvent.mekSlots.easy} slots</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-yellow-400/70">Med:</span>
+                                        <span className="text-yellow-300">{rightEvent.mekSlots.medium} slots</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-red-400/70">Hard:</span>
+                                        <span className="text-red-300">{rightEvent.mekSlots.hard} slots</span>
+                                      </div>
+                                    </div>
+                                  )}
 
                                   {/* Event Image Path Display */}
                                   <div className="mb-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded">

@@ -51,6 +51,8 @@ export default function NormalMekRewards() {
   const [isDeploying, setIsDeploying] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [deploymentMessage, setDeploymentMessage] = useState('');
+  const [deploymentMode, setDeploymentMode] = useState<'single' | 'all'>('all');
+  const [selectedDeployChapter, setSelectedDeployChapter] = useState(1);
 
   // Auto-save config to localStorage when it changes
   useEffect(() => {
@@ -62,8 +64,15 @@ export default function NormalMekRewards() {
   const saveConfiguration = useMutation(api.normalMekRewards.saveConfiguration);
   const updateConfiguration = useMutation(api.normalMekRewards.updateConfiguration);
   const savedConfigs = useQuery(api.normalMekRewards.getConfigurations);
-  const deployAllMekanisms = useMutation(api.deployedNodeData.deployAllMekanisms);
+  const initiateDeploymentSession = useMutation(api.deployedNodeData.initiateDeploymentSession);
+  const deployMekanismsChapter = useMutation(api.deployedNodeData.deployMekanismsChapter);
+  const finalizeDeployment = useMutation(api.deployedNodeData.finalizeDeployment);
   const [saveName, setSaveName] = useState('');
+  const [deploymentSessionId, setDeploymentSessionId] = useState<string | null>(null);
+  const [deploymentProgress, setDeploymentProgress] = useState<number>(0);
+  const getDeploymentProgress = useQuery(api.deployedNodeData.getDeploymentProgress,
+    deploymentSessionId ? { sessionId: deploymentSessionId } : "skip"
+  );
 
   // Query backend for real mek variation data
   const mekBySearch = useQuery(api.normalMekRewards.getMekByRankOrId, {
@@ -591,14 +600,28 @@ export default function NormalMekRewards() {
           )}
         </div>
 
-        {/* Deploy to All Chapters Button */}
-        <div className="mt-6 pt-6 border-t border-gray-700">
-          <button
-            onClick={() => setShowDeployModal(true)}
-            className="w-full px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold rounded-lg text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-          >
-            🚀 Deploy Mekanisms to All 10 Chapters
-          </button>
+        {/* Deploy Buttons */}
+        <div className="mt-6 pt-6 border-t border-gray-700 space-y-3">
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setDeploymentMode('single');
+                setShowDeployModal(true);
+              }}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold rounded-lg text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            >
+              📦 Deploy to Single Chapter
+            </button>
+            <button
+              onClick={() => {
+                setDeploymentMode('all');
+                setShowDeployModal(true);
+              }}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold rounded-lg text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            >
+              🚀 Deploy to All 10 Chapters
+            </button>
+          </div>
         </div>
       </div>
 
@@ -612,13 +635,31 @@ export default function NormalMekRewards() {
             className="bg-gray-900 border-2 border-orange-500/50 rounded-lg p-6 max-w-2xl w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold text-orange-400 mb-4">🚀 Deploy All Mekanisms</h3>
+            <h3 className="text-xl font-bold text-orange-400 mb-4">
+              {deploymentMode === 'single' ? '📦 Deploy Single Chapter' : '🚀 Deploy All Mekanisms'}
+            </h3>
 
             <div className="space-y-4">
+              {/* Chapter Selection for Single Mode */}
+              {deploymentMode === 'single' && (
+                <div className="bg-black/30 rounded p-4">
+                  <h4 className="text-cyan-400 font-bold mb-2">Select Chapter to Deploy</h4>
+                  <select
+                    value={selectedDeployChapter}
+                    onChange={(e) => setSelectedDeployChapter(parseInt(e.target.value))}
+                    className="px-3 py-2 bg-black/50 border border-cyan-400/30 rounded text-sm text-cyan-300"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(ch => (
+                      <option key={ch} value={ch}>Chapter {ch}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="bg-black/30 rounded p-4">
                 <h4 className="text-yellow-400 font-bold mb-2">Deployment Summary</h4>
                 <p className="text-sm text-gray-300 mb-3">
-                  This will deploy mekanisms to all 10 chapters with the following configuration:
+                  This will deploy mekanisms to {deploymentMode === 'single' ? `Chapter ${selectedDeployChapter}` : 'all 10 chapters'} with the following configuration:
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -634,10 +675,10 @@ export default function NormalMekRewards() {
                   <div>
                     <div className="text-gray-400 mb-2">Total Nodes to Deploy:</div>
                     <div className="pl-3 space-y-1">
-                      <div><span className="text-gray-300">Normal:</span> 3,500</div>
-                      <div><span className="text-orange-400">Challengers:</span> 400</div>
-                      <div><span className="text-red-400">Mini-Bosses:</span> 90</div>
-                      <div><span className="text-yellow-500">Final Bosses:</span> 10</div>
+                      <div><span className="text-gray-300">Normal:</span> {deploymentMode === 'single' ? '350' : '3,500'}</div>
+                      <div><span className="text-orange-400">Challengers:</span> {deploymentMode === 'single' ? '40' : '400'}</div>
+                      <div><span className="text-red-400">Mini-Bosses:</span> {deploymentMode === 'single' ? '9' : '90'}</div>
+                      <div><span className="text-yellow-500">Final Bosses:</span> {deploymentMode === 'single' ? '1' : '10'}</div>
                     </div>
                   </div>
                 </div>
@@ -645,7 +686,7 @@ export default function NormalMekRewards() {
 
               <div className="bg-orange-500/10 border border-orange-500/30 rounded p-4">
                 <p className="text-sm text-orange-300">
-                  <strong>⚠️ Warning:</strong> This will immediately update ALL mekanisms across ALL chapters in Story Climb.
+                  <strong>⚠️ Warning:</strong> This will immediately update {deploymentMode === 'single' ? `all mekanisms in Chapter ${selectedDeployChapter}` : 'ALL mekanisms across ALL chapters'} in Story Climb.
                   The current configuration will be archived and can be rolled back if needed.
                 </p>
               </div>
@@ -654,9 +695,22 @@ export default function NormalMekRewards() {
                 <div className={`p-3 rounded ${
                   deploymentMessage.includes('Success')
                     ? 'bg-green-500/10 border border-green-500/30 text-green-300'
-                    : 'bg-red-500/10 border border-red-500/30 text-red-300'
+                    : deploymentMessage.includes('Error') || deploymentMessage.includes('failed')
+                    ? 'bg-red-500/10 border border-red-500/30 text-red-300'
+                    : 'bg-blue-500/10 border border-blue-500/30 text-blue-300'
                 }`}>
                   {deploymentMessage}
+                  {isDeploying && deploymentProgress > 0 && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 transition-all duration-300"
+                          style={{ width: `${deploymentProgress}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">{deploymentProgress}% complete</div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -666,25 +720,104 @@ export default function NormalMekRewards() {
                 onClick={async () => {
                   setIsDeploying(true);
                   setDeploymentMessage('');
+                  setDeploymentProgress(0);
 
                   try {
-                    const result = await deployAllMekanisms({
-                      normalNodeConfig: JSON.stringify(config),
-                      notes: `Deployed with config: Gold ${config.goldRange.min}-${config.goldRange.max}, XP ${config.xpRange.min}-${config.xpRange.max}, Essence ${config.essenceRange.min}-${config.essenceRange.max}`
-                    });
+                    if (deploymentMode === 'single') {
+                      // Single chapter deployment
+                      setDeploymentMessage(`📦 Initiating deployment for Chapter ${selectedDeployChapter}...`);
+                      const sessionResult = await initiateDeploymentSession({
+                        normalNodeConfig: JSON.stringify(config),
+                        notes: `Single chapter deployment - Chapter ${selectedDeployChapter}`
+                      });
 
-                    if (result.success) {
-                      setDeploymentMessage(`✅ Success! ${result.message}`);
-                      setTimeout(() => {
-                        setShowDeployModal(false);
-                        setDeploymentMessage('');
-                      }, 3000);
+                      if (!sessionResult.success) {
+                        throw new Error(sessionResult.error || 'Failed to initiate session');
+                      }
+
+                      const sessionId = sessionResult.sessionId;
+                      setDeploymentSessionId(sessionId);
+
+                      // Deploy the selected chapter
+                      setDeploymentMessage(`📦 Deploying Chapter ${selectedDeployChapter}...`);
+                      setDeploymentProgress(50);
+
+                      const chapterResult = await deployMekanismsChapter({
+                        sessionId,
+                        chapter: selectedDeployChapter,
+                        normalNodeConfig: JSON.stringify(config)
+                      });
+
+                      if (!chapterResult.success) {
+                        throw new Error(`Failed to deploy chapter ${selectedDeployChapter}: ${chapterResult.error}`);
+                      }
+
+                      // Finalize deployment
+                      setDeploymentMessage('✨ Finalizing deployment...');
+                      setDeploymentProgress(75);
+
+                      const finalResult = await finalizeDeployment({ sessionId });
+
+                      if (!finalResult.success) {
+                        throw new Error(finalResult.error || 'Failed to finalize deployment');
+                      }
+
+                      setDeploymentMessage(`✅ Success! Chapter ${selectedDeployChapter} deployed successfully`);
+                      setDeploymentProgress(100);
                     } else {
-                      setDeploymentMessage(`❌ Error: ${result.error}`);
+                      // All chapters deployment
+                      setDeploymentMessage('🚀 Initiating deployment session...');
+                      const sessionResult = await initiateDeploymentSession({
+                        normalNodeConfig: JSON.stringify(config),
+                        notes: `Deployed with config: Gold ${config.goldRange.min}-${config.goldRange.max}, XP ${config.xpRange.min}-${config.xpRange.max}, Essence ${config.essenceRange.min}-${config.essenceRange.max}`
+                      });
+
+                      if (!sessionResult.success) {
+                        throw new Error(sessionResult.error || 'Failed to initiate session');
+                      }
+
+                      const sessionId = sessionResult.sessionId;
+                      setDeploymentSessionId(sessionId);
+
+                      // Deploy each chapter
+                      for (let chapter = 1; chapter <= 10; chapter++) {
+                        setDeploymentMessage(`📦 Deploying Chapter ${chapter} of 10...`);
+                        setDeploymentProgress(chapter * 10);
+
+                        const chapterResult = await deployMekanismsChapter({
+                          sessionId,
+                          chapter,
+                          normalNodeConfig: JSON.stringify(config)
+                        });
+
+                        if (!chapterResult.success) {
+                          throw new Error(`Failed to deploy chapter ${chapter}: ${chapterResult.error}`);
+                        }
+                      }
+
+                      // Finalize deployment
+                      setDeploymentMessage('✨ Finalizing deployment...');
+                      const finalResult = await finalizeDeployment({ sessionId });
+
+                      if (!finalResult.success) {
+                        throw new Error(finalResult.error || 'Failed to finalize deployment');
+                      }
+
+                      setDeploymentMessage(`✅ Success! ${finalResult.message}`);
+                      setDeploymentProgress(100);
                     }
+
+                    setTimeout(() => {
+                      setShowDeployModal(false);
+                      setDeploymentMessage('');
+                      setDeploymentSessionId(null);
+                      setDeploymentProgress(0);
+                    }, 3000);
                   } catch (error) {
                     console.error('Deployment failed:', error);
                     setDeploymentMessage(`❌ Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    setDeploymentSessionId(null);
+                    setDeploymentProgress(0);
                   } finally {
                     setIsDeploying(false);
                   }

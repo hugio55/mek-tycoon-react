@@ -15,6 +15,14 @@ interface SuccessBarProps {
   showDetails?: boolean;
   height?: string;
   className?: string;
+  baseRewards?: {
+    gold: number;
+    xp: number;
+  };
+  potentialRewards?: Array<{
+    name: string;
+    chance: number;
+  }>;
 }
 
 export default function SuccessBar({
@@ -23,7 +31,9 @@ export default function SuccessBar({
   mekContributions = [],
   showDetails = true,
   height = 'h-12',
-  className = ''
+  className = '',
+  baseRewards = { gold: 100, xp: 50 },
+  potentialRewards = []
 }: SuccessBarProps) {
   const colors = getDifficultyColors(difficultyConfig.difficulty);
   const greenLine = difficultyConfig.successGreenLine;
@@ -75,23 +85,11 @@ export default function SuccessBar({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-red-500 rounded-full" />
-            <span className="text-xs text-gray-400">Risk</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: colors.primary }}
-            />
-            <span className="text-xs text-gray-400">{greenLine}%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span className="text-xs text-gray-400">Bonus</span>
-          </div>
-        </div>
+        {status.text && (
+          <span className={`text-sm font-bold ${status.color} ${status.glow ? 'animate-pulse' : ''}`}>
+            {status.text}
+          </span>
+        )}
       </div>
 
       {/* Main Success Bar */}
@@ -129,13 +127,14 @@ export default function SuccessBar({
           />
         </div>
 
-        {/* Green line marker */}
+        {/* Green line marker - more visible */}
         <div
-          className="absolute top-0 bottom-0 w-1 shadow-2xl"
+          className="absolute top-0 bottom-0 w-1 shadow-2xl z-20"
           style={{
             left: `${greenLine}%`,
             backgroundColor: colors.primary,
-            boxShadow: `0 0 10px ${colors.glow}`
+            boxShadow: `0 0 20px ${colors.glow}, 0 0 10px ${colors.primary}`,
+            filter: 'brightness(1.5)'
           }}
         >
           {/* Green line label */}
@@ -178,11 +177,64 @@ export default function SuccessBar({
         </div>
       </div>
 
-      {/* Overshoot bonus indicator */}
+      {/* Overshoot bonus details - shows real-time reward changes */}
       {overshootBonus > 0 && (
-        <div className="mt-2 flex items-center justify-between bg-green-900/20 border border-green-500/30 rounded-lg px-3 py-2">
-          <span className="text-xs text-green-400">Overshoot Bonus Active!</span>
-          <span className="text-sm font-bold text-green-400">+{overshootBonus.toFixed(0)}% Rewards</span>
+        <div className="mt-2 bg-green-900/20 border border-green-500/30 rounded-lg px-3 py-2">
+          <div className="text-xs text-green-400 font-semibold mb-2">Overshoot Bonus Active! +{overshootBonus.toFixed(0)}%</div>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {/* Gold and XP changes */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-400">Gold:</span>
+                <span>
+                  <span className="text-gray-500">{Math.round(baseRewards.gold * difficultyConfig.goldMultiplier)}</span>
+                  <span className="text-gray-500"> → </span>
+                  <span className="text-green-400 font-bold">
+                    {Math.round(baseRewards.gold * difficultyConfig.goldMultiplier * (1 + overshootBonus / 100))}
+                  </span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">XP:</span>
+                <span>
+                  <span className="text-gray-500">{Math.round(baseRewards.xp * difficultyConfig.xpMultiplier)}</span>
+                  <span className="text-gray-500"> → </span>
+                  <span className="text-green-400 font-bold">
+                    {Math.round(baseRewards.xp * difficultyConfig.xpMultiplier * (1 + overshootBonus / 100))}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Reward chances changes */}
+            <div>
+              <div className="text-gray-400 mb-1">Reward Chances:</div>
+              {potentialRewards.slice(0, 3).map((reward, idx) => {
+                // Calculate skewed chances - rarer items get bigger boost
+                const rarityMultiplier = idx === 0 ? 1.0 : idx === 1 ? 1.2 : 1.5;
+                const boostedChance = Math.min(100, reward.chance * (1 + (overshootBonus / 100) * rarityMultiplier));
+                return (
+                  <div key={reward.name} className="flex items-center justify-between">
+                    <span className="text-gray-500 truncate max-w-[80px]" title={reward.name}>
+                      {reward.name.length > 10 ? reward.name.substring(0, 10) + '...' : reward.name}:
+                    </span>
+                    <span>
+                      <span className="text-gray-500">{reward.chance}%</span>
+                      <span className="text-gray-500"> → </span>
+                      <span className="text-green-400 font-bold">{boostedChance.toFixed(0)}%</span>
+                    </span>
+                  </div>
+                );
+              })}
+              {/* Essence boost */}
+              <div className="flex items-center justify-between mt-1 pt-1 border-t border-gray-700">
+                <span className="text-gray-400">Essence:</span>
+                <span className="text-green-400 font-bold">
+                  ×{(difficultyConfig.essenceAmountMultiplier * (1 + overshootBonus / 100)).toFixed(1)}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
