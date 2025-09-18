@@ -95,6 +95,8 @@ export default function StoryMissionCard({
   const [showLightbox, setShowLightbox] = useState(false);
   const [isHoveringDeployButton, setIsHoveringDeployButton] = useState(false);
   const [showDeployTooltip, setShowDeployTooltip] = useState(false);
+  const [selectedChip, setSelectedChip] = useState<{ tier: number; modifier: string } | null>(null);
+  const [clickedChip, setClickedChip] = useState<{ tier: number; modifier: string } | null>(null);
 
   const formatGoldAmount = (amount: number): string => {
     if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
@@ -175,8 +177,8 @@ export default function StoryMissionCard({
   }
   
   return (
-    <div 
-      className="relative w-full max-w-md mx-auto"
+    <div
+      className="relative w-full max-w-[320px] mx-auto"
       style={{ transform: `scale(${scale})`, transformOrigin: 'top center', ...style }}
     >
       <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
@@ -194,7 +196,7 @@ export default function StoryMissionCard({
                   src={mekImage}
                   alt={mekName}
                   fill
-                  className="object-cover transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+                  className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
                   style={{ imageRendering: 'crisp-edges' }}
                 />
                 {/* Hover overlay */}
@@ -283,15 +285,16 @@ export default function StoryMissionCard({
 
                 if (isChipReward && chipMatch) {
                   const tier = parseInt(chipMatch[1]);
-                  const modifier = chipMatch[2].toLowerCase();
+                  const modifier = chipMatch[2].toUpperCase();
 
-                  // Get color from TIER_COLORS array (0-indexed)
-                  if (tier >= 1 && tier <= 10) {
-                    chipColor = TIER_COLORS[tier - 1];
+                  // Get color from MODIFIER_COLORS based on the modifier letter
+                  const modifierColor = MODIFIER_COLORS[modifier as keyof typeof MODIFIER_COLORS];
+                  if (modifierColor) {
+                    chipColor = modifierColor;
                   }
 
                   // Build chip icon path
-                  const chipFileName = `${tier}${modifier}.webp`;
+                  const chipFileName = `${tier}${modifier.toLowerCase()}.webp`;
                   chipIcon = `/chip-images/uni-chips/uni chips 75px webp/${chipFileName}`;
                 }
 
@@ -299,25 +302,58 @@ export default function StoryMissionCard({
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {isChipReward && chipIcon ? (
-                        <div className="w-5 h-5 relative">
+                        <div
+                          className="w-5 h-5 relative cursor-pointer transition-all duration-200 hover:scale-125 active:scale-95"
+                          onClick={() => {
+                            if (chipMatch) {
+                              const tier = parseInt(chipMatch[1]);
+                              const modifier = chipMatch[2].toLowerCase();
+                              setClickedChip({ tier, modifier });
+                              setSelectedChip({ tier, modifier });
+                            }
+                          }}
+                          onMouseEnter={() => {
+                            if (chipMatch) {
+                              const tier = parseInt(chipMatch[1]);
+                              const modifier = chipMatch[2].toLowerCase();
+                              setSelectedChip({ tier, modifier });
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            if (!clickedChip) {
+                              setSelectedChip(null);
+                            }
+                          }}
+                        >
                           <Image
                             src={chipIcon}
                             alt={reward.name}
                             fill
-                            className="object-contain"
+                            className="object-contain drop-shadow-[0_0_4px_rgba(250,182,23,0.3)] hover:drop-shadow-[0_0_8px_rgba(250,182,23,0.6)]"
+                            style={{
+                              filter: selectedChip?.tier === parseInt(chipMatch[1]) && selectedChip?.modifier === chipMatch[2].toLowerCase()
+                                ? 'brightness(1.2)'
+                                : 'brightness(1)'
+                            }}
                           />
+                          {/* Click animation ring */}
+                          {clickedChip?.tier === parseInt(chipMatch[1]) && clickedChip?.modifier === chipMatch[2].toLowerCase() && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              <div className="absolute inset-0 rounded-full border-2 border-yellow-400 animate-ping" />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="w-4 h-4 bg-yellow-500/20 rounded" />
                       )}
-                      <span className="text-xs" style={{ color: isChipReward ? chipColor : getRarityTier(reward.chance).color }}>
+                      <span className="text-[11px]" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
                         {reward.name}
                       </span>
                       {reward.quantity && (
                         <span className="text-[10px] text-gray-500">x{reward.quantity}</span>
                       )}
                     </div>
-                    <span className="text-xs font-bold" style={{ color: isChipReward ? chipColor : getRarityTier(reward.chance).color }}>
+                    <span className="text-[11px] font-bold" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
                       {reward.chance}%
                     </span>
                   </div>
@@ -554,6 +590,74 @@ export default function StoryMissionCard({
           <div className="mek-overlay-metal-texture"></div>
         </div>
       </div>
+
+      {/* Lightbox for chip image */}
+      {selectedChip && clickedChip && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center"
+          onClick={() => {
+            setSelectedChip(null);
+            setClickedChip(null);
+          }}
+        >
+          {/* Background overlay */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          {/* Chip image container */}
+          <div
+            className="relative flex items-center justify-center p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Glow effect behind chip - using modifier color */}
+            <div
+              className="absolute w-[500px] h-[500px] rounded-full opacity-40"
+              style={{
+                background: `radial-gradient(circle, ${MODIFIER_COLORS[selectedChip.modifier.toUpperCase() as keyof typeof MODIFIER_COLORS] || '#999999'}88 0%, transparent 70%)`,
+                filter: 'blur(40px)'
+              }}
+            />
+
+            {/* Chip image */}
+            <div className="relative">
+              <Image
+                src={`/chip-images/uni-chips/uni chips 700px webp/${selectedChip.tier}${selectedChip.modifier}.webp`}
+                alt={`Tier ${selectedChip.tier} ${selectedChip.modifier.toUpperCase()} Universal Chip`}
+                width={700}
+                height={700}
+                className="relative z-10 animate-in fade-in zoom-in-95 duration-300 drop-shadow-[0_0_30px_rgba(250,182,23,0.5)]"
+                style={{ imageRendering: 'crisp-edges' }}
+              />
+
+              {/* Chip info */}
+              <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+                <div
+                  className="text-2xl font-bold uppercase tracking-wider"
+                  style={{
+                    color: MODIFIER_COLORS[selectedChip.modifier.toUpperCase() as keyof typeof MODIFIER_COLORS] || '#999999',
+                    textShadow: `0 0 20px ${MODIFIER_COLORS[selectedChip.modifier.toUpperCase() as keyof typeof MODIFIER_COLORS] || '#999999'}88, 0 0 40px ${MODIFIER_COLORS[selectedChip.modifier.toUpperCase() as keyof typeof MODIFIER_COLORS] || '#999999'}44`
+                  }}
+                >
+                  Tier {selectedChip.tier} {selectedChip.modifier.toUpperCase()}
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Universal Chip</div>
+              </div>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setSelectedChip(null);
+                setClickedChip(null);
+              }}
+              className="absolute top-4 right-4 text-4xl text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
+              style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+            >
+              ×
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Lightbox for mek image */}
       {showLightbox && mekImage && typeof window !== 'undefined' && createPortal(

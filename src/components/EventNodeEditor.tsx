@@ -13,6 +13,8 @@ interface EventNode {
   name: string;
   goldReward: number;
   xpReward: number;
+  image?: string; // Path to the event image
+  variationBuffs?: string[]; // 4 variation buffs for this event
   essenceRewards?: Array<{
     variation: string;
     abundanceRank: number; // 1-80, where 1 is least abundant
@@ -84,12 +86,25 @@ export default function EventNodeEditor() {
     description: string;
   }>({ name: '', type: 'frame', description: '' });
 
+  // Batch image assignment
+  const [eventImagesFolder, setEventImagesFolder] = useState<string>('/event-images/450px webp');
+
   // Deployment state
   const [showDeploymentModal, setShowDeploymentModal] = useState(false);
   const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus>({
     isDeploying: false,
   });
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+
+  // Variation buff assignment state with type and count tracking
+  interface VariationBuffInfo {
+    name: string;
+    type: 'head' | 'body' | 'trait';
+    count: number;
+  }
+  const [variationBuffs, setVariationBuffs] = useState<{[eventNumber: number]: VariationBuffInfo[]}>({});
+  const [buffAssignmentMethod, setBuffAssignmentMethod] = useState<'tiered' | 'balanced' | 'random'>('tiered');
+  const [showBuffPreview, setShowBuffPreview] = useState(false);
 
   // Global ranges for all 200 events
   const [globalRanges, setGlobalRanges] = useState({
@@ -151,6 +166,9 @@ export default function EventNodeEditor() {
         }
         if (loadedData.globalRanges) {
           setGlobalRanges(loadedData.globalRanges);
+        }
+        if (loadedData.eventImagesFolder) {
+          setEventImagesFolder(loadedData.eventImagesFolder);
         }
       } catch (error) {
         console.error('Failed to parse configuration data:', error);
@@ -245,6 +263,47 @@ export default function EventNodeEditor() {
     setEventsData(newEventsData);
   };
 
+  // Update event image
+  const updateEventImage = (eventIndex: number, imagePath: string) => {
+    const newEventsData = [...eventsData];
+    newEventsData[eventIndex].image = imagePath;
+    setEventsData(newEventsData);
+  };
+
+  // Batch assign images from folder
+  const batchAssignImages = async () => {
+    console.log('Starting batch assignment with folder:', eventImagesFolder);
+    const newEventsData = eventsData.map((event, index) => {
+      // Replace spaces with %20 for URL compatibility
+      const encodedFolder = eventImagesFolder.replace(/ /g, '%20');
+      const imagePath = `${encodedFolder}/${event.eventNumber}.webp`;
+      console.log(`Event ${event.eventNumber}: ${imagePath}`);
+      return {
+        ...event,
+        image: imagePath
+      };
+    });
+    setEventsData(newEventsData);
+    console.log('Batch assignment complete, first 3 events:', newEventsData.slice(0, 3));
+
+    // Auto-save the configuration if there's a current config
+    if (currentConfigId) {
+      try {
+        await updateConfiguration({
+          configId: currentConfigId,
+          data: JSON.stringify({ events: newEventsData, globalRanges, eventImagesFolder }),
+          timestamp: Date.now(),
+        });
+        alert(`Successfully assigned images and saved to "${currentConfigName}"!`);
+      } catch (error) {
+        console.error('Failed to auto-save after batch assignment:', error);
+        alert(`Images assigned but auto-save failed. Please click "Update" to save manually.`);
+      }
+    } else {
+      alert(`Successfully assigned images! Click "Update" or save as a new configuration to persist changes.`);
+    }
+  };
+
   // Add item to event
   const addItemToEvent = (eventIndex: number, item: any) => {
     const newEventsData = [...eventsData];
@@ -327,7 +386,7 @@ export default function EventNodeEditor() {
     try {
       const result = await saveConfiguration({
         name: saveName,
-        data: JSON.stringify({ events: eventsData, globalRanges }),
+        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder }),
         timestamp: Date.now(),
       });
       alert('Event configuration saved successfully!');
@@ -356,7 +415,7 @@ export default function EventNodeEditor() {
     try {
       await updateConfiguration({
         configId: currentConfigId,
-        data: JSON.stringify({ events: eventsData, globalRanges }),
+        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder }),
         timestamp: Date.now(),
       });
       alert('Configuration updated successfully!');
@@ -455,6 +514,156 @@ export default function EventNodeEditor() {
     [2, 22, 42, 62],  // Event 19
     [1, 21, 41, 61],  // Event 20 - most rare of the 80 least abundant
   ];
+
+  // Generate variation buffs for all events using tiered system
+  const generateVariationBuffs = () => {
+    // Track variations by type with their counts
+    const headVariations: Map<string, number> = new Map();
+    const bodyVariations: Map<string, number> = new Map();
+    const traitVariations: Map<string, number> = new Map();
+
+    // Count all variations in the collection
+    (mekRarityMaster as MekData[]).forEach(mek => {
+      if (!BOSS_VARIATIONS.heads.has(mek.head)) {
+        headVariations.set(mek.head, (headVariations.get(mek.head) || 0) + 1);
+      }
+      if (!BOSS_VARIATIONS.bodies.has(mek.body)) {
+        bodyVariations.set(mek.body, (bodyVariations.get(mek.body) || 0) + 1);
+      }
+      if (!BOSS_VARIATIONS.traits.has(mek.trait)) {
+        traitVariations.set(mek.trait, (traitVariations.get(mek.trait) || 0) + 1);
+      }
+    });
+
+    // Convert to sorted arrays - SORTED BY RARITY (least common first)
+    const sortedHeads = Array.from(headVariations.entries()).sort((a, b) => a[1] - b[1]);
+    const sortedBodies = Array.from(bodyVariations.entries()).sort((a, b) => a[1] - b[1]);
+    const sortedTraits = Array.from(traitVariations.entries()).sort((a, b) => a[1] - b[1]);
+
+    const newBuffs: {[eventNumber: number]: VariationBuffInfo[]} = {};
+    const usedCombinations = new Set<string>();
+
+    // Generate buffs for each event
+    for (let eventNum = 1; eventNum <= 200; eventNum++) {
+      const chapter = Math.ceil(eventNum / 20);
+      const eventInChapter = ((eventNum - 1) % 20) + 1;
+      const overallProgress = ((eventNum - 1) / 199); // 0 to 1 overall
+
+      let selectedBuffs: VariationBuffInfo[] = [];
+      let attempts = 0;
+
+      do {
+        selectedBuffs = [];
+        const usedNames = new Set<string>();
+
+        // ENSURE we get one of each type first (head, body, trait)
+        const types: ('head' | 'body' | 'trait')[] = ['head', 'body', 'trait'];
+
+        // Shuffle types for randomness
+        for (let i = types.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [types[i], types[j]] = [types[j], types[i]];
+        }
+
+        // Pick one of each type for the first 3 slots
+        for (let slotIndex = 0; slotIndex < 3; slotIndex++) {
+          const type = types[slotIndex];
+          let sourceArray: [string, number][];
+
+          if (type === 'head') sourceArray = sortedHeads;
+          else if (type === 'body') sourceArray = sortedBodies;
+          else sourceArray = sortedTraits;
+
+          let rarityIndex: number;
+
+          if (slotIndex === 0) {
+            // FIRST SLOT: Guarantee at least one relatively rare variation
+            // Early events get moderately rare (15-40% range of rarity)
+            // Late events get very rare (0-20% range of rarity)
+            const maxRarePercent = 0.4 - (overallProgress * 0.35); // 40% -> 5%
+            const minRarePercent = 0.15 - (overallProgress * 0.14); // 15% -> 1%
+
+            rarityIndex = Math.floor(
+              sourceArray.length * (minRarePercent + Math.random() * (maxRarePercent - minRarePercent))
+            );
+          } else {
+            // SLOTS 2-3: Mix of common and uncommon
+            // Early events: mostly common (50-90% range)
+            // Late events: more varied (20-70% range)
+            const minPercent = 0.5 - (overallProgress * 0.3); // 50% -> 20%
+            const maxPercent = 0.9 - (overallProgress * 0.2); // 90% -> 70%
+
+            rarityIndex = Math.floor(
+              sourceArray.length * (minPercent + Math.random() * (maxPercent - minPercent))
+            );
+          }
+
+          const [name, count] = sourceArray[rarityIndex];
+
+          if (!usedNames.has(name)) {
+            usedNames.add(name);
+            selectedBuffs.push({ name, type, count });
+          }
+        }
+
+        // For the 4th slot: wildcard with full range possibility
+        const fourthType = Math.random() < 0.4 ? 'head' : (Math.random() < 0.7 ? 'body' : 'trait');
+        let sourceArray: [string, number][];
+
+        if (fourthType === 'head') sourceArray = sortedHeads;
+        else if (fourthType === 'body') sourceArray = sortedBodies;
+        else sourceArray = sortedTraits;
+
+        // 4th slot can be anything, but bias toward middle rarities
+        let rarityIndex: number;
+        const roll = Math.random();
+
+        if (roll < 0.1 + overallProgress * 0.2) {
+          // Very rare (0-15% range) - more likely in later events
+          rarityIndex = Math.floor(Math.random() * sourceArray.length * 0.15);
+        } else if (roll < 0.5) {
+          // Middle rarity (30-70% range)
+          rarityIndex = Math.floor(sourceArray.length * (0.3 + Math.random() * 0.4));
+        } else {
+          // Common (60-100% range)
+          rarityIndex = Math.floor(sourceArray.length * (0.6 + Math.random() * 0.4));
+        }
+
+        const [name, count] = sourceArray[rarityIndex];
+
+        if (!usedNames.has(name)) {
+          selectedBuffs.push({ name, type: fourthType, count });
+        }
+
+        // Sort for consistent comparison
+        const combinationKey = selectedBuffs.map(b => b.name).sort().join('|');
+
+        // Check for uniqueness
+        if (!usedCombinations.has(combinationKey) && selectedBuffs.length === 4) {
+          usedCombinations.add(combinationKey);
+          break;
+        }
+
+        attempts++;
+      } while (attempts < 100); // Safety limit
+
+      // Store just the names for the event data (backward compatibility)
+      const buffNames = selectedBuffs.map(b => b.name);
+
+      // Update events with the variation buff names
+      const newEvents = [...eventsData];
+      if (newEvents[eventNum - 1]) {
+        newEvents[eventNum - 1].variationBuffs = buffNames;
+      }
+      setEventsData(newEvents);
+
+      // Store full info for display
+      newBuffs[eventNum] = selectedBuffs;
+    }
+
+    setVariationBuffs(newBuffs);
+    console.log('Generated variation buffs for all 200 events');
+  };
 
   // Calculate and distribute essence rewards for a chapter using variations NOT in chapter
   const calculateEssenceDistribution = (chapterNumber: number) => {
@@ -785,6 +994,107 @@ export default function EventNodeEditor() {
           </button>
         </div>
 
+        {/* Variation Buff Assignment System */}
+        <div className="mb-4 bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded p-3">
+          <h5 className="text-yellow-400 text-sm font-bold mb-2 flex items-center gap-2">
+            <span>⚔️</span> Variation Buff Assignment
+          </h5>
+
+          <div className="text-xs text-gray-400 mb-3">
+            Assign 4 variation buffs to each event. Uses a tiered rarity system with increasing difficulty.
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-gray-400">Assignment Method</label>
+              <select
+                value={buffAssignmentMethod}
+                onChange={(e) => setBuffAssignmentMethod(e.target.value as any)}
+                className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-gray-300"
+              >
+                <option value="tiered">Tiered Rarity (Recommended)</option>
+                <option value="balanced">Balanced Distribution</option>
+                <option value="random">Pure Random</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={generateVariationBuffs}
+                className="w-full px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-black font-semibold rounded text-sm transition-colors"
+              >
+                Generate All Buffs
+              </button>
+            </div>
+          </div>
+
+          {/* Preview toggle */}
+          <button
+            onClick={() => setShowBuffPreview(!showBuffPreview)}
+            className="text-xs text-yellow-400 hover:text-yellow-300 underline"
+          >
+            {showBuffPreview ? 'Hide' : 'Show'} Preview
+          </button>
+
+          {/* Preview section */}
+          {showBuffPreview && (
+            <div className="mt-3 space-y-2 max-h-48 overflow-y-auto bg-black/30 rounded p-2">
+              <div className="text-xs text-gray-500 mb-2">Sample Events:</div>
+              {[1, 10, 20, 40, 60, 100, 140, 180, 200].map(eventNum => {
+                const buffs = variationBuffs[eventNum] || [];
+                return (
+                  <div key={eventNum} className="flex items-center gap-2 text-xs">
+                    <span className="text-yellow-400 w-12">E{eventNum}:</span>
+                    {buffs.length > 0 ? (
+                      <div className="flex gap-1">
+                        {buffs.map((buff, idx) => (
+                          <span
+                            key={idx}
+                            className="px-1 py-0.5 bg-black/50 border rounded text-[10px]"
+                            style={{
+                              borderColor: buff.type === 'head' ? '#3B82F6' : buff.type === 'body' ? '#FBBF24' : '#10B981',
+                              color: buff.type === 'head' ? '#93BBFC' : buff.type === 'body' ? '#FDE68A' : '#6EE7B7'
+                            }}
+                          >
+                            {buff.name} ({buff.count}) {buff.type.charAt(0).toUpperCase()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 italic">Not generated</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Batch Image Assignment */}
+        <div className="mb-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded p-3">
+          <h5 className="text-purple-400 text-sm font-bold mb-2 flex items-center gap-2">
+            <span>📁</span> Event Images Folder Path
+          </h5>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={eventImagesFolder}
+              onChange={(e) => setEventImagesFolder(e.target.value)}
+              placeholder="e.g., /event-images/450px webp"
+              className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded text-sm text-gray-300 font-mono"
+              title="Web-relative path from public folder (e.g., /event-images)"
+            />
+            <button
+              onClick={batchAssignImages}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded text-sm font-semibold transition-all"
+            >
+              Assign All Images (1-200)
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-gray-400">
+            <span className="text-purple-300">ℹ️ Note:</span> Expects files named 1.webp, 2.webp, ... 200.webp in the specified folder
+          </div>
+        </div>
+
         {/* Events by Chapter (Collapsible) */}
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(chapter => {
@@ -840,7 +1150,7 @@ export default function EventNodeEditor() {
                               <div className="bg-black/50 border border-purple-500/10 rounded p-2 flex gap-2">
                                 {/* Circular Thumbnail - Clickable */}
                                 <img
-                                  src={`/event-images/${leftEvent.eventNumber}.webp`}
+                                  src={leftEvent.image || `/event-images/${leftEvent.eventNumber}.webp`}
                                   alt={`Event ${leftEvent.eventNumber}`}
                                   className="w-[52px] h-[52px] rounded-full object-cover border border-purple-500/30 flex-shrink-0 cursor-pointer hover:border-purple-400"
                                   onClick={() => setPreviewImage(leftEvent.eventNumber)}
@@ -886,6 +1196,13 @@ export default function EventNodeEditor() {
                                     />
                                   </div>
 
+                                  {/* Event Image Path Display */}
+                                  <div className="mb-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded">
+                                    <span className="text-[10px] text-purple-400/60">
+                                      {leftEvent.image ? `✓ ${leftEvent.image.split('/').pop()}` : '⚠️ No image assigned'}
+                                    </span>
+                                  </div>
+
                                   {/* Chip Rewards */}
                                   {(() => {
                                     const chipData = calculateChipRewardsForEvent(leftEvent.eventNumber);
@@ -911,6 +1228,39 @@ export default function EventNodeEditor() {
                                       </div>
                                     );
                                   })()}
+
+                                  {leftEvent.variationBuffs && leftEvent.variationBuffs.length > 0 && (
+                                    <div className="text-xs text-yellow-400/80 mt-1">
+                                      <div className="font-semibold">Variation Buffs:</div>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {(() => {
+                                          // Get full buff info if available, otherwise just show names
+                                          const fullBuffs = variationBuffs[(chapter - 1) * 20 + leftIndex + 1];
+                                          if (fullBuffs && fullBuffs.length > 0) {
+                                            return fullBuffs.map((buff, i) => (
+                                              <span
+                                                key={i}
+                                                className="px-1 py-0.5 bg-black/50 border rounded text-[9px]"
+                                                style={{
+                                                  borderColor: buff.type === 'head' ? '#3B82F6' : buff.type === 'body' ? '#FBBF24' : '#10B981',
+                                                  color: buff.type === 'head' ? '#93BBFC' : buff.type === 'body' ? '#FDE68A' : '#6EE7B7'
+                                                }}
+                                              >
+                                                {buff.name} ({buff.count}) {buff.type === 'head' ? 'H' : buff.type === 'body' ? 'B' : 'T'}
+                                              </span>
+                                            ));
+                                          } else {
+                                            // Fallback to just names
+                                            return leftEvent.variationBuffs.map((buff, i) => (
+                                              <span key={i} className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-[10px] text-yellow-300">
+                                                {buff}
+                                              </span>
+                                            ));
+                                          }
+                                        })()}
+                                      </div>
+                                    </div>
+                                  )}
 
                                   {leftEvent.essenceRewards && leftEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
@@ -968,7 +1318,7 @@ export default function EventNodeEditor() {
                               <div className="bg-black/50 border border-purple-500/10 rounded p-2 flex gap-2">
                                 {/* Circular Thumbnail - Clickable */}
                                 <img
-                                  src={`/event-images/${rightEvent.eventNumber}.webp`}
+                                  src={rightEvent.image || `/event-images/${rightEvent.eventNumber}.webp`}
                                   alt={`Event ${rightEvent.eventNumber}`}
                                   className="w-[52px] h-[52px] rounded-full object-cover border border-purple-500/30 flex-shrink-0 cursor-pointer hover:border-purple-400"
                                   onClick={() => setPreviewImage(rightEvent.eventNumber)}
@@ -1014,6 +1364,13 @@ export default function EventNodeEditor() {
                                     />
                                   </div>
 
+                                  {/* Event Image Path Display */}
+                                  <div className="mb-1 px-1 py-0.5 bg-black/30 border border-purple-500/20 rounded">
+                                    <span className="text-[10px] text-purple-400/60">
+                                      {rightEvent.image ? `✓ ${rightEvent.image.split('/').pop()}` : '⚠️ No image assigned'}
+                                    </span>
+                                  </div>
+
                                   {/* Chip Rewards */}
                                   {(() => {
                                     const chipData = calculateChipRewardsForEvent(rightEvent.eventNumber);
@@ -1039,6 +1396,39 @@ export default function EventNodeEditor() {
                                       </div>
                                     );
                                   })()}
+
+                                  {rightEvent.variationBuffs && rightEvent.variationBuffs.length > 0 && (
+                                    <div className="text-xs text-yellow-400/80 mt-1">
+                                      <div className="font-semibold">Variation Buffs:</div>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {(() => {
+                                          // Get full buff info if available, otherwise just show names
+                                          const fullBuffs = variationBuffs[(chapter - 1) * 20 + rightIndex + 1];
+                                          if (fullBuffs && fullBuffs.length > 0) {
+                                            return fullBuffs.map((buff, i) => (
+                                              <span
+                                                key={i}
+                                                className="px-1 py-0.5 bg-black/50 border rounded text-[9px]"
+                                                style={{
+                                                  borderColor: buff.type === 'head' ? '#3B82F6' : buff.type === 'body' ? '#FBBF24' : '#10B981',
+                                                  color: buff.type === 'head' ? '#93BBFC' : buff.type === 'body' ? '#FDE68A' : '#6EE7B7'
+                                                }}
+                                              >
+                                                {buff.name} ({buff.count}) {buff.type === 'head' ? 'H' : buff.type === 'body' ? 'B' : 'T'}
+                                              </span>
+                                            ));
+                                          } else {
+                                            // Fallback to just names
+                                            return rightEvent.variationBuffs.map((buff, i) => (
+                                              <span key={i} className="px-1 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-[10px] text-yellow-300">
+                                                {buff}
+                                              </span>
+                                            ));
+                                          }
+                                        })()}
+                                      </div>
+                                    </div>
+                                  )}
 
                                   {rightEvent.essenceRewards && rightEvent.essenceRewards.length > 0 && (
                                     <div className="text-xs text-purple-400/80 mt-1">
@@ -1131,7 +1521,7 @@ export default function EventNodeEditor() {
         >
           <div className="bg-gray-900 border border-purple-500/50 rounded-lg p-4 m-4" onClick={(e) => e.stopPropagation()}>
             <img
-              src={`/event-images/${previewImage}.webp`}
+              src={eventsData[previewImage - 1]?.image || `/event-images/${previewImage}.webp`}
               alt={`Event ${previewImage}`}
               className="max-w-[600px] max-h-[600px] object-contain rounded"
               onError={(e) => {

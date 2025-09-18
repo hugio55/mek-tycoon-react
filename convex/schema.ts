@@ -1043,7 +1043,8 @@ export default defineSchema({
       v.literal("xp"),
       v.literal("mek_slot"),
       v.literal("market"),
-      v.literal("reward_chance")
+      v.literal("reward_chance"),
+      v.literal("success")
     )),
     unitType: v.optional(v.union(
       v.literal("flat_number"),        // +10
@@ -1128,4 +1129,43 @@ export default defineSchema({
     })),
     updatedAt: v.number(),
   }),
+
+  // Difficulty system configuration
+  difficultyConfigs: defineTable({
+    difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
+
+    // Success thresholds
+    successGreenLine: v.number(), // Percentage required for guaranteed success (5%, 30%, 75%)
+
+    // Reward multipliers
+    goldMultiplier: v.number(), // Base gold reward multiplier
+    xpMultiplier: v.number(), // Base XP reward multiplier
+    essenceAmountMultiplier: v.number(), // Amount of essence received multiplier
+
+    // Mek slot configuration
+    minSlots: v.number(), // Minimum number of Mek slots
+    maxSlots: v.number(), // Maximum number of Mek slots
+    singleSlotChance: v.number(), // Percentage chance for single slot (0-100)
+
+    // Cost modifiers
+    deploymentFeeMultiplier: v.number(), // Entry cost multiplier
+
+    // Essence rarity distribution modifiers
+    commonEssenceBoost: v.number(), // Percentage adjustment to common essence drop rate
+    rareEssencePenalty: v.number(), // Percentage adjustment to rare essence drop rate
+
+    // Overshoot bonus configuration
+    overshootBonusRate: v.number(), // Bonus percentage per point over green line
+    maxOvershootBonus: v.number(), // Maximum possible overshoot bonus percentage
+
+    // Visual and UI settings
+    colorTheme: v.string(), // Color theme for UI (green, yellow, red)
+    displayName: v.string(), // Display name for UI
+    description: v.optional(v.string()), // Description for players
+
+    // System
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_difficulty", ["difficulty"]),
 });

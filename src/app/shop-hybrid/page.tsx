@@ -34,6 +34,31 @@ const getEssenceImage = (index: number) => {
   return ESSENCE_IMAGES[index % ESSENCE_IMAGES.length];
 };
 
+// Random Mek portraits for sellers
+const MEK_PORTRAITS = [
+  "/mek-images/150px/000-000-000.webp",
+  "/mek-images/150px/111-111-111.webp",
+  "/mek-images/150px/222-222-222.webp",
+  "/mek-images/150px/333-333-333.webp",
+  "/mek-images/150px/444-444-444.webp",
+  "/mek-images/150px/555-555-555.webp",
+  "/mek-images/150px/666-666-666.webp",
+  "/mek-images/150px/777-777-777.webp",
+  "/mek-images/150px/888-888-888.webp",
+  "/mek-images/150px/999-999-999.webp",
+  "/mek-images/150px/aa1-aa1-cd1.webp",
+  "/mek-images/150px/aa1-aa3-hn1.webp",
+  "/mek-images/150px/aa1-aa4-gk1.webp",
+  "/mek-images/150px/aa1-ak1-bc2.webp",
+  "/mek-images/150px/aa1-ak1-de1.webp",
+];
+
+// Get a stable Mek portrait for a seller based on their ID
+const getMekPortrait = (sellerId: string) => {
+  const hash = sellerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return MEK_PORTRAITS[hash % MEK_PORTRAITS.length];
+};
+
 // Quick filter chips removed - moved to sort dropdown
 
 // Item rarity definitions
@@ -88,12 +113,14 @@ export default function ShopHybridPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [showMakeOffer, setShowMakeOffer] = useState(false);
+  const [showMyListings, setShowMyListings] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showMekChipsDropdown, setShowMekChipsDropdown] = useState(false);
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
   const [showOnlyAffordable, setShowOnlyAffordable] = useState(false);
   const [hoveredListing, setHoveredListing] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
   const [selectedUniChipTier, setSelectedUniChipTier] = useState<string>("T1");
   const [showUniChipDropdown, setShowUniChipDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -122,6 +149,16 @@ export default function ShopHybridPage() {
 
   // Override gold for testing UI with insufficient funds
   const userProfile = userProfileQuery ? { ...userProfileQuery, gold: 1000 } : null;
+
+  // Set current time on client only to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentTime(Date.now());
+    // Update time every minute
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -421,7 +458,7 @@ export default function ShopHybridPage() {
       itemVariation: "Stone Essence",
       essenceType: "stone",
       quantity: 5.5,
-      pricePerUnit: 1000,
+      pricePerUnit: 100,
       marketAverage: 1100,
       salesVolume24h: 34,
       listedAt: Date.now() - 1800000,
@@ -438,7 +475,7 @@ export default function ShopHybridPage() {
       itemVariation: "Disco Essence",
       essenceType: "disco",
       quantity: 2.3,
-      pricePerUnit: 2500,
+      pricePerUnit: 250,
       marketAverage: 2800,
       lastSoldPrice: 2600,
       salesVolume24h: 12,
@@ -457,7 +494,7 @@ export default function ShopHybridPage() {
       itemVariation: "Laser Essence",
       essenceType: "laser",
       quantity: 1.0,
-      pricePerUnit: 8000,
+      pricePerUnit: 800,
       marketAverage: 7500,
       lastSoldPrice: 7800,
       salesVolume24h: 3,
@@ -475,10 +512,10 @@ export default function ShopHybridPage() {
       sellerRating: 3.9,
       sellerSales: 123,
       itemType: "essence",
-      itemVariation: "Candy Essence",
+      itemVariation: "The Lethal Dimension",
       essenceType: "candy",
       quantity: 10.0,
-      pricePerUnit: 500,
+      pricePerUnit: 50,
       marketAverage: 600,
       lastSoldPrice: 550,
       salesVolume24h: 45,
@@ -615,7 +652,7 @@ export default function ShopHybridPage() {
       sellerRating: 3.7,
       sellerSales: 156,
       itemType: "essence",
-      itemVariation: "Moss Essence",
+      itemVariation: "Ace of Spades Ultimate",
       essenceType: "moss",
       quantity: 25.0,
       pricePerUnit: 300,
@@ -651,6 +688,11 @@ export default function ShopHybridPage() {
 
   // Enhanced filtering with multiple criteria
   const filteredListings = mockListings.filter(listing => {
+    // My Listings filter - show only user's listings
+    if (showMyListings) {
+      if (listing.sellerId !== userId) return false;
+    }
+
     // Category filter
     if (selectedCategory === "head" || selectedCategory === "body" || selectedCategory === "trait") {
       if (listing.itemType !== selectedCategory) return false;
@@ -818,24 +860,14 @@ export default function ShopHybridPage() {
           {/* Grunge Overlays */}
           <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
 
-          <div className="relative flex justify-between items-center">
-            <div>
+          <div className="relative flex items-center">
+            <div className="flex-1 text-center">
               <h1 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
-                EQUIPMENT EXCHANGE
+                SHOP
               </h1>
-              <div className="flex items-center gap-3 mt-1">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <p className="text-green-400 text-xs font-semibold">
-                    {sortedListings.length} ACTIVE
-                  </p>
-                </div>
-                <span className="text-gray-600">|</span>
-                <span className="text-gray-400 text-xs">Press / to search</span>
-              </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="absolute right-0 flex items-center gap-4">
               {/* Market Stats */}
               <div className="flex flex-col items-end">
                 <div className="text-[9px] text-gray-500 uppercase">Your Balance</div>
@@ -847,115 +879,49 @@ export default function ShopHybridPage() {
           </div>
         </div>
 
-        {/* Three Column Layout */}
+        {/* Two Column Layout - Table Left, Sidebar Right */}
         <div className="flex flex-1 gap-2 px-4 pb-4 overflow-hidden">
-          {/* Left Sidebar - Floating Controls */}
-          <div className="w-64 p-4 overflow-y-auto">
-            <div className="relative">
+          {/* Main Content - Table with Dirty Glass Effect */}
+          <div className="flex-1 relative rounded-lg overflow-hidden flex flex-col">
+            {/* Style K - Streaked glass texture background - Much lighter */}
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-600/15 via-gray-500/10 to-gray-600/15" />
 
-              {/* Create Listing Button */}
-              <button
-                onClick={() => setShowCreateListing(true)}
-                className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-2 rounded-md transition-all transform hover:scale-[1.02] mb-2 text-xs uppercase tracking-wider shadow-lg"
-              >
-                + CREATE LISTING
-              </button>
+            {/* Vertical streaks */}
+            <div className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                  linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 15%, transparent 30%, rgba(255,255,255,0.18) 45%, transparent 60%, rgba(255,255,255,0.15) 75%, transparent 100%),
+                  linear-gradient(90deg, transparent 0%, rgba(250,250,250,0.1) 25%, transparent 50%, rgba(250,250,250,0.1) 75%, transparent 100%)
+                `,
+                backgroundSize: '100% 100%'
+              }}
+            />
 
-              {/* My Listings Button */}
-              <button
-                onClick={() => console.log('Show my listings')}
-                className="w-full bg-gray-800/80 hover:bg-gray-700/80 text-yellow-400 border border-yellow-500/30 font-bold px-4 py-2 rounded-md transition-all transform hover:scale-[1.02] mb-4 text-xs uppercase tracking-wider backdrop-blur-sm"
-              >
-                MY LISTINGS
-              </button>
+            {/* Streak pattern overlay - Enhanced visibility */}
+            <div className="absolute inset-0 opacity-70"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  90deg,
+                  transparent,
+                  transparent 3px,
+                  rgba(220, 220, 220, 0.15) 3px,
+                  rgba(220, 220, 220, 0.15) 4px
+                )`,
+                mixBlendMode: 'overlay'
+              }}
+            />
 
-              {/* Category Grid - 2x2 */}
-              <div className="mb-6">
-                <div className="mek-label-uppercase text-yellow-400/70 mb-2 text-[10px]">CATEGORIES</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setSelectedCategory('head')}
-                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
-                      selectedCategory === 'head' || selectedCategory === 'body' || selectedCategory === 'trait'
-                        ? 'bg-yellow-400 text-black'
-                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
-                    }`}
-                  >
-                    MEK CHIPS
-                  </button>
-                  <button
-                    onClick={() => setSelectedCategory('essence')}
-                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
-                      selectedCategory === 'essence'
-                        ? 'bg-yellow-400 text-black'
-                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
-                    }`}
-                  >
-                    ESSENCE
-                  </button>
-                  <button
-                    onClick={() => setSelectedCategory('oem')}
-                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
-                      selectedCategory === 'oem'
-                        ? 'bg-yellow-400 text-black'
-                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
-                    }`}
-                  >
-                    OEM
-                  </button>
-                  <button
-                    onClick={() => setSelectedCategory('uni-chips')}
-                    className={`px-3 py-3 font-bold uppercase text-xs tracking-wider transition-all rounded ${
-                      selectedCategory === 'uni-chips'
-                        ? 'bg-yellow-400 text-black'
-                        : 'bg-black/40 text-gray-400 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/50'
-                    }`}
-                  >
-                    UNI CHIPS
-                  </button>
-                </div>
-              </div>
+            {/* Glass texture and blur */}
+            <div className="absolute inset-0 backdrop-blur-sm" />
 
+            {/* Border with glass edge effect */}
+            <div className="absolute inset-0 border border-gray-600/20 rounded-lg" />
 
-
-              {/* Create Listing Button */}
-              <button
-                onClick={() => setShowCreateListing(true)}
-                className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-2 rounded-md transition-all transform hover:scale-[1.02] w-full flex items-center justify-center gap-2 group text-xs uppercase tracking-wider shadow-lg"
-              >
-                <span className="text-base">+</span>
-                <span>CREATE NEW LISTING</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 animate-shimmer pointer-events-none" />
-              </button>
-
-              {/* Seed Button */}
-              <button
-                onClick={async () => {
-                  try {
-                    const result = await seedMarketplace();
-                    alert(`Marketplace seeded!`);
-                    window.location.reload();
-                  } catch (error) {
-                    alert('Failed to seed marketplace: ' + error);
-                  }
-                }}
-                className="mt-3 w-full px-3 py-2 bg-gray-900/60 border border-gray-700/50 hover:bg-gray-900/80 hover:border-gray-600 text-gray-400 font-bold uppercase tracking-wider transition-all text-[10px] rounded-md"
-              >
-                POPULATE DEMO
-              </button>
-            </div>
-          </div>
-
-          {/* Main Content - Table */}
-          <div className="flex-1 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-lg overflow-hidden flex flex-col">
-            {/* Sort Dropdown - Above Table */}
-            <div className="px-4 py-3 bg-gradient-to-b from-black/80 to-black/60 border-b border-yellow-500/30 flex items-center justify-between">
+            {/* Content wrapper */}
+            <div className="relative z-10 flex flex-col h-full">
+              {/* Sort Dropdown - Above Table */}
+              <div className="px-4 py-3 bg-gradient-to-b from-amber-950/40 via-brown-900/30 to-transparent backdrop-blur-sm border-b border-amber-700/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-xs font-semibold uppercase">{sortedListings.length} Active</span>
-                </div>
-                <div className="text-gray-500">|</div>
                 <span className="text-gray-400 text-xs">Real-time marketplace</span>
               </div>
               <div className="flex items-center gap-2">
@@ -974,9 +940,10 @@ export default function ShopHybridPage() {
               </div>
             </div>
 
-            {/* Category Buttons - Horizontal Layout */}
-            <div className="px-4 py-2 bg-black/60 border-b border-yellow-500/20 flex items-center gap-2">
-              {CATEGORIES.map((cat) => {
+              {/* Category Buttons - Horizontal Layout */}
+              <div className="px-4 py-2 bg-gradient-to-r from-amber-950/30 via-brown-900/20 to-amber-950/30 backdrop-blur-sm border-b border-amber-700/20">
+              <div className="flex items-center gap-2 mb-2">
+                {CATEGORIES.map((cat) => {
                 const isMekChips = cat.id === 'mek-chips';
                 const isUniChips = cat.id === 'uni-chips';
                 const isActive = isMekChips
@@ -1093,31 +1060,75 @@ export default function ShopHybridPage() {
                   >
                     {cat.name}
                   </button>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="ENTER KEYWORDS..."
+                  className="flex-1 px-3 py-1.5 bg-black/40 border border-yellow-500/30 rounded-md text-white text-xs font-medium placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-2 py-1.5 bg-gray-900/60 border border-gray-700 rounded-md text-gray-400 text-xs font-medium hover:border-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="relative flex-1 overflow-auto">
-              <div className="absolute inset-0 mek-overlay-metal-texture opacity-5 pointer-events-none" />
+              <div className="relative flex-1 overflow-auto">
+                {/* Additional glass texture for table area */}
+                <div className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(180deg, transparent 0%, rgba(120, 63, 4, 0.05) 50%, transparent 100%),
+                      linear-gradient(90deg, transparent 0%, rgba(92, 51, 23, 0.05) 50%, transparent 100%)
+                    `,
+                    backgroundSize: '100% 2px, 2px 100%'
+                  }}
+                />
 
-              {/* Listings Table - Dynamic Headers Based on Category */}
-              <table className="w-full">
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/30">
-                    <th className="py-2 px-2 text-left text-gray-400 text-[10px] font-semibold uppercase tracking-wider"></th>
-                    <th className="py-2 px-2 text-left text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Item Name</th>
-                    <th className="py-2 px-2 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Seller</th>
-                    <th className="py-2 px-2 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Qty</th>
+                {/* My Listings Indicator */}
+                {showMyListings && (
+                  <div className="bg-green-500/20 border-b border-green-500/50 px-4 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-400 font-bold text-xs uppercase">Viewing Your Listings</span>
+                    <span className="text-gray-400 text-xs">({sortedListings.length} active)</span>
+                  </div>
+                  <button
+                    onClick={() => setShowMyListings(false)}
+                    className="text-gray-400 hover:text-white text-xs underline"
+                  >
+                    Back to Marketplace
+                  </button>
+                </div>
+              )}
+
+                {/* Listings Table - Dynamic Headers Based on Category */}
+                <table className="w-full">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gradient-to-r from-amber-950/60 via-brown-900/50 to-amber-950/60 backdrop-blur-md border-b-2 border-amber-700/30">
+                    <th className="py-2 px-2 text-left text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider"></th>
+                    <th className="py-2 px-2 text-left text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Item Name</th>
+                    <th className="py-2 px-2 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Seller</th>
+                    <th className="py-2 px-2 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Qty</th>
                     {selectedCategory === "essence" ? (
                       <>
-                        <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Per Unit</th>
-                        <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Total</th>
+                        <th className="py-2 px-2 text-right text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Per Unit</th>
+                        <th className="py-2 px-2 text-right text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Total</th>
                       </>
                     ) : (
-                      <th className="py-2 px-2 text-right text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Price</th>
+                      <th className="py-2 px-2 text-right text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Total</th>
                     )}
-                    <th className="py-3 px-3 text-center text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Time Left</th>
-                    <th className="py-3 px-3 text-center text-gray-400 text-[11px] font-semibold uppercase tracking-wider"></th>
+                    <th className="py-3 px-3 text-center text-amber-200/70 text-[11px] font-semibold uppercase tracking-wider"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1143,7 +1154,9 @@ export default function ShopHybridPage() {
                       // Format time remaining
                       const formatTimeRemaining = (expiresAt: number | undefined) => {
                         if (!expiresAt) return '—';
-                        const remaining = expiresAt - Date.now();
+                        // Use currentTime state to avoid hydration mismatch
+                        if (!currentTime) return '12h0m'; // Default display during SSR
+                        const remaining = expiresAt - currentTime;
                         if (remaining <= 0) return 'Expired';
                         const hours = Math.floor(remaining / (1000 * 60 * 60));
                         const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
@@ -1154,20 +1167,22 @@ export default function ShopHybridPage() {
                         <tr
                           key={listing._id}
                           className={`border-b transition-all group cursor-pointer relative ${
-                            isOwn
-                              ? 'bg-gradient-to-r from-green-500/15 to-green-500/5 border-green-500/30 hover:from-green-500/20 hover:to-green-500/10'
-                              : 'border-gray-800/50 hover:bg-yellow-500/5'
+                            selectedListing?._id === listing._id
+                              ? 'bg-yellow-500/20 border-yellow-500/50'
+                              : isOwn
+                              ? 'bg-gradient-to-r from-green-500/15 via-green-500/10 to-transparent border-green-500/30 hover:from-green-500/20 hover:to-green-500/10 backdrop-blur-sm'
+                              : 'border-amber-800/20 hover:bg-amber-700/10 backdrop-blur-sm'
                           }`}
                           onClick={() => setSelectedListing(listing)}
                         >
                           {/* Item Icon with Rarity */}
-                          <td className="py-1.5 px-3">
+                          <td className="py-1.5 px-1">
                             <div className="relative">
                               {listing.itemType === 'essence' ? (
                                 <img
                                   src={getEssenceImage(parseInt(listing._id, 36))}
                                   alt="Essence"
-                                  className="w-12 h-12 object-contain"
+                                  className="w-11 h-11 object-contain"
                                 />
                               ) : (
                                 <div
@@ -1191,7 +1206,7 @@ export default function ShopHybridPage() {
 
                           {/* Name */}
                           <td className="py-1.5 px-3">
-                            <div className="text-gray-200 text-[11px] font-medium">
+                            <div className="text-white text-xs font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px]">
                               {listing.itemVariation || listing.itemType}
                             </div>
                           </td>
@@ -1201,7 +1216,24 @@ export default function ShopHybridPage() {
                             {isOwn ? (
                               <div className="text-yellow-400 text-xs font-bold">YOU</div>
                             ) : (
-                              <div className="text-gray-300 text-xs font-medium">{listing.sellerName || 'Unknown'}</div>
+                              <div className="relative inline-block mx-auto">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log('View seller profile:', listing.sellerName);
+                                  }}
+                                  className="group block"
+                                >
+                                  <img
+                                    src={getMekPortrait(listing.sellerId)}
+                                    alt="Seller"
+                                    className="w-8 h-8 rounded-full border border-gray-700 transition-all duration-200 group-hover:scale-110 group-hover:border-yellow-500 cursor-pointer"
+                                  />
+                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 border border-yellow-500/50 rounded text-yellow-400 text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                    {listing.sellerName || 'Unknown'}
+                                  </div>
+                                </button>
+                              </div>
                             )}
                           </td>
 
@@ -1218,35 +1250,29 @@ export default function ShopHybridPage() {
                           {selectedCategory === "essence" ? (
                             <>
                               <td className="py-1.5 px-3 text-right">
-                                <div className="text-yellow-400 font-bold text-xs">
+                                <div className={`font-bold text-[10px] ${canAfford ? 'text-yellow-400/70' : 'text-yellow-400/40'}`}>
                                   {listing.pricePerUnit.toLocaleString()}g
                                 </div>
                               </td>
                               <td className="py-1.5 px-3 text-right">
-                                <div className={`font-bold text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                                <div className="font-bold text-sm text-yellow-400">
                                   {totalPrice.toLocaleString()}g
                                 </div>
                               </td>
                             </>
                           ) : (
                             <td className="py-1.5 px-3 text-right">
-                              <div className={`font-bold text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                              <div className="font-bold text-sm text-yellow-400">
                                 {totalPrice.toLocaleString()}g
                               </div>
                             </td>
                           )}
 
 
-                          {/* Time Remaining */}
+                          {/* Actions with Time */}
                           <td className="py-1.5 px-3 text-center">
-                            <div className="text-gray-400 text-[11px] font-medium whitespace-nowrap">
-                              {formatTimeRemaining(listing.expiresAt || Date.now() + 86400000)}
-                            </div>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-1.5 px-3 text-center">
-                            {isOwn ? (
+                            <div className="flex flex-col items-center gap-1">
+                              {isOwn ? (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1263,32 +1289,287 @@ export default function ShopHybridPage() {
                                     handlePurchase(listing._id);
                                   }}
                                   disabled={!canAfford}
+                                  title={!canAfford ? 'You do not have enough gold' : ''}
                                   className={`px-2 py-0.5 font-bold uppercase tracking-wider transition-all text-[10px] rounded ${
                                     canAfford
-                                      ? isGoodDeal
-                                        ? 'bg-green-500 hover:bg-green-400 text-black shadow-lg shadow-green-500/30 animate-pulse'
-                                        : 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
-                                      : 'bg-gray-900/60 border border-gray-700/50 text-gray-600 cursor-not-allowed'
+                                      ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                                      : 'bg-red-600 hover:bg-red-500 text-white cursor-not-allowed'
                                   }`}
                                 >
-                                  {canAfford ? 'BUY' : 'NO GOLD'}
+                                  BUY
                                 </button>
                               )}
+                              <div className="text-gray-500 text-[9px] font-medium whitespace-nowrap">
+                                {formatTimeRemaining(listing.expiresAt || Date.now() + 86400000)}
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-          {/* Right Sidebar - Enhanced Item Intel Panel */}
-          {selectedListing && (
-            <div className="w-80 bg-black/60 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 overflow-y-auto">
+          {/* Right Sidebar */}
+          <div className="w-80 relative rounded-lg overflow-hidden flex flex-col">
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/40 to-gray-900/50" />
+            <div className="absolute inset-0 backdrop-blur-sm" />
+            <div className="absolute inset-0 border border-gray-600/20 rounded-lg" />
+
+            <div className="relative z-10 flex flex-col h-full p-4">
+              {/* Sidebar Actions */}
+              <div className="space-y-2 mb-4">
+                {/* Create Listing Button */}
+                <button
+                  onClick={() => setShowCreateListing(true)}
+                  className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-2 rounded-md transition-all transform hover:scale-[1.02] text-xs uppercase tracking-wider shadow-lg"
+                >
+                  + CREATE LISTING
+                </button>
+
+                {/* My Listings Button */}
+                <button
+                  onClick={() => setShowMyListings(!showMyListings)}
+                  className={`w-full font-bold px-4 py-2 rounded-md transition-all transform hover:scale-[1.02] text-xs uppercase tracking-wider backdrop-blur-sm ${
+                    showMyListings
+                      ? 'bg-green-500 hover:bg-green-400 text-black shadow-lg shadow-green-500/30'
+                      : 'bg-gray-800/80 hover:bg-gray-700/80 text-yellow-400 border border-yellow-500/30'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {showMyListings ? '✓ MY LISTINGS' : 'MY LISTINGS'}
+                    {filteredListings.filter(l => l.sellerId === userId).length > 0 && (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        showMyListings
+                          ? 'bg-black/30 text-green-100'
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {filteredListings.filter(l => l.sellerId === userId).length}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </div>
+
+              {/* Selected Item Details */}
+              {selectedListing ? (
+                <div className="flex-1 overflow-y-auto">
+                  <div className="space-y-3">
+                    <h3 className="mek-text-industrial text-lg text-yellow-400">ITEM INTEL</h3>
+
+                    {/* Market Status Badge */}
+                    {(selectedListing.isHot || selectedListing.isNew || (selectedListing.marketAverage && selectedListing.pricePerUnit < selectedListing.marketAverage * 0.9)) && (
+                      <div className="flex gap-2 flex-wrap">
+                        {selectedListing.isHot && (
+                          <span className="px-2 py-1 bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold rounded animate-pulse">
+                            🔥 HOT
+                          </span>
+                        )}
+                        {selectedListing.isNew && (
+                          <span className="px-2 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded">
+                            ✨ NEW
+                          </span>
+                        )}
+                        {selectedListing.marketAverage && selectedListing.pricePerUnit < selectedListing.marketAverage * 0.9 && (
+                          <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/50 text-blue-400 text-xs font-bold rounded">
+                            💸 DEAL
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Item Visual */}
+                    <div className="flex justify-center p-3 bg-black/40 border border-yellow-500/20 rounded-lg">
+                      {selectedListing.itemType === 'essence' ? (
+                        <img
+                          src={getEssenceImage(parseInt(selectedListing._id, 36))}
+                          alt="Essence"
+                          className="w-20 h-20 object-contain"
+                        />
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-lg flex items-center justify-center text-2xl font-bold text-black"
+                          style={{
+                            background:
+                              selectedListing.itemType === 'head' ? 'linear-gradient(135deg, #fab617 0%, #d4a017 100%)' :
+                              selectedListing.itemType === 'body' ? 'linear-gradient(135deg, #808080 0%, #606060 100%)' :
+                              selectedListing.itemType === 'trait' ? 'linear-gradient(135deg, #fab617 0%, #ffdd00 100%)' :
+                              'linear-gradient(135deg, #fab617 0%, #d4a017 100%)',
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
+                          }}
+                        >
+                          {selectedListing.itemType === 'head' ? 'H' :
+                           selectedListing.itemType === 'body' ? 'B' :
+                           selectedListing.itemType === 'trait' ? 'T' : '?'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Item Info */}
+                    <div className="space-y-2">
+                      <div className="p-2 bg-black/60 border border-yellow-500/20 rounded-md">
+                        <div className="mek-label-uppercase text-yellow-400/60 text-[9px] mb-1">DESIGNATION</div>
+                        <div className="text-white font-bold text-sm">{selectedListing.itemVariation || selectedListing.itemType}</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 bg-black/60 border border-yellow-500/20 rounded-md">
+                          <div className="mek-label-uppercase text-yellow-400/60 text-[9px] mb-1">QTY</div>
+                          <div className="text-blue-400 font-bold">{selectedListing.quantity}</div>
+                        </div>
+                        {selectedListing.rarity && (
+                          <div className="p-2 bg-black/60 border border-yellow-500/20 rounded-md">
+                            <div className="mek-label-uppercase text-yellow-400/60 text-[9px] mb-1">RARITY</div>
+                            <div
+                              className="font-bold uppercase text-xs"
+                              style={{ color: ITEM_RARITIES[selectedListing.rarity].color }}
+                            >
+                              {selectedListing.rarity}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="p-2 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-md">
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-yellow-400/70 text-[10px] uppercase">Price:</span>
+                            <span className="text-yellow-400 font-bold">{selectedListing.pricePerUnit.toLocaleString()}g</span>
+                          </div>
+                          {selectedListing.marketAverage && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400 text-[10px] uppercase">Market:</span>
+                              <span className="text-gray-400 font-bold text-xs">{selectedListing.marketAverage.toLocaleString()}g</span>
+                            </div>
+                          )}
+                          <div className="border-t border-yellow-500/20 pt-1 mt-1">
+                            <div className="flex justify-between">
+                              <span className="text-yellow-400 text-[10px] uppercase">Total:</span>
+                              <span className="text-yellow-400 font-bold text-lg">{(selectedListing.pricePerUnit * selectedListing.quantity).toLocaleString()}g</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Market Activity */}
+                      {(selectedListing.salesVolume24h || selectedListing.viewCount) && (
+                        <div className="p-2 bg-black/60 border border-gray-700/50 rounded-md">
+                          <div className="mek-label-uppercase text-gray-400 text-[9px] mb-1">ACTIVITY</div>
+                          <div className="space-y-0.5">
+                            {selectedListing.salesVolume24h && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500 text-[10px]">24h Sales:</span>
+                                <span className="text-gray-300 text-[10px] font-mono">{selectedListing.salesVolume24h}</span>
+                              </div>
+                            )}
+                            {selectedListing.viewCount && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500 text-[10px]">Views:</span>
+                                <span className="text-gray-300 text-[10px] font-mono">{selectedListing.viewCount}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Seller Info */}
+                      <div className="p-2 bg-black/60 border border-gray-700/50 rounded-md">
+                        <div className="mek-label-uppercase text-gray-400 text-[9px] mb-1">SELLER</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300 text-xs font-medium">{selectedListing.sellerName || 'Unknown'}</span>
+                          {selectedListing.sellerRating && (
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={i < Math.floor(selectedListing.sellerRating) ? 'text-yellow-400' : 'text-gray-600'}
+                                  style={{ fontSize: '10px' }}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="space-y-2 mt-3">
+                        {selectedListing.sellerId === userId ? (
+                          <button
+                            onClick={() => handleCancelListing(selectedListing._id)}
+                            className="w-full px-3 py-2 bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400 font-bold uppercase tracking-wider transition-all text-xs rounded-md"
+                          >
+                            CANCEL LISTING
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handlePurchase(selectedListing._id)}
+                              disabled={!userProfile || userProfile.gold < selectedListing.pricePerUnit * selectedListing.quantity}
+                              className={`w-full px-3 py-2 font-bold uppercase tracking-wider transition-all text-xs rounded-md ${
+                                userProfile && userProfile.gold >= selectedListing.pricePerUnit * selectedListing.quantity
+                                  ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
+                                  : 'bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed'
+                              }`}
+                            >
+                              {userProfile && userProfile.gold >= selectedListing.pricePerUnit * selectedListing.quantity
+                                ? 'BUY NOW'
+                                : 'INSUFFICIENT'}
+                            </button>
+
+                            {!watchlist.has(selectedListing._id) ? (
+                              <button
+                                onClick={() => setWatchlist(prev => new Set(prev).add(selectedListing._id))}
+                                className="w-full px-3 py-1.5 bg-black/40 border border-yellow-500/50 hover:bg-yellow-500/10 text-yellow-400 font-bold uppercase tracking-wider transition-all text-[10px] rounded-md"
+                              >
+                                ⭐ WATCH
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setWatchlist(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(selectedListing._id);
+                                    return newSet;
+                                  });
+                                }}
+                                className="w-full px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 hover:bg-yellow-500/30 text-yellow-400 font-bold uppercase tracking-wider transition-all text-[10px] rounded-md"
+                              >
+                                ✓ WATCHING
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4 text-gray-700">—</div>
+                    <div className="text-gray-500 text-xs uppercase">Select an item</div>
+                    <div className="text-gray-600 text-[10px] mt-1">Click any listing for details</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Lightbox Modal for Item Details - REMOVED */}
+        {false && selectedListing && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setSelectedListing(null)}>
+            <div className="bg-gradient-to-br from-amber-950/90 via-brown-900/90 to-amber-950/90 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="relative">
-                <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-30" />
 
                 <div className="relative">
                   <div className="flex justify-between items-start mb-4">
@@ -1342,9 +1623,9 @@ export default function ShopHybridPage() {
                       )}
                       {selectedListing.itemType === 'essence' ? (
                         <img
-                          src={getEssenceImage(parseInt(selectedListing._id, 36))}
+                          src="/essence-images/gifs/bumble big gif.gif"
                           alt="Essence"
-                          className="w-24 h-24 object-contain"
+                          className="w-32 h-32 object-contain"
                         />
                       ) : (
                         <div
@@ -1577,8 +1858,8 @@ export default function ShopHybridPage() {
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Create Listing Modal */}
         <CreateListingModal

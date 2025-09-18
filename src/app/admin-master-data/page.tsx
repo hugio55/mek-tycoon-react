@@ -6,9 +6,11 @@ import { api } from '@/convex/_generated/api';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
 import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
+import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
 
 // Data system definitions
 const DATA_SYSTEMS = [
+  { id: 'difficulty-system', name: 'Difficulty System Configuration', icon: '⚔️', implemented: true },
   { id: 'mek-talent-tree', name: 'Mek Talent Tree Nodes', icon: '🌳', implemented: false },
   { id: 'mech-power-chips', name: 'Mech Power Chips', icon: '⚡', implemented: false },
   { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: true },
@@ -29,18 +31,7 @@ export default function AdminMasterDataPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
   const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>(() => {
-    // Try to load from localStorage first
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('systemImplementationStatus');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse saved system status:', e);
-        }
-      }
-    }
-    // Fall back to defaults from DATA_SYSTEMS
+    // Always use defaults during initial render to avoid hydration mismatch
     const initial: Record<string, 'incomplete' | 'in-progress' | 'complete'> = {};
     DATA_SYSTEMS.forEach(s => { initial[s.id] = s.implemented ? 'complete' : 'incomplete'; });
     return initial;
@@ -51,6 +42,18 @@ export default function AdminMasterDataPage() {
   const [minRange, setMinRange] = useState(1);
   const [maxRange, setMaxRange] = useState(100);
   const [scalingFactor, setScalingFactor] = useState(1.5);
+
+  // Load system completion status from localStorage after mount
+  useEffect(() => {
+    const saved = localStorage.getItem('systemImplementationStatus');
+    if (saved) {
+      try {
+        setSystemCompletion(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse saved system status:', e);
+      }
+    }
+  }, []); // Only run once on mount
 
   // Save system completion status to localStorage whenever it changes
   useEffect(() => {
@@ -241,6 +244,30 @@ export default function AdminMasterDataPage() {
 
         {/* Data Systems Sections */}
         <div className="space-y-4">
+          {/* Difficulty System Configuration */}
+          <div id="section-difficulty-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg">
+            <button
+              onClick={() => toggleSection('difficulty-system')}
+              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚔️</span>
+                <h3 className="text-lg font-bold text-yellow-400">Difficulty System Configuration</h3>
+                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+              </div>
+              <span className="text-gray-400">{expandedSections.has('difficulty-system') ? '▼' : '▶'}</span>
+            </button>
+            {expandedSections.has('difficulty-system') && (
+              <div className="p-4 border-t border-gray-700/50">
+                <p className="text-gray-400 mb-4">
+                  Configure difficulty levels for missions: success thresholds, reward multipliers, slot counts, and essence distribution.
+                  Controls how Easy, Medium, and Hard difficulties affect gameplay balance.
+                </p>
+                <DifficultyAdminConfig />
+              </div>
+            )}
+          </div>
+
           {/* Mek Talent Tree Nodes */}
           <div id="section-mek-talent-tree" className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
             <button

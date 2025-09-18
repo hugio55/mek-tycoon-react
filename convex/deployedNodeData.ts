@@ -25,6 +25,16 @@ export const deployEventNodes = mutation({
 
       // Enhance event data - chip rewards will be calculated client-side
       const enhancedEvents = events.map((event: any) => {
+        // Use provided image or fall back to default path
+        let imageReference = event.image;
+        if (!imageReference) {
+          // If no image provided, use a deterministic selection based on event number
+          const imageIndex = event.eventNumber % 154;
+          imageReference = imageIndex === 0
+            ? '/event-images/450px webp/blank resize.webp'
+            : `/event-images/450px webp/blank resize_${imageIndex + 1}.webp`;
+        }
+
         return {
           eventNumber: event.eventNumber,
           name: event.name || `Event ${event.eventNumber}`,
@@ -33,7 +43,8 @@ export const deployEventNodes = mutation({
           chipRewards: event.chipRewards || [], // Will be calculated client-side
           essenceRewards: event.essenceRewards || [],
           customRewards: event.customRewards || [],
-          imageReference: `/event-images/${event.eventNumber}.webp`,
+          imageReference,
+          image: imageReference, // Include both for compatibility
         };
       });
 

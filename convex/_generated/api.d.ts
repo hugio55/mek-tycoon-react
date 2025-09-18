@@ -27,6 +27,7 @@ import type * as crafting from "../crafting.js";
 import type * as crons from "../crons.js";
 import type * as deployedNodeData from "../deployedNodeData.js";
 import type * as devToolbar from "../devToolbar.js";
+import type * as difficultyConfigs from "../difficultyConfigs.js";
 import type * as eventNodeRewards from "../eventNodeRewards.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
 import type * as gameConstants from "../gameConstants.js";
@@ -93,6 +94,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   deployedNodeData: typeof deployedNodeData;
   devToolbar: typeof devToolbar;
+  difficultyConfigs: typeof difficultyConfigs;
   eventNodeRewards: typeof eventNodeRewards;
   fixMek3412To000: typeof fixMek3412To000;
   gameConstants: typeof gameConstants;
