@@ -74,6 +74,10 @@ const BOSS_VARIATIONS = {
 };
 
 export default function EventNodeEditor() {
+  // Track if there are unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastDeployedData, setLastDeployedData] = useState<string>('');
+
   // Calculate mek slots for an event using round-robin distribution
   const calculateEventMekSlots = (eventNumber: number): { easy: number; medium: number; hard: number } => {
     // Event numbers are 1-based

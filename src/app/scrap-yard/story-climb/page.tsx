@@ -92,6 +92,15 @@ export default function StoryClimbPage() {
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   // Challenger effect locked to Phase Shift (quantum2)
   const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
+  const [debugPanelMinimized, setDebugPanelMinimized] = useState(true); // State to minimize debug panel - starts minimized
+  const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
+
+  // Test Panel Controls for Success Meter
+  const [showTestPanel, setShowTestPanel] = useState(false);
+  const [testSuccessRate, setTestSuccessRate] = useState(50);
+  const [testMeterVariant, setTestMeterVariant] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [testLayoutStyle, setTestLayoutStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [testSubLayoutStyle, setTestSubLayoutStyle] = useState<1.1 | 1.2 | 1.3 | 1.4 | 1.5>(1.3);
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
@@ -105,6 +114,9 @@ export default function StoryClimbPage() {
 
   // Difficulty system state
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('medium');
+  // Locked to Crossed Out style
+  const [completedDifficulties, setCompletedDifficulties] = useState<Record<string, Set<DifficultyLevel>>>({});
+  const goldFrameStyle = 5; // Locked to Classical Laurel Wreath
   const difficultyConfigs = useQuery(api.difficultyConfigs.getAll);
   const currentDifficultyConfig = difficultyConfigs?.find(c => c.difficulty === selectedDifficulty) as DifficultyConfig | undefined;
 
@@ -114,34 +126,9 @@ export default function StoryClimbPage() {
   const v1Tree = storyTrees?.find(tree => tree.name === "V1");
   const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
 
-  // Load event node configurations to get actual gold/XP values
-  const eventConfigs = useQuery(api.eventNodeRewards.getConfigurations);
-  const attempt2Config = eventConfigs?.find(config => config.name === "attempt 2!");
-
-  // Parse configuration data once
+  // Parse deployed event nodes for direct access
   const [parsedConfig, setParsedConfig] = useState<any>(null);
-  useEffect(() => {
-    if (attempt2Config?.data) {
-      try {
-        const parsed = JSON.parse(attempt2Config.data);
-        setParsedConfig(parsed);
-        console.log('Parsed attempt 2! configuration:', parsed);
-        // Log the structure to understand how to access the data
-        if (parsed) {
-          console.log('Config keys:', Object.keys(parsed));
-          if (parsed.events) {
-            console.log('Sample event:', parsed.events[0]);
-          }
-          if (parsed.nodes) {
-            console.log('Sample node:', parsed.nodes[0]);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to parse configuration:', e);
-      }
-    }
-  }, [attempt2Config]);
-  
+
   const [previewNodes, setPreviewNodes] = useState<StoryNode[] | null>(null);
   const [previewConnections, setPreviewConnections] = useState<Connection[] | null>(null);
 
@@ -159,15 +146,38 @@ export default function StoryClimbPage() {
 
   // Fetch deployed event data
   const activeDeployment = useQuery(api.deployedNodeData.getActiveDeployment);
+  const attributeRarity = useQuery(api.attributeRarity.getAttributeRarity);
   const [deployedEventNodes, setDeployedEventNodes] = useState<Map<string, any>>(new Map());
   const [deployedNormalNodes, setDeployedNormalNodes] = useState<any[]>([]);
   const [deployedChallengerNodes, setDeployedChallengerNodes] = useState<any[]>([]);
   const [deployedMiniBossNodes, setDeployedMiniBossNodes] = useState<any[]>([]);
   const [deployedFinalBossNodes, setDeployedFinalBossNodes] = useState<any[]>([]);
 
+  // Create mapping of event node IDs to their position in the tree
+  const [eventNodePositionMap, setEventNodePositionMap] = useState<Map<string, number>>(new Map());
+
   // Process deployed event data into a Map for easy lookups
   useEffect(() => {
-    console.log('Active deployment:', activeDeployment);
+    // Check if there's any deployment at all
+    if (!activeDeployment) {
+      console.log('❌ NO ACTIVE DEPLOYMENT FOUND');
+      console.log('📝 To fix this:');
+      console.log('   1. Go to Admin Master Data page (/admin-master-data)');
+      console.log('   2. Open "Story Climb Mechanics" section');
+      console.log('   3. Configure event names and rewards');
+      console.log('   4. Click "Deploy to Story Climb"');
+      return;
+    }
+
+    console.log('🔍 DEPLOYMENT PIPELINE DEBUG:', {
+      hasActiveDeployment: !!activeDeployment,
+      deploymentId: activeDeployment?.deploymentId,
+      version: activeDeployment?.version,
+      eventNodesCount: activeDeployment?.eventNodes ?
+        (typeof activeDeployment.eventNodes === 'string' ?
+          JSON.parse(activeDeployment.eventNodes).length :
+          activeDeployment.eventNodes.length) : 0
+    });
 
     // Load event nodes
     if (activeDeployment?.eventNodes) {
@@ -175,7 +185,18 @@ export default function StoryClimbPage() {
         const eventData = typeof activeDeployment.eventNodes === 'string'
           ? JSON.parse(activeDeployment.eventNodes)
           : activeDeployment.eventNodes;
-        console.log('Parsed event data:', eventData.length, 'events');
+        console.log('📦 Parsed event data:', eventData.length, 'events');
+
+        // Log first few events to see their structure
+        if (eventData.length > 0) {
+          console.log('Sample events:', eventData.slice(0, 3).map((e: any) => ({
+            eventNumber: e.eventNumber,
+            name: e.name,
+            goldReward: e.goldReward,
+            xpReward: e.xpReward
+          })));
+        }
+
         const nodeMap = new Map();
 
         eventData.forEach((event: any) => {
@@ -187,7 +208,11 @@ export default function StoryClimbPage() {
             const localEventNumber = ((eventNumber - 1) % 20) + 1;
 
             // Calculate chip rewards for this event
-            const chipRewards = calculateChipRewardsForEvent(eventNumber);
+            const calculatedRewards = calculateChipRewardsForEvent(eventNumber);
+            // Ensure chipRewards is an array (use rewards property if it's an object)
+            const chipRewards = Array.isArray(calculatedRewards)
+              ? calculatedRewards
+              : (calculatedRewards?.rewards || []);
 
             // Store both by event number and potential node IDs
             // Map imageReference to image for consistency
@@ -197,45 +222,59 @@ export default function StoryClimbPage() {
               localEventNumber,
               chipRewards,
               globalEventNumber: eventNumber,
-              // Ensure 'image' field exists for compatibility
-              image: event.image || event.imageReference || `/event-images/${eventNumber}.webp`
+              // Ensure 'image' field exists for compatibility - handle various field names
+              image: event.image || event.imageReference || event.imagePath || `/event-images/450px%20webp/${eventNumber}.webp`
             };
 
-            // Add many possible key formats to increase chance of matching
-            nodeMap.set(`event_${eventNumber}`, eventData);
-            nodeMap.set(`E${localEventNumber}`, eventData); // Also map by local event format
-            nodeMap.set(`E${chapter}_${localEventNumber}`, eventData); // And chapter-specific format
-            nodeMap.set(`${eventNumber}`, eventData); // Just the number
-            nodeMap.set(eventNumber, eventData); // Number as number
+            // IMPORTANT: Use global event number as primary key to avoid collisions
+            // Don't use "E1" for all chapters - that causes overwrites!
 
-            // For chapter 1, also add simple numeric keys for events 1-20
+            // Primary keys using global event number (unique across all chapters)
+            nodeMap.set(`event_${eventNumber}`, eventData);
+            nodeMap.set(eventNumber.toString(), eventData);
+            nodeMap.set(eventNumber, eventData);
+
+            // Chapter-specific keys that won't collide
+            nodeMap.set(`ch${chapter}_E${localEventNumber}`, eventData); // "ch1_E1", "ch10_E1" are different
+            nodeMap.set(`E${chapter}_${localEventNumber}`, eventData); // "E1_1", "E10_1" are different
+
+            // Node ID formats
+            nodeMap.set(`ch${chapter}_node_event_${localEventNumber}`, eventData);
+            nodeMap.set(`ch${chapter}_e${localEventNumber}`, eventData);
+            nodeMap.set(`node_event_${eventNumber}`, eventData);
+            nodeMap.set(`event_node_${eventNumber}`, eventData);
+
+            // Only for Chapter 1, use simple "E1" format (no collision)
             if (chapter === 1) {
+              nodeMap.set(`E${localEventNumber}`, eventData); // "E1" only for Chapter 1
+              nodeMap.set(`Event ${localEventNumber}`, eventData); // "Event 1" only for Chapter 1
               nodeMap.set(localEventNumber.toString(), eventData);
               nodeMap.set(localEventNumber, eventData);
             }
 
-            // Log what we're storing
-            console.log(`Storing event ${eventNumber} (ch${chapter} E${localEventNumber}) with data:`, {
-              name: eventData.name,
-              image: eventData.image,
-              goldReward: eventData.goldReward,
-              xpReward: eventData.xpReward,
-              keys: [
-                `event_${eventNumber}`,
-                `E${localEventNumber}`,
-                `E${chapter}_${localEventNumber}`,
-                `${eventNumber}`
-              ]
-            });
+            // Log what we're storing (only first few per chapter to avoid spam)
+            if (localEventNumber <= 2 || localEventNumber === 20) {
+              console.log(`📦 Storing Ch${chapter} Event ${localEventNumber} (Global #${eventNumber}):`, {
+                name: eventData.name,
+                image: eventData.image ? '✓ Has image' : '✗ No image',
+                goldReward: eventData.goldReward,
+                xpReward: eventData.xpReward
+              });
+            }
           }
         });
 
         setDeployedEventNodes(nodeMap);
         console.log('Loaded deployed event data:', nodeMap.size, 'events');
-        console.log('Map keys:', Array.from(nodeMap.keys()));
+        // console.log('Map keys:', Array.from(nodeMap.keys()));
+
+        // Also set parsedConfig for compatibility with existing code
+        setParsedConfig({ events: eventData });
       } catch (error) {
         console.error('Failed to parse deployed event data:', error);
       }
+    } else {
+      console.log('⚠️ No event nodes in active deployment');
     }
 
     // Load normal nodes (already parsed from the query)
@@ -427,16 +466,144 @@ export default function StoryClimbPage() {
     return null;
   }, [deployedNormalNodes, deployedChallengerNodes, deployedMiniBossNodes, deployedFinalBossNodes]);
 
+  // Helper function to calculate essence probabilities using attribute rarity
+  const calculateEssenceProbabilities = useCallback((head: string, body: string, trait: string) => {
+    if (!attributeRarity || !attributeRarity.heads || !attributeRarity.bodies || !attributeRarity.traits) {
+      // Return default probabilities if no rarity data
+      return {
+        headChance: 33,
+        bodyChance: 34,
+        traitChance: 33,
+      };
+    }
+
+    const headData = attributeRarity.heads[head];
+    const bodyData = attributeRarity.bodies[body];
+    const traitData = attributeRarity.traits[trait];
+
+    if (!headData || !bodyData || !traitData) {
+      // Return default if any attribute is missing
+      return {
+        headChance: 33,
+        bodyChance: 34,
+        traitChance: 33,
+      };
+    }
+
+    // Calculate proportional weights (more common items have higher drop chance)
+    // The drop rate is proportional to how common the variation is
+    const headWeight = headData.count;
+    const bodyWeight = bodyData.count;
+    const traitWeight = traitData.count;
+
+    // Normalize to percentages that sum to 100%
+    const totalWeight = headWeight + bodyWeight + traitWeight;
+
+    let headChance = Math.round((headWeight / totalWeight) * 100);
+    let bodyChance = Math.round((bodyWeight / totalWeight) * 100);
+    let traitChance = Math.round((traitWeight / totalWeight) * 100);
+
+    // Ensure they sum to exactly 100%
+    const currentTotal = headChance + bodyChance + traitChance;
+    if (currentTotal !== 100) {
+      const diff = 100 - currentTotal;
+      if (headChance >= bodyChance && headChance >= traitChance) {
+        headChance += diff;
+      } else if (bodyChance >= traitChance) {
+        bodyChance += diff;
+      } else {
+        traitChance += diff;
+      }
+    }
+
+    return {
+      headChance,
+      bodyChance,
+      traitChance,
+      headCount: headData.count,
+      bodyCount: bodyData.count,
+      traitCount: traitData.count,
+    };
+  }, [attributeRarity]);
+
   // Helper to get event data for a node
   const getEventDataForNode = useCallback((node: StoryNode) => {
     if (node.storyNodeType !== 'event') return null;
 
-    console.log('Looking for event data for node:', {
-      id: node.id,
-      label: node.label,
-      type: node.storyNodeType
-    });
-    console.log('Available deployed event keys:', Array.from(deployedEventNodes.keys()));
+    // Disable debug logging to stop spam
+    const DEBUG = false;
+
+    // First, try direct label match (most likely for event nodes)
+    if (node.label && node.label !== 'Node' && deployedEventNodes.has(node.label)) {
+      const eventData = deployedEventNodes.get(node.label);
+      console.log('✅ DIRECT LABEL MATCH:', node.label, eventData);
+      return eventData;
+    }
+
+    // Special handling when label is generic "Node"
+    // Use position mapping to find the correct event
+    if (node.label === 'Node' && node.storyNodeType === 'event') {
+      // Use the position map to find which global event number this node represents
+      const globalEventNumber = eventNodePositionMap.get(node.id);
+      if (globalEventNumber) {
+        // Calculate local event number within chapter (1-20)
+        const localEventNumber = ((globalEventNumber - 1) % 20) + 1;
+        const chapter = Math.ceil(globalEventNumber / 20);
+
+        if (DEBUG) {
+          console.log(`📍 Node position: Chapter ${chapter}, Event ${localEventNumber} (Global: ${globalEventNumber})`);
+        }
+
+        // Try to find the deployed event data for this position
+        // Prioritize unique keys to avoid chapter collisions
+        const possibleKeys = [
+          // Global event number keys (most unique, no collisions)
+          globalEventNumber.toString(), // "1", "181", etc.
+          globalEventNumber, // 1, 181, etc. (number)
+          `event_${globalEventNumber}`, // event_1, event_181, etc.
+
+          // Chapter-specific keys (also unique)
+          `ch${chapter}_E${localEventNumber}`, // ch1_E1, ch10_E1 (unique)
+          `E${chapter}_${localEventNumber}`, // E1_1, E10_1 (unique)
+
+          // Simple keys ONLY for Chapter 1 (to avoid collisions)
+          ...(chapter === 1 ? [
+            `E${localEventNumber}`, // E1, E2, etc.
+            `Event ${localEventNumber}`, // Event 1, Event 2, etc.
+            localEventNumber.toString(), // "1", "2", etc.
+            localEventNumber, // 1, 2, etc. (number)
+          ] : [])
+        ];
+
+        for (const key of possibleKeys) {
+          if (deployedEventNodes.has(key)) {
+            const eventData = deployedEventNodes.get(key);
+
+            // Log what we found to debug the mismatch (only once per unique event)
+            if (!window.debuggedEvents) window.debuggedEvents = new Set();
+            if (!window.debuggedEvents.has(node.id)) {
+              window.debuggedEvents.add(node.id);
+              console.log('✅ FOUND MATCH using position-based key:', key);
+              console.log('Event data retrieved:', {
+                key,
+                name: eventData?.name,
+                globalEventNumber: eventData?.globalEventNumber,
+                eventNumber: eventData?.eventNumber,
+                chapter: eventData?.chapter,
+                localEventNumber: eventData?.localEventNumber
+              });
+            }
+
+            return eventData;
+          }
+        }
+
+        console.log('⚠️ No match found for event position:', globalEventNumber);
+        console.log('Available keys sample:', Array.from(deployedEventNodes.keys()).slice(0, 10));
+      } else {
+        console.log('⚠️ No position mapping for node:', node.id);
+      }
+    }
 
     // Extract chapter from node ID (e.g., "ch1_node_..." -> 1)
     const chapterMatch = node.id?.match(/ch(\d+)/);
@@ -466,20 +633,27 @@ export default function StoryClimbPage() {
         `E${chapter}_${localEventNumber}`, // Chapter-specific format
       ];
 
-      console.log('Calculated event numbers:', {
-        nodeId: node.id,
-        label: node.label,
-        chapter,
-        localEventNumber,
-        globalEventNumber,
-        tryingIds: possibleIds
-      });
+      if (DEBUG) {
+        console.log('📊 Calculated event numbers:', {
+          nodeId: node.id,
+          label: node.label,
+          chapter,
+          localEventNumber,
+          globalEventNumber,
+          tryingIds: possibleIds
+        });
+      }
 
       for (const id of possibleIds) {
         if (id !== null && id !== undefined && deployedEventNodes.has(id)) {
-          console.log('Found match with ID:', id);
           const eventData = deployedEventNodes.get(id);
-          console.log('Retrieved event data:', eventData);
+          if (DEBUG) {
+            console.log('✅ MATCH FOUND with ID:', id, {
+              name: eventData?.name,
+              goldReward: eventData?.goldReward,
+              xpReward: eventData?.xpReward
+            });
+          }
           return eventData;
         }
       }
@@ -489,14 +663,25 @@ export default function StoryClimbPage() {
     const fallbackIds = [node.id, node.label];
     for (const id of fallbackIds) {
       if (id && deployedEventNodes.has(id)) {
-        console.log('Found match with fallback ID:', id);
-        return deployedEventNodes.get(id);
+        const eventData = deployedEventNodes.get(id);
+        if (DEBUG) {
+          console.log('✅ FALLBACK MATCH with ID:', id, {
+            name: eventData?.name
+          });
+        }
+        return eventData;
       }
     }
 
-    console.log('No match found for event node');
+    if (DEBUG) {
+      console.log('❌ NO MATCH FOUND for event node:', {
+        nodeId: node.id,
+        label: node.label,
+        hasDeployedData: deployedEventNodes.size > 0
+      });
+    }
     return null;
-  }, [deployedEventNodes]);
+  }, [deployedEventNodes, eventNodePositionMap]);
 
   // Helper function to generate rewards based on node type and level
   const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
@@ -514,7 +699,7 @@ export default function StoryClimbPage() {
       const eventData = getEventDataForNode(node);
       console.log('Event node detected, eventData:', eventData);
 
-      if (eventData?.chipRewards) {
+      if (eventData?.chipRewards && Array.isArray(eventData.chipRewards)) {
         // Use deployed chip rewards if available
         console.log('Using deployed chip rewards:', eventData.chipRewards);
         return eventData.chipRewards.map((chip: any) => ({
@@ -554,50 +739,80 @@ export default function StoryClimbPage() {
       }));
     }
 
-    // Get deployed mek to determine reward tier
+    // Get deployed mek to determine rewards
     const deployedMek = getDeployedMekForNode(node);
-    const rank = deployedMek?.rank || 2000; // Default to mid-tier if no rank
 
-    // Determine reward tier based on rank (1-4000, where 1 is best)
+    // If we have deployed mek data with essence types, use those
+    if (deployedMek && deployedMek.head && deployedMek.body && deployedMek.trait) {
+      // Calculate dynamic essence drop probabilities based on actual rarity
+      const probabilities = calculateEssenceProbabilities(
+        deployedMek.head,
+        deployedMek.body,
+        deployedMek.trait
+      );
+
+      const essenceRewards = [
+        {
+          name: `${deployedMek.head} Essence`,
+          quantity: deployedMek.essenceReward || 1,
+          chance: probabilities.headChance
+        },
+        {
+          name: `${deployedMek.body} Essence`,
+          quantity: deployedMek.essenceReward || 1,
+          chance: probabilities.bodyChance
+        },
+        {
+          name: `${deployedMek.trait} Essence`,
+          quantity: deployedMek.essenceReward || 1,
+          chance: probabilities.traitChance
+        }
+      ];
+
+      // Sort by chance (highest to lowest) for better display
+      essenceRewards.sort((a, b) => b.chance - a.chance);
+
+      console.log('Using deployed mek essence rewards with dynamic probabilities:', {
+        head: deployedMek.head,
+        body: deployedMek.body,
+        trait: deployedMek.trait,
+        essenceReward: deployedMek.essenceReward,
+        probabilities,
+        totalDropChance: essenceRewards.reduce((sum, r) => sum + r.chance, 0),
+        rewards: essenceRewards
+      });
+
+      return essenceRewards;
+    }
+
+    // Fallback to generic rewards if no deployed data
+    const rank = deployedMek?.rank || 2000;
     let rewardTier: 'legendary' | 'rare' | 'uncommon' | 'common';
     if (rank <= 100) rewardTier = 'legendary';
     else if (rank <= 500) rewardTier = 'rare';
     else if (rank <= 2000) rewardTier = 'uncommon';
     else rewardTier = 'common';
 
-    // Define rewards based on tier
     const rewardsByTier = {
       legendary: [
-        { name: "Legendary Power Chip", quantity: 3, chance: 75 },
-        { name: "Rare Essence", quantity: 5, chance: 45 },
-        { name: "Epic Frame", quantity: 2, chance: 30 },
-        { name: "SSS Canister", quantity: 2, chance: 15 },
-        { name: "Mythic Core", quantity: 1, chance: 8 },
-        { name: "Divine Spark", quantity: 1, chance: 1 }
+        { name: "Legendary Essence", quantity: 3, chance: 45 },
+        { name: "Epic Essence", quantity: 2, chance: 30 },
+        { name: "Rare Essence", quantity: 1, chance: 15 }
       ],
       rare: [
-        { name: "Rare Power Chip", quantity: 3, chance: 75 },
-        { name: "Golden Essence", quantity: 3, chance: 45 },
-        { name: "Rare Frame", quantity: 2, chance: 30 },
-        { name: "S Canister", quantity: 1, chance: 15 },
-        { name: "Epic Core", quantity: 1, chance: 8 },
-        { name: "Legendary Spark", quantity: 1, chance: 1 }
+        { name: "Rare Essence", quantity: 3, chance: 45 },
+        { name: "Uncommon Essence", quantity: 2, chance: 30 },
+        { name: "Common Essence", quantity: 1, chance: 15 }
       ],
       uncommon: [
-        { name: "Uncommon Power Chip", quantity: 2, chance: 75 },
-        { name: "Silver Essence", quantity: 2, chance: 45 },
-        { name: "Uncommon Frame", quantity: 1, chance: 30 },
-        { name: "A Canister", quantity: 1, chance: 15 },
-        { name: "Rare Core", quantity: 1, chance: 8 },
-        { name: "Epic Spark", quantity: 1, chance: 1 }
+        { name: "Uncommon Essence", quantity: 2, chance: 45 },
+        { name: "Common Essence", quantity: 2, chance: 30 },
+        { name: "Basic Essence", quantity: 1, chance: 15 }
       ],
       common: [
-        { name: "Common Power Chip", quantity: 2, chance: 75 },
-        { name: "Bumblebee Essence", quantity: 1.5, chance: 45 },
-        { name: "Paul Essence", quantity: 2, chance: 30 },
-        { name: "DMT Canister", quantity: 1, chance: 15 },
-        { name: "Rare Power Chip", quantity: 1, chance: 8 },
-        { name: "Legendary Frame", quantity: 1, chance: 1 }
+        { name: "Common Essence", quantity: 2, chance: 45 },
+        { name: "Basic Essence", quantity: 1.5, chance: 30 },
+        { name: "Starter Essence", quantity: 1, chance: 15 }
       ]
     };
 
@@ -628,7 +843,7 @@ export default function StoryClimbPage() {
     // For event nodes, calculate and return chip rewards as buffs
     if (node.storyNodeType === 'event') {
       const eventData = getEventDataForNode(node);
-      if (eventData?.chipRewards) {
+      if (eventData?.chipRewards && Array.isArray(eventData.chipRewards)) {
         return eventData.chipRewards.map((chip: any) => ({
           id: `chip-${chip.tier}-${chip.modifier}`,
           name: `T${chip.tier} ${chip.modifier}`,
@@ -695,7 +910,7 @@ export default function StoryClimbPage() {
     }
 
     return selectedBuffs;
-  }, [getDeployedMekForNode, getEventDataForNode]);
+  }, [getDeployedMekForNode, getEventDataForNode, calculateEssenceProbabilities]);
   
   // Helper function to get available slots for a node (for testing)
   const getNodeAvailableSlots = useCallback((node: ExtendedStoryNode) => {
@@ -832,7 +1047,7 @@ export default function StoryClimbPage() {
     }
   }, [treeData, previewMode, getDeployedMekForNode, leastRareMechanisms, deployedNormalNodes, deployedChallengerNodes, deployedMiniBossNodes, deployedFinalBossNodes]); // Include all deployment data dependencies
   
-  // Debug logging
+  // Debug logging and create event node position mapping
   useEffect(() => {
     console.log("Story trees from database:", storyTrees);
     console.log("V1 tree:", v1Tree);
@@ -850,6 +1065,68 @@ export default function StoryClimbPage() {
         challenger: treeData.nodes?.filter(n => n.challenger).length
       });
       console.log("First few nodes:", treeData.nodes?.slice(0, 10));
+
+      // Create event node position mapping
+      const eventNodes = treeData.nodes?.filter((n: any) => n.storyNodeType === 'event');
+      if (eventNodes && eventNodes.length > 0) {
+        console.log("🎯 Event nodes in tree - Sample IDs:", eventNodes.slice(0, 10).map((n: any) => ({
+          id: n.id,
+          label: n.label,
+        })));
+
+        // Sort event nodes by chapter first, then by position within chapter
+        // Extract chapter from node ID to ensure correct ordering
+        const sortedEventNodes = [...eventNodes].sort((a, b) => {
+          // Extract chapter numbers from node IDs
+          const chapterA = parseInt(a.id?.match(/ch(\d+)/)?.[1] || '1');
+          const chapterB = parseInt(b.id?.match(/ch(\d+)/)?.[1] || '1');
+
+          // First sort by chapter (1 before 2, etc.)
+          if (chapterA !== chapterB) {
+            return chapterA - chapterB;
+          }
+
+          // Within same chapter, sort by Y position (higher Y = lower on screen = earlier in tree)
+          // In a skill tree, START is at bottom (high Y), END is at top (low Y)
+          if (Math.abs(a.y - b.y) > 10) { // If Y values differ significantly
+            return b.y - a.y; // Higher Y first (bottom of tree)
+          }
+
+          // If Y is similar (same row), sort by X position (left to right)
+          return a.x - b.x;
+        });
+
+        // Create position map - events are numbered globally (1-200)
+        // but we need to track them per chapter for proper mapping
+        const posMap = new Map<string, number>();
+        let currentChapter = 0;
+        let eventInChapter = 0;
+
+        sortedEventNodes.forEach((node, index) => {
+          // Extract chapter from node ID
+          const nodeChapter = parseInt(node.id?.match(/ch(\d+)/)?.[1] || '1');
+
+          // Reset counter when entering new chapter
+          if (nodeChapter !== currentChapter) {
+            currentChapter = nodeChapter;
+            eventInChapter = 0;
+          }
+
+          eventInChapter++;
+
+          // Calculate global event number: (chapter-1) * 20 + eventInChapter
+          const globalEventNumber = (currentChapter - 1) * 20 + eventInChapter;
+
+          posMap.set(node.id, globalEventNumber);
+
+          // Only log first few events per chapter to avoid spam
+          if (eventInChapter <= 3 || eventInChapter === 20) {
+            console.log(`Event position mapping: ${node.id} -> Chapter ${currentChapter}, Event ${eventInChapter} (Global: ${globalEventNumber})`);
+          }
+        });
+
+        setEventNodePositionMap(posMap);
+      }
     }
     console.log("Preview mode:", previewMode);
   }, [storyTrees, v1Tree, v2Tree, test5Tree, treeData, previewMode]);
@@ -872,12 +1149,12 @@ export default function StoryClimbPage() {
     // There are 154 event images (blank resize.webp and blank resize_2.webp through blank resize_154.webp)
     const totalEventImages = 154;
     const index = Math.abs(hash) % totalEventImages;
-    
-    // Return the correct filename
+
+    // Return the correct filename with URL-encoded spaces
     if (index === 0) {
-      return 'blank resize.webp';
+      return 'blank%20resize.webp';
     } else {
-      return `blank resize_${index + 1}.webp`;
+      return `blank%20resize_${index + 1}.webp`;
     }
   }, []);
 
@@ -915,19 +1192,50 @@ export default function StoryClimbPage() {
           promises.push(promise);
         } else if (node.storyNodeType === 'event') {
           // Load event images for event nodes
+          console.log('📸 Loading image for event node:', {
+            nodeId: node.id,
+            nodeLabel: node.label,
+            storyNodeType: node.storyNodeType
+          });
+
           const eventData = getEventDataForNode(node);
+          console.log('📸 Event data found:', {
+            hasData: !!eventData,
+            hasImage: !!eventData?.image,
+            imagePath: eventData?.image,
+            eventName: eventData?.name
+          });
+
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
-            img.onload = () => resolve();
-            img.onerror = () => resolve(); // Still resolve on error to not block
+            img.onload = () => {
+              console.log('✅ Image loaded successfully for:', node.id);
+              resolve();
+            };
+            img.onerror = () => {
+              console.log('❌ Image failed to load for:', node.id);
+              resolve(); // Still resolve on error to not block
+            };
           });
 
           // Use deployed event image if available, otherwise use random
           if (eventData?.image) {
-            img.src = eventData.image;
+            // Ensure the path is properly formatted
+            let imagePath = eventData.image;
+
+            // Handle paths with spaces - they should already be URL-encoded from deployment
+            // but ensure consistency
+            if (imagePath.includes(' ') && !imagePath.includes('%20')) {
+              imagePath = imagePath.replace(/ /g, '%20');
+            }
+
+            console.log('📸 Using deployed image:', imagePath);
+            img.src = imagePath;
           } else {
             const eventImageName = getEventImage(node.id);
-            img.src = `/event-images/450px webp/${eventImageName.replace(/ /g, '%20')}`;
+            const fallbackPath = `/event-images/450px%20webp/${eventImageName.replace(/ /g, '%20')}`;
+            console.log('📸 Using fallback image:', fallbackPath);
+            img.src = fallbackPath;
           }
 
           eventImageMap.set(node.id, img);
@@ -1173,8 +1481,12 @@ export default function StoryClimbPage() {
           
           ctx.save();
           if (isAvailablePath) {
-            // Glowing connection to available nodes
-            const glowIntensity = 0.5 + Math.sin(Date.now() / 500) * 0.3;
+            // Glowing connection to available nodes with smooth animation
+            const connectionTime = Date.now() / 500;
+            const rawConnectionGlow = Math.sin(connectionTime);
+            const easedConnectionGlow = rawConnectionGlow < 0 ? -Math.pow(-rawConnectionGlow, 1.4) : Math.pow(rawConnectionGlow, 1.4);
+            const glowIntensity = 0.5 + easedConnectionGlow * 0.25;
+
             ctx.shadowBlur = 15;
             ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
             ctx.strokeStyle = '#fab617';
@@ -1223,7 +1535,7 @@ export default function StoryClimbPage() {
       
       // Log START node position specifically
       if (node.id === 'start') {
-        console.log(`START node transformed position: (${pos.x}, ${pos.y}), canvas height: ${canvas.height}`);
+        // console.log(`START node transformed position: (${pos.x}, ${pos.y}), canvas height: ${canvas.height}`);
       }
       
       // Skip nodes outside viewport
@@ -1314,25 +1626,54 @@ export default function StoryClimbPage() {
 
         // Apply strong pulsating yellow glow for selected node
         if (isNodeSelected) {
-          // Strong pulsating yellow glow for selected node
+          // Strong pulsating yellow glow for selected node with smooth gradients
           ctx.save();
-          const pulseIntensity = 0.7 + Math.sin(Date.now() / 400) * 0.3; // Stronger pulse
-          ctx.shadowBlur = 50; // Bigger blur
-          ctx.shadowColor = `rgba(250, 182, 23, ${pulseIntensity})`;
-          // Triple glow effect for selected
-          for (let i = 0; i < 3; i++) {
-            if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+
+          // Use smoother sine wave with easing for less banding
+          const time = Date.now() / 400;
+          const rawPulse = Math.sin(time);
+          // Apply easing function to smooth the transitions
+          const easedPulse = rawPulse < 0
+            ? -Math.pow(-rawPulse, 1.5)
+            : Math.pow(rawPulse, 1.5);
+          const pulseIntensity = 0.7 + easedPulse * 0.25; // Slightly reduced range for smoother transitions
+
+          // Use radial gradient for smoother glow effect
+          if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+            // Create radial gradient for smoother glow
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+            gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
+            gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
+            gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
+            gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
+
+            // Draw multiple concentric circles with gradient
+            for (let i = 2; i >= 0; i--) {
               ctx.beginPath();
-              ctx.arc(pos.x, pos.y, nodeSize + i * 7, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.25)})`;
-              ctx.lineWidth = 3;
+              ctx.arc(pos.x, pos.y, nodeSize + i * 8 + easedPulse * 2, 0, Math.PI * 2);
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2 + (2 - i);
+              ctx.globalAlpha = 0.8 - i * 0.2;
               ctx.stroke();
-            } else {
-              ctx.strokeStyle = `rgba(250, 182, 23, ${pulseIntensity * (1 - i * 0.25)})`;
-              ctx.lineWidth = 3;
-              ctx.strokeRect(pos.x - nodeSize - i * 7, pos.y - nodeSize - i * 7, (nodeSize + i * 7) * 2, (nodeSize + i * 7) * 2);
+            }
+          } else {
+            // Square glow for boss nodes
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+            gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
+            gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
+            gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
+            gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
+
+            for (let i = 2; i >= 0; i--) {
+              const offset = i * 8 + easedPulse * 2;
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2 + (2 - i);
+              ctx.globalAlpha = 0.8 - i * 0.2;
+              ctx.strokeRect(pos.x - nodeSize - offset, pos.y - nodeSize - offset, (nodeSize + offset) * 2, (nodeSize + offset) * 2);
             }
           }
+
+          ctx.globalAlpha = 1;
           ctx.restore();
         } // Close isNodeSelected block
         // Hover effect removed per user request - no animation on hover
@@ -1340,7 +1681,13 @@ export default function StoryClimbPage() {
         // Base glow for available nodes (subtle white glow, stronger yellow for selected)
         ctx.save();
         const isSelectedGlow = selectedNode && selectedNode.id === node.id;
-        const baseGlowIntensity = isSelectedGlow ? 0.4 + Math.sin(Date.now() / 400) * 0.3 : 0.15 + Math.sin(Date.now() / 1000) * 0.05;
+
+        // Smoother animation for base glow
+        const glowTime = Date.now() / (isSelectedGlow ? 400 : 1000);
+        const rawGlow = Math.sin(glowTime);
+        const easedGlow = rawGlow < 0 ? -Math.pow(-rawGlow, 1.3) : Math.pow(rawGlow, 1.3);
+        const baseGlowIntensity = isSelectedGlow ? 0.4 + easedGlow * 0.25 : 0.15 + easedGlow * 0.04;
+
         ctx.shadowBlur = isSelectedGlow ? 35 : 20;
         ctx.shadowColor = isSelectedGlow ? `rgba(250, 182, 23, ${baseGlowIntensity})` : `rgba(255, 255, 255, ${baseGlowIntensity})`;
         ctx.shadowOffsetX = 0;
@@ -1361,7 +1708,13 @@ export default function StoryClimbPage() {
         // Additional glow layer (yellow for selected, subtle white for others)
         ctx.save();
         const isNodeSelectedGlow = selectedNode && selectedNode.id === node.id;
-        const glowIntensity = isNodeSelectedGlow ? 0.5 + Math.sin(Date.now() / 400) * 0.3 : 0.2 + Math.sin(Date.now() / 1000) * 0.1;
+
+        // Smooth animation for additional glow
+        const additionalGlowTime = Date.now() / (isNodeSelectedGlow ? 400 : 1000);
+        const rawAdditionalGlow = Math.sin(additionalGlowTime);
+        const easedAdditionalGlow = rawAdditionalGlow < 0 ? -Math.pow(-rawAdditionalGlow, 1.4) : Math.pow(rawAdditionalGlow, 1.4);
+        const glowIntensity = isNodeSelectedGlow ? 0.5 + easedAdditionalGlow * 0.25 : 0.2 + easedAdditionalGlow * 0.08;
+
         ctx.shadowBlur = isNodeSelectedGlow ? 25 : 10;
         ctx.shadowColor = isNodeSelectedGlow ? `rgba(250, 182, 23, ${glowIntensity})` : `rgba(255, 255, 255, ${glowIntensity * 0.5})`;
         
@@ -1392,11 +1745,17 @@ export default function StoryClimbPage() {
         const isNodeSelectedHere = selectedNode && selectedNode.id === node.id;
         if (isAvailable) {
           if (isNodeSelectedHere) {
-            const glowIntensity = 0.6 + Math.sin(Date.now() / 400) * 0.4;
+            const selectedTime = Date.now() / 400;
+            const rawSelectedGlow = Math.sin(selectedTime);
+            const easedSelectedGlow = rawSelectedGlow < 0 ? -Math.pow(-rawSelectedGlow, 1.3) : Math.pow(rawSelectedGlow, 1.3);
+            const glowIntensity = 0.6 + easedSelectedGlow * 0.35;
             ctx.shadowBlur = 30;
             ctx.shadowColor = `rgba(250, 182, 23, ${glowIntensity})`;
           } else {
-            const glowIntensity = 0.3 + Math.sin(Date.now() / 800) * 0.2;
+            const subtleTime = Date.now() / 800;
+            const rawSubtleGlow = Math.sin(subtleTime);
+            const easedSubtleGlow = rawSubtleGlow < 0 ? -Math.pow(-rawSubtleGlow, 1.2) : Math.pow(rawSubtleGlow, 1.2);
+            const glowIntensity = 0.3 + easedSubtleGlow * 0.15;
             ctx.shadowBlur = 15;
             ctx.shadowColor = `rgba(255, 255, 255, ${glowIntensity})`;
           }
@@ -1436,6 +1795,19 @@ export default function StoryClimbPage() {
         ctx.fill();
         
         // Draw event image if available
+        if (node.storyNodeType === 'event') {
+          // Log only for first few events to avoid spam
+          const eventNum = parseInt(node.label?.replace('E', '') || '0');
+          if (eventNum <= 3) {
+            console.log('🎨 Rendering event node:', {
+              nodeId: node.id,
+              nodeLabel: node.label,
+              hasImage: eventImages.has(node.id),
+              eventImagesSize: eventImages.size
+            });
+          }
+        }
+
         if (eventImages.has(node.id)) {
           const img = eventImages.get(node.id)!;
           if (img.complete && img.naturalWidth > 0) {
@@ -1893,7 +2265,7 @@ export default function StoryClimbPage() {
                 borderWidth = 3;
               } else if (isAvailable) {
                 const isChallengerSelected = selectedNode && selectedNode.id === node.id;
-                borderColor = isChallengerSelected ? `rgba(250, 182, 23, ${challengerPulse})` : `rgba(255, 255, 255, ${challengerPulse})`; // Yellow if selected, white if available
+                borderColor = isChallengerSelected ? `rgba(250, 182, 23, ${challengerPulse})` : `rgba(255, 50, 50, ${challengerPulse})`; // Yellow if selected, red if available
                 borderWidth = 3;
               } else {
                 borderColor = `rgba(140, 40, 40, ${challengerPulse * 0.7})`; // Darker red pulse
@@ -1921,7 +2293,7 @@ export default function StoryClimbPage() {
               if (isCompleted) {
                 ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
               } else {
-                ctx.shadowColor = 'rgba(255, 100, 50, 0.6)'; // Orange-red glow
+                ctx.shadowColor = 'rgba(255, 50, 50, 0.8)'; // Red glow for available challenger
               }
               
               ctx.beginPath();
@@ -1942,26 +2314,35 @@ export default function StoryClimbPage() {
               // Draw special frame based on selected style
               switch (challengerFrameStyle) {
                 case 'spikes':
-                  // Draw jagged spikes around the circle - shorter and smoother
-                  const spikeCount = 24;
-                  const baseAlpha = 0.85;
+                  // Draw jagged spikes around the circle - bigger and bolder
+                  const spikeCount = 20; // Slightly fewer for bigger individual spikes
+                  const baseAlpha = 0.9;
                   const animOffset = nodeOffset * 0.001; // Use node-specific offset for desync
-                  
+
                   // Single path for all spikes for better performance
                   ctx.save();
-                  ctx.fillStyle = `rgba(120, 35, 35, ${baseAlpha * 0.7})`; // Much more muted red with reduced alpha
-                  ctx.strokeStyle = `rgba(100, 20, 20, ${0.6})`; // Very dark, subtle stroke
-                  ctx.lineWidth = 1.5;
-                  
+
+                  // Add glow for available state
+                  if (isAvailable && !isCompleted) {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = 'rgba(255, 50, 50, 0.6)';
+                    ctx.fillStyle = `rgba(180, 40, 40, ${baseAlpha})`; // Brighter red when available
+                    ctx.strokeStyle = `rgba(255, 50, 50, ${0.8})`; // Red glow stroke
+                  } else {
+                    ctx.fillStyle = `rgba(120, 35, 35, ${baseAlpha * 0.7})`; // Original muted red
+                    ctx.strokeStyle = `rgba(100, 20, 20, ${0.6})`; // Very dark, subtle stroke
+                  }
+                  ctx.lineWidth = 2.5; // Bolder stroke
+
                   ctx.beginPath();
                   for (let i = 0; i < spikeCount; i++) {
                     const angle = (i / spikeCount) * Math.PI * 2;
                     const innerRadius = halfSize;
-                    // Much shorter spikes - only 2-3 pixels out with gentle animation
-                    const outerRadius = halfSize + 2.5 + Math.sin(pulseTime + i * 0.3 + animOffset) * 0.5;
-                    
-                    // Create triangular spikes with smaller angle
-                    const angleWidth = 0.03; // Narrower spikes
+                    // Bigger spikes - 5-7 pixels out with more pronounced animation
+                    const outerRadius = halfSize + 6 + Math.sin(pulseTime + i * 0.3 + animOffset) * 1.5;
+
+                    // Create triangular spikes with wider angle for bolder look
+                    const angleWidth = 0.05; // Wider spikes
                     const x1 = pos.x + Math.cos(angle - angleWidth) * innerRadius;
                     const y1 = pos.y + Math.sin(angle - angleWidth) * innerRadius;
                     const x2 = pos.x + Math.cos(angle) * outerRadius;
@@ -2310,7 +2691,435 @@ export default function StoryClimbPage() {
         ctx.lineTo(pos.x + nodeSize/4, pos.y - nodeSize/4);
         ctx.stroke();
       }
-      
+
+      // Draw GOLD FRAME for nodes with all difficulties completed
+      const nodeDifficulties = completedDifficulties[node.id];
+      const allDifficultyCompleted = nodeDifficulties &&
+        nodeDifficulties.has('easy') &&
+        nodeDifficulties.has('medium') &&
+        nodeDifficulties.has('hard');
+
+      if (allDifficultyCompleted && node.id !== 'start') {
+        ctx.save();
+
+        // Determine if node is circular (events and normal nodes are circles in the canvas)
+        const isCircular = node.storyNodeType === 'event' || node.storyNodeType === 'normal';
+
+        // Use actual node size for tight hugging frames
+        const baseSize = node.storyNodeType === 'event' ? nodeSize :
+                        node.storyNodeType === 'boss' ? halfSize :
+                        node.storyNodeType === 'final_boss' ? halfSize :
+                        node.storyNodeType === 'normal' ? nodeSize :
+                        halfSize;
+
+        // Style 1: Wavy Golden Aura
+        if (goldFrameStyle === 1) {
+          const time = Date.now() * 0.002;
+
+          // Create wavy golden border that replaces the normal stroke
+          ctx.lineWidth = 6;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = 'rgba(255, 215, 0, 0.9)';
+
+          // Create gradient
+          const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, baseSize);
+          gradient.addColorStop(0.7, '#ffed4e');
+          gradient.addColorStop(0.85, '#ffd700');
+          gradient.addColorStop(1, '#ffed4e');
+          ctx.strokeStyle = gradient;
+
+          if (isCircular) {
+            // Draw wavy circle
+            ctx.beginPath();
+            const points = 32;
+            for (let i = 0; i <= points; i++) {
+              const angle = (i / points) * Math.PI * 2;
+              const waveAmount = Math.sin(angle * 4 + time) * 3;
+              const radius = baseSize + 2 + waveAmount;
+              const x = pos.x + Math.cos(angle) * radius;
+              const y = pos.y + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+          } else {
+            // Draw wavy square
+            ctx.beginPath();
+            const corners = [
+              { x: -baseSize, y: -baseSize },
+              { x: baseSize, y: -baseSize },
+              { x: baseSize, y: baseSize },
+              { x: -baseSize, y: baseSize }
+            ];
+
+            corners.forEach((corner, i) => {
+              const next = corners[(i + 1) % 4];
+              const steps = 8;
+              for (let j = 0; j <= steps; j++) {
+                const t = j / steps;
+                const wave = Math.sin((t + i + time) * Math.PI * 2) * 3;
+                const x = pos.x + corner.x + (next.x - corner.x) * t;
+                const y = pos.y + corner.y + (next.y - corner.y) * t;
+
+                // Add wave perpendicular to the edge
+                const perpX = i % 2 === 0 ? 0 : wave;
+                const perpY = i % 2 === 0 ? wave : 0;
+
+                if (i === 0 && j === 0) ctx.moveTo(x + perpX, y + perpY);
+                else ctx.lineTo(x + perpX, y + perpY);
+              }
+            });
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+
+        // Style 2: Spiked Sun Burst
+        else if (goldFrameStyle === 2) {
+          const time = Date.now() * 0.001;
+
+          // Draw sun burst spikes
+          ctx.strokeStyle = '#ffd700';
+          ctx.fillStyle = '#ffd700';
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+
+          if (isCircular) {
+            // Draw spiky sun-like border
+            const spikes = 16;
+            ctx.beginPath();
+            for (let i = 0; i <= spikes * 2; i++) {
+              const angle = (i / (spikes * 2)) * Math.PI * 2;
+              const isSpike = i % 2 === 0;
+              const radius = isSpike ? baseSize + 8 + Math.sin(time * 2) * 2 : baseSize;
+              const x = pos.x + Math.cos(angle) * radius;
+              const y = pos.y + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.globalAlpha = 0.3;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          } else {
+            // Draw crystalline edges for squares
+            ctx.lineWidth = 4;
+            const inset = 2;
+
+            // Draw main frame with crystal cuts
+            ctx.beginPath();
+            const cutSize = 8;
+
+            // Top edge with cuts
+            ctx.moveTo(pos.x - baseSize + cutSize, pos.y - baseSize - inset);
+            ctx.lineTo(pos.x + baseSize - cutSize, pos.y - baseSize - inset);
+            ctx.lineTo(pos.x + baseSize + inset, pos.y - baseSize + cutSize);
+
+            // Right edge
+            ctx.lineTo(pos.x + baseSize + inset, pos.y + baseSize - cutSize);
+            ctx.lineTo(pos.x + baseSize - cutSize, pos.y + baseSize + inset);
+
+            // Bottom edge
+            ctx.lineTo(pos.x - baseSize + cutSize, pos.y + baseSize + inset);
+            ctx.lineTo(pos.x - baseSize - inset, pos.y + baseSize - cutSize);
+
+            // Left edge
+            ctx.lineTo(pos.x - baseSize - inset, pos.y - baseSize + cutSize);
+            ctx.closePath();
+
+            ctx.stroke();
+            ctx.globalAlpha = 0.2;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        // Style 3: Flowing Liquid Gold
+        else if (goldFrameStyle === 3) {
+          const time = Date.now() * 0.0015;
+
+          // Create flowing liquid effect
+          const gradient = ctx.createLinearGradient(
+            pos.x - baseSize, pos.y - baseSize,
+            pos.x + baseSize, pos.y + baseSize
+          );
+          const shift = (Math.sin(time) + 1) / 2;
+          gradient.addColorStop(0, '#ffed4e');
+          gradient.addColorStop(0.3 + shift * 0.2, '#ffd700');
+          gradient.addColorStop(0.7 - shift * 0.2, '#ffb347');
+          gradient.addColorStop(1, '#ffed4e');
+
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 5;
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = 'rgba(255, 215, 0, 0.7)';
+
+          if (isCircular) {
+            // Draw flowing circle with drips
+            ctx.beginPath();
+            const points = 48;
+            for (let i = 0; i <= points; i++) {
+              const angle = (i / points) * Math.PI * 2;
+              const flow = Math.sin(angle * 3 + time * 2) * 2;
+              const drip = Math.max(0, Math.sin(angle * 8 + time * 3) * 3);
+              const radius = baseSize + 1 + flow + drip;
+              const x = pos.x + Math.cos(angle) * radius;
+              const y = pos.y + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+          } else {
+            // Draw melting square
+            ctx.beginPath();
+            const melt = Math.sin(time) * 2;
+
+            // Top edge (straight)
+            ctx.moveTo(pos.x - baseSize, pos.y - baseSize);
+            ctx.lineTo(pos.x + baseSize, pos.y - baseSize);
+
+            // Right edge with drips
+            for (let i = 0; i <= 8; i++) {
+              const t = i / 8;
+              const drip = Math.max(0, Math.sin(t * Math.PI * 3 + time * 2) * 4);
+              ctx.lineTo(pos.x + baseSize + drip, pos.y - baseSize + t * baseSize * 2);
+            }
+
+            // Bottom edge with waves
+            for (let i = 8; i >= 0; i--) {
+              const t = i / 8;
+              const wave = Math.sin(t * Math.PI * 2 + time) * 3;
+              ctx.lineTo(pos.x + baseSize - t * baseSize * 2, pos.y + baseSize + wave + melt);
+            }
+
+            // Left edge
+            ctx.lineTo(pos.x - baseSize, pos.y - baseSize);
+            ctx.stroke();
+          }
+        }
+
+        // Style 4: Celestial Ring
+        else if (goldFrameStyle === 4) {
+          const time = Date.now() * 0.001;
+
+          // Create gradient for celestial effect
+          const gradient = ctx.createRadialGradient(pos.x, pos.y, baseSize - 5, pos.x, pos.y, baseSize + 5);
+          gradient.addColorStop(0, 'rgba(255, 215, 0, 0)');
+          gradient.addColorStop(0.3, '#ffd700');
+          gradient.addColorStop(0.5, '#ffed4e');
+          gradient.addColorStop(0.7, '#ffd700');
+          gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 4;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#ffd700';
+
+          if (isCircular) {
+            // Draw orbital ring with star-like points
+            ctx.beginPath();
+            const points = 24;
+            for (let i = 0; i <= points; i++) {
+              const angle = (i / points) * Math.PI * 2;
+              const isPoint = i % 3 === 0;
+              const pointOffset = isPoint ? Math.sin(time * 3 + i) * 2 + 3 : 0;
+              const radius = baseSize + 2 + pointOffset;
+              const x = pos.x + Math.cos(angle) * radius;
+              const y = pos.y + Math.sin(angle) * radius;
+
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Add small orbiting stars
+            ctx.fillStyle = '#ffed4e';
+            ctx.shadowBlur = 10;
+            const starCount = 6;
+            for (let i = 0; i < starCount; i++) {
+              const angle = (i / starCount) * Math.PI * 2 + time * 2;
+              const starX = pos.x + Math.cos(angle) * (baseSize + 8);
+              const starY = pos.y + Math.sin(angle) * (baseSize + 8);
+
+              ctx.save();
+              ctx.translate(starX, starY);
+              ctx.rotate(time * 3 + i);
+
+              // Draw 4-pointed star
+              ctx.beginPath();
+              ctx.moveTo(0, -3);
+              ctx.lineTo(1, 0);
+              ctx.lineTo(0, 3);
+              ctx.lineTo(-1, 0);
+              ctx.closePath();
+              ctx.fill();
+
+              ctx.restore();
+            }
+          } else {
+            // Square version with corner stars
+            const halfSize = baseSize + 2;
+
+            // Draw enchanted square frame
+            ctx.beginPath();
+            // Top edge with wave
+            for (let i = 0; i <= 10; i++) {
+              const t = i / 10;
+              const wave = Math.sin(t * Math.PI * 2 + time * 3) * 2;
+              const x = pos.x - halfSize + (t * halfSize * 2);
+              const y = pos.y - halfSize + wave;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            // Right edge
+            for (let i = 0; i <= 10; i++) {
+              const t = i / 10;
+              const wave = Math.sin(t * Math.PI * 2 + time * 3 + Math.PI/2) * 2;
+              const x = pos.x + halfSize + wave;
+              const y = pos.y - halfSize + (t * halfSize * 2);
+              ctx.lineTo(x, y);
+            }
+            // Bottom edge
+            for (let i = 10; i >= 0; i--) {
+              const t = i / 10;
+              const wave = Math.sin(t * Math.PI * 2 + time * 3 + Math.PI) * 2;
+              const x = pos.x - halfSize + (t * halfSize * 2);
+              const y = pos.y + halfSize + wave;
+              ctx.lineTo(x, y);
+            }
+            // Left edge
+            for (let i = 10; i >= 0; i--) {
+              const t = i / 10;
+              const wave = Math.sin(t * Math.PI * 2 + time * 3 + Math.PI*1.5) * 2;
+              const x = pos.x - halfSize + wave;
+              const y = pos.y - halfSize + (t * halfSize * 2);
+              ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Add corner stars
+            ctx.fillStyle = '#ffed4e';
+            const corners = [
+              { x: pos.x - halfSize - 5, y: pos.y - halfSize - 5 },
+              { x: pos.x + halfSize + 5, y: pos.y - halfSize - 5 },
+              { x: pos.x + halfSize + 5, y: pos.y + halfSize + 5 },
+              { x: pos.x - halfSize - 5, y: pos.y + halfSize + 5 }
+            ];
+
+            corners.forEach((corner, i) => {
+              ctx.save();
+              ctx.translate(corner.x, corner.y);
+              ctx.rotate(time * 4 + i * Math.PI/2);
+
+              // Draw star burst
+              ctx.beginPath();
+              for (let j = 0; j < 4; j++) {
+                const angle = (j / 4) * Math.PI * 2;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(angle) * 4, Math.sin(angle) * 4);
+              }
+              ctx.stroke();
+
+              ctx.restore();
+            });
+          }
+        }
+
+        // Style 5: Classical Laurel Wreath
+        else if (goldFrameStyle === 5) {
+          // Classical laurel wreath design
+          ctx.strokeStyle = '#b8860b';
+          ctx.fillStyle = '#ffd700';
+          ctx.lineWidth = 3;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+
+          if (isCircular) {
+            // Draw laurel wreath circle
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, baseSize + 1, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw laurel leaves around the circle
+            const leafCount = 16;
+            for (let i = 0; i < leafCount; i++) {
+              const angle = (i / leafCount) * Math.PI * 2;
+              const leafRadius = baseSize + 5;
+              const leafX = pos.x + Math.cos(angle) * leafRadius;
+              const leafY = pos.y + Math.sin(angle) * leafRadius;
+
+              ctx.save();
+              ctx.translate(leafX, leafY);
+              ctx.rotate(angle + Math.PI / 2);
+
+              // Draw laurel leaf
+              ctx.beginPath();
+              ctx.ellipse(0, 0, 2, 5, 0, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Add leaf detail line
+              ctx.strokeStyle = '#8b6914';
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(0, -5);
+              ctx.lineTo(0, 5);
+              ctx.stroke();
+
+              ctx.restore();
+            }
+
+            // Inner decorative ring
+            ctx.strokeStyle = '#cdaa3d';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, baseSize - 3, 0, Math.PI * 2);
+            ctx.stroke();
+          } else {
+            // Square frame with laurel corners
+            ctx.strokeRect(pos.x - baseSize - 1, pos.y - baseSize - 1,
+                         (baseSize + 1) * 2, (baseSize + 1) * 2);
+
+            // Draw laurel branches at corners
+            const corners = [
+              { x: pos.x - baseSize, y: pos.y - baseSize, angle: -Math.PI/4 },
+              { x: pos.x + baseSize, y: pos.y - baseSize, angle: Math.PI/4 },
+              { x: pos.x + baseSize, y: pos.y + baseSize, angle: 3*Math.PI/4 },
+              { x: pos.x - baseSize, y: pos.y + baseSize, angle: -3*Math.PI/4 }
+            ];
+
+            corners.forEach(corner => {
+              ctx.save();
+              ctx.translate(corner.x, corner.y);
+              ctx.rotate(corner.angle);
+
+              // Draw laurel branch
+              for (let i = 0; i < 3; i++) {
+                const leafX = i * 3;
+                ctx.beginPath();
+                ctx.ellipse(leafX, 0, 1.5, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+              }
+
+              ctx.restore();
+            });
+
+            // Inner frame
+            ctx.strokeStyle = '#cdaa3d';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(pos.x - baseSize + 3, pos.y - baseSize + 3,
+                         (baseSize - 3) * 2, (baseSize - 3) * 2);
+          }
+        }
+
+        ctx.restore();
+      }
+
       // Draw node label
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#ffffff';
@@ -2386,26 +3195,32 @@ export default function StoryClimbPage() {
       } else if (node.storyNodeType === 'event') {
         // Draw EVENT text inside the node with curved text along bottom inner edge
         ctx.save();
-        const eventTitles = [
-          'The Lost Shadows', 'Frozen Echo', 'Binary Storm', 'Void Walker',
-          'Crystal Nexus', 'Shadow Protocol', 'Iron Forge', 'Plasma Core',
-          'Quantum Leap', 'Neural Link', 'Time Rift', 'Data Stream',
-          'The Talisman', 'Neon Dreams', 'Ghost Signal', 'Circuit Break'
-        ];
-        
-        // Get the event name from deployed data or use a deterministic title
+
+        // Get the event name from deployed data
         const eventData = getEventDataForNode(node);
-        let eventTitle = eventTitles[0]; // Default
+        let eventTitle = '';
 
         if (eventData?.name && eventData.name !== 'EVENT NODE') {
+          // Use deployed event name
           eventTitle = eventData.name;
         } else {
-          // Get a deterministic title based on node ID
-          let titleHash = 0;
-          for (let i = 0; i < node.id.length; i++) {
-            titleHash = ((titleHash << 5) - titleHash) + node.id.charCodeAt(i);
+          // Better fallback: use event number from label
+          const eventNumMatch = node.label?.match(/E(\d+)/);
+          if (eventNumMatch) {
+            const localEventNum = eventNumMatch[1];
+            // Extract chapter from node ID
+            const chapterMatch = node.id?.match(/ch(\d+)/);
+            const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+            const globalEventNumber = (chapter - 1) * 20 + parseInt(localEventNum);
+
+            // Use a more descriptive default name
+            eventTitle = `Event ${globalEventNumber}`;
+
+            console.log('📝 Using fallback event title:', eventTitle, 'for node:', node.label);
+          } else {
+            // Last resort fallback
+            eventTitle = 'Event';
           }
-          eventTitle = eventTitles[Math.abs(titleHash) % eventTitles.length];
         }
         
         // Draw curved text INSIDE the circle along the bottom with background
@@ -3253,47 +4068,151 @@ export default function StoryClimbPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Debug Panel - Temporary for troubleshooting */}
-      <div className="fixed top-4 left-4 z-50 bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
-        <h3 className="text-yellow-500 font-bold mb-2">🔧 Debug Panel</h3>
-        <div className="text-xs text-gray-300 space-y-2">
-          <div className="border-b border-gray-700 pb-2">
-            <div className="text-green-400">Deployment Status:</div>
-            <div>Normal Nodes: {deployedNormalNodes.length}</div>
-            <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
-            <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
-            <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
+
+      {/* Debug Panel - Collapsible */}
+      <div className="fixed top-4 left-4 z-50">
+        {debugPanelMinimized ? (
+          // Minimized state - just a small button
+          <button
+            onClick={() => setDebugPanelMinimized(false)}
+            className="bg-black/95 border-2 border-yellow-500 px-3 py-2 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2"
+            title="Expand Debug Panel"
+          >
+            <span className="text-yellow-500 font-bold">🔧</span>
+            <span className="text-yellow-500 text-xs font-bold">Debug</span>
+            <span className="text-yellow-500 text-sm">▶</span>
+          </button>
+        ) : (
+          // Expanded state - full debug panel
+          <div className="bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-yellow-500 font-bold">🔧 Debug Panel</h3>
+              <button
+                onClick={() => setDebugPanelMinimized(true)}
+                className="text-yellow-500 hover:text-yellow-400 text-lg font-bold px-2"
+                title="Minimize Debug Panel"
+              >
+                −
+              </button>
+            </div>
+            <div className="text-xs text-gray-300 space-y-2">
+              <div className="border-b border-gray-700 pb-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-purple-400 font-semibold">Mode:</label>
+                  <button
+                    onClick={() => setDebugMode(!debugMode)}
+                    className={`px-3 py-1 rounded-md text-xs font-orbitron uppercase tracking-wider transition-all duration-200 ${
+                      debugMode
+                        ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 hover:bg-purple-500/30'
+                        : 'bg-gray-700/50 border border-gray-600 text-gray-400 hover:bg-gray-600/50'
+                    }`}
+                  >
+                    {debugMode ? '🐛 Debug: Click Any' : '🎮 Normal Mode'}
+                  </button>
+                </div>
+              </div>
+              <div className="border-b border-gray-700 pb-2">
+                <div className="text-green-400">Deployment Status:</div>
+                <div>Normal Nodes: {deployedNormalNodes.length}</div>
+                <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
+                <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
+                <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
+              </div>
+              {selectedNode && (
+                <div className="border-b border-gray-700 pb-2">
+                  <div className="text-yellow-400 font-semibold">Selected Node:</div>
+                  <div>ID: {selectedNode.id}</div>
+                  <div>Type: {selectedNode.storyNodeType}</div>
+                  <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
+                  {(() => {
+                    const deployedMek = getDeployedMekForNode(selectedNode);
+                    if (deployedMek) {
+                      return (
+                        <>
+                          <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
+                          <div className="pl-2">
+                            <div>Asset ID: #{deployedMek.assetId}</div>
+                            <div>Rank: {deployedMek.rank}</div>
+                            <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
+                            <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
+                          </div>
+                        </>
+                      );
+                    }
+                    return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
+                  })()}
+                </div>
+              )}
+              {!selectedNode && (
+                <div className="text-gray-500 italic">Click a node to see debug info</div>
+              )}
+            </div>
           </div>
-          {selectedNode && (
-            <div className="border-b border-gray-700 pb-2">
-              <div className="text-yellow-400 font-semibold">Selected Node:</div>
-              <div>ID: {selectedNode.id}</div>
-              <div>Type: {selectedNode.storyNodeType}</div>
-              <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
-              {(() => {
-                const deployedMek = getDeployedMekForNode(selectedNode);
-                if (deployedMek) {
-                  return (
-                    <>
-                      <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
-                      <div className="pl-2">
-                        <div>Asset ID: #{deployedMek.assetId}</div>
-                        <div>Rank: {deployedMek.rank}</div>
-                        <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
-                        <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
-                      </div>
-                    </>
-                  );
-                }
-                return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
-              })()}
+        )}
+      </div>
+
+      {/* Debug: Lock Difficulty Panel - Collapsible */}
+      {selectedNode && (
+        <div className="fixed top-24 left-4 z-50">
+          {lockDifficultyPanelMinimized ? (
+            // Minimized state
+            <button
+              onClick={() => setLockDifficultyPanelMinimized(false)}
+              className="bg-black/95 border-2 border-red-500 px-3 py-2 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-2"
+              title="Expand Lock Difficulty Panel"
+            >
+              <span className="text-red-500 font-bold">🔒</span>
+              <span className="text-red-500 text-xs font-bold">Lock Debug</span>
+              <span className="text-red-500 text-sm">▶</span>
+            </button>
+          ) : (
+            // Expanded state
+            <div className="bg-black/95 border-2 border-red-500/50 p-3 rounded-lg w-56">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs text-red-400 font-bold">Debug: Lock Difficulty</label>
+                <button
+                  onClick={() => setLockDifficultyPanelMinimized(true)}
+                  className="text-red-500 hover:text-red-300 transition-colors"
+                  title="Minimize"
+                >
+                  <span className="text-sm font-bold">◀</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (selectedNode && selectedDifficulty) {
+                    setCompletedDifficulties(prev => ({
+                      ...prev,
+                      [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                    }));
+                  }
+                }}
+                className="w-full bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded text-xs hover:bg-red-600/30 hover:border-red-400 transition-colors mb-2"
+              >
+                Lock {selectedDifficulty?.toUpperCase()} on Current Node
+              </button>
+
+              <button
+                onClick={() => {
+                  if (selectedNode) {
+                    setCompletedDifficulties(prev => ({
+                      ...prev,
+                      [selectedNode.id]: new Set(['easy', 'medium', 'hard'])
+                    }));
+                  }
+                }}
+                className="w-full bg-yellow-600/20 border border-yellow-500/50 text-yellow-400 px-2 py-1 rounded text-xs hover:bg-yellow-600/30 hover:border-yellow-400 transition-colors"
+              >
+                Complete ALL Difficulties (Gold Frame)
+              </button>
+              <p className="text-[10px] text-gray-500 mt-1">
+                (Test gold frame on current node)
+              </p>
             </div>
           )}
-          {!selectedNode && (
-            <div className="text-gray-500 italic">Click a node to see debug info</div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Header */}
       <div className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/50 p-4 mb-6">
@@ -3403,31 +4322,6 @@ export default function StoryClimbPage() {
                 <div className="absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-black/85 via-black/75 to-transparent" />
               </div>
               
-              {/* Effect Selectors */}
-              <div className="absolute top-4 right-4 z-30 flex gap-2">
-                {/* Challenger Frame Selector */}
-                <select
-                  value={challengerFrameStyle}
-                  onChange={(e) => setChallengerFrameStyle(e.target.value as 'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals')}
-                  className="px-3 py-1 bg-black/60 border border-red-500/40 rounded-md text-red-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-red-500/20 hover:border-red-500/60 transition-all duration-200"
-                >
-                  <option value="spikes">Frame: Spikes</option>
-                  <option value="lightning">Frame: Lightning</option>
-                  <option value="sawblade">Frame: Sawblade</option>
-                  <option value="flames">Frame: Flames</option>
-                  <option value="crystals">Frame: Crystals</option>
-                </select>
-                
-                {/* Debug Mode Selector */}
-                <select
-                  value={debugMode ? 'debug' : 'normal'}
-                  onChange={(e) => setDebugMode(e.target.value === 'debug')}
-                  className="px-3 py-1 bg-black/60 border border-purple-500/40 rounded-md text-purple-500 text-xs font-orbitron uppercase tracking-wider cursor-pointer hover:bg-purple-500/20 hover:border-purple-500/60 transition-all duration-200"
-                >
-                  <option value="normal">Normal Mode</option>
-                  <option value="debug">Debug: Click Any Node</option>
-                </select>
-              </div>
               
               {/* Hover Tooltip - REMOVED per user request */}
               {false && (
@@ -3723,12 +4617,20 @@ export default function StoryClimbPage() {
                     }
                   } else {
                     const deployedMek = getDeployedMekForNode(selectedNode);
-                    if (deployedMek?.goldReward) {
-                      baseGold = deployedMek.goldReward;
+                    console.log('Deployed mek data for gold reward:', {
+                      hasDeployedMek: !!deployedMek,
+                      goldReward: deployedMek?.goldReward,
+                      typeOfGoldReward: typeof deployedMek?.goldReward,
+                      fullMek: deployedMek
+                    });
+                    if (deployedMek && deployedMek.goldReward !== undefined && deployedMek.goldReward !== null) {
+                      baseGold = Number(deployedMek.goldReward);
+                      console.log('Using deployed gold reward:', baseGold);
                     } else {
                       baseGold = selectedNode.storyNodeType === 'final_boss' ? 1000000 :
                                 selectedNode.storyNodeType === 'boss' ? 500000 :
                                 selectedNode.storyNodeType === 'normal' ? 150000 : 250000;
+                      console.log('Using fallback gold reward:', baseGold);
                     }
                   }
                   // Apply difficulty multiplier
@@ -3750,6 +4652,20 @@ export default function StoryClimbPage() {
                     const deployedMek = getDeployedMekForNode(selectedNode);
                     if (deployedMek?.xpReward) {
                       baseXP = deployedMek.xpReward;
+                    } else if (deployedMek?.rank) {
+                      // Calculate XP based on rank if xpReward is missing
+                      // Using similar logic to deployedNodeData.ts
+                      const rankFactor = (4000 - deployedMek.rank) / 4000; // 0 to 1, higher is better
+                      if (selectedNode.storyNodeType === 'normal') {
+                        baseXP = Math.round(50 + rankFactor * 450); // 50-500 XP range for normal
+                      } else if (selectedNode.storyNodeType === 'boss') {
+                        baseXP = Math.round(500 + rankFactor * 1500); // 500-2000 XP for boss
+                      } else if (selectedNode.storyNodeType === 'final_boss') {
+                        baseXP = Math.round(2000 + rankFactor * 3000); // 2000-5000 XP for final boss
+                      } else {
+                        baseXP = 5000; // Default challenger
+                      }
+                      console.log('Calculated XP from rank:', { rank: deployedMek.rank, baseXP });
                     } else {
                       baseXP = selectedNode.storyNodeType === 'final_boss' ? 20000 :
                               selectedNode.storyNodeType === 'boss' ? 10000 :
@@ -3762,7 +4678,8 @@ export default function StoryClimbPage() {
                 })()}
                 potentialRewards={getNodeRewards(selectedNode as ExtendedStoryNode)}
                 variationBuffs={getNodeVariationBuffs(selectedNode as ExtendedStoryNode)}
-                successChance={completedNodes.has(selectedNode.id) ? 100 :
+                successChance={showTestPanel ? testSuccessRate :
+                              completedNodes.has(selectedNode.id) ? 100 :
                               isNodeAvailable(selectedNode) ?
                                 calculateSuccessChance(
                                   selectedNode.id,
@@ -3779,7 +4696,14 @@ export default function StoryClimbPage() {
                 })()}
                 availableSlots={currentDifficultyConfig ? calculateMekSlots(currentDifficultyConfig, selectedNode.id) : getNodeAvailableSlots(selectedNode as ExtendedStoryNode)}
                 selectedMeks={selectedMeks[selectedNode.id] || []}
-                onDeploy={() => handleNodeDeploy(selectedNode as ExtendedStoryNode)}
+                onDeploy={() => {
+                  handleNodeDeploy(selectedNode as ExtendedStoryNode);
+                  // Mark the current difficulty as completed
+                  setCompletedDifficulties(prev => ({
+                    ...prev,
+                    [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                  }));
+                }}
                 onMekSlotClick={handleMekSlotClick}
                 onMekRemove={handleMekRemove}
                 scale={0.95}
@@ -3788,12 +4712,24 @@ export default function StoryClimbPage() {
                 onDifficultyChange={setSelectedDifficulty}
                 showDifficultySelector={true}
                 difficultyConfig={currentDifficultyConfig}
+                lockedStyle={1}
+                completedDifficulties={completedDifficulties[selectedNode.id] || new Set()}
+                onDifficultyComplete={(difficulty: DifficultyLevel) => {
+                  setCompletedDifficulties(prev => ({
+                    ...prev,
+                    [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), difficulty])
+                  }));
+                }}
                 mekContributions={selectedMeks[selectedNode.id]?.map((mek: any, idx: number) => ({
                   mekId: mek.id || `mek-${idx}`,
                   name: mek.name || `MEK ${idx + 1}`,
                   rank: mek.rank || 1000,
                   contribution: 10 // Base contribution per Mek
                 }))}
+                // Pass test panel meter variant settings
+                meterVariant={showTestPanel ? testMeterVariant : 1}
+                layoutStyle={showTestPanel ? testLayoutStyle : 1}
+                subLayoutStyle={showTestPanel ? testSubLayoutStyle : 1.3}
               />
             ) : (
               // No node selected or hovered - Using Style K from UI Showcase
@@ -3846,6 +4782,158 @@ export default function StoryClimbPage() {
         traitCircleStyle={1}
         mekFrameStyle={1}
       />
+
+      {/* Floating Success Meter Test Panel - Bottom Left */}
+      <div className="fixed bottom-4 left-4 z-[9999]">
+        {/* Toggle Button */}
+        {!showTestPanel && (
+          <button
+            onClick={() => setShowTestPanel(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow-2xl flex items-center gap-2 transition-all border-2 border-purple-400"
+          >
+            <span className="text-lg">🧪</span>
+            <span className="text-sm font-bold">Test Success</span>
+          </button>
+        )}
+
+        {/* Test Panel */}
+        {showTestPanel && (
+          <div className="bg-black border-2 border-purple-500 rounded-lg p-4 shadow-2xl w-80">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-bold text-purple-300 uppercase tracking-wider">
+                🧪 Success Meter Test
+              </span>
+              <button
+                onClick={() => setShowTestPanel(false)}
+                className="text-gray-400 hover:text-white text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Current Value */}
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl font-bold text-yellow-400">{testSuccessRate}%</span>
+              <div className="flex-1 text-xs text-gray-300">
+                Test success meter position
+              </div>
+            </div>
+
+            {/* Slider */}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={testSuccessRate}
+              onChange={(e) => setTestSuccessRate(Number(e.target.value))}
+              className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer mb-3"
+            />
+
+            {/* Quick Jump Buttons */}
+            <div className="grid grid-cols-4 gap-1 text-xs">
+              <button
+                onClick={() => setTestSuccessRate(0)}
+                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+              >
+                0%
+              </button>
+              <button
+                onClick={() => setTestSuccessRate(30)}
+                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
+              >
+                30%
+              </button>
+              <button
+                onClick={() => setTestSuccessRate(70)}
+                className="px-2 py-1 bg-green-700 rounded hover:bg-green-600 text-white font-bold"
+              >
+                GL
+              </button>
+              <button
+                onClick={() => setTestSuccessRate(100)}
+                className="px-2 py-1 bg-yellow-700 rounded hover:bg-yellow-600 text-white"
+              >
+                100%
+              </button>
+            </div>
+
+            {/* Meter Variant Selector */}
+            <div className="mt-4 pt-3 border-t border-purple-500/30">
+              <div className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">
+                Meter Design
+              </div>
+              <div className="grid grid-cols-5 gap-1">
+                {[1, 2, 3, 4, 5].map((variant) => (
+                  <button
+                    key={variant}
+                    onClick={() => setTestMeterVariant(variant as 1 | 2 | 3 | 4 | 5)}
+                    className={`px-2 py-2 rounded text-xs font-bold transition-all ${
+                      testMeterVariant === variant
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {variant === 1 && 'Neon'}
+                    {variant === 2 && 'Surge'}
+                    {variant === 3 && 'Plasma'}
+                    {variant === 4 && 'Quantum'}
+                    {variant === 5 && 'Reactor'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Layout Style Selector */}
+            <div className="mt-3 pt-3 border-t border-purple-500/30">
+              <div className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">
+                Card Layout
+              </div>
+              <div className="grid grid-cols-5 gap-1">
+                {[1, 2, 3, 4, 5].map((layout) => (
+                  <button
+                    key={layout}
+                    onClick={() => setTestLayoutStyle(layout as 1 | 2 | 3 | 4 | 5)}
+                    className={`px-2 py-1 rounded text-xs transition-all ${
+                      testLayoutStyle === layout
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    L{layout}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sub-Layout Style for Layout 1 */}
+              {testLayoutStyle === 1 && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-400 mb-1">Compression:</div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {[1.1, 1.2, 1.3, 1.4, 1.5].map((subLayout) => (
+                      <button
+                        key={subLayout}
+                        onClick={() => setTestSubLayoutStyle(subLayout as 1.1 | 1.2 | 1.3 | 1.4 | 1.5)}
+                        className={`px-2 py-1 rounded text-xs transition-all ${
+                          testSubLayoutStyle === subLayout
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {subLayout}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 text-xs text-gray-400">
+              Test different meter designs and layouts
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

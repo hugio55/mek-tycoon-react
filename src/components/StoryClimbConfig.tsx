@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import EventNodeEditor from './EventNodeEditor';
 import NormalMekRewards from './NormalMekRewards';
+import MiniBossFinalBossRewards from './MiniBossFinalBossRewards';
 
 interface ChapterConfig {
   chapter: number;
@@ -48,15 +49,16 @@ export default function StoryClimbConfig() {
   const [customSeed, setCustomSeed] = useState('1');
   const [selectedChapter, setSelectedChapter] = useState(1);
 
-  // Collapsible sections state
+  // Collapsible sections state - all start collapsed
   const [sectionsCollapsed, setSectionsCollapsed] = useState({
-    overview: false,
+    overview: true,
     algorithm: true,
     chapters: true,
-    seed: false,
+    seed: true,
     events: true,
     normalMeks: true,
-    mekSlots: false
+    mekSlots: true,
+    miniBossFinalBoss: true
   });
 
   // Mek Slots configuration
@@ -239,77 +241,6 @@ export default function StoryClimbConfig() {
         )}
       </div>
 
-      {/* Seed Configuration */}
-      <div className="bg-gray-800/30 rounded-lg p-4">
-        <button
-          onClick={() => toggleSection('seed')}
-          className="w-full flex items-center justify-between text-left mb-3"
-        >
-          <h4 className="text-sm font-bold text-yellow-500/80 flex items-center gap-2">
-            <span>{sectionsCollapsed.seed ? '▶' : '▼'}</span>
-            Tree Generation Seed
-          </h4>
-        </button>
-
-        {!sectionsCollapsed.seed && (
-          <div className="space-y-3">
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="wallet"
-                  checked={seedType === 'wallet'}
-                  onChange={(e) => setSeedType('wallet')}
-                  className="text-yellow-500"
-                />
-                <span className="text-sm text-gray-300">Use Wallet Address</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="custom"
-                  checked={seedType === 'custom'}
-                  onChange={(e) => setSeedType('custom')}
-                  className="text-yellow-500"
-                />
-                <span className="text-sm text-gray-300">Custom Seed</span>
-              </label>
-            </div>
-            {seedType === 'custom' && (
-              <input
-                type="text"
-                value={customSeed}
-                onChange={(e) => setCustomSeed(e.target.value)}
-                placeholder="Enter custom seed (e.g., 1)"
-                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded text-sm text-gray-300"
-              />
-            )}
-
-            {/* Chapter Selection */}
-            <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-300">Preview Chapter:</label>
-              <select
-                value={selectedChapter}
-                onChange={(e) => setSelectedChapter(parseInt(e.target.value))}
-                className="px-3 py-2 bg-black/50 border border-gray-700 rounded text-sm text-gray-300"
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(ch => (
-                  <option key={ch} value={ch}>Chapter {ch}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleGeneratePreview}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded text-sm transition-colors"
-              >
-                Open Preview in Story Climb
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Mek Slots Configuration - New Section */}
       <div className="bg-gradient-to-br from-green-900/20 via-black/50 to-cyan-900/20 rounded-lg p-4 border border-green-500/30">
@@ -566,186 +497,191 @@ export default function StoryClimbConfig() {
               </div>
             </div>
 
-            {/* Mini-Bosses Slots */}
+            {/* Mini-Bosses and Final Bosses Slots */}
             <div className="bg-black/30 rounded p-3">
-              <h5 className="text-red-400 text-sm font-bold mb-2">Mini-Bosses (9 per chapter)</h5>
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="text-gray-400">Easy Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="15"
-                      value={mekSlotsConfig.miniBosses.easy.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          easy: { ...prev.miniBosses.easy, min: parseInt(e.target.value) || 3 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
-                    />
-                    <span className="text-gray-400">to</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="15"
-                      value={mekSlotsConfig.miniBosses.easy.max}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          easy: { ...prev.miniBosses.easy, max: parseInt(e.target.value) || 4 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
-                    />
+              <h5 className="text-red-400 text-sm font-bold mb-3">Mini-Bosses and Final Bosses (9 + 1 per chapter)</h5>
+
+              {/* Mini-Bosses Section */}
+              <div className="mb-4">
+                <h6 className="text-orange-400 text-xs font-semibold mb-2">Mini-Bosses (9 per chapter)</h6>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label className="text-gray-400">Easy Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="15"
+                        value={mekSlotsConfig.miniBosses.easy.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            easy: { ...prev.miniBosses.easy, min: parseInt(e.target.value) || 3 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      />
+                      <span className="text-gray-400">to</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="15"
+                        value={mekSlotsConfig.miniBosses.easy.max}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            easy: { ...prev.miniBosses.easy, max: parseInt(e.target.value) || 4 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      />
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                      {calculateSlotDistribution('miniBosses', 'easy', 9)}
+                    </div>
                   </div>
-                  <div className="text-[10px] text-gray-500 mt-1">
-                    {calculateSlotDistribution('miniBosses', 'easy', 9)}
+                  <div>
+                    <label className="text-gray-400">Medium Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={mekSlotsConfig.miniBosses.medium.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            medium: { ...prev.miniBosses.medium, min: parseInt(e.target.value) || 5 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      />
+                      <span className="text-gray-400">to</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={mekSlotsConfig.miniBosses.medium.max}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            medium: { ...prev.miniBosses.medium, max: parseInt(e.target.value) || 8 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      />
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                      {calculateSlotDistribution('miniBosses', 'medium', 9)}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="text-gray-400">Medium Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={mekSlotsConfig.miniBosses.medium.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          medium: { ...prev.miniBosses.medium, min: parseInt(e.target.value) || 5 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
-                    />
-                    <span className="text-gray-400">to</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={mekSlotsConfig.miniBosses.medium.max}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          medium: { ...prev.miniBosses.medium, max: parseInt(e.target.value) || 8 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
-                    />
-                  </div>
-                  <div className="text-[10px] text-gray-500 mt-1">
-                    {calculateSlotDistribution('miniBosses', 'medium', 9)}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-gray-400">Hard Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="25"
-                      value={mekSlotsConfig.miniBosses.hard.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          hard: { ...prev.miniBosses.hard, min: parseInt(e.target.value) || 9 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
-                    />
-                    <span className="text-gray-400">to</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="25"
-                      value={mekSlotsConfig.miniBosses.hard.max}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        miniBosses: {
-                          ...prev.miniBosses,
-                          hard: { ...prev.miniBosses.hard, max: parseInt(e.target.value) || 12 }
-                        }
-                      }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
-                    />
-                  </div>
-                  <div className="text-[10px] text-gray-500 mt-1">
-                    {calculateSlotDistribution('miniBosses', 'hard', 9)}
+                  <div>
+                    <label className="text-gray-400">Hard Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="25"
+                        value={mekSlotsConfig.miniBosses.hard.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            hard: { ...prev.miniBosses.hard, min: parseInt(e.target.value) || 9 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      />
+                      <span className="text-gray-400">to</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="25"
+                        value={mekSlotsConfig.miniBosses.hard.max}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          miniBosses: {
+                            ...prev.miniBosses,
+                            hard: { ...prev.miniBosses.hard, max: parseInt(e.target.value) || 12 }
+                          }
+                        }))}
+                        className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      />
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                      {calculateSlotDistribution('miniBosses', 'hard', 9)}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Final Bosses Slots */}
-            <div className="bg-black/30 rounded p-3">
-              <h5 className="text-yellow-500 text-sm font-bold mb-2">Final Bosses (1 per chapter)</h5>
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="text-gray-400">Easy Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={mekSlotsConfig.finalBosses.easy.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        finalBosses: {
-                          ...prev.finalBosses,
-                          easy: { ...prev.finalBosses.easy, min: parseInt(e.target.value) || 5, max: parseInt(e.target.value) || 5 }
-                        }
-                      }))}
-                      className="w-20 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
-                    />
-                    <span className="text-gray-400">slots</span>
+              {/* Final Bosses Section */}
+              <div className="border-t border-gray-700/50 pt-3">
+                <h6 className="text-yellow-500 text-xs font-semibold mb-2">Final Bosses (1 per chapter)</h6>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label className="text-gray-400">Easy Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={mekSlotsConfig.finalBosses.easy.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          finalBosses: {
+                            ...prev.finalBosses,
+                            easy: { ...prev.finalBosses.easy, min: parseInt(e.target.value) || 5, max: parseInt(e.target.value) || 5 }
+                          }
+                        }))}
+                        className="w-20 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      />
+                      <span className="text-gray-400">slots</span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="text-gray-400">Medium Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={mekSlotsConfig.finalBosses.medium.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        finalBosses: {
-                          ...prev.finalBosses,
-                          medium: { ...prev.finalBosses.medium, min: parseInt(e.target.value) || 10, max: parseInt(e.target.value) || 10 }
-                        }
-                      }))}
-                      className="w-20 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
-                    />
-                    <span className="text-gray-400">slots</span>
+                  <div>
+                    <label className="text-gray-400">Medium Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={mekSlotsConfig.finalBosses.medium.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          finalBosses: {
+                            ...prev.finalBosses,
+                            medium: { ...prev.finalBosses.medium, min: parseInt(e.target.value) || 10, max: parseInt(e.target.value) || 10 }
+                          }
+                        }))}
+                        className="w-20 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      />
+                      <span className="text-gray-400">slots</span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="text-gray-400">Hard Mode</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max="40"
-                      value={mekSlotsConfig.finalBosses.hard.min}
-                      onChange={(e) => setMekSlotsConfig(prev => ({
-                        ...prev,
-                        finalBosses: {
-                          ...prev.finalBosses,
-                          hard: { ...prev.finalBosses.hard, min: parseInt(e.target.value) || 15, max: parseInt(e.target.value) || 15 }
-                        }
-                      }))}
-                      className="w-20 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
-                    />
-                    <span className="text-gray-400">slots</span>
+                  <div>
+                    <label className="text-gray-400">Hard Mode</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="40"
+                        value={mekSlotsConfig.finalBosses.hard.min}
+                        onChange={(e) => setMekSlotsConfig(prev => ({
+                          ...prev,
+                          finalBosses: {
+                            ...prev.finalBosses,
+                            hard: { ...prev.finalBosses.hard, min: parseInt(e.target.value) || 15, max: parseInt(e.target.value) || 15 }
+                          }
+                        }))}
+                        className="w-20 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      />
+                      <span className="text-gray-400">slots</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -899,6 +835,22 @@ export default function StoryClimbConfig() {
         {!sectionsCollapsed.events && <EventNodeEditor />}
       </div>
 
+      {/* Mini Boss and Final Boss Rewards Configuration - Collapsible */}
+      <div className="bg-gray-800/30 rounded-lg p-4">
+        <button
+          onClick={() => toggleSection('miniBossFinalBoss')}
+          className="w-full flex items-center justify-between text-left mb-3"
+        >
+          <h4 className="text-sm font-bold text-red-400 flex items-center gap-2">
+            <span>{sectionsCollapsed.miniBossFinalBoss ? '▶' : '▼'}</span>
+            Mini Boss and Final Boss Rewards
+          </h4>
+        </button>
+        {!sectionsCollapsed.miniBossFinalBoss && (
+          <MiniBossFinalBossRewards />
+        )}
+      </div>
+
       {/* Normal Mek Node Rewards - Collapsible */}
       <div className="bg-gray-800/30 rounded-lg p-4">
         <button
@@ -910,7 +862,7 @@ export default function StoryClimbConfig() {
             Normal Mek Node Rewards
           </h4>
         </button>
-        {!sectionsCollapsed.normalMeks && <NormalMekRewards />}
+        {!sectionsCollapsed.normalMeks && <NormalMekRewards mekSlotsConfig={mekSlotsConfig.normalMeks} />}
       </div>
     </div>
   );

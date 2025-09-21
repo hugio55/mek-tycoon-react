@@ -6,6 +6,8 @@ import Image from 'next/image';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
 import { TIER_COLORS, MODIFIER_COLORS } from '@/lib/chipRewardCalculator';
 import SuccessBar from '@/components/SuccessBar';
+import { renderDifficultyButton } from './StoryMissionCard-buttonStyles';
+import { getVariationImage } from '@/lib/variations-helper';
 
 // Type definitions
 interface MissionReward {
@@ -49,6 +51,14 @@ interface StoryMissionCardProps {
   scale?: number;
   style?: React.CSSProperties;
   rewardBarStyle?: 1 | 2 | 3; // For different reward bar designs
+  lockedStyle?: 1 | 2 | 3 | 4 | 5; // For different locked difficulty styles
+  completedDifficulties?: Set<'easy' | 'medium' | 'hard'>;
+  onDifficultyComplete?: (difficulty: 'easy' | 'medium' | 'hard') => void;
+
+  // Success bar customization props
+  meterVariant?: 1 | 2 | 3 | 4 | 5;
+  layoutStyle?: 1 | 2 | 3 | 4 | 5;
+  subLayoutStyle?: 1.1 | 1.2 | 1.3 | 1.4 | 1.5;
 
   // State
   isLocked?: boolean;
@@ -106,7 +116,14 @@ export default function StoryMissionCard({
   onDifficultyChange,
   showDifficultySelector = false,
   difficultyConfig,
-  mekContributions = []
+  mekContributions = [],
+  lockedStyle = 1,
+  completedDifficulties = new Set(),
+  onDifficultyComplete,
+  // Success bar customization props
+  meterVariant: propMeterVariant,
+  layoutStyle: propLayoutStyle,
+  subLayoutStyle: propSubLayoutStyle
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -115,6 +132,32 @@ export default function StoryMissionCard({
   const [showDeployTooltip, setShowDeployTooltip] = useState(false);
   const [selectedChip, setSelectedChip] = useState<{ tier: number; modifier: string } | null>(null);
   const [clickedChip, setClickedChip] = useState<{ tier: number; modifier: string } | null>(null);
+  const [successBarLayout, setSuccessBarLayout] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [successBarSubLayout, setSuccessBarSubLayout] = useState<1.1 | 1.2 | 1.3 | 1.4 | 1.5>(1.1);
+  const [meterVariantState, setMeterVariantState] = useState<1 | 2 | 3 | 4 | 5>(1);
+
+  // Use props if provided, otherwise use internal state
+  const meterVariant = propMeterVariant || meterVariantState;
+  const layoutStyle = propLayoutStyle || successBarLayout;
+  const subLayoutStyle = propSubLayoutStyle || successBarSubLayout;
+
+  // Check if all difficulties are completed
+  const allDifficultiesCompleted =
+    completedDifficulties.has('easy') &&
+    completedDifficulties.has('medium') &&
+    completedDifficulties.has('hard');
+
+  // Auto-select available difficulty if current one is completed
+  React.useEffect(() => {
+    if (!allDifficultiesCompleted && completedDifficulties.has(currentDifficulty)) {
+      // Try to select the next available difficulty
+      const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
+      const availableDifficulty = difficulties.find(d => !completedDifficulties.has(d));
+      if (availableDifficulty && onDifficultyChange) {
+        onDifficultyChange(availableDifficulty);
+      }
+    }
+  }, [completedDifficulties, currentDifficulty, onDifficultyChange, allDifficultiesCompleted]);
 
   const formatGoldAmount = (amount: number): string => {
     if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
@@ -246,8 +289,13 @@ export default function StoryMissionCard({
 
             {/* Content overlay */}
             <div className="relative h-full flex items-center justify-between px-4">
-              <h2 className="text-lg font-black tracking-wider text-yellow-400 uppercase">
-                {mekName}
+              <h2 className="text-xl font-black tracking-wider uppercase">
+                {mekName && (
+                  <>
+                    <span className="text-white">MEK </span>
+                    <span className="text-yellow-400">#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                  </>
+                )}
               </h2>
               {mekRank !== undefined && mekRank !== null && (
                 <div className="text-sm text-gray-300">
@@ -258,38 +306,48 @@ export default function StoryMissionCard({
           </div>
         </div>
 
-        {/* Compact Difficulty Selector - between rank bar and gold/XP */}
+        {/* Difficulty Selector with Multiple Style Options */}
         {showDifficultySelector && (
-          <div className="bg-black/80 border-b border-yellow-500/30 px-2 py-2">
-            <div className="flex gap-1 justify-center">
+          <div className="bg-black/80 border-b border-yellow-500/30 px-2 py-2 relative">
+            <div className="flex gap-1.5 justify-center">
               {(['easy', 'medium', 'hard'] as const).map(difficulty => {
                 const isSelected = currentDifficulty === difficulty;
-                const colors = {
-                  easy: { bg: 'bg-green-900/50', border: 'border-green-500/50', text: 'text-green-400', selectedBg: 'bg-green-900/80' },
-                  medium: { bg: 'bg-yellow-900/50', border: 'border-yellow-500/50', text: 'text-yellow-400', selectedBg: 'bg-yellow-900/80' },
-                  hard: { bg: 'bg-red-900/50', border: 'border-red-500/50', text: 'text-red-400', selectedBg: 'bg-red-900/80' }
-                };
-                const config = colors[difficulty];
-                const thresholds = { easy: '5%', medium: '30%', hard: '75%' };
-
-                return (
-                  <button
-                    key={difficulty}
-                    onClick={() => onDifficultyChange?.(difficulty)}
-                    className={`
-                      flex-1 px-2 py-1.5 border transition-all duration-200
-                      ${isSelected ? `${config.selectedBg} ${config.border} ring-1 ring-offset-1 ring-offset-black ${config.text.replace('400', '300')}` : `${config.bg} ${config.border} hover:${config.selectedBg}`}
-                      ${config.text} text-xs font-bold uppercase
-                    `}
-                  >
-                    <div className="text-center">
-                      <div className="text-[10px] opacity-60">REQ</div>
-                      <div className="font-mono">{thresholds[difficulty]}</div>
-                    </div>
-                  </button>
+                const isCompleted = completedDifficulties.has(difficulty);
+                return renderDifficultyButton(
+                  difficulty,
+                  isSelected,
+                  2, // Lock in Intense Neon Bloom style
+                  () => {
+                    if (!isCompleted) {
+                      onDifficultyChange?.(difficulty);
+                    }
+                  },
+                  isCompleted,
+                  lockedStyle
                 );
               })}
             </div>
+
+            {/* COMPLETE overlay when all difficulties are done */}
+            {allDifficultiesCompleted && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-3xl font-black text-yellow-400 uppercase tracking-wider animate-pulse"
+                  style={{
+                    textShadow: `
+                      0 0 20px rgba(250, 204, 21, 1),
+                      0 0 40px rgba(250, 204, 21, 0.8),
+                      0 0 60px rgba(250, 204, 21, 0.6),
+                      0 0 80px rgba(250, 204, 21, 0.4)
+                    `,
+                    background: 'linear-gradient(135deg, #fbbf24, #fde68a, #fbbf24)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}
+                >
+                  COMPLETE
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -299,11 +357,11 @@ export default function StoryMissionCard({
           <div className="relative grid grid-cols-2 h-12">
             {/* Gold Section - Centered as a unit in left column */}
             <div className="flex items-center justify-center">
-              <div className="flex items-center gap-1">
-                <span className="text-[22px] font-semibold text-yellow-400" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+              <div className="flex items-end gap-0.5">
+                <span className="text-[22px] font-semibold text-yellow-400 leading-none" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
                   {formatGoldAmount(primaryReward)}
                 </span>
-                <span className="text-[11px] text-yellow-400/80" style={{ fontFamily: 'Segoe UI, sans-serif' }}>G</span>
+                <span className="text-[11px] text-yellow-400 font-bold mb-[1px]" style={{ fontFamily: 'Segoe UI, sans-serif' }}>G</span>
               </div>
             </div>
 
@@ -312,11 +370,11 @@ export default function StoryMissionCard({
 
             {/* XP Section - Centered as a unit in right column */}
             <div className="flex items-center justify-center">
-              <div className="flex items-center gap-1">
-                <span className="text-[22px] font-semibold text-blue-400" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
+              <div className="flex items-end gap-0.5">
+                <span className="text-[22px] font-semibold text-blue-400 leading-none" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
                   +{formatGoldAmount(experience)}
                 </span>
-                <span className="text-[11px] text-blue-400/80" style={{ fontFamily: 'Segoe UI, sans-serif' }}>XP</span>
+                <span className="text-[11px] text-blue-400/80 font-bold mb-[1px]" style={{ fontFamily: 'Segoe UI, sans-serif' }}>XP</span>
               </div>
             </div>
           </div>
@@ -399,14 +457,14 @@ export default function StoryMissionCard({
                       ) : (
                         <div className="w-4 h-4 bg-yellow-500/20 rounded" />
                       )}
-                      <span className="text-[11px]" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
+                      <span className="text-[10.5px]" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
                         {reward.name}
                       </span>
                       {reward.quantity && (
-                        <span className="text-[10px] text-gray-500">x{reward.quantity}</span>
+                        <span className="text-[9.5px] text-gray-500">x{reward.quantity}</span>
                       )}
                     </div>
-                    <span className="text-[11px] font-bold" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
+                    <span className="text-[10.5px] font-bold" style={{ color: isChipReward ? chipColor : undefined }} className={!isChipReward ? getRarityTier(reward.chance).color : ''}>
                       {reward.chance}%
                     </span>
                   </div>
@@ -426,23 +484,10 @@ export default function StoryMissionCard({
 
             {/* Grid Layout for Variation Buffs - Dynamic sizing based on count */}
             <div className="flex justify-center">
-              <div className={`grid ${variationBuffs.length <= 4 ? 'grid-cols-4' : 'grid-cols-4'} gap-3 max-w-[350px]`}>
+              <div className={`grid ${variationBuffs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} gap-3 max-w-[350px]`}>
                 {variationBuffs.map((buff, index) => {
-                  // Map buff names to image paths
-                  const buffImageMap: Record<string, string> = {
-                    'TASER': '/variation-images/taser.png',
-                    'LOG': '/variation-images/log.png',
-                    'KEVLAR': '/variation-images/kevlar.png',
-                    'NUKE': '/variation-images/nuke.png',
-                    'EXPOSED': '/variation-images/exposed.png',
-                    'JADE': '/variation-images/jade.png',
-                    'SHAMROCK': '/variation-images/shamrock.png',
-                    'CLASSIC': '/variation-images/classic.png',
-                    'LIGHTNING': '/variation-images/lightning.png',
-                    'CORRODED': '/variation-images/corroded.png',
-                  };
-
-                  const imagePath = buffImageMap[buff.name] || '/variation-images/default.png';
+                  // Use the dynamic variation image path from the admin settings
+                  const imagePath = getVariationImage(buff.name);
 
                   return (
                     <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
@@ -477,7 +522,7 @@ export default function StoryMissionCard({
                       </span>
 
                       {/* Percentage buff below the name */}
-                      <span className="text-[11px] text-yellow-400 font-bold -mt-1">
+                      <span className="text-[11px] text-yellow-400 font-bold mt-1">
                         {buff.bonus}
                       </span>
                     </div>
@@ -559,12 +604,148 @@ export default function StoryMissionCard({
           {/* Success Chance Bar - using new SuccessBar component */}
           {difficultyConfig ? (
             <div className="mb-4">
+              {/* Layout Selector for Testing - Only show if no props are provided */}
+              {!propMeterVariant && !propLayoutStyle && !propSubLayoutStyle && (
+                <div className="mb-3 bg-black/60 rounded-lg p-2 border border-gray-700">
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Success Bar Layout</div>
+
+                {/* Meter Variant Selector */}
+                <div className="mb-2">
+                  <div className="text-[9px] text-gray-500 mb-1">Meter Design:</div>
+                  <div className="grid grid-cols-5 gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((variant) => (
+                      <button
+                        key={variant}
+                        onClick={() => setMeterVariantState(variant as 1 | 2 | 3 | 4 | 5)}
+                        className={`
+                          px-1 py-0.5 rounded text-[10px] font-bold transition-all
+                          ${meterVariant === variant
+                            ? 'bg-green-500/30 border border-green-400 text-green-400'
+                            : 'bg-black/30 border border-gray-700 text-gray-600 hover:border-gray-500 hover:text-gray-400'
+                          }
+                        `}
+                        title={[
+                          'Current Design',
+                          'Tactical Industrial',
+                          'Holographic Modern',
+                          'Military Command',
+                          'Cinematic Sci-Fi'
+                        ][variant - 1]}
+                      >
+                        {variant}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[8px] text-gray-600">
+                    {[
+                      'Current Design',
+                      'Tactical Industrial',
+                      'Holographic Modern',
+                      'Military Command',
+                      'Cinematic Sci-Fi'
+                    ][meterVariant - 1]}
+                  </div>
+                </div>
+
+                {/* Main Layout Selector */}
+                <div className="grid grid-cols-5 gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((layout) => (
+                    <button
+                      key={layout}
+                      onClick={() => {
+                        setSuccessBarLayout(layout as 1 | 2 | 3 | 4 | 5);
+                        // Reset to first sub-layout when changing main layout
+                        if (layout === 1) {
+                          setSuccessBarSubLayout(1.1);
+                        }
+                      }}
+                      className={`
+                        px-2 py-1 rounded text-xs font-bold transition-all
+                        ${layoutStyle === layout
+                          ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-400'
+                          : 'bg-black/40 border-2 border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-400'
+                        }
+                      `}
+                      title={`Layout ${layout}: ${[
+                        'Vertical Stack',
+                        'Two-Row',
+                        'Grid Modular',
+                        'Asymmetric',
+                        'Compact Pills'
+                      ][layout - 1]}`}
+                    >
+                      {layout}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sub-Layout Selector for Layout 1 */}
+                {layoutStyle === 1 && (
+                  <>
+                    <div className="text-[9px] text-gray-500 mb-1">Vertical Stack Variations:</div>
+                    <div className="grid grid-cols-5 gap-1 mb-2">
+                      {[1.1, 1.2, 1.3, 1.4, 1.5].map((subLayout, index) => (
+                        <button
+                          key={subLayout}
+                          onClick={() => setSuccessBarSubLayout(subLayout as 1.1 | 1.2 | 1.3 | 1.4 | 1.5)}
+                          className={`
+                            px-1 py-0.5 rounded text-[10px] font-semibold transition-all
+                            ${subLayoutStyle === subLayout
+                              ? 'bg-blue-500/30 border border-blue-400 text-blue-400'
+                              : 'bg-black/30 border border-gray-700 text-gray-600 hover:border-gray-500 hover:text-gray-400'
+                            }
+                          `}
+                          title={[
+                            'Ultra-Compact Single Row',
+                            'Two-Row Compact',
+                            'Badge Rewards',
+                            'Expandable View',
+                            'Icon-Based Minimalist'
+                          ][index]}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-[8px] text-gray-600">
+                      {(() => {
+                        const index = [1.1, 1.2, 1.3, 1.4, 1.5].indexOf(successBarSubLayout);
+                        return [
+                          'V1: Ultra-Compact Single Row',
+                          'V2: Two-Row Compact Design',
+                          'V3: Success with Mini Badge Rewards',
+                          'V4: Collapsed/Expandable View',
+                          'V5: Icon-Based Minimalist'
+                        ][index];
+                      })()}
+                    </div>
+                  </>
+                )}
+
+                {/* Description for other layouts */}
+                {successBarLayout !== 1 && (
+                  <div className="text-[9px] text-gray-500 mt-1">
+                    {[
+                      '',
+                      '2: Two-Row Horizontal',
+                      '3: Grid Modular 2x2',
+                      '4: Asymmetric Hero',
+                      '5: Compact Badge/Pills'
+                    ][layoutStyle]}
+                  </div>
+                )}
+              </div>
+              )}
+
               <SuccessBar
                 currentSuccess={successChance}
                 difficultyConfig={difficultyConfig}
                 mekContributions={mekContributions}
                 showDetails={false}
                 height="h-8"
+                layoutStyle={layoutStyle}
+                subLayoutStyle={layoutStyle === 1 ? subLayoutStyle : undefined}
+                meterVariant={meterVariant}
               />
             </div>
           ) : (
@@ -604,7 +785,7 @@ export default function StoryMissionCard({
               <span className="uppercase tracking-wider">Deployment Fee:</span> <span className="text-yellow-400 font-bold text-base">{formatGoldAmount(deploymentFee)} Gold</span>
             </div>
             <div
-              className="transform scale-75"
+              className="transform scale-75 cursor-pointer"
               onMouseEnter={() => {
                 if (!selectedMeks || selectedMeks.length === 0) {
                   setIsHoveringDeployButton(true);
@@ -628,7 +809,7 @@ export default function StoryMissionCard({
                 variant="yellow"
                 alwaysOn={true}
                 disabled={!selectedMeks || selectedMeks.length === 0}
-                className="w-full"
+                className="w-full [&>div]:cursor-pointer"
               />
             </div>
             {/* Tooltip for inactive deploy button */}
@@ -636,14 +817,14 @@ export default function StoryMissionCard({
               <div
                 className="fixed pointer-events-none"
                 style={{
-                  left: `${mousePos.x}px`,
-                  top: `${mousePos.y - 40}px`,
+                  left: `${Math.min(Math.max(mousePos.x, 150), window.innerWidth - 150)}px`,
+                  top: `${mousePos.y - 60}px`,
                   transform: 'translateX(-50%)',
                   zIndex: 99999,
                 }}
               >
                 <div className="bg-black/95 border border-yellow-400/50 px-3 py-2 rounded shadow-xl">
-                  <div className="text-sm text-yellow-400">
+                  <div className="text-sm text-yellow-400 whitespace-nowrap">
                     Please enlist at least one mechanism
                   </div>
                 </div>
@@ -690,8 +871,11 @@ export default function StoryMissionCard({
                 alt={`Tier ${selectedChip.tier} ${selectedChip.modifier.toUpperCase()} Universal Chip`}
                 width={700}
                 height={700}
-                className="relative z-10 animate-in fade-in zoom-in-95 duration-300 drop-shadow-[0_0_30px_rgba(250,182,23,0.5)]"
-                style={{ imageRendering: 'crisp-edges' }}
+                className="relative z-10 animate-in fade-in zoom-in-95 duration-300"
+                style={{
+                  imageRendering: 'crisp-edges',
+                  filter: `drop-shadow(0 0 30px ${MODIFIER_COLORS[selectedChip.modifier.toUpperCase() as keyof typeof MODIFIER_COLORS] || '#999999'}88)`
+                }}
               />
 
               {/* Chip info */}

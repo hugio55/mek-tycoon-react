@@ -1160,6 +1160,11 @@ export default defineSchema({
     overshootBonusRate: v.number(), // Bonus percentage per point over green line
     maxOvershootBonus: v.number(), // Maximum possible overshoot bonus percentage
 
+    // Mek slot configuration
+    minSlots: v.optional(v.number()), // Minimum number of mek slots
+    maxSlots: v.optional(v.number()), // Maximum number of mek slots
+    singleSlotChance: v.optional(v.number()), // Percentage chance of getting single slot
+
     // Visual and UI settings
     colorTheme: v.string(), // Color theme for UI (green, yellow, red)
     displayName: v.string(), // Display name for UI
@@ -1172,4 +1177,40 @@ export default defineSchema({
   })
     .index("by_node_and_difficulty", ["nodeType", "difficulty"])
     .index("by_difficulty", ["difficulty"]),
+
+  // Attribute rarity lookup table for essence drop calculations
+  attributeRarity: defineTable({
+    // Unique identifier (should only have one document)
+    type: v.literal("singleton"),
+
+    // Head variations with counts and calculated drop chances
+    heads: v.optional(v.any()), // Map of head name -> { count, appearanceRate, dropChance }
+
+    // Body variations with counts and calculated drop chances
+    bodies: v.optional(v.any()), // Map of body name -> { count, appearanceRate, dropChance }
+
+    // Trait variations with counts and calculated drop chances
+    traits: v.optional(v.any()), // Map of trait name -> { count, appearanceRate, dropChance }
+
+    // Metadata
+    totalMeks: v.number(), // Total number of meks analyzed (should be 4000)
+    lastUpdated: v.number(), // Timestamp of last update
+    version: v.number(), // Version number for cache invalidation
+  })
+    .index("by_type", ["type"]),
+
+  // Full collection of all 4000 unique meks with their attributes
+  mekCollection: defineTable({
+    rank: v.number(), // Rarity rank 1-4000 (1 = rarest)
+    assetId: v.string(), // Unique asset ID
+    sourceKey: v.string(), // Source key for image lookup
+    head: v.string(), // Head variation name
+    body: v.string(), // Body variation name
+    trait: v.string(), // Trait variation name
+  })
+    .index("by_rank", ["rank"])
+    .index("by_asset_id", ["assetId"])
+    .index("by_head", ["head"])
+    .index("by_body", ["body"])
+    .index("by_trait", ["trait"]),
 });

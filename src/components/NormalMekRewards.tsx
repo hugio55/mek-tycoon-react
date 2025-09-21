@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { calculateMekSlots } from '@/lib/difficultyModifiers';
 
 interface RewardConfig {
   goldRange: { min: number; max: number };
@@ -16,7 +17,17 @@ interface RewardConfig {
   essenceRounding: 'none' | '0.1' | '0.5' | '1';
 }
 
-export default function NormalMekRewards() {
+interface MekSlotsConfig {
+  easy: { min: number; max: number };
+  medium: { min: number; max: number };
+  hard: { min: number; max: number };
+}
+
+interface Props {
+  mekSlotsConfig?: MekSlotsConfig;
+}
+
+export default function NormalMekRewards({ mekSlotsConfig }: Props) {
   // Load config from localStorage or use defaults
   const getInitialConfig = (): RewardConfig => {
     if (typeof window !== 'undefined') {
@@ -437,6 +448,51 @@ export default function NormalMekRewards() {
                 <div><span className="text-gray-400">Head:</span> {mekBySearch.mek.head}</div>
                 <div><span className="text-gray-400">Body:</span> {mekBySearch.mek.body}</div>
                 <div className="col-span-2"><span className="text-gray-400">Trait:</span> {mekBySearch.mek.trait}</div>
+                {mekSlotsConfig && (
+                  <div className="col-span-2">
+                    <span className="text-gray-400">Mek Slots:</span>
+                    <span className="ml-2">
+                      {(() => {
+                        // Use assetId as nodeId for deterministic slot calculation
+                        const nodeId = `mek-${mekBySearch.mek.assetId}`;
+
+                        // Create mock difficulty configs for each difficulty level
+                        const easyConfig = {
+                          difficulty: 'easy' as const,
+                          minSlots: mekSlotsConfig.easy.min,
+                          maxSlots: mekSlotsConfig.easy.max,
+                          singleSlotChance: mekSlotsConfig.easy.min === 1 ? 75 : 0,
+                        };
+
+                        const mediumConfig = {
+                          difficulty: 'medium' as const,
+                          minSlots: mekSlotsConfig.medium.min,
+                          maxSlots: mekSlotsConfig.medium.max,
+                          singleSlotChance: 0,
+                        };
+
+                        const hardConfig = {
+                          difficulty: 'hard' as const,
+                          minSlots: mekSlotsConfig.hard.min,
+                          maxSlots: mekSlotsConfig.hard.max,
+                          singleSlotChance: 0,
+                        };
+
+                        const easySlots = calculateMekSlots(easyConfig as any, nodeId);
+                        const mediumSlots = calculateMekSlots(mediumConfig as any, nodeId);
+                        const hardSlots = calculateMekSlots(hardConfig as any, nodeId);
+
+                        return (
+                          <>
+                            <span className="text-green-400">Easy: {easySlots}</span>
+                            <span className="text-yellow-400 ml-3">Medium: {mediumSlots}</span>
+                            <span className="text-red-400 ml-3">Hard: {hardSlots}</span>
+                          </>
+                        );
+                      })()}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

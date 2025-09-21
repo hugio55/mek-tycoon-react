@@ -7,13 +7,15 @@ import MasterRangeSystem from '@/components/MasterRangeSystem';
 import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
+import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
+import MekSuccessRateConfig from '@/components/MekSuccessRateConfig';
 
 // Data system definitions
 const DATA_SYSTEMS = [
-  { id: 'difficulty-system', name: 'Difficulty System Configuration', icon: '⚔️', implemented: true },
-  { id: 'mek-talent-tree', name: 'Mek Talent Tree Nodes', icon: '🌳', implemented: false },
+  { id: 'mek-systems', name: 'Mek Systems', icon: '⚙️', implemented: true },
   { id: 'mech-power-chips', name: 'Mech Power Chips', icon: '⚡', implemented: false },
   { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: true },
+  { id: 'buff-categories', name: 'Buff Categories', icon: '✨', implemented: true },
   { id: 'story-climb-mechanics', name: 'Story Climb Mechanics', icon: '🏔️', implemented: false },
   { id: 'daily-recipes', name: 'Daily Recipes (Universal Chips)', icon: '📖', implemented: false },
   { id: 'salvage-materials', name: 'Salvage Materials', icon: '🔧', implemented: false },
@@ -22,7 +24,8 @@ const DATA_SYSTEMS = [
   { id: 'single-missions', name: 'Single Missions Formulation', icon: '🎯', implemented: false },
   { id: 'global-game-data', name: 'Global Game Data', icon: '🌐', implemented: true },
   { id: 'shop-system', name: 'Shop System', icon: '🛒', implemented: true },
-  { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true }
+  { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true },
+  { id: 'variations', name: 'Variations', icon: '🎨', implemented: false }
 ];
 
 export default function AdminMasterDataPage() {
@@ -36,7 +39,24 @@ export default function AdminMasterDataPage() {
     DATA_SYSTEMS.forEach(s => { initial[s.id] = s.implemented ? 'complete' : 'incomplete'; });
     return initial;
   });
-  
+
+  // Variations System State
+  const [variationsImageFolder, setVariationsImageFolder] = useState('');
+
+  // Load variations folder path from localStorage on mount
+  useEffect(() => {
+    const savedPath = localStorage.getItem('variationsImageFolder');
+    if (savedPath) {
+      setVariationsImageFolder(savedPath);
+    }
+  }, []);
+
+  // Save variations folder path when it changes
+  const handleVariationsFolderChange = (path: string) => {
+    setVariationsImageFolder(path);
+    localStorage.setItem('variationsImageFolder', path);
+  };
+
   // Master Range Controls
   const [globalMultiplier, setGlobalMultiplier] = useState(1);
   const [minRange, setMinRange] = useState(1);
@@ -69,12 +89,34 @@ export default function AdminMasterDataPage() {
   const progressPercentage = (implementedCount / totalCount) * 100;
 
   const toggleSection = (sectionId: string) => {
-    // Only allow one section open at a time
-    const newExpanded = new Set<string>();
-    if (!expandedSections.has(sectionId)) {
-      newExpanded.add(sectionId);
+    // List of known subsection IDs
+    const subsectionIds = [
+      'mek-success-rate',
+      'mek-talent-tree',
+      'difficulty-subsystem',
+      'buff-categories-sub'
+    ];
+
+    const isSubsection = subsectionIds.includes(sectionId);
+
+    if (isSubsection) {
+      // For subsections, keep the parent section open and just toggle the subsection
+      const newExpanded = new Set(expandedSections);
+      if (newExpanded.has(sectionId)) {
+        newExpanded.delete(sectionId);
+      } else {
+        newExpanded.add(sectionId);
+      }
+      setExpandedSections(newExpanded);
+    } else {
+      // For main sections, only allow one open at a time
+      const newExpanded = new Set<string>();
+      if (!expandedSections.has(sectionId)) {
+        newExpanded.add(sectionId);
+        // Also close all subsections when closing a main section
+      }
+      setExpandedSections(newExpanded);
     }
-    setExpandedSections(newExpanded);
   };
 
   const navigateToSection = (sectionId: string) => {
@@ -244,49 +286,67 @@ export default function AdminMasterDataPage() {
 
         {/* Data Systems Sections */}
         <div className="space-y-4">
-          {/* Difficulty System Configuration */}
-          <div id="section-difficulty-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg">
+          {/* Mek Systems */}
+          <div id="section-mek-systems" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg">
             <button
-              onClick={() => toggleSection('difficulty-system')}
+              onClick={() => toggleSection('mek-systems')}
               className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">⚔️</span>
-                <h3 className="text-lg font-bold text-yellow-400">Difficulty System Configuration</h3>
+                <span className="text-2xl">⚙️</span>
+                <h3 className="text-lg font-bold text-yellow-400">Mek Systems</h3>
                 <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
               </div>
-              <span className="text-gray-400">{expandedSections.has('difficulty-system') ? '▼' : '▶'}</span>
+              <span className="text-gray-400">{expandedSections.has('mek-systems') ? '▼' : '▶'}</span>
             </button>
-            {expandedSections.has('difficulty-system') && (
+            {expandedSections.has('mek-systems') && (
               <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">
-                  Configure difficulty levels for missions: success thresholds, reward multipliers, slot counts, and essence distribution.
-                  Controls how Easy, Medium, and Hard difficulties affect gameplay balance.
-                </p>
-                <DifficultyAdminConfig />
-              </div>
-            )}
-          </div>
+                <p className="text-gray-400 mb-4">Configure core Mek systems including talent trees and base success rates</p>
 
-          {/* Mek Talent Tree Nodes */}
-          <div id="section-mek-talent-tree" className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
-            <button
-              onClick={() => toggleSection('mek-talent-tree')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🌳</span>
-                <h3 className="text-lg font-bold text-yellow-400">Mek Talent Tree Nodes</h3>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('mek-talent-tree') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('mek-talent-tree') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Configure talent tree node generation parameters</p>
-                {/* Content will go here */}
-                <div className="bg-gray-800/30 rounded p-4">
-                  <p className="text-sm text-gray-500">System not yet implemented</p>
+                {/* Base Success Rate Configuration Subsection */}
+                <div className="mb-4 bg-black/40 border border-yellow-500/30 rounded-lg">
+                  <button
+                    onClick={() => toggleSection('mek-success-rate')}
+                    className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📊</span>
+                      <h4 className="text-md font-bold text-yellow-400">Base Success Rate Configuration</h4>
+                      <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">{expandedSections.has('mek-success-rate') ? '▼' : '▶'}</span>
+                  </button>
+                  {expandedSections.has('mek-success-rate') && (
+                    <div className="p-4 border-t border-yellow-500/20">
+                      <MekSuccessRateConfig />
+                    </div>
+                  )}
                 </div>
+
+                {/* Talent Tree Nodes Subsection */}
+                <div className="mb-4 bg-black/40 border border-gray-600/30 rounded-lg">
+                  <button
+                    onClick={() => toggleSection('mek-talent-tree')}
+                    className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🌳</span>
+                      <h4 className="text-md font-bold text-yellow-400">Mek Talent Tree Nodes</h4>
+                      <span className="px-2 py-0.5 bg-gray-600/30 text-gray-400 text-xs font-bold rounded">COMING SOON</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">{expandedSections.has('mek-talent-tree') ? '▼' : '▶'}</span>
+                  </button>
+                  {expandedSections.has('mek-talent-tree') && (
+                    <div className="p-4 border-t border-gray-600/20">
+                      <p className="text-sm text-gray-500">Talent tree configuration system coming soon...</p>
+                      <div className="mt-3 bg-gray-800/30 rounded p-3">
+                        <p className="text-xs text-gray-600">Will include node types, connections, and progression paths</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Mek Systems can be added here */}
               </div>
             )}
           </div>
@@ -332,11 +392,34 @@ export default function AdminMasterDataPage() {
                   Universal chip buff generation system with master ranges for all buff categories.
                   <span className="text-green-400 ml-2">✓ Migrated from chip-builder page</span>
                 </p>
-                <MasterRangeSystem 
+                <MasterRangeSystem
                   onApplyRanges={() => {
                     console.log('Universal chip ranges applied');
                   }}
                 />
+              </div>
+            )}
+          </div>
+
+          {/* Buff Categories */}
+          <div id="section-buff-categories" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg">
+            <button
+              onClick={() => toggleSection('buff-categories')}
+              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">✨</span>
+                <h3 className="text-lg font-bold text-yellow-400">Buff Categories</h3>
+                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+              </div>
+              <span className="text-gray-400">{expandedSections.has('buff-categories') ? '▼' : '▶'}</span>
+            </button>
+            {expandedSections.has('buff-categories') && (
+              <div className="p-4 border-t border-gray-700/50">
+                <p className="text-gray-400 mb-4">
+                  Manage buff categories for chips, mechanisms, and game systems. Configure success rate curves and tier-specific buffs.
+                </p>
+                <BuffCategoriesAdmin />
               </div>
             )}
           </div>
@@ -359,7 +442,32 @@ export default function AdminMasterDataPage() {
                   Unified system for story progression, events, mechanisms, bosses, and final bosses.
                   Controls how mechanisms are distributed across story nodes.
                 </p>
-                <StoryClimbConfig />
+
+                {/* Difficulty System Configuration Sub-section */}
+                <div className="mb-6 bg-black/40 border border-yellow-500/30 rounded-lg">
+                  <button
+                    onClick={() => toggleSection('difficulty-subsystem')}
+                    className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">⚔️</span>
+                      <h4 className="text-md font-bold text-yellow-400">Difficulty System Configuration</h4>
+                      <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">{expandedSections.has('difficulty-subsystem') ? '▼' : '▶'}</span>
+                  </button>
+                  {expandedSections.has('difficulty-subsystem') && (
+                    <div className="p-3 border-t border-yellow-500/20">
+                      <p className="text-gray-400 text-sm mb-3">
+                        Configure difficulty levels for missions: success thresholds, reward multipliers, and slot counts.
+                        Controls how Easy, Medium, and Hard difficulties affect gameplay balance.
+                      </p>
+                      <DifficultyAdminConfig />
+                    </div>
+                  )}
+                </div>
+
+                <StoryClimbConfig key={expandedSections.has('story-climb-mechanics') ? 'expanded' : 'collapsed'} />
               </div>
             )}
           </div>
@@ -684,6 +792,85 @@ export default function AdminMasterDataPage() {
                       <span className="text-blue-300 ml-2">AI-powered negotiation helper</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Variations */}
+          <div id="section-variations" className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg">
+            <button
+              onClick={() => toggleSection('variations')}
+              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎨</span>
+                <h3 className="text-lg font-bold text-yellow-400">Variations</h3>
+              </div>
+              <span className="text-gray-400">{expandedSections.has('variations') ? '▼' : '▶'}</span>
+            </button>
+            {expandedSections.has('variations') && (
+              <div className="p-4 border-t border-gray-700/50">
+                <p className="text-gray-400 mb-4">Configure and manage Mek variations system</p>
+
+                {/* Image Folder Configuration */}
+                <div className="bg-gray-800/30 rounded-lg p-4 mb-4">
+                  <h4 className="text-sm font-bold text-yellow-300 mb-3">Variations Image Folder</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">
+                        Folder Path
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={variationsImageFolder}
+                          onChange={(e) => handleVariationsFolderChange(e.target.value)}
+                          placeholder="e.g., C:\Assets\Mek-Variations or /public/images/variations"
+                          className="flex-1 px-3 py-2 bg-black/50 border border-gray-600 rounded text-gray-300 placeholder-gray-500 focus:border-yellow-500/50 focus:outline-none"
+                        />
+                        <button
+                          onClick={() => {
+                            // This would typically open a folder browser dialog
+                            console.log('Browse for folder clicked');
+                          }}
+                          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-gray-300 transition-colors"
+                        >
+                          Browse
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Specify the folder containing variation images (heads, bodies, traits)
+                      </p>
+                    </div>
+
+                    {variationsImageFolder && (
+                      <div className="bg-black/30 rounded p-3 border border-gray-700">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-gray-400">Current Path:</span>
+                          <span className="text-xs text-green-400">✓ Set</span>
+                        </div>
+                        <code className="text-xs text-yellow-300 break-all">{variationsImageFolder}</code>
+                      </div>
+                    )}
+
+                    {/* Search Field */}
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">
+                        Search Variations
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Search by name, ID, or category..."
+                        className="w-full px-3 py-2 bg-black/50 border border-gray-600 rounded text-gray-300 placeholder-gray-500 focus:border-yellow-500/50 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Placeholder for more variation features */}
+                <div className="bg-gray-800/20 rounded p-4 border border-gray-700/30">
+                  <p className="text-sm text-gray-500">More variation configuration features coming soon...</p>
                 </div>
               </div>
             )}

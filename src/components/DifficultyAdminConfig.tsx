@@ -8,12 +8,17 @@ import SuccessBar from '@/components/SuccessBar';
 
 type NodeType = 'normal' | 'challenger' | 'event' | 'miniboss' | 'final_boss';
 
-export default function DifficultyAdminConfig() {
+interface DifficultyAdminConfigProps {
+  testSuccessRate?: number;
+}
+
+export default function DifficultyAdminConfig({ testSuccessRate: externalTestRate }: DifficultyAdminConfigProps = {}) {
   const [selectedNodeType, setSelectedNodeType] = useState<NodeType>('normal');
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('medium');
   const [hasChanges, setHasChanges] = useState(false);
   const [localConfigs, setLocalConfigs] = useState<any>({});
   const [previewSuccessRate, setPreviewSuccessRate] = useState(50);
+  const [successBarLayout, setSuccessBarLayout] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   // Dummy node data for each type
   const dummyNodeData = {
@@ -92,6 +97,13 @@ export default function DifficultyAdminConfig() {
     }
   }, [configs]);
 
+  // Sync external test rate when provided
+  useEffect(() => {
+    if (externalTestRate !== undefined) {
+      setPreviewSuccessRate(externalTestRate);
+    }
+  }, [externalTestRate]);
+
   const configKey = `${selectedNodeType}_${selectedDifficulty}`;
   const currentConfig = localConfigs[configKey];
   const colors = getDifficultyColors(selectedDifficulty);
@@ -116,10 +128,7 @@ export default function DifficultyAdminConfig() {
       successGreenLine: currentConfig.successGreenLine,
       goldMultiplier: currentConfig.goldMultiplier,
       xpMultiplier: currentConfig.xpMultiplier,
-      essenceAmountMultiplier: currentConfig.essenceAmountMultiplier,
       deploymentFeeMultiplier: currentConfig.deploymentFeeMultiplier,
-      commonEssenceBoost: currentConfig.commonEssenceBoost,
-      rareEssencePenalty: currentConfig.rareEssencePenalty,
       overshootBonusRate: currentConfig.overshootBonusRate,
       maxOvershootBonus: currentConfig.maxOvershootBonus,
       colorTheme: currentConfig.colorTheme,
@@ -142,7 +151,14 @@ export default function DifficultyAdminConfig() {
     }
   };
 
-  if (!configs || configs.length === 0) {
+  // State for controlling test panel visibility
+  const [showTestPanel, setShowTestPanel] = useState(false);
+
+  if (!configs) {
+    return <div className="text-gray-400">Loading configurations...</div>;
+  }
+
+  if (configs.length === 0) {
     return (
       <div className="bg-gray-800/30 rounded p-6">
         <p className="text-yellow-400 mb-4">No difficulty configurations found.</p>
@@ -157,7 +173,26 @@ export default function DifficultyAdminConfig() {
   }
 
   if (!currentConfig) {
-    return <div className="text-gray-400">Loading...</div>;
+    return (
+      <div className="bg-gray-800/30 rounded p-6">
+        <p className="text-yellow-400 mb-4">Configuration for {selectedNodeType} ({selectedDifficulty}) not found.</p>
+        <p className="text-gray-400 mb-4">Some configurations may be missing from the database.</p>
+        <div className="flex gap-3">
+          <button
+            onClick={handleInitialize}
+            className="bg-yellow-500 text-black font-bold px-4 py-2 rounded hover:bg-yellow-400 transition-colors"
+          >
+            Initialize Missing Configurations
+          </button>
+          <button
+            onClick={handleReset}
+            className="bg-red-500 text-white font-bold px-4 py-2 rounded hover:bg-red-400 transition-colors"
+          >
+            Reset All to Defaults
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Sample rewards for preview
@@ -168,7 +203,7 @@ export default function DifficultyAdminConfig() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       {/* Node Type Selector */}
       <div className="bg-black/50 border border-gray-700 rounded-lg p-4">
         <label className="text-sm font-bold text-yellow-400 mb-2 block">Select Node Type</label>
@@ -275,61 +310,6 @@ export default function DifficultyAdminConfig() {
                 className="w-full mt-1"
               />
             </div>
-            <div>
-              <label className="text-xs text-gray-400 flex justify-between">
-                Essence Amount
-                <span className="text-purple-400">{currentConfig.essenceAmountMultiplier}x</span>
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="3"
-                step="0.1"
-                value={currentConfig.essenceAmountMultiplier}
-                onChange={(e) => handleFieldChange('essenceAmountMultiplier', Number(e.target.value))}
-                className="w-full mt-1"
-              />
-            </div>
-          </div>
-        </div>
-
-
-        {/* Essence Distribution */}
-        <div className="bg-black/50 border border-gray-700 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-yellow-400 mb-3">Essence Distribution</h4>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-gray-400 flex justify-between">
-                Common Boost
-                <span className={currentConfig.commonEssenceBoost >= 0 ? 'text-green-400' : 'text-red-400'}>
-                  {currentConfig.commonEssenceBoost > 0 ? '+' : ''}{currentConfig.commonEssenceBoost}%
-                </span>
-              </label>
-              <input
-                type="range"
-                min="-50"
-                max="50"
-                value={currentConfig.commonEssenceBoost}
-                onChange={(e) => handleFieldChange('commonEssenceBoost', Number(e.target.value))}
-                className="w-full mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 flex justify-between">
-                Rare Modifier
-                <span className={currentConfig.rareEssencePenalty >= 0 ? 'text-green-400' : 'text-red-400'}>
-                  {currentConfig.rareEssencePenalty > 0 ? '+' : ''}{currentConfig.rareEssencePenalty}%
-                </span>
-              </label>
-              <input
-                type="range"
-                min="-100"
-                max="200"
-                value={currentConfig.rareEssencePenalty}
-                onChange={(e) => handleFieldChange('rareEssencePenalty', Number(e.target.value))}
-                className="w-full mt-1"
-              />
-            </div>
           </div>
         </div>
 
@@ -403,27 +383,149 @@ export default function DifficultyAdminConfig() {
           </div>
         </div>
 
-        {/* Success Rate Slider Control */}
-        <div className="mb-6 bg-gray-900/50 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-bold text-gray-300">Test Success Rate</label>
-            <span className="text-lg font-bold text-yellow-400">{previewSuccessRate}%</span>
+        {/* Enhanced Success Rate Testing Controls */}
+        <div className="mb-6 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-2 border-purple-500/50 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-sm font-bold text-purple-300 uppercase tracking-wider">
+              🧪 Success Meter Testing Controls
+            </label>
+            <button
+              onClick={() => setPreviewSuccessRate(currentConfig.successGreenLine)}
+              className="text-xs px-3 py-1 bg-green-600/30 border border-green-400 rounded text-green-300 hover:bg-green-600/50 transition-colors"
+            >
+              Jump to Green Line
+            </button>
           </div>
+
+          {/* Current Value Display */}
+          <div className="flex items-center gap-4 mb-3">
+            <span className="text-2xl font-bold text-yellow-400 font-mono">{previewSuccessRate}%</span>
+            <div className="flex-1 text-xs text-gray-400">
+              {previewSuccessRate < currentConfig.successGreenLine ? (
+                <span>
+                  <span className="text-orange-400">{(currentConfig.successGreenLine - previewSuccessRate).toFixed(1)}%</span> below green line
+                </span>
+              ) : previewSuccessRate > currentConfig.successGreenLine ? (
+                <span>
+                  <span className="text-green-400">+{(previewSuccessRate - currentConfig.successGreenLine).toFixed(1)}%</span> overshoot bonus
+                </span>
+              ) : (
+                <span className="text-green-400">Exactly at green line</span>
+              )}
+            </div>
+          </div>
+
+          {/* Main Slider */}
           <input
             type="range"
             min="0"
             max="100"
             value={previewSuccessRate}
             onChange={(e) => setPreviewSuccessRate(Number(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${currentConfig.successGreenLine}%, #10b981 ${currentConfig.successGreenLine}%, #10b981 100%)`
+              background: `linear-gradient(to right,
+                #dc2626 0%,
+                #dc2626 ${currentConfig.successGreenLine}%,
+                #10b981 ${currentConfig.successGreenLine}%,
+                #10b981 100%)`
             }}
           />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
+
+          {/* Quick Jump Buttons */}
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <button
+              onClick={() => setPreviewSuccessRate(0)}
+              className="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+            >
+              0%
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(Math.floor(currentConfig.successGreenLine * 0.25))}
+              className="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+            >
+              25% to GL
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(Math.floor(currentConfig.successGreenLine * 0.5))}
+              className="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+            >
+              50% to GL
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(Math.floor(currentConfig.successGreenLine * 0.75))}
+              className="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+            >
+              75% to GL
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(currentConfig.successGreenLine)}
+              className="text-xs px-2 py-1 bg-green-700 rounded hover:bg-green-600 transition-colors font-bold"
+            >
+              Green Line
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(Math.min(100, currentConfig.successGreenLine + 10))}
+              className="text-xs px-2 py-1 bg-green-700 rounded hover:bg-green-600 transition-colors"
+            >
+              +10% Over
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(Math.min(100, currentConfig.successGreenLine + 25))}
+              className="text-xs px-2 py-1 bg-green-700 rounded hover:bg-green-600 transition-colors"
+            >
+              +25% Over
+            </button>
+            <button
+              onClick={() => setPreviewSuccessRate(100)}
+              className="text-xs px-2 py-1 bg-yellow-700 rounded hover:bg-yellow-600 transition-colors"
+            >
+              100%
+            </button>
+          </div>
+
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
             <span>0%</span>
             <span className="text-yellow-400">← Green Line: {currentConfig.successGreenLine}% →</span>
             <span>100%</span>
+          </div>
+        </div>
+
+        {/* Success Bar Layout Selector */}
+        <div className="bg-gray-800 rounded p-3 mb-4">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Success Bar Layout Style</div>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((layout) => (
+              <button
+                key={layout}
+                onClick={() => setSuccessBarLayout(layout as 1 | 2 | 3 | 4 | 5)}
+                className={`
+                  px-3 py-2 rounded text-sm font-bold transition-all flex-1
+                  ${successBarLayout === layout
+                    ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-400'
+                    : 'bg-black/40 border-2 border-gray-600 text-gray-400 hover:border-gray-400 hover:text-gray-300'
+                  }
+                `}
+                title={`Layout ${layout}: ${[
+                  'Vertical Stack',
+                  'Two-Row',
+                  'Grid Modular',
+                  'Asymmetric',
+                  'Compact Pills'
+                ][layout - 1]}`}
+              >
+                {layout}
+              </button>
+            ))}
+          </div>
+          <div className="text-xs text-gray-500 mt-2 text-center">
+            {[
+              '1: Vertical Stacked Card',
+              '2: Two-Row Horizontal',
+              '3: Grid Modular 2x2',
+              '4: Asymmetric Hero',
+              '5: Compact Badge/Pills'
+            ][successBarLayout - 1]}
           </div>
         </div>
 
@@ -437,6 +539,7 @@ export default function DifficultyAdminConfig() {
             xp: dummyNodeData[selectedNodeType].baseXp
           }}
           potentialRewards={dummyNodeData[selectedNodeType].potentialRewards}
+          layoutStyle={successBarLayout}
         />
 
         {/* Base vs Modified Values */}
@@ -483,27 +586,6 @@ export default function DifficultyAdminConfig() {
           </div>
         </div>
 
-        {/* Essence Distribution Explanation */}
-        <div className="mt-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-          <h5 className="text-xs font-bold text-purple-400 mb-2">Essence Distribution Settings</h5>
-          <div className="text-xs text-gray-400 space-y-1">
-            <div>
-              <span className="text-purple-300">Common Boost ({currentConfig.commonEssenceBoost}%):</span>
-              <span className="ml-2">
-                {currentConfig.commonEssenceBoost > 0 ? 'Increases' : currentConfig.commonEssenceBoost < 0 ? 'Decreases' : 'No change to'} common essence drop rate
-              </span>
-            </div>
-            <div>
-              <span className="text-purple-300">Rare Modifier ({currentConfig.rareEssencePenalty}%):</span>
-              <span className="ml-2">
-                {currentConfig.rareEssencePenalty > 0 ? 'Increases' : currentConfig.rareEssencePenalty < 0 ? 'Decreases' : 'No change to'} rare essence drop rate
-              </span>
-            </div>
-            <div className="mt-2 pt-2 border-t border-purple-500/20">
-              💡 When overshoot bonus is active, rarer items get proportionally bigger chance boosts
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Action Buttons */}
@@ -533,6 +615,101 @@ export default function DifficultyAdminConfig() {
             Save Changes
           </button>
         </div>
+      </div>
+
+      {/* Floating Success Meter Test Panel - Bottom Left */}
+      <div className="fixed bottom-4 left-4 z-50">
+        {/* Toggle Button */}
+        {!showTestPanel && (
+          <button
+            onClick={() => setShowTestPanel(true)}
+            className="bg-purple-600/80 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all"
+          >
+            <span className="text-lg">🧪</span>
+            <span className="text-sm font-bold">Test Success Meter</span>
+          </button>
+        )}
+
+        {/* Test Panel */}
+        {showTestPanel && (
+          <div className="bg-black/95 border-2 border-purple-500/50 rounded-lg p-4 shadow-2xl w-80 backdrop-blur-sm">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-bold text-purple-300 uppercase tracking-wider">
+                🧪 Success Meter Test
+              </span>
+              <button
+                onClick={() => setShowTestPanel(false)}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Current Value */}
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl font-bold text-yellow-400">{previewSuccessRate}%</span>
+              <div className="flex-1 text-xs text-gray-400">
+                {previewSuccessRate < currentConfig.successGreenLine ? (
+                  <span>
+                    <span className="text-orange-400">{(currentConfig.successGreenLine - previewSuccessRate).toFixed(0)}%</span> below GL
+                  </span>
+                ) : previewSuccessRate > currentConfig.successGreenLine ? (
+                  <span>
+                    <span className="text-green-400">+{(previewSuccessRate - currentConfig.successGreenLine).toFixed(0)}%</span> overshoot
+                  </span>
+                ) : (
+                  <span className="text-green-400">At green line</span>
+                )}
+              </div>
+            </div>
+
+            {/* Slider */}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={previewSuccessRate}
+              onChange={(e) => setPreviewSuccessRate(Number(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mb-3"
+              style={{
+                background: `linear-gradient(to right,
+                  #dc2626 0%,
+                  #dc2626 ${currentConfig.successGreenLine}%,
+                  #10b981 ${currentConfig.successGreenLine}%,
+                  #10b981 100%)`
+              }}
+            />
+
+            {/* Quick Jump Buttons */}
+            <div className="grid grid-cols-4 gap-1 text-xs">
+              <button
+                onClick={() => setPreviewSuccessRate(0)}
+                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+              >
+                0%
+              </button>
+              <button
+                onClick={() => setPreviewSuccessRate(Math.floor(currentConfig.successGreenLine * 0.5))}
+                className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+              >
+                50%→GL
+              </button>
+              <button
+                onClick={() => setPreviewSuccessRate(currentConfig.successGreenLine)}
+                className="px-2 py-1 bg-green-700 rounded hover:bg-green-600 font-bold"
+              >
+                GL
+              </button>
+              <button
+                onClick={() => setPreviewSuccessRate(100)}
+                className="px-2 py-1 bg-yellow-700 rounded hover:bg-yellow-600"
+              >
+                100%
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

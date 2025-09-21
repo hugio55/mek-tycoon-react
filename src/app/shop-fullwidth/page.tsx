@@ -112,7 +112,7 @@ export default function ShopHybridPage() {
   const [sortBy, setSortBy] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
   const [timePeriod, setTimePeriod] = useState("last"); // Time period for history columns
-  const [historyLayout, setHistoryLayout] = useState("option1"); // Layout option for history header
+  const [barStyle, setBarStyle] = useState("style3"); // Bar style for progress bars - Default to Neon
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [showMakeOffer, setShowMakeOffer] = useState(false);
   const [showMyListings, setShowMyListings] = useState(false);
@@ -152,13 +152,13 @@ export default function ShopHybridPage() {
   // Override gold for testing UI with insufficient funds
   const userProfile = userProfileQuery ? { ...userProfileQuery, gold: 1000 } : null;
 
-  // Set current time on client only to avoid hydration mismatch
+  // Set current time on client only to avoid hydration mismatch - UPDATE EVERY SECOND
   useEffect(() => {
     setCurrentTime(Date.now());
-    // Update time every minute
+    // Update time every second for real-time countdown
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 60000);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -201,7 +201,7 @@ export default function ShopHybridPage() {
           break;
         case '/':
           e.preventDefault();
-          const searchInput = document.querySelector('input[placeholder="ENTER KEYWORDS..."]') as HTMLInputElement;
+          const searchInput = document.querySelector('input[placeholder="Search..."]') as HTMLInputElement;
           if (searchInput) {
             searchInput.focus();
           }
@@ -250,7 +250,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 2650,
       salesVolume24h: 12,
       listedAt: Date.now() - 3600000,
-      expiresAt: Date.now() + 300000, // 5 minutes - will show red
+      expiresAt: Date.now() + 150000, // 2.5 minutes - will show red
       rarity: "uncommon",
       viewCount: 45,
       watchCount: 3,
@@ -270,7 +270,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 1900,
       salesVolume24h: 23,
       listedAt: Date.now() - 1800000,
-      expiresAt: Date.now() + 1800000, // 30 minutes - will show orange
+      expiresAt: Date.now() + 2400000, // 40 minutes - will show orange
       rarity: "common",
       viewCount: 67,
       watchCount: 2,
@@ -330,7 +330,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 3400,
       salesVolume24h: 8,
       listedAt: Date.now() - 7200000,
-      expiresAt: Date.now() + 420000, // 7 minutes - red
+      expiresAt: Date.now() + 120000, // 2 minutes - red
       rarity: "rare",
       viewCount: 89,
       watchCount: 7,
@@ -404,7 +404,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 16500,
       salesVolume24h: 2,
       listedAt: Date.now() - 600000,
-      expiresAt: Date.now() + 180000, // 3 minutes - red
+      expiresAt: Date.now() + 90000, // 1.5 minutes - red
       rarity: "legendary",
       viewCount: 234,
       watchCount: 18,
@@ -424,7 +424,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 3300,
       salesVolume24h: 11,
       listedAt: Date.now() - 10800000,
-      expiresAt: Date.now() + 86400000,
+      expiresAt: Date.now() + 3000000, // 50 minutes
       rarity: "uncommon",
       viewCount: 78,
       watchCount: 4,
@@ -449,7 +449,7 @@ export default function ShopHybridPage() {
       watchCount: 9,
     },
 
-    // ESSENCE
+    // ESSENCE - with various quantities for progress bar
     {
       _id: "12" as Id<"marketListings">,
       sellerId: "seller12" as Id<"users">,
@@ -459,11 +459,12 @@ export default function ShopHybridPage() {
       itemType: "essence",
       itemVariation: "Stone Essence",
       essenceType: "stone",
-      quantity: 5.5,
+      quantity: 3.5,
       pricePerUnit: 100,
       marketAverage: 1100,
       salesVolume24h: 34,
       listedAt: Date.now() - 1800000,
+      expiresAt: Date.now() + 180000, // 3 minutes
       rarity: "common",
       isNew: true,
     },
@@ -476,12 +477,13 @@ export default function ShopHybridPage() {
       itemType: "essence",
       itemVariation: "Disco Essence",
       essenceType: "disco",
-      quantity: 2.3,
+      quantity: 7.3,
       pricePerUnit: 250,
       marketAverage: 2800,
       lastSoldPrice: 2600,
       salesVolume24h: 12,
       listedAt: Date.now() - 7200000,
+      expiresAt: Date.now() + 2400000, // 40 minutes
       rarity: "uncommon",
       viewCount: 89,
       watchCount: 6,
@@ -575,7 +577,7 @@ export default function ShopHybridPage() {
       sellerSales: 789,
       itemType: "oem",
       itemVariation: "Kodak Canister",
-      quantity: 10,
+      quantity: 8,
       pricePerUnit: 150,
       marketAverage: 180,
       lastSoldPrice: 160,
@@ -600,6 +602,7 @@ export default function ShopHybridPage() {
       lastSoldPrice: 380,
       salesVolume24h: 23,
       listedAt: Date.now() - 1800000,
+      expiresAt: Date.now() + 2100000, // 35 minutes
       rarity: "uncommon",
       viewCount: 89,
       watchCount: 2,
@@ -847,114 +850,107 @@ export default function ShopHybridPage() {
     return colors[essenceType] || "#666666";
   };
 
-  // Render history header based on selected layout option
-  const renderHistoryHeader = () => {
-    switch (historyLayout) {
-      case "option1": // Inline buttons
+  // Render quantity progress bar based on selected style
+  const renderQuantityBar = (quantity: number, maxQuantity: number = 10, essenceType?: string) => {
+    const percentage = Math.min((quantity / maxQuantity) * 100, 100);
+
+    // Get color for essence bars
+    const getBarColor = () => {
+      if (!essenceType) return { color: '#22d3ee', rgb: '34, 211, 238' }; // Default cyan
+
+      const colors: Record<string, { color: string; rgb: string }> = {
+        stone: { color: '#94a3b8', rgb: '148, 163, 184' }, // Slate gray
+        disco: { color: '#ec4899', rgb: '236, 72, 153' }, // Pink
+        paul: { color: '#fbbf24', rgb: '251, 191, 36' }, // Amber
+        cartoon: { color: '#06b6d4', rgb: '6, 182, 212' }, // Cyan
+        candy: { color: '#f472b6', rgb: '244, 114, 182' }, // Pink
+        tiles: { color: '#8b5cf6', rgb: '139, 92, 246' }, // Violet
+        moss: { color: '#10b981', rgb: '16, 185, 129' }, // Emerald
+        bullish: { color: '#ef4444', rgb: '239, 68, 68' }, // Red
+        journalist: { color: '#6b7280', rgb: '107, 114, 128' }, // Gray
+        laser: { color: '#dc2626', rgb: '220, 38, 38' }, // Red
+        flashbulb: { color: '#facc15', rgb: '250, 204, 21' }, // Yellow
+        accordion: { color: '#a16207', rgb: '161, 98, 7' }, // Brown
+        turret: { color: '#164e63', rgb: '22, 78, 99' }, // Teal
+        drill: { color: '#ea580c', rgb: '234, 88, 12' }, // Orange
+        security: { color: '#1e3a8a', rgb: '30, 58, 138' }, // Blue
+      };
+
+      return colors[essenceType] || { color: '#22d3ee', rgb: '34, 211, 238' };
+    };
+
+    switch (barStyle) {
+      case "style1": // Classic gradient bar
         return (
-          <th className="py-1.5 px-1 text-center border-l border-r border-amber-700/30" colSpan={3}>
-            <div className="flex justify-center gap-1">
-              {['last', '24h', '5d', '25d'].map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setTimePeriod(period)}
-                  className={`px-2 py-1 text-[9px] font-bold uppercase transition-all rounded ${
-                    timePeriod === period
-                      ? 'bg-yellow-500 text-black'
-                      : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-gray-700/50'
-                  }`}
-                >
-                  {period}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-around text-[9px] text-amber-200/50 mt-1">
-              <span>AVG/UNIT</span>
-              <span>QTY</span>
-              <span>VOLUME</span>
-            </div>
-          </th>
+          <div className="relative w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-yellow-500 rounded-full transition-all duration-300"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
         );
 
-      case "option2": // Compact tabs
+      case "style2": // Segmented blocks
         return (
-          <th className="py-1.5 px-1 text-center border-l border-r border-amber-700/30" colSpan={3}>
-            <div className="flex justify-center">
-              <div className="inline-flex bg-black/50 rounded-sm">
-                {['last', '24h', '5d', '25d'].map((period, idx) => (
-                  <button
-                    key={period}
-                    onClick={() => setTimePeriod(period)}
-                    className={`px-3 py-1 text-[9px] font-bold uppercase transition-all ${
-                      timePeriod === period
-                        ? 'bg-yellow-500 text-black'
-                        : 'text-gray-400 hover:text-yellow-400'
-                    } ${idx === 0 ? 'rounded-l-sm' : ''} ${idx === 3 ? 'rounded-r-sm' : ''}`}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-around text-[9px] text-amber-200/50 mt-1">
-              <span>AVG</span>
-              <span>QTY</span>
-              <span>VOL</span>
-            </div>
-          </th>
-        );
-
-      case "option3": // Minimal dots
-        return (
-          <th className="py-1.5 px-1 text-center border-l border-r border-amber-700/30" colSpan={3}>
-            <div className="flex justify-center items-center gap-2">
-              {['last', '24h', '5d', '25d'].map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setTimePeriod(period)}
-                  className={`relative group ${
-                    timePeriod === period ? 'scale-125' : ''
-                  }`}
-                  title={period}
-                >
-                  <div className={`w-2 h-2 rounded-full transition-all ${
-                    timePeriod === period
+          <div className="flex gap-0.5">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 flex-1 ${
+                  i < Math.ceil(quantity)
+                    ? i < Math.floor(quantity)
                       ? 'bg-yellow-500'
-                      : 'bg-gray-600 hover:bg-gray-400'
-                  }`} />
-                  <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] opacity-0 group-hover:opacity-100 transition-opacity">
-                    {period}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-around text-[9px] text-amber-200/50 mt-3">
-              <span>AVG</span>
-              <span>QTY</span>
-              <span>VOL</span>
-            </div>
-          </th>
+                      : 'bg-yellow-500/50'
+                    : 'bg-gray-700'
+                } ${i === 0 ? 'rounded-l' : ''} ${i === 9 ? 'rounded-r' : ''}`}
+              />
+            ))}
+          </div>
         );
 
-      case "option4": // Dropdown menu
+      case "style3": // Glowing neon bar with dynamic colors
+        const barColor = getBarColor();
         return (
-          <th className="py-1.5 px-1 text-center border-l border-r border-amber-700/30" colSpan={3}>
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value)}
-              className="px-2 py-0.5 bg-black/60 border border-yellow-500/30 rounded text-yellow-400 text-[9px] font-bold uppercase"
-            >
-              <option value="last">LAST</option>
-              <option value="24h">24H</option>
-              <option value="5d">5D</option>
-              <option value="25d">25D</option>
-            </select>
-            <div className="flex justify-around text-[9px] text-amber-200/50 mt-1">
-              <span>AVG</span>
-              <span>QTY</span>
-              <span>VOL</span>
-            </div>
-          </th>
+          <div className="relative w-full h-1.5 bg-black rounded-full border border-gray-800/50">
+            <div
+              className="absolute top-0 left-0 h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${percentage}%`,
+                backgroundColor: barColor.color,
+                boxShadow: `0 0 10px rgba(${barColor.rgb}, 0.8), 0 0 20px rgba(${barColor.rgb}, 0.5), inset 0 0 5px rgba(255,255,255,0.3)`
+              }}
+            />
+          </div>
+        );
+
+      case "style4": // Dotted progress
+        return (
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  i < quantity
+                    ? 'bg-yellow-400 scale-100'
+                    : 'bg-gray-700 scale-75'
+                }`}
+              />
+            ))}
+          </div>
+        );
+
+      case "style5": // Industrial hazard stripes
+        return (
+          <div className="relative w-full h-2 bg-gray-900 border border-yellow-500/30 rounded-sm overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full transition-all duration-300"
+              style={{
+                width: `${percentage}%`,
+                background: 'repeating-linear-gradient(45deg, #fab617 0px, #fab617 3px, #000 3px, #000 6px)'
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+          </div>
         );
 
       default:
@@ -969,48 +965,42 @@ export default function ShopHybridPage() {
 
       {/* Main Content */}
       <div className="relative z-10 h-screen flex flex-col">
-        {/* Title Section - Thicker Header with Buttons */}
-        <div className="relative mek-card-industrial mek-border-sharp-gold p-4 mek-glow-yellow mx-4 mt-4 mb-2">
+        {/* Title Section - Narrower Header with Swapped Elements */}
+        <div className="relative mek-card-industrial mek-border-sharp-gold py-2 px-4 mek-glow-yellow mx-4 mt-4 mb-2">
           {/* Hazard Stripes Header */}
-          <div className="absolute top-0 left-0 right-0 h-2 mek-overlay-hazard-stripes opacity-60" />
+          <div className="absolute top-0 left-0 right-0 h-1.5 mek-overlay-hazard-stripes opacity-60" />
 
           {/* Grunge Overlays */}
           <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
 
-          <div className="relative">
-            {/* Top Row - Title and Balance */}
-            <div className="flex items-center mb-3">
-              <div className="flex-1 text-center">
-                <h1 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
-                  SHOP
-                </h1>
-              </div>
-
-              <div className="absolute right-0 flex items-center gap-4">
-                {/* Market Stats */}
-                <div className="flex flex-col items-end">
-                  <div className="text-[9px] text-gray-500 uppercase">Your Balance</div>
-                  <div className="gold-display-medium">
-                    {Math.floor(userProfile?.gold || 0).toLocaleString()}
-                  </div>
-                </div>
+          <div className="relative flex items-center justify-between">
+            {/* Gold Balance - Bottom Left */}
+            <div className="flex flex-col">
+              <div className="text-[9px] text-gray-500 uppercase">Your Balance</div>
+              <div className="gold-display-medium">
+                {Math.floor(userProfile?.gold || 0).toLocaleString()}
               </div>
             </div>
 
-            {/* Bottom Row - Action Buttons */}
+            {/* SHOP Title - Centered */}
+            <h1 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow absolute left-1/2 -translate-x-1/2">
+              SHOP
+            </h1>
+
+            {/* Action Buttons - Right Side */}
             <div className="flex gap-2">
               {/* Create Listing Button */}
               <button
                 onClick={() => setShowCreateListing(true)}
-                className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-[10px] uppercase tracking-wider transition-all rounded shadow-lg shadow-yellow-500/30"
+                className="px-3 py-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-[10px] uppercase tracking-wider transition-all rounded shadow-lg shadow-yellow-500/30"
               >
-                + CREATE LISTING
+                + CREATE
               </button>
 
               {/* My Listings Button */}
               <button
                 onClick={() => setShowMyListings(!showMyListings)}
-                className={`px-3 py-1.5 font-bold text-[10px] uppercase tracking-wider transition-all rounded flex items-center gap-1.5 ${
+                className={`px-3 py-1 font-bold text-[10px] uppercase tracking-wider transition-all rounded flex items-center gap-1.5 ${
                   showMyListings
                     ? 'bg-green-500 text-black shadow-lg shadow-green-500/30'
                     : 'bg-black/50 border border-green-500/30 text-green-400 hover:bg-green-500/10'
@@ -1083,47 +1073,26 @@ export default function ShopHybridPage() {
             {/* Content wrapper */}
             <div className="relative z-10 flex flex-col h-full">
 
-              {/* Layout Option Selector */}
+              {/* Bar Style Selector */}
               <div className="absolute top-2 right-2 z-20">
                 <select
-                  value={historyLayout}
-                  onChange={(e) => setHistoryLayout(e.target.value)}
+                  value={barStyle}
+                  onChange={(e) => setBarStyle(e.target.value)}
                   className="px-2 py-1 bg-black/80 border border-gray-700 rounded text-white text-[9px] font-medium"
                 >
-                  <option value="option1">Layout 1: Inline Buttons</option>
-                  <option value="option2">Layout 2: Compact Tabs</option>
-                  <option value="option3">Layout 3: Minimal Dots</option>
-                  <option value="option4">Layout 4: Dropdown Menu</option>
+                  <option value="style1">Bar Style 1: Gradient</option>
+                  <option value="style2">Bar Style 2: Segments</option>
+                  <option value="style3">Bar Style 3: Neon</option>
+                  <option value="style4">Bar Style 4: Dots</option>
+                  <option value="style5">Bar Style 5: Hazard</option>
                 </select>
               </div>
 
-              {/* Category, Search, and Sort Bar */}
+              {/* Category, Search, and Sort Bar - SWAPPED */}
               <div className="px-3 py-1.5 bg-gradient-to-r from-amber-950/30 via-brown-900/20 to-amber-950/30 backdrop-blur-sm border-b border-amber-700/20">
                 <div className="flex items-center gap-2">
-                  {/* Search Bar - Far Left */}
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search..."
-                      className="w-32 px-2 py-1 bg-black/40 border border-gray-700/50 rounded-md text-white text-[10px] placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm('')}
-                        className="px-1.5 py-1 bg-gray-900/60 border border-gray-700 rounded text-gray-400 text-[9px] hover:border-gray-500 hover:text-gray-300 transition-colors"
-                      >
-                        X
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Spacer to center categories */}
-                  <div className="flex-1" />
-
-                  {/* Category Buttons - Center */}
-                  <div className="flex items-center gap-2 justify-center">
+                  {/* Category Buttons - Far Left */}
+                  <div className="flex items-center gap-2">
                     {CATEGORIES.map((cat) => {
                       const isMekChips = cat.id === 'mek-chips';
                       const isUniChips = cat.id === 'uni-chips';
@@ -1229,6 +1198,25 @@ export default function ShopHybridPage() {
                   {/* Spacer */}
                   <div className="flex-1" />
 
+                  {/* Search Bar - Center/Right */}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search..."
+                      className="w-32 px-2 py-1 bg-black/40 border border-gray-700/50 rounded-md text-white text-[10px] placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="px-1.5 py-1 bg-gray-900/60 border border-gray-700 rounded text-gray-400 text-[9px] hover:border-gray-500 hover:text-gray-300 transition-colors"
+                      >
+                        X
+                      </button>
+                    )}
+                  </div>
+
                   {/* Sort Dropdown - Far Right */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-gray-400 text-[9px] font-medium uppercase">Sort:</span>
@@ -1321,15 +1309,34 @@ export default function ShopHybridPage() {
                       <th className="py-1.5 px-0.5 text-left text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Name</th>
                       <th className="py-1.5 px-0.5 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Seller</th>
 
-                      {/* Quantity for Essence */}
-                      {selectedCategory === 'essence' && (
-                        <th className="py-1.5 px-1 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">QTY</th>
-                      )}
+                      {/* History Period Columns - Using compact tabs layout */}
+                      <th className="py-1.5 px-1 text-center border-l border-r border-amber-700/30" colSpan={3}>
+                        <div className="flex justify-center">
+                          <div className="inline-flex bg-black/50 rounded-sm">
+                            {['last', '24h', '5d', '25d'].map((period, idx) => (
+                              <button
+                                key={period}
+                                onClick={() => setTimePeriod(period)}
+                                className={`px-3 py-1 text-[9px] font-bold uppercase transition-all ${
+                                  timePeriod === period
+                                    ? 'bg-yellow-500 text-black'
+                                    : 'text-gray-400 hover:text-yellow-400'
+                                } ${idx === 0 ? 'rounded-l-sm' : ''} ${idx === 3 ? 'rounded-r-sm' : ''}`}
+                              >
+                                {period}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex justify-around text-[9px] text-amber-200/50 mt-1">
+                          <span>AVG</span>
+                          <span>QTY</span>
+                          <span>VOL</span>
+                        </div>
+                      </th>
 
-                      {/* Price/Unit column moved next to total */}
-
-                      {/* Bracketed Time Period Columns - Using layout options */}
-                      {renderHistoryHeader()}
+                      {/* Units column moved here */}
+                      <th className="py-1.5 px-1 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Units</th>
 
                       {/* Price columns */}
                       <th className="py-1.5 px-1 text-center text-amber-200/70 text-[10px] font-semibold uppercase tracking-wider">Price/Unit</th>
@@ -1341,7 +1348,7 @@ export default function ShopHybridPage() {
                   <tbody>
                     {sortedListings.length === 0 ? (
                       <tr>
-                        <td colSpan={selectedCategory === 'essence' ? 10 : 9} className="py-16 text-center">
+                        <td colSpan={10} className="py-16 text-center">
                           <div className="text-6xl mb-4 text-gray-700">—</div>
                           <div className="text-xl font-semibold text-gray-400">No listings found</div>
                           <div className="text-sm text-gray-500 mt-2">Try adjusting your filters or search terms</div>
@@ -1358,7 +1365,7 @@ export default function ShopHybridPage() {
                           ? ShopSystem.isGoodDeal(listing.pricePerUnit, listing.marketAverage)
                           : false;
 
-                        // Format time remaining with seconds
+                        // Format time remaining with seconds - REAL TIME
                         const formatTimeRemaining = (expiresAt: number | undefined) => {
                           if (!expiresAt) return '—';
                           if (!currentTime) return '24h 00m 00s';
@@ -1408,10 +1415,19 @@ export default function ShopHybridPage() {
                               </div>
                             </td>
 
-                            {/* Name - Reduced spacing */}
+                            {/* Name with Progress Bar */}
                             <td className="py-1 px-0.5">
-                              <div className="text-white text-[11px] font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                                {listing.itemVariation || listing.itemType}
+                              <div>
+                                <div className="text-white text-[11px] font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+                                {/* Progress bar under name */}
+                                <div className="mt-1 relative">
+                                  {renderQuantityBar(listing.quantity, 10, listing.essenceType)}
+                                  <div className="absolute -top-3 right-0 text-[9px] text-yellow-400 font-bold">
+                                    {listing.quantity}
+                                  </div>
+                                </div>
                               </div>
                             </td>
 
@@ -1441,15 +1457,6 @@ export default function ShopHybridPage() {
                               )}
                             </td>
 
-                            {/* Quantity for Essence - Prominent */}
-                            {selectedCategory === 'essence' && (
-                              <td className="py-1 px-1 text-center">
-                                <div className="text-yellow-400 text-[12px] font-bold">
-                                  {listing.quantity}
-                                </div>
-                              </td>
-                            )}
-
                             {/* Time Period Data - Bracketed Columns */}
                             <td className="py-1 px-1 text-center border-l border-amber-800/20">
                               <div className="text-[11px] text-yellow-400/70 font-mono">
@@ -1476,7 +1483,14 @@ export default function ShopHybridPage() {
                               </div>
                             </td>
 
-                            {/* Current Listing Price Per Unit - Blue color, moved here */}
+                            {/* Units for Sale - Moved here */}
+                            <td className="py-1 px-1 text-center">
+                              <div className="text-yellow-400 text-[12px] font-bold">
+                                {listing.quantity}
+                              </div>
+                            </td>
+
+                            {/* Current Listing Price Per Unit - Blue color */}
                             <td className="py-1 px-1 text-center">
                               <div className="text-blue-400 text-[10px] font-bold">
                                 {listing.pricePerUnit.toLocaleString()}/unit
@@ -1515,7 +1529,7 @@ export default function ShopHybridPage() {
                               })()}
                             </td>
 
-                            {/* Actions - Buy Button (last column) */}
+                            {/* Actions - Buy Button (last column) - GREY when can't afford */}
                             <td className="py-1 px-1 text-center">
                               {isOwn ? (
                                 <button
@@ -1538,7 +1552,7 @@ export default function ShopHybridPage() {
                                   className={`px-2 py-0.75 font-bold uppercase tracking-wider transition-all text-[10px] rounded ${
                                     canAfford
                                       ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/30'
-                                      : 'bg-yellow-700 hover:bg-yellow-600 text-black/70 cursor-not-allowed'
+                                      : 'bg-gray-700 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
                                   }`}
                                 >
                                   BUY

@@ -25,6 +25,222 @@ body {
 /* Import the advanced typography system */
 @import '../styles/typography-system.css';
 
+/* Shimmer animation for holographic effects */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Holographic animation for button effects */
+@keyframes holographic {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Success Bar Stripe Animation */
+@keyframes slide-stripes {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(20px);
+  }
+}
+
+/* Electric surge animation */
+@keyframes electric-surge {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100px);
+  }
+}
+
+/* Spark flash animation */
+@keyframes spark-flash {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Plasma flow animation */
+@keyframes plasma-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Bubble float animation */
+@keyframes bubble-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.1);
+  }
+}
+
+/* Ripple animation */
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Quantum particles animation */
+@keyframes quantum-particles {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Overdrive pulse animation */
+@keyframes overdrive-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Reactor pulse animation */
+@keyframes reactor-pulse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Reactor spin animation */
+@keyframes reactor-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Warning scroll animation */
+@keyframes warning-scroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 24px 24px;
+  }
+}
+
+/* Beacon pulse animation */
+@keyframes beacon-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Warning flash animation */
+@keyframes warning-flash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Success Meter Animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes intense-glow {
+  0% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 1), 0 0 60px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 1), 0 0 80px rgba(34, 197, 94, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.7);
+  }
+}
+
+@keyframes alert-pulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.9), inset 0 0 8px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(34, 197, 94, 1), inset 0 0 12px rgba(34, 197, 94, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes cinematic-glow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes cinematic-scan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes cinematic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 50px rgba(34, 197, 94, 1), 0 0 100px rgba(34, 197, 94, 0.6), 0 0 150px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 70px rgba(34, 197, 94, 1), 0 0 140px rgba(34, 197, 94, 0.8), 0 0 210px rgba(34, 197, 94, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.6);
+  }
+}
+
 /* Custom Range Slider Styles for Shop Hybrid Page */
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
