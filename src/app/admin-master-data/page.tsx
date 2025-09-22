@@ -9,6 +9,7 @@ import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
 import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
 import MekSuccessRateConfig from '@/components/MekSuccessRateConfig';
+import MekTalentTreeConfig from '@/components/MekTalentTreeConfig';
 
 // Data system definitions
 const DATA_SYSTEMS = [
@@ -324,24 +325,25 @@ export default function AdminMasterDataPage() {
                 </div>
 
                 {/* Talent Tree Nodes Subsection */}
-                <div className="mb-4 bg-black/40 border border-gray-600/30 rounded-lg">
+                <div className="mb-4 bg-black/40 border border-yellow-500/30 rounded-lg">
                   <button
                     onClick={() => toggleSection('mek-talent-tree')}
                     className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-lg">🌳</span>
-                      <h4 className="text-md font-bold text-yellow-400">Mek Talent Tree Nodes</h4>
-                      <span className="px-2 py-0.5 bg-gray-600/30 text-gray-400 text-xs font-bold rounded">COMING SOON</span>
+                      <h4 className="text-md font-bold text-yellow-400">MEC Talent Tree Nodes</h4>
+                      <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
                     </div>
                     <span className="text-gray-400 text-sm">{expandedSections.has('mek-talent-tree') ? '▼' : '▶'}</span>
                   </button>
                   {expandedSections.has('mek-talent-tree') && (
-                    <div className="p-4 border-t border-gray-600/20">
-                      <p className="text-sm text-gray-500">Talent tree configuration system coming soon...</p>
-                      <div className="mt-3 bg-gray-800/30 rounded p-3">
-                        <p className="text-xs text-gray-600">Will include node types, connections, and progression paths</p>
-                      </div>
+                    <div className="p-4 border-t border-yellow-500/20">
+                      <p className="text-sm text-gray-400 mb-4">
+                        Configure talent tree node buff values across different rarity tiers.
+                        Set progression curves for gold, essence, XP, and other buff categories.
+                      </p>
+                      <MekTalentTreeConfig />
                     </div>
                   )}
                 </div>

@@ -1213,4 +1213,32 @@ export default defineSchema({
     .index("by_head", ["head"])
     .index("by_body", ["body"])
     .index("by_trait", ["trait"]),
+
+  // MEC Talent Tree Tables for buff values by rank ranges
+  mekTreeTables: defineTable({
+    category: v.string(), // Buff category name (e.g., "Gold Flat", "Essence Rate Global")
+    rankRange: v.string(), // Rank range (e.g., "1-10", "11-100", etc.)
+    talentTier: v.string(), // Talent tier (T1-T10)
+    value: v.number(), // Buff value for this category, rank range, and talent tier
+  })
+    .index("by_category", ["category"])
+    .index("by_category_and_range", ["category", "rankRange"])
+    .index("by_category_range_tier", ["category", "rankRange", "talentTier"]),
+
+  // Saved configurations for MEC Talent Tree Tables
+  mekTreeTableSaves: defineTable({
+    saveName: v.string(), // User-defined name for this save
+    timestamp: v.number(), // Unix timestamp when saved
+    description: v.optional(v.string()), // Optional description
+    data: v.array(
+      v.object({
+        category: v.string(),
+        rankRange: v.string(),
+        talentTier: v.string(),
+        value: v.number(),
+      })
+    ), // Complete snapshot of all table data
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_name", ["saveName"]),
 });

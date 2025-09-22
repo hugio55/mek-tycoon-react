@@ -160,16 +160,16 @@ export default function MekSuccessRateConfig() {
       </div>
 
       {/* Curve Configuration */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Controls */}
-        <div className="space-y-4">
+      <div className="space-y-4">
+        {/* Top Row - Curve Type and Min/Max */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Curve Type */}
           <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Curve Type</label>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Curve Type</label>
             <select
               value={curveType}
               onChange={(e) => setCurveType(e.target.value as typeof curveType)}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-3 py-2 text-white"
+              className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1.5 text-white text-sm"
             >
               <option value="linear">Linear</option>
               <option value="exponential">Exponential</option>
@@ -178,74 +178,78 @@ export default function MekSuccessRateConfig() {
             </select>
           </div>
 
-          {/* Min/Max Success */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Min Success %</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={minSuccess}
-                onChange={(e) => setMinSuccess(Number(e.target.value))}
-                className="w-full bg-black/50 border border-yellow-500/30 rounded px-3 py-2 text-white"
-              />
-              <span className="text-xs text-gray-500">For rarest Meks</span>
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Max Success %</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={maxSuccess}
-                onChange={(e) => setMaxSuccess(Number(e.target.value))}
-                className="w-full bg-black/50 border border-yellow-500/30 rounded px-3 py-2 text-white"
-              />
-              <span className="text-xs text-gray-500">For common Meks</span>
-            </div>
+          {/* Min Success */}
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Min Success %</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={minSuccess}
+              onChange={(e) => setMinSuccess(Number(e.target.value))}
+              className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1.5 text-white text-sm"
+            />
+            <span className="text-xs text-gray-500">Rarest</span>
           </div>
 
-          {/* Curve Parameters */}
-          {curveType === 'sigmoid' && (
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Mid Point (Rank)</label>
-              <input
-                type="number"
-                min="1"
-                max={TOTAL_MEKS}
-                value={midPoint}
-                onChange={(e) => setMidPoint(Number(e.target.value))}
-                className="w-full bg-black/50 border border-yellow-500/30 rounded px-3 py-2 text-white"
-              />
-              <span className="text-xs text-gray-500">Center of the S-curve</span>
-            </div>
-          )}
-
-          {(curveType === 'exponential' || curveType === 'sigmoid') && (
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Steepness</label>
-              <input
-                type="range"
-                min="0.5"
-                max="3"
-                step="0.1"
-                value={steepness}
-                onChange={(e) => setSteepness(Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Gentle (0.5)</span>
-                <span className="text-yellow-400">{steepness}</span>
-                <span>Steep (3.0)</span>
-              </div>
-            </div>
-          )}
-
-          {/* Preset Curves */}
+          {/* Max Success */}
           <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Preset Curves</label>
-            <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Max Success %</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={maxSuccess}
+              onChange={(e) => setMaxSuccess(Number(e.target.value))}
+              className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1.5 text-white text-sm"
+            />
+            <span className="text-xs text-gray-500">Common</span>
+          </div>
+        </div>
+
+        {/* Second Row - Parameters and Presets */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column - Curve Parameters */}
+          <div className="space-y-3">
+            {curveType === 'sigmoid' && (
+              <div>
+                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Mid Point (Rank)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={TOTAL_MEKS}
+                  value={midPoint}
+                  onChange={(e) => setMidPoint(Number(e.target.value))}
+                  className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1.5 text-white text-sm"
+                />
+                <span className="text-xs text-gray-500">Center of the S-curve</span>
+              </div>
+            )}
+
+            {(curveType === 'exponential' || curveType === 'sigmoid') && (
+              <div>
+                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Steepness: {steepness}</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="3"
+                  step="0.1"
+                  value={steepness}
+                  onChange={(e) => setSteepness(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Gentle</span>
+                  <span>Steep</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Preset Curves */}
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Preset Curves</label>
+            <div className="grid grid-cols-2 gap-1.5">
               {presetCurves.map((preset) => (
                 <button
                   key={preset.name}
@@ -255,22 +259,22 @@ export default function MekSuccessRateConfig() {
                     setMaxSuccess(preset.max);
                     setSteepness(preset.steep);
                   }}
-                  className="bg-gray-800/50 border border-gray-700 rounded px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:border-yellow-500/50 transition-colors"
+                  className="bg-gray-800/50 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 hover:bg-gray-700/50 hover:border-yellow-500/50 transition-colors"
                 >
                   {preset.name}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Apply Button */}
-          <button
-            onClick={handleApplyCurve}
-            className="w-full bg-yellow-500 text-black font-bold px-4 py-2 rounded hover:bg-yellow-400 transition-colors"
-          >
-            Apply Success Rate Curve
-          </button>
         </div>
+
+        {/* Apply Button */}
+        <button
+          onClick={handleApplyCurve}
+          className="w-full bg-yellow-500 text-black font-bold px-3 py-1.5 rounded hover:bg-yellow-400 transition-colors text-sm"
+        >
+          Apply Success Rate Curve
+        </button>
 
         {/* Sample Values and Application Logs */}
         <div className="space-y-4">

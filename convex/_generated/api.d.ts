@@ -48,6 +48,8 @@ import type * as marketplace from "../marketplace.js";
 import type * as mechanismTiers from "../mechanismTiers.js";
 import type * as mekTalentTrees from "../mekTalentTrees.js";
 import type * as mekTreeBuffTables from "../mekTreeBuffTables.js";
+import type * as mekTreeTableSaves from "../mekTreeTableSaves.js";
+import type * as mekTreeTables from "../mekTreeTables.js";
 import type * as mekTreeTemplates from "../mekTreeTemplates.js";
 import type * as meks from "../meks.js";
 import type * as migrateBuffCategories from "../migrateBuffCategories.js";
@@ -119,6 +121,8 @@ declare const fullApi: ApiFromModules<{
   mechanismTiers: typeof mechanismTiers;
   mekTalentTrees: typeof mekTalentTrees;
   mekTreeBuffTables: typeof mekTreeBuffTables;
+  mekTreeTableSaves: typeof mekTreeTableSaves;
+  mekTreeTables: typeof mekTreeTables;
   mekTreeTemplates: typeof mekTreeTemplates;
   meks: typeof meks;
   migrateBuffCategories: typeof migrateBuffCategories;

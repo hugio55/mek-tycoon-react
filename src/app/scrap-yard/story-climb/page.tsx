@@ -64,15 +64,15 @@ export default function StoryClimbPage() {
         setPreviewChapter(parseInt(chapter || '1'));
         // Start at normal zoom to see nodes properly
         setZoom(1);
-        setViewportOffset(-250); // Start at bottom like normal
+        setViewportOffset(0); // Start at top to see START node
       }
     }
   }, []);
 
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
   const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set(['start'])); // Start is always completed
-  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 900 }); // 2:3 aspect ratio
-  const [viewportOffset, setViewportOffset] = useState(-250); // Start scrolled to absolute bottom of tree
+  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 1200 }); // Extended to align with DEPLOY button (was 900)
+  const [viewportOffset, setViewportOffset] = useState(0); // Start at top since START node is now 450px from top
   const [mounted, setMounted] = useState(false);
   const [nodeImages, setNodeImages] = useState<Map<string, HTMLImageElement>>(new Map());
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -94,13 +94,22 @@ export default function StoryClimbPage() {
   const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
   const [debugPanelMinimized, setDebugPanelMinimized] = useState(true); // State to minimize debug panel - starts minimized
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
+  // Success Meter Card Layout - how title, bar, and status are combined
+  const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
+
+  // Mission Statistics Tracking
+  const [missionStats, setMissionStats] = useState({
+    totalGold: 0,
+    totalExperience: 0,
+    easyCompleted: 0,
+    mediumCompleted: 0,
+    hardCompleted: 0
+  });
+  const [missionStatsLayout, setMissionStatsLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // Layout variations for mission stats card
 
   // Test Panel Controls for Success Meter
   const [showTestPanel, setShowTestPanel] = useState(false);
   const [testSuccessRate, setTestSuccessRate] = useState(50);
-  const [testMeterVariant, setTestMeterVariant] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [testLayoutStyle, setTestLayoutStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [testSubLayoutStyle, setTestSubLayoutStyle] = useState<1.1 | 1.2 | 1.3 | 1.4 | 1.5>(1.3);
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
@@ -1426,9 +1435,9 @@ export default function StoryClimbPage() {
       } else if (startNode) {
         // Always position based on start node
         const startScaledY = (startNode.y - minY) * scale;
-        // Put start node at the very bottom of the canvas
-        // The hemisphere should sit flush with the bottom edge
-        offsetY = canvas.height - startScaledY + viewportOffset + 240; // Move down to sit flush at bottom edge
+        // Put start node 740px from the top of the canvas
+        // The circle should be positioned for visibility
+        offsetY = 740 - startScaledY + viewportOffset; // Position at 740px from top (450 + 290)
       } else {
         // Fallback if no start node
         offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
@@ -2141,18 +2150,18 @@ export default function StoryClimbPage() {
         ctx.restore();
         
       } else if (node.id === 'start') {
-        // Draw special hemisphere start node - CORRECT ORIENTATION
+        // Draw special full circle start node
         ctx.save();
-        
-        const hemisphereRadius = nodeSize; // 25% larger size
-        
-        // Draw hemisphere with flat side DOWN (arc from 0 to PI goes top half)
+
+        const circleRadius = nodeSize; // 25% larger size
+
+        // Draw full circle
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.arc(pos.x, pos.y, circleRadius, 0, Math.PI * 2);
         ctx.closePath();
         
         // Industrial gradient fill with radial effect
-        const gradient = ctx.createRadialGradient(pos.x, pos.y - hemisphereRadius/3, 0, pos.x, pos.y, hemisphereRadius);
+        const gradient = ctx.createRadialGradient(pos.x, pos.y - circleRadius/3, 0, pos.x, pos.y, circleRadius);
         gradient.addColorStop(0, '#fbbf24');
         gradient.addColorStop(0.3, '#fab617');
         gradient.addColorStop(0.7, '#f59e0b');
@@ -2163,45 +2172,45 @@ export default function StoryClimbPage() {
         // Add industrial metallic overlay
         ctx.save();
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.arc(pos.x, pos.y, circleRadius, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
         
         // Add metallic sheen effect
-        const sheenGradient = ctx.createLinearGradient(pos.x - hemisphereRadius, pos.y - hemisphereRadius, pos.x + hemisphereRadius, pos.y);
+        const sheenGradient = ctx.createLinearGradient(pos.x - circleRadius, pos.y - circleRadius, pos.x + circleRadius, pos.y);
         sheenGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
         sheenGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
         sheenGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
         sheenGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
         sheenGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = sheenGradient;
-        ctx.fillRect(pos.x - hemisphereRadius, pos.y - hemisphereRadius, hemisphereRadius * 2, hemisphereRadius);
+        ctx.fillRect(pos.x - circleRadius, pos.y - circleRadius, circleRadius * 2, circleRadius * 2);
         
         // Add improved industrial pattern
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
         ctx.lineWidth = 1;
         
-        // Concentric arcs
-        for (let r = 15; r < hemisphereRadius; r += 15) {
+        // Concentric circles
+        for (let r = 15; r < circleRadius; r += 15) {
           ctx.beginPath();
-          ctx.arc(pos.x, pos.y, r, 0, Math.PI, true);
+          ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
           ctx.stroke();
         }
         
-        // Radial lines
-        for (let angle = 0; angle < Math.PI; angle += Math.PI / 12) {
+        // Radial lines (full circle)
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
           ctx.beginPath();
           ctx.moveTo(pos.x, pos.y);
-          ctx.lineTo(pos.x + Math.cos(angle) * hemisphereRadius, pos.y - Math.sin(angle) * hemisphereRadius);
+          ctx.lineTo(pos.x + Math.cos(angle) * circleRadius, pos.y + Math.sin(angle) * circleRadius);
           ctx.stroke();
         }
         
         // Add subtle dots at intersections
         ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-        for (let r = 30; r < hemisphereRadius; r += 30) {
-          for (let angle = Math.PI / 12; angle < Math.PI; angle += Math.PI / 12) {
+        for (let r = 30; r < circleRadius; r += 30) {
+          for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
             ctx.beginPath();
-            ctx.arc(pos.x + Math.cos(angle) * r, pos.y - Math.sin(angle) * r, 2, 0, Math.PI * 2);
+            ctx.arc(pos.x + Math.cos(angle) * r, pos.y + Math.sin(angle) * r, 2, 0, Math.PI * 2);
             ctx.fill();
           }
         }
@@ -2211,16 +2220,8 @@ export default function StoryClimbPage() {
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, hemisphereRadius, 0, Math.PI, true);
+        ctx.arc(pos.x, pos.y, circleRadius, 0, Math.PI * 2);
         ctx.closePath();
-        ctx.stroke();
-        
-        // Add bottom edge highlight (flat part)
-        ctx.strokeStyle = 'rgba(250, 182, 23, 0.8)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(pos.x - hemisphereRadius, pos.y);
-        ctx.lineTo(pos.x + hemisphereRadius, pos.y);
         ctx.stroke();
         
         ctx.restore();
@@ -3139,13 +3140,13 @@ export default function StoryClimbPage() {
         // Add strong black outline
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 4;
-        ctx.strokeText('START', pos.x, pos.y - 20);
-        
+        ctx.strokeText('START', pos.x, pos.y);
+
         // White text with glow
         ctx.shadowColor = 'rgba(250, 182, 23, 0.8)';
         ctx.shadowBlur = 10;
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('START', pos.x, pos.y - 20);
+        ctx.fillText('START', pos.x, pos.y);
         
         ctx.restore();
         // Reset font for other nodes
@@ -3538,7 +3539,7 @@ export default function StoryClimbPage() {
         if (startNodeInHover) {
           const startScaledY = (startNodeInHover.y - minY) * scale;
           // Must match the draw function's offsetY calculation exactly
-          offsetY = canvas.height - startScaledY + viewportOffset + 240;
+          offsetY = 740 - startScaledY + viewportOffset;
         } else {
           offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
         }
@@ -3834,7 +3835,7 @@ export default function StoryClimbPage() {
       if (startNodeInClick) {
         const startScaledY = (startNodeInClick.y - minY) * scale;
         // Must match the draw function's offsetY calculation exactly
-        offsetY = canvas.height - startScaledY + viewportOffset + 240;
+        offsetY = 740 - startScaledY + viewportOffset;
       } else {
         offsetY = canvas.height - scaledTreeHeight + viewportOffset - padding;
       }
@@ -4214,6 +4215,25 @@ export default function StoryClimbPage() {
         </div>
       )}
 
+      {/* Mission Statistics Layout Selector - Floating in upper left */}
+      <div className="fixed top-24 left-4 z-50">
+        <div className="bg-black/95 border-2 border-purple-500/50 p-2 rounded-lg">
+          <div className="text-purple-400 text-xs font-bold mb-2">MISSION STATS LAYOUT</div>
+          <select
+            value={missionStatsLayout}
+            onChange={(e) => setMissionStatsLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+            className="bg-black/80 border border-purple-500/50 text-purple-400 text-xs px-2 py-1 rounded w-full"
+          >
+            <option value={1}>Grid Layout (Current)</option>
+            <option value={2}>Compact Rows</option>
+            <option value={3}>Vertical Stack</option>
+            <option value={4}>Minimalist Bar</option>
+            <option value={5}>Side-by-Side Cards</option>
+          </select>
+        </div>
+      </div>
+
+
       {/* Header */}
       <div className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/50 p-4 mb-6">
         <div className="flex items-center justify-between max-w-[1600px] mx-auto px-5">
@@ -4470,10 +4490,10 @@ export default function StoryClimbPage() {
                 </div>
               )}
 
-              {/* Corner decorations - removed bottom left to not overlap with hemisphere */}
-              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-yellow-500/50" />
-              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-yellow-500/50" />
-              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-yellow-500/50" />
+              {/* Corner decorations */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-yellow-500/50 rounded-tl" />
+              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-yellow-500/50 rounded-tr" />
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-yellow-500/50 rounded-br" />
             </div>
             
             {/* Jump to Start Button */}
@@ -4540,7 +4560,220 @@ export default function StoryClimbPage() {
                 <p className="mt-4 text-gray-600">// END TRANSMISSION //</p>
               </div>
             )}
-            
+
+            {/* Mission Statistics Card - Below Node Tree */}
+            {missionStatsLayout === 1 && (
+              /* Layout 1: Grid Layout (Current) */
+              <div className="mt-4 bg-black/90 border-2 border-yellow-500/50 rounded-lg shadow-2xl overflow-hidden"
+                   style={{ width: '503px' }}>
+                <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-4 py-3 border-b border-yellow-500/30">
+                  <h3 className="text-yellow-500 font-black uppercase tracking-[0.2em] text-sm"
+                      style={{ fontFamily: 'Orbitron, monospace' }}>
+                    MISSION STATISTICS
+                  </h3>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-black/50 border border-yellow-500/30 rounded p-3">
+                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Gold Earned</div>
+                      <div className="text-yellow-400 text-2xl font-bold font-mono">
+                        {missionStats.totalGold.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="bg-black/50 border border-blue-500/30 rounded p-3">
+                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Experience</div>
+                      <div className="text-blue-400 text-2xl font-bold font-mono">
+                        {missionStats.totalExperience.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-gradient-to-b from-green-900/20 to-black/50 border border-green-500/30 rounded p-3">
+                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Easy Completed</div>
+                      <div className="text-green-400 text-3xl font-black text-center">
+                        {missionStats.easyCompleted}
+                      </div>
+                      <div className="text-green-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
+                    </div>
+                    <div className="bg-gradient-to-b from-yellow-900/20 to-black/50 border border-yellow-500/30 rounded p-3">
+                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Medium Completed</div>
+                      <div className="text-yellow-400 text-3xl font-black text-center">
+                        {missionStats.mediumCompleted}
+                      </div>
+                      <div className="text-yellow-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
+                    </div>
+                    <div className="bg-gradient-to-b from-red-900/20 to-black/50 border border-red-500/30 rounded p-3">
+                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Hard Completed</div>
+                      <div className="text-red-400 text-3xl font-black text-center">
+                        {missionStats.hardCompleted}
+                      </div>
+                      <div className="text-red-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-yellow-500/20 text-center">
+                    <span className="text-gray-500 text-xs uppercase tracking-wider">Total Contracts Completed: </span>
+                    <span className="text-yellow-500 font-bold text-sm">
+                      {missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {missionStatsLayout === 2 && (
+              /* Layout 2: Compact Rows */
+              <div className="mt-4 bg-black/90 border-2 border-yellow-500/50 rounded-lg shadow-2xl"
+                   style={{ width: '503px' }}>
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-yellow-500 font-black uppercase tracking-[0.2em] text-xs"
+                        style={{ fontFamily: 'Orbitron, monospace' }}>
+                      MISSION STATISTICS
+                    </h3>
+                    <div className="text-gray-500 text-xs">
+                      Total: <span className="text-yellow-500 font-bold">
+                        {missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted}
+                      </span> Contracts
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between bg-black/50 px-3 py-2 rounded border border-yellow-500/20">
+                      <span className="text-gray-400 text-xs uppercase">Gold</span>
+                      <span className="text-yellow-400 font-bold">{missionStats.totalGold.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-black/50 px-3 py-2 rounded border border-blue-500/20">
+                      <span className="text-gray-400 text-xs uppercase">Experience</span>
+                      <span className="text-blue-400 font-bold">{missionStats.totalExperience.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-4 bg-black/50 px-3 py-2 rounded border border-gray-500/20">
+                      <div className="flex-1 text-center">
+                        <span className="text-green-400 font-bold text-lg">{missionStats.easyCompleted}</span>
+                        <div className="text-gray-500 text-xs">Easy</div>
+                      </div>
+                      <div className="flex-1 text-center border-x border-gray-700">
+                        <span className="text-yellow-400 font-bold text-lg">{missionStats.mediumCompleted}</span>
+                        <div className="text-gray-500 text-xs">Medium</div>
+                      </div>
+                      <div className="flex-1 text-center">
+                        <span className="text-red-400 font-bold text-lg">{missionStats.hardCompleted}</span>
+                        <div className="text-gray-500 text-xs">Hard</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {missionStatsLayout === 3 && (
+              /* Layout 3: Vertical Stack */
+              <div className="mt-4 bg-gradient-to-b from-black to-gray-950 border-2 border-yellow-500/50 rounded-lg shadow-2xl"
+                   style={{ width: '503px' }}>
+                <div className="text-center py-3 border-b border-yellow-500/30">
+                  <h3 className="text-yellow-500 font-black uppercase tracking-[0.3em] text-sm"
+                      style={{ fontFamily: 'Orbitron, monospace' }}>
+                    MISSION STATISTICS
+                  </h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="text-center py-3 bg-yellow-900/10 rounded-lg border border-yellow-500/30">
+                    <div className="text-gray-400 text-xs uppercase mb-1">Total Gold</div>
+                    <div className="text-yellow-400 text-3xl font-black">{missionStats.totalGold.toLocaleString()}</div>
+                  </div>
+                  <div className="text-center py-3 bg-blue-900/10 rounded-lg border border-blue-500/30">
+                    <div className="text-gray-400 text-xs uppercase mb-1">Experience</div>
+                    <div className="text-blue-400 text-3xl font-black">{missionStats.totalExperience.toLocaleString()}</div>
+                  </div>
+                  <div className="flex justify-around py-3 bg-black/50 rounded-lg border border-gray-500/30">
+                    <div className="text-center">
+                      <div className="text-green-400 text-2xl font-black">{missionStats.easyCompleted}</div>
+                      <div className="text-gray-500 text-xs uppercase">Easy</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-yellow-400 text-2xl font-black">{missionStats.mediumCompleted}</div>
+                      <div className="text-gray-500 text-xs uppercase">Medium</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-red-400 text-2xl font-black">{missionStats.hardCompleted}</div>
+                      <div className="text-gray-500 text-xs uppercase">Hard</div>
+                    </div>
+                  </div>
+                  <div className="text-center text-gray-400 text-xs pt-2">
+                    TOTAL COMPLETED: <span className="text-yellow-500 font-bold">
+                      {missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {missionStatsLayout === 4 && (
+              /* Layout 4: Minimalist Bar */
+              <div className="mt-4 bg-black/80 border border-yellow-500/30 rounded shadow-xl"
+                   style={{ width: '503px' }}>
+                <div className="px-4 py-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <h3 className="text-yellow-500 font-bold text-xs uppercase tracking-wider">Mission Stats</h3>
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="text-yellow-400">💰 {missionStats.totalGold.toLocaleString()}</span>
+                        <span className="text-blue-400">⚡ {missionStats.totalExperience.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="text-green-400">E: {missionStats.easyCompleted}</span>
+                      <span className="text-yellow-400">M: {missionStats.mediumCompleted}</span>
+                      <span className="text-red-400">H: {missionStats.hardCompleted}</span>
+                      <span className="text-gray-400 ml-2">
+                        [{missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted} Total]
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {missionStatsLayout === 5 && (
+              /* Layout 5: Side-by-Side Cards */
+              <div className="mt-4 flex gap-3" style={{ width: '503px' }}>
+                <div className="flex-1 bg-black/90 border-2 border-yellow-500/50 rounded-lg p-3">
+                  <h4 className="text-yellow-500 font-bold text-xs uppercase mb-3">Resources</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-gray-500 text-xs">Gold</div>
+                      <div className="text-yellow-400 text-xl font-bold">{missionStats.totalGold.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs">Experience</div>
+                      <div className="text-blue-400 text-xl font-bold">{missionStats.totalExperience.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 bg-black/90 border-2 border-purple-500/50 rounded-lg p-3">
+                  <h4 className="text-purple-500 font-bold text-xs uppercase mb-3">Contracts</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-400 text-xs">Easy</span>
+                      <span className="text-green-400 font-bold">{missionStats.easyCompleted}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-yellow-400 text-xs">Medium</span>
+                      <span className="text-yellow-400 font-bold">{missionStats.mediumCompleted}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-400 text-xs">Hard</span>
+                      <span className="text-red-400 font-bold">{missionStats.hardCompleted}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1 border-t border-purple-500/20">
+                      <span className="text-gray-400 text-xs">Total</span>
+                      <span className="text-purple-400 font-bold">
+                        {missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Right Column - Mission Card Details */}
@@ -4726,10 +4959,8 @@ export default function StoryClimbPage() {
                   rank: mek.rank || 1000,
                   contribution: 10 // Base contribution per Mek
                 }))}
-                // Pass test panel meter variant settings
-                meterVariant={showTestPanel ? testMeterVariant : 1}
-                layoutStyle={showTestPanel ? testLayoutStyle : 1}
-                subLayoutStyle={showTestPanel ? testSubLayoutStyle : 1.3}
+                variationBuffLayoutStyle={2} // Locked to Classic Grid
+                successMeterCardLayout={successMeterCardLayout}
               />
             ) : (
               // No node selected or hovered - Using Style K from UI Showcase
@@ -4781,6 +5012,7 @@ export default function StoryClimbPage() {
         mekCardStyle={1}
         traitCircleStyle={1}
         mekFrameStyle={1}
+        difficultyConfig={currentDifficultyConfig}
       />
 
       {/* Floating Success Meter Test Panel - Bottom Left */}
@@ -4856,80 +5088,6 @@ export default function StoryClimbPage() {
               >
                 100%
               </button>
-            </div>
-
-            {/* Meter Variant Selector */}
-            <div className="mt-4 pt-3 border-t border-purple-500/30">
-              <div className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">
-                Meter Design
-              </div>
-              <div className="grid grid-cols-5 gap-1">
-                {[1, 2, 3, 4, 5].map((variant) => (
-                  <button
-                    key={variant}
-                    onClick={() => setTestMeterVariant(variant as 1 | 2 | 3 | 4 | 5)}
-                    className={`px-2 py-2 rounded text-xs font-bold transition-all ${
-                      testMeterVariant === variant
-                        ? 'bg-purple-600 text-white shadow-lg'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {variant === 1 && 'Neon'}
-                    {variant === 2 && 'Surge'}
-                    {variant === 3 && 'Plasma'}
-                    {variant === 4 && 'Quantum'}
-                    {variant === 5 && 'Reactor'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Layout Style Selector */}
-            <div className="mt-3 pt-3 border-t border-purple-500/30">
-              <div className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">
-                Card Layout
-              </div>
-              <div className="grid grid-cols-5 gap-1">
-                {[1, 2, 3, 4, 5].map((layout) => (
-                  <button
-                    key={layout}
-                    onClick={() => setTestLayoutStyle(layout as 1 | 2 | 3 | 4 | 5)}
-                    className={`px-2 py-1 rounded text-xs transition-all ${
-                      testLayoutStyle === layout
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    L{layout}
-                  </button>
-                ))}
-              </div>
-
-              {/* Sub-Layout Style for Layout 1 */}
-              {testLayoutStyle === 1 && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-400 mb-1">Compression:</div>
-                  <div className="grid grid-cols-5 gap-1">
-                    {[1.1, 1.2, 1.3, 1.4, 1.5].map((subLayout) => (
-                      <button
-                        key={subLayout}
-                        onClick={() => setTestSubLayoutStyle(subLayout as 1.1 | 1.2 | 1.3 | 1.4 | 1.5)}
-                        className={`px-2 py-1 rounded text-xs transition-all ${
-                          testSubLayoutStyle === subLayout
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                      >
-                        {subLayout}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-3 text-xs text-gray-400">
-              Test different meter designs and layouts
             </div>
           </div>
         )}

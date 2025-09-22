@@ -1,4 +1,5 @@
 // Helper functions for managing variations image paths
+import { VARIATION_IMAGE_MAP } from './variation-image-map';
 
 /**
  * Gets the variations image folder path from localStorage
@@ -38,36 +39,6 @@ export function getVariationImagePath(imageName: string): string {
   // Always use the web-accessible path from public folder
   return `/variation-images/${imageName}`;
 }
-
-/**
- * Maps variation names to their image filenames
- */
-export const VARIATION_IMAGE_MAP: Record<string, string> = {
-  // Traits/Variations
-  'TASER': 'taser.png',
-  'LOG': 'log.png',
-  'KEVLAR': 'kevlar.png',
-  'NUKE': 'nuke.png',
-  'EXPOSED': 'exposed.png',
-  'EXPOSEC': 'exposec.png',
-  'JADE': 'jade.png',
-  'SHAMROCK': 'shamrock.png',
-  'CLASSIC': 'classic.png',
-  'LIGHTNING': 'lightning.png',
-  'CORRODED': 'corroded.png',
-  'PRICKLES': 'prickles.png',
-  'VAMPIRE': 'vampire.png',
-  'NOOB': 'noob.png',
-  'PYREX': 'pyrex.png',
-
-  // Common variations
-  'STANDARD': 'standard.png',
-  'BASIC': 'basic.png',
-  'COMMON': 'common.png',
-
-  // Add more mappings as needed
-  'DEFAULT': 'default.png'
-};
 
 /**
  * Gets the image path for a specific variation

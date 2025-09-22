@@ -37,14 +37,14 @@ export const getRewardColor = (dropChance: number): string => {
 export const generateSampleMeks = (count: number) => {
   // Use the real variations from the system
   const variations = [
-    "taser", "log", "kevlar", "nuke", "exposed", "shamrock", "classic", "lightning", 
-    "corroded", "bark", "aqua", "crimson", "bumblebee", "camo", "hacker", 
+    "taser", "log", "kevlar", "nuke", "exposed", "shamrock", "classic", "lightning",
+    "corroded", "bark", "aqua", "crimson", "bumblebee", "camo", "hacker",
     "disco", "electrik", "gold", "acid", "derelict", "chrome", "cyan", "frost",
     "lava", "moss", "neon", "obsidian", "pearl", "ruby", "sand", "steel", "toxic"
   ];
-  
+
   const styles = [
-    "Warrior", "Guardian", "Technician", "Mystic", "Ranger", "Berserker", 
+    "Warrior", "Guardian", "Technician", "Mystic", "Ranger", "Berserker",
     "Sage", "Assassin", "Paladin", "Architect"
   ];
 
@@ -67,35 +67,73 @@ export const generateSampleMeks = (count: number) => {
     return num;
   };
 
+  // Common matching traits that appear in missions
+  const matchingTraits = ["taser", "log", "kevlar", "nuke", "classic", "lightning", "corroded", "bark"];
+
+  // Non-matching traits for diversity
+  const nonMatchingTraits = variations.filter(v => !matchingTraits.includes(v));
+
   return Array.from({ length: count }, (_, i) => {
     // Generate a unique mek number
     const mekNumber = getMekNumber();
-    
-    // Select random variations - make them more diverse
-    // Only 10% chance of having matching traits with mission requirements
-    const shouldMatch = Math.random() < 0.1;
+
     let traits;
-    
-    if (shouldMatch) {
-      // Pick traits that might match mission requirements (common/uncommon ones)
-      const matchingTraits = ["taser", "log", "kevlar", "nuke", "classic", "lightning", "corroded", "bark"];
+
+    // Controlled distribution of matches:
+    // First 16 meks have specific match patterns
+    if (i === 0) {
+      // 1 mek with all 3 matches
+      traits = [
+        matchingTraits[0],
+        matchingTraits[1],
+        matchingTraits[2]
+      ];
+    } else if (i >= 1 && i <= 2) {
+      // 2 meks with 2 matches
+      const matchTraits = [...matchingTraits].sort(() => Math.random() - 0.5);
+      traits = [
+        matchTraits[0],
+        matchTraits[1],
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)]
+      ];
+    } else if (i >= 3 && i <= 5) {
+      // 3 meks with 1 match
       traits = [
         matchingTraits[Math.floor(Math.random() * matchingTraits.length)],
-        variations[Math.floor(Math.random() * variations.length)],
-        variations[Math.floor(Math.random() * variations.length)]
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)]
+      ];
+    } else if (i >= 6 && i <= 15) {
+      // 10 meks with no matches
+      traits = [
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+        nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)]
       ];
     } else {
-      // Pick random traits that likely won't match
-      traits = [
-        variations[Math.floor(Math.random() * variations.length)],
-        variations[Math.floor(Math.random() * variations.length)],
-        variations[Math.floor(Math.random() * variations.length)]
-      ];
+      // Rest of meks (after first 16) - mostly no matches with occasional single match
+      const hasMatch = Math.random() < 0.05; // 5% chance of having a match
+      if (hasMatch) {
+        traits = [
+          matchingTraits[Math.floor(Math.random() * matchingTraits.length)],
+          nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+          nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)]
+        ];
+      } else {
+        traits = [
+          nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+          nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)],
+          nonMatchingTraits[Math.floor(Math.random() * nonMatchingTraits.length)]
+        ];
+      }
     }
-    
+
+    // Shuffle traits array to randomize position
+    traits = traits.sort(() => Math.random() - 0.5);
+
     const styleIndex = Math.floor(Math.random() * styles.length);
     const imageCode = mekImageCodes[i % mekImageCodes.length];
-    
+
     return {
       id: `mek-${i}-${mekNumber}`, // Include both index and number for guaranteed uniqueness
       name: `Mek #${mekNumber}`,

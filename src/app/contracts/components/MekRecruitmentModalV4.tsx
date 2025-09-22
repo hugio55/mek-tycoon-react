@@ -22,6 +22,8 @@ import Image from 'next/image';
 import { successMultipliers } from '../constants/missionData';
 import { generateSampleMeks } from '../utils/helpers';
 import ModalPortal from './ModalPortal';
+import SuccessMeterV2 from '@/components/SuccessMeterV2';
+import { DifficultyConfig } from '@/lib/difficultyModifiers';
 
 interface MekRecruitmentModalV4Props {
   showMekModal: string | null;
@@ -32,7 +34,19 @@ interface MekRecruitmentModalV4Props {
   mekCardStyle: number;
   traitCircleStyle: number;
   mekFrameStyle: number;
+  difficultyConfig?: DifficultyConfig;
 }
+
+// Theme locked to glass-dirty-vignette with reduced blur for floating effect
+const theme = {
+  name: 'Dirty Glass - Vignette',
+  backdrop: 'bg-black/10', // Reduced from /18 to /10 for more transparency
+  containerBg: 'bg-gradient-to-br from-gray-900/20 via-gray-800/12 to-gray-900/20 backdrop-blur-none bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.12)_70%,rgba(0,0,0,0.20)_100%)]', // Changed backdrop-blur-sm to backdrop-blur-none
+  frameBg: 'bg-gradient-to-b from-gray-800/15 to-gray-900/22 backdrop-blur-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.1)_65%,rgba(0,0,0,0.15)_90%)] border border-gray-600/15', // Changed backdrop-blur-sm to backdrop-blur-none
+  headerBg: 'bg-gradient-to-b from-gray-800/20 to-gray-900/28',
+  cardBg: 'from-gray-800/15 to-gray-900/22',
+  matchCardBg: 'from-yellow-600/32 to-amber-800/42',
+};
 
 // 5 UI Style Variations
 const uiStyles = {
@@ -104,13 +118,21 @@ export default function MekRecruitmentModalV4({
   onClose,
   onMekSelection,
   mekCount,
+  difficultyConfig,
 }: MekRecruitmentModalV4Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
-  const [maxMeksToShow, setMaxMeksToShow] = useState<1 | 5 | 20 | 40 | 100>(20);
-  // Generate meks based on the maximum we might show (100), not the initial mekCount
-  const [allMeks] = useState(() => generateSampleMeks(100));
+  const [maxMeksToShow, setMaxMeksToShow] = useState<1 | 5 | 10 | 50 | 100>(5);
+  const [sampleMekCount, setSampleMekCount] = useState<1 | 5 | 10 | 50 | 100>(5);
+  // Generate meks based on the selected count
+  const [allMeks, setAllMeks] = useState(() => generateSampleMeks(5));
+
+  // Regenerate meks when count changes
+  useEffect(() => {
+    setAllMeks(generateSampleMeks(sampleMekCount));
+    setMaxMeksToShow(sampleMekCount);
+  }, [sampleMekCount]);
   const [hoveredMekIndex, setHoveredMekIndex] = useState<number | null>(null);
   const [hoveredVariation, setHoveredVariation] = useState<string | null>(null);
   const [currentStyle, setCurrentStyle] = useState<keyof typeof uiStyles>('gradient');
@@ -119,6 +141,71 @@ export default function MekRecruitmentModalV4({
   const [hoveredMekBonus, setHoveredMekBonus] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
+  const [percentageStyle, setPercentageStyle] = useState<'tab' | 'badge' | 'pill' | 'flag' | 'chip'>('tab');
+
+  // Frame texture locked to corrupted-data
+  const frameTexture = 'corrupted-data';
+
+  // Texture pattern for corrupted-data effect
+  const texturePattern = 'bg-[repeating-linear-gradient(0deg,transparent,transparent_10px,rgba(255,0,0,0.03)_10px,rgba(255,0,0,0.03)_11px,transparent_11px,transparent_20px),repeating-linear-gradient(90deg,transparent,transparent_15px,rgba(0,255,255,0.03)_15px,rgba(0,255,255,0.03)_16px)]';
+
+
+
+  // Percentage font locked to Roboto
+  const percentageFont = 'roboto';
+  const percentageFontStyles = {
+    className: 'font-bold',
+    fontFamily: 'Roboto, sans-serif'
+  };
+
+  // State for number of buffs to display (for testing spacing)
+  const [buffCount, setBuffCount] = useState<3 | 4>(4);
+
+  // Debug states for success meter
+  const [debugSuccessRate, setDebugSuccessRate] = useState(35);
+  const [debugGoalpost, setDebugGoalpost] = useState(50);
+  const [debugMode, setDebugMode] = useState(false);
+
+  // Determine success likelihood term and color (from SuccessMeterV2)
+  const getSuccessLikelihoodData = (currentPercent: number, greenLinePercent: number) => {
+    if (currentPercent >= greenLinePercent) return { term: 'CERTAIN', color: '#10b981' }; // green-400
+    if (greenLinePercent === 0) return { term: 'CERTAIN', color: '#10b981' };
+    const relativePercent = (currentPercent / greenLinePercent) * 100;
+
+    if (relativePercent === 0) return { term: 'IMPOSSIBLE', color: '#dc2626' }; // red-600 - more vivid red
+    if (relativePercent <= 5) return { term: 'EXTREMELY UNLIKELY', color: '#ea580c' }; // orange-600
+    if (relativePercent < 20) return { term: 'VERY UNLIKELY', color: '#f97316' }; // orange-500
+    if (relativePercent < 35) return { term: 'UNLIKELY', color: '#fb923c' }; // orange-400
+    if (relativePercent < 45) return { term: 'DOUBTFUL', color: '#fbbf24' }; // amber-400
+    if (relativePercent < 55) return { term: 'UNCERTAIN', color: '#fde047' }; // yellow-300
+    if (relativePercent < 65) return { term: 'POSSIBLE', color: '#facc15' }; // yellow-400
+    if (relativePercent < 80) return { term: 'LIKELY', color: '#a3e635' }; // lime-400
+    if (relativePercent < 90) return { term: 'VERY LIKELY', color: '#84cc16' }; // lime-500
+    if (relativePercent < 95) return { term: 'HIGHLY LIKELY', color: '#22c55e' }; // green-500
+    return { term: 'EXTREMELY LIKELY', color: '#10b981' }; // green-400
+  };
+
+  // Calculate actual success rate and overshoot
+  const actualSuccessRate = debugMode ? debugSuccessRate : (35 + (hoveredMekBonus || 0));
+  // Use difficulty config green line if available, otherwise default to 50
+  const actualGoalpost = debugMode ? debugGoalpost : (difficultyConfig?.successGreenLine || 50);
+  const hasReachedGoal = actualSuccessRate >= actualGoalpost;
+  const overshootAmount = hasReachedGoal ? (actualSuccessRate - actualGoalpost) : 0;
+  const percentToGoalpost = actualGoalpost - actualSuccessRate;
+  const likelihoodData = getSuccessLikelihoodData(actualSuccessRate, actualGoalpost);
+
+  // Calculate rewards with overshoot bonus (simplified version)
+  const overshootBonus = overshootAmount * 0.5; // 0.5% bonus per 1% overshoot
+  const goldBase = 674;
+  const xpBase = 67;
+  const essenceBase = 1.2;
+  const goldWithBonus = Math.round(goldBase * (1 + overshootBonus / 100));
+  const xpWithBonus = Math.round(xpBase * (1 + overshootBonus / 100));
+  const essenceWithBonus = (essenceBase * (1 + overshootBonus / 100)).toFixed(1);
+
+  // Glass effect locked to 'none' (clean)
+  const glassEffect = 'none';
+  const glassEffectStyle = ''; // No glass effect
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -143,8 +230,8 @@ export default function MekRecruitmentModalV4({
   if (!showMekModal || !selectedMekSlot) return null;
 
   // Calculate pagination values - always use pagination
-  const itemsPerPage = isZoomedOut ? 48 : 12; // Always paginate regardless of count
-  const columnsPerRow = isZoomedOut ? 8 : 4;
+  const itemsPerPage = isZoomedOut ? 42 : 12; // 7 columns x 6 rows for zoom out
+  const columnsPerRow = isZoomedOut ? 7 : 4;
 
   const style = uiStyles[currentStyle];
   const missionId = selectedMekSlot.missionId;
@@ -253,10 +340,165 @@ export default function MekRecruitmentModalV4({
 
   return (
     <ModalPortal>
-      
+
+      {/* Debug Controls - Floating at top, outside main content */}
+      <div className="fixed top-4 left-4 z-[10001] flex flex-col gap-2">
+        {/* Mek Count Selector */}
+        <select
+          value={sampleMekCount}
+          onChange={(e) => setSampleMekCount(Number(e.target.value) as 1 | 5 | 10 | 50 | 100)}
+          className="px-3 py-1.5 bg-gray-800/90 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:outline-none focus:border-yellow-500"
+        >
+          <option value="1">1 Sample Mek</option>
+          <option value="5">5 Sample Meks</option>
+          <option value="10">10 Sample Meks</option>
+          <option value="50">50 Sample Meks</option>
+          <option value="100">100 Sample Meks</option>
+        </select>
+
+        {/* Percentage Style Selector (only show in zoom out mode) */}
+        {isZoomedOut && (
+          <select
+            value={percentageStyle}
+            onChange={(e) => setPercentageStyle(e.target.value as 'tab' | 'badge' | 'pill' | 'flag' | 'chip')}
+            className="px-3 py-1.5 bg-gray-800/90 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:outline-none focus:border-yellow-500"
+          >
+            <option value="tab">Tab Style</option>
+            <option value="badge">Badge Style</option>
+            <option value="pill">Pill Style</option>
+            <option value="flag">Flag Style</option>
+            <option value="chip">Chip Style</option>
+          </select>
+        )}
+
+        {/* Buff Count Selector (for testing) */}
+        <select
+          value={buffCount}
+          onChange={(e) => setBuffCount(Number(e.target.value) as 3 | 4)}
+          className="px-3 py-1.5 bg-gray-800/90 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:outline-none focus:border-yellow-500"
+        >
+          <option value="3">3 Buffs</option>
+          <option value="4">4 Buffs</option>
+        </select>
+
+        {/* Debug Mode Toggle */}
+        <button
+          onClick={() => setDebugMode(!debugMode)}
+          className={`px-3 py-1.5 rounded text-sm font-bold transition-all ${
+            debugMode
+              ? 'bg-green-600 text-white border-2 border-green-400'
+              : 'bg-gray-800/90 text-gray-200 border border-gray-600 hover:bg-gray-700'
+          }`}
+        >
+          {debugMode ? '🐛 Debug ON' : '🐛 Debug OFF'}
+        </button>
+      </div>
+
+      {/* Debug Panel - Shows when debug mode is on */}
+      {debugMode && (
+        <div className="fixed top-4 right-4 z-[10001] bg-black/95 border-2 border-yellow-500 rounded-lg p-4 shadow-2xl"
+             style={{ width: '300px' }}>
+          <h3 className="text-yellow-400 font-bold text-sm mb-4 uppercase tracking-wider">Success Meter Debug</h3>
+
+          {/* Success Rate Slider */}
+          <div className="mb-4">
+            <label className="text-gray-300 text-xs font-medium block mb-2">
+              Success Rate: <span className="text-yellow-400 font-bold">{debugSuccessRate}%</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={debugSuccessRate}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setDebugSuccessRate(value);
+              }}
+              onMouseMove={(e) => {
+                if (e.buttons === 1) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const percent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                  const clamped = Math.max(0, Math.min(100, percent));
+                  setDebugSuccessRate(clamped);
+                }
+              }}
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer debug-slider"
+              style={{
+                background: `linear-gradient(to right, #facc15 0%, #facc15 ${debugSuccessRate}%, #374151 ${debugSuccessRate}%, #374151 100%)`
+              }}
+            />
+            <div className="flex justify-between text-gray-500 text-[10px] mt-1">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* Goalpost Position Slider */}
+          <div className="mb-4">
+            <label className="text-gray-300 text-xs font-medium block mb-2">
+              Goalpost Position: <span className="text-green-400 font-bold">{debugGoalpost}%</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={debugGoalpost}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setDebugGoalpost(value);
+              }}
+              onMouseMove={(e) => {
+                if (e.buttons === 1) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const percent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                  const clamped = Math.max(0, Math.min(100, percent));
+                  setDebugGoalpost(clamped);
+                }
+              }}
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer debug-slider"
+              style={{
+                background: `linear-gradient(to right, #10b981 0%, #10b981 ${debugGoalpost}%, #374151 ${debugGoalpost}%, #374151 100%)`
+              }}
+            />
+            <div className="flex justify-between text-gray-500 text-[10px] mt-1">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* Info Display */}
+          <div className="bg-gray-900/50 rounded p-2 mt-3">
+            <div className="text-[11px] space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Status:</span>
+                <span className="font-bold" style={{ color: getSuccessLikelihoodData(debugSuccessRate, debugGoalpost).color }}>
+                  {getSuccessLikelihoodData(debugSuccessRate, debugGoalpost).term}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Overshoot:</span>
+                <span className={debugSuccessRate > debugGoalpost ? 'text-green-400 font-bold' : 'text-gray-500'}>
+                  {debugSuccessRate > debugGoalpost ? `+${debugSuccessRate - debugGoalpost}%` : '0%'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Distance to Goal:</span>
+                <span className="text-gray-300">
+                  {Math.abs(debugSuccessRate - debugGoalpost)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced backdrop with animated particles - click outside to close */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-start justify-center pt-12 overflow-y-auto overflow-x-hidden"
+      <div
+        className={`fixed inset-0 ${theme.backdrop} z-[9999] flex items-start justify-center pt-12 overflow-y-auto overflow-x-hidden`}
         onClick={onClose}
       >
         {/* Animated backdrop blur effect - reduced by 50% */}
@@ -290,7 +532,8 @@ export default function MekRecruitmentModalV4({
             animation: 'hexGrid 4s ease-in-out infinite'
           }}
         />
-        <div 
+
+        <div
           className="w-full max-w-[900px] mx-auto relative scan-line mb-12"
           onClick={(e) => e.stopPropagation()}
         >
@@ -299,7 +542,7 @@ export default function MekRecruitmentModalV4({
           
           {/* Tech grid background */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-gray-950 to-black" />
+            <div className={`absolute inset-0 ${theme.containerBg}`} />
             <div 
               className="absolute inset-0 opacity-20"
               style={{
@@ -328,7 +571,7 @@ export default function MekRecruitmentModalV4({
           </div>
           
           {/* Main container with industrial aesthetic */}
-          <div className="relative bg-black/80 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden max-w-full">
+          <div className="relative bg-black/20 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden max-w-full">
             {/* Inner glow effect */}
             <div className="absolute inset-0 bg-gradient-to-t from-amber-950/20 via-transparent to-transparent pointer-events-none" />
             
@@ -340,7 +583,7 @@ export default function MekRecruitmentModalV4({
             
             
             {/* Industrial header */}
-            <div className="relative bg-gradient-to-r from-stone-900/90 via-amber-950/50 to-stone-900/90 border-b-2 border-yellow-500/40 p-4 overflow-hidden max-w-full">
+            <div className={`relative ${theme.headerBg} backdrop-blur-md border-b-2 border-yellow-500/40 p-4 overflow-hidden max-w-full`}>
               {/* Animated background pattern */}
               <div className="absolute inset-0 opacity-30">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent" />
@@ -348,9 +591,13 @@ export default function MekRecruitmentModalV4({
               
               <div className="flex justify-between items-center relative z-10">
                 <div className="flex-1">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 tracking-wider uppercase" 
-                      style={{ fontFamily: "'Orbitron', 'Rajdhani', sans-serif", letterSpacing: '0.15em' }}>
-                    <span className="neon-glow">MEK RECRUITMENT</span>
+                  <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 tracking-wider uppercase"
+                      style={{
+                        fontFamily: "'Orbitron', 'Rajdhani', sans-serif",
+                        letterSpacing: '0.15em',
+                        textShadow: '0 0 8px rgba(250, 204, 21, 0.25), 0 2px 4px rgba(0, 0, 0, 0.5)'
+                      }}>
+                    MEK RECRUITMENT
                   </h2>
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-yellow-400/80 text-xs font-medium uppercase tracking-wider">
@@ -359,99 +606,6 @@ export default function MekRecruitmentModalV4({
                   </div>
                 </div>
                 
-                {/* Futuristic Success Rate Display */}
-                <div className="flex items-center gap-3 mr-4">
-                  <div className="flex-1 min-w-[450px]">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-[11px] text-yellow-400 uppercase tracking-[0.2em] font-bold">
-                        SUCCESS PROBABILITY
-                      </div>
-                      <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400" 
-                        style={{ fontFamily: "'Orbitron', monospace" }}>
-                        {Math.round(35 + (hoveredMekBonus || 0))}%
-                      </div>
-                    </div>
-                    
-                    {/* Industrial progress bar container */}
-                    <div className="h-12 bg-black/60 border border-yellow-500/30 relative overflow-hidden rounded-sm">
-                      {/* Tech grid background */}
-                      <div className="absolute inset-0 opacity-20"
-                        style={{
-                          backgroundImage: `repeating-linear-gradient(
-                            90deg,
-                            transparent,
-                            transparent 10px,
-                            rgba(250, 182, 23, 0.1) 10px,
-                            rgba(250, 182, 23, 0.1) 11px
-                          )`
-                        }}
-                      />
-                      
-                      {/* Main progress fill with gradient - FIXED: No full-width animation */}
-                      <div 
-                        className="absolute inset-0 transition-all duration-700 ease-out"
-                        style={{ 
-                          width: `${35}%`,
-                          background: `linear-gradient(90deg, 
-                            rgba(250, 182, 23, 0.8) 0%, 
-                            rgba(245, 158, 11, 0.9) 50%, 
-                            rgba(250, 182, 23, 0.8) 100%)`,
-                          boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.4), 0 0 30px rgba(250, 182, 23, 0.3)'
-                        }}
-                      >
-                        {/* Shine effect confined to filled portion only */}
-                        <div className="absolute inset-0 overflow-hidden">
-                          <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12" 
-                               style={{ animation: 'shimmer 4s infinite' }} />
-                        </div>
-                        
-                        {/* Energy particles - FIXED to flow left to right */}
-                        <div className="absolute inset-0 overflow-hidden">
-                          {[...Array(3)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="absolute w-1 h-1 bg-white rounded-full"
-                              style={{
-                                top: `${25 + i * 25}%`,
-                                left: '0',
-                                animation: `particleFlow ${2 + i}s ${i * 0.3}s infinite linear`
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Bonus preview on hover - shows even for non-matching meks (3% base) */}
-                      {hoveredMekIndex !== null && (
-                        <div 
-                          className="absolute inset-0 transition-all duration-500"
-                          style={{ 
-                            left: `${35}%`,
-                            width: `${Math.min(65, hoveredMekBonus || 3)}%`,
-                            background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.6), rgba(74, 222, 128, 0.4))',
-                            boxShadow: '0 0 20px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(34, 197, 94, 0.3)'
-                          }}
-                        >
-                          <div className="absolute inset-0 animate-pulse opacity-50 bg-gradient-to-r from-transparent via-green-400/30 to-transparent" />
-                        </div>
-                      )}
-                      
-                      {/* Industrial border effects */}
-                      <div className="absolute inset-0 border border-yellow-400/20 pointer-events-none" />
-                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent" />
-                      
-                      {/* Percentage markers */}
-                      {[25, 50, 75].map(percent => (
-                        <div
-                          key={percent}
-                          className="absolute top-0 bottom-0 w-px bg-yellow-500/20"
-                          style={{ left: `${percent}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
                 
                 {/* Futuristic close button */}
                 <button 
@@ -471,32 +625,85 @@ export default function MekRecruitmentModalV4({
             {/* Fixed Content Container - No Scrolling */}
             <div className="relative z-10">
               
-              {/* System Status */}
-              <div className="px-6 pb-3 pt-4">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
-                  <p className="text-yellow-400/80 text-xs uppercase tracking-wider font-medium">
-                    TRAIT MATCHING SYSTEM
-                  </p>
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+              {/* Success Meter - Full Width (Bar Only) */}
+              <div className="px-6 pb-3" style={{ paddingTop: '31px' }}>
+                {/* SUCCESS METER Title */}
+                <div className="relative" style={{ marginBottom: '29px' }}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-96 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                  </div>
+                  <div className="relative text-center">
+                    <h2 className="text-3xl font-black uppercase tracking-[0.6em]"
+                        style={{
+                          fontFamily: 'Orbitron, monospace',
+                          background: 'linear-gradient(180deg, #fff 0%, #facc15 50%, #f59e0b 100%)',
+                          backgroundClip: 'text',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          filter: 'drop-shadow(0 4px 8px rgba(250, 204, 21, 0.4))'
+                        }}>
+                      SUCCESS METER
+                    </h2>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+                  </div>
+                </div>
+
+                {/* Success Meter Bar */}
+                <div className="[&>*>div:last-child]:hidden">
+                  <SuccessMeterV2
+                    successRate={debugMode ? debugSuccessRate : (35 + (hoveredMekBonus || 0))}
+                    greenLine={debugMode ? debugGoalpost : (difficultyConfig?.successGreenLine || 50)}
+                    showTitle={false}
+                    barHeight={58}
+                    baseRewards={{
+                      gold: 250000,
+                      xp: 5000
+                    }}
+                    difficultyConfig={{
+                      goldMultiplier: 1,
+                      xpMultiplier: 1,
+                      essenceAmountMultiplier: 1,
+                      overshootBonusRate: 0.5,
+                      maxOvershootBonus: 50
+                    }}
+                    cardLayout={1}
+                  />
                 </div>
               </div>
 
-              {/* Industrial Variation Selection */}
-              <div className="p-4 mx-4 my-3 relative">
-                {/* Background effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-950/20 via-stone-950/10 to-black/20 rounded-lg" />
+              {/* Combined Variation Selection and Mission Status */}
+              <div className="p-4 mx-4 relative" style={{ marginTop: '-10px', marginBottom: '12px' }}>
+                {/* Theme-specific background for the floating card */}
+                <div className={`absolute inset-0 rounded-lg ${theme.frameBg}`} />
+                {/* Corrupted-data texture overlay */}
+                <div className={`absolute inset-0 rounded-lg ${texturePattern}`} />
                 <div className="absolute inset-0 border border-yellow-500/20 rounded-lg" />
-                
+
                 {/* Corner accents */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-yellow-400/40 rounded-tl-lg" />
                 <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-yellow-400/40 rounded-tr-lg" />
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-yellow-400/40 rounded-bl-lg" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-yellow-400/40 rounded-br-lg" />
-                
-                <div className="relative flex justify-center p-2">
-                  <div className="grid grid-cols-5 gap-3">
-                    {missionMultipliers.slice(0, 5).map((mult) => {
+
+                <div className="relative flex gap-4 px-4 items-center" style={{ paddingTop: '2px', paddingBottom: '2px' }}>
+                  {/* Left Side - Variation Buffs */}
+                  <div className="flex-1" style={{ marginLeft: '-17px' }}>
+                    <div className="mb-2">
+                      <div className="text-yellow-500 font-black uppercase tracking-[0.2em] text-center"
+                           style={{
+                             fontSize: '17.5px',
+                             fontFamily: 'Orbitron, monospace',
+                             textShadow: '0 0 10px rgba(250, 204, 21, 0.3)',
+                           }}>
+                        VARIATION BUFFS
+                      </div>
+                      <div className="text-gray-400 text-center mt-1.5 font-medium tracking-wide"
+                           style={{ fontSize: '12.5px' }}>
+                        Match these traits for bonus rewards
+                      </div>
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                    {missionMultipliers.slice(0, buffCount).map((mult) => {
                       const isActive = activeBuffFilters.includes(mult.id);
                       const mekHasThisTrait = hoveredMekIndex !== null && 
                         allMeks[hoveredMekIndex]?.traits.includes(mult.id);
@@ -510,7 +717,7 @@ export default function MekRecruitmentModalV4({
                           <div className="flex flex-col items-center">
                             {/* Industrial frame */}
                             <div className={`
-                              relative w-[80px] h-[80px] p-[2px] rounded-full
+                              relative w-[89px] h-[89px] p-[2px] rounded-full
                               ${isActive ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-500 shadow-[0_0_8px_rgba(250,182,23,0.8)]' :
                                 mekHasThisTrait ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 animate-pulse' : 
                                 'bg-gradient-to-br from-gray-800 to-gray-900'}
@@ -531,7 +738,7 @@ export default function MekRecruitmentModalV4({
                                     mekHasThisTrait ? 'scale-105 brightness-125' : 
                                     'brightness-50 opacity-60 group-hover:brightness-75 group-hover:opacity-80'
                                   }`}
-                                  sizes="80px"
+                                  sizes="89px"
                                 />
                                 
                                 {/* Industrial overlay with gleam */}
@@ -550,26 +757,145 @@ export default function MekRecruitmentModalV4({
                             </div>
                             
                             {/* Label with glow effect */}
-                            <div className={`text-[11px] font-bold mt-2 uppercase tracking-wider text-center transition-all
+                            <div className={`font-bold mt-1.5 uppercase tracking-wider text-center transition-all
                               ${isActive ? 'text-yellow-300 drop-shadow-[0_0_8px_rgba(250,182,23,0.8)]' : 
                                 mekHasThisTrait ? 'text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 
                                 'text-gray-600 group-hover:text-gray-500'}
-                            `}>
+                            `}
+                            style={{ fontSize: '10.3px' }}>
                               {mult.name}
                             </div>
-                            
-                            {/* Bonus display with animation */}
-                            <div className={`text-sm font-black transition-all mt-1
-                              ${isActive ? 'text-yellow-400 animate-pulse' : 
-                                mekHasThisTrait ? 'text-green-400 animate-pulse' : 
-                                'text-gray-700 group-hover:text-gray-600'}
-                            `}>
-                              {mult.bonus}
+
+                            {/* Bonus display with animation - fixed height container */}
+                            <div className="h-6 flex items-center justify-center">
+                              <div className={`font-black transition-all
+                                ${isActive ? 'text-yellow-400 animate-pulse' :
+                                  mekHasThisTrait ? 'text-green-400 animate-[flash_0.3s_ease-in-out_infinite]' :
+                                  'text-gray-700 group-hover:text-gray-600'}
+                              `}
+                              style={{
+                                fontSize: '16.9px',
+                                transform: mekHasThisTrait ? 'scale(1.11)' : 'scale(1)',
+                                transformOrigin: 'center',
+                                filter: mekHasThisTrait ? 'drop-shadow(0 0 12px rgba(52, 211, 153, 0.9))' : 'none',
+                                lineHeight: '1'
+                              }}>
+                                {mult.bonus}
+                              </div>
                             </div>
                           </div>
                         </button>
                       );
                     })}
+                    </div>
+                  </div>
+
+                  {/* Right Side - Mission Status */}
+                  <div className="flex items-center" style={{ width: '360px' }}>
+                    <div className="relative bg-black/90 border-2 border-yellow-500/50 shadow-2xl overflow-hidden w-full">
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: `linear-gradient(135deg, transparent 25%, rgba(250, 204, 21, 0.1) 25%, rgba(250, 204, 21, 0.1) 50%, transparent 50%, transparent 75%, rgba(250, 204, 21, 0.1) 75%, rgba(250, 204, 21, 0.1))`,
+                        backgroundSize: '20px 20px'
+                      }}></div>
+
+                      <div className="relative z-10">
+                        <div className="bg-gradient-to-b from-yellow-500/10 to-transparent px-4 py-3 flex items-center justify-between">
+                          <div className="text-left">
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">MISSION STATUS</div>
+                            <div className="font-bold font-['Orbitron'] uppercase text-xl" style={{ color: likelihoodData.color }}>
+                              {likelihoodData.term}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                              hasReachedGoal ? 'text-green-500' : 'text-gray-500'
+                            }`}>OVERSHOOT</div>
+                            <div className={`text-2xl font-black tabular-nums ${
+                              hasReachedGoal ? 'text-green-400' : 'text-gray-600'
+                            }`} style={{
+                              fontFamily: 'Roboto Mono, monospace',
+                              ...(hasReachedGoal ? {
+                                textShadow: '0 0 10px rgba(34, 197, 94, 0.8)',
+                                filter: 'brightness(1.2)'
+                              } : {})
+                            }}>
+                              {overshootAmount.toFixed(0)}%
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-yellow-500/20"></div>
+
+                        <div className="relative">
+                          <div className={`px-4 py-3 space-y-2.5 ${!hasReachedGoal ? 'opacity-40' : ''}`}>
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-yellow-500' : 'text-gray-500'}`}>
+                              Gold:
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
+                                {goldBase.toLocaleString()}
+                              </span>
+                              <span className={`text-xs ${hasReachedGoal ? 'text-yellow-500' : 'text-gray-600'}`}>→</span>
+                              <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-yellow-400' : 'text-gray-500'}`}>
+                                {goldWithBonus.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-blue-500' : 'text-gray-500'}`}>
+                              XP:
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
+                                {xpBase}
+                              </span>
+                              <span className={`text-xs ${hasReachedGoal ? 'text-blue-500' : 'text-gray-600'}`}>→</span>
+                              <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-blue-400' : 'text-gray-500'}`}>
+                                {xpWithBonus}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-green-500' : 'text-gray-500'}`}>
+                              Essence:
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
+                                {essenceBase}x
+                              </span>
+                              <span className={`text-xs ${hasReachedGoal ? 'text-green-500' : 'text-gray-600'}`}>→</span>
+                              <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-green-400' : 'text-gray-500'}`}>
+                                {essenceWithBonus}x
+                              </span>
+                            </div>
+                          </div>
+                          </div>
+
+                          {!hasReachedGoal && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="relative">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/40 via-yellow-500/40 to-orange-500/40 blur animate-pulse"></div>
+                                <div className="relative bg-black/90 px-3 py-2" style={{
+                                  clipPath: 'polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)'
+                                }}>
+                                  <div className="text-center">
+                                    <div className="text-sm text-yellow-400 font-bold italic tracking-wide font-['Roboto']" style={{
+                                      fontSize: '14.4px',
+                                      textShadow: '0 0 10px rgba(250, 204, 21, 0.7), 0 2px 4px rgba(0, 0, 0, 0.9)'
+                                    }}>
+                                      OVERSHOOT IN {Math.abs(percentToGoalpost).toFixed(0)}%
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -664,26 +990,10 @@ export default function MekRecruitmentModalV4({
                     </span>
                   </button>
 
-                  {/* Max Meks Dropdown */}
-                  <div className="relative">
-                    <select
-                      value={maxMeksToShow}
-                      onChange={(e) => {
-                        setMaxMeksToShow(Number(e.target.value) as 1 | 5 | 20 | 40 | 100);
-                        setCurrentPage(1); // Reset to first page when changing max meks
-                      }}
-                      className="bg-black/40 border border-yellow-500/30 text-yellow-400 px-3 py-2 text-xs uppercase tracking-wider focus:border-yellow-400/50 focus:outline-none appearance-none pr-8 cursor-pointer transition-all hover:border-yellow-400/40"
-                      style={{ fontFamily: "'Orbitron', monospace" }}
-                    >
-                      <option value={1}>1 MEK</option>
-                      <option value={5}>5 MEKS</option>
-                      <option value={20}>20 MEKS</option>
-                      <option value={40}>40 MEKS</option>
-                      <option value={100}>100 MEKS</option>
-                    </select>
-                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500/50 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                  {/* Sample Display Info */}
+                  <div className="px-3 py-2 bg-black/40 border border-yellow-500/30 text-yellow-400 text-xs uppercase tracking-wider"
+                       style={{ fontFamily: "'Orbitron', monospace" }}>
+                    4 Sample Meks
                   </div>
                 </div>
               </div>
@@ -763,7 +1073,7 @@ export default function MekRecruitmentModalV4({
                   </div>
                 </div>
                 
-                <div className={`grid ${isZoomedOut ? 'grid-cols-8 gap-2' : 'grid-cols-4 gap-3'} transition-all duration-500`}>
+                <div className={`grid ${isZoomedOut ? 'grid-cols-7 gap-2.5' : 'grid-cols-4 gap-3'} transition-all duration-500`}>
                   {currentPageMeks.map(({ mek, matchedTraits, hasMatch, totalBonus, index }: any) => {
                     const actualIndex = allMeks.findIndex((m: any) => m.name === mek.name);
                     return (
@@ -783,12 +1093,17 @@ export default function MekRecruitmentModalV4({
                           setHoveredMekBonus(0);
                         }}
                         className={`
-                          group relative cursor-pointer transition-all duration-300 overflow-hidden
-                          ${hasMatch 
-                            ? `border-2 bg-gradient-to-b from-amber-950/30 to-black/80 border-yellow-400 shadow-[0_0_15px_rgba(250,182,23,0.4)]`
-                            : 'bg-gradient-to-b from-gray-900/30 to-black/60 border border-gray-700/30 hover:border-yellow-600/40'
+                          group relative cursor-pointer transition-all duration-300
+                          ${
+                            matchedTraits.length === 3
+                              ? `border-2 bg-gradient-to-b ${theme.matchCardBg} border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)]`
+                              : matchedTraits.length === 2
+                                ? `border-2 bg-gradient-to-b ${theme.matchCardBg} border-yellow-400 shadow-[0_0_18px_rgba(250,204,21,0.5)]`
+                                : matchedTraits.length === 1
+                                  ? `border-2 bg-gradient-to-b ${theme.matchCardBg} border-gray-400 shadow-[0_0_15px_rgba(156,163,175,0.4)]`
+                                  : `bg-gradient-to-b ${theme.cardBg} border border-gray-700/30 hover:border-yellow-600/40`
                           }
-                          ${isZoomedOut ? 'hover:scale-110' : 'hover:scale-105'} hover:z-20 hover:shadow-[0_0_20px_rgba(250,182,23,0.4)]
+                          ${isZoomedOut ? 'hover:scale-110 mb-3' : 'hover:scale-105'} hover:z-20
                         `}
                       >
                         {/* Industrial shine effect */}
@@ -796,12 +1111,12 @@ export default function MekRecruitmentModalV4({
                         
                         {/* Match indicator glow - color coded by match count */}
                         {hasMatch && (
-                          <div className={`absolute -inset-0.5 opacity-40 blur-md ${
-                            matchedTraits.length === 3 
-                              ? 'bg-gradient-to-r from-orange-500 via-red-500 to-orange-500'
+                          <div className={`absolute -inset-1 opacity-50 blur-lg ${
+                            matchedTraits.length === 3
+                              ? 'bg-gradient-to-r from-red-500 via-orange-500 to-red-500'
                               : matchedTraits.length === 2
-                                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500'
-                                : 'bg-gradient-to-r from-white via-gray-300 to-white'
+                                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400'
+                                : 'bg-gradient-to-r from-gray-300 via-white to-gray-300'
                           }`} />
                         )}
                         
@@ -825,44 +1140,141 @@ export default function MekRecruitmentModalV4({
                           
                           {/* Industrial overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-yellow-400/5 pointer-events-none" />
-                          
-                          {/* Status badge - show percentage only in normal view */}
-                          {hasMatch && !isZoomedOut && (
-                            <div 
-                              className="absolute top-1 right-1 text-emerald-400 text-[13px] font-black uppercase tracking-wider"
-                              style={{
-                                textShadow: `
-                                  0 0 5px rgba(52, 211, 153, 0.9),
-                                  0 0 15px rgba(52, 211, 153, 0.5),
-                                  1px 1px 2px rgba(0, 0, 0, 1),
-                                  -1px -1px 2px rgba(0, 0, 0, 0.8),
-                                  0 2px 4px rgba(0, 0, 0, 0.9)
-                                `,
-                                letterSpacing: '0.05em'
-                              }}
-                            >
-                              +{totalBonus}%
-                            </div>
-                          )}
                         </div>
+
+                        {/* Percentage display variations for zoomed out view - extending from bottom */}
+                        {isZoomedOut && (
+                          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10">
+                            {/* Tab Style - Clean minimal pill */}
+                            {percentageStyle === 'tab' && (
+                              <div className="bg-black/95 backdrop-blur-sm rounded-b-md px-3 py-0.5 shadow-lg border-x border-b border-gray-600">
+                                <div className="text-[11px] font-bold" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+                                  <span className="text-white">20%</span>
+                                  {hasMatch && (
+                                    <span className="text-lime-400 ml-1">+{totalBonus}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Badge Style - Gradient pill */}
+                            {percentageStyle === 'badge' && (
+                              <div className="bg-gradient-to-r from-gray-800/95 via-gray-700/95 to-gray-800/95 backdrop-blur-sm rounded-b-lg px-3 py-0.5 shadow-md border-x border-b border-gray-500">
+                                <div className="text-[11px] font-bold" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+                                  <span className="text-yellow-300">20%</span>
+                                  {hasMatch && (
+                                    <span className="text-green-400 ml-1">+{totalBonus}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Pill Style - Dark pill with tech font */}
+                            {percentageStyle === 'pill' && (
+                              <div className="bg-gray-900/95 backdrop-blur-sm rounded-b px-3.5 py-0.5 shadow-inner border-x border-b border-gray-700">
+                                <div className="text-[11px] font-black" style={{ fontFamily: 'Orbitron, monospace', letterSpacing: '0.05em' }}>
+                                  <span className="text-gray-300">20%</span>
+                                  {hasMatch && (
+                                    <span className="text-cyan-400 ml-1">+{totalBonus}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Flag Style - Angled pill */}
+                            {percentageStyle === 'flag' && (
+                              <div className="bg-black/90 backdrop-blur-sm px-3 py-0.5 shadow-lg border-x border-b border-yellow-600/50"
+                                   style={{ clipPath: 'polygon(0 0, 100% 0, 95% 100%, 5% 100%)' }}>
+                                <div className="text-[11px] font-bold uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                                  <span className="text-yellow-400">20%</span>
+                                  {hasMatch && (
+                                    <span className="text-emerald-400 ml-0.5">+{totalBonus}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Chip Style - Tech pill with glow line */}
+                            {percentageStyle === 'chip' && (
+                              <div className="relative bg-gradient-to-b from-gray-800/95 to-black/95 backdrop-blur-sm rounded-b px-3 py-0.5 border-x border-b border-cyan-500/30 shadow-[inset_0_-2px_4px_rgba(6,182,212,0.2)]">
+                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+                                <div className="text-[10px] font-black uppercase tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+                                  <span className="text-cyan-400">20%</span>
+                                  {hasMatch && (
+                                    <span className="text-yellow-300 ml-0.5">+{totalBonus}</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                         
                         {/* Mek Info Panel - Only show in normal view */}
                         {!isZoomedOut && (
-                          <div className="relative p-2 bg-gradient-to-b from-black/60 to-black/80">
+                          <div className="relative p-2 pb-3 bg-gradient-to-b from-black/60 to-black/80">
                             {/* Data lines decoration */}
                             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent" />
-                            
-                            <div className="flex justify-between items-center mb-1">
-                              <span className={`text-[11px] font-bold tracking-wider uppercase ${
-                                hasMatch ? 'text-yellow-300' : 'text-gray-400'
-                              }`}>
-                                {mek.name}
-                              </span>
-                              <span className="text-yellow-500/70 text-[10px] font-mono">
-                                LV.{mek.level || 1}
-                              </span>
+
+                            <div className="flex items-center justify-between mb-2">
+                              {/* MEK name and level - left aligned */}
+                              <div className="text-left">
+                                <div className={`text-[11px] font-bold tracking-wider uppercase ${
+                                  hasMatch ? 'text-yellow-300' : 'text-gray-400'
+                                }`}>
+                                  {mek.name}
+                                </div>
+                                <div className="text-yellow-500/70 text-xs font-mono">
+                                  LV.{mek.level || 1}
+                                </div>
+                              </div>
+
+                              {/* Percentage display - right aligned */}
+                              <div
+                                className="relative bg-gradient-to-br from-black/90 to-black/80 border-2 border-yellow-500/40 rounded-sm px-3 py-1 overflow-hidden"
+                                style={{
+                                  minWidth: '95px',
+                                  boxShadow: 'inset 0 1px 2px rgba(250,182,23,0.1), 0 2px 4px rgba(0,0,0,0.5)'
+                                }}
+                              >
+                                {/* Glass effect overlay - removed, locked to clean */}
+                                <div className={`text-[14px] ${percentageFontStyles.className} uppercase tracking-wider text-center`}
+                                     style={{
+                                       fontFamily: percentageFontStyles.fontFamily
+                                     }}>
+                                  <span
+                                    className="text-white"
+                                    style={{
+                                      textShadow: `
+                                        1px 1px 2px rgba(0, 0, 0, 1),
+                                        -1px -1px 2px rgba(0, 0, 0, 0.8),
+                                        0 2px 4px rgba(0, 0, 0, 0.9)
+                                      `,
+                                      letterSpacing: '0.05em'
+                                    }}
+                                  >
+                                    20%
+                                  </span>
+                                  {hasMatch && (
+                                    <span
+                                      className="text-emerald-400 ml-1.5"
+                                      style={{
+                                        textShadow: `
+                                          0 0 5px rgba(52, 211, 153, 0.9),
+                                          0 0 15px rgba(52, 211, 153, 0.5),
+                                          1px 1px 2px rgba(0, 0, 0, 1),
+                                          -1px -1px 2px rgba(0, 0, 0, 0.8),
+                                          0 2px 4px rgba(0, 0, 0, 0.9)
+                                        `,
+                                        letterSpacing: '0.05em'
+                                      }}
+                                    >
+                                      +{totalBonus}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            
+
                             {/* Enhanced Chip Slots */}
                             <div className="flex items-center justify-center">
                               <div className="flex gap-1.5">
@@ -933,6 +1345,7 @@ export default function MekRecruitmentModalV4({
           </div>
         </div>
       </div>
+
     </ModalPortal>
   );
 }

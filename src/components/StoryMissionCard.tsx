@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
 import { TIER_COLORS, MODIFIER_COLORS } from '@/lib/chipRewardCalculator';
-import SuccessBar from '@/components/SuccessBar';
+import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import { renderDifficultyButton } from './StoryMissionCard-buttonStyles';
 import { getVariationImage } from '@/lib/variations-helper';
 
@@ -59,6 +59,12 @@ interface StoryMissionCardProps {
   meterVariant?: 1 | 2 | 3 | 4 | 5;
   layoutStyle?: 1 | 2 | 3 | 4 | 5;
   subLayoutStyle?: 1.1 | 1.2 | 1.3 | 1.4 | 1.5;
+
+  // Variation buff layout style
+  variationBuffLayoutStyle?: 1 | 2 | 3 | 4 | 5;
+
+  // Success meter card layout
+  successMeterCardLayout?: 1 | 2 | 3 | 4 | 5;
 
   // State
   isLocked?: boolean;
@@ -123,7 +129,9 @@ export default function StoryMissionCard({
   // Success bar customization props
   meterVariant: propMeterVariant,
   layoutStyle: propLayoutStyle,
-  subLayoutStyle: propSubLayoutStyle
+  subLayoutStyle: propSubLayoutStyle,
+  variationBuffLayoutStyle = 1,
+  successMeterCardLayout = 1
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -473,67 +481,193 @@ export default function StoryMissionCard({
             </div>
           </div>
 
-          {/* Variation Buffs */}
-          <div className="mb-4">
-            <div className="mb-3">
-              <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-              <div className="text-xs text-gray-400 mt-1">
-                Match traits for success bonuses
-              </div>
-            </div>
+          {/* Variation Buffs Card - Dynamic Layout Based on Style */}
+          <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
+            {variationBuffLayoutStyle === 1 && (
+              // Layout 1: Horizontal with Text (current)
+              <>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-[11px] text-gray-400 max-w-[90px] text-center leading-tight">
+                    Match traits for success bonuses
+                  </div>
+                  <div className="w-px h-10 bg-gray-600/50" />
+                  <div className="flex items-center gap-2">
+                    {variationBuffs.map((buff, index) => {
+                      const imagePath = getVariationImage(buff.name);
+                      return (
+                        <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                          <div
+                            className="relative w-[48px] h-[48px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                            onMouseEnter={(e) => {
+                              setHoveredBuff(buff.name);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                            onMouseLeave={() => setHoveredBuff(null)}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                          >
+                            <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                          </div>
+                          <span className="text-[10px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Grid Layout for Variation Buffs - Dynamic sizing based on count */}
-            <div className="flex justify-center">
-              <div className={`grid ${variationBuffs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} gap-3 max-w-[350px]`}>
-                {variationBuffs.map((buff, index) => {
-                  // Use the dynamic variation image path from the admin settings
-                  const imagePath = getVariationImage(buff.name);
+            {variationBuffLayoutStyle === 2 && (
+              // Layout 2: Classic Grid (original 2x3 or 2x2 grid)
+              <>
+                <div className="text-center mb-2">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Match traits for success bonuses</div>
+                </div>
+                <div className="flex justify-center">
+                  <div className={`grid ${variationBuffs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} gap-2.5 max-w-[350px]`}>
+                    {variationBuffs.map((buff, index) => {
+                      const imagePath = getVariationImage(buff.name);
+                      return (
+                        <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                          <div
+                            className="relative w-[68px] h-[68px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50"
+                            onMouseEnter={(e) => {
+                              setHoveredBuff(buff.name);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                            onMouseLeave={() => setHoveredBuff(null)}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                          >
+                            <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">{buff.name}</span>
+                          <span className="text-[11px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
 
-                  return (
-                    <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
-                      {/* Circle with variation image - increased by ~4% */}
+            {variationBuffLayoutStyle === 3 && (
+              // Layout 3: Vertical Stack (text on top, buffs below)
+              <>
+                <div className="text-center mb-3">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
+                  <div className="text-[10px] text-gray-400 mt-1">Match traits for success bonuses</div>
+                </div>
+                <div className="flex justify-center gap-2">
+                  {variationBuffs.map((buff, index) => {
+                    const imagePath = getVariationImage(buff.name);
+                    return (
+                      <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                        <div
+                          className="relative w-[50px] h-[50px] rounded-full bg-black/80 border-2 border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                          onMouseEnter={(e) => {
+                            setHoveredBuff(buff.name);
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                          }}
+                          onMouseLeave={() => setHoveredBuff(null)}
+                          onMouseMove={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                          }}
+                        >
+                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                        </div>
+                        <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {variationBuffLayoutStyle === 4 && (
+              // Layout 4: Compact Pills (small pill-shaped badges)
+              <>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {variationBuffs.map((buff, index) => {
+                    const imagePath = getVariationImage(buff.name);
+                    return (
                       <div
-                        className="relative w-[58px] h-[58px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50"
+                        key={`${buff.id}-${index}`}
+                        className="flex items-center gap-1.5 bg-black/80 border border-gray-700/50 rounded-full px-2 py-1 cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50"
                         onMouseEnter={(e) => {
                           setHoveredBuff(buff.name);
                           const rect = e.currentTarget.getBoundingClientRect();
                           setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                         }}
-                        onMouseLeave={() => {
-                          setHoveredBuff(null);
-                        }}
+                        onMouseLeave={() => setHoveredBuff(null)}
                         onMouseMove={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                         }}
                       >
-                        <Image
-                          src={imagePath}
-                          alt={buff.name}
-                          fill
-                          className="object-cover"
-                          style={{ imageRendering: 'crisp-edges' }}
-                        />
+                        <div className="relative w-[24px] h-[24px] rounded-full overflow-hidden">
+                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                        </div>
+                        <span className="text-[10px] text-gray-400 uppercase">{buff.name}</span>
+                        <span className="text-[10px] text-yellow-400 font-bold">{buff.bonus}</span>
                       </div>
+                    );
+                  })}
+                </div>
+                <div className="text-[9px] text-gray-400 text-center mt-2">Match traits for success bonuses</div>
+              </>
+            )}
 
-                      {/* Name below the circle */}
-                      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">
-                        {buff.name}
-                      </span>
-
-                      {/* Percentage buff below the name */}
-                      <span className="text-[11px] text-yellow-400 font-bold mt-1">
-                        {buff.bonus}
-                      </span>
-                    </div>
-                  );
-                })}
+            {variationBuffLayoutStyle === 5 && (
+              // Layout 5: Side by Side (text left, buffs right)
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-shrink-0">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
+                  <div className="text-[10px] text-gray-400 mt-1 max-w-[100px]">Match traits for success bonuses</div>
+                </div>
+                <div className="flex gap-1.5">
+                  {variationBuffs.map((buff, index) => {
+                    const imagePath = getVariationImage(buff.name);
+                    return (
+                      <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                        <div
+                          className="relative w-[44px] h-[44px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                          onMouseEnter={(e) => {
+                            setHoveredBuff(buff.name);
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                          }}
+                          onMouseLeave={() => setHoveredBuff(null)}
+                          onMouseMove={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                          }}
+                        >
+                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                        </div>
+                        <span className="text-[9px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
-          {/* Mek Slots */}
-          <div className="mb-4">
+          {/* Mek Deployment Slots Card */}
+          <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
+            <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Mek Deployment Slots</div>
             <div className="grid grid-cols-4 gap-1.5">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => {
                 const isAvailable = slot <= availableSlots;
@@ -601,11 +735,11 @@ export default function StoryMissionCard({
             </div>
           </div>
 
-          {/* Success Chance Bar - using new SuccessBar component */}
+          {/* Success Meter - using new SuccessMeterV2 component */}
           {difficultyConfig ? (
             <div className="mb-4">
               {/* Layout Selector for Testing - Only show if no props are provided */}
-              {!propMeterVariant && !propLayoutStyle && !propSubLayoutStyle && (
+              {!propMeterVariant && !propLayoutStyle && !propSubLayoutStyle && false && (
                 <div className="mb-3 bg-black/60 rounded-lg p-2 border border-gray-700">
                 <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Success Bar Layout</div>
 
@@ -737,45 +871,48 @@ export default function StoryMissionCard({
               </div>
               )}
 
-              <SuccessBar
-                currentSuccess={successChance}
-                difficultyConfig={difficultyConfig}
-                mekContributions={mekContributions}
-                showDetails={false}
-                height="h-8"
-                layoutStyle={layoutStyle}
-                subLayoutStyle={layoutStyle === 1 ? subLayoutStyle : undefined}
-                meterVariant={meterVariant}
+              <SuccessMeterV2
+                successRate={successChance || 0}
+                greenLine={difficultyConfig?.successGreenLine || 50}
+                baseRewards={{
+                  gold: primaryReward || 250000,
+                  xp: experience || 5000
+                }}
+                difficultyConfig={{
+                  goldMultiplier: difficultyConfig?.goldMultiplier || 1,
+                  xpMultiplier: difficultyConfig?.xpMultiplier || 1,
+                  essenceAmountMultiplier: difficultyConfig?.essenceAmountMultiplier || 1,
+                  overshootBonusRate: difficultyConfig?.overshootBonusRate || 1,
+                  maxOvershootBonus: difficultyConfig?.maxOvershootBonus || 50
+                }}
+                showTitle={true}
+                barHeight={56}
+                className=""
+                cardLayout={successMeterCardLayout}
               />
             </div>
           ) : (
-            // Fallback to old bar if no difficulty config
+            // Fallback when no difficulty config
             <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="mek-label-uppercase text-[10px]">Success Chance</span>
-                <span className={`text-lg font-bold ${
-                  successChance >= 80 ? 'text-green-400' :
-                  successChance >= 50 ? 'text-yellow-400' :
-                  'text-orange-400'
-                }`}>
-                  {successChance}%
-                </span>
-              </div>
-              <div className="bg-black/60 rounded-full h-6 overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ease-out relative overflow-hidden ${
-                    successChance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
-                    successChance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
-                    'bg-gradient-to-r from-orange-500 to-orange-400'
-                  }`}
-                  style={{ width: `${successChance}%` }}
-                >
-                  {/* Particle effects layers */}
-                  <div className="mek-success-bar-particles" />
-                  <div className="mek-success-bar-shimmer" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent mek-scan-effect" />
-                </div>
-              </div>
+              <SuccessMeterV2
+                successRate={successChance || 0}
+                greenLine={50} // Default goalpost at 50%
+                baseRewards={{
+                  gold: primaryReward || 250000,
+                  xp: experience || 5000
+                }}
+                difficultyConfig={{
+                  goldMultiplier: 1,
+                  xpMultiplier: 1,
+                  essenceAmountMultiplier: 1,
+                  overshootBonusRate: 1,
+                  maxOvershootBonus: 50
+                }}
+                showTitle={true}
+                barHeight={56}
+                className=""
+                cardLayout={successMeterCardLayout}
+              />
             </div>
           )}
 

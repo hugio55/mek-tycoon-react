@@ -313,6 +313,7 @@ Example transformation:
 - Preserve original design aesthetic from HTML version
 - Direct, honest communication about technical decisions
 - Open to better solutions and alternative approaches
+- **BRIEF TASK COMPLETION SUMMARIES**: Keep explanations 35% shorter - just bullet points of what was done. User will ask for details if needed
 
 ## Session History & Important Updates
 

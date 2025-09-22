@@ -35,6 +35,106 @@ body {
   }
 }
 
+/* Fast flash animation for active variation buffs */
+@keyframes flash {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+/* Custom range slider styles for debug panel */
+input[type="range"].debug-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Track styles */
+input[type="range"].debug-slider::-webkit-slider-track {
+  height: 8px;
+  background: transparent;
+  border-radius: 4px;
+}
+
+input[type="range"].debug-slider::-moz-range-track {
+  height: 8px;
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* Thumb styles */
+input[type="range"].debug-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #facc15;
+  border-radius: 50%;
+  cursor: grab;
+  border: 2px solid #000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  position: relative;
+  z-index: 10;
+  margin-top: -6px;
+  transition: none;
+}
+
+input[type="range"].debug-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #facc15;
+  border-radius: 50%;
+  cursor: grab;
+  border: 2px solid #000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  border: none;
+  transition: none;
+}
+
+/* Hover state */
+input[type="range"].debug-slider::-webkit-slider-thumb:hover {
+  background: #fde047;
+  transform: scale(1.1);
+}
+
+input[type="range"].debug-slider::-moz-range-thumb:hover {
+  background: #fde047;
+  transform: scale(1.1);
+}
+
+/* Active/dragging state */
+input[type="range"].debug-slider::-webkit-slider-thumb:active {
+  background: #fbbf24;
+  transform: scale(1.15);
+  cursor: grabbing;
+}
+
+input[type="range"].debug-slider::-moz-range-thumb:active {
+  background: #fbbf24;
+  transform: scale(1.15);
+  cursor: grabbing;
+}
+
+/* Focus state */
+input[type="range"].debug-slider:focus {
+  outline: none;
+}
+
+input[type="range"].debug-slider:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+input[type="range"].debug-slider:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2), 0 2px 4px rgba(0,0,0,0.5);
+}
+
 /* Holographic animation for button effects */
 @keyframes holographic {
   0%, 100% {

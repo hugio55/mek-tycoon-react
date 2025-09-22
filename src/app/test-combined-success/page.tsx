@@ -51,7 +51,16 @@ export default function TestCombinedSuccess() {
 
   const renderCombinedSuccess = (variant: number) => {
     const isOvershoot = successRate > greenLine;
+    const hasReachedGoal = successRate >= greenLine; // New variable for when at or past goalpost
     const percentToOvershoot = greenLine - successRate;
+
+    // All variations now use the same height
+    const barHeight = 72;
+
+    // Calculate exact position for arrows and percentage text
+    const innerBarWidth = 100; // percentage-based width
+    const paddingPixels = 8; // inset-2 = 8px on each side
+    const goalpostPositionPercent = greenLine; // This is the percentage within the inner bar
 
     return (
       <div className="w-full max-w-md mx-auto">
@@ -78,103 +87,14 @@ export default function TestCombinedSuccess() {
 
         {/* Container for extended markers */}
         <div className="relative">
-          {/* Extended Arrow Markers - OUTSIDE the frame */}
-          {variant === 1 && (
-            <div className="absolute inset-0 pointer-events-none" style={{ left: `${greenLine}%` }}>
-              {/* Top arrow way outside */}
-              <div className="absolute -top-8 -translate-x-1/2">
-                <div className={`text-2xl font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
-                     style={{
-                       filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
-                       animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
-                     }}>
-                  ▼
-                </div>
-              </div>
-              {/* Bottom arrow way outside */}
-              <div className="absolute -bottom-8 top-auto -translate-x-1/2">
-                <div className={`text-2xl font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
-                     style={{
-                       filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
-                       animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
-                     }}>
-                  ▲
-                </div>
-              </div>
-            </div>
-          )}
-
-          {variant === 2 && (
-            <div className="absolute inset-0 pointer-events-none" style={{ left: `${greenLine}%` }}>
-              {/* Large diamond markers outside */}
-              <div className="absolute -top-10 -translate-x-1/2">
-                <div className={`w-4 h-4 rotate-45 ${isOvershoot ? 'bg-cyan-400' : 'bg-green-400'}`}
-                     style={{
-                       boxShadow: isOvershoot ? '0 0 20px #22d3ee, 0 0 40px #22d3ee' : '0 0 15px #4ade80',
-                       animation: isOvershoot ? 'pulse 0.3s infinite' : 'none'
-                     }}></div>
-              </div>
-              <div className="absolute -bottom-10 top-auto -translate-x-1/2">
-                <div className={`w-4 h-4 rotate-45 ${isOvershoot ? 'bg-cyan-400' : 'bg-green-400'}`}
-                     style={{
-                       boxShadow: isOvershoot ? '0 0 20px #22d3ee, 0 0 40px #22d3ee' : '0 0 15px #4ade80',
-                       animation: isOvershoot ? 'pulse 0.3s infinite' : 'none'
-                     }}></div>
-              </div>
-            </div>
-          )}
-
-          {variant === 3 && (
-            <div className="absolute inset-0 pointer-events-none" style={{ left: `${greenLine}%` }}>
-              {/* Bracket markers outside */}
-              <div className="absolute -top-9 -translate-x-1/2">
-                <div className={`text-xl font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
-                     style={{
-                       filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
-                       animation: isOvershoot ? 'glow-pulse 0.4s infinite' : 'none'
-                     }}>
-                  ⌄
-                </div>
-              </div>
-              <div className="absolute -bottom-9 top-auto -translate-x-1/2">
-                <div className={`text-xl font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
-                     style={{
-                       filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
-                       animation: isOvershoot ? 'glow-pulse 0.4s infinite' : 'none'
-                     }}>
-                  ⌃
-                </div>
-              </div>
-            </div>
-          )}
-
-          {variant === 4 && (
-            <div className="absolute inset-0 pointer-events-none" style={{ left: `${greenLine}%` }}>
-              {/* Line extensions with caps */}
-              <div className="absolute -top-12 -translate-x-1/2">
-                <div className={`w-6 h-1 ${isOvershoot ? 'bg-cyan-400' : 'bg-green-400'}`}
-                     style={{
-                       boxShadow: isOvershoot ? '0 0 20px #22d3ee' : '0 0 15px #4ade80',
-                       animation: isOvershoot ? 'flash 0.3s infinite' : 'none'
-                     }}></div>
-              </div>
-              <div className="absolute -bottom-12 top-auto -translate-x-1/2">
-                <div className={`w-6 h-1 ${isOvershoot ? 'bg-cyan-400' : 'bg-green-400'}`}
-                     style={{
-                       boxShadow: isOvershoot ? '0 0 20px #22d3ee' : '0 0 15px #4ade80',
-                       animation: isOvershoot ? 'flash 0.3s infinite' : 'none'
-                     }}></div>
-              </div>
-            </div>
-          )}
-
-          {/* Holographic Modern Bar - Reduced height from h-20 to h-18 */}
-          <div className="relative h-18 rounded-2xl overflow-hidden shadow-2xl"
+          {/* Holographic Modern Bar */}
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl"
                style={{
                  background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.9), rgba(30, 30, 30, 0.9))',
                  backdropFilter: 'blur(10px)',
                  border: '2px solid rgba(250, 204, 21, 0.3)',
-                 height: '72px' // Reduced from 80px by 10%
+                 height: `${barHeight}px`,
+                 zIndex: 10
                }}>
 
             {/* Holographic shimmer background */}
@@ -198,78 +118,112 @@ export default function TestCombinedSuccess() {
                   <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
                 </div>
 
-                {/* Animated Overshoot with energy effects */}
+                {/* GREEN OVERSHOOT AREA - Always Matrix Stream Effect */}
                 {successRate > greenLine && (
                   <div
                     className="absolute inset-y-0 transition-all duration-700 ease-out"
                     style={{
                       left: `${greenLine}%`,
                       width: `${successRate - greenLine}%`,
-                      background: 'linear-gradient(90deg, #047857, #10b981, #34d399)',
-                      boxShadow: '0 0 25px rgba(16, 185, 129, 0.6), inset 0 0 20px rgba(52, 211, 153, 0.4)',
-                      filter: 'brightness(1.2)'
+                      background: 'linear-gradient(180deg, #00ff88 0%, #00ffdd 50%, #00ff88 100%)',
+                      boxShadow: '0 0 30px rgba(0, 255, 136, 0.7), 0 0 50px rgba(0, 255, 221, 0.5), inset 0 0 20px rgba(0, 255, 221, 0.5)',
+                      filter: 'brightness(1.3) saturate(1.2)'
                     }}>
-                    {/* Base gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
-
-                    {/* Energy pulse animation */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent"
-                         style={{
-                           animation: 'energy-flow 1.5s infinite'
-                         }}></div>
-
-                    {/* Light blue shimmer streaks */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div className="absolute inset-0"
-                           style={{
-                             background: 'repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(34, 211, 238, 0.2) 10px, rgba(34, 211, 238, 0.2) 12px)',
-                             animation: 'shimmer-fast 0.8s infinite linear'
-                           }}></div>
-                    </div>
-
-                    {/* Energy particles */}
+                    {/* Extra glow layer */}
                     <div className="absolute inset-0"
                          style={{
-                           backgroundImage: `radial-gradient(circle at 20% 50%, rgba(34, 211, 238, 0.3) 0%, transparent 50%),
-                                           radial-gradient(circle at 80% 50%, rgba(34, 211, 238, 0.3) 0%, transparent 50%)`,
-                           animation: 'pulse 2s infinite'
+                           background: 'radial-gradient(ellipse at center, rgba(0, 255, 200, 0.3) 0%, transparent 70%)',
+                           filter: 'blur(8px)'
                          }}></div>
+                    {/* Matrix rain */}
+                    <div className="absolute inset-0"
+                         style={{
+                           backgroundImage: 'repeating-linear-gradient(90deg, transparent 0, transparent 4px, rgba(0, 255, 200, 0.1) 4px, rgba(0, 255, 200, 0.1) 6px, transparent 6px, transparent 10px, rgba(0, 255, 255, 0.15) 10px, rgba(0, 255, 255, 0.15) 11px, transparent 11px, transparent 16px)',
+                           animation: 'matrixFall 1s linear infinite'
+                         }}></div>
+                    {/* Hex grid */}
+                    <div className="absolute inset-0"
+                         style={{
+                           backgroundImage: 'repeating-conic-gradient(from 30deg at 50% 50%, rgba(0, 255, 200, 0) 0deg, rgba(0, 255, 200, 0.2) 60deg, rgba(0, 255, 200, 0) 120deg)',
+                           backgroundSize: '20px 20px',
+                           animation: 'hexPulse 2s ease-in-out infinite'
+                         }}></div>
+                    {/* Grid lines */}
+                    <div className="absolute inset-0"
+                         style={{
+                           background: `repeating-linear-gradient(90deg, transparent 0, transparent 19px, rgba(0, 255, 255, 0.3) 19px, rgba(0, 255, 255, 0.3) 20px),
+                                       repeating-linear-gradient(0deg, transparent 0, transparent 19px, rgba(0, 255, 200, 0.2) 19px, rgba(0, 255, 200, 0.2) 20px)`,
+                           animation: 'gridFlicker 0.1s steps(2) infinite'
+                         }}></div>
+                    {/* Fast white gleam */}
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div className="absolute inset-y-0 w-[15%]"
+                           style={{
+                             background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 20%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.5) 80%, transparent 100%)',
+                             animation: 'fastGleam 0.2s linear infinite'
+                           }}></div>
+                    </div>
+                    {/* Data stream */}
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div className="absolute inset-y-0 w-[30%]"
+                           style={{
+                             background: 'linear-gradient(90deg, transparent 0%, rgba(150, 255, 255, 0.4) 10%, rgba(150, 255, 255, 0.6) 50%, rgba(150, 255, 255, 0.4) 90%, transparent 100%)',
+                             animation: 'dataStream 2s cubic-bezier(0.4, 0, 0.2, 1) infinite'
+                           }}></div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Goalpost - changes color when passed */}
-              <div className="absolute top-0 bottom-0" style={{ left: `${greenLine}%` }}>
-                {/* Main vertical line - glows white-blue when passed */}
-                <div className={`absolute top-0 bottom-0 w-0.5 -translate-x-1/2 ${
-                  isOvershoot ? 'bg-cyan-400' : 'bg-green-400'
-                }`}
-                     style={{
-                       boxShadow: isOvershoot
-                         ? '0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #0891b2'
-                         : '0 0 8px #4ade80',
-                       animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
-                     }}></div>
+            </div>
+          </div>
 
-                {/* Center orb - also changes */}
-                <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2">
-                  <div className={`w-4 h-4 rounded-full ${
-                    isOvershoot ? 'bg-white' : 'bg-green-400'
-                  }`}
-                       style={{
-                         boxShadow: isOvershoot
-                           ? '0 0 20px #22d3ee, 0 0 40px #0891b2'
-                           : '0 0 15px #4ade80, 0 0 30px #22c55e'
-                       }}></div>
-                </div>
+          {/* Goalpost and Arrow Markers as ONE UNIT */}
+          <div className="absolute pointer-events-none" style={{
+            left: `calc(${paddingPixels}px + (100% - ${paddingPixels * 2}px) * ${goalpostPositionPercent / 100})`,
+            top: 0,
+            bottom: 0,
+            zIndex: 20
+          }}>
+            {/* Dashed vertical line - positioned at exact center */}
+            <div className="absolute top-0 bottom-0 w-0.5 -translate-x-1/2"
+                 style={{
+                   background: isOvershoot
+                     ? 'repeating-linear-gradient(180deg, #22d3ee 0px, #22d3ee 4px, transparent 4px, transparent 8px)'
+                     : 'repeating-linear-gradient(180deg, #4ade80 0px, #4ade80 4px, transparent 4px, transparent 8px)',
+                   boxShadow: isOvershoot
+                     ? '0 0 10px #22d3ee, 0 0 20px #22d3ee'
+                     : '0 0 8px #4ade80',
+                   animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
+                 }}></div>
+            {/* Top arrow */}
+            <div className="absolute -translate-x-1/2" style={{ top: '-12px' }}>
+              <div className={`text-base font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
+                   style={{
+                     filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
+                     animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
+                   }}>
+                ▼
+              </div>
+            </div>
+            {/* Bottom arrow */}
+            <div className="absolute -translate-x-1/2" style={{ bottom: '-12px' }}>
+              <div className={`text-base font-bold ${isOvershoot ? 'text-cyan-400' : 'text-green-400'}`}
+                   style={{
+                     filter: isOvershoot ? 'drop-shadow(0 0 15px #22d3ee)' : 'drop-shadow(0 0 10px #4ade80)',
+                     animation: isOvershoot ? 'flash 0.5s infinite' : 'none'
+                   }}>
+                ▲
               </div>
             </div>
           </div>
         </div>
 
-        {/* Minimal percentage display */}
+        {/* Percentage display - Fixed alignment */}
         <div className="relative h-6 mt-1">
-          <div className="absolute" style={{ left: `${greenLine}%`, transform: 'translateX(-50%)' }}>
+          <div className="absolute -translate-x-1/2" style={{
+            left: `calc(${paddingPixels}px + (100% - ${paddingPixels * 2}px) * ${goalpostPositionPercent / 100})`
+          }}>
             <span className="text-xs font-bold text-green-400/60">
               {greenLine}%
             </span>
@@ -289,19 +243,24 @@ export default function TestCombinedSuccess() {
               <div className="text-left">
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">MISSION STATUS</div>
                 <div className={`font-bold font-['Orbitron'] uppercase text-xl ${
-                  isOvershoot ? 'text-green-400' : 'text-yellow-400'
+                  successRate >= greenLine ? 'text-green-400' : 'text-yellow-400'
                 }`}>
                   {getSuccessLikelihood(successRate, greenLine)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OVERSHOOT</div>
-                <div className={`text-2xl font-bold font-['Orbitron'] ${
-                  overshootBonus > 0 ? 'text-green-400' : 'text-gray-600'
-                }`} style={overshootBonus > 0 ? {
-                  textShadow: '0 0 10px rgba(34, 197, 94, 0.8)',
-                  filter: 'brightness(1.2)'
-                } : {}}>
+                <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                  hasReachedGoal ? 'text-green-500' : 'text-gray-500'
+                }`}>OVERSHOOT</div>
+                <div className={`text-2xl font-bold ${
+                  hasReachedGoal ? 'text-green-400' : 'text-gray-600'
+                }`} style={{
+                  fontFamily: 'Roboto Mono, monospace', // Locked to Roboto Mono for all variations
+                  ...(hasReachedGoal ? {
+                    textShadow: '0 0 10px rgba(34, 197, 94, 0.8)',
+                    filter: 'brightness(1.2)'
+                  } : {})
+                }}>
                   {overshootBonus.toFixed(0)}%
                 </div>
               </div>
@@ -312,16 +271,16 @@ export default function TestCombinedSuccess() {
 
             {/* Rewards Section */}
             <div className="relative">
-              <div className={`px-4 py-3 space-y-1 ${!isOvershoot ? 'opacity-40' : ''}`}>
+              <div className={`px-4 py-3 space-y-1 ${!hasReachedGoal ? 'opacity-40' : ''}`}>
                 {/* Gold */}
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs uppercase font-bold ${isOvershoot ? 'text-yellow-500' : 'text-gray-500'}`}>Gold:</span>
+                  <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-yellow-500' : 'text-gray-500'}`}>Gold:</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs tabular-nums ${isOvershoot ? 'text-gray-500' : 'text-gray-600'}`}>
+                    <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
                       {Math.round(baseRewards.gold * difficultyConfig.goldMultiplier).toLocaleString()}
                     </span>
-                    <span className={`text-xs ${isOvershoot ? 'text-yellow-500' : 'text-gray-600'}`}>→</span>
-                    <span className={`text-sm font-bold tabular-nums ${isOvershoot ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${hasReachedGoal ? 'text-yellow-500' : 'text-gray-600'}`}>→</span>
+                    <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-yellow-400' : 'text-gray-500'}`}>
                       {Math.round(baseRewards.gold * difficultyConfig.goldMultiplier * (1 + overshootBonus / 100)).toLocaleString()}
                     </span>
                   </div>
@@ -329,13 +288,13 @@ export default function TestCombinedSuccess() {
 
                 {/* XP */}
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs uppercase font-bold ${isOvershoot ? 'text-blue-500' : 'text-gray-500'}`}>XP:</span>
+                  <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-blue-500' : 'text-gray-500'}`}>XP:</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs tabular-nums ${isOvershoot ? 'text-gray-500' : 'text-gray-600'}`}>
+                    <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
                       {Math.round(baseRewards.xp * difficultyConfig.xpMultiplier).toLocaleString()}
                     </span>
-                    <span className={`text-xs ${isOvershoot ? 'text-blue-500' : 'text-gray-600'}`}>→</span>
-                    <span className={`text-sm font-bold tabular-nums ${isOvershoot ? 'text-blue-400' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${hasReachedGoal ? 'text-blue-500' : 'text-gray-600'}`}>→</span>
+                    <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-blue-400' : 'text-gray-500'}`}>
                       {Math.round(baseRewards.xp * difficultyConfig.xpMultiplier * (1 + overshootBonus / 100)).toLocaleString()}
                     </span>
                   </div>
@@ -343,70 +302,81 @@ export default function TestCombinedSuccess() {
 
                 {/* Essence */}
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs uppercase font-bold ${isOvershoot ? 'text-green-500' : 'text-gray-500'}`}>Essence:</span>
+                  <span className={`text-xs uppercase font-bold ${hasReachedGoal ? 'text-green-500' : 'text-gray-500'}`}>Essence:</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs tabular-nums ${isOvershoot ? 'text-gray-500' : 'text-gray-600'}`}>
+                    <span className={`text-xs tabular-nums ${hasReachedGoal ? 'text-gray-500' : 'text-gray-600'}`}>
                       {difficultyConfig.essenceAmountMultiplier.toFixed(1)}x
                     </span>
-                    <span className={`text-xs ${isOvershoot ? 'text-green-500' : 'text-gray-600'}`}>→</span>
-                    <span className={`text-sm font-bold tabular-nums ${isOvershoot ? 'text-green-400' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${hasReachedGoal ? 'text-green-500' : 'text-gray-600'}`}>→</span>
+                    <span className={`text-sm font-bold tabular-nums ${hasReachedGoal ? 'text-green-400' : 'text-gray-500'}`}>
                       {(difficultyConfig.essenceAmountMultiplier * (1 + overshootBonus / 100)).toFixed(1)}x
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Industrial warning overlay variations when below goalpost */}
-              {!isOvershoot && (
+              {/* Industrial warning overlay ONLY when BELOW goalpost */}
+              {!hasReachedGoal && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   {variant === 1 && (
-                    /* V1: Clean industrial with yellow accent */
-                    <div className="bg-black/95 border-2 border-yellow-500/60 px-3 py-2">
-                      <div className="text-center">
-                        <div className="text-xs text-yellow-400 font-bold uppercase tracking-wider">
-                          Overshoot Bonuses in {Math.abs(percentToOvershoot).toFixed(0)}%
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {variant === 2 && (
-                    /* V2: Hazard stripes */
-                    <div className="relative bg-black/95 border border-yellow-500/40 px-3 py-2">
-                      <div className="absolute inset-0" style={{
-                        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(250, 204, 21, 0.1) 3px, rgba(250, 204, 21, 0.1) 6px)'
-                      }}></div>
-                      <div className="relative text-center">
-                        <div className="text-xs text-yellow-400 font-bold">
-                          ⚠ OVERSHOOT IN {Math.abs(percentToOvershoot).toFixed(0)}%
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {variant === 3 && (
-                    /* V3: Metallic plate */
-                    <div className="bg-gradient-to-b from-gray-800 to-black border-t-2 border-b-2 border-yellow-500/50 px-4 py-1.5">
-                      <div className="text-center">
-                        <div className="text-[11px] text-yellow-500 font-black uppercase" style={{
-                          letterSpacing: '0.15em',
-                          textShadow: '0 1px 0 rgba(0,0,0,0.5)'
-                        }}>
-                          +{Math.abs(percentToOvershoot).toFixed(0)}% TO OVERSHOOT
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {variant === 4 && (
-                    /* V4: Alert badge */
+                    // Original Angled Boost - Orange/Yellow gradient with polygon clip
                     <div className="relative">
-                      <div className="absolute inset-0 bg-yellow-500/20 blur-xl"></div>
-                      <div className="relative bg-black border border-yellow-500 px-2 py-1">
-                        <div className="absolute -top-px -bottom-px -left-1 w-1 bg-yellow-500"></div>
-                        <div className="absolute -top-px -bottom-px -right-1 w-1 bg-yellow-500"></div>
-                        <div className="text-[11px] text-yellow-400 font-bold text-center">
-                          BONUS: {Math.abs(percentToOvershoot).toFixed(0)}%
+                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/30 via-yellow-500/30 to-orange-500/30 blur animate-pulse"></div>
+                      <div className="relative bg-black/90 px-3 py-1.5" style={{
+                        clipPath: 'polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)'
+                      }}>
+                        <div className="text-center">
+                          <div className="text-xs text-orange-400 font-bold italic tracking-wide font-['Roboto']">
+                            OVERSHOOT IN {Math.abs(percentToOvershoot).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {variant === 2 && (
+                    // Hexagon shape - Cyan/Blue gradient
+                    <div className="relative">
+                      <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/40 via-blue-500/40 to-cyan-500/40 blur-lg animate-pulse"></div>
+                      <div className="relative bg-gradient-to-b from-black/80 to-blue-950/90 px-4 py-2 border border-cyan-500/50" style={{
+                        clipPath: 'polygon(30px 0%, 100% 0%, calc(100% - 30px) 100%, 0% 100%)'
+                      }}>
+                        <div className="text-center">
+                          <div className="text-xs text-cyan-300 font-black uppercase tracking-[0.2em] font-['Roboto']">
+                            ⚡ +{Math.abs(percentToOvershoot).toFixed(0)}% NEEDED
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {variant === 3 && (
+                    // Square/Rectangle with cut corners - Purple/Pink gradient
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-500/30 to-purple-600/20 blur animate-pulse"></div>
+                      <div className="relative bg-black/85 px-5 py-2 border-2 border-purple-500/60" style={{
+                        background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(88,28,135,0.3) 100%)',
+                        clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                      }}>
+                        <div className="text-center">
+                          <div className="text-[11px] text-purple-300 font-bold uppercase tracking-wider font-['Roboto']"
+                               style={{textShadow: '0 0 8px rgba(168, 85, 247, 0.8)'}}>
+                            THRESHOLD -{Math.abs(percentToOvershoot).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {variant === 4 && (
+                    // Diamond shape - Green/Emerald gradient
+                    <div className="relative">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/30 via-green-400/40 to-emerald-500/30 blur-md animate-pulse"></div>
+                      <div className="relative bg-gradient-to-br from-black/90 to-emerald-950/80 px-6 py-2.5" style={{
+                        clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                        boxShadow: 'inset 0 0 20px rgba(16, 185, 129, 0.3)'
+                      }}>
+                        <div className="text-center">
+                          <div className="text-[10px] text-emerald-300 font-black uppercase tracking-[0.15em] font-['Roboto']">
+                            {Math.abs(percentToOvershoot).toFixed(0)}% TO GO
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -423,7 +393,7 @@ export default function TestCombinedSuccess() {
   return (
     <div className="min-h-screen bg-black p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-yellow-400 mb-8">Combined Success Meter Test - Enhanced Variations</h1>
+        <h1 className="text-3xl font-bold text-yellow-400 mb-8">Combined Success Meter - Angled Boost Variations</h1>
 
         {/* Controls */}
         <div className="bg-gray-900 rounded-lg p-6 mb-8">
@@ -443,7 +413,8 @@ export default function TestCombinedSuccess() {
                 <button onClick={() => setSuccessRate(25)} className="px-2 py-1 bg-gray-700 text-xs rounded">25%</button>
                 <button onClick={() => setSuccessRate(greenLine - 5)} className="px-2 py-1 bg-gray-700 text-xs rounded">Before</button>
                 <button onClick={() => setSuccessRate(greenLine)} className="px-2 py-1 bg-gray-700 text-xs rounded">At Goal</button>
-                <button onClick={() => setSuccessRate(greenLine + 15)} className="px-2 py-1 bg-gray-700 text-xs rounded">Past</button>
+                <button onClick={() => setSuccessRate(greenLine + 15)} className="px-2 py-1 bg-gray-700 text-xs rounded">Past +15</button>
+                <button onClick={() => setSuccessRate(greenLine + 30)} className="px-2 py-1 bg-gray-700 text-xs rounded">Past +30</button>
                 <button onClick={() => setSuccessRate(75)} className="px-2 py-1 bg-gray-700 text-xs rounded">75%</button>
               </div>
             </div>
@@ -463,13 +434,13 @@ export default function TestCombinedSuccess() {
 
         {/* Variation Selector */}
         <div className="bg-gray-900 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-300 mb-4">Marker & Warning Box Variations</h2>
+          <h2 className="text-xl font-bold text-gray-300 mb-4">Angled Boost Warning Variations</h2>
           <div className="grid grid-cols-4 gap-3">
             {[
-              { id: 1, name: 'Extended Arrows', desc: 'Arrows outside frame, clean warning box' },
-              { id: 2, name: 'Diamond Markers', desc: 'Diamond markers, hazard stripe warning' },
-              { id: 3, name: 'Bracket Style', desc: 'Bracket markers, metallic plate warning' },
-              { id: 4, name: 'Line Caps', desc: 'Line extensions, alert badge warning' }
+              { id: 1, name: 'Angled Polygon', color: 'Orange/Yellow', shape: 'Slanted Rectangle' },
+              { id: 2, name: 'Power Hexagon', color: 'Cyan/Blue', shape: 'Hexagon Cut' },
+              { id: 3, name: 'Threshold Box', color: 'Purple/Pink', shape: 'Cut Corner Square' },
+              { id: 4, name: 'Diamond Alert', color: 'Green/Emerald', shape: 'Diamond' }
             ].map((variant) => (
               <button
                 key={variant.id}
@@ -484,7 +455,8 @@ export default function TestCombinedSuccess() {
               >
                 <div className="text-lg font-bold mb-1">V{variant.id}</div>
                 <div className="text-xs font-bold mb-1">{variant.name}</div>
-                <div className="text-[10px] text-gray-500">{variant.desc}</div>
+                <div className="text-[10px] text-gray-500">Color: {variant.color}</div>
+                <div className="text-[10px] text-gray-500">Shape: {variant.shape}</div>
               </button>
             ))}
           </div>
@@ -503,7 +475,12 @@ export default function TestCombinedSuccess() {
             {[1, 2, 3, 4].map((variant) => (
               <div key={variant} className="bg-black p-3 rounded">
                 <h3 className="text-xs font-bold text-purple-400 mb-2 text-center">
-                  V{variant}
+                  V{variant}: {
+                    variant === 1 ? 'Angled' :
+                    variant === 2 ? 'Hexagon' :
+                    variant === 3 ? 'Threshold' :
+                    'Diamond'
+                  }
                 </h3>
                 {renderCombinedSuccess(variant)}
               </div>
@@ -514,33 +491,36 @@ export default function TestCombinedSuccess() {
 
       {/* Animation Styles */}
       <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) skewX(-20deg); }
-          100% { transform: translateX(200%) skewX(-20deg); }
-        }
-        @keyframes shimmer-fast {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
+        @keyframes flash {
+          0%, 100% { opacity: 1; }
           50% { opacity: 0.6; }
-        }
-        @keyframes glow-pulse {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.1); }
         }
         @keyframes slide {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
-        @keyframes flash {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
+
+        /* Matrix Stream Animations */
+        @keyframes matrixFall {
+          0% { transform: translateY(-20px); }
+          100% { transform: translateY(20px); }
         }
-        @keyframes energy-flow {
+        @keyframes hexPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        @keyframes gridFlicker {
+          0% { opacity: 0.5; }
+          50% { opacity: 0.7; }
+          100% { opacity: 0.5; }
+        }
+        @keyframes dataStream {
           0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
+          100% { transform: translateX(400%); }
+        }
+        @keyframes fastGleam {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(700%); }
         }
       `}</style>
     </div>
