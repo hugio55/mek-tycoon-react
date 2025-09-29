@@ -100,7 +100,8 @@ export const deployEventNodes = mutation({
   },
 });
 
-// Get the currently active deployment
+// Get the currently active deployment - WARNING: Fetches ALL chapters (expensive!)
+// Use getActiveDeploymentByChapter for better performance
 export const getActiveDeployment = query({
   args: {},
   handler: async (ctx) => {
@@ -126,6 +127,63 @@ export const getActiveDeployment = query({
         challengerNodes: activeDeployment.challengerNodes ? JSON.parse(activeDeployment.challengerNodes) : null,
         miniBossNodes: activeDeployment.miniBossNodes ? JSON.parse(activeDeployment.miniBossNodes) : null,
         finalBossNodes: activeDeployment.finalBossNodes ? JSON.parse(activeDeployment.finalBossNodes) : null,
+        configurationName: activeDeployment.configurationName,
+        notes: activeDeployment.notes,
+      };
+    } catch (error) {
+      console.error("Error parsing deployment data:", error);
+      return null;
+    }
+  },
+});
+
+// Optimized: Get active deployment for a specific chapter only
+export const getActiveDeploymentByChapter = query({
+  args: {
+    chapter: v.number(), // Chapter number (1-10)
+  },
+  handler: async (ctx, args) => {
+    const activeDeployment = await ctx.db
+      .query("deployedStoryClimbData")
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .first();
+
+    if (!activeDeployment) {
+      return null;
+    }
+
+    // Parse and filter the JSON data for only the requested chapter
+    try {
+      // Parse all data
+      const allEventNodes = JSON.parse(activeDeployment.eventNodes);
+      const allNormalNodes = activeDeployment.normalNodes ? JSON.parse(activeDeployment.normalNodes) : [];
+      const allChallengerNodes = activeDeployment.challengerNodes ? JSON.parse(activeDeployment.challengerNodes) : [];
+      const allMiniBossNodes = activeDeployment.miniBossNodes ? JSON.parse(activeDeployment.miniBossNodes) : [];
+      const allFinalBossNodes = activeDeployment.finalBossNodes ? JSON.parse(activeDeployment.finalBossNodes) : [];
+
+      // Filter by chapter
+      const chapterEventNodes = allEventNodes.filter((node: any) => {
+        const eventChapter = Math.ceil(node.eventNumber / 20);
+        return eventChapter === args.chapter;
+      });
+
+      const chapterNormalNodes = allNormalNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterChallengerNodes = allChallengerNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterMiniBossNodes = allMiniBossNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterFinalBossNodes = allFinalBossNodes.filter((node: any) => node.chapter === args.chapter);
+
+      return {
+        deploymentId: activeDeployment.deploymentId,
+        deployedAt: activeDeployment.deployedAt,
+        deployedBy: activeDeployment.deployedBy,
+        version: activeDeployment.version,
+        status: activeDeployment.status,
+        chapter: args.chapter,
+        eventNodes: chapterEventNodes,
+        normalNodes: chapterNormalNodes,
+        challengerNodes: chapterChallengerNodes,
+        miniBossNodes: chapterMiniBossNodes,
+        finalBossNodes: chapterFinalBossNodes,
         configurationName: activeDeployment.configurationName,
         notes: activeDeployment.notes,
       };

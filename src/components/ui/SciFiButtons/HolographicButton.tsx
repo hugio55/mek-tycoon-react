@@ -6,7 +6,7 @@ interface HolographicButtonProps {
   text?: string;
   onClick?: () => void;
   isActive?: boolean;
-  variant?: 'blue' | 'yellow';
+  variant?: 'blue' | 'yellow' | 'gray';
   alwaysOn?: boolean;
   className?: string;
   disabled?: boolean;
@@ -49,6 +49,8 @@ export default function HolographicButton({
 
       if (variantColor === 'yellow') {
         this.color = alwaysOn ? `hsl(48, 100%, 50%)` : `hsl(${45 + Math.random() * 15}, 100%, 50%)`;
+      } else if (variantColor === 'gray') {
+        this.color = `hsl(0, 0%, ${40 + Math.random() * 20}%)`;
       } else {
         this.color = `hsl(${180 + Math.random() * 60}, 100%, 50%)`;
       }
@@ -136,6 +138,14 @@ export default function HolographicButton({
         glowBright: 'rgba(252,211,77,',
         gradient: 'from-gray-900/90 via-amber-950/90 to-black/90'
       }
+    : variant === 'gray'
+    ? {
+        primary: '#6b7280',
+        secondary: '#9ca3af',
+        glow: 'rgba(107,114,128,',
+        glowBright: 'rgba(156,163,175,',
+        gradient: 'from-gray-900/90 via-gray-800/90 to-black/90'
+      }
     : {
         primary: '#06b6d4',
         secondary: '#22d3ee',
@@ -168,6 +178,8 @@ export default function HolographicButton({
             ${isActive
               ? variant === 'yellow'
                 ? 'from-gray-900/90 via-amber-950/90 to-black/90'
+                : variant === 'gray'
+                ? 'from-gray-900/90 via-gray-800/90 to-black/90'
                 : 'from-gray-900/90 via-blue-950/90 to-black/90'
               : 'from-gray-900/90 via-gray-800/90 to-black/90'
             }
@@ -242,11 +254,12 @@ export default function HolographicButton({
           />
 
           {/* Content */}
-          <div className="relative z-10 flex items-center justify-center">
+          <div className="relative z-10 flex items-center justify-center h-full">
+            {/* Text centered vertically */}
             <span
               className={`text-4xl font-bold uppercase ${
                 isActive
-                  ? variant === 'yellow' ? 'text-yellow-400' : 'text-cyan-400'
+                  ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : 'text-cyan-400'
                   : 'text-gray-500'
               }`}
               style={{

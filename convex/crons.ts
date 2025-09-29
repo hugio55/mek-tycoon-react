@@ -1,18 +1,34 @@
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
+import { api } from "./_generated/api";
 
 const crons = cronJobs();
 
-// DISABLED UNTIL LAUNCH - Leaderboard updates not needed during development
-// Uncomment when going live:
-/*
-crons.interval(
-  "update leaderboards",
-  { hours: 2 },
-  internal.leaderboardOptimized.updateAllLeaderboards
+// Auto-merge duplicate wallet records daily
+crons.daily(
+  "merge duplicate wallets",
+  {
+    hourUTC: 4, // Run at 4 AM UTC
+    minuteUTC: 0
+  },
+  api.adminVerificationReset.autoMergeDuplicates
 );
-*/
 
-// Currently disabled to save bandwidth during development
+// Check all wallets every 6 hours and update Mek ownership snapshots
+crons.interval(
+  "wallet snapshot checks",
+  {
+    hours: 6
+  },
+  api.goldMiningSnapshot.runNightlySnapshot as any
+);
+
+// Create automatic gold backups every 6 hours
+crons.interval(
+  "create gold backups",
+  {
+    hours: 6
+  },
+  api.goldBackups.triggerManualDailyBackup
+);
 
 export default crons;

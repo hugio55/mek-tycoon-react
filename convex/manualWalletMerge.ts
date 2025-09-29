@@ -1,0 +1,64 @@
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const manualMergeWalletsBySuffix = mutation({
+  args: {
+    suffix: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allRecords = await ctx.db.query("goldMining").collect();
+
+    const matchingRecords = allRecords.filter(record =>
+      record.walletAddress.endsWith(args.suffix)
+    );
+
+    if (matchingRecords.length < 2) {
+      return {
+        success: false,
+        message: `Only found ${matchingRecords.length} wallet(s) ending with ${args.suffix}`,
+        wallets: matchingRecords.map(r => r.walletAddress)
+      };
+    }
+
+    const sorted = matchingRecords.sort((a, b) => a.createdAt - b.createdAt);
+    const primary = sorted[0];
+    const duplicates = sorted.slice(1);
+
+    const now = Date.now();
+
+    let totalAccumulatedGold = 0;
+    for (const record of matchingRecords) {
+      const lastUpdateTime = record.lastSnapshotTime || record.updatedAt || record.createdAt;
+      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+      const goldSinceLastUpdate = record.totalGoldPerHour * hoursSinceLastUpdate;
+      totalAccumulatedGold += Math.min(50000, (record.accumulatedGold || 0) + goldSinceLastUpdate);
+    }
+
+    const highestGoldRate = Math.max(...matchingRecords.map(r => r.totalGoldPerHour));
+    const mostMeks = matchingRecords.reduce((max, r) =>
+      (r.ownedMeks?.length || 0) > (max.ownedMeks?.length || 0) ? r : max
+    , primary);
+
+    await ctx.db.patch(primary._id, {
+      ownedMeks: mostMeks.ownedMeks || primary.ownedMeks,
+      totalGoldPerHour: highestGoldRate,
+      accumulatedGold: Math.min(50000, totalAccumulatedGold),
+      isBlockchainVerified: matchingRecords.some(r => r.isBlockchainVerified),
+      lastSnapshotTime: now,
+      updatedAt: now,
+    });
+
+    for (const dup of duplicates) {
+      await ctx.db.delete(dup._id);
+    }
+
+    return {
+      success: true,
+      message: `Merged ${duplicates.length} duplicate(s) into wallet ${primary.walletAddress}`,
+      primaryWallet: primary.walletAddress,
+      deletedWallets: duplicates.map(d => d.walletAddress),
+      totalGold: Math.min(50000, totalAccumulatedGold),
+      goldPerHour: highestGoldRate
+    };
+  }
+});

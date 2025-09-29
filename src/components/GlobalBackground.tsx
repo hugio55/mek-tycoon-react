@@ -8,7 +8,7 @@ export default function GlobalBackground() {
   const particles = useMemo(() => {
     const rng = new SeededRandom(12345); // Fixed seed for particles
     return [...Array(25)].map((_, i) => {
-      const driftAngle = -20 + rng.random() * 40;
+      const driftAngle = -60 + rng.random() * 120;
       return {
         id: i,
         left: `${-10 + rng.random() * 120}%`,
@@ -36,17 +36,40 @@ export default function GlobalBackground() {
 
   const satellites = useMemo(() => {
     const rng = new SeededRandom(11111); // Different seed for satellites
-    return [...Array(4)].map((_, i) => {
-      const goingRight = rng.boolean(0.5);
-      const goingDown = rng.boolean(0.5);
+    return [...Array(8)].map((_, i) => {
+      const edge = Math.floor(rng.random() * 4);
+      let startX: number, startY: number, endX: number, endY: number;
+
+      if (edge === 0) {
+        startX = -15 - rng.random() * 10;
+        startY = rng.random() * 100;
+        endX = 115 + rng.random() * 10;
+        endY = rng.random() * 100;
+      } else if (edge === 1) {
+        startX = 115 + rng.random() * 10;
+        startY = rng.random() * 100;
+        endX = -15 - rng.random() * 10;
+        endY = rng.random() * 100;
+      } else if (edge === 2) {
+        startX = rng.random() * 100;
+        startY = -15 - rng.random() * 10;
+        endX = rng.random() * 100;
+        endY = 115 + rng.random() * 10;
+      } else {
+        startX = rng.random() * 100;
+        startY = 115 + rng.random() * 10;
+        endX = rng.random() * 100;
+        endY = -15 - rng.random() * 10;
+      }
+
       return {
         id: i,
-        startX: goingRight ? '-5%' : '105%',
-        startY: goingDown ? '-5%' : '105%',
-        endX: goingRight ? '105%' : '-5%',
-        endY: goingDown ? '105%' : '-5%',
-        delay: `${i * 15 + rng.random() * 20}s`,
-        duration: `${40 + rng.random() * 20}s`,
+        startX: `${startX}%`,
+        startY: `${startY}%`,
+        endX: `${endX}%`,
+        endY: `${endY}%`,
+        delay: `${rng.random() * 10}s`,
+        duration: `${30 + rng.random() * 20}s`,
       };
     });
   }, []);
@@ -199,11 +222,16 @@ export default function GlobalBackground() {
           />
         ))}
         
-        {/* Satellites moving diagonally across screen */}
+        {/* Satellites moving in random directions across screen */}
         {satellites.map((satellite) => {
-          const translateX = satellite.startX === '-5%' ? 'calc(110vw)' : 'calc(-110vw)';
-          const translateY = satellite.startY === '-5%' ? 'calc(110vh)' : 'calc(-110vh)';
-          
+          const startXNum = parseFloat(satellite.startX);
+          const startYNum = parseFloat(satellite.startY);
+          const endXNum = parseFloat(satellite.endX);
+          const endYNum = parseFloat(satellite.endY);
+
+          const translateX = `${(endXNum - startXNum)}vw`;
+          const translateY = `${(endYNum - startYNum)}vh`;
+
           return (
             <div
               key={satellite.id}

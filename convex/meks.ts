@@ -423,7 +423,7 @@ export const getAllMeks = query({
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit || 100, 500); // Hard cap at 500
     const meks = await ctx.db.query("meks").take(limit);
-    
+
     // Return minimal data even for admin queries
     return meks.map(mek => ({
       _id: mek._id,
@@ -432,6 +432,33 @@ export const getAllMeks = query({
       owner: mek.owner,
       rarityRank: mek.rarityRank || mek.gameRank || 9999,
       powerScore: mek.powerScore || 100,
+    }));
+  },
+});
+
+// List all meks for admin detail viewer
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const meks = await ctx.db.query("meks").collect();
+
+    // Return full data for admin viewer
+    return meks.map(mek => ({
+      id: mek._id,
+      assetId: mek.assetId,
+      assetName: mek.assetName,
+      rarityRank: mek.rarityRank,
+      gameRank: mek.gameRank,
+      rarityTier: mek.rarityTier,
+      headVariation: mek.headVariation,
+      bodyVariation: mek.bodyVariation,
+      itemVariation: mek.itemVariation,
+      goldRate: mek.goldRate,
+      level: mek.level,
+      powerScore: mek.powerScore,
+      iconUrl: mek.iconUrl,
+      sourceKey: mek.sourceKey,
+      isGenesis: mek.isGenesis,
     }));
   },
 });

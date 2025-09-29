@@ -24,6 +24,7 @@ import { generateSampleMeks } from '../utils/helpers';
 import ModalPortal from './ModalPortal';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import { DifficultyConfig } from '@/lib/difficultyModifiers';
+import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 
 interface MekRecruitmentModalV4Props {
   showMekModal: string | null;
@@ -145,6 +146,34 @@ export default function MekRecruitmentModalV4({
 
   // Frame texture locked to corrupted-data
   const frameTexture = 'corrupted-data';
+
+  // Helper function to get variation name from ID
+  const getVariationName = (traitId: string): string => {
+    // First try to match with heads
+    const headVariation = ALL_VARIATIONS.heads.find(h => {
+      // Convert ID to 3-digit string format (e.g., 1 -> "001")
+      const formattedId = String(h.id).padStart(3, '0');
+      return formattedId === traitId || h.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
+    });
+    if (headVariation) return headVariation.name;
+
+    // Then try bodies
+    const bodyVariation = ALL_VARIATIONS.bodies.find(b => {
+      const formattedId = String(b.id).padStart(3, '0');
+      return formattedId === traitId || b.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
+    });
+    if (bodyVariation) return bodyVariation.name;
+
+    // Then try items/traits
+    const itemVariation = ALL_VARIATIONS.items.find(i => {
+      const formattedId = String(i.id).padStart(3, '0');
+      return formattedId === traitId || i.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
+    });
+    if (itemVariation) return itemVariation.name;
+
+    // If still not found, return the original ID
+    return traitId;
+  };
 
   // Texture pattern for corrupted-data effect
   const texturePattern = 'bg-[repeating-linear-gradient(0deg,transparent,transparent_10px,rgba(255,0,0,0.03)_10px,rgba(255,0,0,0.03)_11px,transparent_11px,transparent_20px),repeating-linear-gradient(90deg,transparent,transparent_15px,rgba(0,255,255,0.03)_15px,rgba(0,255,255,0.03)_16px)]';
@@ -1144,7 +1173,7 @@ export default function MekRecruitmentModalV4({
 
                         {/* Percentage display variations for zoomed out view - extending from bottom */}
                         {isZoomedOut && (
-                          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10">
+                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-10">
                             {/* Tab Style - Clean minimal pill */}
                             {percentageStyle === 'tab' && (
                               <div className="bg-black/95 backdrop-blur-sm rounded-b-md px-3 py-0.5 shadow-lg border-x border-b border-gray-600">
@@ -1280,7 +1309,8 @@ export default function MekRecruitmentModalV4({
                               <div className="flex gap-1.5">
                                 {mek.traits.slice(0, 3).map((trait: string, i: number) => {
                                   const isMatched = matchedTraits.some((mt: any) => mt?.id === trait);
-                                  
+                                  const traitName = getVariationName(trait);
+
                                   return (
                                     <div key={`${trait}-${i}`} className="relative group/chip">
                                       {/* Chip container with stronger glow for matches */}
@@ -1294,7 +1324,7 @@ export default function MekRecruitmentModalV4({
                                         <div className="relative w-full h-full rounded-full bg-black overflow-hidden">
                                           <Image
                                             src="/variation-images/acid.jpg"
-                                            alt={trait}
+                                            alt={traitName}
                                             width={44}
                                             height={44}
                                             className={`w-full h-full object-cover rounded-full transition-all ${
@@ -1314,7 +1344,7 @@ export default function MekRecruitmentModalV4({
                                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1.5 bg-black/95 border border-yellow-500/50 text-yellow-300 text-[10px] whitespace-nowrap opacity-0 group-hover/chip:opacity-100 pointer-events-none z-50 transition-all">
                                         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-b border-r border-yellow-500/50 rotate-45" />
                                         <div className="font-mono uppercase tracking-wider">
-                                          {trait}
+                                          {traitName}
                                           {isMatched && (
                                             <span className="text-green-400 ml-2 font-bold">
                                               +{parseInt(matchedTraits.find((mt: any) => mt?.id === trait)?.bonus?.replace('+', '').replace('%', '') || '0')}%

@@ -83,7 +83,7 @@ export default function SuccessMeterV2({
           <div className="w-96 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
         </div>
         <div className="relative text-center">
-          <h2 className="text-3xl font-black uppercase tracking-[0.6em]"
+          <h2 className="text-3xl font-black uppercase tracking-[0.3em] whitespace-nowrap"
               style={{
                 fontFamily: 'Orbitron, monospace',
                 background: 'linear-gradient(180deg, #fff 0%, #facc15 50%, #f59e0b 100%)',
@@ -104,7 +104,7 @@ export default function SuccessMeterV2({
   const renderBar = (height = barHeight, showPercentage = true) => (
     <>
       <div className="relative">
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl"
+        <div className="relative overflow-hidden shadow-2xl"
              style={{
                background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.9), rgba(30, 30, 30, 0.9))',
                backdropFilter: 'blur(10px)',
@@ -119,8 +119,8 @@ export default function SuccessMeterV2({
                  animation: 'slide 4s infinite'
                }}></div>
 
-          <div className="absolute inset-2 bg-black/50 rounded-xl">
-            <div className="absolute inset-0 rounded-xl overflow-hidden">
+          <div className="absolute inset-2 bg-black/50">
+            <div className="absolute inset-0 overflow-hidden">
               <div
                 className="absolute inset-y-0 left-0 transition-all duration-700 ease-out"
                 style={{
@@ -380,7 +380,7 @@ export default function SuccessMeterV2({
     case 2: // Unified Frame - all in one bordered card
       return (
         <div className={`w-full ${className}`}>
-          <div className="bg-black/95 border-2 border-yellow-500/50 rounded-lg shadow-2xl overflow-hidden">
+          <div className="bg-black/95 border-2 border-yellow-500/50 shadow-2xl overflow-hidden">
             <div className="p-4">
               {renderTitle(0.85, 'mb-4')}
               {renderBar(56)}
@@ -427,7 +427,7 @@ export default function SuccessMeterV2({
     case 3: // Compact Integration - tighter spacing
       return (
         <div className={`w-full ${className}`}>
-          <div className="bg-gradient-to-b from-black/95 to-black/90 border border-yellow-500/40 rounded-lg p-3">
+          <div className="bg-gradient-to-b from-black/95 to-black/90 border border-yellow-500/40 p-3">
             {renderTitle(0.7, 'mb-3')}
             <div className="mb-3">
               {renderBar(48, false)}
@@ -474,14 +474,14 @@ export default function SuccessMeterV2({
     case 4: // Horizontal Flow - side by side elements
       return (
         <div className={`w-full ${className}`}>
-          <div className="bg-black/95 border-2 border-yellow-500/50 rounded-lg p-4">
+          <div className="bg-black/95 border-2 border-yellow-500/50 p-4">
             {renderTitle(0.75, 'mb-3')}
             <div className="flex gap-3 items-stretch">
               <div className="flex-1">
                 {renderBar(100, true)}
               </div>
               <div className="w-48">
-                <div className="bg-black/60 border border-yellow-500/30 rounded-lg p-2 h-full">
+                <div className="bg-black/60 border border-yellow-500/30 p-2 h-full">
                   <div className="text-[9px] font-bold text-gray-500 uppercase">Status</div>
                   <div className="font-bold text-sm" style={{ color: likelihoodData.color }}>
                     {likelihoodData.term}
@@ -534,11 +534,11 @@ export default function SuccessMeterV2({
     case 5: // Minimalist Card - clean single card
       return (
         <div className={`w-full ${className}`}>
-          <div className="bg-gradient-to-b from-gray-950 to-black border border-yellow-500/30 rounded-xl shadow-2xl">
+          <div className="bg-gradient-to-b from-gray-950 to-black border border-yellow-500/30 shadow-2xl">
             <div className="p-4 pb-3">
               {showTitle && (
                 <div className="text-center mb-3">
-                  <h2 className="text-xl font-black uppercase tracking-[0.4em] text-yellow-400"
+                  <h2 className="text-lg font-black uppercase tracking-[0.2em] text-yellow-400 whitespace-nowrap"
                       style={{ fontFamily: 'Orbitron, monospace' }}>
                     SUCCESS METER
                   </h2>

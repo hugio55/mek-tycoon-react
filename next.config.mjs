@@ -22,7 +22,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Fix webpack crypto issue
+  // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -30,8 +30,31 @@ const nextConfig = {
         crypto: false,
         stream: false,
         buffer: false,
+        fs: false,
+        path: false,
       };
     }
+
+    // Handle WebAssembly files
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      layers: true,
+    };
+
+    // Add rule for WASM files
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'webassembly/async',
+    });
+
+    // Ignore optional dependencies that cause issues
+    config.externals = [...(config.externals || []),
+      '@meshsdk/core',
+      '@meshsdk/react',
+      'sidan_csl_rs'
+    ];
+
     return config;
   },
 };

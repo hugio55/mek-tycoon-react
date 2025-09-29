@@ -143,6 +143,33 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 - **112 Body Variations**
 - **95 Trait Variations**
 
+### Mek Images Location
+**IMPORTANT**: All Mek images are stored in:
+```
+C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react\public\mek-images\
+```
+- Images are organized by size: `150px/`, `500px/`, `1000px/`
+- Use path `/mek-images/150px/[variation-codes].webp` in components
+- Files are in WebP format
+- Named by variation codes: `[head]-[body]-[item].webp` (e.g., "bc2-dm1-ap1.webp")
+
+**⚠️ CRITICAL: Mek Image Linking Issues**
+When linking Mek images, you MUST handle these two issues:
+1. **Suffix Removal**: Database sourceKeys have suffixes like "-B", "-C" that must be removed
+   - Example: `"AA1-AA4-GH1-B"` → `"AA1-AA4-GH1"`
+   - Use regex: `.replace(/-[A-Z]$/, '')`
+2. **Case Conversion**: Database uses UPPERCASE, but files are lowercase
+   - Example: `"AA1-AA4-GH1"` → `"aa1-aa4-gh1"`
+   - Always use `.toLowerCase()`
+
+**Correct Implementation:**
+```javascript
+const cleanKey = selectedMek.sourceKey
+  .replace(/-[A-Z]$/, '')  // Remove suffix
+  .toLowerCase();           // Convert to lowercase
+const imagePath = `/mek-images/150px/${cleanKey}.webp`;
+```
+
 ### Crafting System Hierarchy
 The crafting system follows this flow:
 1. Select Component Type (Heads/Bodies/Traits)

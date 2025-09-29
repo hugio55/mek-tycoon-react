@@ -1,0 +1,18 @@
+{
+  "name": "mek-tycoon-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for Mek Tycoon gold tier nicknames",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "convex": "^1.17.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}

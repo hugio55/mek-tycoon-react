@@ -71,31 +71,39 @@ export default function HubPage() {
     walletAddress ? { walletAddress } : "skip"
   );
   
+  // Check blockchain verification status - MUST be declared before usage
+  const verificationStatus = useQuery(
+    api.goldMining.isWalletVerified,
+    walletAddress && walletAddress !== "demo_wallet_123" ? { walletAddress } : "skip"
+  );
+
   useEffect(() => {
     const initUser = async () => {
       try {
         // Get wallet from localStorage or use demo
         const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
         setWalletAddress(storedWallet);
-        
-        const user = await getOrCreateUser({ 
-          walletAddress: storedWallet 
+
+        const user = await getOrCreateUser({
+          walletAddress: storedWallet
         });
         if (user) {
           setUserId(user._id as Id<"users">);
           setTotalGold(user.gold);
-          
+
           // Fetch initial gold data once
           try {
             const goldData = await getInitialGold({ userId: user._id as Id<"users"> });
             setCachedGoldData(goldData);
-            setGoldPerSecond(goldData.goldPerSecond);
+
+            // DON'T set goldPerSecond yet - wait for verification check
+            // setGoldPerSecond will be set by the verification useEffect
             setLiveGold(goldData.pendingGold);
             setLastGoldFetch(Date.now());
           } catch (error) {
             console.error("Failed to fetch initial gold data:", error);
             // Set default values
-            setGoldPerSecond(50 / 3600); // 50 gold per hour default
+            setGoldPerSecond(0); // Start at 0 until verified
             setLiveGold(0);
           }
         }
@@ -105,7 +113,7 @@ export default function HubPage() {
       }
     };
     initUser();
-    
+
     // Generate stars for background (moved to useEffect to avoid hydration issues)
     setStars(prevStars => {
       if (prevStars.length > 0) return prevStars; // Only generate once
@@ -122,7 +130,36 @@ export default function HubPage() {
       }));
     });
   }, [getOrCreateUser, getInitialGold]);
-  
+
+  // CRITICAL: Enforce verification - control gold rate based on verification status
+  useEffect(() => {
+    if (!cachedGoldData) return; // Wait for gold data to load
+
+    // Demo wallet: always allow gold accumulation
+    if (walletAddress === "demo_wallet_123") {
+      console.log('[Hub] Demo wallet - enabling gold accumulation');
+      setGoldPerSecond(cachedGoldData.goldPerSecond);
+      return;
+    }
+
+    // Real wallet: check verification status
+    if (walletAddress && verificationStatus) {
+      if (verificationStatus.isVerified) {
+        // User IS verified - enable gold accumulation
+        console.log('[Hub] Wallet verified - enabling gold accumulation');
+        setGoldPerSecond(cachedGoldData.goldPerSecond);
+      } else {
+        // User is NOT verified - freeze gold accumulation
+        console.log('[Hub] Wallet NOT verified - freezing gold accumulation at 0');
+        setGoldPerSecond(0);
+      }
+    } else if (walletAddress) {
+      // Verification status not loaded yet - keep at 0
+      console.log('[Hub] Waiting for verification status...');
+      setGoldPerSecond(0);
+    }
+  }, [verificationStatus, cachedGoldData, walletAddress]);
+
   // Check if user has set display name
   useEffect(() => {
     if (getUserDisplayName && walletAddress && walletAddress !== "demo_wallet_123") {
@@ -134,13 +171,13 @@ export default function HubPage() {
       }
     }
   }, [getUserDisplayName, walletAddress]);
-  
+
   // Get user profile with real-time updates
   const userProfile = useQuery(
     api.users.getUserProfile,
     userId && walletAddress ? { walletAddress } : "skip"
   );
-  
+
   const liveGoldData = null; // Server polling disabled for bandwidth optimization
   
   const collectGold = useMutation(api.goldTracking.collectGold);
@@ -159,7 +196,10 @@ export default function HubPage() {
   
   // Animate live gold counter with smooth visual updates
   useEffect(() => {
-    if (goldPerSecond > 0) {
+    // ONLY animate if verified OR if using demo wallet
+    const isVerified = verificationStatus?.isVerified || walletAddress === "demo_wallet_123";
+
+    if (goldPerSecond > 0 && isVerified) {
       // Update visually every 100ms for smooth animation
       const interval = setInterval(() => {
         setLiveGold(prev => {
@@ -171,7 +211,7 @@ export default function HubPage() {
       }, 100); // Update visually every 100ms for smooth counting
       return () => clearInterval(interval);
     }
-  }, [goldPerSecond, cachedGoldData]);
+  }, [goldPerSecond, cachedGoldData, verificationStatus, walletAddress]);
   
   const collectAllGold = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!userId) return;
@@ -620,7 +660,77 @@ export default function HubPage() {
             </div>
           </div>
         </div>
-        
+
+        {/* VERIFICATION WARNING - Only show if wallet exists but is NOT verified */}
+        {verificationStatus && verificationStatus.exists && !verificationStatus.isVerified && (
+          <div
+            className="mb-6 p-6 rounded-xl border-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.25) 100%)',
+              borderColor: '#ef4444',
+              boxShadow: '0 0 30px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.1)',
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className="text-4xl"
+                style={{
+                  filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.6))'
+                }}
+              >
+                ⚠️
+              </div>
+              <div className="flex-1">
+                <h3
+                  className="text-xl font-bold mb-2"
+                  style={{
+                    fontFamily: "'Orbitron', sans-serif",
+                    color: '#fef2f2',
+                    textShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  BLOCKCHAIN VERIFICATION REQUIRED
+                </h3>
+                <p
+                  className="text-base mb-4"
+                  style={{
+                    color: '#fecaca',
+                    lineHeight: '1.6'
+                  }}
+                >
+                  Your wallet is connected, but <strong>you must verify NFT ownership on the blockchain before you can start earning gold</strong>.
+                  Without verification, your gold accumulation is paused at {Math.floor(liveGold)} gold.
+                </p>
+                <Link
+                  href="/admin-master-data"
+                  className="inline-block px-6 py-3 rounded-lg font-bold transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#ffffff',
+                    fontFamily: "'Orbitron', sans-serif",
+                    letterSpacing: '0.05em',
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+                    textTransform: 'uppercase',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.6)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                  }}
+                >
+                  Verify NFT Ownership Now →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Unified Stats */}
         <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-500/30">
           {/* Economy Status */}

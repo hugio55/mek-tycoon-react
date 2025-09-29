@@ -91,6 +91,8 @@ export default function ContractsLayoutOption11() {
   const [activeBuffFilters, setActiveBuffFilters] = useState<string[]>([]);
   const [selectedBuff, setSelectedBuff] = useState<any | null>(null);
   const [buffModalStyle, setBuffModalStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [deployedMissions, setDeployedMissions] = useState<Record<string, { startTime: number; duration: number; meks: any[] }>>({});
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
   const dailyVariation = "Acid";
   
   // Update timer every second
@@ -156,7 +158,40 @@ export default function ContractsLayoutOption11() {
     return Math.min(100, baseRate + weaknessBonus);
   };
 
-  
+  // Handle mission deployment
+  const handleDeployMission = (missionId: string, meks: any[], duration: number) => {
+    console.log('handleDeployMission called with:', missionId, meks);
+
+    // Store the deployment with the meks
+    setDeployedMissions(prev => ({
+      ...prev,
+      [missionId]: {
+        startTime: Date.now(),
+        duration: duration,
+        meks: meks
+      }
+    }));
+
+    // Keep mission selected to show the in-progress state
+    setSelectedMissionId(missionId);
+
+    // IMPORTANT: Keep the meks in selectedMeks so the UI doesn't clear
+    // Don't clear selectedMeks[missionId] - we want to keep showing the meks
+  };
+
+  // Check if mission is deployed and in progress
+  const isMissionDeployed = (missionId: string) => {
+    return deployedMissions[missionId] !== undefined;
+  };
+
+  // Check if mission is completed
+  const isMissionCompleted = (missionId: string) => {
+    const deployment = deployedMissions[missionId];
+    if (!deployment) return false;
+    return currentTime >= deployment.startTime + deployment.duration;
+  };
+
+
   // Get border classes based on selected style
   const getBorderClasses = (style: BorderStyle) => {
     switch(style) {
@@ -238,7 +273,10 @@ export default function ContractsLayoutOption11() {
 
   const renderContract = (contract: any, isGlobal: boolean = false) => {
     const contractId = isGlobal ? 'global' : (contract?.id || 'default');
-    const meks = isGlobal ? dailyMeks : (selectedMeks[contractId] || []);
+    // Use deployed meks if mission is deployed, otherwise use selected meks
+    const meks = deployedMissions[contractId]
+      ? deployedMissions[contractId].meks
+      : (isGlobal ? dailyMeks : (selectedMeks[contractId] || []));
     const mekSlotCount = isGlobal ? 6 : (contract?.mekSlots || 2);
     const goldReward = isGlobal ? 250000 : 3500;
     const xpReward = isGlobal ? 5000 : 250;
@@ -356,8 +394,18 @@ export default function ContractsLayoutOption11() {
                     {deployFeeType === "essence" ? "Paul Essence: 2" : `${formatGoldAmount(deployFee)} Gold`}
                   </div>
                 </div>
-                <button className="flex-1 py-2.5 bg-gradient-to-r from-green-600/80 to-emerald-500/80 text-white rounded-lg font-medium text-sm">
-                  DEPLOY SQUAD
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeployMission(contractId, meks, isGlobal ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+                  }}
+                  disabled={isMissionDeployed(contractId)}
+                  className={`flex-1 py-2.5 rounded-lg font-medium text-sm ${
+                    isMissionDeployed(contractId)
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-600/80 to-emerald-500/80 text-white'
+                  }`}>
+                  {isMissionDeployed(contractId) ? 'IN PROGRESS' : 'DEPLOY SQUAD'}
                 </button>
               </div>
             </div>
@@ -490,8 +538,18 @@ export default function ContractsLayoutOption11() {
                     <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-white/10'} rounded-lg`} />
                   ))}
                 </div>
-                <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-400 text-black font-bold rounded-lg">
-                  DEPLOY
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeployMission(contractId, meks, isGlobal ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+                  }}
+                  disabled={isMissionDeployed(contractId)}
+                  className={`px-6 py-3 font-bold rounded-lg ${
+                    isMissionDeployed(contractId)
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-400 text-black'
+                  }`}>
+                  {isMissionDeployed(contractId) ? 'IN PROGRESS' : 'DEPLOY'}
                 </button>
               </div>
             </div>
@@ -552,7 +610,19 @@ export default function ContractsLayoutOption11() {
               ))}
             </div>
             <div className="text-xs text-red-400">Fee: {formatGoldAmount(deployFee)}</div>
-            <button className="px-4 py-2 bg-green-600 text-white rounded text-sm">Deploy</button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeployMission(contractId, meks, isGlobal ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+              }}
+              disabled={isMissionDeployed(contractId)}
+              className={`px-4 py-2 rounded text-sm ${
+                isMissionDeployed(contractId)
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white'
+              }`}>
+              {isMissionDeployed(contractId) ? 'In Progress' : 'Deploy'}
+            </button>
           </div>
         </div>
       );
@@ -591,7 +661,7 @@ export default function ContractsLayoutOption11() {
                 {/* Squad slots */}
                 <div className="flex gap-1.5">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-black/40'} rounded-lg border ${i >= mekSlotCount ? 'border-gray-800' : 'border-yellow-500/10'}`} />
+                    <div key={i} className={`flex-1 aspect-square ${i >= mekSlotCount ? 'bg-black/20' : 'bg-black/40'} rounded-lg border-2 ${i >= mekSlotCount ? 'border-gray-600 opacity-60' : 'border-yellow-500/10'}`} />
                   ))}
                 </div>
               </div>
@@ -626,8 +696,18 @@ export default function ContractsLayoutOption11() {
                 {/* Deploy Button */}
                 <div>
                   <div className="text-xs text-red-400 mb-2">Fee: {formatGoldAmount(deployFee)} Gold</div>
-                  <button className="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-lg font-semibold text-sm">
-                    DEPLOY
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeployMission(contractId, meks, isGlobal ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+                    }}
+                    disabled={isMissionDeployed(contractId)}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-sm ${
+                      isMissionDeployed(contractId)
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-500 text-white'
+                    }`}>
+                    {isMissionDeployed(contractId) ? 'IN PROGRESS' : 'DEPLOY'}
                   </button>
                 </div>
               </div>
@@ -997,7 +1077,7 @@ export default function ContractsLayoutOption11() {
                   const isLocked = i >= mekSlotCount;
                   return (
                     <div key={i} className="aspect-square">
-                      <div className={`w-full h-full ${isLocked ? 'bg-gradient-to-br from-gray-900/50 to-black/50' : 'bg-gradient-to-br from-gray-800/60 to-gray-900/60'} rounded-xl border ${isLocked ? 'border-gray-800' : 'border-yellow-500/20 hover:border-yellow-400/40'} flex flex-col items-center justify-center transition-all`}>
+                      <div className={`w-full h-full ${isLocked ? 'bg-gradient-to-br from-gray-900/50 to-black/50' : 'bg-gradient-to-br from-gray-800/60 to-gray-900/60'} rounded-xl border-2 ${isLocked ? 'border-gray-600 opacity-60' : 'border-yellow-500/20 hover:border-yellow-400/40'} flex flex-col items-center justify-center transition-all`}>
                         {isLocked ? (
                           <>
                             <span className="text-gray-700">🔒</span>
@@ -1077,8 +1157,12 @@ export default function ContractsLayoutOption11() {
           
           // Mek Slots
           mekSlotCount={mekSlotCount}
-          selectedMeks={selectedMeks[contractId] || []}
+          selectedMeks={meks}
           onMekSlotClick={(slotIndex, currentMek) => {
+            // Don't allow changes if mission is deployed
+            if (isMissionDeployed(contractId)) {
+              return;
+            }
             if (currentMek) {
               // Toggle clicked state for removal tooltip
               if (clickedMek?.missionId === contractId && clickedMek?.slotIndex === slotIndex) {
@@ -1102,6 +1186,10 @@ export default function ContractsLayoutOption11() {
             }
           }}
           onMekRemove={(slotIndex) => {
+            // Don't allow changes if mission is deployed
+            if (isMissionDeployed(contractId)) {
+              return;
+            }
             const newMeks = [...(selectedMeks[contractId] || [])];
             newMeks[slotIndex] = null;
             setSelectedMeks({ ...selectedMeks, [contractId]: newMeks });
@@ -1109,6 +1197,10 @@ export default function ContractsLayoutOption11() {
             setAnimatedSuccessRate({ ...animatedSuccessRate, [contractId]: calculateNewSuccessRate(contractId, newMeks) });
           }}
           onMekChange={(slotIndex) => {
+            // Don't allow changes if mission is deployed
+            if (isMissionDeployed(contractId)) {
+              return;
+            }
             setSelectedMekSlot({ missionId: contractId, slotIndex });
             setShowMekModal(contractId);
           }}
@@ -1119,6 +1211,7 @@ export default function ContractsLayoutOption11() {
           
           // Deploy
           deployFee={deployFee}
+          isDeployed={isMissionDeployed(contractId)}
           onDeploy={() => {
             // Deploy logic here
             console.log('Deploy mission:', contractId);
@@ -1155,8 +1248,19 @@ export default function ContractsLayoutOption11() {
                   {missionTitle}
                 </h2>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="mek-label-uppercase">Expires in</div>
-                  <div className="text-sm font-bold text-yellow-300">{formatCountdown(missionEndTime)}</div>
+                  {isMissionDeployed(contractId) ? (
+                    <>
+                      <div className="mek-label-uppercase text-green-400">Mission Ends In</div>
+                      <div className="text-sm font-bold text-green-400">
+                        {formatCountdown(deployedMissions[contractId].startTime + deployedMissions[contractId].duration)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mek-label-uppercase">Expires in</div>
+                      <div className="text-sm font-bold text-yellow-300">{formatCountdown(missionEndTime)}</div>
+                    </>
+                  )}
                 </div>
               </div>
               {/* Add grunge overlays */}
@@ -1196,13 +1300,13 @@ export default function ContractsLayoutOption11() {
                   {Array.from({ length: Math.max(mekSlotCount, 8) }).map((_, i) => (
                     <div
                       key={i}
-                      className={`mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/30 bg-black/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-yellow-500/60 transition-all ${meks[i] ? 'bg-yellow-900/20' : ''}`}
+                      className={`mek-slot-empty aspect-square border-2 border-dashed border-yellow-500/40 bg-black/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-yellow-500/70 hover:shadow-[0_0_10px_rgba(250,182,23,0.3)] transition-all ${meks[i] ? 'bg-yellow-900/20' : ''} shadow-[0_0_5px_rgba(250,182,23,0.2)]`}
                       onClick={() => handleMekSlotClick(contractId, i)}
                     >
                       {meks[i] ? (
                         <div className="text-xs text-yellow-400 font-bold">MEK</div>
                       ) : (
-                        <div className="text-2xl text-gray-600">+</div>
+                        <div className="text-4xl text-yellow-500/50" style={{ textShadow: '0 0 8px rgba(250, 182, 23, 0.4)' }}>+</div>
                       )}
                     </div>
                   ))}
@@ -1232,9 +1336,33 @@ export default function ContractsLayoutOption11() {
                     {formatGoldAmount(deployFee)} Gold
                   </div>
                 </div>
-                <button className="mek-button-primary px-6 py-3 font-bold uppercase tracking-wider">
-                  Deploy
-                </button>
+                {isMissionDeployed(contractId) ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Aborting mission:', contractId);
+                      const newDeployed = { ...deployedMissions };
+                      delete newDeployed[contractId];
+                      setDeployedMissions(newDeployed);
+                      // Keep the mission selected even after abort
+                      setSelectedMissionId(contractId);
+                    }}
+                    className="px-6 py-3 font-bold uppercase tracking-wider bg-red-900/50 border-2 border-red-500/50 text-red-400 hover:bg-red-800/50 hover:border-red-400 transition-all"
+                  >
+                    Abort Mission
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Deploying mission:', contractId, 'with meks:', meks);
+                      handleDeployMission(contractId, meks, isGlobal ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+                    }}
+                    className="mek-button-primary px-6 py-3 font-bold uppercase tracking-wider"
+                  >
+                    Deploy
+                  </button>
+                )}
               </div>
 
               {/* Industrial Overlays */}
@@ -1340,13 +1468,13 @@ export default function ContractsLayoutOption11() {
                     <div key={i} className="aspect-square">
                       <div className={`
                         w-full h-full rounded-lg border-2 flex items-center justify-center transition-all
-                        ${isLocked 
-                          ? 'bg-black/90 border-gray-900 opacity-20' 
-                          : 'bg-gradient-to-br from-yellow-900/30 to-transparent border-yellow-500/50 hover:border-yellow-400 hover:shadow-lg hover:shadow-yellow-500/30 cursor-pointer'
+                        ${isLocked
+                          ? 'bg-black/90 border-gray-600 opacity-60'
+                          : 'bg-gradient-to-br from-yellow-900/30 to-transparent border-yellow-500/50 hover:border-yellow-400 hover:shadow-lg hover:shadow-yellow-500/30 cursor-pointer shadow-[0_0_8px_rgba(250,182,23,0.25)]'
                         }
                       `}>
                         {!isLocked && (
-                          <span className="text-4xl text-yellow-500/50 hover:text-yellow-400 transition-colors">+</span>
+                          <span className="mek-slot-plus hover:text-yellow-400 transition-colors">+</span>
                         )}
                       </div>
                     </div>
@@ -1580,13 +1708,13 @@ export default function ContractsLayoutOption11() {
                     <div key={i} className="aspect-square">
                       <div className={`
                         w-full h-full rounded-lg border-2 flex items-center justify-center transition-all
-                        ${isLocked 
-                          ? 'bg-black/60 border-gray-800 opacity-20' 
-                          : 'bg-yellow-900/20 border-yellow-500/30 hover:border-yellow-400/50 hover:bg-yellow-900/30 cursor-pointer'
+                        ${isLocked
+                          ? 'bg-black/60 border-gray-600 opacity-60'
+                          : 'bg-yellow-900/20 border-yellow-500/40 hover:border-yellow-400/60 hover:bg-yellow-900/30 cursor-pointer shadow-[0_0_6px_rgba(250,182,23,0.2)]'
                         }
                       `}>
                         {!isLocked && (
-                          <span className="text-2xl text-yellow-500/40 hover:text-yellow-400/60">+</span>
+                          <span className="text-4xl text-yellow-500/50 hover:text-yellow-400/70" style={{ textShadow: '0 0 8px rgba(250, 182, 23, 0.4)' }}>+</span>
                         )}
                       </div>
                     </div>

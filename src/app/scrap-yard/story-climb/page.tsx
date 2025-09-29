@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import StoryMissionCard from '@/components/StoryMissionCard';
@@ -12,6 +12,14 @@ import { leastRareMechanisms } from './least-rare-mechanisms';
 import { createSeededRandomFromString } from '@/lib/seeded-random';
 import { calculateChipRewardsForEvent } from '@/lib/chipRewardCalculator';
 import { DifficultyLevel, DifficultyConfig, calculateRewards, calculateMekSlots } from '@/lib/difficultyModifiers';
+import { StoryModeTitleCard } from '@/components/StoryModeTitleCards';
+import '@/styles/story-title-cards.css';
+import SuccessMeterV2 from '@/components/SuccessMeterV2';
+import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import { createPortal } from 'react-dom';
+import MissionCountdown from '@/components/MissionCountdown';
+import CancelMissionLightbox from '@/components/CancelMissionLightbox';
+import ContractSlots, { ContractSlot } from '@/components/ContractSlots';
 
 
 interface StoryNode {
@@ -45,6 +53,13 @@ function hashCode(str: string): number {
   return Math.abs(hash);
 }
 
+// Format gold amounts for display
+function formatGoldAmount(amount: number): string {
+  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+  if (amount >= 1000) return `${amount.toLocaleString()}`;
+  return amount.toLocaleString();
+}
+
 export default function StoryClimbPage() {
   // Check for preview mode from URL params
   const [previewMode, setPreviewMode] = useState(false);
@@ -71,7 +86,7 @@ export default function StoryClimbPage() {
 
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
   const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set(['start'])); // Start is always completed
-  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 1200 }); // Extended to align with DEPLOY button (was 900)
+  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 762 }); // Canvas height set to 762px
   const [viewportOffset, setViewportOffset] = useState(0); // Start at top since START node is now 450px from top
   const [mounted, setMounted] = useState(false);
   const [nodeImages, setNodeImages] = useState<Map<string, HTMLImageElement>>(new Map());
@@ -83,9 +98,91 @@ export default function StoryClimbPage() {
   const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hasDragged, setHasDragged] = useState(false);
-  const [showJumpButton, setShowJumpButton] = useState(false);
+  const [showJumpButton, setShowJumpButton] = useState(true);
   const [isJumping, setIsJumping] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [showCancelLightbox, setShowCancelLightbox] = useState(false);
+  const [pendingCancelNodeId, setPendingCancelNodeId] = useState<string | null>(null);
+  const [deployingNodes, setDeployingNodes] = useState<Set<string>>(new Set());
+
+  // Active missions and duration config queries (moved up to avoid hoisting issues)
+  const activeMissions = useQuery(api.activeMissions.getActiveMissions);
+  const startMission = useMutation(api.activeMissions.startMission);
+  const cancelMission = useMutation(api.activeMissions.cancelMission);
+  const completeMission = useMutation(api.activeMissions.completeMission);
+  const forceCleanupMissions = useMutation(api.activeMissions.forceCleanupMissions);
+  const activeDurationConfig = useQuery(api.durationConfigs.getActiveDurationConfig);
+
+  // Story tree queries (moved up to avoid hoisting issues)
+  const storyTrees = useQuery(api.storyTrees.getAllStoryTrees);
+  const v2Tree = storyTrees?.find(tree => tree.name === "V2");
+  const v1Tree = storyTrees?.find(tree => tree.name === "V1");
+  const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
+  const treeData = v2Tree || v1Tree || test5Tree; // Use V2 if available, otherwise V1, then Test 5
+
+  // Helper function to calculate duration based on node position and type
+  const calculateNodeDuration = useCallback((node: StoryNode, nodeType: string) => {
+    if (!activeDurationConfig || !treeData) return 15; // default fallback
+
+    const config = (activeDurationConfig as any)[nodeType];
+    if (!config || !config.min || !config.max) return 15;
+
+    // Convert duration object to minutes
+    const durationToMinutes = (dur: any) => {
+      return (dur.days || 0) * 24 * 60 +
+             (dur.hours || 0) * 60 +
+             (dur.minutes || 0);
+    };
+
+    const minMinutes = durationToMinutes(config.min);
+    const maxMinutes = durationToMinutes(config.max);
+
+    // Find all nodes of the same type
+    const sameTypeNodes = treeData.nodes.filter(n => {
+      if (nodeType === 'challenger') {
+        return n.storyNodeType === 'normal' && (n as any).challenger === true;
+      }
+      if (nodeType === 'normal') {
+        return n.storyNodeType === 'normal' && !(n as any).challenger;
+      }
+      return n.storyNodeType === nodeType.replace('miniboss', 'boss').replace('finalboss', 'final_boss');
+    });
+
+    if (sameTypeNodes.length === 0) return minMinutes;
+
+    // Sort by Y position (higher Y = lower on screen = earlier in progression)
+    const sortedNodes = [...sameTypeNodes].sort((a, b) => b.y - a.y);
+
+    // Find this node's position in the progression
+    const nodeIndex = sortedNodes.findIndex(n => n.id === node.id);
+    if (nodeIndex === -1) return minMinutes;
+
+    // Calculate progression (0 = bottom/start, 1 = top/end)
+    const progression = nodeIndex / Math.max(1, sortedNodes.length - 1);
+
+    // Apply curve (default 1.5 for exponential growth)
+    const curve = config.curve || 1.5;
+    const curvedProgression = Math.pow(progression, curve);
+
+    // Interpolate between min and max
+    const duration = minMinutes + (maxMinutes - minMinutes) * curvedProgression;
+
+    // Round to nearest 5 minutes
+    return Math.round(duration / 5) * 5;
+  }, [activeDurationConfig, treeData]);
+
+  // Helper to get node rewards based on type
+  // Placeholder for getNodeRewards - will be defined later after getEventDataForNode
+
+  // Helper to get contract fee based on node type
+  const getNodeContractFee = useCallback((node: ExtendedStoryNode) => {
+    // Will use getNodeRewards once it's defined
+    // For now, return a default fee
+    const baseGold = node.storyNodeType === 'final_boss' ? 200000 :
+                    node.storyNodeType === 'boss' ? 100000 :
+                    node.storyNodeType === 'event' ? 75000 : 30000;
+    return Math.floor(baseGold * 0.1); // 10% of gold reward as fee
+  }, []);
   const [hoveredNode, setHoveredNode] = useState<StoryNode | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [hoverEffectStyle, setHoverEffectStyle] = useState(0); // Add missing hover effect style
@@ -96,6 +193,7 @@ export default function StoryClimbPage() {
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
   // Success Meter Card Layout - how title, bar, and status are combined
   const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
+  const colorScheme = 'circuit' as const; // Locked to Holographic Circuit
 
   // Mission Statistics Tracking
   const [missionStats, setMissionStats] = useState({
@@ -117,9 +215,131 @@ export default function StoryClimbPage() {
   const [selectedMeks, setSelectedMeks] = useState<Record<string, any[]>>({});
   const [nodeFadeStates, setNodeFadeStates] = useState<Map<string, number>>(new Map()); // Track fade animation for each node
   const [inactiveNodeTooltip, setInactiveNodeTooltip] = useState<{ x: number; y: number; visible: boolean; fading: boolean }>({ x: 0, y: 0, visible: false, fading: false });
+  const [isHoveringDeployButton, setIsHoveringDeployButton] = useState(false);
+  const [showDeployTooltip, setShowDeployTooltip] = useState(false);
+  const [flashingMekSlots, setFlashingMekSlots] = useState(false);
+  const [flashingFees, setFlashingFees] = useState(false);
+  const [deployValidationErrors, setDeployValidationErrors] = useState<string[]>([]);
+  const [showDeployValidationPopup, setShowDeployValidationPopup] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Contract Slots State
+  const [contractSlots, setContractSlots] = useState<ContractSlot[]>([
+    { id: 1, status: 'available' },
+    { id: 2, status: 'locked', unlockChapter: 2 },
+    { id: 3, status: 'locked', unlockChapter: 3 },
+    { id: 4, status: 'locked', unlockChapter: 5 },
+    { id: 5, status: 'locked', unlockChapter: 7 }
+  ]);
+  const [contractSlotColor, setContractSlotColor] = useState<'cyan' | 'purple' | 'gold' | 'emerald' | 'crimson'>('cyan');
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [missionGlowStyle, setMissionGlowStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
+
+  // Update current time for countdown displays
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000); // Update every second
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sync contract slots with active missions
+  useEffect(() => {
+    if (activeMissions) {
+      console.log('Syncing contract slots with active missions:', activeMissions);
+      setContractSlots(prev => {
+        const updated = [...prev];
+
+        // First, clear any slots that no longer have active missions
+        updated.forEach(slot => {
+          if (slot.status === 'active' && slot.nodeId) {
+            const mission = activeMissions.find(m => m.nodeId === slot.nodeId);
+            if (!mission) {
+              slot.status = 'available';
+              slot.nodeId = undefined;
+              slot.startTime = undefined;
+              slot.duration = undefined;
+            }
+          }
+        });
+
+        // Then, add or update active missions in slots
+        activeMissions.forEach(mission => {
+          // Check if this mission is already in a slot
+          const existingSlot = updated.find(s => s.nodeId === mission.nodeId);
+          if (existingSlot) {
+            // Update existing slot with latest mission data
+            existingSlot.status = 'active';
+            existingSlot.nodeName = mission.nodeName || `Mek #${Math.floor(Math.random() * 9000) + 1000}`;
+            existingSlot.startTime = mission.startTime;
+            existingSlot.duration = mission.duration;
+          } else {
+            // Find first available slot for new mission
+            const availableSlot = updated.find(s => s.status === 'available');
+            if (availableSlot) {
+              availableSlot.status = 'active';
+              availableSlot.nodeId = mission.nodeId;
+              availableSlot.nodeName = mission.nodeName || `Mek #${Math.floor(Math.random() * 9000) + 1000}`;
+              availableSlot.startTime = mission.startTime;
+              availableSlot.duration = mission.duration;
+            }
+          }
+        });
+
+        console.log('Updated contract slots:', updated);
+        return updated;
+      });
+    }
+  }, [activeMissions]);
+
+  // Handle contract slot click - will be defined after handleNodeDeploy
+  const handleContractSlotClick = useCallback((slot: ContractSlot) => {
+    if (slot.status === 'available' && selectedNode) {
+      // Start a mission in this slot
+      const nodeToStart = selectedNode as ExtendedStoryNode;
+
+      // Check if mission is already active
+      if (activeMissions?.some(m => m.nodeId === nodeToStart.id)) {
+        console.log('Mission already active for this node');
+        return;
+      }
+
+      // Get duration based on node type and position
+      let minutes = 15; // default
+      const isChallenger = (nodeToStart as any).challenger === true;
+
+      if (nodeToStart.storyNodeType === 'final_boss') {
+        minutes = calculateNodeDuration(nodeToStart, 'finalboss');
+      } else if (nodeToStart.storyNodeType === 'boss') {
+        minutes = calculateNodeDuration(nodeToStart, 'miniboss');
+      } else if (nodeToStart.storyNodeType === 'event') {
+        minutes = calculateNodeDuration(nodeToStart, 'event');
+      } else if (isChallenger) {
+        minutes = calculateNodeDuration(nodeToStart, 'challenger');
+      } else {
+        minutes = calculateNodeDuration(nodeToStart, 'normal');
+      }
+
+      const durationMs = minutes * 60 * 1000;
+
+      // Update contract slot to active
+      setContractSlots(prev => prev.map(s =>
+        s.id === slot.id
+          ? { ...s, status: 'active' as const, nodeId: nodeToStart.id, startTime: Date.now(), duration: durationMs }
+          : s
+      ));
+
+      // Start the actual mission - will be defined below
+      // Note: handleNodeDeploy will be called after it's defined
+    } else if (slot.status === 'active' && slot.nodeId) {
+      // Show cancel lightbox for this slot's mission
+      setPendingCancelNodeId(slot.nodeId);
+      setShowCancelLightbox(true);
+    }
+  }, [selectedNode, activeDurationConfig, activeMissions, calculateNodeDuration]);
 
   // Difficulty system state
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('medium');
@@ -129,11 +349,7 @@ export default function StoryClimbPage() {
   const difficultyConfigs = useQuery(api.difficultyConfigs.getAll);
   const currentDifficultyConfig = difficultyConfigs?.find(c => c.difficulty === selectedDifficulty) as DifficultyConfig | undefined;
 
-  // Load the V2 story tree (primary) with storyNodeType, or V1 as fallback
-  const storyTrees = useQuery(api.storyTrees.getAllStoryTrees);
-  const v2Tree = storyTrees?.find(tree => tree.name === "V2");
-  const v1Tree = storyTrees?.find(tree => tree.name === "V1");
-  const test5Tree = storyTrees?.find(tree => tree.name === "test 5");
+  // Story trees already moved up to avoid hoisting issues
 
   // Parse deployed event nodes for direct access
   const [parsedConfig, setParsedConfig] = useState<any>(null);
@@ -150,11 +366,16 @@ export default function StoryClimbPage() {
     }
   }, [previewMode]);
 
-  // Always use database tree data (V2, V1, or test5)
-  const treeData = v2Tree || v1Tree || test5Tree; // Use V2 if available, otherwise V1, then Test 5
+  // Tree data already declared above to avoid hoisting issues
 
-  // Fetch deployed event data
-  const activeDeployment = useQuery(api.deployedNodeData.getActiveDeployment);
+  // Determine which chapter to load (currently fixed to Chapter 1)
+  const currentChapter = previewMode ? previewChapter : 1;
+
+  // Fetch deployed event data - ONLY for current chapter to save bandwidth
+  // This reduces bandwidth usage by ~90% compared to fetching all chapters
+  const activeDeployment = useQuery(api.deployedNodeData.getActiveDeploymentByChapter, {
+    chapter: currentChapter
+  });
   const attributeRarity = useQuery(api.attributeRarity.getAttributeRarity);
   const [deployedEventNodes, setDeployedEventNodes] = useState<Map<string, any>>(new Map());
   const [deployedNormalNodes, setDeployedNormalNodes] = useState<any[]>([]);
@@ -846,7 +1067,13 @@ export default function StoryClimbPage() {
 
     return baseRewards;
   }, [getEventDataForNode]);
-  
+
+  // Update getNodeContractFee to use getNodeRewards
+  const getNodeContractFeeWithRewards = useCallback((node: ExtendedStoryNode) => {
+    const rewards = getNodeRewards(node);
+    return Math.floor(rewards.gold * 0.1); // 10% of gold reward as fee
+  }, [getNodeRewards]);
+
   // Helper function to get variation buffs (traits) from deployed mek
   const getNodeVariationBuffs = useCallback((node: ExtendedStoryNode) => {
     // For event nodes, calculate and return chip rewards as buffs
@@ -937,13 +1164,156 @@ export default function StoryClimbPage() {
   }, []);
 
   // Helper function to handle node deployment
-  const handleNodeDeploy = useCallback((node: ExtendedStoryNode) => {
-    if (!completedNodes.has(node.id)) {
-      const newCompleted = new Set(completedNodes);
-      newCompleted.add(node.id);
-      setCompletedNodes(newCompleted);
+  const handleNodeDeploy = useCallback(async (node: ExtendedStoryNode, skipValidation?: boolean) => {
+    // Check if already deploying this node (prevent double-clicks)
+    if (deployingNodes.has(node.id)) {
+      console.log('Already deploying this node');
+      return;
     }
-  }, [completedNodes]);
+
+    // Check if mission is already active
+    const activeMission = activeMissions?.find(m => m.nodeId === node.id);
+    if (activeMission) {
+      console.log('Mission already active for this node');
+      return;
+    }
+
+    // Validation: Check for meks and funds
+    if (!skipValidation) {
+      const errors: string[] = [];
+      const selectedMeksForNode = selectedMeks[node.id] || [];
+      const hasMeks = selectedMeksForNode.filter(Boolean).length > 0;
+
+      if (!hasMeks) {
+        errors.push('No meks attached');
+        // Flash mek slots
+        setFlashingMekSlots(true);
+        setTimeout(() => setFlashingMekSlots(false), 2000);
+      }
+
+      // Get contract fee
+      const contractFee = getNodeContractFeeWithRewards(node);
+      // For now, we'll assume the user has enough funds since we can't check their balance yet
+      // This will be updated when we have access to user's gold balance
+      const userGold = 1000000; // Placeholder - replace with actual user gold
+      const userEssence = 10; // Placeholder - replace with actual user essence
+
+      if (userGold < contractFee) {
+        const goldNeeded = contractFee - userGold;
+        errors.push(`Low gold (need ${goldNeeded.toLocaleString()} more)`);
+        // Flash fees
+        setFlashingFees(true);
+        setTimeout(() => setFlashingFees(false), 2000);
+      }
+
+      // Check for essence if required (example check)
+      const essenceRequired = node.storyNodeType === 'boss' ? 0.5 : 0;
+      if (essenceRequired > 0 && userEssence < essenceRequired) {
+        const essenceNeeded = essenceRequired - userEssence;
+        errors.push(`Low essence (need ${essenceNeeded.toFixed(1)} more)`);
+        setFlashingFees(true);
+        setTimeout(() => setFlashingFees(false), 2000);
+      }
+
+      if (errors.length > 0) {
+        setDeployValidationErrors(errors);
+        setShowDeployValidationPopup(true);
+        return;
+      }
+    }
+
+    // Mark as deploying
+    setDeployingNodes(prev => new Set([...prev, node.id]));
+
+    // Get duration based on node type and position
+    let minutes = 15; // default
+    const isChallenger = (node as any).challenger === true;
+
+    if (node.storyNodeType === 'final_boss') {
+      minutes = calculateNodeDuration(node, 'finalboss');
+    } else if (node.storyNodeType === 'boss') {
+      minutes = calculateNodeDuration(node, 'miniboss');
+    } else if (node.storyNodeType === 'event') {
+      minutes = calculateNodeDuration(node, 'event');
+    } else if (isChallenger) {
+      minutes = calculateNodeDuration(node, 'challenger');
+    } else {
+      minutes = calculateNodeDuration(node, 'normal');
+    }
+
+    const durationMs = minutes * 60 * 1000;
+
+    // Calculate rewards
+    const rewards = getNodeRewards(node);
+    const contractFee = getNodeContractFeeWithRewards(node);
+
+    try {
+      // Start the mission in the database
+      await startMission({
+        nodeId: node.id,
+        nodeType: node.storyNodeType || 'normal',
+        nodeName: node.label || `Node ${node.id}`,
+        duration: durationMs,
+        contractFee: contractFee,
+        expectedRewards: {
+          gold: rewards.gold,
+          essence: rewards.essence > 0 ? rewards.essence : undefined,
+          chipT1: rewards.chipT1 > 0 ? rewards.chipT1 : undefined,
+          special: rewards.special > 0 ? rewards.special : undefined,
+        },
+        selectedMeks: (selectedMeks[node.id] || []).filter(Boolean).map(mek => ({
+          id: mek.id,
+          name: mek.name,
+          rank: mek.rank || mek.rarity === 'legendary' ? 1 :
+                mek.rarity === 'epic' ? 2 :
+                mek.rarity === 'rare' ? 3 :
+                mek.rarity === 'uncommon' ? 4 : 5,
+          matchedTraits: mek.matchedTraits || []
+        })),
+        difficulty: selectedDifficulty,
+      });
+
+      console.log(`Mission started for node ${node.id}`);
+      // Close the node panel after successful deployment
+      setSelectedNode(null);
+    } catch (error: any) {
+      console.error('Failed to start mission:', error);
+      // Show user-friendly error message
+      if (error.message?.includes('already active')) {
+        alert('A mission is already active for this node. Please wait for it to complete.');
+      } else {
+        alert('Failed to start mission. Please try again.');
+      }
+    } finally {
+      // Remove from deploying set
+      setDeployingNodes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(node.id);
+        return newSet;
+      });
+    }
+  }, [completedNodes, activeMissions, activeDurationConfig, selectedMeks, selectedDifficulty, startMission, deployingNodes]);
+
+  // Handle contract slot click - view or abort active contracts only
+  const handleContractSlotClickNew = useCallback(async (slot: ContractSlot, action?: 'view' | 'abort') => {
+    // Only handle actions for active slots
+    if (slot.status === 'active' && slot.nodeId) {
+      if (action === 'view') {
+        // Find and select the node in the tree
+        const node = treeData?.nodes?.find(n => n.id === slot.nodeId);
+        if (node) {
+          setSelectedNode(node as ExtendedStoryNode);
+          // Optionally scroll to the node
+          // You could add auto-scroll logic here
+        }
+      } else if (action === 'abort') {
+        // Show cancel/abort lightbox for this slot's mission
+        setPendingCancelNodeId(slot.nodeId);
+        setShowCancelLightbox(true);
+      }
+    }
+    // Available slots now show their own message popup in the ContractSlots component
+  }, [treeData]);
 
   // Handle mek slot click - opens the recruitment modal
   const handleMekSlotClick = useCallback((slotIndex: number) => {
@@ -1275,7 +1645,7 @@ export default function StoryClimbPage() {
       if (containerRef.current) {
         const container = containerRef.current;
         const width = container.clientWidth - 20; // Reduce width by 20px to move right edge left
-        const height = Math.floor(width * 1.5); // 2:3 aspect ratio
+        const height = Math.max(300, Math.floor(width * 0.6)); // Much shorter canvas, roughly 60% of width
         // console.log("Canvas size updated:", { width, height });
         setCanvasSize({ width, height });
       }
@@ -1300,7 +1670,7 @@ export default function StoryClimbPage() {
     // });
     
     // Don't require images to be loaded - render without them if needed
-    if (!canvasRef.current || !treeData || canvasSize.width === 0) {
+    if (!canvasRef.current || !treeData || !treeData.nodes || canvasSize.width === 0) {
       // console.log("Canvas draw skipped - missing core requirements");
       return;
     }
@@ -1633,59 +2003,195 @@ export default function StoryClimbPage() {
         // Check if this is the selected node
         const isNodeSelected = selectedNode && selectedNode.id === node.id;
 
-        // Apply strong pulsating yellow glow for selected node
+        // Apply strong pulsating glow for selected node
         if (isNodeSelected) {
-          // Strong pulsating yellow glow for selected node with smooth gradients
           ctx.save();
 
-          // Use smoother sine wave with easing for less banding
-          const time = Date.now() / 400;
-          const rawPulse = Math.sin(time);
-          // Apply easing function to smooth the transitions
-          const easedPulse = rawPulse < 0
-            ? -Math.pow(-rawPulse, 1.5)
-            : Math.pow(rawPulse, 1.5);
-          const pulseIntensity = 0.7 + easedPulse * 0.25; // Slightly reduced range for smoother transitions
+          // Check if this is a challenger node for special red electric effect
+          const isChallenger = node.challenger === true && node.storyNodeType === 'normal';
 
-          // Use radial gradient for smoother glow effect
-          if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
-            // Create radial gradient for smoother glow
-            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
-            gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
-            gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
-            gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
-            gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
+          if (isChallenger) {
+            // RED ELECTRIC EFFECT for selected challenger nodes
+            const time = Date.now() / 200; // Faster animation for electric feel
+            const rawPulse = Math.sin(time * 2); // Double speed for more intense flashing
+            const electricPulse = Math.random() > 0.7 ? 1 : rawPulse; // Random flicker effect
+            const pulseIntensity = 0.8 + electricPulse * 0.2; // Higher base intensity when selected
 
-            // Draw multiple concentric circles with gradient
-            for (let i = 2; i >= 0; i--) {
+            // Electric red gradient with random flickering
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 40);
+            gradient.addColorStop(0, `rgba(255, 0, 0, ${pulseIntensity})`);
+            gradient.addColorStop(0.3, `rgba(255, 50, 50, ${pulseIntensity * 0.9})`);
+            gradient.addColorStop(0.6, `rgba(200, 0, 0, ${pulseIntensity * 0.6})`);
+            gradient.addColorStop(1, `rgba(255, 0, 0, 0)`);
+
+            // Multiple electric rings with random offsets (more intense when selected)
+            for (let i = 0; i < 4; i++) {
               ctx.beginPath();
-              ctx.arc(pos.x, pos.y, nodeSize + i * 8 + easedPulse * 2, 0, Math.PI * 2);
+              const randomOffset = Math.random() * 4;
+              ctx.arc(pos.x, pos.y, nodeSize + 12 + i * 6 + randomOffset, 0, Math.PI * 2);
               ctx.strokeStyle = gradient;
-              ctx.lineWidth = 2 + (2 - i);
-              ctx.globalAlpha = 0.8 - i * 0.2;
+              ctx.lineWidth = 3 + Math.random() * 2;
+              ctx.globalAlpha = electricPulse * (1 - i * 0.2);
               ctx.stroke();
             }
-          } else {
-            // Square glow for boss nodes
-            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
-            gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
-            gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
-            gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
-            gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
 
-            for (let i = 2; i >= 0; i--) {
-              const offset = i * 8 + easedPulse * 2;
-              ctx.strokeStyle = gradient;
-              ctx.lineWidth = 2 + (2 - i);
-              ctx.globalAlpha = 0.8 - i * 0.2;
-              ctx.strokeRect(pos.x - nodeSize - offset, pos.y - nodeSize - offset, (nodeSize + offset) * 2, (nodeSize + offset) * 2);
+            // Electric lightning bolts radiating outward (more bolts when selected)
+            ctx.strokeStyle = `rgba(255, 100, 100, ${pulseIntensity})`;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = electricPulse * 0.9;
+
+            for (let i = 0; i < 12; i++) {
+              if (Math.random() > 0.2) { // More frequent bolts when selected
+                const angle = (i / 12) * Math.PI * 2 + time * 0.1;
+                const innerRadius = nodeSize + 5;
+                const outerRadius = nodeSize + 25 + Math.random() * 15;
+
+                ctx.beginPath();
+                ctx.moveTo(pos.x + Math.cos(angle) * innerRadius, pos.y + Math.sin(angle) * innerRadius);
+
+                // Jagged lightning path
+                const steps = 4;
+                for (let j = 1; j <= steps; j++) {
+                  const progress = j / steps;
+                  const radius = innerRadius + (outerRadius - innerRadius) * progress;
+                  const offsetAngle = angle + (Math.random() - 0.5) * 0.4;
+                  ctx.lineTo(pos.x + Math.cos(offsetAngle) * radius, pos.y + Math.sin(offsetAngle) * radius);
+                }
+                ctx.stroke();
+              }
+            }
+          } else {
+            // Normal yellow glow for non-challenger selected nodes
+            const time = Date.now() / 400;
+            const rawPulse = Math.sin(time);
+            const easedPulse = rawPulse < 0 ? -Math.pow(-rawPulse, 1.5) : Math.pow(rawPulse, 1.5);
+            const pulseIntensity = 0.7 + easedPulse * 0.25;
+
+            if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+              const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+              gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
+              gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
+              gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
+              gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
+
+              for (let i = 2; i >= 0; i--) {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, nodeSize + i * 8 + easedPulse * 2, 0, Math.PI * 2);
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2 + (2 - i);
+                ctx.globalAlpha = 0.8 - i * 0.2;
+                ctx.stroke();
+              }
+            } else {
+              // Square glow for boss nodes
+              const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+              gradient.addColorStop(0, `rgba(250, 182, 23, ${pulseIntensity * 0.9})`);
+              gradient.addColorStop(0.3, `rgba(250, 182, 23, ${pulseIntensity * 0.6})`);
+              gradient.addColorStop(0.6, `rgba(250, 182, 23, ${pulseIntensity * 0.3})`);
+              gradient.addColorStop(1, `rgba(250, 182, 23, 0)`);
+
+              for (let i = 2; i >= 0; i--) {
+                const offset = i * 8 + easedPulse * 2;
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2 + (2 - i);
+                ctx.globalAlpha = 0.8 - i * 0.2;
+                ctx.strokeRect(pos.x - nodeSize - offset, pos.y - nodeSize - offset, (nodeSize + offset) * 2, (nodeSize + offset) * 2);
+              }
             }
           }
 
           ctx.globalAlpha = 1;
           ctx.restore();
-        } // Close isNodeSelected block
-        // Hover effect removed per user request - no animation on hover
+        } else if (isHovered) {
+          // Enhanced hover glow for available nodes
+          ctx.save();
+
+          // Check if this is a challenger node for special effects
+          const isChallenger = node.challenger === true && node.storyNodeType === 'normal';
+
+          if (isChallenger) {
+            // Special RED ELECTRIC FLASHING effect for challenger nodes
+            const time = Date.now() / 200; // Faster animation for electric feel
+            const rawPulse = Math.sin(time * 2); // Double speed for more intense flashing
+            const electricPulse = Math.random() > 0.7 ? 1 : rawPulse; // Random flicker effect
+            const pulseIntensity = 0.7 + electricPulse * 0.3;
+
+            // Electric red gradient with random flickering
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+            gradient.addColorStop(0, `rgba(255, 0, 0, ${pulseIntensity})`);
+            gradient.addColorStop(0.3, `rgba(255, 50, 50, ${pulseIntensity * 0.8})`);
+            gradient.addColorStop(0.6, `rgba(200, 0, 0, ${pulseIntensity * 0.5})`);
+            gradient.addColorStop(1, `rgba(255, 0, 0, 0)`);
+
+            // Multiple electric rings with random offsets
+            for (let i = 0; i < 3; i++) {
+              ctx.beginPath();
+              const randomOffset = Math.random() * 3;
+              ctx.arc(pos.x, pos.y, nodeSize + 10 + i * 5 + randomOffset, 0, Math.PI * 2);
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2 + Math.random() * 2;
+              ctx.globalAlpha = electricPulse * (0.9 - i * 0.2);
+              ctx.stroke();
+            }
+
+            // Electric lightning bolts radiating outward
+            ctx.strokeStyle = `rgba(255, 100, 100, ${pulseIntensity})`;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = electricPulse * 0.8;
+
+            for (let i = 0; i < 8; i++) {
+              if (Math.random() > 0.3) { // Random bolts appear/disappear
+                const angle = (i / 8) * Math.PI * 2 + time * 0.1;
+                const innerRadius = nodeSize + 5;
+                const outerRadius = nodeSize + 20 + Math.random() * 10;
+
+                ctx.beginPath();
+                ctx.moveTo(pos.x + Math.cos(angle) * innerRadius, pos.y + Math.sin(angle) * innerRadius);
+
+                // Jagged lightning path
+                const steps = 3;
+                for (let j = 1; j <= steps; j++) {
+                  const progress = j / steps;
+                  const radius = innerRadius + (outerRadius - innerRadius) * progress;
+                  const offsetAngle = angle + (Math.random() - 0.5) * 0.3;
+                  ctx.lineTo(pos.x + Math.cos(offsetAngle) * radius, pos.y + Math.sin(offsetAngle) * radius);
+                }
+                ctx.stroke();
+              }
+            }
+          } else {
+            // Normal hover effect for non-challenger nodes
+            const time = Date.now() / 500;
+            const rawPulse = Math.sin(time);
+            const easedPulse = rawPulse < 0 ? -Math.pow(-rawPulse, 1.4) : Math.pow(rawPulse, 1.4);
+            const pulseIntensity = 0.6 + easedPulse * 0.3;
+
+            if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+              // Circular glow for normal/event nodes
+              const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 25);
+              gradient.addColorStop(0, `rgba(255, 255, 255, ${pulseIntensity * 0.8})`);
+              gradient.addColorStop(0.3, `rgba(147, 197, 253, ${pulseIntensity * 0.5})`);
+              gradient.addColorStop(0.6, `rgba(147, 197, 253, ${pulseIntensity * 0.3})`);
+              gradient.addColorStop(1, `rgba(147, 197, 253, 0)`);
+
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 10 + easedPulse * 3, 0, Math.PI * 2);
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            } else {
+              // Square glow for boss nodes
+              const offset = 10 + easedPulse * 3;
+              ctx.shadowBlur = 20 + easedPulse * 10;
+              ctx.shadowColor = `rgba(147, 197, 253, ${pulseIntensity})`;
+              ctx.strokeStyle = `rgba(255, 255, 255, ${pulseIntensity * 0.8})`;
+              ctx.lineWidth = 2;
+              ctx.strokeRect(pos.x - nodeSize - offset, pos.y - nodeSize - offset, (nodeSize + offset) * 2, (nodeSize + offset) * 2);
+            }
+          }
+
+          ctx.restore();
+        } // Close isHovered block
 
         // Base glow for available nodes (subtle white glow, stronger yellow for selected)
         ctx.save();
@@ -2307,11 +2813,11 @@ export default function StoryClimbPage() {
 
             
             // Add Challenger frame effects BEFORE clipping (so they appear behind the node)
-            if (isChallenger && !isCompleted) {
+            if (isChallenger) {  // Show frame for ALL challenger nodes, including completed ones
               ctx.save();
               const pulseTime = Date.now() / 500;
               const nodeOffset = hashCode(node.id) % 1000;
-              
+
               // Draw special frame based on selected style
               switch (challengerFrameStyle) {
                 case 'spikes':
@@ -2323,8 +2829,13 @@ export default function StoryClimbPage() {
                   // Single path for all spikes for better performance
                   ctx.save();
 
-                  // Add glow for available state
-                  if (isAvailable && !isCompleted) {
+                  // Add glow for available state or green tint for completed
+                  if (isCompleted) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+                    ctx.fillStyle = `rgba(40, 120, 40, ${baseAlpha * 0.8})`; // Green-tinted spikes for completed
+                    ctx.strokeStyle = `rgba(16, 185, 129, ${0.6})`; // Green stroke for completed
+                  } else if (isAvailable) {
                     ctx.shadowBlur = 12;
                     ctx.shadowColor = 'rgba(255, 50, 50, 0.6)';
                     ctx.fillStyle = `rgba(180, 40, 40, ${baseAlpha})`; // Brighter red when available
@@ -3301,23 +3812,188 @@ export default function StoryClimbPage() {
         const nodeNumber = node.label.match(/\d+/) || [''];
         ctx.fillText(nodeNumber[0], pos.x, pos.y);
       }
+
+      // Draw countdown timer overlay on active mission nodes
+      const activeMission = activeMissions?.find(m => m.nodeId === node.id);
+      if (activeMission) {
+        const now = Date.now();
+        const endTime = activeMission.startTime + activeMission.duration;
+        const remainingMs = Math.max(0, endTime - now);
+
+        if (remainingMs > 0) {
+          // Calculate time components
+          const totalSeconds = Math.floor(remainingMs / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          // Format time string
+          let timeString = '';
+          if (hours > 0) {
+            timeString = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          } else {
+            timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          }
+
+          // Draw blue glow around the node to indicate active mission
+          ctx.save();
+          const pulseAmount = Math.sin(Date.now() / 400) * 0.3 + 0.7;
+          const baseColor = remainingMs < 60000 ? [239, 68, 68] : [6, 182, 212]; // RGB values
+
+          // Style 1: Soft Radial Glow (subtle, diffuse)
+          if (missionGlowStyle === 1) {
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.6})`;
+            ctx.strokeStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.3})`;
+            ctx.lineWidth = 2;
+
+            if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+              ctx.strokeRect(pos.x - nodeSize - 2, pos.y - nodeSize - 2, (nodeSize + 2) * 2, (nodeSize + 2) * 2);
+            } else {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 2, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          // Style 2: Double Halo (two gentle rings)
+          else if (missionGlowStyle === 2) {
+            ctx.shadowBlur = 30;
+            ctx.strokeStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.4})`;
+            ctx.lineWidth = 1.5;
+
+            if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+              ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.5)`;
+              ctx.strokeRect(pos.x - nodeSize - 3, pos.y - nodeSize - 3, (nodeSize + 3) * 2, (nodeSize + 3) * 2);
+              ctx.strokeRect(pos.x - nodeSize - 6, pos.y - nodeSize - 6, (nodeSize + 6) * 2, (nodeSize + 6) * 2);
+            } else {
+              ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.5)`;
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 3, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 6, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          // Style 3: Ethereal Aura (very soft, wide glow)
+          else if (missionGlowStyle === 3) {
+            ctx.shadowBlur = 50;
+            ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.5})`;
+            ctx.strokeStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.2})`;
+            ctx.lineWidth = 1;
+
+            if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+              ctx.strokeRect(pos.x - nodeSize - 1, pos.y - nodeSize - 1, (nodeSize + 1) * 2, (nodeSize + 1) * 2);
+            } else {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 1, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          // Style 4: Gentle Pulse (single ring, medium intensity)
+          else if (missionGlowStyle === 4) {
+            ctx.shadowBlur = 35;
+            ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.7})`;
+            ctx.strokeStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.5})`;
+            ctx.lineWidth = 2.5;
+
+            if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+              ctx.strokeRect(pos.x - nodeSize - 4, pos.y - nodeSize - 4, (nodeSize + 4) * 2, (nodeSize + 4) * 2);
+            } else {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + 4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          // Style 5: Shimmer Edge (tight, bright edge glow)
+          else if (missionGlowStyle === 5) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.9})`;
+            ctx.strokeStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${pulseAmount * 0.7})`;
+            ctx.lineWidth = 3;
+
+            if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+              ctx.strokeRect(pos.x - nodeSize, pos.y - nodeSize, nodeSize * 2, nodeSize * 2);
+            } else {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          ctx.restore();
+
+          ctx.save();
+
+          // First, darken the entire node area
+          let overlaySize = nodeSize;
+          if (node.storyNodeType === 'boss' || node.storyNodeType === 'final_boss') {
+            // Square overlay for boss nodes
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(pos.x - overlaySize, pos.y - overlaySize, overlaySize * 2, overlaySize * 2);
+          } else if (node.id === 'start') {
+            // Special case for start node
+            overlaySize = 75;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, overlaySize, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fill();
+          } else {
+            // Circular overlay for normal and event nodes
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, overlaySize, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fill();
+          }
+
+          // Draw countdown timer in center of node
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = remainingMs < 60000 ? `rgba(239, 68, 68, ${pulseAmount})` : `rgba(6, 182, 212, ${pulseAmount})`;
+
+          // Draw time string with larger font
+          ctx.font = 'bold 16px Orbitron';
+          ctx.fillStyle = remainingMs < 60000 ? '#ef4444' : '#06b6d4';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(timeString, pos.x, pos.y);
+
+          // Draw a circular progress indicator
+          const progress = (currentTime - activeMission.startTime) / activeMission.duration;
+          ctx.strokeStyle = remainingMs < 60000 ? `rgba(239, 68, 68, ${pulseAmount})` : `rgba(6, 182, 212, ${pulseAmount})`;
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.shadowBlur = 5;
+
+          // Draw progress arc
+          const arcRadius = overlaySize - 5;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, arcRadius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress), false);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      }
     });
     
     // console.log("Canvas render complete");
-  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerFrameStyle, getEventDataForNode]);
+  }, [treeData, canvasSize, viewportOffset, completedNodes, nodeImages, eventImages, imagesLoaded, panOffset, zoom, hoveredNode, animationTick, challengerFrameStyle, getEventDataForNode, activeMissions, currentTime, missionGlowStyle]);
 
   // Separate effect for jump button visibility to avoid infinite loop
   useEffect(() => {
-    if (treeData) {
+    if (treeData && treeData.nodes) {
       const startNode = treeData.nodes.find(n => n.id === 'start');
       if (startNode) {
-        // Simple check: if we've scrolled up more than 100 pixels, show the button
-        // Show button when scrolled up from the start position
-        const isScrolledUp = viewportOffset > -200 || panOffset.y > 50;
-        setShowJumpButton(isScrolledUp);
+        // Show button when scrolled up (positive viewportOffset) or down significantly from start
+        // or when panned away from center
+        const isScrolledAway = viewportOffset > 50 || viewportOffset < -600 || Math.abs(panOffset.y) > 100 || Math.abs(panOffset.x) > 100;
+        setShowJumpButton(isScrolledAway);
       }
     }
-  }, [treeData, viewportOffset, panOffset.y]);
+  }, [treeData, viewportOffset, panOffset.y, panOffset.x]);
 
   // Check if there are any challenger nodes that need animation
   const hasChallenger = useMemo(() => {
@@ -3378,7 +4054,7 @@ export default function StoryClimbPage() {
               connectedNodeId = conn.from;
             }
             if (!connectedNodeId || !completedNodes.has(connectedNodeId)) return false;
-            const connectedNode = treeData.nodes.find(n => n.id === connectedNodeId);
+            const connectedNode = treeData.nodes?.find(n => n.id === connectedNodeId);
             if (!connectedNode) return false;
             return hoveredNode.y < connectedNode.y;
           });
@@ -3468,7 +4144,7 @@ export default function StoryClimbPage() {
       const y = (e.clientY - rect.top) * scaleY;
 
       // Apply same position adjustments as in draw function
-      const nodes = treeData.nodes.map(node => {
+      const nodes = (treeData.nodes || []).map(node => {
         const adjustedNode = { ...node };
 
         if (node.storyNodeType === 'event') {
@@ -3640,8 +4316,8 @@ export default function StoryClimbPage() {
       const newY = prev.y + deltaY;
       
       // Find the final boss node to set scroll limit
-      const finalBossNode = treeData?.nodes.find(n => n.storyNodeType === 'final_boss');
-      if (finalBossNode && canvasRef.current) {
+      const finalBossNode = treeData?.nodes?.find(n => n.storyNodeType === 'final_boss');
+      if (finalBossNode && canvasRef.current && treeData?.nodes) {
         const canvas = canvasRef.current;
         const nodes = treeData.nodes;
         const minY = Math.min(...nodes.map(n => n.y));
@@ -3735,7 +4411,7 @@ export default function StoryClimbPage() {
       }
       
       // Find the connected completed node
-      const connectedNode = treeData.nodes.find(n => n.id === connectedNodeId);
+      const connectedNode = treeData.nodes?.find(n => n.id === connectedNodeId);
       if (!connectedNode) return false;
       
       // Only allow upward progression (lower Y values = further up the tree)
@@ -3764,7 +4440,7 @@ export default function StoryClimbPage() {
     const y = (event.clientY - rect.top) * scaleY;
     
     // Apply same position adjustments as in draw function
-    const nodes = treeData.nodes.map(node => {
+    const nodes = (treeData.nodes || []).map(node => {
       const adjustedNode = { ...node };
       
       if (node.storyNodeType === 'event') {
@@ -3847,6 +4523,7 @@ export default function StoryClimbPage() {
     };
     
     // Check if click is on any node
+    let foundHoverNode = null;
     for (const node of nodes) {
       let pos = transform(node.x, node.y);
 
@@ -3889,6 +4566,7 @@ export default function StoryClimbPage() {
           setHoveredNode(null);
           setSelectedNode(node);
           console.log(`${debugMode ? 'Debug' : 'Preview'} mode - selected node:`, node);
+          foundHoverNode = node;
           break;
         }
 
@@ -3938,6 +4616,7 @@ export default function StoryClimbPage() {
           setHoveredNode(null); // Clear hover state when selecting a node
           setSelectedNode(node);
           setInactiveNodeTooltip({ x: 0, y: 0, visible: false, fading: false }); // Hide tooltip
+          foundHoverNode = node;
           // Don't auto-complete the node anymore - let user click Complete button
           // Auto-scroll removed - camera stays where user positioned it
         } else if (completedNodes.has(node.id)) {
@@ -3946,6 +4625,7 @@ export default function StoryClimbPage() {
           newCompleted.delete(node.id);
           setCompletedNodes(newCompleted);
           setInactiveNodeTooltip({ x: 0, y: 0, visible: false, fading: false }); // Hide tooltip
+          foundHoverNode = node;
         } else if (!completedNodes.has(node.id) && !isAdjacent) {
           // Show tooltip for inactive nodes
           const rect = canvas.getBoundingClientRect();
@@ -3981,21 +4661,31 @@ export default function StoryClimbPage() {
             visible: true,
             fading: false
           });
+          foundHoverNode = node;
           // Don't auto-hide - tooltip stays until mouse moves away
         }
         break;
       }
     }
+
+    // If we've checked all nodes and didn't find any match, deselect the current node
+    // This happens when clicking on empty space
+    if (!foundHoverNode) {
+      console.log('Clicked on empty space - deselecting node');
+      setSelectedNode(null);
+      setHoveredNode(null);
+      setInactiveNodeTooltip({ x: 0, y: 0, visible: false, fading: false });
+    }
   }, [treeData, viewportOffset, completedNodes, canvasSize, hasDragged, panOffset, zoom, previewMode, debugMode]);
 
   // Handle mouse wheel scrolling with proper isolation
   const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    if (!treeData || !canvasRef.current) return;
-    
+    if (!treeData || !treeData.nodes || !canvasRef.current) return;
+
     // Prevent page scroll when over canvas
     event.preventDefault();
     event.stopPropagation();
-    
+
     // Calculate max scroll based on tree size
     const nodes = treeData.nodes;
     
@@ -4069,9 +4759,113 @@ export default function StoryClimbPage() {
 
   return (
     <div className="min-h-screen">
+      {/* CSS for flashing animations */}
+      <style jsx>{`
+        @keyframes flash-red {
+          0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+        }
+        @keyframes flash-yellow {
+          0%, 100% { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+          50% { border-color: rgba(245, 158, 11, 1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
+        }
+        .flash-red {
+          animation: flash-red 0.5s ease-in-out 3;
+        }
+        .flash-yellow {
+          animation: flash-yellow 0.5s ease-in-out 3;
+        }
+      `}</style>
+      {/* Story Mode Title Card with Style Selector */}
+      <StoryModeTitleCard
+        chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
+        colorScheme={colorScheme}
+      />
+
+      {/* Contract Slots Bar - Wrapped in same container as main content */}
+      <div className="max-w-[1600px] mx-auto pl-5 pb-2 relative z-50">
+        <ContractSlots
+          slots={contractSlots}
+          onSlotClick={handleContractSlotClickNew}
+          fillColorStyle={contractSlotColor}
+        />
+      </div>
+
+      {/* Debug: Cancel Contracts Panel - Left side */}
+      <div className="fixed left-4 top-64 z-50 bg-black/90 border border-red-500/50 rounded-lg p-3 shadow-xl">
+        <div className="text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
+          Debug: Cancel Contracts
+        </div>
+
+        {activeMissions && activeMissions.length > 0 ? (
+          <div className="space-y-2">
+            {activeMissions.map((mission: any) => (
+              <div key={mission._id} className="flex items-center gap-2 text-xs">
+                <button
+                  onClick={async () => {
+                    try {
+                      await cancelMission({ nodeId: mission.nodeId });
+                      console.log('Cancelled mission:', mission.nodeId);
+                    } catch (error) {
+                      console.error('Failed to cancel mission:', error);
+                    }
+                  }}
+                  className="bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded hover:bg-red-600/30 hover:border-red-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <span className="text-gray-400 truncate max-w-[150px]">
+                  {mission.nodeName || mission.nodeId}
+                </span>
+              </div>
+            ))}
+
+            {/* Cancel All Button */}
+            <button
+              onClick={async () => {
+                try {
+                  for (const mission of activeMissions) {
+                    await cancelMission({ nodeId: mission.nodeId });
+                  }
+                  console.log('Cancelled all missions');
+                } catch (error) {
+                  console.error('Failed to cancel all missions:', error);
+                }
+              }}
+              className="w-full mt-2 bg-red-600/30 border border-red-500 text-red-300 px-2 py-1 rounded hover:bg-red-600/40 hover:border-red-300 transition-colors font-bold text-xs"
+            >
+              CANCEL ALL
+            </button>
+          </div>
+        ) : (
+          <div className="text-gray-500 text-xs">No active contracts</div>
+        )}
+
+        {/* Force Cleanup Button - Always visible */}
+        <div className="mt-3 pt-3 border-t border-red-500/30">
+          <button
+            onClick={async () => {
+              try {
+                const result = await forceCleanupMissions();
+                console.log('Force cleanup result:', result);
+                alert(`Cleaned up ${result.cleanedCount} stuck missions`);
+              } catch (error) {
+                console.error('Failed to force cleanup:', error);
+                alert('Failed to cleanup stuck missions');
+              }
+            }}
+            className="w-full bg-orange-600/30 border border-orange-500 text-orange-300 px-2 py-1 rounded hover:bg-orange-600/40 hover:border-orange-300 transition-colors font-bold text-xs"
+          >
+            🔧 FORCE CLEANUP STUCK
+          </button>
+          <div className="text-[10px] text-gray-500 mt-1 text-center">
+            Clears all stuck missions from DB
+          </div>
+        </div>
+      </div>
 
       {/* Debug Panel - Collapsible */}
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         {debugPanelMinimized ? (
           // Minimized state - just a small button
           <button
@@ -4119,6 +4913,34 @@ export default function StoryClimbPage() {
                 <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
                 <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
               </div>
+              <div className="border-b border-gray-700 pb-2">
+                <div className="text-cyan-400 font-semibold mb-1">Contract Slot Colors:</div>
+                <select
+                  value={contractSlotColor}
+                  onChange={(e) => setContractSlotColor(e.target.value as any)}
+                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+                >
+                  <option value="cyan">Cyan Glow</option>
+                  <option value="purple">Purple Glow</option>
+                  <option value="gold">Gold Glow</option>
+                  <option value="emerald">Emerald Glow</option>
+                  <option value="crimson">Crimson Glow</option>
+                </select>
+              </div>
+              <div className="border-b border-gray-700 pb-2">
+                <div className="text-cyan-400 font-semibold mb-1">Mission Node Glow:</div>
+                <select
+                  value={missionGlowStyle}
+                  onChange={(e) => setMissionGlowStyle(parseInt(e.target.value) as any)}
+                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+                >
+                  <option value="1">Soft Radial Glow</option>
+                  <option value="2">Double Halo</option>
+                  <option value="3">Ethereal Aura</option>
+                  <option value="4">Gentle Pulse</option>
+                  <option value="5">Shimmer Edge</option>
+                </select>
+              </div>
               {selectedNode && (
                 <div className="border-b border-gray-700 pb-2">
                   <div className="text-yellow-400 font-semibold">Selected Node:</div>
@@ -4154,7 +4976,7 @@ export default function StoryClimbPage() {
 
       {/* Debug: Lock Difficulty Panel - Collapsible */}
       {selectedNode && (
-        <div className="fixed top-24 left-4 z-50">
+        <div className="fixed bottom-4 right-80 z-50">
           {lockDifficultyPanelMinimized ? (
             // Minimized state
             <button
@@ -4215,39 +5037,11 @@ export default function StoryClimbPage() {
         </div>
       )}
 
-      {/* Mission Statistics Layout Selector - Floating in upper left */}
-      <div className="fixed top-24 left-4 z-50">
-        <div className="bg-black/95 border-2 border-purple-500/50 p-2 rounded-lg">
-          <div className="text-purple-400 text-xs font-bold mb-2">MISSION STATS LAYOUT</div>
-          <select
-            value={missionStatsLayout}
-            onChange={(e) => setMissionStatsLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="bg-black/80 border border-purple-500/50 text-purple-400 text-xs px-2 py-1 rounded w-full"
-          >
-            <option value={1}>Grid Layout (Current)</option>
-            <option value={2}>Compact Rows</option>
-            <option value={3}>Vertical Stack</option>
-            <option value={4}>Minimalist Bar</option>
-            <option value={5}>Side-by-Side Cards</option>
-          </select>
-        </div>
-      </div>
-
-
-      {/* Header */}
-      <div className="bg-black/80 backdrop-blur-sm border-b-2 border-yellow-500/50 p-4 mb-6">
-        <div className="flex items-center justify-between max-w-[1600px] mx-auto px-5">
-          <h1 className="text-2xl font-bold text-yellow-500 font-orbitron tracking-wider">
-            STORY MODE - CHAPTER 1
-          </h1>
-
-        </div>
-      </div>
 
       {/* Main Content - Wider container for better layout */}
-      <div className="max-w-[1600px] mx-auto pl-5">
+      <div className="max-w-[1600px] mx-auto pl-5 pt-5 relative z-10">
         {/* Two Column Layout - adjusted to reduce gap */}
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
             {/* Canvas Container with Style Q background */}
@@ -4529,13 +5323,16 @@ export default function StoryClimbPage() {
                   
                   requestAnimationFrame(animate);
                 }}
-                className="absolute top-32 left-1/3 transform -translate-x-1/2 px-3 py-1 bg-black/60 border border-yellow-500/40 rounded-md text-yellow-500 text-xs font-orbitron uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500/60 transition-all duration-200 flex items-center gap-1 z-20 cursor-pointer"
+                className="absolute px-3 py-1.5 bg-black/90 border border-yellow-500/60 rounded text-yellow-500 text-xs font-orbitron uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500 transition-all duration-200 flex items-center gap-1.5 z-50 cursor-pointer backdrop-blur-sm shadow-lg"
                 style={{
+                  top: '34px',
+                  left: 'calc(50% - 150px)',
+                  transform: 'translateX(-50%)',
                   animation: 'fadeIn 0.3s ease-out forwards',
                 }}
               >
-                Jump Down
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="animate-bounce">
+                <span style={{ position: 'relative', top: '2px' }}>Jump Down</span>
+                <svg width="16" height="16" viewBox="0 0 12 12" fill="none" className="animate-bounce" style={{ position: 'relative', top: '4px' }}>
                   <path d="M6 2L6 9M6 9L3 6M6 9L9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
@@ -4561,66 +5358,553 @@ export default function StoryClimbPage() {
               </div>
             )}
 
-            {/* Mission Statistics Card - Below Node Tree */}
+            {/* Mission Statistics Card - Below Node Tree - NOW CONTAINS SUCCESS METER & DEPLOY */}
             {missionStatsLayout === 1 && (
-              /* Layout 1: Grid Layout (Current) */
-              <div className="mt-4 bg-black/90 border-2 border-yellow-500/50 rounded-lg shadow-2xl overflow-hidden"
-                   style={{ width: '503px' }}>
-                <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-4 py-3 border-b border-yellow-500/30">
-                  <h3 className="text-yellow-500 font-black uppercase tracking-[0.2em] text-sm"
-                      style={{ fontFamily: 'Orbitron, monospace' }}>
-                    MISSION STATISTICS
-                  </h3>
-                </div>
+              /* Layout 1: Success Meter, Mission Status, Deploy */
+              <div className={`mt-4 border-2 rounded-lg shadow-2xl overflow-hidden relative ${
+                selectedNode ? 'border-yellow-500/50' : 'border-gray-700/30'
+              }`}
+                   style={{
+                     width: '503px',
+                     background: selectedNode
+                       ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%)'
+                       : 'linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.01) 100%)'
+                   }}>
                 <div className="p-4">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-black/50 border border-yellow-500/30 rounded p-3">
-                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Gold Earned</div>
-                      <div className="text-yellow-400 text-2xl font-bold font-mono">
-                        {missionStats.totalGold.toLocaleString()}
+                  {/* FULL WIDTH - Success Meter */}
+                  {currentDifficultyConfig && selectedNode ? (
+                    <div className="mb-4">
+                      <SuccessMeterV2
+                        successRate={
+                          showTestPanel ? testSuccessRate :
+                          completedNodes.has(selectedNode.id) ? 100 :
+                          isNodeAvailable(selectedNode) ?
+                            calculateSuccessChance(
+                              selectedNode.id,
+                              65,
+                              getNodeVariationBuffs(selectedNode as ExtendedStoryNode)
+                            ) : 0
+                        }
+                        greenLine={currentDifficultyConfig?.successGreenLine || 50}
+                        baseRewards={{
+                          gold: (() => {
+                            let baseGold = 0;
+                            if (selectedNode.storyNodeType === 'event') {
+                              const eventData = getEventDataForNode(selectedNode);
+                              if (eventData?.goldReward) {
+                                baseGold = eventData.goldReward;
+                              } else {
+                                const labelMatch = selectedNode.label?.match(/E(\d+)/);
+                                const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
+                                baseGold = 100 + (eventNum - 1) * 50;
+                              }
+                            } else {
+                              const deployedMek = getDeployedMekForNode(selectedNode);
+                              if (deployedMek && deployedMek.goldReward !== undefined && deployedMek.goldReward !== null) {
+                                baseGold = Number(deployedMek.goldReward);
+                              } else {
+                                baseGold = selectedNode.storyNodeType === 'final_boss' ? 1000000 :
+                                          selectedNode.storyNodeType === 'boss' ? 500000 :
+                                          selectedNode.storyNodeType === 'normal' ? 150000 : 250000;
+                              }
+                            }
+                            return Math.round(baseGold * currentDifficultyConfig.goldMultiplier);
+                          })(),
+                          xp: (() => {
+                            let baseXP = 0;
+                            if (selectedNode.storyNodeType === 'event') {
+                              const eventData = getEventDataForNode(selectedNode);
+                              if (eventData?.xpReward) {
+                                baseXP = eventData.xpReward;
+                              } else {
+                                const labelMatch = selectedNode.label?.match(/E(\d+)/);
+                                const eventNum = labelMatch ? parseInt(labelMatch[1]) : 1;
+                                baseXP = 10 + (eventNum - 1) * 10;
+                              }
+                            } else {
+                              const deployedMek = getDeployedMekForNode(selectedNode);
+                              if (deployedMek?.xpReward) {
+                                baseXP = deployedMek.xpReward;
+                              } else if (deployedMek?.rank) {
+                                const rankFactor = (4000 - deployedMek.rank) / 4000;
+                                if (selectedNode.storyNodeType === 'normal') {
+                                  baseXP = Math.round(50 + rankFactor * 450);
+                                } else if (selectedNode.storyNodeType === 'boss') {
+                                  baseXP = Math.round(500 + rankFactor * 1500);
+                                } else if (selectedNode.storyNodeType === 'final_boss') {
+                                  baseXP = Math.round(2000 + rankFactor * 3000);
+                                } else {
+                                  baseXP = 5000;
+                                }
+                              } else {
+                                baseXP = selectedNode.storyNodeType === 'final_boss' ? 20000 :
+                                        selectedNode.storyNodeType === 'boss' ? 10000 :
+                                        selectedNode.storyNodeType === 'normal' ? 3000 : 5000;
+                              }
+                            }
+                            return Math.round(baseXP * currentDifficultyConfig.xpMultiplier);
+                          })()
+                        }}
+                        difficultyConfig={{
+                          goldMultiplier: currentDifficultyConfig?.goldMultiplier || 1,
+                          xpMultiplier: currentDifficultyConfig?.xpMultiplier || 1,
+                          essenceAmountMultiplier: currentDifficultyConfig?.essenceAmountMultiplier || 1,
+                          overshootBonusRate: currentDifficultyConfig?.overshootBonusRate || 1,
+                          maxOvershootBonus: currentDifficultyConfig?.maxOvershootBonus || 50
+                        }}
+                        showTitle={true}
+                        barHeight={56}
+                        className=""
+                      />
+                    </div>
+                  ) : selectedNode ? (
+                    // Fallback when no difficulty config but node is selected
+                    <div className="mb-4">
+                      <SuccessMeterV2
+                        successRate={
+                          showTestPanel ? testSuccessRate :
+                          completedNodes.has(selectedNode.id) ? 100 :
+                          isNodeAvailable(selectedNode) ?
+                            calculateSuccessChance(
+                              selectedNode.id,
+                              65,
+                              getNodeVariationBuffs(selectedNode as ExtendedStoryNode)
+                            ) : 0
+                        }
+                        greenLine={50}
+                        baseRewards={{
+                          gold: 250000,
+                          xp: 5000
+                        }}
+                        difficultyConfig={{
+                          goldMultiplier: 1,
+                          xpMultiplier: 1,
+                          essenceAmountMultiplier: 1,
+                          overshootBonusRate: 1,
+                          maxOvershootBonus: 50
+                        }}
+                        showTitle={true}
+                        barHeight={56}
+                        className=""
+                      />
+                    </div>
+                  ) : (
+                    // Show empty/placeholder meter when no node is selected
+                    <div className="mb-4 opacity-30">
+                      {/* Custom placeholder SUCCESS METER display */}
+                      <div className="relative">
+                        {/* Title */}
+                        <div className="relative mb-6" style={{ transform: 'scale(1)', transformOrigin: 'center top' }}>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-96 h-1 bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
+                          </div>
+                          <div className="relative text-center">
+                            <h2 className="text-3xl font-black uppercase tracking-[0.3em] whitespace-nowrap text-gray-600"
+                                style={{
+                                  fontFamily: 'Orbitron, monospace',
+                                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))'
+                                }}>
+                              SUCCESS METER
+                            </h2>
+                          </div>
+                        </div>
+
+                        {/* Bar container */}
+                        <div className="relative bg-black/90 border-2 border-gray-700/50 shadow-2xl overflow-hidden">
+                          <div className="relative z-10">
+                            {/* Progress bar area */}
+                            <div className="relative" style={{ height: '56px' }}>
+                              <div className="absolute inset-0 bg-gray-900/40"></div>
+                              {/* Empty bar with no progress */}
+                              <div className="absolute top-0 left-0 h-full bg-gray-800/30" style={{ width: '0%' }}></div>
+                            </div>
+
+                            {/* Status section with dashes */}
+                            <div className="bg-gradient-to-b from-gray-700/10 to-transparent px-4 py-3 flex items-center justify-between">
+                              <div className="text-left">
+                                <div className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">MISSION STATUS</div>
+                                <div className="font-bold font-['Orbitron'] uppercase text-xl text-gray-600">
+                                  ----------
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-600">OVERSHOOT</div>
+                                <div className="text-2xl font-bold text-gray-600" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+                                  ---%
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
+
+                            {/* Rewards section with dashes */}
+                            <div className="px-4 py-3 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs uppercase font-bold text-gray-600">Gold:</span>
+                                <span className="text-sm font-bold tabular-nums text-gray-600">---</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs uppercase font-bold text-gray-600">XP:</span>
+                                <span className="text-sm font-bold tabular-nums text-gray-600">---</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-black/50 border border-blue-500/30 rounded p-3">
-                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Experience</div>
-                      <div className="text-blue-400 text-2xl font-bold font-mono">
-                        {missionStats.totalExperience.toLocaleString()}
+                  )}
+
+                  {/* ASYMMETRIC FOCUS DESIGN - Hero Deploy with Supporting Resources */}
+                  {selectedNode ? (
+                    <div className="flex gap-3 items-stretch">
+                      {/* LEFT - Resource Grid */}
+                      <div className="flex-1">
+                        <div className="bg-gray-900/50 border border-yellow-500/20 rounded-sm h-full p-3">
+                        <div className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-2 text-center font-bold">
+                          CONTRACT FEES
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {/* Row 1: Gold */}
+                          <div className={`bg-gradient-to-r from-yellow-500/20 via-yellow-500/10 to-yellow-500/5 border ${flashingFees ? 'flash-red border-red-500' : 'border-yellow-500/30'} rounded-sm overflow-hidden`}>
+                            <div className="flex h-7">
+                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
+                                <span className="text-sm text-yellow-400 uppercase font-black">GOLD</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-end">
+                                <span className="text-yellow-400 font-black text-base">
+                                  {formatGoldAmount(
+                                    (() => {
+                                      const baseFee = selectedNode.storyNodeType === 'final_boss' ? 200000 :
+                                                     selectedNode.storyNodeType === 'boss' ? 100000 :
+                                                     selectedNode.storyNodeType === 'event' ? 75000 :
+                                                     selectedNode.storyNodeType === 'normal' ? 30000 : 50000;
+                                      return currentDifficultyConfig ?
+                                        Math.round(baseFee * currentDifficultyConfig.deploymentFeeMultiplier) : baseFee;
+                                    })()
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 2: Essence */}
+                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-purple-500/30'} rounded-sm overflow-hidden`}>
+                            <div className="flex h-7">
+                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">ESSENCE</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
+                                <span className="text-purple-400 font-bold text-[11px]">Ace of Spades Ultimate</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
+                                <span className="text-purple-300 font-bold text-xs">1.5</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 3: Chip */}
+                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-cyan-500/30'} rounded-sm overflow-hidden`}>
+                            <div className="flex h-7">
+                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">CHIP</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
+                                <span className="text-cyan-400 font-bold text-[11px]">Bowling</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
+                                <span className="text-cyan-300 font-bold text-xs">A-Mod</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 4: Special */}
+                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-green-500/30'} rounded-sm overflow-hidden`}>
+                            <div className="flex h-7">
+                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">SPECIAL</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
+                                <span className="text-green-400 font-bold text-[11px]">DMT Canister</span>
+                              </div>
+                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
+                                <span className="text-green-300 font-bold text-xs">1</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* RIGHT - Duration and Deploy/Cancel Button */}
+                    <div className="w-32 h-full flex flex-col gap-1">
+                      {/* Check if there's an active mission for this node */}
+                      {(() => {
+                        const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
+                        const isActive = !!activeMission;
+
+                        return (
+                          <>
+                            {/* Mission Duration or Countdown Timer - extended height */}
+                            <div className="relative overflow-hidden rounded-sm" style={{ height: 'calc(55% + 12px)' }}>
+                              {isActive ? (
+                                // Show countdown timer when mission is active
+                                <>
+                                  {/* Animated background gradient - cyan theme for active */}
+                                  <div className="absolute inset-0 bg-gradient-to-br from-black via-cyan-950/30 to-black" />
+
+                                  {/* Scan line effect - cyan */}
+                                  <div className="absolute inset-0 opacity-20"
+                                    style={{
+                                      backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(6, 182, 212, 0.3) 50%)',
+                                      backgroundSize: '100% 4px',
+                                      animation: 'scan 4s linear infinite'
+                                    }}
+                                  />
+
+                                  {/* Border glow - cyan */}
+                                  <div className="absolute inset-0 border border-cyan-500/30"
+                                    style={{ boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2)' }}
+                                  />
+
+                                  {/* Countdown Content */}
+                                  <div className="relative h-full flex items-center justify-center px-2 py-2">
+                                    <MissionCountdown
+                                      endTime={activeMission.startTime + activeMission.duration}
+                                      onComplete={async () => {
+                                        // Complete the mission when timer expires
+                                        await completeMission({ nodeId: selectedNode.id });
+                                        // Mark node as completed
+                                        if (!completedNodes.has(selectedNode.id)) {
+                                          const newCompleted = new Set(completedNodes);
+                                          newCompleted.add(selectedNode.id);
+                                          setCompletedNodes(newCompleted);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </>
+                              ) : (
+                                // Show duration when mission is not active
+                                <>
+                                  {/* Animated background gradient */}
+                                  <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black" />
+
+                                  {/* Scan line effect */}
+                                  <div className="absolute inset-0 opacity-20"
+                                    style={{
+                                      backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(250, 182, 23, 0.3) 50%)',
+                                      backgroundSize: '100% 4px',
+                                      animation: 'scan 8s linear infinite'
+                                    }}
+                                  />
+
+                                  {/* Hexagonal pattern overlay */}
+                                  <div className="absolute inset-0 opacity-10"
+                                    style={{
+                                      backgroundImage: `
+                                        linear-gradient(30deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%),
+                                        linear-gradient(150deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%),
+                                        linear-gradient(270deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%)
+                                      `,
+                                      backgroundSize: '20px 35px'
+                                    }}
+                                  />
+
+                                  {/* Border glow */}
+                                  <div className="absolute inset-0 border border-yellow-500/30"
+                                    style={{ boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.1)' }}
+                                  />
+
+                                  {/* Content */}
+                                  <div className="relative h-full flex flex-col items-center justify-center px-2 py-2">
+                                    <div className="text-xs text-gray-400 uppercase tracking-[0.2em] text-center font-bold">Duration</div>
+                                    <div className="text-center mt-1">
+                                      <span className="text-yellow-400 font-black text-2xl"
+                                        style={{
+                                          fontFamily: 'Roboto Mono, monospace',
+                                          textShadow: '0 0 20px rgba(250, 182, 23, 0.6), 0 0 40px rgba(250, 182, 23, 0.3)'
+                                        }}>
+                                        {(() => {
+                                          // Calculate duration based on node position
+                                          const isChallenger = (selectedNode as any).challenger === true;
+                                          let minutes = 15; // default
+
+                                          if (selectedNode.storyNodeType === 'final_boss') {
+                                            minutes = calculateNodeDuration(selectedNode, 'finalboss');
+                                          } else if (selectedNode.storyNodeType === 'boss') {
+                                            minutes = calculateNodeDuration(selectedNode, 'miniboss');
+                                          } else if (selectedNode.storyNodeType === 'event') {
+                                            minutes = calculateNodeDuration(selectedNode, 'event');
+                                          } else if (isChallenger) {
+                                            minutes = calculateNodeDuration(selectedNode, 'challenger');
+                                          } else {
+                                            minutes = calculateNodeDuration(selectedNode, 'normal');
+                                          }
+
+                                          // Format duration display
+                                          if (minutes < 60) {
+                                            return `${minutes}m`;
+                                          } else if (minutes < 1440) { // Less than 24 hours
+                                            const hours = Math.floor(minutes / 60);
+                                            const mins = minutes % 60;
+                                            return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                                          } else { // Days
+                                            const days = Math.floor(minutes / 1440);
+                                            const hours = Math.floor((minutes % 1440) / 60);
+                                            return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+                                          }
+                                        })()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Deploy or Cancel Button - fills remaining space to align with bottom */}
+                            <div
+                              className="flex-1 mt-[17px]"
+                              onMouseEnter={() => {
+                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                                  setIsHoveringDeployButton(true);
+                                  setShowDeployTooltip(true);
+                                  setFlashingMekSlots(true);
+                                }
+                              }}
+                              onMouseLeave={() => {
+                                setIsHoveringDeployButton(false);
+                                setShowDeployTooltip(false);
+                                setFlashingMekSlots(false);
+                              }}
+                              onMouseMove={(e) => {
+                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                                  setMousePos({ x: e.clientX, y: e.clientY });
+                                }
+                              }}
+                            >
+                              <div className="w-full h-full relative">
+                                <HolographicButton
+                                  text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
+                                  onClick={() => {
+                                    if (deployingNodes.has(selectedNode.id)) {
+                                      return; // Prevent clicks while deploying
+                                    }
+                                    if (isActive) {
+                                      // Show cancel confirmation lightbox
+                                      setPendingCancelNodeId(selectedNode.id);
+                                      setShowCancelLightbox(true);
+                                    } else {
+                                      handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
+                                      setCompletedDifficulties(prev => ({
+                                        ...prev,
+                                        [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                                      }));
+                                    }
+                                  }}
+                                  isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
+                                  variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
+                                  alwaysOn={true}  // Always show particles
+                                  disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
+                                  className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ) : (
+                  // Show placeholder when no node is selected
+                  <div className="opacity-30">
+                    <div className="flex gap-3 items-stretch">
+                      {/* LEFT - Resource Grid */}
+                      <div className="flex-1">
+                        <div className="bg-black/80 border border-gray-700/20 rounded-sm h-full p-3">
+                          <div className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-2 text-center font-bold">
+                            CONTRACT FEES
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">GOLD</span>
+                                <span className="text-gray-600 font-black text-lg">---</span>
+                              </div>
+                            </div>
+                            <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                              <div className="text-[9px] text-gray-600 uppercase">ACE ESSENCE</div>
+                              <div className="text-gray-600 font-bold text-sm">--</div>
+                            </div>
+                            <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                              <div className="text-[9px] text-gray-600 uppercase">BOWLING CHIP</div>
+                              <div className="text-gray-600 font-bold text-sm">--</div>
+                            </div>
+                            <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[9px] text-gray-600 uppercase">SPECIAL</span>
+                                <span className="text-gray-600 font-bold text-sm">---</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* RIGHT - Deploy Button (disabled) */}
+                      <div className="flex-shrink-0">
+                        <div className="w-32 h-[140px]">
+                          <button disabled className="w-full h-full relative overflow-hidden bg-gray-900/40 border-2 border-gray-800 cursor-not-allowed opacity-50 rounded-sm">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                              <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 12L5 19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V12"
+                                      stroke="currentColor"
+                                      strokeWidth="2.5"
+                                      fill="none"
+                                      fillOpacity="0"
+                                      className="text-gray-700" />
+                                <path d="M12 7V17M7 10L12 7L17 10"
+                                      stroke="currentColor"
+                                      strokeWidth="2.5"
+                                      className="text-gray-700" />
+                              </svg>
+                              <div>
+                                <div className="font-black text-base tracking-[0.3em] uppercase text-gray-700">
+                                  DEPLOY
+                                </div>
+                                <div className="text-[9px] tracking-[0.2em] uppercase mt-0.5 text-gray-800">
+                                  SELECT NODE
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-gradient-to-b from-green-900/20 to-black/50 border border-green-500/30 rounded p-3">
-                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Easy Completed</div>
-                      <div className="text-green-400 text-3xl font-black text-center">
-                        {missionStats.easyCompleted}
+                )}
+                  {/* Tooltip for inactive deploy button */}
+                  {showDeployTooltip && typeof window !== 'undefined' && createPortal(
+                    <div
+                      className="fixed pointer-events-none"
+                      style={{
+                        left: `${Math.min(Math.max(mousePos.x, 150), window.innerWidth - 150)}px`,
+                        top: `${mousePos.y - 60}px`,
+                        transform: 'translateX(-50%)',
+                        zIndex: 99999,
+                      }}
+                    >
+                      <div className="bg-black/95 border border-yellow-400/50 px-3 py-2 rounded shadow-xl">
+                        <div className="text-sm text-yellow-400 whitespace-nowrap">
+                          Please enlist at least one mechanism
+                        </div>
                       </div>
-                      <div className="text-green-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
-                    </div>
-                    <div className="bg-gradient-to-b from-yellow-900/20 to-black/50 border border-yellow-500/30 rounded p-3">
-                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Medium Completed</div>
-                      <div className="text-yellow-400 text-3xl font-black text-center">
-                        {missionStats.mediumCompleted}
-                      </div>
-                      <div className="text-yellow-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
-                    </div>
-                    <div className="bg-gradient-to-b from-red-900/20 to-black/50 border border-red-500/30 rounded p-3">
-                      <div className="text-gray-500 text-xs uppercase tracking-wider mb-2">Hard Completed</div>
-                      <div className="text-red-400 text-3xl font-black text-center">
-                        {missionStats.hardCompleted}
-                      </div>
-                      <div className="text-red-500/50 text-xs text-center mt-1 uppercase">Contracts</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-yellow-500/20 text-center">
-                    <span className="text-gray-500 text-xs uppercase tracking-wider">Total Contracts Completed: </span>
-                    <span className="text-yellow-500 font-bold text-sm">
-                      {missionStats.easyCompleted + missionStats.mediumCompleted + missionStats.hardCompleted}
-                    </span>
-                  </div>
+                    </div>,
+                    document.body
+                  )}
                 </div>
               </div>
             )}
 
-            {missionStatsLayout === 2 && (
+            {false && missionStatsLayout === 2 && (
               /* Layout 2: Compact Rows */
               <div className="mt-4 bg-black/90 border-2 border-yellow-500/50 rounded-lg shadow-2xl"
                    style={{ width: '503px' }}>
@@ -4664,7 +5948,7 @@ export default function StoryClimbPage() {
               </div>
             )}
 
-            {missionStatsLayout === 3 && (
+            {false && missionStatsLayout === 3 && (
               /* Layout 3: Vertical Stack */
               <div className="mt-4 bg-gradient-to-b from-black to-gray-950 border-2 border-yellow-500/50 rounded-lg shadow-2xl"
                    style={{ width: '503px' }}>
@@ -4706,7 +5990,7 @@ export default function StoryClimbPage() {
               </div>
             )}
 
-            {missionStatsLayout === 4 && (
+            {false && missionStatsLayout === 4 && (
               /* Layout 4: Minimalist Bar */
               <div className="mt-4 bg-black/80 border border-yellow-500/30 rounded shadow-xl"
                    style={{ width: '503px' }}>
@@ -4732,7 +6016,7 @@ export default function StoryClimbPage() {
               </div>
             )}
 
-            {missionStatsLayout === 5 && (
+            {false && missionStatsLayout === 5 && (
               /* Layout 5: Side-by-Side Cards */
               <div className="mt-4 flex gap-3" style={{ width: '503px' }}>
                 <div className="flex-1 bg-black/90 border-2 border-yellow-500/50 rounded-lg p-3">
@@ -4930,7 +6214,7 @@ export default function StoryClimbPage() {
                 availableSlots={currentDifficultyConfig ? calculateMekSlots(currentDifficultyConfig, selectedNode.id) : getNodeAvailableSlots(selectedNode as ExtendedStoryNode)}
                 selectedMeks={selectedMeks[selectedNode.id] || []}
                 onDeploy={() => {
-                  handleNodeDeploy(selectedNode as ExtendedStoryNode);
+                  handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
                   // Mark the current difficulty as completed
                   setCompletedDifficulties(prev => ({
                     ...prev,
@@ -4961,21 +6245,42 @@ export default function StoryClimbPage() {
                 }))}
                 variationBuffLayoutStyle={2} // Locked to Classic Grid
                 successMeterCardLayout={successMeterCardLayout}
+                flashingMekSlots={flashingMekSlots}
               />
             ) : (
-              // No node selected or hovered - Using Style K from UI Showcase
-              <StyleK className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <h3 className="text-2xl font-orbitron font-bold text-yellow-500 mb-3 uppercase tracking-wider">Select A Node</h3>
-                  <p className="text-gray-400 text-sm">
-                    Click any available node to view mission details
-                  </p>
-
-                  <div className="mt-8 text-xs text-gray-500">
-                    <p>Progress: {completedNodes.size} / {treeData?.nodes.length || 0} Nodes</p>
-                  </div>
-                </div>
-              </StyleK>
+              // No node selected - show empty state with darkened card
+              <div className="opacity-30">
+                <StoryMissionCard
+                  title="----------"
+                  mekImage=""
+                  mekName="----------"
+                  mekRank={null}
+                  goldReward={0}
+                  xpReward={0}
+                  potentialRewards={[]}
+                  variationBuffs={[]}
+                  successChance={0}
+                  deploymentFee={0}
+                  availableSlots={0}
+                  selectedMeks={[]}
+                  onDeploy={() => {}}
+                  onMekSlotClick={() => {}}
+                  onMekRemove={() => {}}
+                  scale={0.95}
+                  isLocked={false}
+                  isEmpty={true}
+                  currentDifficulty={'medium'}
+                  onDifficultyChange={() => {}}
+                  showDifficultySelector={false}
+                  difficultyConfig={null}
+                  lockedStyle={1}
+                  completedDifficulties={new Set()}
+                  onDifficultyComplete={() => {}}
+                  mekContributions={[]}
+                  variationBuffLayoutStyle={2}
+                  successMeterCardLayout={successMeterCardLayout}
+                />
+              </div>
             )}
 
             {/* Complete button - outside the card for easy removal later */}
@@ -5092,6 +6397,88 @@ export default function StoryClimbPage() {
           </div>
         )}
       </div>
+
+      {/* Cancel Mission Confirmation Lightbox */}
+      <CancelMissionLightbox
+        isOpen={showCancelLightbox}
+        onClose={() => {
+          setShowCancelLightbox(false);
+          setPendingCancelNodeId(null);
+        }}
+        onConfirm={async () => {
+          if (pendingCancelNodeId) {
+            try {
+              await cancelMission({ nodeId: pendingCancelNodeId });
+              console.log(`Mission cancelled for node ${pendingCancelNodeId}`);
+            } catch (error) {
+              console.error('Failed to cancel mission:', error);
+            }
+          }
+          setShowCancelLightbox(false);
+          setPendingCancelNodeId(null);
+        }}
+        contractFee={(() => {
+          if (pendingCancelNodeId && selectedNode?.id === pendingCancelNodeId) {
+            return getNodeContractFee(selectedNode as ExtendedStoryNode);
+          }
+          return 0;
+        })()}
+      />
+
+      {/* Deploy Validation Popup */}
+      {showDeployValidationPopup && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          onClick={() => setShowDeployValidationPopup(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+
+          {/* Popup */}
+          <div
+            className="relative bg-black/95 border-2 border-red-500/50 rounded-lg p-6 max-w-md mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 0 50px rgba(239, 68, 68, 0.3)',
+            }}
+          >
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center">
+                <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-xl font-bold text-red-400 text-center mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+              Cannot Deploy Mission
+            </h2>
+
+            {/* Error Messages */}
+            <div className="bg-red-900/20 border border-red-500/30 rounded p-4 mb-6">
+              <ul className="space-y-2">
+                {deployValidationErrors.map((error, index) => (
+                  <li key={index} className="text-red-400 flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span>{error}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* OK Button */}
+            <button
+              onClick={() => setShowDeployValidationPopup(false)}
+              className="w-full bg-red-500/20 border-2 border-red-500 text-red-400 font-bold py-3 px-6 rounded hover:bg-red-500/30 transition-colors uppercase tracking-wider"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

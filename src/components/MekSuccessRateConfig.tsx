@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface SuccessRatePoint {
   rank: number;
@@ -32,6 +33,22 @@ export default function MekSuccessRateConfig() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [applicationLogs, setApplicationLogs] = useState<ApplicationLog[]>([]);
 
+  // Save/Load state
+  const [saveName, setSaveName] = useState('');
+  const [currentConfigId, setCurrentConfigId] = useState<Id<"mekSuccessRateSaves"> | null>(null);
+  const [currentConfigName, setCurrentConfigName] = useState<string | null>(null);
+  const [selectedSaveId, setSelectedSaveId] = useState<Id<"mekSuccessRateSaves"> | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
+
+  // Convex queries and mutations
+  const savedConfigs = useQuery(api.mekSuccessRates.getAllSaves);
+  const currentSave = useQuery(api.mekSuccessRates.getCurrentSave);
+  const createSave = useMutation(api.mekSuccessRates.createSave);
+  const updateSave = useMutation(api.mekSuccessRates.updateSave);
+  const loadSave = useMutation(api.mekSuccessRates.loadSave);
+  const deleteSave = useMutation(api.mekSuccessRates.deleteSave);
+
   // Load application logs from localStorage on mount
   useEffect(() => {
     const savedLogs = localStorage.getItem('mekSuccessRateLogs');
@@ -47,6 +64,19 @@ export default function MekSuccessRateConfig() {
       }
     }
   }, []);
+
+  // Auto-load the current active configuration when component mounts or when it changes
+  useEffect(() => {
+    if (currentSave) {
+      setCurveType(currentSave.curveType);
+      setMinSuccess(currentSave.minSuccess);
+      setMaxSuccess(currentSave.maxSuccess);
+      setSteepness(currentSave.steepness);
+      setMidPoint(currentSave.midPoint);
+      setCurrentConfigId(currentSave._id);
+      setCurrentConfigName(currentSave.saveName);
+    }
+  }, [currentSave]);
 
   // Calculate success rate for a given rank based on curve type
   const calculateSuccessRate = useCallback((rank: number): number => {
@@ -120,7 +150,11 @@ export default function MekSuccessRateConfig() {
     // Save to localStorage
     localStorage.setItem('mekSuccessRateLogs', JSON.stringify(updatedLogs));
 
-    // TODO: Save this configuration to Convex and apply to all 4000 Meks
+    // If we have a current config, auto-update it
+    if (currentConfigId) {
+      handleUpdate();
+    }
+
     console.log(`Applying success rate curve to all ${TOTAL_MEKS} Meks:`, {
       curveType,
       minSuccess,
@@ -132,6 +166,97 @@ export default function MekSuccessRateConfig() {
     // Show confirmation
     setShowConfirmation(true);
     setTimeout(() => setShowConfirmation(false), 3000);
+  };
+
+  const handleSaveNew = async () => {
+    if (!saveName.trim()) {
+      alert('Please enter a name for the save');
+      return;
+    }
+
+    try {
+      const saveId = await createSave({
+        saveName: saveName.trim(),
+        curveType,
+        minSuccess,
+        maxSuccess,
+        steepness,
+        midPoint,
+        totalMeks: TOTAL_MEKS,
+      });
+
+      setCurrentConfigId(saveId);
+      setCurrentConfigName(saveName.trim());
+      setShowSaveDialog(false);
+      setSaveName('');
+      alert(`Configuration saved as "${saveName.trim()}"`);
+    } catch (error: any) {
+      alert(error.message || 'Failed to save configuration');
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!currentConfigId) {
+      alert('No configuration is currently loaded. Please save as a new configuration first.');
+      return;
+    }
+
+    try {
+      await updateSave({
+        saveId: currentConfigId,
+        curveType,
+        minSuccess,
+        maxSuccess,
+        steepness,
+        midPoint,
+        totalMeks: TOTAL_MEKS,
+      });
+      alert(`Updated configuration: "${currentConfigName}"`);
+    } catch (error) {
+      alert('Failed to update configuration');
+    }
+  };
+
+  const handleLoad = async () => {
+    if (!selectedSaveId) {
+      alert('Please select a save to load');
+      return;
+    }
+
+    try {
+      const result = await loadSave({ saveId: selectedSaveId });
+      if (result) {
+        setCurveType(result.curveType);
+        setMinSuccess(result.minSuccess);
+        setMaxSuccess(result.maxSuccess);
+        setSteepness(result.steepness);
+        setMidPoint(result.midPoint);
+        setCurrentConfigId(result._id);
+        setCurrentConfigName(result.saveName);
+        setShowLoadDialog(false);
+        setSelectedSaveId(null);
+        alert(`Loaded configuration: "${result.saveName}"`);
+      }
+    } catch (error) {
+      alert('Failed to load configuration');
+    }
+  };
+
+  const handleDelete = async (saveId: Id<"mekSuccessRateSaves">) => {
+    if (!confirm('Are you sure you want to delete this saved configuration?')) {
+      return;
+    }
+
+    try {
+      await deleteSave({ saveId });
+      if (saveId === currentConfigId) {
+        setCurrentConfigId(null);
+        setCurrentConfigName(null);
+      }
+      alert('Configuration deleted');
+    } catch (error) {
+      alert('Failed to delete configuration');
+    }
   };
 
   const presetCurves = [
@@ -157,7 +282,137 @@ export default function MekSuccessRateConfig() {
         <p className="text-sm text-gray-400">
           Set the base success percentage for each Mek based on their rarity rank (1 = most common, {TOTAL_MEKS} = rarest).
         </p>
+        {currentConfigName && (
+          <p className="text-xs text-green-400 mt-1">
+            Currently loaded: <span className="font-bold">{currentConfigName}</span>
+          </p>
+        )}
       </div>
+
+      {/* Save/Load/Update Controls */}
+      <div className="bg-black/50 border border-yellow-500/30 rounded-lg p-4">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowSaveDialog(true)}
+            className="bg-blue-500 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-400 transition-colors"
+          >
+            Save As New
+          </button>
+          {currentConfigId && (
+            <button
+              onClick={handleUpdate}
+              className="bg-green-500 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-green-400 transition-colors"
+            >
+              Update Current
+            </button>
+          )}
+          <button
+            onClick={() => setShowLoadDialog(true)}
+            className="bg-purple-500 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-purple-400 transition-colors"
+          >
+            Load Configuration
+          </button>
+        </div>
+      </div>
+
+      {/* Save Dialog */}
+      {showSaveDialog && (
+        <div className="bg-gray-900/95 border-2 border-yellow-500 rounded-lg p-4">
+          <h5 className="text-sm font-bold text-yellow-400 mb-3">Save Configuration</h5>
+          <input
+            type="text"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            placeholder="Enter configuration name"
+            className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1.5 text-white text-sm mb-3"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && handleSaveNew()}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveNew}
+              className="bg-green-500 text-white px-3 py-1 rounded text-sm font-bold hover:bg-green-400"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => {
+                setShowSaveDialog(false);
+                setSaveName('');
+              }}
+              className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-bold hover:bg-gray-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Load Dialog */}
+      {showLoadDialog && (
+        <div className="bg-gray-900/95 border-2 border-yellow-500 rounded-lg p-4">
+          <h5 className="text-sm font-bold text-yellow-400 mb-3">Load Configuration</h5>
+          <div className="space-y-2 max-h-60 overflow-y-auto mb-3">
+            {savedConfigs && savedConfigs.length > 0 ? (
+              savedConfigs.map((save) => (
+                <div
+                  key={save._id}
+                  onClick={() => setSelectedSaveId(save._id)}
+                  className={`bg-black/50 rounded p-2 cursor-pointer transition-colors ${
+                    selectedSaveId === save._id
+                      ? 'border-2 border-yellow-500'
+                      : 'border border-gray-700 hover:border-yellow-500/50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-sm font-bold text-white">{save.saveName}</div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(save.timestamp).toLocaleDateString()} at{' '}
+                        {new Date(save.timestamp).toLocaleTimeString()}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {save.curveType} | Min: {save.minSuccess}% | Max: {save.maxSuccess}%
+                      </div>
+                    </div>
+                    {save.isCurrentConfig && (
+                      <span className="text-xs text-green-400 font-bold">ACTIVE</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No saved configurations found</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleLoad}
+              disabled={!selectedSaveId}
+              className="bg-green-500 text-white px-3 py-1 rounded text-sm font-bold hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+            >
+              Load
+            </button>
+            {selectedSaveId && (
+              <button
+                onClick={() => handleDelete(selectedSaveId)}
+                className="bg-red-500 text-white px-3 py-1 rounded text-sm font-bold hover:bg-red-400"
+              >
+                Delete
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowLoadDialog(false);
+                setSelectedSaveId(null);
+              }}
+              className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-bold hover:bg-gray-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Curve Configuration */}
       <div className="space-y-4">

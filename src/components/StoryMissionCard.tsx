@@ -23,6 +23,7 @@ interface VariationBuff {
 }
 
 interface StoryMissionCardProps {
+  flashingMekSlots?: boolean;
   // Core mission data
   title?: string;
   mekImage?: string; // Path to the mek image
@@ -55,16 +56,8 @@ interface StoryMissionCardProps {
   completedDifficulties?: Set<'easy' | 'medium' | 'hard'>;
   onDifficultyComplete?: (difficulty: 'easy' | 'medium' | 'hard') => void;
 
-  // Success bar customization props
-  meterVariant?: 1 | 2 | 3 | 4 | 5;
-  layoutStyle?: 1 | 2 | 3 | 4 | 5;
-  subLayoutStyle?: 1.1 | 1.2 | 1.3 | 1.4 | 1.5;
-
   // Variation buff layout style
   variationBuffLayoutStyle?: 1 | 2 | 3 | 4 | 5;
-
-  // Success meter card layout
-  successMeterCardLayout?: 1 | 2 | 3 | 4 | 5;
 
   // State
   isLocked?: boolean;
@@ -126,12 +119,8 @@ export default function StoryMissionCard({
   lockedStyle = 1,
   completedDifficulties = new Set(),
   onDifficultyComplete,
-  // Success bar customization props
-  meterVariant: propMeterVariant,
-  layoutStyle: propLayoutStyle,
-  subLayoutStyle: propSubLayoutStyle,
   variationBuffLayoutStyle = 1,
-  successMeterCardLayout = 1
+  flashingMekSlots = false
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -140,14 +129,6 @@ export default function StoryMissionCard({
   const [showDeployTooltip, setShowDeployTooltip] = useState(false);
   const [selectedChip, setSelectedChip] = useState<{ tier: number; modifier: string } | null>(null);
   const [clickedChip, setClickedChip] = useState<{ tier: number; modifier: string } | null>(null);
-  const [successBarLayout, setSuccessBarLayout] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [successBarSubLayout, setSuccessBarSubLayout] = useState<1.1 | 1.2 | 1.3 | 1.4 | 1.5>(1.1);
-  const [meterVariantState, setMeterVariantState] = useState<1 | 2 | 3 | 4 | 5>(1);
-
-  // Use props if provided, otherwise use internal state
-  const meterVariant = propMeterVariant || meterVariantState;
-  const layoutStyle = propLayoutStyle || successBarLayout;
-  const subLayoutStyle = propSubLayoutStyle || successBarSubLayout;
 
   // Check if all difficulties are completed
   const allDifficultiesCompleted =
@@ -207,20 +188,126 @@ export default function StoryMissionCard({
   // Mock function to get available mek count for a variation (for testing)
   const getAvailableMekCount = (variationName: string): number => {
     const owned = getOwnedMekCount(variationName);
-    // Return about 30-70% of owned meks as available
-    const availablePercent = 0.3 + Math.random() * 0.4;
+    // Generate a deterministic percentage based on the variation name
+    const seed = variationName.charCodeAt(0) + variationName.charCodeAt(variationName.length - 1);
+    const availablePercent = 0.3 + ((seed % 40) / 100); // 30-70% range
     return Math.max(1, Math.floor(owned * availablePercent));
   };
 
   // If empty, show skeleton
   if (isEmpty) {
     return (
-      <div 
-        className="relative w-full max-w-md mx-auto"
+      <div
+        className="relative w-full max-w-[328px] mx-auto"
         style={{ transform: `scale(${scale})`, transformOrigin: 'top center', ...style }}
       >
-        <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden opacity-20">
-          <div className="h-[800px]" />
+        <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
+          {/* Mek Image Section - Empty State */}
+          <div className="relative">
+            <div className="relative w-full aspect-square bg-black/40">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-gray-700 text-6xl font-bold opacity-30">?</div>
+              </div>
+            </div>
+
+            {/* Title Card - Empty State (matching variation 1) */}
+            <div className="relative h-14 overflow-hidden border-t-2 border-b-2 border-gray-700/30">
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black" />
+              <div className="relative h-full flex items-center justify-between px-4">
+                <h2 className="text-xl font-black tracking-wider uppercase">
+                  <span className="text-gray-600">--- ----</span>
+                </h2>
+                <div className="text-sm text-gray-700">
+                  Rank <span className="text-gray-600 font-bold text-lg">----</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Difficulty Selector - Empty State */}
+          <div className="bg-black/80 border-b border-gray-700/30 px-2 py-2">
+            <div className="flex gap-1.5 justify-center">
+              {['EASY', 'MEDIUM', 'HARD'].map((diff) => (
+                <button
+                  key={diff}
+                  disabled
+                  className="px-3 py-1 bg-gray-900/40 border border-gray-800/30 rounded text-[10px] font-bold text-gray-700 cursor-not-allowed opacity-50"
+                >
+                  {diff}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gold and XP Bar - Empty State */}
+          <div className="relative bg-black/90 border-y border-gray-700/30 overflow-hidden">
+            <div className="relative grid grid-cols-2 h-12">
+              <div className="flex items-center justify-center">
+                <div className="flex items-end gap-0.5">
+                  <span className="text-[22px] font-semibold text-gray-600 leading-none">---</span>
+                  <span className="text-[11px] text-gray-600 font-bold mb-[1px]">GOLD</span>
+                </div>
+              </div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-6 bg-gray-700/30" />
+              <div className="flex items-center justify-center">
+                <div className="flex items-end gap-0.5">
+                  <span className="text-[22px] font-semibold text-gray-600 leading-none">+---</span>
+                  <span className="text-[14px] text-gray-600/80 font-bold mb-[1px]">XP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 relative">
+            {/* Potential Rewards - Empty State */}
+            <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
+              <div className="mek-label-uppercase mb-2 text-[10px] text-gray-600">Potential Rewards</div>
+              <div className="space-y-1">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-gray-800/30 rounded" />
+                      <span className="text-[10.5px] text-gray-700">----------</span>
+                    </div>
+                    <span className="text-[10.5px] font-bold text-gray-700">--%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Variation Buffs Card - Empty State (Layout 2: Classic Grid) */}
+            <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
+              <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
+              <div className="flex items-center justify-center gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div className="relative w-[24px] h-[24px] rounded-full bg-gray-800/30 border border-gray-700/30" />
+                    <span className="text-[10px] text-gray-700 uppercase mt-1">----</span>
+                    <span className="text-[10px] text-gray-600 font-bold">+--</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-[9px] text-gray-600 text-center mt-2">Match traits for success bonuses</div>
+            </div>
+
+            {/* Mek Deployment Slots Card - Empty State */}
+            <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
+              <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-2">Mek Deployment Slots</div>
+              <div className="grid grid-cols-2 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
+                  <div
+                    key={slot}
+                    className="aspect-square p-1 mek-slot-empty opacity-30 flex items-center justify-center"
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl text-gray-700">+</div>
+                      <div className="text-[10px] uppercase text-gray-700">Empty</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -247,71 +334,412 @@ export default function StoryMissionCard({
   
   return (
     <div
-      className="relative w-full max-w-[320px] mx-auto"
+      className="relative w-full max-w-[328px] mx-auto"
       style={{ transform: `scale(${scale})`, transformOrigin: 'top center', ...style }}
     >
       <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
 
         {/* Mek Image Section with Hazard Stripe Header */}
         <div className="relative">
-          {/* Mek Image - Full width, no padding */}
+          {/* Mek Image - Full width, with padding to prevent overlap */}
           <div
-            className="relative w-full aspect-square bg-black overflow-hidden cursor-pointer group"
+            className="relative w-full aspect-square bg-black cursor-pointer group"
             onClick={() => setShowLightbox(true)}
           >
-            {mekImage && (
-              <>
-                <Image
-                  src={mekImage}
-                  alt={mekName}
-                  fill
-                  className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
-                  style={{ imageRendering: 'crisp-edges' }}
-                />
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-black/80 px-2 py-1 rounded border border-yellow-500/50">
-                    <span className="text-xs text-yellow-400">Click to enlarge</span>
+            {/* Inner container with padding to prevent border overlap */}
+            <div className="absolute inset-0 p-1 overflow-hidden">
+              {mekImage && (
+                <>
+                  <Image
+                    src={mekImage}
+                    alt={mekName}
+                    fill
+                    className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+                    style={{ imageRendering: 'crisp-edges' }}
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                    <div className="bg-black/80 px-2 py-1 rounded border border-yellow-500/50">
+                      <span className="text-xs text-yellow-400">Click to enlarge</span>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Hazard Stripe Header Bar */}
-          <div className="relative h-12 bg-gradient-to-r from-black via-gray-900 to-black border-t-2 border-b-2 border-yellow-500/50 overflow-hidden">
-            {/* Diagonal hazard stripes - darkened */}
-            <div
-              className="absolute inset-0 opacity-15"
-              style={{
-                backgroundImage: `repeating-linear-gradient(
-                  45deg,
-                  #fab617,
-                  #fab617 10px,
-                  #000000 10px,
-                  #000000 20px
-                )`,
-              }}
-            />
-
-            {/* Content overlay */}
-            <div className="relative h-full flex items-center justify-between px-4">
-              <h2 className="text-xl font-black tracking-wider uppercase">
-                {mekName && (
-                  <>
-                    <span className="text-white">MEK </span>
-                    <span className="text-yellow-400">#{mekName.replace(/^MEK\s*#?/i, '')}</span>
-                  </>
-                )}
-              </h2>
-              {mekRank !== undefined && mekRank !== null && (
-                <div className="text-sm text-gray-300">
-                  Rank <span className="text-yellow-400 font-bold text-lg">{mekRank}</span>
-                </div>
+                </>
               )}
             </div>
           </div>
+
+          {/* Title Card Variations */}
+          {(() => {
+            // VARIATION SELECTOR - Change this value (1-5) to switch between designs
+            const titleCardVariation = 1; // Change this to 1, 2, 3, 4, or 5
+
+            // Define the 5 spectacular variations
+            const variations = {
+              // VARIATION 1: HAZARD WARNING INDUSTRIAL
+              1: () => (
+                <div className="relative h-14 overflow-hidden border-t-2 border-b-2 border-yellow-500">
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black" />
+
+                  {/* Large-scale hazard stripes background */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `repeating-linear-gradient(
+                        45deg,
+                        #fab617,
+                        #fab617 20px,
+                        transparent 20px,
+                        transparent 40px
+                      )`,
+                    }}
+                  />
+
+                  {/* Grid texture overlay - made more visible */}
+                  <div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      backgroundImage: `
+                        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px),
+                        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px)
+                      `,
+                      backgroundSize: '4px 4px',
+                    }}
+                  />
+
+                  {/* Warning tape borders */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center justify-between px-4">
+                    <h2 className="text-xl font-black tracking-wider uppercase">
+                      {mekName && (
+                        <>
+                          <span className="text-yellow-500" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>MEK </span>
+                          <span className="text-white" style={{ textShadow: '0 0 20px rgba(250, 182, 23, 0.8)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                        </>
+                      )}
+                    </h2>
+                    {mekRank !== undefined && mekRank !== null && (
+                      <div className="text-sm text-gray-300">
+                        Rank <span className="text-yellow-400 font-bold text-lg" style={{ textShadow: '0 0 15px rgba(250, 182, 23, 0.6)' }}>{mekRank}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ),
+
+              // VARIATION 2: CARBON FIBER TACTICAL
+              2: () => (
+                <div className="relative h-14 overflow-hidden border-y-4 border-yellow-600" style={{ borderStyle: 'double' }}>
+                  {/* Black base */}
+                  <div className="absolute inset-0 bg-black" />
+
+                  {/* Carbon fiber pattern */}
+                  <div
+                    className="absolute inset-0 opacity-40"
+                    style={{
+                      backgroundImage: `
+                        repeating-linear-gradient(45deg, transparent, transparent 2px, #fab617 2px, #fab617 3px),
+                        repeating-linear-gradient(-45deg, transparent, transparent 2px, #000 2px, #000 3px)
+                      `,
+                      backgroundSize: '8px 8px',
+                    }}
+                  />
+
+                  {/* Hex grid overlay */}
+                  <div
+                    className="absolute inset-0 opacity-25"
+                    style={{
+                      backgroundImage: `radial-gradient(circle, transparent 65%, rgba(250, 182, 23, 0.4) 65%)`,
+                      backgroundSize: '15px 15px',
+                      backgroundPosition: '0 0, 7.5px 7.5px',
+                    }}
+                  />
+
+                  {/* Yellow accent bars */}
+                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-80" />
+                  <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-80" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-600 via-transparent to-yellow-600 opacity-50" />
+                  <div className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-600 via-transparent to-yellow-600 opacity-50" />
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center justify-between px-4">
+                    <h2 className="text-xl font-black tracking-wider uppercase">
+                      {mekName && (
+                        <>
+                          <span className="text-black bg-yellow-500 px-1" style={{ clipPath: 'polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%)' }}>MEK</span>
+                          <span className="text-yellow-500 ml-2">#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                        </>
+                      )}
+                    </h2>
+                    {mekRank !== undefined && mekRank !== null && (
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-yellow-600 uppercase">Rank</div>
+                        <div className="text-xl font-black text-black bg-yellow-500 px-2 py-0.5" style={{ clipPath: 'polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)' }}>
+                          {mekRank}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ),
+
+              // VARIATION 3: HOLOGRAPHIC CIRCUIT
+              3: () => (
+                <div className="relative h-14 overflow-hidden">
+                  {/* Gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-yellow-950/50 to-black" />
+
+                  {/* Circuit board pattern */}
+                  <div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(90deg, rgba(250, 182, 23, 0.3) 1px, transparent 1px),
+                        linear-gradient(180deg, rgba(250, 182, 23, 0.3) 1px, transparent 1px),
+                        radial-gradient(circle at 10px 10px, #fab617 1px, transparent 1px),
+                        radial-gradient(circle at 30px 30px, #fab617 1px, transparent 1px)
+                      `,
+                      backgroundSize: '20px 20px, 20px 20px, 40px 40px, 40px 40px',
+                      backgroundPosition: '0 0, 0 0, 0 0, 20px 20px',
+                    }}
+                  />
+
+                  {/* Holographic shimmer effect */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      background: `linear-gradient(105deg,
+                        transparent 40%,
+                        rgba(250, 182, 23, 0.6) 45%,
+                        rgba(255, 255, 255, 0.3) 50%,
+                        rgba(250, 182, 23, 0.6) 55%,
+                        transparent 60%)`,
+                      animation: 'shimmer 3s infinite',
+                    }}
+                  />
+
+                  {/* Scan line effect */}
+                  <div
+                    className="absolute inset-0 opacity-15"
+                    style={{
+                      backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(250, 182, 23, 0.5) 50%)',
+                      backgroundSize: '100% 4px',
+                      animation: 'scan 8s linear infinite',
+                    }}
+                  />
+
+                  {/* Border glow */}
+                  <div className="absolute inset-0 border-2 border-yellow-500" style={{ boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.3), 0 0 20px rgba(250, 182, 23, 0.3)' }} />
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center justify-between px-4">
+                    <h2 className="text-xl font-black tracking-wider uppercase">
+                      {mekName && (
+                        <>
+                          <span className="text-yellow-400" style={{
+                            textShadow: '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.5)',
+                            filter: 'brightness(1.2)'
+                          }}>MEK </span>
+                          <span className="text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                        </>
+                      )}
+                    </h2>
+                    {mekRank !== undefined && mekRank !== null && (
+                      <div className="text-sm text-gray-300">
+                        Rank <span className="text-yellow-400 font-bold text-lg" style={{
+                          textShadow: '0 0 20px rgba(250, 182, 23, 1)',
+                          filter: 'brightness(1.2)'
+                        }}>{mekRank}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ),
+
+              // VARIATION 4: MILITARY STENCIL
+              4: () => (
+                <div className="relative h-14 overflow-hidden border-t-4 border-b-4 border-yellow-500" style={{ borderImage: 'repeating-linear-gradient(90deg, #fab617 0px, #fab617 10px, black 10px, black 20px) 4' }}>
+                  {/* Dark military green-black background */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-black" />
+
+                  {/* Diamond plate texture */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `
+                        repeating-linear-gradient(60deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 12px),
+                        repeating-linear-gradient(-60deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 12px)
+                      `,
+                      backgroundSize: '20px 20px',
+                    }}
+                  />
+
+                  {/* Stencil dots pattern */}
+                  <div
+                    className="absolute inset-0 opacity-15"
+                    style={{
+                      backgroundImage: 'radial-gradient(circle, #fab617 20%, transparent 20%)',
+                      backgroundSize: '8px 8px',
+                      backgroundPosition: '0 0, 4px 4px',
+                    }}
+                  />
+
+                  {/* Warning stripes on sides */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8" style={{
+                    backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 4px, transparent 4px, transparent 8px)',
+                    opacity: 0.3
+                  }} />
+                  <div className="absolute right-0 top-0 bottom-0 w-8" style={{
+                    backgroundImage: 'repeating-linear-gradient(-45deg, #fab617 0, #fab617 4px, transparent 4px, transparent 8px)',
+                    opacity: 0.3
+                  }} />
+
+                  {/* Content */}
+                  <div className="relative h-full flex items-center justify-between px-12">
+                    <h2 className="text-xl font-black tracking-wider uppercase">
+                      {mekName && (
+                        <>
+                          <span className="text-yellow-500" style={{
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.2em',
+                            textShadow: '2px 2px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black'
+                          }}>MEK</span>
+                          <span className="text-white ml-2" style={{
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.1em'
+                          }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                        </>
+                      )}
+                    </h2>
+                    {mekRank !== undefined && mekRank !== null && (
+                      <div className="flex items-center">
+                        <div className="bg-yellow-500 text-black px-3 py-1" style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 900,
+                          clipPath: 'polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)',
+                        }}>
+                          RANK {mekRank}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ),
+
+              // VARIATION 5: CINEMATIC SCI-FI
+              5: () => (
+                <div className="relative h-16 overflow-hidden">
+                  {/* Deep space black with subtle blue undertones */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-gray-950 to-black" />
+
+                  {/* Animated energy field background */}
+                  <div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      background: `
+                        radial-gradient(ellipse at top, rgba(250, 182, 23, 0.3) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(250, 182, 23, 0.3) 0%, transparent 50%)
+                      `,
+                    }}
+                  />
+
+                  {/* Hexagonal grid pattern - larger and more visible */}
+                  <div
+                    className="absolute inset-0 opacity-25"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(30deg, transparent 0%, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%, transparent 100%),
+                        linear-gradient(150deg, transparent 0%, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%, transparent 100%),
+                        linear-gradient(270deg, transparent 0%, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%, transparent 100%)
+                      `,
+                      backgroundSize: '25px 43.3px',
+                    }}
+                  />
+
+                  {/* Holographic scan lines */}
+                  <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(250, 182, 23, 0.8) 2px, rgba(250, 182, 23, 0.8) 3px)',
+                      animation: 'scan 10s linear infinite',
+                    }}
+                  />
+
+                  {/* Top and bottom energy bars */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" style={{ boxShadow: '0 0 20px rgba(250, 182, 23, 0.8)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" style={{ boxShadow: '0 0 20px rgba(250, 182, 23, 0.8)' }} />
+
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-20 h-8" style={{
+                    background: 'linear-gradient(135deg, rgba(250, 182, 23, 0.5) 0%, transparent 50%)',
+                    clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+                  }} />
+                  <div className="absolute top-0 right-0 w-20 h-8" style={{
+                    background: 'linear-gradient(225deg, rgba(250, 182, 23, 0.5) 0%, transparent 50%)',
+                    clipPath: 'polygon(0 0, 100% 0, 100% 100%)',
+                  }} />
+                  <div className="absolute bottom-0 left-0 w-20 h-8" style={{
+                    background: 'linear-gradient(45deg, rgba(250, 182, 23, 0.5) 0%, transparent 50%)',
+                    clipPath: 'polygon(0 0, 0 100%, 100% 100%)',
+                  }} />
+                  <div className="absolute bottom-0 right-0 w-20 h-8" style={{
+                    background: 'linear-gradient(315deg, rgba(250, 182, 23, 0.5) 0%, transparent 50%)',
+                    clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+                  }} />
+
+                  {/* Content with futuristic styling */}
+                  <div className="relative h-full flex items-center justify-between px-6">
+                    <h2 className="text-2xl font-black tracking-wider uppercase">
+                      {mekName && (
+                        <>
+                          <span className="relative">
+                            <span className="text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text" style={{
+                              filter: 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.8))',
+                              fontFamily: 'Orbitron, monospace',
+                            }}>MEK</span>
+                          </span>
+                          <span className="text-white ml-3" style={{
+                            fontFamily: 'Orbitron, monospace',
+                            textShadow: '0 0 30px rgba(250, 182, 23, 0.5)',
+                          }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                        </>
+                      )}
+                    </h2>
+                    {mekRank !== undefined && mekRank !== null && (
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-600 blur-xl opacity-50" />
+                        <div className="relative bg-black/80 border-2 border-yellow-500 px-4 py-1" style={{
+                          clipPath: 'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
+                          boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.3)',
+                        }}>
+                          <span className="text-xs text-yellow-400 uppercase">Rank</span>
+                          <span className="text-xl font-black text-yellow-400 ml-2">{mekRank}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ),
+            };
+
+            // Render the selected variation
+            return variations[titleCardVariation]();
+          })()}
+
+          <style jsx>{`
+            @keyframes shimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(200%); }
+            }
+            @keyframes scan {
+              0% { transform: translateY(0); }
+              100% { transform: translateY(100px); }
+            }
+          `}</style>
         </div>
 
         {/* Difficulty Selector with Multiple Style Options */}
@@ -361,6 +789,11 @@ export default function StoryMissionCard({
 
         {/* Gold and XP Bar - Compact side-by-side */}
         <div className="relative bg-black/90 border-y border-yellow-500/30 overflow-hidden">
+          {/* Industrial Yellow style - locked in */}
+          <div className="bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent py-0.5">
+            <div className="text-[10px] text-yellow-500/70 uppercase tracking-wider text-center font-bold">Base Rewards</div>
+          </div>
+
           {/* Content */}
           <div className="relative grid grid-cols-2 h-12">
             {/* Gold Section - Centered as a unit in left column */}
@@ -369,7 +802,7 @@ export default function StoryMissionCard({
                 <span className="text-[22px] font-semibold text-yellow-400 leading-none" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
                   {formatGoldAmount(primaryReward)}
                 </span>
-                <span className="text-[11px] text-yellow-400 font-bold mb-[1px]" style={{ fontFamily: 'Segoe UI, sans-serif' }}>G</span>
+                <span className="text-[11px] text-yellow-400 font-bold" style={{ fontFamily: 'Segoe UI, sans-serif' }}>GOLD</span>
               </div>
             </div>
 
@@ -382,7 +815,7 @@ export default function StoryMissionCard({
                 <span className="text-[22px] font-semibold text-blue-400 leading-none" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
                   +{formatGoldAmount(experience)}
                 </span>
-                <span className="text-[11px] text-blue-400/80 font-bold mb-[1px]" style={{ fontFamily: 'Segoe UI, sans-serif' }}>XP</span>
+                <span className="text-[14px] text-blue-400/80 font-bold" style={{ fontFamily: 'Segoe UI, sans-serif' }}>XP</span>
               </div>
             </div>
           </div>
@@ -668,7 +1101,7 @@ export default function StoryMissionCard({
           {/* Mek Deployment Slots Card */}
           <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
             <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Mek Deployment Slots</div>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => {
                 const isAvailable = slot <= availableSlots;
                 const selectedMek = selectedMeks[slot - 1];
@@ -676,16 +1109,16 @@ export default function StoryMissionCard({
                 return (
                   <div
                     key={slot}
-                    className={`aspect-square p-1 border-2 flex items-center justify-center transition-all relative overflow-hidden group ${
+                    className={`aspect-square p-1 flex items-center justify-center relative overflow-hidden group ${
                       selectedMek
-                        ? 'border-solid border-yellow-500/50 bg-gradient-to-br from-yellow-900/20 to-black/60'
+                        ? 'border-solid border-3 border-yellow-500/50 bg-gradient-to-br from-yellow-900/20 to-black/60 transition-all'
                         : isAvailable
-                        ? `mek-slot-empty border-dashed bg-black/40 cursor-pointer ${
-                            isHoveringDeployButton
-                              ? 'border-yellow-400 bg-yellow-500/20 shadow-[inset_0_0_30px_rgba(250,182,23,0.4)] animate-pulse'
-                              : 'border-yellow-500/30 hover:border-yellow-500/60 hover:bg-yellow-500/10 hover:shadow-[inset_0_0_20px_rgba(250,182,23,0.2)]'
+                        ? `mek-slot-empty bg-black/40 cursor-pointer ${
+                            flashingMekSlots || isHoveringDeployButton
+                              ? 'border-yellow-400 bg-yellow-500/20 shadow-[inset_0_0_30px_rgba(250,182,23,0.4)] animate-[pulse_0.5s_ease-in-out_infinite]'
+                              : 'border-yellow-500/30 hover:border-yellow-500/60 hover:bg-yellow-500/10 hover:shadow-[inset_0_0_20px_rgba(250,182,23,0.2)] transition-all'
                           }`
-                        : 'border-solid border-gray-800/30 bg-black/80 cursor-not-allowed opacity-30'
+                        : 'border-solid border-2 border-gray-600/50 bg-gray-900/60 cursor-not-allowed opacity-50'
                     }`}
                     onClick={
                       selectedMek
@@ -721,10 +1154,10 @@ export default function StoryMissionCard({
                       </>
                     ) : (
                       <div className="text-center">
-                        <div className={`text-2xl transition-colors ${isAvailable ? 'text-gray-600 group-hover:text-yellow-500/70' : 'text-gray-800'}`}>
+                        <div className={`text-2xl transition-colors ${isAvailable ? 'text-gray-600 group-hover:text-yellow-500/70' : 'text-gray-500'}`}>
                           {isAvailable ? '+' : '×'}
                         </div>
-                        <div className={`text-[8px] uppercase transition-colors ${isAvailable ? 'text-gray-600 group-hover:text-yellow-500/50' : 'text-gray-800'}`}>
+                        <div className={`text-[10px] uppercase transition-colors ${isAvailable ? 'text-gray-600 group-hover:text-yellow-500/50' : 'text-gray-500'}`}>
                           {isAvailable ? 'Empty' : 'Locked'}
                         </div>
                       </div>
@@ -735,11 +1168,12 @@ export default function StoryMissionCard({
             </div>
           </div>
 
+          {/* SUCCESS METER MOVED TO MISSION STATISTICS CARD - COMMENTED FOR EASY REVERT */}
           {/* Success Meter - using new SuccessMeterV2 component */}
-          {difficultyConfig ? (
+          {false && difficultyConfig ? (
             <div className="mb-4">
-              {/* Layout Selector for Testing - Only show if no props are provided */}
-              {!propMeterVariant && !propLayoutStyle && !propSubLayoutStyle && false && (
+              {/* Layout Selector for Testing - Removed */}
+              {false && (
                 <div className="mb-3 bg-black/60 rounded-lg p-2 border border-gray-700">
                 <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Success Bar Layout</div>
 
@@ -888,36 +1322,13 @@ export default function StoryMissionCard({
                 showTitle={true}
                 barHeight={56}
                 className=""
-                cardLayout={successMeterCardLayout}
               />
             </div>
-          ) : (
-            // Fallback when no difficulty config
-            <div className="mb-4">
-              <SuccessMeterV2
-                successRate={successChance || 0}
-                greenLine={50} // Default goalpost at 50%
-                baseRewards={{
-                  gold: primaryReward || 250000,
-                  xp: experience || 5000
-                }}
-                difficultyConfig={{
-                  goldMultiplier: 1,
-                  xpMultiplier: 1,
-                  essenceAmountMultiplier: 1,
-                  overshootBonusRate: 1,
-                  maxOvershootBonus: 50
-                }}
-                showTitle={true}
-                barHeight={56}
-                className=""
-                cardLayout={successMeterCardLayout}
-              />
-            </div>
-          )}
+          ) : null}
 
+          {/* DEPLOY SECTION MOVED TO MISSION STATISTICS CARD - COMMENTED FOR EASY REVERT */}
           {/* Deploy Section */}
-          <div className="text-center relative">
+          {false && <div className="text-center relative">
             <div className="text-sm text-gray-400 mb-1">
               <span className="uppercase tracking-wider">Deployment Fee:</span> <span className="text-yellow-400 font-bold text-base">{formatGoldAmount(deploymentFee)} Gold</span>
             </div>
@@ -968,7 +1379,7 @@ export default function StoryMissionCard({
               </div>,
               document.body
             )}
-          </div>
+          </div>}
 
           {/* Metal texture overlay */}
           <div className="mek-overlay-metal-texture"></div>
@@ -1061,7 +1472,7 @@ export default function StoryMissionCard({
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={mekImage.replace('/mek-images/', '/mek-images/1000px/')}
+              src={mekImage.replace(/\/mek-images\/\d+px\//, '/mek-images/1000px/')}
               alt={mekName}
               width={2000}
               height={2000}

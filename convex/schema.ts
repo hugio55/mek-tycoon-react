@@ -208,6 +208,11 @@ export default defineSchema({
     walletStakeAddress: v.optional(v.string()), // Stake address for additional verification
     walletVerified: v.optional(v.boolean()), // True if wallet ownership is verified via signature
     walletType: v.optional(v.string()), // e.g., "nami", "eternl", "flint", etc.
+
+    // Discord Integration
+    discordUserId: v.optional(v.string()), // Discord user ID (snowflake)
+    discordUsername: v.optional(v.string()), // Discord username for reference
+    discordLinkedAt: v.optional(v.number()), // When Discord was linked
     
     // Profile fields
     username: v.optional(v.string()),
@@ -379,7 +384,10 @@ export default defineSchema({
       v.literal("consumable"),
       v.literal("boost"),
       v.literal("special"),
-      v.literal("mek")
+      v.literal("mek"),
+      v.literal("enclosure"),
+      v.literal("oem"),
+      v.literal("universal-chips")
     ),
     itemVariation: v.optional(v.string()),
     itemDescription: v.optional(v.string()),
@@ -1241,4 +1249,479 @@ export default defineSchema({
   })
     .index("by_timestamp", ["timestamp"])
     .index("by_name", ["saveName"]),
+
+  // Saved configurations for Mek Success Rate curves
+  mekSuccessRateSaves: defineTable({
+    saveName: v.string(), // User-defined name for this save
+    timestamp: v.number(), // Unix timestamp when saved
+    curveType: v.union(
+      v.literal('linear'),
+      v.literal('exponential'),
+      v.literal('logarithmic'),
+      v.literal('sigmoid')
+    ),
+    minSuccess: v.number(),
+    maxSuccess: v.number(),
+    steepness: v.number(),
+    midPoint: v.number(),
+    totalMeks: v.number(),
+    rounding: v.optional(v.union(
+      v.literal('whole'),
+      v.literal('1decimal'),
+      v.literal('2decimal'),
+      v.literal('none')
+    )), // Rounding option for success percentages
+    isCurrentConfig: v.optional(v.boolean()), // Flag to mark the active configuration
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_name", ["saveName"])
+    .index("by_current", ["isCurrentConfig"]),
+
+  // Saved configurations for Mek Gold Rate curves
+  mekGoldRateSaves: defineTable({
+    saveName: v.string(), // User-defined name for this save
+    timestamp: v.number(), // Unix timestamp when saved
+    curveType: v.union(
+      v.literal('linear'),
+      v.literal('exponential'),
+      v.literal('logarithmic'),
+      v.literal('sigmoid')
+    ),
+    minGold: v.number(), // Minimum gold per hour (for rarest)
+    maxGold: v.number(), // Maximum gold per hour (for most common)
+    steepness: v.number(),
+    midPoint: v.number(),
+    totalMeks: v.number(),
+    rounding: v.optional(v.union(
+      v.literal('whole'),
+      v.literal('1decimal'),
+      v.literal('2decimal'),
+      v.literal('none')
+    )), // Rounding option for gold rates
+    isCurrentConfig: v.optional(v.boolean()), // Flag to mark the active configuration
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_name", ["saveName"])
+    .index("by_current", ["isCurrentConfig"]),
+
+  // Variation buff configuration
+  variationBuffConfig: defineTable({
+    minPercent: v.number(),
+    maxPercent: v.number(),
+    curveType: v.union(v.literal('linear'), v.literal('exponential'), v.literal('logarithmic')),
+    curveFactor: v.number(),
+  }),
+
+  // Variation buff assignments
+  variationBuffs: defineTable({
+    variationId: v.number(),
+    name: v.string(),
+    category: v.union(v.literal('head'), v.literal('body'), v.literal('item')),
+    buffPercent: v.number(),
+  })
+    .index("by_variation", ["variationId", "category"])
+    .index("by_category", ["category"])
+    .index("by_buff", ["buffPercent"]),
+
+  // Gold Mining System for wallet-connected users (SIMPLIFIED)
+  goldMining: defineTable({
+    // Wallet identification
+    walletAddress: v.string(), // Stake address for NFT ownership
+    walletType: v.optional(v.string()), // nami, eternl, flint, etc.
+    paymentAddresses: v.optional(v.array(v.string())), // Payment addresses for Blockfrost fallback
+
+    // Blockchain verification status
+    isBlockchainVerified: v.optional(v.boolean()), // Has the user completed blockchain verification?
+    lastVerificationTime: v.optional(v.number()), // When was the last verification performed
+
+    // Mek ownership data
+    ownedMeks: v.array(v.object({
+      assetId: v.string(), // Unique asset ID from blockchain
+      policyId: v.string(), // Policy ID for verification
+      assetName: v.string(), // Name of the Mek
+      imageUrl: v.optional(v.string()), // Thumbnail URL
+      goldPerHour: v.number(), // Base gold generation rate
+      rarityRank: v.optional(v.number()), // Rarity ranking
+      headVariation: v.optional(v.string()),
+      bodyVariation: v.optional(v.string()),
+      itemVariation: v.optional(v.string()),
+    })),
+
+    // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
+    totalGoldPerHour: v.number(), // Sum of all Mek rates
+    lastActiveTime: v.number(), // Last time user was active on page
+    accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
+    lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+
+    // LEGACY FIELDS (kept for backwards compatibility)
+    currentGold: v.optional(v.number()), // LEGACY: Use accumulatedGold instead
+    lastCheckTime: v.optional(v.number()), // LEGACY: No longer needed
+    sessionStartTime: v.optional(v.number()), // LEGACY: No longer needed
+    offlineEarnings: v.optional(v.number()), // LEGACY: No longer needed
+    snapshotMekCount: v.optional(v.number()), // Mek count from last snapshot
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_total_rate", ["totalGoldPerHour"]),
+
+  // Duration Configuration for Story Climb nodes
+  durationConfigs: defineTable({
+    name: v.string(), // Configuration name (e.g., "Default", "Speed Run", "Marathon")
+    isActive: v.boolean(), // Whether this config is currently deployed to Story Climb
+
+    // Duration settings for each node type
+    normal: v.object({
+      min: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      max: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      curve: v.number(),
+    }),
+    challenger: v.object({
+      min: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      max: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      curve: v.number(),
+    }),
+    miniboss: v.object({
+      min: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      max: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      curve: v.number(),
+    }),
+    event: v.object({
+      min: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      max: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      curve: v.number(),
+    }),
+    finalboss: v.object({
+      min: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      max: v.object({ days: v.number(), hours: v.number(), minutes: v.number(), seconds: v.number() }),
+      curve: v.number(),
+    }),
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    deployedAt: v.optional(v.number()), // When this config was last deployed
+  })
+    .index("by_name", ["name"])
+    .index("by_active", ["isActive"]),
+
+  // Gold Mining Snapshot Logs - tracks nightly wallet verification
+  goldMiningSnapshotLogs: defineTable({
+    timestamp: v.number(), // When snapshot was run
+    totalMiners: v.number(), // Total number of wallets checked
+    updatedCount: v.number(), // Number successfully updated
+    errorCount: v.number(), // Number of errors encountered
+    status: v.string(), // "completed", "failed", "triggered_manually", etc.
+  }),
+
+  // Mek Ownership History - stores snapshots of which Meks were in which wallets over time
+  mekOwnershipHistory: defineTable({
+    walletAddress: v.string(), // Which wallet this snapshot is for
+    snapshotTime: v.number(), // When this snapshot was taken
+    meks: v.array(v.object({
+      assetId: v.string(), // Unique asset ID
+      assetName: v.string(), // Mek name
+      goldPerHour: v.number(), // Gold rate for this Mek at this time
+      rarityRank: v.optional(v.number()),
+    })),
+    totalGoldPerHour: v.number(), // Total rate at time of snapshot
+    totalMekCount: v.number(), // How many Meks were present
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_time", ["walletAddress", "snapshotTime"]),
+
+  // Node Fee Configuration for Story Climb
+  nodeFeeConfig: defineTable({
+    fees: v.any(), // Object containing fee configs for each node type
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastVersionId: v.optional(v.id("nodeFeeVersions")),
+  }),
+
+  // Node Fee Versions - Named saves
+  nodeFeeVersions: defineTable({
+    name: v.string(),
+    fees: v.any(),
+    createdAt: v.number(),
+    isAutoSave: v.optional(v.boolean()),
+  }),
+
+  // Active Missions - tracks missions currently in progress
+  activeMissions: defineTable({
+    nodeId: v.string(),
+    nodeType: v.string(),
+    nodeName: v.string(),
+    startTime: v.number(),
+    duration: v.number(), // Duration in milliseconds
+    contractFee: v.number(),
+    expectedRewards: v.object({
+      gold: v.optional(v.number()),
+      essence: v.optional(v.number()),
+      chipT1: v.optional(v.number()),
+      special: v.optional(v.number()),
+    }),
+    selectedMeks: v.array(v.object({
+      id: v.string(),
+      name: v.string(),
+      rank: v.number(),
+      matchedTraits: v.optional(v.array(v.object({
+        id: v.string(),
+        name: v.string(),
+        image: v.string(),
+        bonus: v.string(),
+      }))),
+    })),
+    difficulty: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    completedAt: v.optional(v.number()),
+    cancelledAt: v.optional(v.number()),
+  })
+    .index("by_node", ["nodeId"])
+    .index("by_status", ["status"])
+    .index("by_start_time", ["startTime"]),
+
+  // Gold Backups - disaster recovery snapshots of all user gold states
+  goldBackups: defineTable({
+    // Backup metadata
+    backupTimestamp: v.number(), // When this backup was created
+    backupName: v.optional(v.string()), // Optional name for manual backups
+    backupType: v.union(
+      v.literal("auto_daily"),
+      v.literal("manual"),
+      v.literal("pre_update"),
+      v.literal("pre_migration"),
+      v.literal("emergency")
+    ),
+    triggeredBy: v.optional(v.string()), // Who/what triggered this backup
+    totalUsersBackedUp: v.number(), // Count of users in this backup
+    notes: v.optional(v.string()), // Optional notes about this backup
+
+    // Snapshot metadata
+    snapshotVersion: v.number(), // Version number for backup format
+    systemVersion: v.optional(v.string()), // App version when backup was made
+  })
+    .index("by_timestamp", ["backupTimestamp"])
+    .index("by_type", ["backupType"])
+    .index("by_name", ["backupName"]),
+
+  // Gold Backup User Data - individual user gold states within each backup
+  goldBackupUserData: defineTable({
+    // Reference to the backup
+    backupId: v.id("goldBackups"),
+
+    // User identification
+    walletAddress: v.string(),
+    userId: v.optional(v.id("users")), // Reference to users table if exists
+
+    // Gold state at time of backup
+    currentGold: v.number(), // Gold amount calculated at backup time
+    goldPerHour: v.number(), // Gold generation rate per hour
+    accumulatedGold: v.optional(v.number()), // Previously accumulated gold
+    lastSnapshotTime: v.optional(v.number()), // Last rate update timestamp
+
+    // Mining data
+    totalGoldPerHour: v.optional(v.number()), // From goldMining table
+    mekCount: v.number(), // Number of meks owned
+    lastActiveTime: v.optional(v.number()), // When user was last active
+
+    // Backup metadata
+    backupTimestamp: v.number(), // When this user's data was backed up
+    calculationMethod: v.optional(v.string()), // How gold was calculated
+
+    // Mek data snapshot (for verification)
+    topMekGoldRate: v.optional(v.number()), // Highest gold rate mek
+    topMekAssetId: v.optional(v.string()), // Asset ID of top mek
+    totalMekGoldRate: v.optional(v.number()), // Sum of all mek rates
+
+    // Additional game state
+    level: v.optional(v.number()),
+    experience: v.optional(v.number()),
+    bankBalance: v.optional(v.number()), // From bank account if exists
+  })
+    .index("by_backup", ["backupId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_backup_wallet", ["backupId", "walletAddress"])
+    .index("by_timestamp", ["backupTimestamp"]),
+
+  // Audit logs for blockchain verification and security
+  auditLogs: defineTable({
+    type: v.string(), // "verification", "walletConnection", "rateChange", "goldCheckpoint", "walletLink"
+
+    // Common fields
+    timestamp: v.number(),
+    createdAt: v.number(),
+
+    // Verification logs
+    stakeAddress: v.optional(v.string()),
+    verified: v.optional(v.boolean()),
+    source: v.optional(v.string()), // "blockfrost" or "koios"
+    walletCount: v.optional(v.number()),
+    blockchainCount: v.optional(v.number()),
+
+    // Wallet connection logs
+    walletName: v.optional(v.string()),
+    signatureVerified: v.optional(v.boolean()),
+    nonce: v.optional(v.string()),
+
+    // Rate change logs
+    mekNumber: v.optional(v.number()),
+    oldRate: v.optional(v.number()),
+    newRate: v.optional(v.number()),
+    changedBy: v.optional(v.string()),
+    reason: v.optional(v.string()),
+
+    // Gold checkpoint logs
+    goldAmount: v.optional(v.number()),
+    merkleRoot: v.optional(v.string()),
+    blockHeight: v.optional(v.number()),
+
+    // Wallet link logs
+    primaryWallet: v.optional(v.string()),
+    linkedWallet: v.optional(v.string()),
+  })
+    .index("by_type", ["type"])
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_created", ["createdAt"]),
+
+  // Wallet signatures for secure connections
+  walletSignatures: defineTable({
+    stakeAddress: v.string(),
+    nonce: v.string(),
+    signature: v.string(),
+    walletName: v.string(),
+    verified: v.boolean(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_nonce", ["nonce"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Multi-wallet aggregation
+  walletLinks: defineTable({
+    primaryWallet: v.string(),
+    linkedWallet: v.string(),
+    signatureVerified: v.boolean(),
+    linkDate: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_primary", ["primaryWallet"])
+    .index("by_linked", ["linkedWallet"])
+    .index("by_primary_active", ["primaryWallet", "active"]),
+
+  // Gold checkpoints for on-chain verification
+  goldCheckpoints: defineTable({
+    walletAddress: v.string(),
+    goldAmount: v.number(),
+    goldPerHour: v.number(),
+    timestamp: v.number(),
+    type: v.string(), // 'manual', 'automatic', 'restore'
+    merkleRoot: v.optional(v.string()),
+    blockHeight: v.optional(v.number()),
+    mekCount: v.optional(v.number()),
+    totalGoldRate: v.optional(v.number()),
+    verified: v.optional(v.boolean()),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_type", ["type"]),
+
+  // Gold snapshots for historical tracking
+  goldSnapshots: defineTable({
+    walletAddress: v.string(),
+    accumulatedGold: v.number(),
+    goldPerHour: v.number(),
+    mekCount: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // CIP-25 NFT metadata cache
+  nftMetadata: defineTable({
+    assetId: v.string(),
+    assetName: v.string(),
+    metadata: v.any(), // Full CIP-25 metadata object
+    mekData: v.any(), // Extracted MEK-specific data
+    resolvedImage: v.optional(v.string()), // Resolved IPFS image URL
+    fetchedAt: v.number(),
+    lastUpdated: v.number(),
+  })
+    .index("by_asset_id", ["assetId"])
+    .index("by_asset_name", ["assetName"])
+    .index("by_updated", ["lastUpdated"]),
+
+  // Security anomalies detected in the system
+  securityAnomalies: defineTable({
+    type: v.string(),
+    walletAddress: v.string(),
+    detail: v.string(),
+    timestamp: v.number(),
+    severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'), v.literal('critical')),
+    resolved: v.boolean(),
+    resolvedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_severity", ["severity"])
+    .index("by_created", ["createdAt"])
+    .index("by_resolved", ["resolved"]),
+
+  // Wallets flagged as suspicious
+  suspiciousWallets: defineTable({
+    walletAddress: v.string(),
+    reason: v.string(),
+    severity: v.union(v.literal('low'), v.literal('medium'), v.literal('high'), v.literal('critical')),
+    flaggedAt: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_severity", ["severity"])
+    .index("by_active", ["active"]),
+
+  // Rate limit violations
+  rateLimitViolations: defineTable({
+    walletAddress: v.string(),
+    endpoint: v.string(),
+    timestamp: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Discord connections - links wallets to Discord accounts
+  discordConnections: defineTable({
+    walletAddress: v.string(),
+    discordUserId: v.string(), // Discord snowflake ID
+    discordUsername: v.string(), // For display
+    guildId: v.string(), // Discord server ID
+    linkedAt: v.number(),
+    active: v.boolean(),
+    lastNicknameUpdate: v.optional(v.number()),
+    currentEmoji: v.optional(v.string()),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_discord_user", ["discordUserId"])
+    .index("by_guild", ["guildId"])
+    .index("by_active", ["active"]),
+
+  // Discord gold tier configuration
+  discordGoldTiers: defineTable({
+    tierName: v.string(),
+    minGold: v.number(),
+    maxGold: v.optional(v.number()),
+    emoji: v.string(),
+    order: v.number(), // Display order (higher gold = higher order)
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"])
+    .index("by_active", ["active"]),
 });

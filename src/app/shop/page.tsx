@@ -81,16 +81,16 @@ export default function ShopPage() {
     userId ? { walletAddress: "demo_wallet_123" } : "skip"
   );
   
-  // Get marketplace listings - PAUSED TO SAVE BANDWIDTH
-  const listingsData = null; // useQuery(
-  //   api.marketplace.getActiveListings,
-  //   {
-  //     itemType: selectedCategory,
-  //     searchTerm: searchTerm || undefined,
-  //     limit: 100,
-  //     offset: 0,
-  //   }
-  // );
+  // Get marketplace listings
+  const listingsData = useQuery(
+    api.marketplace.getActiveListings,
+    {
+      itemType: selectedCategory,
+      searchTerm: searchTerm || undefined,
+      limit: 100,
+      offset: 0,
+    }
+  );
   
   const listings = listingsData?.listings;
   

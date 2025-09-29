@@ -158,6 +158,16 @@ export default function EventNodeEditor() {
     xpRounding: 'none' as 'none' | '5' | '10'
   });
 
+  // Deployment Fee configuration for all 200 events
+  const [deploymentFeeConfig, setDeploymentFeeConfig] = useState({
+    minFee: 1000,
+    maxFee: 100000,
+    interpolationType: 'linear' as 'linear' | 'exponential' | 'logarithmic',
+    curveStrength: 1.5,
+    feeRounding: '100' as 'none' | '10' | '100' | '1000',
+    showVisualization: false
+  });
+
   // Initialize eventsData before using it in queries
   const [eventsData, setEventsData] = useState<EventNode[]>(() => {
     // Initialize with 200 events (20 per chapter × 10 chapters)
@@ -228,6 +238,9 @@ export default function EventNodeEditor() {
         if (loadedData.eventImagesFolder) {
           setEventImagesFolder(loadedData.eventImagesFolder);
         }
+        if (loadedData.deploymentFeeConfig) {
+          setDeploymentFeeConfig(loadedData.deploymentFeeConfig);
+        }
       } catch (error) {
         console.error('Failed to parse configuration data:', error);
       }
@@ -276,6 +289,42 @@ export default function EventNodeEditor() {
         return Math.round(value / 10) * 10;
       default:
         return Math.round(value);
+    }
+  };
+
+  // Calculate deployment fee for an event based on its number
+  const calculateDeploymentFee = (eventNumber: number): number => {
+    const normalizedPosition = (eventNumber - 1) / 199; // 0 to 1
+
+    let interpolatedValue: number;
+    switch (deploymentFeeConfig.interpolationType) {
+      case 'linear':
+        interpolatedValue = normalizedPosition;
+        break;
+      case 'exponential':
+        interpolatedValue = Math.pow(normalizedPosition, deploymentFeeConfig.curveStrength);
+        break;
+      case 'logarithmic':
+        // Logarithmic curve (starts steep, flattens out)
+        interpolatedValue = Math.log(1 + normalizedPosition * 9) / Math.log(10);
+        break;
+      default:
+        interpolatedValue = normalizedPosition;
+    }
+
+    const fee = deploymentFeeConfig.minFee +
+      (deploymentFeeConfig.maxFee - deploymentFeeConfig.minFee) * interpolatedValue;
+
+    // Apply rounding
+    switch (deploymentFeeConfig.feeRounding) {
+      case '10':
+        return Math.round(fee / 10) * 10;
+      case '100':
+        return Math.round(fee / 100) * 100;
+      case '1000':
+        return Math.round(fee / 1000) * 1000;
+      default:
+        return Math.round(fee);
     }
   };
 
@@ -444,7 +493,7 @@ export default function EventNodeEditor() {
     try {
       const result = await saveConfiguration({
         name: saveName,
-        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder }),
+        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder, deploymentFeeConfig }),
         timestamp: Date.now(),
       });
       alert('Event configuration saved successfully!');
@@ -473,7 +522,7 @@ export default function EventNodeEditor() {
     try {
       await updateConfiguration({
         configId: currentConfigId,
-        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder }),
+        data: JSON.stringify({ events: eventsData, globalRanges, eventImagesFolder, deploymentFeeConfig }),
         timestamp: Date.now(),
       });
       alert('Configuration updated successfully!');
@@ -1050,6 +1099,148 @@ export default function EventNodeEditor() {
           >
             Apply to All Events
           </button>
+        </div>
+
+        {/* Deployment Fee Configuration */}
+        <div className="mb-4 bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded p-3">
+          <h5 className="text-green-400 text-sm font-bold mb-2 flex items-center gap-2">
+            <span>💰</span> Deployment Fee Requirements
+          </h5>
+          <div className="text-xs text-gray-400 mb-3">
+            Configure gold deployment fees for all 200 events with interpolation
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-green-400 text-xs">Min Fee (Event 1)</label>
+              <input
+                type="number"
+                value={deploymentFeeConfig.minFee}
+                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, minFee: Number(e.target.value)})}
+                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+                placeholder="Min Fee"
+              />
+            </div>
+            <div>
+              <label className="text-green-400 text-xs">Max Fee (Event 200)</label>
+              <input
+                type="number"
+                value={deploymentFeeConfig.maxFee}
+                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, maxFee: Number(e.target.value)})}
+                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+                placeholder="Max Fee"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-green-400 text-xs">Interpolation Type</label>
+              <select
+                value={deploymentFeeConfig.interpolationType}
+                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, interpolationType: e.target.value as any})}
+                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+              >
+                <option value="linear">Linear</option>
+                <option value="exponential">Exponential</option>
+                <option value="logarithmic">Logarithmic</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-green-400 text-xs">Rounding</label>
+              <select
+                value={deploymentFeeConfig.feeRounding}
+                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, feeRounding: e.target.value as any})}
+                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+              >
+                <option value="none">No Rounding</option>
+                <option value="10">Round to 10</option>
+                <option value="100">Round to 100</option>
+                <option value="1000">Round to 1000</option>
+              </select>
+            </div>
+          </div>
+
+          {deploymentFeeConfig.interpolationType === 'exponential' && (
+            <div className="mb-3">
+              <label className="text-green-400 text-xs">Curve Strength</label>
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.1"
+                value={deploymentFeeConfig.curveStrength}
+                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, curveStrength: Number(e.target.value)})}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Gentle (0.5)</span>
+                <span className="text-green-400">{deploymentFeeConfig.curveStrength.toFixed(1)}</span>
+                <span>Steep (3.0)</span>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => setDeploymentFeeConfig({...deploymentFeeConfig, showVisualization: !deploymentFeeConfig.showVisualization})}
+            className="w-full px-3 py-1 bg-green-600/20 hover:bg-green-600/30 border border-green-500/50 text-green-400 rounded text-xs transition-colors mb-3"
+          >
+            {deploymentFeeConfig.showVisualization ? 'Hide' : 'Show'} Visualization
+          </button>
+
+          {deploymentFeeConfig.showVisualization && (
+            <div className="bg-black/30 border border-green-500/20 rounded p-3">
+              <div className="text-xs text-green-400 font-semibold mb-2">Fee Distribution Preview</div>
+              <div className="space-y-1 max-h-60 overflow-y-auto">
+                {[1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200].map(eventNum => {
+                  const fee = calculateDeploymentFee(eventNum);
+                  const percentage = ((fee - deploymentFeeConfig.minFee) / (deploymentFeeConfig.maxFee - deploymentFeeConfig.minFee)) * 100;
+
+                  return (
+                    <div key={eventNum} className="flex items-center gap-2">
+                      <span className="text-gray-500 w-12 text-right">E{eventNum}:</span>
+                      <div className="flex-1 bg-black/50 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-green-400 text-xs w-20 text-right">{fee.toLocaleString()}g</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-green-500/20">
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500">Chapter 1 Avg:</span>
+                    <div className="text-green-400 font-semibold">
+                      {Math.round([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+                        .map(calculateDeploymentFee)
+                        .reduce((a,b) => a+b, 0) / 20).toLocaleString()}g
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Chapter 5 Avg:</span>
+                    <div className="text-green-400 font-semibold">
+                      {Math.round([81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100]
+                        .map(calculateDeploymentFee)
+                        .reduce((a,b) => a+b, 0) / 20).toLocaleString()}g
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Chapter 10 Avg:</span>
+                    <div className="text-green-400 font-semibold">
+                      {Math.round([181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200]
+                        .map(calculateDeploymentFee)
+                        .reduce((a,b) => a+b, 0) / 20).toLocaleString()}g
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Variation Buff Assignment System */}

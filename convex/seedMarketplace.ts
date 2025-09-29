@@ -157,7 +157,7 @@ export const seedMarketplaceListings = mutation({
     for (const frame of frameListings) {
       await ctx.db.insert("marketListings", {
         sellerId: demoSeller._id,
-        itemType: "frames" as any,
+        itemType: "enclosure",
         itemVariation: frame.variation,
         itemDescription: frame.desc,
         quantity: frame.qty,
@@ -183,7 +183,7 @@ export const seedMarketplaceListings = mutation({
     for (const oem of oemListings) {
       await ctx.db.insert("marketListings", {
         sellerId: demoSeller._id,
-        itemType: "oem" as any,
+        itemType: "oem",
         itemVariation: oem.variation,
         itemDescription: oem.desc,
         quantity: oem.qty,

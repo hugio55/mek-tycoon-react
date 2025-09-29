@@ -1,5 +1,9 @@
 // All variations are equal - they appear as grey outlines unless matched (then yellow)
+// Ordered from least rare to most rare based on copy counts
 export const successMultipliers = [
+  { id: "vampire", name: "Vampire", image: "/variation-images/vampire.png", bonus: "+10%" },
+  { id: "noob", name: "Noob", image: "/variation-images/noob.png", bonus: "+10%" },
+  { id: "desufnoc", name: "desufnoC", image: "/variation-images/desufnoc.png", bonus: "+10%" },
   { id: "taser", name: "Taser", image: "/variation-images/taser.png", bonus: "+10%" },
   { id: "log", name: "Log", image: "/variation-images/log.png", bonus: "+10%" },
   { id: "kevlar", name: "Kevlar", image: "/variation-images/kevlar.png", bonus: "+10%" },

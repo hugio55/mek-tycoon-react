@@ -62,7 +62,7 @@ async function calculateAttributeRarity(ctx: any) {
   const bodyCounts: Record<string, number> = {};
   const traitCounts: Record<string, number> = {};
 
-  allMeks.forEach(mek => {
+  allMeks.forEach((mek: any) => {
     if (mek.head) headCounts[mek.head] = (headCounts[mek.head] || 0) + 1;
     if (mek.body) bodyCounts[mek.body] = (bodyCounts[mek.body] || 0) + 1;
     if (mek.trait) traitCounts[mek.trait] = (traitCounts[mek.trait] || 0) + 1;
@@ -96,7 +96,7 @@ async function calculateAttributeRarity(ctx: any) {
   // Update or create rarity document
   const existing = await ctx.db
     .query("attributeRarity")
-    .withIndex("by_type", q => q.eq("type", "singleton"))
+    .withIndex("by_type", (q: any) => q.eq("type", "singleton"))
     .first();
 
   const rarityData = {

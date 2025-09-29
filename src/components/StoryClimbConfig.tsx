@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import EventNodeEditor from './EventNodeEditor';
 import NormalMekRewards from './NormalMekRewards';
 import MiniBossFinalBossRewards from './MiniBossFinalBossRewards';
+import NodeFeeConfig from './NodeFeeConfig';
 
 interface ChapterConfig {
   chapter: number;
@@ -43,22 +44,40 @@ interface MekSlotsConfig {
   };
 }
 
-export default function StoryClimbConfig() {
+interface StoryClimbConfigProps {
+  activeSection?: string;
+}
+
+export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProps = {}) {
   const router = useRouter();
   const [seedType, setSeedType] = useState<'wallet' | 'custom'>('wallet');
   const [customSeed, setCustomSeed] = useState('1');
   const [selectedChapter, setSelectedChapter] = useState(1);
 
-  // Collapsible sections state - all start collapsed
+  // Map activeSection to internal section names
+  const sectionMap: Record<string, keyof typeof sectionsCollapsed> = {
+    'normal-mek-distribution': 'algorithm',
+    'chapter-rarity': 'chapters',
+    'mek-slots': 'mekSlots',
+    'node-fee': 'nodeFees',
+    'event-node': 'events',
+    'boss-rewards': 'miniBossFinalBoss',
+    'normal-rewards': 'normalMeks'
+  };
+
+  const targetSection = activeSection ? sectionMap[activeSection] : null;
+
+  // Collapsible sections state - expand only the active section
   const [sectionsCollapsed, setSectionsCollapsed] = useState({
-    overview: true,
-    algorithm: true,
-    chapters: true,
-    seed: true,
-    events: true,
-    normalMeks: true,
-    mekSlots: true,
-    miniBossFinalBoss: true
+    overview: targetSection !== 'overview',
+    algorithm: targetSection !== 'algorithm',
+    chapters: targetSection !== 'chapters',
+    seed: targetSection !== 'seed',
+    nodeFees: targetSection !== 'nodeFees',
+    events: targetSection !== 'events',
+    normalMeks: targetSection !== 'normalMeks',
+    mekSlots: targetSection !== 'mekSlots',
+    miniBossFinalBoss: targetSection !== 'miniBossFinalBoss'
   });
 
   // Mek Slots configuration
@@ -92,6 +111,14 @@ export default function StoryClimbConfig() {
 
   const toggleSection = (section: string) => {
     setSectionsCollapsed(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Helper to check if a section should be rendered
+  const shouldRenderSection = (section: keyof typeof sectionsCollapsed) => {
+    // If no activeSection is specified, render all sections
+    if (!targetSection) return true;
+    // Otherwise, only render the target section
+    return section === targetSection;
   };
 
   // Define the chapter configurations based on the documentation
@@ -150,6 +177,7 @@ export default function StoryClimbConfig() {
     <div className="space-y-6">
 
       {/* Mek Distribution Algorithm Info - Collapsible */}
+      {shouldRenderSection('algorithm') && (
       <div className="bg-gradient-to-br from-purple-900/20 via-black/50 to-blue-900/20 rounded-lg p-4 border border-purple-500/30">
         <button
           onClick={() => toggleSection('algorithm')}
@@ -194,8 +222,10 @@ export default function StoryClimbConfig() {
           </div>
         )}
       </div>
+      )}
 
       {/* Chapter Rarity Breakdown - Collapsible */}
+      {shouldRenderSection('chapters') && (
       <div className="bg-gray-800/30 rounded-lg p-4">
         <button
           onClick={() => toggleSection('chapters')}
@@ -240,9 +270,11 @@ export default function StoryClimbConfig() {
           </div>
         )}
       </div>
+      )}
 
 
       {/* Mek Slots Configuration - New Section */}
+      {shouldRenderSection('mekSlots') && (
       <div className="bg-gradient-to-br from-green-900/20 via-black/50 to-cyan-900/20 rounded-lg p-4 border border-green-500/30">
         <button
           onClick={() => toggleSection('mekSlots')}
@@ -808,7 +840,7 @@ export default function StoryClimbConfig() {
             {/* Save/Deploy Button */}
             <div className="flex justify-end mt-4">
               <button
-                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-semibold transition-colors"
+                className="mek-button-primary"
                 onClick={() => {
                   localStorage.setItem('mekSlotsConfig', JSON.stringify(mekSlotsConfig));
                   alert('Mek Slots configuration saved!');
@@ -820,8 +852,27 @@ export default function StoryClimbConfig() {
           </div>
         )}
       </div>
+      )}
+
+      {/* Node Fee Configuration - Collapsible */}
+      {shouldRenderSection('nodeFees') && (
+      <div className="bg-gray-800/30 rounded-lg p-4">
+        <button
+          onClick={() => toggleSection('nodeFees')}
+          className="w-full flex items-center justify-between text-left mb-3"
+        >
+          <h4 className="text-sm font-bold text-purple-400 flex items-center gap-2">
+            <span>{sectionsCollapsed.nodeFees ? '▶' : '▼'}</span>
+            <span className="text-lg">💰</span>
+            Node Fee Configuration (All Node Types)
+          </h4>
+        </button>
+        {!sectionsCollapsed.nodeFees && <NodeFeeConfig />}
+      </div>
+      )}
 
       {/* Event Node Editor with integrated chip rewards - Collapsible */}
+      {shouldRenderSection('events') && (
       <div className="bg-gray-800/30 rounded-lg p-4">
         <button
           onClick={() => toggleSection('events')}
@@ -834,8 +885,10 @@ export default function StoryClimbConfig() {
         </button>
         {!sectionsCollapsed.events && <EventNodeEditor />}
       </div>
+      )}
 
       {/* Mini Boss and Final Boss Rewards Configuration - Collapsible */}
+      {shouldRenderSection('miniBossFinalBoss') && (
       <div className="bg-gray-800/30 rounded-lg p-4">
         <button
           onClick={() => toggleSection('miniBossFinalBoss')}
@@ -850,8 +903,10 @@ export default function StoryClimbConfig() {
           <MiniBossFinalBossRewards />
         )}
       </div>
+      )}
 
       {/* Normal Mek Node Rewards - Collapsible */}
+      {shouldRenderSection('normalMeks') && (
       <div className="bg-gray-800/30 rounded-lg p-4">
         <button
           onClick={() => toggleSection('normalMeks')}
@@ -864,6 +919,7 @@ export default function StoryClimbConfig() {
         </button>
         {!sectionsCollapsed.normalMeks && <NormalMekRewards mekSlotsConfig={mekSlotsConfig.normalMeks} />}
       </div>
+      )}
     </div>
   );
 }

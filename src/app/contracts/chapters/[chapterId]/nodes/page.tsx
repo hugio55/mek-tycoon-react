@@ -121,7 +121,8 @@ export default function ChapterNodesPage() {
   const handleStartMission = () => {
     if (selectedMission) {
       setCompletedMissions(prev => new Set([...prev, selectedMission.id]));
-      setSelectedMission(null);
+      // DON'T clear selectedMission - keep it selected to show in-progress state
+      // setSelectedMission(null);
     }
   };
 

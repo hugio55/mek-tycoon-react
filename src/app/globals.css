@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global deployment slot enhancements */
+@layer utilities {
+  /* Target any dashed yellow border elements - add glow */
+  [class*="border-dashed"][class*="border-yellow"],
+  [class*="border-yellow"][class*="border-dashed"],
+  [class*="border-dotted"][class*="border-yellow"],
+  [class*="border-yellow"][class*="border-dotted"] {
+    box-shadow: 0 0 8px rgba(250, 182, 23, 0.35),
+                inset 0 0 6px rgba(250, 182, 23, 0.15) !important;
+    transition: all 0.3s ease;
+  }
+
+  [class*="border-dashed"][class*="border-yellow"]:hover,
+  [class*="border-yellow"][class*="border-dashed"]:hover,
+  [class*="border-dotted"][class*="border-yellow"]:hover,
+  [class*="border-yellow"][class*="border-dotted"]:hover {
+    box-shadow: 0 0 15px rgba(250, 182, 23, 0.5),
+                inset 0 0 10px rgba(250, 182, 23, 0.25) !important;
+  }
+
+  /* Style plus signs in empty mek slots */
+  .mek-slot-plus {
+    font-size: 3rem !important;
+    color: rgba(250, 182, 23, 0.7) !important;
+    text-shadow: 0 0 15px rgba(250, 182, 23, 0.6) !important;
+  }
+}
+
 /* Global overflow prevention */
 html, body {
   overflow-x: hidden;
@@ -645,6 +673,16 @@ body {
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
+}
+
+@keyframes slideRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
+}
+
+@keyframes slideLeft {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-8px); }
 }
 
 @keyframes magicParticle {
