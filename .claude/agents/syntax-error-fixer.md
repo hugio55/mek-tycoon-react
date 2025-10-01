@@ -1,7 +1,7 @@
 ---
 name: syntax-error-fixer
 description: Use this agent when you encounter syntax errors in React, TypeScript, or JSX code, particularly parsing errors, bracket mismatches, unclosed tags, or malformed expressions. This includes errors like 'Unexpected token', 'JSX element has no corresponding closing tag', 'Expression expected', or any bracket/parenthesis mismatch errors in React components. Examples:\n\n<example>\nContext: The user encounters a syntax error in their React component.\nuser: "I'm getting 'Parsing error: Unexpected token }' on line 395 of my component"\nassistant: "I'll use the syntax-error-fixer agent to diagnose and fix this parsing error."\n<commentary>\nSince there's a syntax error in React/JSX code, use the Task tool to launch the syntax-error-fixer agent to identify and resolve the issue.\n</commentary>\n</example>\n\n<example>\nContext: The user has a JSX-related error after writing new code.\nuser: "My map function isn't working, getting 'Expected )' error"\nassistant: "Let me use the syntax-error-fixer agent to identify the bracket mismatch in your map function."\n<commentary>\nThe user has a syntax error related to brackets in a map function, so use the syntax-error-fixer agent.\n</commentary>\n</example>\n\n<example>\nContext: After implementing a new feature, the build fails with syntax errors.\nuser: "Build failed with 'JSX element has no corresponding closing tag' but I can't find where"\nassistant: "I'll deploy the syntax-error-fixer agent to locate and fix the unclosed JSX tag."\n<commentary>\nThere's a JSX syntax error that needs fixing, use the syntax-error-fixer agent to resolve it.\n</commentary>\n</example>
-model: opus
+model: sonnet
 color: orange
 ---
 

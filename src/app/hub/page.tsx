@@ -7,15 +7,19 @@ import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 export default function HubPage() {
-  
+
   const [liveGold, setLiveGold] = useState(0);
   const [totalGold, setTotalGold] = useState(0);
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [goldPerSecond, setGoldPerSecond] = useState(0);
   const [lastGoldFetch, setLastGoldFetch] = useState(Date.now());
   const [cachedGoldData, setCachedGoldData] = useState<{goldPerHour: number; goldPerSecond: number} | null>(null);
+  const [displayGold, setDisplayGold] = useState(0); // Visual display only, updated via ref
+  const [optimisticTotalGold, setOptimisticTotalGold] = useState<number | null>(null); // Optimistic gold display
+  const [isCollecting, setIsCollecting] = useState(false); // Collecting state
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, direction: string, speed: number, delay: number}>>([]);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(0);
   const [initError, setInitError] = useState<string | null>(null);
@@ -77,6 +81,12 @@ export default function HubPage() {
     walletAddress && walletAddress !== "demo_wallet_123" ? { walletAddress } : "skip"
   );
 
+  // DEBUGGING: Get goldMining data to check if level bonuses are present
+  const goldMiningData = useQuery(
+    api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
   useEffect(() => {
     const initUser = async () => {
       try {
@@ -94,6 +104,18 @@ export default function HubPage() {
           // Fetch initial gold data once
           try {
             const goldData = await getInitialGold({ userId: user._id as Id<"users"> });
+
+            console.log('[HUB INIT] ===================================');
+            console.log('[HUB INIT] getInitialGold returned:', {
+              timestamp: new Date().toISOString(),
+              goldPerHour: goldData.goldPerHour,
+              goldPerSecond: goldData.goldPerSecond,
+              pendingGold: goldData.pendingGold,
+              totalGold: goldData.totalGold
+            });
+            console.log('[HUB INIT] ⚠️ NOTE: This data comes from users.goldPerHour, NOT goldMining.totalGoldPerHour!');
+            console.log('[HUB INIT] ===================================');
+
             setCachedGoldData(goldData);
 
             // DON'T set goldPerSecond yet - wait for verification check
@@ -131,9 +153,60 @@ export default function HubPage() {
     });
   }, [getOrCreateUser, getInitialGold]);
 
+  // DIAGNOSTIC LOGGING: Track goldMiningData changes
+  useEffect(() => {
+    if (!goldMiningData) return;
+
+    console.log('[HUB SYNC] =================================');
+    console.log('[HUB SYNC] goldMiningData received:', {
+      timestamp: new Date().toISOString(),
+      totalGoldPerHour: goldMiningData.totalGoldPerHour,
+      baseGoldPerHour: goldMiningData.baseGoldPerHour,
+      boostGoldPerHour: goldMiningData.boostGoldPerHour,
+      mekCount: goldMiningData.ownedMeks?.length || 0
+    });
+
+    // Check if level boost data exists in ownedMeks array
+    const meksWithBoosts = goldMiningData.ownedMeks?.filter(mek =>
+      mek.levelBoostAmount && mek.levelBoostAmount > 0
+    ) || [];
+
+    console.log('[HUB SYNC] Meks with level bonuses:', meksWithBoosts.length);
+
+    if (meksWithBoosts.length > 0) {
+      console.log('[HUB SYNC] Level bonus details:',
+        meksWithBoosts.map(mek => ({
+          assetName: mek.assetName,
+          level: mek.currentLevel,
+          baseRate: mek.baseGoldPerHour || mek.goldPerHour,
+          boostPercent: mek.levelBoostPercent,
+          boostAmount: mek.levelBoostAmount,
+          effectiveRate: mek.effectiveGoldPerHour
+        }))
+      );
+    } else {
+      console.warn('[HUB SYNC] ⚠️ NO LEVEL BONUSES FOUND in ownedMeks array!');
+      console.log('[HUB SYNC] Raw ownedMeks data:', goldMiningData.ownedMeks?.map(mek => ({
+        assetName: mek.assetName,
+        goldPerHour: mek.goldPerHour,
+        baseGoldPerHour: mek.baseGoldPerHour,
+        currentLevel: mek.currentLevel,
+        levelBoostAmount: mek.levelBoostAmount,
+        effectiveGoldPerHour: mek.effectiveGoldPerHour
+      })));
+    }
+    console.log('[HUB SYNC] =================================');
+  }, [goldMiningData]);
+
   // CRITICAL: Enforce verification - control gold rate based on verification status
   useEffect(() => {
     if (!cachedGoldData) return; // Wait for gold data to load
+
+    console.log('[HUB RATE] Setting gold rate from cachedGoldData:', {
+      timestamp: new Date().toISOString(),
+      goldPerSecond: cachedGoldData.goldPerSecond,
+      goldPerHour: cachedGoldData.goldPerHour
+    });
 
     // Demo wallet: always allow gold accumulation
     if (walletAddress === "demo_wallet_123") {
@@ -194,54 +267,88 @@ export default function HubPage() {
     }
   }, [liveGoldData]);
   
-  // Animate live gold counter with smooth visual updates
+  // Animate live gold counter with smooth visual updates using direct DOM manipulation
   useEffect(() => {
     // ONLY animate if verified OR if using demo wallet
     const isVerified = verificationStatus?.isVerified || walletAddress === "demo_wallet_123";
 
-    if (goldPerSecond > 0 && isVerified) {
-      // Update visually every 100ms for smooth animation
-      const interval = setInterval(() => {
+    if (goldPerSecond > 0 && isVerified && liveGold !== null) {
+      let lastTimestamp = performance.now();
+      let animationFrameId: number;
+      const goldDisplayElement = document.getElementById('live-gold-display');
+
+      const animate = (timestamp: number) => {
+        const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+        lastTimestamp = timestamp;
+
+        const maxGold = (cachedGoldData?.goldPerHour || GAME_CONSTANTS.DEFAULT_GOLD_RATE) * GAME_CONSTANTS.MAX_GOLD_CAP_HOURS;
+        const increment = goldPerSecond * deltaTime;
+
         setLiveGold(prev => {
-          const maxGold = (cachedGoldData?.goldPerHour || GAME_CONSTANTS.DEFAULT_GOLD_RATE) * GAME_CONSTANTS.MAX_GOLD_CAP_HOURS; // 72 hour cap
-          // Add 1/10th of a second's worth of gold for smooth visual effect
-          const increment = goldPerSecond / 10;
-          return Math.min(prev + increment, maxGold);
+          const newGold = Math.min(prev + increment, maxGold);
+
+          // Update DOM directly for smooth visual updates
+          if (goldDisplayElement) {
+            goldDisplayElement.textContent = newGold.toFixed(2);
+          }
+
+          return newGold;
         });
-      }, 100); // Update visually every 100ms for smooth counting
-      return () => clearInterval(interval);
+
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animationFrameId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationFrameId);
     }
   }, [goldPerSecond, cachedGoldData, verificationStatus, walletAddress]);
   
   const collectAllGold = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!userId) return;
-    
+    if (!userId || isCollecting) return;
+
     const goldToCollect = Math.floor(liveGold);
-    
+    if (goldToCollect === 0) return;
+
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setIsCollecting(true);
+    const expectedTotalGold = totalGold + goldToCollect;
+    setOptimisticTotalGold(expectedTotalGold);
+    setLiveGold(0); // Clear collected gold immediately
+
     // Animate counting up
-    animateGoldCount(totalGold, totalGold + goldToCollect, (value) => {
+    animateGoldCount(totalGold, expectedTotalGold, (value) => {
       setTotalGold(value);
     });
-    
+
     // Add animation to button
     const button = e.currentTarget;
     button.classList.add('collecting');
     setTimeout(() => {
       button.classList.remove('collecting');
     }, 500);
-    
+
     // Collect gold from server
     try {
       const result = await collectGold({ userId });
+
+      // SUCCESS: Sync with real data
+      setOptimisticTotalGold(null);
       setTotalGold(Math.floor(result.totalGold));
-      setLiveGold(0);
-      
+
       // Show popup with collected gold and XP
       showGoldPopup(Math.floor(result.collected), result.xpGained || 0, result.leveledUp || false, result.currentLevel || 1);
     } catch (error) {
       console.error("Failed to collect gold:", error);
-      // Still show popup with estimated amount on error
-      showGoldPopup(goldToCollect, 0, false, 1);
+
+      // ROLLBACK: Restore previous state
+      setOptimisticTotalGold(null);
+      setTotalGold(totalGold);
+      setLiveGold(goldToCollect);
+
+      // Show error notification using toast
+      toastError('Failed to collect gold. Please try again.');
+    } finally {
+      setIsCollecting(false);
     }
   };
   
@@ -475,13 +582,14 @@ export default function HubPage() {
       <div className="relative z-10 py-6">
         
         {/* Hub Title Section */}
-        <div 
+        <div
           className="relative mb-6 rounded-xl overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
             border: '2px solid #fab617',
             boxShadow: '0 0 20px rgba(250, 182, 23, 0.3)',
-            padding: '20px'
+            padding: '20px',
+            marginBottom: 'calc(1.5rem - 25px)'
           }}
         >
           {/* Green inner border */}
@@ -518,7 +626,7 @@ export default function HubPage() {
             {/* Total Gold Display - Absolute positioned */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col">
               <div className="gold-display-medium">
-                {Math.floor(totalGold).toLocaleString()}
+                {Math.floor(optimisticTotalGold ?? totalGold).toLocaleString()}
               </div>
               <div 
                 style={{
@@ -631,8 +739,9 @@ export default function HubPage() {
             
             {/* Live Earnings - Absolute positioned */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col text-right">
-              <div 
-                style={{ 
+              <div
+                id="live-gold-display"
+                style={{
                   fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
                   fontSize: '24px',
                   fontWeight: 200,
@@ -819,9 +928,14 @@ export default function HubPage() {
               </Link>
               <button
                 onClick={collectAllGold}
-                className="px-3 py-1 text-xs rounded transition-colors bg-gray-700/50 text-gray-400 hover:bg-gray-700 border border-gray-600/50"
+                disabled={isCollecting || liveGold === 0}
+                className={`px-3 py-1 text-xs rounded transition-colors border border-gray-600/50 ${
+                  isCollecting || liveGold === 0
+                    ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                    : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                }`}
               >
-                Collect All
+                {isCollecting ? 'Collecting...' : 'Collect All'}
               </button>
             </div>
           </div>
@@ -984,7 +1098,7 @@ export default function HubPage() {
           </div>
           
           {/* Gold Stats Card - Right Column */}
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700 self-start">
             <div className="mb-4">
               <h3 className="text-lg font-bold text-center mb-3" style={{
                 fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",

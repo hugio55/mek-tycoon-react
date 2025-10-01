@@ -52,6 +52,7 @@ const DATA_SYSTEMS = [
   { id: 'mek-rate-experiment', name: 'Mek Rate Experiment', icon: '💎', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Wallet Management', icon: '👛', implemented: true },
+  { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false }
 ];
 
@@ -2384,6 +2385,17 @@ export default function AdminMasterDataPage() {
                 <WalletManagementAdmin />
               </div>
           </div>
+          )}
+
+          {/* Bot Testing System - DISABLED */}
+          {activeTab === 'bot-testing' && (
+            <div id="section-bot-testing" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+              <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Bot testing system has been disabled to reduce Blockfrost API usage.
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Notification System */}

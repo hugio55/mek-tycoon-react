@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useState, useCallback, useMemo, memo } from 'react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
-export default function SnapshotHistoryViewer() {
+function SnapshotHistoryViewer() {
   const [walletFilter, setWalletFilter] = useState('');
   const [expandedSnapshot, setExpandedSnapshot] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'snapshots' | 'logs'>('snapshots');
@@ -15,6 +15,37 @@ export default function SnapshotHistoryViewer() {
   );
 
   const logs = useQuery(api.snapshotHistory.getSnapshotLogs, { limit: 20 });
+  const deleteSnapshot = useMutation(api.snapshotHistory.deleteSnapshot);
+  const restoreFromSnapshot = useMutation(api.snapshotHistory.restoreFromSnapshot);
+
+  const handleDeleteSnapshot = useCallback(async (snapshotId: string) => {
+    if (!confirm('Are you sure you want to delete this snapshot? This cannot be undone.')) return;
+
+    try {
+      await deleteSnapshot({ snapshotId: snapshotId as any });
+    } catch (error) {
+      console.error('Failed to delete snapshot:', error);
+      alert('Failed to delete snapshot');
+    }
+  }, [deleteSnapshot]);
+
+  const handleRestoreSnapshot = useCallback(async (snapshotId: string, walletAddress: string, snapshotTime: number) => {
+    const confirmMsg = `⚠️ RESTORE FROM SNAPSHOT ⚠️\n\nThis will restore wallet ${walletAddress.substring(0, 12)}... to the EXACT state from:\n${new Date(snapshotTime).toLocaleString()}\n\nThis will:\n• Replace current Mek ownership data\n• Restore gold per hour rates\n• Restore Mek levels\n• Restore gold balance\n• Restore cumulative gold\n\nAre you ABSOLUTELY SURE you want to do this?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const result = await restoreFromSnapshot({ snapshotId: snapshotId as any });
+      alert(`✅ Success!\n\n${result.message}\n\nRestored:\n• ${result.restoredMekCount} Meks\n• ${result.restoredGoldPerHour.toFixed(2)} gold/hr\n• ${result.restoredGold.toFixed(2)} current gold\n• ${result.restoredCumulativeGold.toFixed(2)} cumulative gold`);
+    } catch (error: any) {
+      console.error('Failed to restore snapshot:', error);
+      alert(`Failed to restore snapshot:\n${error.message || error}`);
+    }
+  }, [restoreFromSnapshot]);
+
+  const toggleExpand = useCallback((snapshotId: string) => {
+    setExpandedSnapshot(prev => prev === snapshotId ? null : snapshotId);
+  }, []);
 
   if (!snapshots && viewMode === 'snapshots') {
     return (
@@ -31,10 +62,6 @@ export default function SnapshotHistoryViewer() {
       </div>
     );
   }
-
-  const toggleExpand = (snapshotId: string) => {
-    setExpandedSnapshot(expandedSnapshot === snapshotId ? null : snapshotId);
-  };
 
   return (
     <div className="space-y-4">
@@ -105,12 +132,12 @@ export default function SnapshotHistoryViewer() {
                   key={snapshot._id}
                   className="bg-gray-900/50 rounded-lg border border-gray-700 overflow-hidden hover:border-yellow-700/50 transition-colors"
                 >
-                  <div
-                    className="p-4 cursor-pointer"
-                    onClick={() => toggleExpand(snapshot._id)}
-                  >
+                  <div className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div
+                        className="flex items-center gap-4 flex-1 cursor-pointer"
+                        onClick={() => toggleExpand(snapshot._id)}
+                      >
                         <div className="text-2xl">{expandedSnapshot === snapshot._id ? '▼' : '▶'}</div>
                         <div>
                           <div className="font-mono text-sm text-gray-300">
@@ -131,6 +158,35 @@ export default function SnapshotHistoryViewer() {
                           <div className="text-sm text-gray-400">Gold/hr</div>
                           <div className="text-lg font-bold text-green-400">{snapshot.totalGoldPerHour.toFixed(2)}</div>
                         </div>
+                        {snapshot.verificationStatus && snapshot.verificationStatus !== 'verified' && (
+                          <div className="text-right">
+                            <div className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded border border-red-700">
+                              {snapshot.verificationStatus === 'lookup_failed' && '⚠️ Lookup Failed'}
+                              {snapshot.verificationStatus === 'validation_failed' && '❌ Invalid Data'}
+                              {snapshot.verificationStatus === 'uncertain' && '❓ Uncertain'}
+                            </div>
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRestoreSnapshot(snapshot._id, snapshot.walletAddress, snapshot.snapshotTime);
+                          }}
+                          className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors"
+                          title="Restore wallet to this snapshot"
+                        >
+                          Restore
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSnapshot(snapshot._id);
+                          }}
+                          className="px-3 py-1 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors"
+                          title="Delete this snapshot"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -238,3 +294,5 @@ export default function SnapshotHistoryViewer() {
     </div>
   );
 }
+
+export default memo(SnapshotHistoryViewer);

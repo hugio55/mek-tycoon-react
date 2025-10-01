@@ -4,6 +4,7 @@ import { useState } from "react";
 import MekImage from "@/components/MekImage";
 import EssenceChart, { type EssenceData } from "@/components/EssenceChart";
 import Image from "next/image";
+import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
 
 type Mek = {
   id: string;
@@ -118,7 +119,19 @@ export default function ProfilePage() {
   const filteredMeks = userData.meks.filter(mek => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
-    return mek.number.toString().includes(term);
+
+    // Check mek number
+    if (mek.number.toString().includes(term)) return true;
+
+    // Check variation names if sourceKey exists
+    if (mek.sourceKey) {
+      const variations = getVariationInfoFromFullKey(mek.sourceKey);
+      if (variations.head.name.toLowerCase().includes(term)) return true;
+      if (variations.body.name.toLowerCase().includes(term)) return true;
+      if (variations.trait.name.toLowerCase().includes(term)) return true;
+    }
+
+    return false;
   }).sort((a, b) => {
     if (mekSortBy === 'level') {
       return b.level - a.level;
@@ -458,45 +471,66 @@ export default function ProfilePage() {
                 
                 {/* Meks Tab */}
                 {activeTab === 'meks' && (
-                  <div className="space-y-6">
-                    {/* Search Bar */}
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search by Mek # or variation..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          setCurrentPage(1);
-                        }}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
-                      />
-                    </div>
-                    
-                    {/* Sort Options */}
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-xl font-bold text-yellow-400">Owned Meks</h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setMekSortBy('level')}
-                          className={`px-3 py-1 text-xs rounded transition-all ${
-                            mekSortBy === 'level'
-                              ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
-                              : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
-                          }`}
-                        >
-                          Sort by Level
-                        </button>
-                        <button
-                          onClick={() => setMekSortBy('goldPerHour')}
-                          className={`px-3 py-1 text-xs rounded transition-all ${
-                            mekSortBy === 'goldPerHour'
-                              ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
-                              : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
-                          }`}
-                        >
-                          Sort by Gold/Hr
-                        </button>
+                  <div className="space-y-4">
+                    {/* Header with Search and Sort */}
+                    <div>
+                      <h3 className="text-xl font-bold text-yellow-400 mb-3">Owned Meks</h3>
+
+                      {/* Search Bar and Sort Controls Row */}
+                      <div className="flex gap-3 items-end">
+                        {/* Search Bar - Left Side */}
+                        <div className="flex-1">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={searchTerm}
+                              onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                              }}
+                              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
+                            />
+                            {searchTerm && (
+                              <button
+                                onClick={() => {
+                                  setSearchTerm('');
+                                  setCurrentPage(1);
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1 px-1">
+                            Search by Mek # or variation (e.g., bumblebee, seafoam)
+                          </div>
+                        </div>
+
+                        {/* Sort Dropdown - Right Side */}
+                        <div className="flex gap-2 mb-[30px]">
+                          <button
+                            onClick={() => setMekSortBy('level')}
+                            className={`px-4 py-2 text-sm rounded transition-all ${
+                              mekSortBy === 'level'
+                                ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
+                                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
+                            }`}
+                          >
+                            Sort by Level
+                          </button>
+                          <button
+                            onClick={() => setMekSortBy('goldPerHour')}
+                            className={`px-4 py-2 text-sm rounded transition-all ${
+                              mekSortBy === 'goldPerHour'
+                                ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
+                                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
+                            }`}
+                          >
+                            Sort by Gold/Hr
+                          </button>
+                        </div>
                       </div>
                     </div>
                     

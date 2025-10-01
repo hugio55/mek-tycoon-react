@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Leaderboard Direct</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+        }
+        #status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #fab617;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 2px solid #fab617;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <h2>Leaderboard Direct Test</h2>
+        <p>Loading page without wallet requirement...</p>
+        <p id="result">Waiting for page to load...</p>
+    </div>
+
+    <iframe id="testFrame" src="http://localhost:3100/mek-rate-logging"></iframe>
+
+    <script>
+        const frame = document.getElementById('testFrame');
+        const result = document.getElementById('result');
+
+        // Wait for page to load
+        frame.onload = function() {
+            setTimeout(() => {
+                try {
+                    const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                    const body = frameDoc.body.innerText;
+
+                    if (body.includes('Low Mek co')) {
+                        result.innerHTML = '✓ Found "Low Mek co" in page';
+                        result.style.color = '#0f0';
+                    } else if (body.includes('NO CARDANO WALLETS')) {
+                        result.innerHTML = '✗ Wallet gate is blocking - need to bypass or connect wallet';
+                        result.style.color = '#f00';
+                    } else {
+                        result.innerHTML = '? Page loaded but status unclear';
+                        result.style.color = '#fa0';
+                    }
+                } catch (e) {
+                    result.innerHTML = '✗ Cannot access iframe (CORS/security): ' + e.message;
+                    result.style.color = '#f00';
+                }
+            }, 5000);
+        };
+    </script>
+</body>
+</html>

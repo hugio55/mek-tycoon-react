@@ -48,12 +48,7 @@ const nextConfig = {
       type: 'webassembly/async',
     });
 
-    // Ignore optional dependencies that cause issues
-    config.externals = [...(config.externals || []),
-      '@meshsdk/core',
-      '@meshsdk/react',
-      'sidan_csl_rs'
-    ];
+    // Don't exclude MeshSDK packages - they need to be bundled for WASM support
 
     return config;
   },

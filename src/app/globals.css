@@ -28,6 +28,16 @@
     color: rgba(250, 182, 23, 0.7) !important;
     text-shadow: 0 0 15px rgba(250, 182, 23, 0.6) !important;
   }
+
+  /* Shimmer animation for max level Meks */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
 }
 
 /* Global overflow prevention */

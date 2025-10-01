@@ -16,6 +16,14 @@ This starts both Next.js (port 3100) and Convex in one terminal.
 ## Project Overview
 Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The game combines resource management, crafting, and collection mechanics with a sleek, futuristic UI.
 
+## Naming Conventions
+**IMPORTANT**: Always use "Mek" terminology:
+- "mech" → "Mek"
+- "mechanism" → "Mekanism"
+- "mechanic" → "Mekanism"
+- "mech-related" → "Mek-related"
+- Any variations of "mech" should be replaced with "Mek"
+
 ## Tech Stack
 - **Frontend**: Next.js 15.4.6 (App Router), React, TypeScript
 - **Styling**: Tailwind CSS v3 (NOT v4!) with custom glass-morphism effects

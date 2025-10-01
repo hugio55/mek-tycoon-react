@@ -756,7 +756,7 @@ export default defineSchema({
   // Leaderboard Cache - pre-computed leaderboard data
   leaderboardCache: defineTable({
     category: v.string(), // "gold", "meks", "essence", "networth", "level"
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
     walletAddress: v.string(),
     username: v.optional(v.string()),
     value: v.number(), // The metric value (gold amount, mek count, etc.)
@@ -1330,9 +1330,13 @@ export default defineSchema({
     walletType: v.optional(v.string()), // nami, eternl, flint, etc.
     paymentAddresses: v.optional(v.array(v.string())), // Payment addresses for Blockfrost fallback
 
+    // Company identity
+    companyName: v.optional(v.string()), // User-chosen company name (alphanumeric only)
+
     // Blockchain verification status
     isBlockchainVerified: v.optional(v.boolean()), // Has the user completed blockchain verification?
     lastVerificationTime: v.optional(v.number()), // When was the last verification performed
+    consecutiveSnapshotFailures: v.optional(v.number()), // Track consecutive failed snapshots (default: 0)
 
     // Mek ownership data
     ownedMeks: v.array(v.object({
@@ -1340,18 +1344,34 @@ export default defineSchema({
       policyId: v.string(), // Policy ID for verification
       assetName: v.string(), // Name of the Mek
       imageUrl: v.optional(v.string()), // Thumbnail URL
-      goldPerHour: v.number(), // Base gold generation rate
+      goldPerHour: v.number(), // Base gold generation rate (LEGACY - use baseGoldPerHour)
       rarityRank: v.optional(v.number()), // Rarity ranking
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),
+      // New fields for level boost tracking
+      baseGoldPerHour: v.optional(v.number()), // Original rate from rarity (immutable)
+      currentLevel: v.optional(v.number()), // Current level (1-10)
+      levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90)
+      levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
+      effectiveGoldPerHour: v.optional(v.number()), // baseGoldPerHour + levelBoostAmount
     })),
 
     // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
-    totalGoldPerHour: v.number(), // Sum of all Mek rates
+    totalGoldPerHour: v.number(), // Sum of all Mek rates (including boosts)
+    baseGoldPerHour: v.optional(v.number()), // Sum of all base Mek rates (without boosts)
+    boostGoldPerHour: v.optional(v.number()), // Sum of all level boosts
     lastActiveTime: v.number(), // Last time user was active on page
     accumulatedGold: v.optional(v.number()), // Gold accumulated up to lastSnapshotTime
     lastSnapshotTime: v.optional(v.number()), // Time of last offline accumulation snapshot
+
+    // Gold spending tracking (for Mek leveling)
+    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on Mek upgrades
+    totalUpgradesPurchased: v.optional(v.number()), // Total number of upgrades bought
+    lastUpgradeSpend: v.optional(v.number()), // Timestamp of last upgrade purchase
+
+    // Cumulative gold tracking
+    totalCumulativeGold: v.optional(v.number()), // Total gold earned all-time (never decreases)
 
     // Metadata
     createdAt: v.number(),
@@ -1425,12 +1445,32 @@ export default defineSchema({
       assetName: v.string(), // Mek name
       goldPerHour: v.number(), // Gold rate for this Mek at this time
       rarityRank: v.optional(v.number()),
+      baseGoldPerHour: v.optional(v.number()), // Base rate before level boosts
+      currentLevel: v.optional(v.number()), // Mek level at time of snapshot
+      levelBoostPercent: v.optional(v.number()), // Level boost percentage
+      levelBoostAmount: v.optional(v.number()), // Level boost gold amount
     })),
     totalGoldPerHour: v.number(), // Total rate at time of snapshot
     totalMekCount: v.number(), // How many Meks were present
+
+    // Complete game state (added for full restoration)
+    accumulatedGold: v.optional(v.number()), // Gold accumulated at time of snapshot
+    totalCumulativeGold: v.optional(v.number()), // Total cumulative gold earned
+    totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on upgrades
+    lastActiveTime: v.optional(v.number()), // Last active time at snapshot
+    lastSnapshotTime: v.optional(v.number()), // Previous snapshot time
+
+    verificationStatus: v.optional(v.union(
+      v.literal("verified"), // Blockchain lookup succeeded
+      v.literal("lookup_failed"), // Blockchain lookup failed - data preserved
+      v.literal("validation_failed"), // Data didn't pass validation checks
+      v.literal("uncertain") // Unknown status (for old snapshots)
+    )),
+    verificationError: v.optional(v.string()), // Error message if lookup failed
   })
     .index("by_wallet", ["walletAddress"])
-    .index("by_wallet_and_time", ["walletAddress", "snapshotTime"]),
+    .index("by_wallet_and_time", ["walletAddress", "snapshotTime"])
+    .index("by_status", ["verificationStatus"]),
 
   // Node Fee Configuration for Story Climb
   nodeFeeConfig: defineTable({
@@ -1724,4 +1764,147 @@ export default defineSchema({
   })
     .index("by_order", ["order"])
     .index("by_active", ["active"]),
+
+  // Bot testing system - wallet snapshot
+  walletSnapshot: defineTable({
+    address: v.string(),
+    mekCount: v.number(),
+    mekVariations: v.array(v.string()),
+    lastActivity: v.number(),
+    isActive: v.boolean(),
+  })
+    .index("by_address", ["address"])
+    .index("by_active", ["isActive"]),
+
+  // Admin Notifications - system alerts for admins
+  adminNotifications: defineTable({
+    type: v.string(), // "snapshot_failure_threshold", "system_error", etc.
+    severity: v.union(v.literal("info"), v.literal("warning"), v.literal("error"), v.literal("critical")),
+    title: v.string(),
+    message: v.string(),
+    walletAddress: v.optional(v.string()),
+    data: v.optional(v.any()), // Additional data related to the notification
+    timestamp: v.number(),
+    read: v.boolean(),
+    readAt: v.optional(v.number()),
+  })
+    .index("by_read", ["read"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_type", ["type"])
+    .index("by_severity", ["severity"]),
+
+  // MEK LEVELING SYSTEM TABLES
+
+  // Mek Levels - tracks level data per wallet+mek combination
+  mekLevels: defineTable({
+    // Composite key for wallet-bound levels
+    walletAddress: v.string(), // Wallet that owns the leveled Mek
+    assetId: v.string(), // Unique Mek asset ID
+    mekNumber: v.optional(v.number()), // Mek number for display
+
+    // Level data
+    currentLevel: v.number(), // Current level (1-10)
+    experience: v.optional(v.number()), // Experience points (future use)
+    totalGoldSpent: v.number(), // Total gold invested in this Mek
+
+    // Gold rate boost tracking
+    baseGoldPerHour: v.optional(v.number()), // Base rate when first leveled
+    currentBoostPercent: v.optional(v.number()), // Current boost percentage (0-90)
+    currentBoostAmount: v.optional(v.number()), // Actual boost in gold/hr
+
+    // Ownership tracking
+    levelAcquiredAt: v.number(), // When this wallet first got the Mek
+    lastUpgradeAt: v.optional(v.number()), // Last upgrade timestamp
+    lastVerifiedAt: v.number(), // Last ownership verification
+    ownershipStatus: v.string(), // "verified", "pending", "transferred"
+
+    // Transfer history
+    previousMaxLevel: v.optional(v.number()), // Max level reached before transfer
+    previousOwners: v.optional(v.array(v.object({
+      walletAddress: v.string(),
+      acquiredAt: v.number(),
+      transferredAt: v.optional(v.number()),
+      maxLevelReached: v.number(),
+      totalGoldSpent: v.number(),
+    }))),
+
+    // Rate limiting
+    upgradeCount24h: v.optional(v.number()), // Upgrades in last 24 hours
+    lastUpgradeDay: v.optional(v.string()), // Date string for daily reset
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_wallet_asset", ["walletAddress", "assetId"])
+    .index("by_asset", ["assetId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_level", ["currentLevel"])
+    .index("by_ownership", ["ownershipStatus"])
+    .index("by_verification", ["lastVerifiedAt"]),
+
+  // Level Upgrades - audit log of all upgrade transactions
+  levelUpgrades: defineTable({
+    // Transaction data
+    upgradeId: v.string(), // Unique upgrade ID
+    walletAddress: v.string(), // Wallet that performed upgrade
+    assetId: v.string(), // Mek being upgraded
+    mekNumber: v.optional(v.number()), // For display
+
+    // Level change
+    fromLevel: v.number(), // Starting level
+    toLevel: v.number(), // Target level
+    goldCost: v.number(), // Gold spent
+
+    // Verification
+    signatureRequired: v.boolean(), // Was signature required (levels 8-10)
+    signatureHash: v.optional(v.string()), // Signature hash if required
+    ownershipVerified: v.boolean(), // Was ownership verified before upgrade
+
+    // Transaction status
+    status: v.string(), // "pending", "completed", "failed", "refunded"
+    failureReason: v.optional(v.string()), // Why it failed if applicable
+
+    // Timestamps
+    timestamp: v.number(), // When upgrade occurred
+    completedAt: v.optional(v.number()), // When transaction completed
+
+    // Gold tracking
+    goldBalanceBefore: v.number(), // Gold balance before upgrade
+    goldBalanceAfter: v.number(), // Gold balance after upgrade
+
+    // Additional metadata
+    ipAddress: v.optional(v.string()), // For rate limiting
+    userAgent: v.optional(v.string()), // Browser info
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_asset", ["assetId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_status", ["status"])
+    .index("by_wallet_asset", ["walletAddress", "assetId"]),
+
+  // Mek Transfer Events - tracks NFT transfers for level resets
+  mekTransferEvents: defineTable({
+    assetId: v.string(), // Mek that was transferred
+    fromWallet: v.string(), // Previous owner
+    toWallet: v.string(), // New owner
+
+    // Level data at time of transfer
+    levelAtTransfer: v.number(), // Level when transferred
+    goldInvestedAtTransfer: v.number(), // Total gold invested
+
+    // Detection method
+    detectedBy: v.string(), // "blockchain_poll", "manual_sync", "ownership_check"
+    detectedAt: v.number(), // When we detected the transfer
+    blockchainTimestamp: v.optional(v.number()), // Actual transfer time if known
+
+    // Processing status
+    processed: v.boolean(), // Have we reset the levels?
+    processedAt: v.optional(v.number()), // When we processed it
+  })
+    .index("by_asset", ["assetId"])
+    .index("by_from_wallet", ["fromWallet"])
+    .index("by_to_wallet", ["toWallet"])
+    .index("by_detected", ["detectedAt"])
+    .index("by_processed", ["processed"]),
 });

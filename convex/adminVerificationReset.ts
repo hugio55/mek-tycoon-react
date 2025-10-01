@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
 
 // Admin function to reset verification status (for testing)
 export const resetVerificationStatus = mutation({
@@ -83,20 +84,18 @@ export const deleteWallet = mutation({
       deletedItems.ownershipHistory++;
     }
 
-    // 3. Delete from goldBackups (if exists)
-    const backups = await ctx.db.query("goldBackups").collect();
-    for (const backup of backups) {
-      // Check if this wallet is in the backup
-      if (backup.snapshots && Array.isArray(backup.snapshots)) {
-        const hasWallet = backup.snapshots.some((s: any) => s.walletAddress === args.walletAddress);
-        if (hasWallet) {
-          // Remove this wallet from the backup snapshots
-          const filteredSnapshots = backup.snapshots.filter((s: any) => s.walletAddress !== args.walletAddress);
-          await ctx.db.patch(backup._id, { snapshots: filteredSnapshots });
-          deletedItems.goldBackups++;
-        }
-      }
-    }
+    // 3. Delete from goldBackups (if exists) - DISABLED: Schema changed
+    // const backups = await ctx.db.query("goldBackups").collect();
+    // for (const backup of backups) {
+    //   if (backup.snapshots && Array.isArray(backup.snapshots)) {
+    //     const hasWallet = backup.snapshots.some((s: any) => s.walletAddress === args.walletAddress);
+    //     if (hasWallet) {
+    //       const filteredSnapshots = backup.snapshots.filter((s: any) => s.walletAddress !== args.walletAddress);
+    //       await ctx.db.patch(backup._id, { snapshots: filteredSnapshots });
+    //       deletedItems.goldBackups++;
+    //     }
+    //   }
+    // }
 
     // 4. Delete Discord connections (if exists)
     try {
@@ -291,6 +290,158 @@ export const autoMergeDuplicates = mutation({
   }
 });
 
+// Admin function to manually update wallet gold amount
+// CRITICAL: This now properly maintains the totalCumulativeGold invariant
+export const updateWalletGold = mutation({
+  args: {
+    walletAddress: v.string(),
+    newGoldAmount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldMiningRecord) {
+      return {
+        success: false,
+        message: "Wallet not found in goldMining table"
+      };
+    }
+
+    const now = Date.now();
+    const currentAccumulated = goldMiningRecord.accumulatedGold || 0;
+    const totalSpent = goldMiningRecord.totalGoldSpentOnUpgrades || 0;
+    const goldDifference = args.newGoldAmount - currentAccumulated;
+
+    // CRITICAL FIX: Properly initialize totalCumulativeGold if not set
+    // The invariant is: totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
+    // If cumulative is 0, we need to set it to at least (accumulated + spent)
+    let recordToUse = {
+      ...goldMiningRecord,
+      accumulatedGold: currentAccumulated,
+      totalGoldSpentOnUpgrades: totalSpent,
+      totalCumulativeGold: goldMiningRecord.totalCumulativeGold || 0,
+      createdAt: goldMiningRecord.createdAt,
+      totalGoldPerHour: goldMiningRecord.totalGoldPerHour
+    };
+
+    // If totalCumulativeGold is not initialized, calculate it from current state
+    if (!recordToUse.totalCumulativeGold || recordToUse.totalCumulativeGold === 0) {
+      // Initialize to minimum valid value to satisfy invariant
+      recordToUse.totalCumulativeGold = currentAccumulated + totalSpent;
+
+      console.log(`[Admin] Initializing totalCumulativeGold for wallet ${args.walletAddress.substring(0, 20)}...`, {
+        currentAccumulated,
+        totalSpent,
+        initializedTo: recordToUse.totalCumulativeGold
+      });
+    }
+
+    // Defensive check: Validate current state BEFORE making changes
+    try {
+      validateGoldInvariant(recordToUse);
+    } catch (error) {
+      console.error(`[Admin] CRITICAL: Wallet has invalid state BEFORE update!`, {
+        walletAddress: args.walletAddress.substring(0, 20),
+        currentAccumulated,
+        totalSpent,
+        totalCumulativeGold: recordToUse.totalCumulativeGold,
+        error: (error as Error).message
+      });
+
+      // Force-fix the invariant before proceeding
+      recordToUse.totalCumulativeGold = Math.max(
+        recordToUse.totalCumulativeGold,
+        currentAccumulated + totalSpent
+      );
+
+      console.log(`[Admin] Force-corrected totalCumulativeGold to ${recordToUse.totalCumulativeGold}`);
+    }
+
+    if (goldDifference > 0) {
+      // Adding gold - use the increase function
+      console.log(`[Admin] Attempting to ADD ${goldDifference} gold`, {
+        from: currentAccumulated,
+        to: args.newGoldAmount,
+        recordState: {
+          accumulatedGold: recordToUse.accumulatedGold,
+          totalCumulativeGold: recordToUse.totalCumulativeGold,
+          totalSpent: recordToUse.totalGoldSpentOnUpgrades
+        }
+      });
+
+      const goldUpdate = calculateGoldIncrease(recordToUse, goldDifference);
+
+      await ctx.db.patch(goldMiningRecord._id, {
+        accumulatedGold: goldUpdate.newAccumulatedGold,
+        totalCumulativeGold: goldUpdate.newTotalCumulativeGold,
+        lastSnapshotTime: now,
+        updatedAt: now
+      });
+
+      console.log(`[Admin] ADDED ${goldDifference} gold for wallet ${args.walletAddress.substring(0, 20)}... (${currentAccumulated} → ${goldUpdate.newAccumulatedGold}, cumulative: ${goldUpdate.newTotalCumulativeGold})`);
+
+      return {
+        success: true,
+        message: `Added ${goldDifference} gold. New balance: ${goldUpdate.newAccumulatedGold}, cumulative: ${goldUpdate.newTotalCumulativeGold}`
+      };
+    } else if (goldDifference < 0) {
+      // Removing gold - just decrease accumulated (cumulative stays the same)
+      // Note: We don't use calculateGoldDecrease here because this isn't spending on upgrades
+
+      // Defensive check: Ensure we're not removing more than available
+      if (args.newGoldAmount < 0) {
+        return {
+          success: false,
+          message: `Cannot set negative gold amount: ${args.newGoldAmount}`
+        };
+      }
+
+      // Calculate what the new cumulative should be
+      // If we're manually reducing accumulated, cumulative stays the same (gold was "wasted")
+      const newCumulativeGold = recordToUse.totalCumulativeGold;
+
+      // Defensive check: Ensure invariant will still hold after removal
+      if (newCumulativeGold < args.newGoldAmount + totalSpent) {
+        console.error(`[Admin] Cannot remove gold - would violate invariant!`, {
+          currentAccumulated,
+          newAmount: args.newGoldAmount,
+          totalSpent,
+          currentCumulative: recordToUse.totalCumulativeGold,
+          wouldNeed: args.newGoldAmount + totalSpent
+        });
+
+        return {
+          success: false,
+          message: `Cannot reduce gold to ${args.newGoldAmount} - would violate tracking invariant (cumulative: ${newCumulativeGold}, need: ${args.newGoldAmount + totalSpent})`
+        };
+      }
+
+      await ctx.db.patch(goldMiningRecord._id, {
+        accumulatedGold: args.newGoldAmount,
+        totalCumulativeGold: newCumulativeGold,
+        lastSnapshotTime: now,
+        updatedAt: now
+      });
+
+      console.log(`[Admin] REMOVED ${Math.abs(goldDifference)} gold for wallet ${args.walletAddress.substring(0, 20)}... (${currentAccumulated} → ${args.newGoldAmount}, cumulative unchanged: ${newCumulativeGold})`);
+
+      return {
+        success: true,
+        message: `Removed ${Math.abs(goldDifference)} gold. New balance: ${args.newGoldAmount}, cumulative: ${newCumulativeGold}`
+      };
+    } else {
+      // No change
+      return {
+        success: true,
+        message: `No change - gold already at ${args.newGoldAmount}`
+      };
+    }
+  }
+});
+
 // Admin query to get all wallets with full details
 export const getAllWallets = query({
   args: {},
@@ -333,6 +484,14 @@ export const getAllWallets = query({
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
+      // Calculate real-time cumulative gold (same logic as userStats.ts)
+      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
+      let baseCumulativeGold = miner.totalCumulativeGold || 0;
+      if (!miner.totalCumulativeGold) {
+        baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
+      }
+      const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
+
       // Time since last active
       const minutesSinceActive = Math.floor((now - miner.lastActiveTime) / (1000 * 60));
       const hoursSinceActive = Math.floor(minutesSinceActive / 60);
@@ -354,6 +513,7 @@ export const getAllWallets = query({
         mekCount: miner.ownedMeks.length,
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.floor(currentGold * 100) / 100,
+        totalCumulativeGold: Math.floor(totalCumulativeGold * 100) / 100,
         isVerified: miner.isBlockchainVerified === true,
         lastVerificationTime: miner.lastVerificationTime || null,
         lastActiveTime: miner.lastActiveTime,

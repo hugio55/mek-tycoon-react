@@ -49,52 +49,88 @@ export const runNightlySnapshot = internalAction({
 
         console.log(`Fetching blockchain data for: ${stakeAddress}`);
 
-        // Query blockchain for current wallet contents using flexible approach
-        // This will work for both registered and unregistered stake addresses
+        // Query blockchain for current wallet contents (stake address only)
         const walletData = await ctx.runAction(api.getWalletAssetsFlexible.getWalletAssetsFlexible, {
           walletIdentifier: stakeAddress,
-          paymentAddresses: miner.paymentAddresses || [], // Pass stored payment addresses for fallback
         });
 
         if (walletData.success && walletData.meks) {
           // Calculate new gold rate based on current Mek ownership
           const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
 
-          // Get gold rates for these Meks
-          const goldRates = await ctx.runQuery(api.goldMining.calculateGoldRates, {
-            meks: walletData.meks.map((m: any) => ({
-              assetId: m.assetId,
-              rarityRank: m.mekNumber // Use mek number as rank for now
-            }))
-          });
-
-          // Calculate total gold per hour
-          const totalGoldPerHour = goldRates.reduce((sum: number, rate: any) =>
-            sum + rate.goldPerHour, 0
+          // CRITICAL FIX: Look up existing gold rates from ownedMeks instead of recalculating
+          // Create a map of assetId -> existing Mek data with correct gold rates
+          const existingMeksMap = new Map(
+            miner.ownedMeks.map(mek => [mek.assetId, mek])
           );
+
+          // For each blockchain Mek, use existing rate if available, otherwise fetch proper rate
+          const mekDetails = [];
+          let totalGoldPerHour = 0;
+
+          for (const blockchainMek of walletData.meks) {
+            const existingMek = existingMeksMap.get(blockchainMek.assetId);
+
+            if (existingMek) {
+              // Mek exists in database - use its existing gold rate (includes level boosts!)
+              mekDetails.push({
+                assetId: blockchainMek.assetId,
+                assetName: blockchainMek.assetName,
+                goldPerHour: existingMek.goldPerHour, // Use existing rate (includes boosts)
+                rarityRank: existingMek.rarityRank,
+                baseGoldPerHour: existingMek.baseGoldPerHour,
+                currentLevel: existingMek.currentLevel,
+                levelBoostPercent: existingMek.levelBoostPercent,
+                levelBoostAmount: existingMek.levelBoostAmount,
+              });
+              totalGoldPerHour += existingMek.goldPerHour;
+            } else {
+              // New Mek not in database - need to fetch proper variation data
+              console.log(`[Snapshot] New Mek detected: ${blockchainMek.assetName} - fetching variation data`);
+
+              // Import and get proper Mek data
+              const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
+              const mekData = getMekDataByNumber(blockchainMek.mekNumber);
+
+              if (mekData) {
+                const goldPerHour = Math.round(mekData.goldPerHour * 100) / 100;
+                mekDetails.push({
+                  assetId: blockchainMek.assetId,
+                  assetName: blockchainMek.assetName,
+                  goldPerHour: goldPerHour,
+                  rarityRank: mekData.finalRank,
+                  baseGoldPerHour: goldPerHour,
+                  currentLevel: 1,
+                  levelBoostPercent: 0,
+                  levelBoostAmount: 0,
+                });
+                totalGoldPerHour += goldPerHour;
+              } else {
+                console.warn(`[Snapshot] Could not find data for Mek #${blockchainMek.mekNumber}`);
+              }
+            }
+          }
 
           console.log(`Wallet ${stakeAddress}: ${walletData.meks.length} Meks, ${totalGoldPerHour} gold/hr`);
 
-          // Update the miner's record with new rate
+          // Update the miner's record with new rate (success - reset failure counter)
           await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
             walletAddress: miner.walletAddress,
             mekCount: walletData.meks.length,
             totalGoldPerHour: totalGoldPerHour,
             mekNumbers: mekNumbers,
-            mekDetails: walletData.meks.map((m: any, index: number) => ({
-              assetId: m.assetId,
-              assetName: m.assetName,
-              goldPerHour: goldRates[index]?.goldPerHour || 0,
-              rarityRank: m.mekNumber
-            }))
+            mekDetails: mekDetails,
+            snapshotSuccess: true, // Reset failure counter
           });
 
           updatedCount++;
         } else {
           console.error(`Failed to fetch wallet data: ${walletData.error}`);
 
-          // If wallet not found or has no Meks, set rate to 0
-          if (walletData.error === 'Stake address not found' || walletData.totalMeks === 0) {
+          // DON'T zero out the gold rate - preserve existing data if lookup fails
+          // Only update to 0 if we're CERTAIN there are no MEKs
+          if (walletData.totalMeks === 0 && walletData.success) {
+            // Only if we successfully queried and found 0 MEKs
             await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
               walletAddress: miner.walletAddress,
               mekCount: 0,
@@ -104,7 +140,12 @@ export const runNightlySnapshot = internalAction({
             });
             updatedCount++;
           } else {
-            errorCount++;
+            // Lookup failed - increment failure counter and preserve existing data
+            console.log(`Skipping wallet ${miner.walletAddress} - lookup failed, preserving existing data`);
+            await ctx.runMutation(internal.goldMiningSnapshot.incrementSnapshotFailure, {
+              walletAddress: miner.walletAddress,
+            });
+            skippedCount++;
           }
         }
       } catch (error) {
@@ -153,7 +194,12 @@ export const updateMinerAfterSnapshot = internalMutation({
       assetName: v.string(),
       goldPerHour: v.number(),
       rarityRank: v.optional(v.number()),
+      baseGoldPerHour: v.optional(v.number()),
+      currentLevel: v.optional(v.number()),
+      levelBoostPercent: v.optional(v.number()),
+      levelBoostAmount: v.optional(v.number()),
     })),
+    snapshotSuccess: v.optional(v.boolean()), // Whether snapshot succeeded
   },
   handler: async (ctx, args) => {
     const miner = await ctx.db
@@ -167,13 +213,40 @@ export const updateMinerAfterSnapshot = internalMutation({
 
     const now = Date.now();
 
-    // Store ownership snapshot in history table
+    // VALIDATION: Don't store snapshots with suspicious 0s
+    // If the wallet currently has ownedMeks but we're trying to snapshot 0, something is wrong
+    const currentMekCount = miner.ownedMeks?.length || 0;
+    const snapshotMekCount = args.mekCount;
+
+    if (currentMekCount > 0 && snapshotMekCount === 0) {
+      console.error(`[Snapshot Validation] REJECTED snapshot for ${args.walletAddress}`);
+      console.error(`  Current MEK count: ${currentMekCount}, Snapshot claimed: ${snapshotMekCount}`);
+      console.error(`  This suggests a blockchain lookup failure - preserving existing data`);
+
+      // Don't create a bad snapshot - return error
+      return {
+        success: false,
+        error: "Snapshot validation failed: blockchain returned 0 MEKs but wallet has MEKs in database",
+        skipped: true
+      };
+    }
+
+    // Store ownership snapshot in history table with COMPLETE game state
     await ctx.db.insert("mekOwnershipHistory", {
       walletAddress: args.walletAddress,
       snapshotTime: now,
       meks: args.mekDetails,
       totalGoldPerHour: args.totalGoldPerHour,
       totalMekCount: args.mekCount,
+
+      // Complete game state for full restoration
+      accumulatedGold: miner.accumulatedGold || 0,
+      totalCumulativeGold: miner.totalCumulativeGold || 0,
+      totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
+      lastActiveTime: miner.lastActiveTime,
+      lastSnapshotTime: miner.lastSnapshotTime,
+
+      verificationStatus: "verified", // This snapshot passed validation
     });
 
     // CRITICAL: Calculate accumulated gold properly
@@ -194,15 +267,71 @@ export const updateMinerAfterSnapshot = internalMutation({
     }
 
     // Update with new Mek count and rate, saving accumulated gold
-    await ctx.db.patch(miner._id, {
+    const patchData: any = {
       totalGoldPerHour: args.totalGoldPerHour,
       lastSnapshotTime: now,
       snapshotMekCount: args.mekCount,
       updatedAt: now,
       accumulatedGold,
-    });
+    };
+
+    // Reset consecutive failures counter on successful snapshot
+    if (args.snapshotSuccess) {
+      patchData.consecutiveSnapshotFailures = 0;
+    }
+
+    await ctx.db.patch(miner._id, patchData);
 
     return { success: true };
+  },
+});
+
+// Internal mutation to increment snapshot failure counter
+export const incrementSnapshotFailure = internalMutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const miner = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!miner) {
+      return { success: false, error: "Wallet not found" };
+    }
+
+    const currentFailures = miner.consecutiveSnapshotFailures || 0;
+    const newFailures = currentFailures + 1;
+
+    console.log(`Incrementing snapshot failures for ${args.walletAddress}: ${currentFailures} → ${newFailures}`);
+
+    await ctx.db.patch(miner._id, {
+      consecutiveSnapshotFailures: newFailures,
+      updatedAt: Date.now(),
+    });
+
+    // Log warning if reaching threshold
+    if (newFailures >= 3) {
+      console.warn(`⚠️ Wallet ${args.walletAddress} has reached ${newFailures} consecutive snapshot failures - gold accumulation will be paused`);
+
+      // Log alert to admin notification system
+      await ctx.db.insert("adminNotifications", {
+        type: "snapshot_failure_threshold",
+        severity: "warning",
+        title: `Wallet reached ${newFailures} consecutive snapshot failures`,
+        message: `Wallet ${args.walletAddress} has failed ${newFailures} consecutive snapshots. Gold accumulation has been paused.`,
+        walletAddress: args.walletAddress,
+        data: {
+          consecutiveFailures: newFailures,
+          threshold: 3,
+        },
+        timestamp: Date.now(),
+        read: false,
+      });
+    }
+
+    return { success: true, newFailures };
   },
 });
 
@@ -326,52 +455,88 @@ export const runManualSnapshot = internalAction({
 
         console.log(`Fetching blockchain data for: ${stakeAddress}`);
 
-        // Query blockchain for current wallet contents using flexible approach
-        // This will work for both registered and unregistered stake addresses
+        // Query blockchain for current wallet contents (stake address only)
         const walletData = await ctx.runAction(api.getWalletAssetsFlexible.getWalletAssetsFlexible, {
           walletIdentifier: stakeAddress,
-          paymentAddresses: miner.paymentAddresses || [], // Pass stored payment addresses for fallback
         });
 
         if (walletData.success && walletData.meks) {
           // Calculate new gold rate based on current Mek ownership
           const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
 
-          // Get gold rates for these Meks
-          const goldRates = await ctx.runQuery(api.goldMining.calculateGoldRates, {
-            meks: walletData.meks.map((m: any) => ({
-              assetId: m.assetId,
-              rarityRank: m.mekNumber // Use mek number as rank for now
-            }))
-          });
-
-          // Calculate total gold per hour
-          const totalGoldPerHour = goldRates.reduce((sum: number, rate: any) =>
-            sum + rate.goldPerHour, 0
+          // CRITICAL FIX: Look up existing gold rates from ownedMeks instead of recalculating
+          // Create a map of assetId -> existing Mek data with correct gold rates
+          const existingMeksMap = new Map(
+            miner.ownedMeks.map(mek => [mek.assetId, mek])
           );
+
+          // For each blockchain Mek, use existing rate if available, otherwise fetch proper rate
+          const mekDetails = [];
+          let totalGoldPerHour = 0;
+
+          for (const blockchainMek of walletData.meks) {
+            const existingMek = existingMeksMap.get(blockchainMek.assetId);
+
+            if (existingMek) {
+              // Mek exists in database - use its existing gold rate (includes level boosts!)
+              mekDetails.push({
+                assetId: blockchainMek.assetId,
+                assetName: blockchainMek.assetName,
+                goldPerHour: existingMek.goldPerHour, // Use existing rate (includes boosts)
+                rarityRank: existingMek.rarityRank,
+                baseGoldPerHour: existingMek.baseGoldPerHour,
+                currentLevel: existingMek.currentLevel,
+                levelBoostPercent: existingMek.levelBoostPercent,
+                levelBoostAmount: existingMek.levelBoostAmount,
+              });
+              totalGoldPerHour += existingMek.goldPerHour;
+            } else {
+              // New Mek not in database - need to fetch proper variation data
+              console.log(`[Snapshot] New Mek detected: ${blockchainMek.assetName} - fetching variation data`);
+
+              // Import and get proper Mek data
+              const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
+              const mekData = getMekDataByNumber(blockchainMek.mekNumber);
+
+              if (mekData) {
+                const goldPerHour = Math.round(mekData.goldPerHour * 100) / 100;
+                mekDetails.push({
+                  assetId: blockchainMek.assetId,
+                  assetName: blockchainMek.assetName,
+                  goldPerHour: goldPerHour,
+                  rarityRank: mekData.finalRank,
+                  baseGoldPerHour: goldPerHour,
+                  currentLevel: 1,
+                  levelBoostPercent: 0,
+                  levelBoostAmount: 0,
+                });
+                totalGoldPerHour += goldPerHour;
+              } else {
+                console.warn(`[Snapshot] Could not find data for Mek #${blockchainMek.mekNumber}`);
+              }
+            }
+          }
 
           console.log(`Wallet ${stakeAddress}: ${walletData.meks.length} Meks, ${totalGoldPerHour} gold/hr`);
 
-          // Update the miner's record with new rate
+          // Update the miner's record with new rate (success - reset failure counter)
           await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
             walletAddress: miner.walletAddress,
             mekCount: walletData.meks.length,
             totalGoldPerHour: totalGoldPerHour,
             mekNumbers: mekNumbers,
-            mekDetails: walletData.meks.map((m: any, index: number) => ({
-              assetId: m.assetId,
-              assetName: m.assetName,
-              goldPerHour: goldRates[index]?.goldPerHour || 0,
-              rarityRank: m.mekNumber
-            }))
+            mekDetails: mekDetails,
+            snapshotSuccess: true, // Reset failure counter
           });
 
           updatedCount++;
         } else {
           console.error(`Failed to fetch wallet data: ${walletData.error}`);
 
-          // If wallet not found or has no Meks, set rate to 0
-          if (walletData.error === 'Stake address not found' || walletData.totalMeks === 0) {
+          // DON'T zero out the gold rate - preserve existing data if lookup fails
+          // Only update to 0 if we're CERTAIN there are no MEKs
+          if (walletData.totalMeks === 0 && walletData.success) {
+            // Only if we successfully queried and found 0 MEKs
             await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
               walletAddress: miner.walletAddress,
               mekCount: 0,
@@ -381,7 +546,12 @@ export const runManualSnapshot = internalAction({
             });
             updatedCount++;
           } else {
-            errorCount++;
+            // Lookup failed - increment failure counter and preserve existing data
+            console.log(`Skipping wallet ${miner.walletAddress} - lookup failed, preserving existing data`);
+            await ctx.runMutation(internal.goldMiningSnapshot.incrementSnapshotFailure, {
+              walletAddress: miner.walletAddress,
+            });
+            skippedCount++;
           }
         }
       } catch (error) {

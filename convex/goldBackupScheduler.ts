@@ -1,6 +1,7 @@
 import { cronJobs } from "convex/server";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { calculateCurrentGold } from "./lib/goldCalculations";
 
 /**
  * Gold Backup Scheduler - Automated Daily Backups
@@ -65,10 +66,12 @@ export const runDailyBackup = internalMutation({
       for (const goldMining of allGoldMining) {
         try {
           // Calculate current gold
-          const lastUpdateTime = goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt;
-          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-          const goldSinceLastUpdate = goldMining.totalGoldPerHour * hoursSinceLastUpdate;
-          const currentGold = Math.min(50000, (goldMining.accumulatedGold || 0) + goldSinceLastUpdate);
+          const currentGold = calculateCurrentGold({
+            accumulatedGold: goldMining.accumulatedGold || 0,
+            goldPerHour: goldMining.totalGoldPerHour,
+            lastSnapshotTime: goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt,
+            isVerified: true
+          });
 
           const goldPerHour = goldMining.totalGoldPerHour;
           const mekCount = goldMining.ownedMeks.length;

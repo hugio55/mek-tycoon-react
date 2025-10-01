@@ -9,6 +9,51 @@ import BlockchainVerificationPanel from "@/components/BlockchainVerificationPane
 import { walletRateLimiter, rateLimitedCall } from "@/lib/rateLimiter";
 import HolographicButton from "@/components/ui/SciFiButtons/HolographicButton";
 import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
+// MekLevelUpgrade component removed - using inline upgrade UI from demo
+import GoldLeaderboard from "@/components/GoldLeaderboard";
+import { CompanyNameModal } from "@/components/CompanyNameModal";
+import { calculateCurrentGold } from "@/convex/lib/goldCalculations";
+
+// Animated Number Component
+function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const animationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const startValue = displayValue;
+    const endValue = value;
+    const duration = 500; // milliseconds
+    const startTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const progress = Math.min((now - startTime) / duration, 1);
+
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentValue = startValue + (endValue - startValue) * eased;
+
+      setDisplayValue(currentValue);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [value]);
+
+  return <>{displayValue.toFixed(decimals)}</>;
+}
 
 // Simple function to create Pool.pm URL without MeshSDK
 function createPoolPmUrl(policyId: string, assetName: string): string {
@@ -39,6 +84,9 @@ interface MekAsset {
   assetName: string;
   imageUrl?: string;
   goldPerHour: number;
+  baseGoldPerHour?: number; // Original rate from rarity
+  levelBoostAmount?: number; // Boost amount from level
+  currentLevel?: number; // Current level 1-10
   rarityRank?: number;
   mekNumber: number;
   headGroup?: string;
@@ -79,15 +127,25 @@ export default function MekRateLoggingPage() {
   const [ownedMeks, setOwnedMeks] = useState<MekAsset[]>([]);
   const [loadingMeks, setLoadingMeks] = useState(false);
   const [selectedMek, setSelectedMek] = useState<MekAsset | null>(null);
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // 'desc' = highest first, 'asc' = lowest first
+  const [sortType, setSortType] = useState<'rate' | 'level'>('rate'); // Sort by rate or level
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [goldTextStyle, setGoldTextStyle] = useState<number>(1); // Default to spaced style
+  const [mekNumberStyle, setMekNumberStyle] = useState<number>(0); // Mek number display style
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
+  const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
+  // Level bar style locked to Bar Indicators (option 5)
+
+  // Company name states
+  const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
+  const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
+  const [searchTerm, setSearchTerm] = useState(''); // Search functionality
 
   // Blockchain verification state
   const [showVerificationPanel, setShowVerificationPanel] = useState(true);
   const [verificationStatus, setVerificationStatus] = useState<any>(null);
   const [isSignatureVerified, setIsSignatureVerified] = useState(false);
   const [isProcessingSignature, setIsProcessingSignature] = useState(false);
+  const [isVerifyingBlockchain, setIsVerifyingBlockchain] = useState(false);
 
   // Toast notification state
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'info' | 'error' } | null>(null);
@@ -95,23 +153,62 @@ export default function MekRateLoggingPage() {
 
   // Gold tracking
   const [currentGold, setCurrentGold] = useState(0);
+  const [cumulativeGold, setCumulativeGold] = useState(0);
   const [goldPerHour, setGoldPerHour] = useState(0);
   const goldIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const checkpointIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [refreshGold, setRefreshGold] = useState(0); // Trigger to refresh gold after upgrade
+  const initialLoadRef = useRef(true); // Track initial page load
+
+  // Animation states for upgrade feedback
+  const [goldSpentAnimations, setGoldSpentAnimations] = useState<{id: string, amount: number}[]>([]);
+  const [upgradingMeks, setUpgradingMeks] = useState<Set<string>>(new Set());
+  const [animatedMekValues, setAnimatedMekValues] = useState<{[key: string]: {
+    level: number,
+    goldRate: number,
+    bonusRate: number
+  }}>({});
 
   // Convex mutations
   const initializeGoldMining = useMutation(api.goldMining.initializeGoldMining);
   const initializeWithBlockfrost = useAction(api.goldMining.initializeWithBlockfrost);
   const updateGoldCheckpoint = useMutation(api.goldMining.updateGoldCheckpoint);
   const updateLastActive = useMutation(api.goldMining.updateLastActive);
+  const upgradeMek = useMutation(api.mekLeveling.upgradeMekLevel);
   const calculateGoldRates = useQuery(api.goldMining.calculateGoldRates,
     ownedMeks.length > 0 ? {
-      meks: ownedMeks.map(m => ({ assetId: m.assetId, rarityRank: m.rarityRank || m.mekNumber }))
+      meks: ownedMeks
+        .filter(m => m.assetId) // Filter out any meks without assetId
+        .map(m => ({ assetId: m.assetId, rarityRank: m.rarityRank || m.mekNumber }))
     } : "skip"
   );
 
   // Get gold mining data
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // LOG: Query data updates
+  useEffect(() => {
+    if (goldMiningData) {
+      console.log('[QUERY] goldMiningData updated:', {
+        accumulatedGold: goldMiningData.accumulatedGold,
+        lastSnapshotTime: goldMiningData.lastSnapshotTime,
+        totalGoldPerHour: goldMiningData.totalGoldPerHour,
+        updatedAt: goldMiningData.updatedAt,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [goldMiningData]);
+
+  // Get user stats including cumulative gold
+  const userStats = useQuery(
+    api.userStats.getUserStats,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Query Mek levels for the wallet
+  const mekLevels = useQuery(api.mekLeveling.getMekLevels,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -122,13 +219,66 @@ export default function MekRateLoggingPage() {
   const fetchOnChainRates = useAction(api.smartContractArchitecture.fetchOnChainRates);
   // Multi-wallet aggregation removed - one wallet per account
 
+  // CSS transition handles smooth counting animation (no JS animation needed)
+
   // Update gold display when goldMiningData changes
   useEffect(() => {
     if (goldMiningData) {
       setCurrentGold(goldMiningData.currentGold);
+
+      if (initialLoadRef.current) {
+        initialLoadRef.current = false; // Mark initial load as complete
+      }
+
+      // Check if we need to refresh rates with level boosts
+      // This happens when the stored totalGoldPerHour doesn't match what it should be with boosts
+      if (mekLevels && mekLevels.length > 0 && goldMiningData.ownedMeks) {
+        const expectedTotalWithBoosts = goldMiningData.ownedMeks.reduce((sum, mek) => {
+          const levelData = mekLevels.find(l => l.assetId === mek.assetId);
+          const boost = levelData?.currentBoostAmount || 0;
+          // The stored goldPerHour might already include boost if we just upgraded
+          // But on page reload it might not, so we need to check
+          const baseRate = mek.goldPerHour - boost; // Try to extract base rate
+          const effectiveRate = Math.max(mek.goldPerHour, baseRate + boost);
+          return sum + effectiveRate;
+        }, 0);
+
+        // If there's a significant mismatch, we need to reinitialize
+        if (Math.abs(expectedTotalWithBoosts - goldMiningData.totalGoldPerHour) > 1) {
+          console.log('[Level Boost Check] Rate mismatch detected on page load:', {
+            storedTotal: goldMiningData.totalGoldPerHour,
+            expectedWithBoosts: expectedTotalWithBoosts,
+            difference: expectedTotalWithBoosts - goldMiningData.totalGoldPerHour,
+            mekLevels: mekLevels.length
+          });
+          // The level sync effect will handle updating the rates
+        }
+      }
+
       setGoldPerHour(goldMiningData.totalGoldPerHour);
+
+      // Initialize cumulative gold (matching userStats.ts logic)
+      const now = Date.now();
+
+      // Start with stored cumulative gold
+      let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
+
+      // If totalCumulativeGold isn't set yet, estimate from accumulated gold + spent gold
+      if (!goldMiningData.totalCumulativeGold) {
+        baseCumulativeGold = (goldMiningData.accumulatedGold || 0) + (goldMiningData.totalGoldSpentOnUpgrades || 0);
+      }
+
+      // Add real-time earnings since last checkpoint (only if verified)
+      if (goldMiningData.isBlockchainVerified === true) {
+        const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
+        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+        const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
+        setCumulativeGold(baseCumulativeGold + goldSinceLastUpdate);
+      } else {
+        setCumulativeGold(baseCumulativeGold);
+      }
     }
-  }, [goldMiningData]);
+  }, [goldMiningData, mekLevels]);
 
   // Query to check backend authentication status
   // CRITICAL: Only check auth AFTER connection is complete to avoid interfering with connection process
@@ -138,9 +288,29 @@ export default function MekRateLoggingPage() {
       : 'skip'
   );
 
+  // Query company name for current wallet
+  const companyNameData = useQuery(api.goldMining.getCompanyName,
+    walletAddress ? { walletAddress } : 'skip'
+  );
+
+  // Show company name modal when wallet connects without a company name
+  useEffect(() => {
+    if (walletConnected && walletAddress && companyNameData !== undefined) {
+      if (!companyNameData?.hasCompanyName) {
+        setShowCompanyNameModal(true);
+        setCompanyNameModalMode('initial');
+      }
+    }
+  }, [walletConnected, walletAddress, companyNameData]);
+
   // Restore wallet connection from localStorage on mount
   useEffect(() => {
     const restoreWalletConnection = async () => {
+      // Guard against SSR - only run in browser
+      if (typeof window === 'undefined') {
+        return;
+      }
+
       try {
         const savedWalletData = localStorage.getItem('mek_wallet_session');
         if (!savedWalletData) {
@@ -245,6 +415,26 @@ export default function MekRateLoggingPage() {
     }
   }, [authStatus, walletConnected, isSignatureVerified, isConnecting]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    // Guard against SSR
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.sort-dropdown-container')) {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    if (sortDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [sortDropdownOpen]);
+
   // Restore and sync verification status from goldMiningData
   useEffect(() => {
     if (goldMiningData && walletConnected) {
@@ -276,8 +466,96 @@ export default function MekRateLoggingPage() {
     }
   }, [ownedMeks, walletConnected]);
 
+  // Sync level and boost data from goldMiningData and mekLevels into ownedMeks
+  useEffect(() => {
+    if (goldMiningData?.ownedMeks && ownedMeks.length > 0) {
+      console.log('[Level Sync] Syncing level data from goldMiningData and mekLevels');
+      console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
+      console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData.totalGoldPerHour);
+      console.log('[Level Sync] Current ownedMeks rates:', ownedMeks.map(m => ({
+        assetId: m.assetId.slice(-8),
+        goldPerHour: m.goldPerHour,
+        level: m.currentLevel
+      })));
+
+      // Create a map of goldMiningData meks for quick lookup
+      const goldMiningMekMap = new Map(
+        goldMiningData.ownedMeks.map(mek => [mek.assetId, mek])
+      );
+
+      // Create a map of mekLevels for quick lookup
+      const mekLevelMap = new Map(
+        (mekLevels || []).map(level => [level.assetId, level])
+      );
+
+      // Update ownedMeks with level and boost data
+      const updatedMeks = ownedMeks.map(mek => {
+        const goldMiningMek = goldMiningMekMap.get(mek.assetId);
+        const mekLevel = mekLevelMap.get(mek.assetId);
+
+        // Use level from mekLevels if available, otherwise default to 1
+        const currentLevel = mekLevel?.currentLevel || 1;
+        const levelBoostAmount = mekLevel?.currentBoostAmount || 0;
+
+        // Calculate the base rate (without boost)
+        const baseRate = goldMiningMek?.baseGoldPerHour ||
+                         goldMiningMek?.goldPerHour ||
+                         mek.goldPerHour - (mek.levelBoostAmount || 0);
+
+        // Calculate effective gold per hour (base + boost)
+        const effectiveGoldPerHour = baseRate + levelBoostAmount;
+
+        if (goldMiningMek) {
+          return {
+            ...mek,
+            baseGoldPerHour: baseRate,
+            levelBoostAmount: levelBoostAmount,
+            currentLevel: currentLevel,
+            goldPerHour: effectiveGoldPerHour, // Update the main rate to include boost
+          };
+        }
+        return {
+          ...mek,
+          currentLevel: currentLevel,
+          levelBoostAmount: levelBoostAmount,
+          baseGoldPerHour: mek.goldPerHour - levelBoostAmount, // Calculate base from current rate
+          goldPerHour: mek.goldPerHour + levelBoostAmount, // Ensure boost is applied
+        };
+      });
+
+      // Only update if there are actual changes
+      const hasChanges = updatedMeks.some((mek, idx) =>
+        mek.levelBoostAmount !== ownedMeks[idx].levelBoostAmount ||
+        mek.currentLevel !== ownedMeks[idx].currentLevel ||
+        mek.baseGoldPerHour !== ownedMeks[idx].baseGoldPerHour ||
+        mek.goldPerHour !== ownedMeks[idx].goldPerHour // Also check if effective rate changed
+      );
+
+      if (hasChanges) {
+        console.log('[Level Sync] Found level changes, updating meks with levels:',
+          updatedMeks.map(m => ({
+            assetId: m.assetId,
+            level: m.currentLevel,
+            baseRate: m.baseGoldPerHour,
+            boost: m.levelBoostAmount,
+            effectiveRate: m.goldPerHour
+          })));
+        setOwnedMeks(updatedMeks);
+
+        // Also update the total gold per hour
+        const newTotalRate = updatedMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+        setGoldPerHour(newTotalRate);
+      }
+    }
+  }, [goldMiningData?.ownedMeks, mekLevels]); // Include mekLevels in dependencies
+
   // Close dropdown when clicking outside
   useEffect(() => {
+    // Guard against SSR
+    if (typeof document === 'undefined') {
+      return;
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.wallet-dropdown')) {
@@ -291,8 +569,21 @@ export default function MekRateLoggingPage() {
     }
   }, [walletDropdownOpen]);
 
+  // Show company name modal if wallet is connected but no company name is set
+  useEffect(() => {
+    if (walletConnected && companyNameData && !companyNameData.hasCompanyName) {
+      setCompanyNameModalMode('initial');
+      setShowCompanyNameModal(true);
+    }
+  }, [walletConnected, companyNameData]);
+
   // Generate background stars and satellites on mount
   useEffect(() => {
+    // Guard against SSR
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const generatedBackgroundStars = [...Array(200)].map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
@@ -348,6 +639,11 @@ export default function MekRateLoggingPage() {
 
     // Auto-reconnect if previously connected (session persistence)
     setTimeout(async () => {
+      // Guard against SSR
+      if (typeof window === 'undefined') {
+        return;
+      }
+
       const savedWallet = localStorage.getItem('goldMiningWallet');
       const savedWalletType = localStorage.getItem('goldMiningWalletType');
 
@@ -1027,35 +1323,39 @@ export default function MekRateLoggingPage() {
 
       console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation');
 
-      // Use requestAnimationFrame for smoother updates at ~30 FPS
-      let animationFrameId: number;
-      let lastUpdate = Date.now();
-      const targetFPS = 30;
-      const frameTime = 1000 / targetFPS; // ~33ms for 30 FPS
-
+      // CSS-based animation: Update once per second, let CSS handle smooth transitions
       const updateGold = () => {
-        const now = Date.now();
+        if (goldMiningData) {
+          // Use shared calculation utility
+          const calculatedGold = calculateCurrentGold({
+            accumulatedGold: goldMiningData.accumulatedGold || 0,
+            goldPerHour: goldMiningData.totalGoldPerHour,
+            lastSnapshotTime: goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt,
+            isVerified: true
+          });
 
-        // Update at 30 FPS (every ~33ms)
-        if (now - lastUpdate >= frameTime) {
-          if (goldMiningData) {
-            // Calculate from the last snapshot time with accumulated gold
-            const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
-            const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-            const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
-            const calculatedGold = Math.min(50000, (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate);
+          // Update state once per second - CSS transition handles smooth animation
+          setCurrentGold(calculatedGold);
 
-            // Always update for smooth counter animation
-            setCurrentGold(calculatedGold);
+          // Also update cumulative gold in real-time
+          const baseCumulativeGold = goldMiningData.totalCumulativeGold || (goldMiningData.accumulatedGold || 0);
+          const goldSinceLastUpdate = calculatedGold - (goldMiningData.accumulatedGold || 0);
+
+          // Only add ongoing earnings to cumulative if verified
+          if (goldMiningData.isBlockchainVerified === true) {
+            const calculatedCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
+            setCumulativeGold(calculatedCumulativeGold);
+          } else {
+            setCumulativeGold(baseCumulativeGold);
           }
-          lastUpdate = now;
         }
-
-        animationFrameId = requestAnimationFrame(updateGold);
       };
 
-      // Start the animation loop
-      animationFrameId = requestAnimationFrame(updateGold);
+      // Update 60 times per second (~16.67ms) - CSS handles smooth animation
+      const animationInterval = setInterval(updateGold, 16.67);
+
+      // Initial update
+      updateGold();
 
       // Update last active time every 5 minutes (only if verified)
       checkpointIntervalRef.current = setInterval(async () => {
@@ -1067,7 +1367,7 @@ export default function MekRateLoggingPage() {
       }, 5 * 60 * 1000);
 
       return () => {
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        clearInterval(animationInterval);
         if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
       };
     }
@@ -1075,6 +1375,11 @@ export default function MekRateLoggingPage() {
 
   // Save on page unload
   useEffect(() => {
+    // Guard against SSR
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const handleUnload = async () => {
       if (walletAddress) {
         await updateLastActive({
@@ -1247,7 +1552,7 @@ export default function MekRateLoggingPage() {
                     textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
                   }}
                 >
-                  MEK GOLD MINING
+                  MEK EMPLOYMENT
                 </h1>
 
                 {/* System status */}
@@ -1265,13 +1570,13 @@ export default function MekRateLoggingPage() {
                 </p>
 
                 {availableWallets.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className={availableWallets.length === 1 ? "flex justify-center" : "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"}>
                     {availableWallets.map(wallet => (
                       <button
                         key={wallet.name}
                         onClick={() => connectWallet(wallet)}
                         disabled={isConnecting}
-                        className="group relative bg-black/30 border border-yellow-500/20 text-yellow-500 px-4 py-3 sm:px-6 sm:py-4 transition-all hover:bg-yellow-500/5 hover:border-yellow-500/40 active:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[48px] touch-manipulation"
+                        className={`group relative bg-black/30 border border-yellow-500/20 text-yellow-500 px-4 py-3 sm:px-6 sm:py-4 transition-all hover:bg-yellow-500/5 hover:border-yellow-500/40 active:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[48px] touch-manipulation ${availableWallets.length === 1 ? 'w-64' : ''}`}
                       >
                         {/* Hover glow effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1305,12 +1610,17 @@ export default function MekRateLoggingPage() {
                 )}
               </div>
             </div>
+
+            {/* Leaderboard below connection card */}
+            <div className="mt-8 flex justify-center">
+              <GoldLeaderboard />
+            </div>
           </div>
         ) : (
           // Gold Mining Dashboard
           <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
-            {/* Wallet dropdown in top left corner */}
-            <div className="absolute top-0 left-0 z-20">
+            {/* Wallet dropdown and company name in top left corner */}
+            <div className="absolute top-0 left-0 z-20 flex items-center gap-3">
               <div className="relative wallet-dropdown">
                 <button
                   onClick={() => setWalletDropdownOpen(!walletDropdownOpen)}
@@ -1324,10 +1634,46 @@ export default function MekRateLoggingPage() {
 
                 {walletDropdownOpen && (
                   <div className="absolute top-full left-0 mt-1 w-56 sm:w-64 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-md rounded-sm shadow-lg">
-                    {/* Wallet address */}
-                    <div className="px-4 py-3 border-b border-yellow-500/20">
+                    {/* Corporation name and wallet address */}
+                    <div className="px-4 py-3 border-b border-yellow-500/20 space-y-2">
+                      {/* Corporation name */}
+                      {companyNameData?.companyName ? (
+                        <div
+                          className="text-yellow-400 font-bold text-sm cursor-pointer hover:text-yellow-300 transition-colors"
+                          onClick={() => {
+                            setCompanyNameModalMode('edit');
+                            setShowCompanyNameModal(true);
+                            setWalletDropdownOpen(false);
+                          }}
+                          title="Click to edit corporation name"
+                        >
+                          {companyNameData.companyName}
+                          <span className="ml-1 text-xs opacity-60">✏️</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setCompanyNameModalMode('initial');
+                            setShowCompanyNameModal(true);
+                            setWalletDropdownOpen(false);
+                          }}
+                          className="text-yellow-400/60 text-sm italic hover:text-yellow-400 transition-colors"
+                        >
+                          + Set corporation name
+                        </button>
+                      )}
+
+                      {/* Wallet address */}
                       <div className="text-gray-400 font-mono text-xs">
                         {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
+                      </div>
+                    </div>
+
+                    {/* Cumulative Gold Display */}
+                    <div className="px-4 py-3 border-b border-yellow-500/20">
+                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Cumulative Gold</div>
+                      <div className="text-yellow-400 font-bold text-lg font-mono">
+                        {cumulativeGold.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </div>
                     </div>
 
@@ -1372,6 +1718,30 @@ export default function MekRateLoggingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Corporation name display */}
+              {companyNameData?.companyName && (
+                <div
+                  className="cursor-pointer hover:text-white/90 transition-colors flex items-center gap-2"
+                  onClick={() => {
+                    setCompanyNameModalMode('edit');
+                    setShowCompanyNameModal(true);
+                  }}
+                  title="Click to edit corporation name"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-yellow-400 text-xs uppercase tracking-wider font-['Orbitron']">
+                      Corporation:
+                    </span>
+                    <span className="text-white text-base sm:text-lg font-['Orbitron'] font-bold tracking-wide">
+                      {companyNameData.companyName}
+                    </span>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400 hover:text-yellow-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Gold text style dropdown - hidden since we're using fixed style */}
@@ -1398,163 +1768,302 @@ export default function MekRateLoggingPage() {
               />
             </div>
 
-            {/* Information text floating in the night sky - moved up 40px */}
-            <div className="text-center mb-[50px] px-4 pt-8 sm:pt-[110px]">
-              <p className="text-yellow-400/80 text-lg sm:text-xl font-mono max-w-3xl mx-auto mb-8">
-                <span className="text-xl sm:text-2xl font-bold">Welcome to the Mek Income Tracker.</span><br/><br/>
-                This is a small yet important mechanic for a mech-related product we are currently working on. Therefore, we are conducting early testing and research on active Mek collectors.
+            {/* Information text floating in the night sky - moved up 140px total */}
+            <div className="text-center mb-[50px] px-4 pt-8 sm:pt-[10px]">
+              <p className="max-w-xl mx-auto mb-8">
+                <span className="text-xs sm:text-sm font-mono text-gray-400">
+                  <span className="font-bold">This website is for testing a core mechanic of a future Over Exposed product.</span> Each Mekanism has an upgradeable income that feeds your corporation. Level up, accumulate gold and top the chart. Please share bugs and feedback{' '}
+                  <a
+                    href="https://discord.gg/kHkvnPbfmm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-400 hover:text-yellow-300 underline transition-colors"
+                  >
+                    here
+                  </a>.
+                </span>
               </p>
             </div>
 
-            {/* Header */}
-            <div className="mb-8 text-center">
-              {/* Big Gold Counter Card */}
-              <div className="inline-block relative">
-                {/* Corner brackets */}
-                <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-yellow-500/40" />
-                <div className="absolute -top-2 -right-2 w-6 h-6 border-r-2 border-t-2 border-yellow-500/40" />
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 border-l-2 border-b-2 border-yellow-500/40" />
-                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-yellow-500/40" />
+            {/* Combined Card - Stacked Layout */}
+            <div className="mb-8 flex justify-center px-4" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+              <div className="relative w-full">
+                {/* Outer corner brackets for unified card */}
+                <div className="absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
+                <div className="absolute -top-3 -right-3 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
+                <div className="absolute -bottom-3 -left-3 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
+                <div className="absolute -bottom-3 -right-3 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
 
-                <div className="bg-black/10 border border-yellow-500/20 p-4 sm:p-6 md:p-8 backdrop-blur-xl relative overflow-hidden">
-                  {/* Grid pattern overlay */}
-                  <div
-                    className="absolute inset-0 opacity-5"
-                    style={{
-                      backgroundImage: `
-                        repeating-linear-gradient(0deg, transparent, transparent 19px, #FAB617 19px, #FAB617 20px),
-                        repeating-linear-gradient(90deg, transparent, transparent 19px, #FAB617 19px, #FAB617 20px)
-                      `
-                    }}
-                  />
+                <div className="bg-black/10 border-2 border-yellow-500/30 backdrop-blur-xl relative overflow-hidden">
+                    {/* Top section - Total Gold */}
+                    <div className="p-4 sm:p-6 md:p-8 relative">
+                      {/* Grid pattern overlay */}
+                      <div
+                        className="absolute inset-0 opacity-5"
+                        style={{
+                          backgroundImage: `
+                            repeating-linear-gradient(0deg, transparent, transparent 19px, #FAB617 19px, #FAB617 20px),
+                            repeating-linear-gradient(90deg, transparent, transparent 19px, #FAB617 19px, #FAB617 20px)
+                          `
+                        }}
+                      />
 
-                  {/* Status indicator */}
-                  <div className="absolute top-4 right-4 flex items-center gap-2">
-                    {verificationStatus?.verified ? (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                        <span className="text-xs text-gray-500 font-mono uppercase">Active</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                        <span className="text-xs text-orange-400 font-mono uppercase">Paused</span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Total Gold label */}
-                  <div className="text-gray-400 text-sm uppercase tracking-widest font-mono mb-2">
-                    TOTAL GOLD
-                  </div>
-
-                  {/* Gold amount - Responsive text size */}
-                  <div
-                    className="text-4xl sm:text-5xl md:text-6xl font-black text-yellow-500 mb-3 tabular-nums font-mono"
-                    style={{
-                      textShadow: '0 0 15px rgba(250, 182, 23, 0.6)',
-                      fontSize: 'clamp(2rem, 8vw, 3.75rem)'
-                    }}
-                  >
-                    {currentGold.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
-                  </div>
-
-                  {/* Top separator */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent mb-3" />
-
-                  {/* Gold per hour label - with style variations */}
-                  <div className="mb-3">
-                    {goldTextStyle === 0 && (
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
-                        <span className="text-yellow-400 font-black font-mono text-xl sm:text-2xl">{goldPerHour.toFixed(0)}</span>
-                        <span className="text-gray-400 font-normal text-xs sm:text-sm uppercase tracking-wider">gold per hour</span>
+                      {/* Status indicator */}
+                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                        {verificationStatus?.verified ? (
+                          <>
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                            <span className="text-xs text-gray-500 font-mono uppercase">Active</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                            <span className="text-xs text-orange-400 font-mono uppercase">Paused</span>
+                          </>
+                        )}
                       </div>
-                    )}
-                    {goldTextStyle === 1 && (
-                      <div className="text-base sm:text-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
-                        <span className="text-white font-bold font-mono tracking-wider">{goldPerHour.toFixed(2)}</span>
-                        <span className="text-yellow-500/60 font-light uppercase tracking-[0.2em] sm:tracking-[0.3em]">GOLD/HR</span>
-                      </div>
-                    )}
-                    {goldTextStyle === 2 && (
-                      <div className="inline-block bg-yellow-500/20 px-2 sm:px-3 py-1 border border-yellow-500/30 rounded-sm">
-                        <span className="text-yellow-400 font-black text-lg sm:text-xl">{goldPerHour.toFixed(1)}</span>
-                        <span className="text-yellow-500/80 text-[10px] sm:text-xs uppercase ml-1 sm:ml-2">gold per hour</span>
-                      </div>
-                    )}
-                    {goldTextStyle === 3 && (
-                      <div className="text-gray-400 font-mono text-xs sm:text-sm">
-                        <span className="text-yellow-400 text-lg sm:text-xl font-bold">{goldPerHour.toFixed(2)}</span> per hour
-                      </div>
-                    )}
-                    {goldTextStyle === 4 && (
-                      <div className="font-['Orbitron'] uppercase">
-                        <span className="text-yellow-500 text-xl sm:text-2xl font-black">{goldPerHour.toFixed(0)}</span>
-                        <span className="text-gray-500 text-[10px] sm:text-xs tracking-widest block mt-0.5 sm:mt-1">GOLD PER HOUR</span>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Bottom separator */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent mb-2" />
+                      {/* Total Gold label */}
+                      <div className="text-gray-400 text-sm uppercase tracking-widest font-mono mb-2 relative text-center">
+                        TOTAL GOLD
+                      </div>
 
-                  {/* Mek count descriptor */}
-                  <div className="text-gray-500 text-xs font-mono">
-                    This is the total rate across all {ownedMeks.length} Meks
-                  </div>
+                      {/* Gold amount - Responsive text size */}
+                      <div
+                        className="text-4xl sm:text-5xl md:text-6xl font-black text-yellow-500 mb-3 tabular-nums font-mono relative text-center"
+                        style={{
+                          textShadow: '0 0 15px rgba(250, 182, 23, 0.6)',
+                          fontSize: 'clamp(2rem, 8vw, 3.75rem)'
+                        }}
+                      >
+                        <div className="relative">
+                          <span
+                            className="tabular-nums inline-block"
+                            style={{
+                              transition: 'all 0.016s linear'
+                            }}
+                          >
+                            {Math.floor(currentGold).toLocaleString('en-US')}
+                          </span>
+                          <span
+                            className="text-3xl sm:text-4xl md:text-5xl opacity-70 inline-block"
+                            style={{
+                              fontSize: '0.525em',
+                              transition: 'all 0.016s linear'
+                            }}
+                          >
+                            .{((currentGold % 1) * 1000).toFixed(0).padStart(3, '0')}
+                          </span>
+                          {/* Gold spent animations */}
+                          {goldSpentAnimations.map(animation => (
+                            <div
+                              key={animation.id}
+                              className="absolute -top-12 left-1/2 -translate-x-1/2 text-2xl sm:text-3xl font-bold text-red-500 pointer-events-none whitespace-nowrap"
+                              style={{
+                                animation: 'floatUpFade 2s ease-out forwards',
+                                textShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
+                              }}
+                            >
+                              -{animation.amount.toLocaleString()}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Gold per hour label - with style variations */}
+                      <div className="mb-3 text-center">
+                        {goldTextStyle === 0 && (
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+                            <span className="text-yellow-400 font-black font-mono text-xl sm:text-2xl">{goldPerHour.toFixed(0)}</span>
+                            <span className="text-gray-400 font-normal text-xs sm:text-sm uppercase tracking-wider">gold per hour</span>
+                          </div>
+                        )}
+                        {goldTextStyle === 1 && (
+                          <div className="text-base sm:text-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
+                            <span className="text-white font-bold font-mono tracking-wider">{goldPerHour.toFixed(2)}</span>
+                            <span className="text-yellow-500/60 font-light uppercase tracking-[0.2em] sm:tracking-[0.3em]">GOLD/HR</span>
+                          </div>
+                        )}
+                        {goldTextStyle === 2 && (
+                          <div className="inline-block bg-yellow-500/20 px-2 sm:px-3 py-1 border border-yellow-500/30 rounded-sm">
+                            <span className="text-yellow-400 font-black text-lg sm:text-xl">{goldPerHour.toFixed(1)}</span>
+                            <span className="text-yellow-500/80 text-[10px] sm:text-xs uppercase ml-1 sm:ml-2">gold per hour</span>
+                          </div>
+                        )}
+                        {goldTextStyle === 3 && (
+                          <div className="text-gray-400 font-mono text-xs sm:text-sm">
+                            <span className="text-yellow-400 text-lg sm:text-xl font-bold">{goldPerHour.toFixed(2)}</span> per hour
+                          </div>
+                        )}
+                        {goldTextStyle === 4 && (
+                          <div className="font-['Orbitron'] uppercase">
+                            <span className="text-yellow-500 text-xl sm:text-2xl font-black">{goldPerHour.toFixed(0)}</span>
+                            <span className="text-gray-500 text-[10px] sm:text-xs tracking-widest block mt-0.5 sm:mt-1">GOLD PER HOUR</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mek count and verification in one line */}
+                      <div className="flex items-center justify-center gap-4 text-xs font-mono">
+                        <div className="text-gray-500">
+                          Rate across all {ownedMeks.length} Meks
+                        </div>
+                        {verificationStatus?.verified && (
+                          <div className="inline-flex items-center gap-1 text-green-500">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">verified via Blockfrost</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
+
+                    {/* Bottom section - Leaderboard */}
+                    <div className="p-4 flex justify-center">
+                      <GoldLeaderboard currentWallet={walletAddress || undefined} />
+                    </div>
                 </div>
               </div>
+            </div>
 
-              {/* Verify on Blockchain Button */}
-              {!verificationStatus?.verified ? (
+            {/* Verify on Blockchain Button */}
+            <div className="mb-12">
+              {!verificationStatus?.verified && (
                 <div className="mt-[69px]">
                   <div className="w-full max-w-xs mx-auto relative">
-                    <HolographicButton
-                      text={isProcessingSignature ? "VERIFYING..." : "Blockchain Verify"}
-                      onClick={() => {
-                        if (!isProcessingSignature) {
-                          const verifyButton = document.querySelector('[data-verify-blockchain]');
-                          if (verifyButton) {
-                            (verifyButton as HTMLElement).click();
+                    <div className="relative">
+                      <HolographicButton
+                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKCHAIN..." : isProcessingSignature ? "VERIFYING..." : "Blockchain Verify"}
+                        onClick={() => {
+                          if (!isProcessingSignature && !isVerifyingBlockchain) {
+                            const verifyButton = document.querySelector('[data-verify-blockchain]');
+                            if (verifyButton) {
+                              (verifyButton as HTMLElement).click();
+                            }
                           }
-                        }
-                      }}
-                      isActive={!isProcessingSignature}
-                      variant="yellow"
-                      alwaysOn={true}
-                      disabled={isProcessingSignature}
-                      className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
-                    />
+                        }}
+                        isActive={!isProcessingSignature && !isVerifyingBlockchain}
+                        variant="yellow"
+                        alwaysOn={true}
+                        disabled={isProcessingSignature || isVerifyingBlockchain}
+                        className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+                      />
+                      {isVerifyingBlockchain && (
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-3">
+                          <div className="relative w-5 h-5">
+                            <div className="absolute inset-0 border-3 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
+                            <div className="absolute inset-0 border-3 border-transparent border-b-yellow-400 rounded-full animate-spin" style={{ animationDirection: 'reverse' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                     <p className="text-gray-400 text-sm text-center mt-[22px] font-mono">
                       For an added layer of security, please verify on blockchain to begin.
                     </p>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center mt-4">
-                  <div className="inline-flex items-center gap-2 text-green-500">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-sm font-mono">verified via Blockfrost</span>
-                  </div>
-                </div>
               )}
 
             </div>
 
-            {/* Controls Row - Sort button */}
-            <div className="flex justify-between items-start mb-3 sm:mb-4 px-2 sm:px-0">
-              <button
-                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                className="px-3 py-2.5 sm:px-4 sm:py-2 bg-black/20 border border-yellow-500/30 text-yellow-400 hover:bg-black/30 hover:border-yellow-500/50 active:bg-black/40 transition-all uppercase tracking-wider text-xs font-sans font-bold backdrop-blur-xl flex items-center gap-2 min-h-[44px] touch-manipulation rounded-sm"
-              >
-                SORT
-                <span className="text-lg">
-                  {sortOrder === 'desc' ? '↓' : '↑'}
-                </span>
-              </button>
+            {/* Controls Row - Search bar and Sort button */}
+            <div className={`flex gap-3 items-center justify-between mb-3 sm:mb-4 ${
+              ownedMeks.length === 1 ? 'max-w-md mx-auto' :
+              ownedMeks.length === 2 ? 'max-w-3xl mx-auto' :
+              ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
+              'max-w-7xl mx-auto'
+            }`}>
+              {/* Search Bar - Minimalist Tech Style */}
+              <div className="max-w-lg relative">
+                <div className="text-xs text-gray-500 mb-1 px-1">
+                  Search by Mek # or variation (e.g., bumblebee, seafoam)
+                </div>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white placeholder-white/30 focus:border-white/40 focus:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out"
+                    style={{
+                      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                      fontWeight: '300',
+                      letterSpacing: '0.02em'
+                    }}
+                  />
+                  <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-focus-within:w-full transition-all duration-700 ease-out" />
+                  {!searchTerm ? (
+                    <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  ) : (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xl w-5 h-5 flex items-center justify-center transition-colors duration-200"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Sort Dropdown - Minimalist Tech Style - Hidden when 2 or fewer meks */}
+              {ownedMeks.length > 2 && (
+                <div className="relative sort-dropdown-container">
+                  <button
+                    onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                    className="relative px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out group"
+                    style={{
+                      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                      fontWeight: '300',
+                      letterSpacing: '0.02em'
+                    }}
+                  >
+                    <span>Sort</span>
+                    <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                  </button>
+
+                  {sortDropdownOpen && (
+                    <div
+                      className="absolute right-0 mt-1 z-50 min-w-[140px] bg-black/90 backdrop-blur-xl border border-white/20 overflow-hidden"
+                    >
+                      <button
+                        onClick={() => {
+                          setSortType('rate');
+                          setSortDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200"
+                        style={{
+                          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                          fontWeight: sortType === 'rate' ? '400' : '300',
+                          color: sortType === 'rate' ? 'white' : 'rgba(255,255,255,0.6)'
+                        }}
+                      >
+                        Rate
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortType('level');
+                          setSortDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200"
+                        style={{
+                          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                          fontWeight: sortType === 'level' ? '400' : '300',
+                          color: sortType === 'level' ? 'white' : 'rgba(255,255,255,0.6)'
+                        }}
+                      >
+                        Level
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Blockchain Verification Panel - Hidden, but keep component for functionality */}
@@ -1564,6 +2073,8 @@ export default function MekRateLoggingPage() {
                   paymentAddress={paymentAddress}
                   meks={ownedMeks}
                   isProcessingSignature={isProcessingSignature}
+                  onVerificationStart={() => setIsVerifyingBlockchain(true)}
+                  onVerificationEnd={() => setIsVerifyingBlockchain(false)}
                   onVerificationComplete={(status) => {
                     console.log('[Verification Complete] Status:', status);
                     setVerificationStatus(status);
@@ -1596,18 +2107,48 @@ export default function MekRateLoggingPage() {
                 />
             </div>
 
-            {/* Meks Grid - Center-aligned for odd numbers */}
-            <div className={`grid gap-4 ${
-              ownedMeks.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
-              ownedMeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto' :
-              ownedMeks.length === 5 ? 'grid-cols-2 sm:grid-cols-5 max-w-6xl mx-auto' :
-              'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+            {/* Meks Grid - 4 columns wide */}
+            <div className={`grid gap-6 ${
+              ownedMeks.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+              ownedMeks.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' :
+              ownedMeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto' :
+              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto'
             }`}>
-              {[...ownedMeks].sort((a, b) => {
-                return sortOrder === 'desc'
-                  ? b.goldPerHour - a.goldPerHour  // Highest first
-                  : a.goldPerHour - b.goldPerHour; // Lowest first
-              }).map(mek => {
+              {[...ownedMeks]
+                .filter(mek => {
+                  if (!searchTerm) return true;
+                  const term = searchTerm.toLowerCase();
+
+                  // Check Mek number
+                  if (mek.mekNumber && mek.mekNumber.toString().includes(term)) return true;
+                  if (mek.assetName.toLowerCase().includes(term)) return true;
+
+                  // Check variation names if sourceKey exists
+                  if (mek.sourceKey) {
+                    const variations = getVariationInfoFromFullKey(mek.sourceKey);
+                    if (variations.head.name.toLowerCase().includes(term)) return true;
+                    if (variations.body.name.toLowerCase().includes(term)) return true;
+                    if (variations.trait.name.toLowerCase().includes(term)) return true;
+                  }
+
+                  // Check head, body, item groups directly
+                  if (mek.headGroup?.toLowerCase().includes(term)) return true;
+                  if (mek.bodyGroup?.toLowerCase().includes(term)) return true;
+                  if (mek.itemGroup?.toLowerCase().includes(term)) return true;
+
+                  return false;
+                })
+                .sort((a, b) => {
+                  if (sortType === 'rate') {
+                    return b.goldPerHour - a.goldPerHour;  // Highest rate first
+                  } else {
+                    // Sort by level (rarityRank - lower rank = higher level)
+                    const aRank = a.rarityRank || 9999;
+                    const bRank = b.rarityRank || 9999;
+                    return aRank - bRank;  // Best rank (lowest number) first
+                  }
+                })
+                .map(mek => {
                 const maxGoldRate = Math.max(...ownedMeks.map(m => m.goldPerHour));
                 const relativeRate = (mek.goldPerHour / maxGoldRate) * 100;
 
@@ -1617,7 +2158,27 @@ export default function MekRateLoggingPage() {
                     className="group relative cursor-pointer touch-manipulation"
                     onClick={() => setSelectedMek(mek)}
                   >
-                    <div className="bg-black/10 border border-yellow-500/50 sm:border-2 backdrop-blur-xl hover:border-yellow-500/70 transition-all relative overflow-hidden group-hover:bg-black/20">
+                    <div
+                      className="bg-black/10 border sm:border-2 backdrop-blur-xl transition-all relative overflow-hidden group-hover:bg-black/20"
+                      style={{
+                        borderColor: (() => {
+                          const level = mek.currentLevel || 1;
+                          const colors = [
+                            '#CCCCCC', // Level 1: light gray
+                            '#80FF80', // Level 2: medium light green
+                            '#00FF00', // Level 3: saturated green
+                            '#32CD32', // Level 4: green
+                            '#4169E1', // Level 5: blue
+                            '#9370DB', // Level 6: light purple
+                            '#6A0DAD', // Level 7: dark purple
+                            '#FFA500', // Level 8: orange
+                            '#FF6B00', // Level 9: saturated orange
+                            '#FF0000', // Level 10: red
+                          ];
+                          return `${colors[level - 1] || '#FFFFFF'}80`; // 80 = 50% opacity in hex
+                        })()
+                      }}
+                    >
                       {/* Subtle grid overlay */}
                       <div
                         className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none"
@@ -1652,27 +2213,392 @@ export default function MekRateLoggingPage() {
                         )}
                       </div>
 
-                      {/* Info bar at bottom - Mobile-optimized */}
-                      <div className="bg-black/40 p-2 sm:p-3 border-t border-yellow-500/30">
-                        {/* Left side - Mek name and rank - Responsive text */}
-                        <div className="flex justify-between items-end gap-1">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-xs sm:text-sm uppercase tracking-wide truncate" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                              {mek.assetName.replace(/Mek #(\d+)/, (match, num) => `MEK #${num.padStart(4, '0')}`)}
-                            </div>
-                            <div className="text-gray-400 text-[10px] sm:text-xs font-mono uppercase mt-0.5">
-                              RANK {mek.rarityRank || '???'}
+                      {/* HOLOGRAPHIC STACK LAYOUT - Exact copy from demo */}
+                      <div className="w-full relative">
+                        {/* Holographic background effect */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-purple-500/5 to-yellow-500/5 blur-xl" />
+
+                        <div className="relative space-y-2 p-3 bg-black/80 backdrop-blur-sm">
+                          {/* Layer 1: Mek Identity */}
+                          <div className="relative group">
+                            <div
+                              className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border rounded-lg p-2"
+                              style={{
+                                borderColor: (() => {
+                                  const level = mek.currentLevel || 1;
+                                  const colors = [
+                                    '#CCCCCC', // Level 1: light gray
+                                    '#80FF80', // Level 2: medium light green
+                                    '#00FF00', // Level 3: saturated green
+                                    '#32CD32', // Level 4: green
+                                    '#4169E1', // Level 5: blue
+                                    '#9370DB', // Level 6: light purple
+                                    '#6A0DAD', // Level 7: dark purple
+                                    '#FFA500', // Level 8: orange
+                                    '#FF6B00', // Level 9: saturated orange
+                                    '#FF0000', // Level 10: red
+                                  ];
+                                  return `${colors[level - 1] || '#FFFFFF'}4D`; // 4D = 30% opacity in hex
+                                })()
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Mechanism Unit</div>
+                                  {/* Mek Number - color matches level */}
+                                  <div className="text-xl font-medium leading-tight" style={{
+                                    color: (() => {
+                                      const level = mek.currentLevel || 1;
+                                      const colors = [
+                                        '#CCCCCC', // Level 1: light gray
+                                        '#80FF80', // Level 2: medium light green
+                                        '#00FF00', // Level 3: saturated green
+                                        '#32CD32', // Level 4: green
+                                        '#4169E1', // Level 5: blue
+                                        '#9370DB', // Level 6: light purple
+                                        '#6A0DAD', // Level 7: dark purple
+                                        '#FFA500', // Level 8: orange
+                                        '#FF6B00', // Level 9: saturated orange
+                                        '#FF0000', // Level 10: red
+                                      ];
+                                      return colors[level - 1] || '#FFFFFF';
+                                    })(),
+                                    fontFamily: 'Orbitron, monospace',
+                                    letterSpacing: '0.05em',
+                                    opacity: 0.7
+                                  }}>
+                                    MEK #{mek.mekNumber ? mek.mekNumber.toString().padStart(4, '0') : '????'}
+                                  </div>
+                                  {/* Rank display */}
+                                  {mek.rarityRank && (
+                                    <div className="text-sm text-gray-300 uppercase tracking-wider mt-0.5" style={{
+                                      fontFamily: 'monospace',
+                                      opacity: 0.85
+                                    }}>
+                                      Rank: {mek.rarityRank}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Level</div>
+                                  <div className={`text-2xl font-black leading-tight`} style={{
+                                    color: (() => {
+                                      const level = mek.currentLevel || 1;
+                                      const colors = [
+                                        '#CCCCCC', // Level 1: light gray
+                                        '#80FF80', // Level 2: medium light green
+                                        '#00FF00', // Level 3: saturated green
+                                        '#32CD32', // Level 4: green
+                                        '#4169E1', // Level 5: blue
+                                        '#9370DB', // Level 6: light purple
+                                        '#6A0DAD', // Level 7: dark purple
+                                        '#FFA500', // Level 8: orange
+                                        '#FF6B00', // Level 9: saturated orange
+                                        '#FF0000', // Level 10: red
+                                      ];
+                                      return colors[level - 1] || '#FFFFFF';
+                                    })()
+                                  }}>
+                                    {mek.currentLevel || 1}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Right side - Gold/hr - Mobile-sized */}
-                          <div className="flex flex-col sm:flex-row items-end sm:items-baseline gap-0 sm:gap-1.5">
-                            <span className="text-gray-400 text-[10px] sm:text-xs uppercase font-mono hidden sm:inline">GOLD/HR</span>
-                            <span className="text-lg sm:text-2xl font-black text-yellow-400 tabular-nums leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                              {mek.goldPerHour.toFixed(1)}
-                            </span>
-                            <span className="text-gray-400 text-[10px] uppercase font-mono sm:hidden">G/HR</span>
+                          {/* Level Progress Bar */}
+                          <div className="relative">
+                            <div className="bg-black/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-2">
+                              {/* Bar Indicators - Locked Style */}
+                              <div className="flex justify-between gap-1.5 h-8">
+                                {Array.from({ length: 10 }, (_, i) => {
+                                  const level = i + 1;
+                                  const currentLevel = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
+                                  const isActive = level <= currentLevel;
+                                  const colors = ['#CCCCCC', '#80FF80', '#00FF00', '#32CD32', '#4169E1', '#9370DB', '#6A0DAD', '#FFA500', '#FF6B00', '#FF0000'];
+                                  const currentLevelColor = colors[currentLevel - 1] || '#FFFFFF';
+
+                                  return (
+                                    <div
+                                      key={level}
+                                      className="flex-1 transition-all duration-500 relative overflow-hidden rounded-sm"
+                                      style={{
+                                        backgroundColor: isActive ? currentLevelColor : '#1a1a1a',
+                                        border: isActive ? `1px solid ${currentLevelColor}` : '1px solid #333',
+                                        boxShadow: isActive ? `0 0 12px ${currentLevelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)` : 'inset 0 2px 4px rgba(0,0,0,0.8)',
+                                        opacity: isActive ? 1 : 0.3
+                                      }}
+                                    >
+                                      {/* Animated fill effect */}
+                                      {isActive && (
+                                        <div
+                                          className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                                          style={{
+                                            height: '100%',
+                                            background: `linear-gradient(to top, ${currentLevelColor}, ${currentLevelColor}80 50%, transparent)`,
+                                            animation: 'pulse 2s ease-in-out infinite'
+                                          }}
+                                        />
+                                      )}
+                                      {/* Highlight stripe */}
+                                      {isActive && (
+                                        <div
+                                          className="absolute top-0 left-0 right-0 h-1/4"
+                                          style={{
+                                            background: `linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)`
+                                          }}
+                                        />
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Layer 2: Gold Production */}
+                          <div className="relative group">
+                            <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 backdrop-blur-md border border-yellow-500/30 rounded-lg p-3">
+                              <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Income Rate</div>
+                              <div className="flex flex-col gap-1">
+                                {/* Base rate */}
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-[11px] text-gray-500">BASE:</span>
+                                    <span className="text-xl font-bold text-yellow-400">{(mek.baseGoldPerHour || mek.goldPerHour).toFixed(1)}</span>
+                                    <span className="text-xs text-gray-400">gold/hr</span>
+                                  </div>
+                                </div>
+
+                                {/* Bonus rate - always shown */}
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-[11px] text-gray-500">BONUS:</span>
+                                    {(animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) && (animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) > 0 ? (
+                                      <>
+                                        <span className={`text-xl font-bold text-green-400 transition-all duration-700 ${upgradingMeks.has(mek.assetId) ? 'scale-110' : ''}`}>
+                                          +<AnimatedNumber value={animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount || 0} decimals={1} />
+                                        </span>
+                                        <span className="text-xs text-gray-400">gold/hr</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="text-xl font-bold text-gray-600">+0.0</span>
+                                        <span className="text-xs text-gray-400">gold/hr</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Separator with glow - always shown */}
+                                <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-1" />
+
+                                {/* Total - always shown */}
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-[11px] text-gray-500">TOTAL:</span>
+                                  <span className="text-2xl font-black text-white" style={{
+                                    textShadow: '0 0 15px rgba(250, 182, 23, 0.8)'
+                                  }}>
+                                    <AnimatedNumber value={animatedMekValues[mek.assetId]?.goldRate || ((mek.baseGoldPerHour || mek.goldPerHour) + (mek.levelBoostAmount || 0))} decimals={1} />
+                                  </span>
+                                  <span className="text-sm text-yellow-400 font-bold">gold/hr</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Layer 4: Upgrade Interface - EXACT COPY FROM DEMO */}
+                          {walletAddress && mek.currentLevel < 10 ? (
+                            <div className="relative group">
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
+
+                              <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-green-500/30 rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="text-[10px] text-green-400 uppercase tracking-wider">Upgrade Cost</div>
+                                    <div className={`text-xl font-bold ${
+                                      (() => {
+                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+                                        const currentLevel = mek.currentLevel || 1;
+                                        const cost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
+                                        return currentGold >= cost ? 'text-yellow-400' : 'text-red-500';
+                                      })()
+                                    }`}>
+                                      {(() => {
+                                        // Calculate upgrade cost inline
+                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+                                        const currentLevel = mek.currentLevel || 1;
+                                        const cost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
+                                        return cost.toLocaleString();
+                                      })()} gold
+                                    </div>
+                                    <div className="text-xs text-green-400 mt-1 transition-all duration-500">
+                                      Bonus: +{(() => {
+                                        const currentLevel = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
+                                        const nextLevel = currentLevel + 1;
+                                        const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
+
+                                        // Calculate total bonus percentage at next level
+                                        let nextLevelPercent = 0;
+                                        for (let i = 2; i <= nextLevel; i++) {
+                                          nextLevelPercent += 5 + (i - 1) * 5; // 10, 15, 20, 25...
+                                        }
+
+                                        const nextLevelBonus = baseRate * (nextLevelPercent / 100);
+                                        return nextLevelBonus.toFixed(1);
+                                      })()} g/hr
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={async (e) => {
+                                      // Prevent event bubbling to card click
+                                      e.stopPropagation();
+
+                                      // Handle upgrade logic
+                                      const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+                                      const currentLevel = mek.currentLevel || 1;
+                                      const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
+                                      const canAfford = currentGold >= upgradeCost;
+
+                                      if (!canAfford || currentLevel >= 10) return;
+
+                                      // Add to upgrading set for animation
+                                      setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
+
+                                      // Trigger gold spent animation
+                                      const animationId = `${mek.assetId}-${Date.now()}`;
+                                      setGoldSpentAnimations(prev => [...prev, { id: animationId, amount: upgradeCost }]);
+
+                                      // Remove animation after 2 seconds
+                                      setTimeout(() => {
+                                        setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+                                      }, 2000);
+
+                                      // Animate the Mek values immediately
+                                      const newLevel = currentLevel + 1;
+                                      const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
+
+                                      // Calculate cumulative bonus percentage for new level
+                                      let newBonusPercent = 0;
+                                      for (let i = 2; i <= newLevel; i++) {
+                                        newBonusPercent += 5 + (i - 1) * 5; // 10, 15, 20, 25...
+                                      }
+
+                                      const newBonusRate = baseRate * (newBonusPercent / 100);
+                                      const newTotalRate = baseRate + newBonusRate;
+
+                                      // Start animating values
+                                      setAnimatedMekValues(prev => ({
+                                        ...prev,
+                                        [mek.assetId]: {
+                                          level: newLevel,
+                                          goldRate: newTotalRate,
+                                          bonusRate: newBonusRate
+                                        }
+                                      }));
+
+                                      try {
+                                        // LOG: Before mutation call
+                                        console.log('[UPGRADE] Before mutation call:', {
+                                          currentGold,
+                                          upgradeCost,
+                                          expectedRemaining: currentGold - upgradeCost,
+                                          timestamp: new Date().toISOString()
+                                        });
+
+                                        // Call the upgrade mutation
+                                        const result = await upgradeMek({
+                                          walletAddress,
+                                          assetId: mek.assetId,
+                                          mekNumber: mek.mekNumber,
+                                        });
+
+                                        // LOG: Mutation result
+                                        console.log('[UPGRADE] Mutation result:', {
+                                          result,
+                                          timestamp: new Date().toISOString()
+                                        });
+
+                                        // CRITICAL FIX: Don't manually update currentGold state!
+                                        // The animation loop (line 1268) overwrites any manual setState calls
+                                        // within 33ms. Instead, let the query refresh naturally and the animation
+                                        // loop will pick up the new goldMiningData.accumulatedGold value.
+                                        console.log('[UPGRADE] Waiting for query to refresh with deducted gold:', {
+                                          expectedGold: result.remainingGold,
+                                          currentGold,
+                                          costDeducted: upgradeCost,
+                                          timestamp: new Date().toISOString()
+                                        });
+
+                                        // Refresh will happen automatically via Convex reactivity
+                                        console.log('[UPGRADE] Mek upgraded successfully');
+
+                                        // Remove from upgrading set after success
+                                        setTimeout(() => {
+                                          setUpgradingMeks(prev => {
+                                            const newSet = new Set(prev);
+                                            newSet.delete(mek.assetId);
+                                            return newSet;
+                                          });
+                                          // Clear animated values after data refreshes
+                                          setAnimatedMekValues(prev => {
+                                            const newValues = { ...prev };
+                                            delete newValues[mek.assetId];
+                                            return newValues;
+                                          });
+                                        }, 1000);
+                                      } catch (error) {
+                                        console.error('Upgrade failed:', error);
+                                        // Remove from upgrading set on error
+                                        setUpgradingMeks(prev => {
+                                          const newSet = new Set(prev);
+                                          newSet.delete(mek.assetId);
+                                          return newSet;
+                                        });
+                                        // Clear animated values on error
+                                        setAnimatedMekValues(prev => {
+                                          const newValues = { ...prev };
+                                          delete newValues[mek.assetId];
+                                          return newValues;
+                                        });
+                                      }
+                                    }}
+                                    disabled={(() => {
+                                      const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+                                      const currentLevel = mek.currentLevel || 1;
+                                      const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
+                                      return currentGold < upgradeCost;
+                                    })()}
+                                    className={`
+                                      px-4 py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-200 text-sm
+                                      ${(() => {
+                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+                                        const currentLevel = mek.currentLevel || 1;
+                                        const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
+                                        const canAfford = currentGold >= upgradeCost;
+
+                                        return canAfford
+                                          ? 'bg-gradient-to-r from-green-500/20 to-green-400/20 border-2 border-green-400 text-green-400 hover:from-green-500/30 hover:to-green-400/30 hover:scale-105'
+                                          : 'bg-gray-800/40 border border-gray-700 text-gray-500 cursor-not-allowed opacity-50';
+                                      })()}
+                                    `}
+                                  >
+                                    UPGRADE
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : walletAddress && mek.currentLevel >= 10 ? (
+                            <div className="relative">
+                              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 blur-xl animate-pulse" />
+                              <div className="relative bg-gradient-to-r from-yellow-500/10 via-yellow-400/20 to-yellow-500/10 backdrop-blur-md border-2 border-yellow-400 rounded-lg p-4 text-center">
+                                <div className="text-3xl font-black text-yellow-400 uppercase tracking-wider">
+                                  MAXIMUM
+                                </div>
+                                <div className="text-sm text-gray-300">Optimization Complete</div>
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -1721,78 +2647,63 @@ export default function MekRateLoggingPage() {
         )}
       </div>
 
-      {/* Lightbox for selected Mek - Mobile-optimized */}
+      {/* Lightbox for selected Mek - Clean Detail View */}
       {selectedMek && (
         <div
-          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/95 sm:bg-black/90 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm overflow-y-auto"
           onClick={() => setSelectedMek(null)}
         >
           <div
-            className="relative max-w-4xl w-full bg-black/95 sm:bg-black/80 border-0 sm:border-2 border-yellow-500/50 p-4 sm:p-6 md:p-8 min-h-screen sm:min-h-0 sm:rounded-sm"
+            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-8"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Corner brackets */}
-            <div className="absolute -top-2 -left-2 w-8 h-8 border-l-4 border-t-4 border-yellow-500" />
-            <div className="absolute -top-2 -right-2 w-8 h-8 border-r-4 border-t-4 border-yellow-500" />
-            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-l-4 border-b-4 border-yellow-500" />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-r-4 border-b-4 border-yellow-500" />
-
-            {/* Close button - Touch-friendly size */}
+            {/* Close button */}
             <button
               onClick={() => setSelectedMek(null)}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-yellow-500 hover:text-yellow-300 text-4xl sm:text-3xl font-bold z-10 w-12 h-12 sm:w-auto sm:h-auto flex items-center justify-center touch-manipulation"
+              className="absolute top-4 right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
             >
               ×
             </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-              {/* Large image - Mobile-optimized */}
-              <div className="aspect-square bg-black/50 overflow-hidden border sm:border-2 border-yellow-500/20 rounded-sm max-h-[60vh] sm:max-h-none mx-auto w-full">
-                {selectedMek.mekNumber ? (
-                  <img
-                    src={getMekImageUrl(selectedMek.mekNumber, '1000px')}
-                    alt={selectedMek.assetName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : selectedMek.imageUrl ? (
-                  <img
-                    src={selectedMek.imageUrl}
-                    alt={selectedMek.assetName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono">
-                    NO IMAGE
-                  </div>
-                )}
+            <div className="flex flex-col items-center">
+              {/* Large Mek Image - Nearly full screen */}
+              <div className="relative w-full max-w-3xl mb-6">
+                <div className="relative aspect-square bg-black overflow-hidden">
+                  {selectedMek.mekNumber ? (
+                    <img
+                      src={getMekImageUrl(selectedMek.mekNumber, '1000px')}
+                      alt={selectedMek.assetName}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : selectedMek.imageUrl ? (
+                    <img
+                      src={selectedMek.imageUrl}
+                      alt={selectedMek.assetName}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono">
+                      NO IMAGE
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Mek details - Mobile spacing */}
-              <div className="flex flex-col justify-start sm:justify-center space-y-4 sm:space-y-6">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-yellow-500 uppercase tracking-wide sm:tracking-wider font-['Orbitron'] mb-1 sm:mb-2">
+              {/* Mek Info Below */}
+              <div className="w-full max-w-3xl space-y-4">
+                {/* Mek Name and Rank */}
+                <div className="text-center">
+                  <h2 className="text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
                     {selectedMek.assetName}
                   </h2>
-                  <p className="text-gray-400 font-mono text-base sm:text-lg">
+                  <p className="text-gray-400 font-mono text-lg">
                     RANK {selectedMek.rarityRank || '???'}
                   </p>
                 </div>
 
-                {/* Gold rate display - Mobile-sized */}
-                <div className="bg-black/50 border border-yellow-500/30 p-4 sm:p-6 rounded-sm">
-                  <div className="text-center">
-                    <div className="text-4xl sm:text-5xl md:text-6xl font-black text-yellow-400 font-mono mb-1 sm:mb-2">
-                      {selectedMek.goldPerHour.toFixed(2)}
-                    </div>
-                    <div className="text-yellow-500/60 font-light uppercase tracking-[0.2em] sm:tracking-[0.3em] text-xs sm:text-sm">
-                      GOLD PER HOUR
-                    </div>
-                  </div>
-                </div>
-
-                {/* Variations Table - Three columns */}
-                <div className="bg-black/50 rounded-sm overflow-hidden">
-                  <table className="w-full text-sm">
+                {/* Variations Table */}
+                <div className="bg-black/50">
+                  <table className="w-4/5 mx-auto">
                     <tbody>
                       {(() => {
                         if (!selectedMek.sourceKey) return null;
@@ -1800,30 +2711,37 @@ export default function MekRateLoggingPage() {
 
                         return (
                           <>
-                            <tr>
-                              <td className="px-3 py-2 text-gray-500 font-mono uppercase text-sm w-1/3 whitespace-nowrap">Head Variation</td>
-                              <td className="px-3 py-2 text-right font-bold text-sm" style={{ color: variations.head.color }}>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                HEAD
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
                                 {variations.head.name}
                               </td>
-                              <td className="px-3 py-2 text-right font-mono text-base w-20" style={{ color: variations.head.color }}>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
                                 {variations.head.count > 0 ? `×${variations.head.count}` : ''}
                               </td>
                             </tr>
-                            <tr>
-                              <td className="px-3 py-2 text-gray-500 font-mono uppercase text-sm whitespace-nowrap">Body Variation</td>
-                              <td className="px-3 py-2 text-right font-bold text-sm" style={{ color: variations.body.color }}>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                BODY
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
                                 {variations.body.name}
                               </td>
-                              <td className="px-3 py-2 text-right font-mono text-base" style={{ color: variations.body.color }}>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
                                 {variations.body.count > 0 ? `×${variations.body.count}` : ''}
                               </td>
                             </tr>
+                            {/* Trait Variation */}
                             <tr>
-                              <td className="px-3 py-2 text-gray-500 font-mono uppercase text-sm whitespace-nowrap">Trait Variation</td>
-                              <td className="px-3 py-2 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                TRAIT
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
                                 {variations.trait.name}
                               </td>
-                              <td className="px-3 py-2 text-right font-mono text-base" style={{ color: variations.trait.color }}>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
                                 {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
                               </td>
                             </tr>
@@ -1832,18 +2750,6 @@ export default function MekRateLoggingPage() {
                       })()}
                     </tbody>
                   </table>
-                </div>
-
-                {/* Asset ID - Hidden on mobile for space */}
-                <div className="text-xs text-gray-600 font-mono hidden sm:block break-all">
-                  Asset ID: <a
-                    href={createPoolPmUrl(MEK_POLICY_ID, selectedMek.assetId)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-400"
-                  >
-                    {selectedMek.assetId}
-                  </a>
                 </div>
               </div>
             </div>
@@ -1891,7 +2797,6 @@ export default function MekRateLoggingPage() {
           </div>
         </div>
       )}
-
 
       {/* Add animations and mobile optimizations */}
       <style jsx>{`
@@ -1984,6 +2889,17 @@ export default function MekRateLoggingPage() {
           }
         }
 
+        @keyframes floatUpFade {
+          0% {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-50%) translateY(-40px);
+            opacity: 0;
+          }
+        }
+
         @keyframes pulse-glow {
           0%, 100% {
             box-shadow: 0 0 20px rgba(250, 182, 23, 0.3), 0 0 40px rgba(250, 182, 23, 0.2);
@@ -1996,7 +2912,138 @@ export default function MekRateLoggingPage() {
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
         }
+
+        /* New animations for sci-fi styles */
+        @keyframes scan-slow {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(200%); }
+        }
+
+        :global(.animate-scan-slow) {
+          animation: scan-slow 4s linear infinite;
+        }
+
+        /* Shimmer animation removed for cleaner industrial look */
+        /* Original shimmer code preserved below for future use:
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+
+        :global(.animate-shimmer) {
+          animation: shimmer 3s linear infinite;
+        } */
+
+        @keyframes hologram-sweep {
+          0% { transform: translateX(-100%) skewX(-12deg); }
+          100% { transform: translateX(400%) skewX(-12deg); }
+        }
+
+        :global(.animate-hologram-sweep) {
+          animation: hologram-sweep 3s ease-in-out infinite;
+        }
+
+        :global(.matrix-rain) {
+          background-image: repeating-linear-gradient(
+            0deg,
+            transparent,
+            rgba(34, 197, 94, 0.03) 2px,
+            transparent 4px
+          );
+          animation: matrix-flow 1s linear infinite;
+        }
+
+        @keyframes matrix-flow {
+          0% { background-position: 0 0; }
+          100% { background-position: 0 4px; }
+        }
+
+        @keyframes mek-scan-line {
+          0% { top: -2px; }
+          100% { top: 100%; }
+        }
+
+        @keyframes plasma-border {
+          0% { border-image-source: linear-gradient(45deg, #8b5cf6, #ec4899, #8b5cf6); }
+          50% { border-image-source: linear-gradient(45deg, #ec4899, #8b5cf6, #ec4899); }
+          100% { border-image-source: linear-gradient(45deg, #8b5cf6, #ec4899, #8b5cf6); }
+        }
+
+        @keyframes energy-flow {
+          0% { background-position: 0 0; }
+          100% { background-position: 4px 0; }
+        }
+
+        @keyframes crystal-shine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+
+        @keyframes data-flow {
+          0% { transform: translateX(-100%); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        :global(.animate-data-flow) {
+          animation: data-flow 2s ease-in-out infinite;
+        }
+
+        @keyframes quantum-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        @keyframes quantum-float {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-10px) translateX(5px); }
+          50% { transform: translateY(5px) translateX(-5px); }
+          75% { transform: translateY(-5px) translateX(10px); }
+        }
+
+        :global(.animate-quantum-float) {
+          animation: quantum-float 6s ease-in-out infinite;
+        }
+
+        @keyframes quantum-pulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 100% 50%; }
+        }
+
+        :global(.animate-gradient-shift) {
+          background-size: 200% auto;
+          animation: gradient-shift 3s linear infinite;
+        }
+
+        :global(.bg-repeating-linear-gradient) {
+          background-image: repeating-linear-gradient(
+            var(--tw-gradient-angle),
+            var(--tw-gradient-from),
+            var(--tw-gradient-from) var(--tw-gradient-from-position),
+            var(--tw-gradient-to) var(--tw-gradient-to-position)
+          );
+        }
       `}</style>
+
+      {/* Company Name Modal */}
+      {walletAddress && (
+        <CompanyNameModal
+          isOpen={showCompanyNameModal}
+          onClose={() => setShowCompanyNameModal(false)}
+          walletAddress={walletAddress}
+          mode={companyNameModalMode}
+          onSuccess={(companyName) => {
+            console.log('Company name set successfully:', companyName);
+            // The query will automatically refetch and update the UI
+          }}
+        />
+      )}
     </div>
   )
 }

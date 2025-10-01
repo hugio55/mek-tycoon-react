@@ -204,7 +204,7 @@ export default function GlobalBackground() {
         ))}
         
         {/* Floating particles drifting in straight lines like space debris */}
-        {particles.map((particle) => (
+        {mounted && particles.map((particle) => (
           <div
             key={particle.id}
             className="absolute bg-yellow-400 rounded-full"
@@ -223,7 +223,7 @@ export default function GlobalBackground() {
         ))}
         
         {/* Satellites moving in random directions across screen */}
-        {satellites.map((satellite) => {
+        {mounted && satellites.map((satellite) => {
           const startXNum = parseFloat(satellite.startX);
           const startYNum = parseFloat(satellite.startY);
           const endXNum = parseFloat(satellite.endX);

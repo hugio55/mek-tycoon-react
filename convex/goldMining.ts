@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
+import { calculateCurrentGold, GOLD_CAP, calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";
@@ -22,10 +23,25 @@ export const initializeGoldMining = mutation({
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),
+      // Level boost fields (optional to preserve backward compatibility)
+      baseGoldPerHour: v.optional(v.number()),
+      currentLevel: v.optional(v.number()),
+      levelBoostPercent: v.optional(v.number()),
+      levelBoostAmount: v.optional(v.number()),
+      effectiveGoldPerHour: v.optional(v.number()),
     })),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    // CRITICAL: Only accept stake addresses to prevent duplicates
+    if (!args.walletAddress.startsWith('stake1')) {
+      console.error(`[GoldMining] REJECTED non-stake address: ${args.walletAddress}`);
+      return {
+        success: false,
+        error: "Only stake addresses are accepted. Please use stake address format."
+      };
+    }
 
     // Check for ALL records with this wallet (to handle duplicates)
     const allExisting = await ctx.db
@@ -33,7 +49,42 @@ export const initializeGoldMining = mutation({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .collect();
 
+    // ALSO check for hex/payment address duplicates
+    const stakeSuffix = args.walletAddress.slice(-8);
+    const allWallets = await ctx.db.query("goldMining").collect();
+    const potentialDuplicates = allWallets.filter(w =>
+      w.walletAddress !== args.walletAddress &&
+      (w.walletAddress.includes(stakeSuffix) ||
+       w.walletAddress.includes('fe6012f1') || // Common hex suffix
+       w.walletAddress.startsWith('01d9d9cf8225') || // Hex prefix
+       w.walletAddress.startsWith('addr1')) // Payment address
+    );
+
+    // Merge any found duplicates
+    if (potentialDuplicates.length > 0) {
+      console.log(`[GoldMining] Found ${potentialDuplicates.length} potential duplicates to merge`);
+      for (const dup of potentialDuplicates) {
+        console.log(`[GoldMining] Deleting duplicate: ${dup.walletAddress.substring(0, 20)}...`);
+        await ctx.db.delete(dup._id);
+      }
+    }
+
     const totalGoldPerHour = args.ownedMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+
+    console.log('[INIT MUTATION] ================================');
+    console.log('[INIT MUTATION] initializeGoldMining called:', {
+      timestamp: new Date().toISOString(),
+      wallet: args.walletAddress.substring(0, 20) + '...',
+      mekCount: args.ownedMeks.length,
+      totalGoldPerHour: totalGoldPerHour.toFixed(2)
+    });
+
+    // Check if level boost data is being passed
+    const meksWithBoosts = args.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
+    console.log('[INIT MUTATION] Meks with level boosts:', {
+      count: meksWithBoosts.length,
+      totalBoost: meksWithBoosts.reduce((sum, mek) => sum + (mek.levelBoostAmount || 0), 0).toFixed(2)
+    });
 
     // If we have duplicates, merge them NOW
     if (allExisting.length > 1) {
@@ -46,10 +97,14 @@ export const initializeGoldMining = mutation({
 
       // Sum all accumulated gold from duplicates
       const totalAccumulatedGold = allExisting.reduce((sum, record) => {
-        const lastUpdateTime = record.lastSnapshotTime || record.updatedAt || record.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = record.totalGoldPerHour * hoursSinceLastUpdate;
-        return sum + Math.min(50000, (record.accumulatedGold || 0) + goldSinceLastUpdate);
+        const currentGold = calculateCurrentGold({
+          accumulatedGold: record.accumulatedGold || 0,
+          goldPerHour: record.totalGoldPerHour,
+          lastSnapshotTime: record.lastSnapshotTime || record.updatedAt || record.createdAt,
+          isVerified: true,
+          consecutiveSnapshotFailures: record.consecutiveSnapshotFailures || 0
+        });
+        return sum + currentGold;
       }, 0);
 
       // Update primary with merged data
@@ -81,12 +136,22 @@ export const initializeGoldMining = mutation({
 
     if (existing) {
       // Calculate current gold for display (but don't save it)
-      const lastUpdateTime = existing.lastSnapshotTime || existing.createdAt;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = existing.totalGoldPerHour * hoursSinceLastUpdate;
-      const currentGold = Math.min(50000, (existing.accumulatedGold || 0) + goldSinceLastUpdate);
+      const currentGold = calculateCurrentGold({
+        accumulatedGold: existing.accumulatedGold || 0,
+        goldPerHour: existing.totalGoldPerHour,
+        lastSnapshotTime: existing.lastSnapshotTime || existing.createdAt,
+        isVerified: true,
+        consecutiveSnapshotFailures: existing.consecutiveSnapshotFailures || 0
+      });
 
       // Update the wallet info AND the gold rate when meks change
+      console.log('[INIT MUTATION] Updating existing record:', {
+        existingRate: existing.totalGoldPerHour,
+        newRate: totalGoldPerHour,
+        existingMekCount: existing.ownedMeks.length,
+        newMekCount: args.ownedMeks.length
+      });
+
       await ctx.db.patch(existing._id, {
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
@@ -95,6 +160,9 @@ export const initializeGoldMining = mutation({
         lastActiveTime: now,
         updatedAt: now,
       });
+
+      console.log('[INIT MUTATION] Record updated successfully');
+      console.log('[INIT MUTATION] ================================');
 
       return {
         currentGold,
@@ -109,6 +177,7 @@ export const initializeGoldMining = mutation({
         ownedMeks: args.ownedMeks,
         totalGoldPerHour,
         accumulatedGold: 0,
+        totalCumulativeGold: 0, // Initialize cumulative gold for new wallets
         isBlockchainVerified: false, // NEW: Starts unverified, must verify to earn gold
         lastSnapshotTime: now,
         lastActiveTime: now,
@@ -141,23 +210,90 @@ export const getGoldMiningData = query({
       return null;
     }
 
-    // VERIFICATION CHECK: Only accumulate gold if wallet is verified
-    let currentGold = data.accumulatedGold || 0;
+    console.log('[QUERY] ===================================');
+    console.log('[QUERY] getGoldMiningData called:', {
+      timestamp: new Date().toISOString(),
+      wallet: args.walletAddress.substring(0, 20) + '...',
+      storedTotalRate: data.totalGoldPerHour,
+      storedBaseRate: data.baseGoldPerHour,
+      storedBoostRate: data.boostGoldPerHour,
+      mekCount: data.ownedMeks.length
+    });
 
-    if (data.isBlockchainVerified === true) {
-      // Calculate: accumulated gold + (time since last update × current rate)
-      const lastUpdateTime = data.lastSnapshotTime || data.updatedAt || data.createdAt;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = data.totalGoldPerHour * hoursSinceLastUpdate;
-      currentGold = Math.min(50000, (data.accumulatedGold || 0) + goldSinceLastUpdate);
+    // RECALCULATE total gold rate from ownedMeks (in case levels changed since last mutation)
+    const recalculatedBaseRate = data.ownedMeks.reduce(
+      (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+      0
+    );
+    const recalculatedBoostRate = data.ownedMeks.reduce(
+      (sum, mek) => sum + (mek.levelBoostAmount || 0),
+      0
+    );
+    const recalculatedTotalRate = recalculatedBaseRate + recalculatedBoostRate;
+
+    console.log('[QUERY] Recalculated rates:', {
+      recalculatedBaseRate: recalculatedBaseRate.toFixed(2),
+      recalculatedBoostRate: recalculatedBoostRate.toFixed(2),
+      recalculatedTotalRate: recalculatedTotalRate.toFixed(2)
+    });
+
+    // Log each Mek's contribution
+    console.log('[QUERY] Individual Mek rates:');
+    data.ownedMeks.forEach((mek, idx) => {
+      console.log(`  [${idx + 1}] ${mek.assetName}:`, {
+        goldPerHour: mek.goldPerHour,
+        baseGoldPerHour: mek.baseGoldPerHour,
+        currentLevel: mek.currentLevel,
+        levelBoostPercent: mek.levelBoostPercent,
+        levelBoostAmount: mek.levelBoostAmount,
+        effectiveGoldPerHour: mek.effectiveGoldPerHour
+      });
+    });
+
+    // Check if level boost data is missing
+    const meksWithBoosts = data.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
+    const meksWithLevelField = data.ownedMeks.filter(mek => mek.currentLevel && mek.currentLevel > 1);
+
+    console.log('[QUERY] Level boost analysis:', {
+      totalMeks: data.ownedMeks.length,
+      meksWithBoostAmount: meksWithBoosts.length,
+      meksWithLevelField: meksWithLevelField.length,
+      meksWithBaseRate: data.ownedMeks.filter(mek => mek.baseGoldPerHour).length
+    });
+
+    if (meksWithBoosts.length === 0 && meksWithLevelField.length > 0) {
+      console.warn('[QUERY] ⚠️ WARNING: Meks have currentLevel > 1 but NO levelBoostAmount! This means level data is not being synced!');
     }
-    // If not verified, currentGold stays at accumulatedGold (no new accumulation)
 
-    return {
+    // VERIFICATION CHECK: Only accumulate gold if wallet is verified
+    const currentGold = calculateCurrentGold({
+      accumulatedGold: data.accumulatedGold || 0,
+      goldPerHour: recalculatedTotalRate,
+      lastSnapshotTime: data.lastSnapshotTime || data.updatedAt || data.createdAt,
+      isVerified: data.isBlockchainVerified === true,
+      consecutiveSnapshotFailures: data.consecutiveSnapshotFailures || 0
+    });
+
+    const result = {
       ...data,
       currentGold,
+      // Return recalculated rates (not stale stored values)
+      baseGoldPerHour: recalculatedBaseRate,
+      boostGoldPerHour: recalculatedBoostRate,
+      totalGoldPerHour: recalculatedTotalRate,
       isVerified: data.isBlockchainVerified === true, // Add verification status to response
     };
+
+    console.log('[QUERY] Returning to frontend:', {
+      baseGoldPerHour: result.baseGoldPerHour.toFixed(2),
+      boostGoldPerHour: result.boostGoldPerHour.toFixed(2),
+      totalGoldPerHour: result.totalGoldPerHour.toFixed(2),
+      currentGold: result.currentGold.toFixed(2),
+      mekCount: result.ownedMeks.length
+    });
+    console.log('[QUERY] ===================================');
+
+    return result;
   },
 });
 
@@ -180,19 +316,42 @@ export const updateGoldCheckpoint = mutation({
 
     // VERIFICATION CHECK: Only accumulate gold if verified
     let newAccumulatedGold = existing.accumulatedGold || 0;
+    let newTotalCumulativeGold = existing.totalCumulativeGold || 0;
+    let goldEarnedThisUpdate = 0;
 
     if (existing.isBlockchainVerified === true) {
       // Calculate accumulated gold up to this point
-      const lastUpdateTime = existing.lastSnapshotTime || existing.updatedAt || existing.createdAt;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = existing.totalGoldPerHour * hoursSinceLastUpdate;
-      newAccumulatedGold = Math.min(50000, (existing.accumulatedGold || 0) + goldSinceLastUpdate);
+      const cappedGold = calculateCurrentGold({
+        accumulatedGold: existing.accumulatedGold || 0,
+        goldPerHour: existing.totalGoldPerHour,
+        lastSnapshotTime: existing.lastSnapshotTime || existing.updatedAt || existing.createdAt,
+        isVerified: true,
+        consecutiveSnapshotFailures: existing.consecutiveSnapshotFailures || 0
+      });
+      goldEarnedThisUpdate = cappedGold - (existing.accumulatedGold || 0);
+
+      // Use the centralized gold increase function to ensure invariants
+      const goldUpdate = calculateGoldIncrease(existing, goldEarnedThisUpdate);
+      newAccumulatedGold = goldUpdate.newAccumulatedGold;
+      newTotalCumulativeGold = goldUpdate.newTotalCumulativeGold;
+
+      console.log('[UPDATE GOLD CHECKPOINT] Gold increase:', {
+        goldEarnedThisUpdate,
+        oldAccumulated: existing.accumulatedGold || 0,
+        newAccumulatedGold,
+        oldCumulative: existing.totalCumulativeGold || 0,
+        newTotalCumulativeGold
+      });
+    } else {
+      // If not verified, keep existing values (no new accumulation)
+      newAccumulatedGold = existing.accumulatedGold || 0;
+      newTotalCumulativeGold = existing.totalCumulativeGold || (existing.accumulatedGold || 0) + (existing.totalGoldSpentOnUpgrades || 0);
     }
-    // If not verified, newAccumulatedGold stays at current level (no new accumulation)
 
     // Save the snapshot
     await ctx.db.patch(existing._id, {
       accumulatedGold: newAccumulatedGold,
+      totalCumulativeGold: newTotalCumulativeGold,
       lastSnapshotTime: now,
       lastActiveTime: now,
       updatedAt: now,
@@ -378,14 +537,13 @@ export const getAllGoldMiningData = query({
     return allMiners.map(miner => {
       // Calculate: accumulated gold + (time since last update × current rate)
       // VERIFICATION CHECK: Only accumulate if verified
-      let currentGold = miner.accumulatedGold || 0;
-
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
-      }
+      const currentGold = calculateCurrentGold({
+        accumulatedGold: miner.accumulatedGold || 0,
+        goldPerHour: miner.totalGoldPerHour,
+        lastSnapshotTime: miner.lastSnapshotTime || miner.updatedAt || miner.createdAt,
+        isVerified: miner.isBlockchainVerified === true,
+        consecutiveSnapshotFailures: miner.consecutiveSnapshotFailures || 0
+      });
 
       // Calculate time since last active
       const minutesSinceActive = Math.floor((now - miner.lastActiveTime) / (1000 * 60));
@@ -411,6 +569,7 @@ export const getAllGoldMiningData = query({
         _id: miner._id,
         walletAddress: miner.walletAddress,
         walletType: miner.walletType || "Unknown",
+        companyName: miner.companyName || null,
         mekCount: miner.ownedMeks.length,
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.max(0, Math.floor(currentGold * 100) / 100), // Ensure no negative values
@@ -494,32 +653,113 @@ export const initializeWithBlockfrost = action({
         });
       }
 
+      // Get level data for these Meks to include boosts
+      const mekLevels = await ctx.runQuery(api.mekLeveling.getMekLevels, {
+        walletAddress: args.stakeAddress
+      });
+
+      // Create a map for quick level lookup
+      const levelMap = new Map(mekLevels.map(level => [level.assetId, level]));
+
+      // Apply level boosts to Mek rates
+      const meksWithLevelBoosts = meksWithRates.map(m => {
+        const levelData = levelMap.get(m.assetId);
+        const currentLevel = levelData?.currentLevel || 1;
+        const boostPercent = levelData?.currentBoostPercent || 0;
+        const boostAmount = levelData?.currentBoostAmount || 0;
+
+        // Calculate effective rate (base + boost)
+        const effectiveRate = m.goldPerHour + boostAmount;
+
+        return {
+          ...m,
+          baseGoldPerHour: m.goldPerHour, // Store the base rate
+          currentLevel: currentLevel,
+          levelBoostPercent: boostPercent,
+          levelBoostAmount: boostAmount,
+          effectiveGoldPerHour: effectiveRate,
+          goldPerHour: effectiveRate // Use effective rate as the main rate
+        };
+      });
+
       // Initialize or update gold mining record
-      // Strip fields not in the mutation validator (mekNumber, sourceKey)
-      const meksForMutation = meksWithRates.map(m => ({
+      // Include level boost fields to preserve upgrade data
+      const meksForMutation = meksWithLevelBoosts.map(m => ({
         assetId: m.assetId,
         policyId: m.policyId,
         assetName: m.assetName,
         imageUrl: m.imageUrl,
-        goldPerHour: m.goldPerHour,
+        goldPerHour: m.goldPerHour, // This is now the effective rate with boost
         rarityRank: m.rarityRank,
         headVariation: m.headVariation,
         bodyVariation: m.bodyVariation,
-        itemVariation: m.itemVariation
+        itemVariation: m.itemVariation,
+        // CRITICAL: Include level boost fields to preserve upgrade data
+        baseGoldPerHour: m.baseGoldPerHour,
+        currentLevel: m.currentLevel,
+        levelBoostPercent: m.levelBoostPercent,
+        levelBoostAmount: m.levelBoostAmount,
+        effectiveGoldPerHour: m.effectiveGoldPerHour
       }));
 
+      // CRITICAL FIX: Get existing gold mining data and MERGE with new Blockfrost data
+      // This prevents overwriting Meks that aren't on the blockchain (from local testing)
+      const existingData = await ctx.runQuery(api.goldMining.getGoldMiningData, {
+        walletAddress: args.stakeAddress
+      });
+
+      let finalMeksList = meksForMutation;
+
+      if (existingData && existingData.ownedMeks.length > meksForMutation.length) {
+        console.log(`[GoldMining] Merging existing ${existingData.ownedMeks.length} Meks with ${meksForMutation.length} on-chain Meks`);
+
+        // Create a map of on-chain Meks by assetId
+        const onChainMekMap = new Map(meksForMutation.map(m => [m.assetId, m]));
+
+        // Start with existing Meks and update with on-chain data where available
+        finalMeksList = existingData.ownedMeks.map(existingMek => {
+          const onChainMek = onChainMekMap.get(existingMek.assetId);
+          if (onChainMek) {
+            // Mek is on-chain - use the on-chain data (which includes level boosts)
+            return onChainMek;
+          } else {
+            // Mek not on-chain - keep existing data (preserve level boosts)
+            return {
+              assetId: existingMek.assetId,
+              policyId: existingMek.policyId,
+              assetName: existingMek.assetName,
+              imageUrl: existingMek.imageUrl,
+              goldPerHour: existingMek.goldPerHour,
+              rarityRank: existingMek.rarityRank,
+              headVariation: existingMek.headVariation,
+              bodyVariation: existingMek.bodyVariation,
+              itemVariation: existingMek.itemVariation,
+              baseGoldPerHour: existingMek.baseGoldPerHour,
+              currentLevel: existingMek.currentLevel,
+              levelBoostPercent: existingMek.levelBoostPercent,
+              levelBoostAmount: existingMek.levelBoostAmount,
+              effectiveGoldPerHour: existingMek.effectiveGoldPerHour
+            };
+          }
+        });
+
+        console.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
+      }
+
+      // CRITICAL FIX: Always use stake address for database records
+      // This prevents duplicate wallets with payment addresses
       await ctx.runMutation(api.goldMining.initializeGoldMining, {
-        walletAddress: args.walletAddress,
+        walletAddress: args.stakeAddress, // ALWAYS use stake address, never payment
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
-        ownedMeks: meksForMutation
+        ownedMeks: finalMeksList
       });
 
       return {
         success: true,
-        meks: meksWithRates,
-        mekCount: meksWithRates.length,
-        totalGoldPerHour: meksWithRates.reduce((sum, m) => sum + m.goldPerHour, 0)
+        meks: meksWithLevelBoosts, // Return the level-boosted data
+        mekCount: meksWithLevelBoosts.length,
+        totalGoldPerHour: meksWithLevelBoosts.reduce((sum, m) => sum + m.goldPerHour, 0) // This now includes boosts
       };
 
     } catch (error: any) {
@@ -659,6 +899,30 @@ export const factoryResetForProduction = mutation({
     }
     breakdown.auditLogs = auditLogs.length;
 
+    // 10. Clear mekLevels (Mek level progression data)
+    const mekLevels = await ctx.db.query("mekLevels").collect();
+    for (const level of mekLevels) {
+      await ctx.db.delete(level._id);
+      totalDeleted++;
+    }
+    breakdown.mekLevels = mekLevels.length;
+
+    // 11. Clear levelUpgrades (upgrade transaction logs)
+    const levelUpgrades = await ctx.db.query("levelUpgrades").collect();
+    for (const upgrade of levelUpgrades) {
+      await ctx.db.delete(upgrade._id);
+      totalDeleted++;
+    }
+    breakdown.levelUpgrades = levelUpgrades.length;
+
+    // 12. Clear mekTransferEvents (NFT transfer tracking)
+    const transferEvents = await ctx.db.query("mekTransferEvents").collect();
+    for (const event of transferEvents) {
+      await ctx.db.delete(event._id);
+      totalDeleted++;
+    }
+    breakdown.mekTransferEvents = transferEvents.length;
+
     return {
       success: true,
       message: "🚀 FACTORY RESET COMPLETE - System is now in pristine state for production launch",
@@ -696,15 +960,13 @@ export const getGoldMiningStats = query({
 
     // Calculate accumulated gold using update time method (only for VERIFIED wallets)
     const totalGoldAccumulated = allMiners.reduce((sum, miner) => {
-      let currentGold = miner.accumulatedGold || 0;
-
-      // Only accumulate if verified
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
-      }
+      const currentGold = calculateCurrentGold({
+        accumulatedGold: miner.accumulatedGold || 0,
+        goldPerHour: miner.totalGoldPerHour,
+        lastSnapshotTime: miner.lastSnapshotTime || miner.updatedAt || miner.createdAt,
+        isVerified: miner.isBlockchainVerified === true,
+        consecutiveSnapshotFailures: miner.consecutiveSnapshotFailures || 0
+      });
 
       return sum + Math.max(0, currentGold); // Ensure no negative values
     }, 0);
@@ -754,6 +1016,157 @@ export const resetAllGoldMiningData = mutation({
     return {
       success: true,
       deletedCount: allRecords.length
+    };
+  },
+});
+
+// Company name validation helper
+function validateCompanyName(name: string): { valid: boolean; error?: string } {
+  if (!name || typeof name !== 'string') {
+    return { valid: false, error: "Company name is required" };
+  }
+
+  const trimmed = name.trim();
+
+  if (trimmed.length < 2) {
+    return { valid: false, error: "Company name must be at least 2 characters" };
+  }
+
+  if (trimmed.length > 30) {
+    return { valid: false, error: "Company name must be 30 characters or less" };
+  }
+
+  // Only allow letters, numbers, and spaces
+  const alphanumericRegex = /^[a-zA-Z0-9\s]+$/;
+  if (!alphanumericRegex.test(trimmed)) {
+    return { valid: false, error: "Company name can only contain letters, numbers, and spaces" };
+  }
+
+  // Basic profanity filter (add more terms as needed)
+  const profanityWords = ['fuck', 'shit', 'damn', 'hell', 'ass', 'bitch', 'crap', 'piss'];
+  const lowerName = trimmed.toLowerCase();
+  const hasProfanity = profanityWords.some(word => lowerName.includes(word));
+
+  if (hasProfanity) {
+    return { valid: false, error: "Company name contains inappropriate language" };
+  }
+
+  return { valid: true };
+}
+
+// Set company name for a wallet
+export const setCompanyName = mutation({
+  args: {
+    walletAddress: v.string(),
+    companyName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate company name
+    const validation = validateCompanyName(args.companyName);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: validation.error
+      };
+    }
+
+    const trimmedName = args.companyName.trim();
+
+    // Check if company name is already taken (case-insensitive)
+    const existingCompany = await ctx.db
+      .query("goldMining")
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("walletAddress"), args.walletAddress),
+          q.eq(q.field("companyName"), trimmedName)
+        )
+      )
+      .first();
+
+    if (existingCompany) {
+      return {
+        success: false,
+        error: "Company name is already taken"
+      };
+    }
+
+    // Find the user's gold mining record
+    const existing = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!existing) {
+      return {
+        success: false,
+        error: "Wallet not found. Please connect your wallet first."
+      };
+    }
+
+    // Update with the new company name
+    await ctx.db.patch(existing._id, {
+      companyName: trimmedName,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      companyName: trimmedName
+    };
+  },
+});
+
+// Get company name for a wallet
+export const getCompanyName = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    return {
+      companyName: data?.companyName || null,
+      hasCompanyName: !!data?.companyName
+    };
+  },
+});
+
+// Check if company name is available
+export const checkCompanyNameAvailability = query({
+  args: {
+    companyName: v.string(),
+    currentWalletAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const validation = validateCompanyName(args.companyName);
+    if (!validation.valid) {
+      return {
+        available: false,
+        error: validation.error
+      };
+    }
+
+    const trimmedName = args.companyName.trim();
+
+    // Check if name is taken by someone else
+    const existingCompany = await ctx.db
+      .query("goldMining")
+      .filter((q) =>
+        args.currentWalletAddress
+          ? q.and(
+              q.neq(q.field("walletAddress"), args.currentWalletAddress),
+              q.eq(q.field("companyName"), trimmedName)
+            )
+          : q.eq(q.field("companyName"), trimmedName)
+      )
+      .first();
+
+    return {
+      available: !existingCompany,
+      error: existingCompany ? "Company name is already taken" : undefined
     };
   },
 });

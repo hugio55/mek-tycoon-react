@@ -107,8 +107,8 @@ export const verifySignature = action({
       }
 
       // REAL CRYPTOGRAPHIC SIGNATURE VERIFICATION
-      // Call the new action with proper Emurgo library verification
-      const verificationResult = await ctx.runAction(api.actions.verifyCardanoSignature.verifyCardanoSignature, {
+      // Use simplified verification temporarily while debugging CSL library issues
+      const verificationResult = await ctx.runAction(api.actions.verifyCardanoSignatureSimple.verifyCardanoSignature, {
         stakeAddress: args.stakeAddress,
         nonce: args.nonce,
         signature: args.signature,

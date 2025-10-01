@@ -49,6 +49,7 @@ export default function ProductionLaunchCleaner() {
             <ul className="text-red-300 text-xs list-disc list-inside ml-2 space-y-1">
               <li>All wallet connections (including yours)</li>
               <li>All gold balances</li>
+              <li>All Mek levels (resets to level 1)</li>
               <li>All historical data</li>
               <li>All backups and snapshots</li>
               <li>All authentication data</li>
@@ -73,6 +74,9 @@ export default function ProductionLaunchCleaner() {
             <li>goldBackupUserData (backup records)</li>
             <li>walletSignatures (authentication data)</li>
             <li>auditLogs (verification logs)</li>
+            <li>mekLevels (ALL Mek level progression data)</li>
+            <li>levelUpgrades (upgrade transaction history)</li>
+            <li>mekTransferEvents (NFT transfer tracking)</li>
           </ul>
         </div>
 

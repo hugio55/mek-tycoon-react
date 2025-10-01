@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSound } from "@/contexts/SoundContext";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface NavCategory {
   id: string;
@@ -77,6 +79,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Admin Dashboard", href: "/admin" },
       { label: "User Management", href: "/admin/users" },
       { label: "Master Data Systems", href: "/admin-master-data" },
+      { label: "Mek Gold Mining", href: "/mek-gold-mining" },
       { label: "Save System", href: "/admin-save" },
       { label: "Mek Selector", href: "/mek-selector" },
       { label: "Shop Manager", href: "/admin-shop" },
@@ -109,6 +112,70 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [mounted, setMounted] = useState(false);
   const [menuHeaderStyle, setMenuHeaderStyle] = useState('standard-balanced');
   const { soundEnabled, toggleSound, playClickSound } = useSound();
+
+  // Get wallet address from localStorage
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for wallet address changes
+    const checkWalletAddress = () => {
+      const stored = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress');
+      setWalletAddress(stored);
+    };
+
+    // Initial check
+    checkWalletAddress();
+
+    // Listen for storage changes (when wallet connects/disconnects)
+    window.addEventListener('storage', checkWalletAddress);
+
+    // Also check periodically for changes (backup)
+    const interval = setInterval(checkWalletAddress, 1000);
+
+    return () => {
+      window.removeEventListener('storage', checkWalletAddress);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Get user stats (with real-time updates)
+  const userStats = useQuery(
+    api.userStats.getUserStats,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Get company name for current wallet
+  const companyNameData = useQuery(
+    api.goldMining.getCompanyName,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // State for real-time cumulative gold
+  const [realtimeCumulativeGold, setRealtimeCumulativeGold] = useState(0);
+
+  // Update cumulative gold in real-time
+  useEffect(() => {
+    if (!userStats) return;
+
+    // Set initial value from query
+    const initialValue = userStats.totalCumulativeGold || 0;
+    setRealtimeCumulativeGold(initialValue);
+
+    // If gold per hour is greater than 0, start real-time updates
+    if (userStats.goldPerHour > 0) {
+      // Track the start time for accurate calculation
+      const startTime = Date.now();
+      const startValue = initialValue;
+
+      const interval = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000; // seconds elapsed
+        const goldEarned = (userStats.goldPerHour / 3600) * elapsed; // gold earned since start
+        setRealtimeCumulativeGold(startValue + goldEarned);
+      }, 100); // Update every 100ms for smooth counting
+
+      return () => clearInterval(interval);
+    }
+  }, [userStats]); // Re-run when userStats changes
 
   const toggleCategory = (categoryId: string) => {
     playClickSound();
@@ -283,6 +350,34 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
 
   const currentStyles = getHeaderStyles();
 
+  const renderUserStats = () => {
+    if (!userStats || (!userStats.mekCount && !realtimeCumulativeGold)) {
+      return null;
+    }
+
+    return (
+      <div className="fixed top-4 left-4 z-[65] bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-400/50 rounded-lg p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+        <div className="space-y-2">
+          {companyNameData?.hasCompanyName && (
+            <div className="flex items-center gap-2 border-b border-yellow-400/20 pb-2 mb-2">
+              <span className="text-yellow-400 font-bold text-base uppercase tracking-widest">
+                {companyNameData.companyName}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400/70 text-xs uppercase tracking-wider">Meks:</span>
+            <span className="text-yellow-400 font-bold text-sm">{userStats.mekCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400/70 text-xs uppercase tracking-wider whitespace-nowrap">Total Cumulative Gold:</span>
+            <span className="text-yellow-400 font-bold text-sm">{Math.floor(realtimeCumulativeGold).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderNavigation = () => (
     <>
       <div className={`flex items-stretch ${currentStyles.spacing} ${currentStyles.navMaxWidth}`}>
@@ -441,6 +536,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
           {renderNavigation()}
         </nav>
         {renderControls()}
+        {renderUserStats()}
       </div>
     );
   }
@@ -466,6 +562,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
           {renderNavigation()}
         </nav>
         {renderControls()}
+        {renderUserStats()}
       </div>
     );
   }
@@ -493,6 +590,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         </nav>
       </div>
       {renderControls()}
+      {renderUserStats()}
     </div>
   );
 }

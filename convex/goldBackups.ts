@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { calculateCurrentGold } from "./lib/goldCalculations";
 
 /**
  * Gold Backup System - Disaster Recovery for User Gold States
@@ -54,10 +55,12 @@ export const createGoldBackup = mutation({
       for (const goldMining of allGoldMining) {
         try {
           // Calculate current gold
-          const lastUpdateTime = goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt;
-          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-          const goldSinceLastUpdate = goldMining.totalGoldPerHour * hoursSinceLastUpdate;
-          const currentGold = Math.min(50000, (goldMining.accumulatedGold || 0) + goldSinceLastUpdate);
+          const currentGold = calculateCurrentGold({
+            accumulatedGold: goldMining.accumulatedGold || 0,
+            goldPerHour: goldMining.totalGoldPerHour,
+            lastSnapshotTime: goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt,
+            isVerified: true
+          });
 
           const goldPerHour = goldMining.totalGoldPerHour;
           const mekCount = goldMining.ownedMeks.length;
@@ -451,10 +454,12 @@ export const getBackupSystemStats = query({
       currentSystemStats: {
         totalGoldMiners: currentGoldMining.length,
         totalCurrentGold: currentGoldMining.reduce((sum, gm) => {
-          const lastUpdateTime = gm.lastSnapshotTime || gm.updatedAt || gm.createdAt;
-          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-          const goldSinceLastUpdate = gm.totalGoldPerHour * hoursSinceLastUpdate;
-          return sum + Math.min(50000, (gm.accumulatedGold || 0) + goldSinceLastUpdate);
+          return sum + calculateCurrentGold({
+            accumulatedGold: gm.accumulatedGold || 0,
+            goldPerHour: gm.totalGoldPerHour,
+            lastSnapshotTime: gm.lastSnapshotTime || gm.updatedAt || gm.createdAt,
+            isVerified: true
+          });
         }, 0),
         totalGoldPerHour: currentGoldMining.reduce((sum, gm) => sum + gm.totalGoldPerHour, 0),
       },

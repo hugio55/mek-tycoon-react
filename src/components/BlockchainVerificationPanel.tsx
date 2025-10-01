@@ -19,6 +19,8 @@ interface BlockchainVerificationPanelProps {
   paymentAddress?: string | null;
   meks: any[];
   onVerificationComplete?: (status: VerificationStatus) => void;
+  onVerificationStart?: () => void;
+  onVerificationEnd?: () => void;
   isProcessingSignature?: boolean;
 }
 
@@ -27,6 +29,8 @@ export default function BlockchainVerificationPanel({
   paymentAddress,
   meks,
   onVerificationComplete,
+  onVerificationStart,
+  onVerificationEnd,
   isProcessingSignature = false
 }: BlockchainVerificationPanelProps) {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
@@ -127,6 +131,7 @@ export default function BlockchainVerificationPanel({
     }
 
     setIsVerifying(true);
+    onVerificationStart?.();
     setVerificationError(null);
     setProgressPercent(0);
     setVerificationProgress('Initializing verification...');
@@ -224,6 +229,7 @@ export default function BlockchainVerificationPanel({
       setVerificationError(error.message || 'Verification failed');
     } finally {
       setIsVerifying(false);
+      onVerificationEnd?.();
     }
   };
 

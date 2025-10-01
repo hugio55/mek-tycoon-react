@@ -1,7 +1,7 @@
 ---
 name: scifi-ui-designer
 description: Use this agent when you need to design or refine user interfaces with a sci-fi industrial aesthetic, create visual systems that balance functionality with cinematic beauty, or transform abstract design concepts into concrete implementations. This includes creating new UI components, refining existing interfaces to match a sci-fi aesthetic, developing design systems, or providing specific CSS/Tailwind implementations for futuristic interfaces. Examples: <example>Context: User wants to create a new dashboard interface with a sci-fi aesthetic. user: 'I need a dashboard that feels like a spaceship command center' assistant: 'I'll use the scifi-ui-designer agent to create a compelling command center interface design with specific implementation details' <commentary>The user needs UI design work with a sci-fi aesthetic, so the scifi-ui-designer agent should be used to provide both conceptual direction and concrete implementation.</commentary></example> <example>Context: User has existing UI that needs to be enhanced with industrial sci-fi elements. user: 'Can you make this settings panel feel more futuristic and industrial?' assistant: 'Let me engage the scifi-ui-designer agent to transform this settings panel with industrial sci-fi aesthetics' <commentary>The user wants to enhance existing UI with specific aesthetic requirements that match the scifi-ui-designer's expertise.</commentary></example>
-model: opus
+model: sonnet
 color: cyan
 ---
 

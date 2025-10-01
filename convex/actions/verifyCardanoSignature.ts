@@ -13,10 +13,12 @@ async function getCardanoSerializationLib() {
   try {
     // Try dynamic import first (for newer Node.js versions)
     const module = await import('@emurgo/cardano-serialization-lib-nodejs');
-    return module;
+    // Return the actual library object, not the module wrapper
+    return module.default || module;
   } catch (e) {
     // Fallback to require for older setups
-    return require('@emurgo/cardano-serialization-lib-nodejs');
+    const module = require('@emurgo/cardano-serialization-lib-nodejs');
+    return module.default || module;
   }
 }
 
@@ -41,6 +43,17 @@ export const verifyCardanoSignature = action({
       // Load Cardano serialization library
       const CSL = await getCardanoSerializationLib();
 
+      // Debug: Check what we got from the library
+      console.log("[Signature Verification] CSL type:", typeof CSL);
+      console.log("[Signature Verification] CSL has COSESign1:", !!CSL.COSESign1);
+      console.log("[Signature Verification] CSL has COSE_Sign1:", !!CSL.COSE_Sign1);
+
+      // If CSL doesn't have the expected properties, list what it does have
+      if (!CSL.COSESign1 && !CSL.COSE_Sign1) {
+        const availableKeys = Object.keys(CSL).slice(0, 20); // First 20 keys for debugging
+        console.log("[Signature Verification] Available CSL keys:", availableKeys);
+      }
+
       // Step 1: Basic validation
       if (!args.signature || args.signature.length < 100) {
         console.error("[Signature Verification] Signature too short");
@@ -63,7 +76,17 @@ export const verifyCardanoSignature = action({
       let coseSign1;
       try {
         const signatureBytes = Buffer.from(args.signature, 'hex');
-        coseSign1 = CSL.COSESign1.from_bytes(signatureBytes);
+        // Check if COSESign1 exists (different versions of the lib may structure it differently)
+        if (CSL.COSESign1 && CSL.COSESign1.from_bytes) {
+          coseSign1 = CSL.COSESign1.from_bytes(signatureBytes);
+        } else if (CSL.COSE_Sign1 && CSL.COSE_Sign1.from_bytes) {
+          // Try alternative naming convention
+          coseSign1 = CSL.COSE_Sign1.from_bytes(signatureBytes);
+        } else {
+          // Log available properties for debugging
+          console.error("[Signature Verification] CSL object properties:", Object.keys(CSL).filter(k => k.toLowerCase().includes('cose')));
+          throw new Error("COSESign1 not found in CSL library");
+        }
       } catch (parseError: any) {
         console.error("[Signature Verification] Failed to parse COSE_Sign1:", parseError);
         return {

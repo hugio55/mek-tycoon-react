@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { calculateCurrentGold } from "./lib/goldCalculations";
 
 export const manualMergeWalletsBySuffix = mutation({
   args: {
@@ -28,10 +29,12 @@ export const manualMergeWalletsBySuffix = mutation({
 
     let totalAccumulatedGold = 0;
     for (const record of matchingRecords) {
-      const lastUpdateTime = record.lastSnapshotTime || record.updatedAt || record.createdAt;
-      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-      const goldSinceLastUpdate = record.totalGoldPerHour * hoursSinceLastUpdate;
-      totalAccumulatedGold += Math.min(50000, (record.accumulatedGold || 0) + goldSinceLastUpdate);
+      totalAccumulatedGold += calculateCurrentGold({
+        accumulatedGold: record.accumulatedGold || 0,
+        goldPerHour: record.totalGoldPerHour,
+        lastSnapshotTime: record.lastSnapshotTime || record.updatedAt || record.createdAt,
+        isVerified: true
+      });
     }
 
     const highestGoldRate = Math.max(...matchingRecords.map(r => r.totalGoldPerHour));

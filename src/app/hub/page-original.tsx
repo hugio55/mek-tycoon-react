@@ -1120,9 +1120,9 @@ export default function HubPage() {
             </button>
           </div>
         </div>
-      </div>
-      
+
       {/* Quick Actions */}
+      <div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link href="/crafting" className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-yellow-500 transition-all text-center">
             <div className="text-2xl mb-2">🔨</div>
@@ -1142,7 +1142,7 @@ export default function HubPage() {
           </Link>
         </div>
       </div>
-      
+
       {/* Username Modal */}
       {showUsernameModal && walletAddress && (
         <UsernameModal

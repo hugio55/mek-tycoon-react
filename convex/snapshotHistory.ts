@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getSnapshotHistory = query({
@@ -71,5 +71,143 @@ export const getWalletSnapshotTimeline = query({
         rarityRank: mek.rarityRank,
       })),
     }));
+  },
+});
+
+// Delete a single snapshot
+export const deleteSnapshot = mutation({
+  args: {
+    snapshotId: v.id("mekOwnershipHistory"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.snapshotId);
+    return { success: true, message: "Snapshot deleted successfully" };
+  },
+});
+
+// Restore a wallet's data from a specific snapshot
+export const restoreFromSnapshot = mutation({
+  args: {
+    snapshotId: v.id("mekOwnershipHistory"),
+  },
+  handler: async (ctx, args) => {
+    // Get the snapshot
+    const snapshot = await ctx.db.get(args.snapshotId);
+    if (!snapshot) {
+      throw new Error("Snapshot not found");
+    }
+
+    // Get the wallet's goldMining record
+    const miner = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+      .first();
+
+    if (!miner) {
+      throw new Error(`No goldMining record found for wallet ${snapshot.walletAddress}`);
+    }
+
+    // Create a map of existing meks to preserve required fields
+    const existingMeksMap = new Map(
+      miner.ownedMeks.map(mek => [mek.assetId, mek])
+    );
+
+    // Restore the miner's COMPLETE game state from snapshot
+    await ctx.db.patch(miner._id, {
+      totalGoldPerHour: snapshot.totalGoldPerHour,
+      ownedMeks: snapshot.meks.map(mek => {
+        const existingMek = existingMeksMap.get(mek.assetId);
+        return {
+          assetId: mek.assetId,
+          policyId: existingMek?.policyId || "", // Preserve existing policyId
+          assetName: mek.assetName,
+          imageUrl: existingMek?.imageUrl, // Preserve existing image
+          goldPerHour: mek.goldPerHour,
+          rarityRank: mek.rarityRank,
+          headVariation: existingMek?.headVariation,
+          bodyVariation: existingMek?.bodyVariation,
+          itemVariation: existingMek?.itemVariation,
+          baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour,
+          currentLevel: mek.currentLevel || 1,
+          levelBoostPercent: mek.levelBoostPercent || 0,
+          levelBoostAmount: mek.levelBoostAmount || 0,
+          effectiveGoldPerHour: (mek.baseGoldPerHour || mek.goldPerHour) + (mek.levelBoostAmount || 0),
+        };
+      }),
+
+      // Restore complete game state
+      accumulatedGold: snapshot.accumulatedGold || 0,
+      totalCumulativeGold: snapshot.totalCumulativeGold || 0,
+      totalGoldSpentOnUpgrades: snapshot.totalGoldSpentOnUpgrades || 0,
+      lastActiveTime: snapshot.lastActiveTime || snapshot.snapshotTime,
+      lastSnapshotTime: snapshot.lastSnapshotTime || snapshot.snapshotTime,
+
+      updatedAt: Date.now(),
+    });
+
+    // Restore Mek levels table to match snapshot state
+    // Step 1: Get all existing mekLevels for this wallet
+    const existingLevels = await ctx.db
+      .query("mekLevels")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+      .collect();
+
+    // Step 2: Create a Set of assetIds in the snapshot
+    const snapshotAssetIds = new Set(snapshot.meks.map(m => m.assetId));
+
+    // Step 3: Delete mekLevels records for Meks NOT in the snapshot (sold/transferred)
+    for (const level of existingLevels) {
+      if (!snapshotAssetIds.has(level.assetId)) {
+        await ctx.db.delete(level._id);
+      }
+    }
+
+    // Step 4: Update or create mekLevels for ALL Meks in snapshot
+    const now = Date.now();
+    for (const mek of snapshot.meks) {
+      const existingLevel = existingLevels.find(l => l.assetId === mek.assetId);
+      const mekLevel = mek.currentLevel || 1;
+      const mekNumber = parseInt(mek.assetName.replace(/\D/g, '')) || 0;
+
+      if (existingLevel) {
+        // Update existing record
+        await ctx.db.patch(existingLevel._id, {
+          currentLevel: mekLevel,
+          currentBoostPercent: mek.levelBoostPercent || 0,
+          currentBoostAmount: mek.levelBoostAmount || 0,
+          baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour,
+          mekNumber,
+          lastVerifiedAt: now,
+          ownershipStatus: "verified",
+          updatedAt: now,
+        });
+      } else {
+        // Create new record
+        await ctx.db.insert("mekLevels", {
+          walletAddress: snapshot.walletAddress,
+          assetId: mek.assetId,
+          mekNumber,
+          currentLevel: mekLevel,
+          totalGoldSpent: 0, // Unknown from snapshot - will be 0 for restored levels
+          baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour,
+          currentBoostPercent: mek.levelBoostPercent || 0,
+          currentBoostAmount: mek.levelBoostAmount || 0,
+          levelAcquiredAt: snapshot.snapshotTime,
+          lastVerifiedAt: now,
+          ownershipStatus: "verified",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: `Restored ${snapshot.walletAddress.substring(0, 12)}... to snapshot from ${new Date(snapshot.snapshotTime).toLocaleString()}`,
+      restoredMekCount: snapshot.meks.length,
+      restoredGoldPerHour: snapshot.totalGoldPerHour,
+      restoredGold: snapshot.accumulatedGold || 0,
+      restoredCumulativeGold: snapshot.totalCumulativeGold || 0,
+    };
   },
 });
