@@ -4,10 +4,16 @@ import type { NextRequest } from 'next/server';
 /**
  * Middleware for domain-based routing
  * Redirects all routes to /mek-rate-logging (for Vercel deployment)
+ * Allows localhost to access all pages for development
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
+
+  // Allow localhost/development to access everything
+  if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    return NextResponse.next();
+  }
 
   // Game domain (play.mektycoon.com) - redirect / to /hub, block /mek-rate-logging
   if (hostname.includes('play.')) {
