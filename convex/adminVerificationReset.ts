@@ -510,6 +510,7 @@ export const getAllWallets = query({
         _id: miner._id,
         walletAddress: miner.walletAddress,
         walletType: miner.walletType || "Unknown",
+        companyName: miner.companyName || null,
         mekCount: miner.ownedMeks.length,
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.floor(currentGold * 100) / 100,

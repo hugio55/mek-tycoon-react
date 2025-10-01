@@ -169,7 +169,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                       <>
                         {/* Active company */}
                         <div className="flex items-center justify-between p-3 sm:p-2">
-                          <div className="flex items-center gap-1 sm:gap-3">
+                          <div className="flex items-center gap-3 sm:gap-3">
                             {/* Rank */}
                             <div className="text-2xl sm:text-3xl font-black" style={{
                               color: rankColor,

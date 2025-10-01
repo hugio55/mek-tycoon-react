@@ -12,6 +12,10 @@ interface CardanoWalletApi {
   signData(address: string, payload: string): Promise<{ signature: string; key: string }>;
   submitTx(tx: string): Promise<string>;
   getCollateral(): Promise<string[] | undefined>;
+  experimental?: {
+    on(event: 'accountChange' | 'networkChange', callback: () => void): void;
+    off(event: 'accountChange' | 'networkChange', callback: () => void): void;
+  };
 }
 
 interface CardanoWallet {

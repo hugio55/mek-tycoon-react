@@ -162,7 +162,8 @@ export default function WalletManagementAdmin() {
     if (!wallets) return [];
     return wallets.filter(wallet =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase())
+      wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [wallets, searchTerm]);
 
@@ -342,6 +343,7 @@ export default function WalletManagementAdmin() {
           <thead>
             <tr className="border-b border-gray-700 bg-gray-800/50">
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Wallet</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Company Name</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Verified</th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">MEKs</th>
@@ -357,7 +359,7 @@ export default function WalletManagementAdmin() {
           <tbody className="divide-y divide-gray-700">
             {filteredWallets.length === 0 ? (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
                 </td>
               </tr>
@@ -366,8 +368,28 @@ export default function WalletManagementAdmin() {
                 <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors">
                   <td className="px-4 py-3">
                     <div className="font-mono text-sm text-gray-300">
-                      {wallet.walletAddress.substring(0, 12)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
+                      <div className="mb-1">
+                        {wallet.walletAddress.substring(0, 12)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(wallet.walletAddress);
+                          setStatusMessage({ type: 'success', message: 'Wallet address copied!' });
+                          setTimeout(() => setStatusMessage(null), 2000);
+                        }}
+                        className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors inline-block"
+                        title="Copy wallet address"
+                      >
+                        📋 Copy
+                      </button>
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {wallet.companyName ? (
+                      <span className="text-sm font-semibold text-yellow-400">{wallet.companyName}</span>
+                    ) : (
+                      <span className="text-sm text-gray-600 italic">No name</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>

@@ -170,11 +170,16 @@ const DEMO_MEKS: MekAsset[] = [
 export default function MekRateLoggingPage() {
   // Demo mode detection
   const [isDemoMode, setIsDemoMode] = useState(false);
+  // Force no wallet mode for UI tweaking
+  const [forceNoWallet, setForceNoWallet] = useState(false);
+  // Wallet card design variation selector (1, 2, 3, 4, or 5) - LOCKED TO 5: Docking Port C
+  const walletCardVariation = 5;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       setIsDemoMode(params.get('demo') === 'true');
+      setForceNoWallet(params.get('forceNoWallet') === 'true');
     }
   }, []);
 
@@ -204,6 +209,7 @@ export default function MekRateLoggingPage() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [isAutoReconnecting, setIsAutoReconnecting] = useState(true); // Start with auto-reconnecting state
   const connectionLockRef = useRef<boolean>(false); // Prevent multiple simultaneous connections
+  const walletApiRef = useRef<any>(null); // Store wallet API reference for event listeners
 
   // Mek assets
   const [ownedMeks, setOwnedMeks] = useState<MekAsset[]>([]);
@@ -393,6 +399,12 @@ export default function MekRateLoggingPage() {
         return;
       }
 
+      // Skip auto-reconnect if forceNoWallet mode is enabled
+      if (forceNoWallet) {
+        setIsAutoReconnecting(false);
+        return;
+      }
+
       try {
         const savedWalletData = localStorage.getItem('mek_wallet_session');
         if (!savedWalletData) {
@@ -476,7 +488,7 @@ export default function MekRateLoggingPage() {
     };
 
     restoreWalletConnection();
-  }, []);
+  }, [forceNoWallet]);
 
   // Watch authentication status and clear session if expired
   useEffect(() => {
@@ -799,6 +811,52 @@ export default function MekRateLoggingPage() {
     };
   }, [isDemoMode]);
 
+  // Listen for wallet account changes (CIP-30 experimental API)
+  useEffect(() => {
+    // Only set up listener if wallet is connected and we have an API reference
+    if (!walletConnected || !walletApiRef.current) {
+      return;
+    }
+
+    const handleAccountChange = () => {
+      console.log('[Wallet Account Change] Detected account switch in wallet extension');
+
+      // Show notification to user
+      setToast({
+        message: '⚠️ Wallet account changed - disconnecting for security',
+        type: 'info'
+      });
+
+      // Auto-disconnect after brief delay to allow user to see notification
+      setTimeout(() => {
+        disconnectWallet();
+      }, 2000);
+    };
+
+    // Try to set up the account change listener
+    // CIP-30 wallets may have experimental.on() method
+    try {
+      const api = walletApiRef.current;
+
+      if (api.experimental && typeof api.experimental.on === 'function') {
+        console.log('[Wallet Account Change] Setting up account change listener');
+        api.experimental.on('accountChange', handleAccountChange);
+
+        // Cleanup function
+        return () => {
+          if (api.experimental && typeof api.experimental.off === 'function') {
+            console.log('[Wallet Account Change] Removing account change listener');
+            api.experimental.off('accountChange', handleAccountChange);
+          }
+        };
+      } else {
+        console.log('[Wallet Account Change] Wallet does not support account change events');
+      }
+    } catch (error) {
+      console.warn('[Wallet Account Change] Failed to set up listener:', error);
+    }
+  }, [walletConnected, walletAddress]);
+
   // Detect available Cardano wallets
   const detectAvailableWallets = () => {
     const wallets: WalletInfo[] = [];
@@ -1060,6 +1118,9 @@ export default function MekRateLoggingPage() {
       setWalletType(wallet.name.toLowerCase());
       setWalletConnected(true);
       setOwnedMeks(meks);
+
+      // Store wallet API reference for event listeners
+      walletApiRef.current = api;
 
     } catch (error: any) {
       console.error('[Wallet Connect] Wallet connection error:', error);
@@ -1422,6 +1483,7 @@ export default function MekRateLoggingPage() {
     setOwnedMeks([]);
     setCurrentGold(0);
     setGoldPerHour(0);
+    walletApiRef.current = null; // Clear wallet API reference
 
     // Clear localStorage
     localStorage.removeItem('goldMiningWallet');
@@ -1633,7 +1695,7 @@ export default function MekRateLoggingPage() {
 
       {/* Main Content - Mobile-optimized padding and overflow */}
       <div className="relative z-10 h-screen overflow-auto p-4 md:p-6 lg:p-8 mobile-scroll scale-95 sm:scale-100 origin-top">
-        {isAutoReconnecting ? (
+        {isAutoReconnecting && !forceNoWallet ? (
           // Loading spinner while auto-reconnecting
           <div className="flex flex-col items-center justify-center h-full min-h-[100vh]">
             <div className="relative">
@@ -1654,7 +1716,7 @@ export default function MekRateLoggingPage() {
               Detecting Wallet Connection...
             </p>
           </div>
-        ) : !walletConnected ? (
+        ) : !walletConnected || forceNoWallet ? (
           // Wallet Connection Screen - Mobile-optimized
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] md:h-full py-8 md:py-0">
             {/* Main connection card with corner brackets */}
@@ -1698,39 +1760,231 @@ export default function MekRateLoggingPage() {
 
                 <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent mb-8" />
 
-                <p className="text-gray-400 mb-8 text-center font-mono text-sm">
-                  Connect your Cardano wallet to initialize gold extraction protocols
-                </p>
-
                 {availableWallets.length > 0 ? (
-                  <div className={availableWallets.length === 1 ? "flex justify-center" : "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"}>
-                    {availableWallets.map(wallet => (
-                      <button
-                        key={wallet.name}
-                        onClick={() => connectWallet(wallet)}
-                        disabled={isConnecting}
-                        className={`group relative bg-black/30 border border-yellow-500/20 text-yellow-500 px-4 py-3 sm:px-6 sm:py-4 transition-all hover:bg-yellow-500/5 hover:border-yellow-500/40 active:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[48px] touch-manipulation ${availableWallets.length === 1 ? 'w-64' : ''}`}
-                      >
-                        {/* Hover glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                        {/* Corner accents */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/40" />
-                        <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/40" />
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/40" />
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/40" />
-
-                        <span className="relative z-10">{wallet.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center bg-black/30 border border-red-500/20 p-6 backdrop-blur-sm">
-                    <p className="text-red-500 mb-4 font-['Orbitron'] uppercase tracking-wider font-bold">No Cardano wallets detected</p>
-                    <p className="text-gray-400 text-sm font-mono">
-                      Please install Nami, Eternl, Flint, or another supported wallet
+                  <>
+                    <p className="text-gray-400 mb-8 text-center font-mono text-sm">
+                      Connect your Cardano wallet to initialize gold extraction protocols
                     </p>
-                  </div>
+                    <div className={availableWallets.length === 1 ? "flex justify-center" : "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"}>
+                      {availableWallets.map(wallet => (
+                        <button
+                          key={wallet.name}
+                          onClick={() => connectWallet(wallet)}
+                          disabled={isConnecting}
+                          className={`group relative bg-black/30 border border-yellow-500/20 text-yellow-500 px-4 py-3 sm:px-6 sm:py-4 transition-all hover:bg-yellow-500/5 hover:border-yellow-500/40 active:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[48px] touch-manipulation ${availableWallets.length === 1 ? 'w-64' : ''}`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/40" />
+                          <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/40" />
+                          <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/40" />
+                          <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/40" />
+                          <span className="relative z-10">{wallet.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* VARIATION 1: Terminal Standby */}
+                    {walletCardVariation === 1 && (
+                      <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
+                        <div
+                          className="absolute inset-0 opacity-5"
+                          style={{
+                            backgroundImage: `linear-gradient(rgba(250, 182, 23, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.1) 1px, transparent 1px)`,
+                            backgroundSize: '20px 20px'
+                          }}
+                        />
+                        <div className="relative mx-auto w-24 h-24 mb-6">
+                          <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full" />
+                          <div className="absolute inset-0 border-2 border-transparent border-t-yellow-500 rounded-full animate-spin" style={{ animationDuration: '3s' }} />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-12 h-12 bg-yellow-500/20 rounded-full animate-pulse" style={{ boxShadow: '0 0 30px rgba(250, 182, 23, 0.4)' }} />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                          </div>
+                        </div>
+                        <div className="relative space-y-3 font-mono">
+                          <div className="flex items-center justify-center gap-2 text-yellow-500">
+                            <span className="text-yellow-500/50">{'>>>'}</span>
+                            <p className="uppercase tracking-wider text-sm font-['Orbitron'] font-bold">Wallet Interface Not Detected</p>
+                          </div>
+                          <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent my-4" />
+                          <div className="px-4 space-y-2">
+                            <p className="text-gray-400 text-sm leading-relaxed font-mono">Please install your Mek-holding Cardano wallet on this device then refresh this page.</p>
+                            <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                          </div>
+                          <div className="flex items-center justify-center gap-2 mt-6 text-xs text-gray-500 uppercase tracking-wider">
+                            <div className="w-1.5 h-1.5 bg-yellow-500/50 rounded-full" />
+                            <span>Nami • Eternl • Flint • Supported</span>
+                            <div className="w-1.5 h-1.5 bg-yellow-500/50 rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VARIATION 2: Equipment Checkout */}
+                    {walletCardVariation === 2 && (
+                      <div className="relative bg-black/30 border-l-4 border-l-yellow-500/50 border-r border-t border-b border-yellow-500/20 backdrop-blur-sm overflow-hidden">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 opacity-30" style={{ backgroundImage: `repeating-linear-gradient(45deg, #000 0px, #000 10px, #fab617 10px, #fab617 20px)` }} />
+                        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle at 20% 30%, rgba(250, 182, 23, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(250, 182, 23, 0.1) 0%, transparent 50%)` }} />
+                        <div className="relative p-8 space-y-6">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 px-4 py-2">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                              <span className="text-yellow-500 font-['Orbitron'] uppercase text-xs tracking-widest font-bold">Pending Installation</span>
+                            </div>
+                          </div>
+                          <div className="border-2 border-dashed border-yellow-500/30 p-6 bg-black/20">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 border-2 border-yellow-500/40 bg-black/30 flex items-center justify-center">
+                                <div className="w-6 h-6 border-2 border-yellow-500/60" />
+                              </div>
+                              <div className="flex-1 space-y-3">
+                                <div>
+                                  <p className="text-xs uppercase tracking-wider text-gray-500 font-mono mb-1">Required Equipment</p>
+                                  <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wide font-bold text-lg">Cardano Wallet Interface</p>
+                                </div>
+                                <div className="h-px bg-gradient-to-r from-yellow-500/20 to-transparent" />
+                                <div className="space-y-2">
+                                  <p className="text-gray-400 text-sm font-mono leading-relaxed">Please install your Mek-holding Cardano wallet on this device then refresh this page.</p>
+                                  <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            <span className="text-xs uppercase tracking-wider text-gray-600 font-mono">Compatible:</span>
+                            {['Nami', 'Eternl', 'Flint', 'Others'].map(wallet => (
+                              <span key={wallet} className="text-xs bg-black/40 border border-yellow-500/20 px-2 py-1 text-gray-400 font-mono uppercase tracking-wider">{wallet}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VARIATION 3: Docking Port A - Hexagonal Design */}
+                    {walletCardVariation === 3 && (
+                      <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg 45deg, rgba(250, 182, 23, 0.3) 45deg 46deg, transparent 46deg 90deg)` }} />
+                        <div className="relative mx-auto w-32 h-32 mb-6 flex items-center justify-center">
+                          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s', clipPath: 'polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)' }}>
+                            <div className="w-full h-full border-2 border-yellow-500/30" style={{ clipPath: 'polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)' }} />
+                          </div>
+                          <div className="relative w-20 h-20 bg-black/50 border-2 border-yellow-500/50 flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)' }}>
+                            <div className="w-8 h-8 bg-yellow-500/20 animate-pulse" style={{ clipPath: 'polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)', boxShadow: '0 0 20px rgba(250, 182, 23, 0.4)' }} />
+                          </div>
+                          {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                            <div key={angle} className="absolute w-2 h-2 bg-yellow-500/60 rounded-full" style={{ transform: `rotate(${angle}deg) translateY(-56px)`, animation: `pulse 2s ease-in-out ${i * 0.2}s infinite` }} />
+                          ))}
+                        </div>
+                        <div className="relative space-y-3">
+                          <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-sm font-bold">Wallet Connection Required</p>
+                          <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+                          <div className="px-4 space-y-2">
+                            <p className="text-gray-400 font-mono leading-relaxed" style={{ fontSize: 'clamp(0.65rem, 2vw, 0.875rem)' }}>
+                              Please install your Mek-holding Cardano wallet on this device then refresh this page.
+                            </p>
+                            <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                          </div>
+                          <div className="pt-3">
+                            <div className="inline-flex flex-wrap items-center justify-center gap-1 bg-black/40 border border-yellow-500/20 px-3 py-2">
+                              <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Nami • Eternl • Flint • Yoroi • Typhon • Gero • NuFi</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VARIATION 4: Docking Port B - Circular Radar */}
+                    {walletCardVariation === 4 && (
+                      <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
+                        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle at center, rgba(250, 182, 23, 0.1) 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
+                        <div className="relative mx-auto w-28 h-28 mb-6">
+                          {/* Outer rings */}
+                          <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full" />
+                          <div className="absolute inset-2 border border-yellow-500/30 rounded-full" />
+                          <div className="absolute inset-4 border border-yellow-500/40 rounded-full" />
+                          {/* Scanning beam */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-0.5 h-1/2 bg-gradient-to-t from-yellow-500/60 to-transparent origin-bottom animate-spin" style={{ animationDuration: '4s' }} />
+                          </div>
+                          {/* Center core */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-yellow-500/30 rounded-full animate-pulse" style={{ boxShadow: '0 0 25px rgba(250, 182, 23, 0.5)' }}>
+                              <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="relative space-y-3">
+                          <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-sm font-bold">Wallet Connection Required</p>
+                          <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+                          <div className="px-4 space-y-2">
+                            <p className="text-gray-400 font-mono leading-relaxed" style={{ fontSize: 'clamp(0.65rem, 2vw, 0.875rem)' }}>
+                              Please install your Mek-holding Cardano wallet on this device then refresh this page.
+                            </p>
+                            <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                          </div>
+                          <div className="pt-3">
+                            <div className="inline-flex flex-wrap items-center justify-center gap-1 bg-black/40 border border-yellow-500/20 px-3 py-2">
+                              <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Nami • Eternl • Flint • Yoroi • Typhon • Gero • NuFi</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VARIATION 5: Docking Port C - Targeting Reticle */}
+                    {walletCardVariation === 5 && (
+                      <div className="relative text-center bg-black/30 p-4 sm:p-8 backdrop-blur-sm overflow-hidden">
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-yellow-500/20" />
+                          <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-500/20" />
+                        </div>
+                        <div className="relative mx-auto w-28 h-28 mb-6 flex items-center justify-center">
+                          {/* Crosshair */}
+                          <div className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
+                          <div className="absolute h-full w-0.5 bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
+                          {/* Corner brackets */}
+                          <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-yellow-500/60" />
+                          <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-yellow-500/60" />
+                          <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-yellow-500/60" />
+                          <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-yellow-500/60" />
+                          {/* Rotating outer ring */}
+                          <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full animate-spin" style={{ animationDuration: '8s' }}>
+                            <div className="absolute top-0 left-1/2 w-1 h-1 -ml-0.5 -mt-0.5 bg-yellow-500 rounded-full" />
+                            <div className="absolute right-0 top-1/2 w-1 h-1 -mr-0.5 -mt-0.5 bg-yellow-500 rounded-full" />
+                          </div>
+                          {/* Center indicator */}
+                          <div className="relative w-12 h-12 border-2 border-yellow-500/50 rounded-full bg-black/50 flex items-center justify-center">
+                            <div className="w-6 h-6 bg-yellow-500/20 rounded-full animate-pulse" style={{ boxShadow: '0 0 20px rgba(250, 182, 23, 0.4)' }}>
+                              <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="relative space-y-3">
+                          <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-sm font-bold">Wallet Connection Required</p>
+                          <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+                          <div className="px-1 sm:px-4 space-y-2">
+                            <p className="text-gray-400 font-mono leading-relaxed" style={{ fontSize: 'clamp(0.65rem, 2vw, 0.875rem)' }}>
+                              Please install your Mek-holding Cardano wallet on this device then refresh this page.
+                            </p>
+                            <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                          </div>
+                          <div className="pt-3">
+                            <div className="inline-flex flex-wrap items-center justify-center gap-1 bg-black/40 border border-yellow-500/20 px-3 py-2">
+                              <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Nami • Eternl • Flint • Yoroi • Typhon • Gero • NuFi</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {walletError && (
