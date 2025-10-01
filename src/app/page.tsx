@@ -1689,7 +1689,9 @@ export default function MekRateLoggingPage() {
                 {/* System status */}
                 <div className="flex items-center justify-center gap-2 mb-8">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <p className="text-gray-500 text-sm uppercase tracking-widest font-mono">
+                  <p className="text-gray-500 uppercase tracking-widest font-mono whitespace-nowrap" style={{
+                    fontSize: 'clamp(0.5rem, 2.5vw, 0.875rem)'
+                  }}>
                     System Online • Awaiting Authorization
                   </p>
                 </div>
