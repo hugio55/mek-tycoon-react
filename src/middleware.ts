@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Middleware for domain-based routing
- * Redirects all routes to /mek-rate-logging (for Vercel deployment)
+ * Blocks access to all pages except root (/) on production
  * Allows localhost to access all pages for development
  */
 export function middleware(request: NextRequest) {
@@ -15,22 +15,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Game domain (play.mektycoon.com) - redirect / to /hub, block /mek-rate-logging
+  // Game domain (play.mektycoon.com) - redirect / to /hub
   if (hostname.includes('play.')) {
     if (pathname === '/') {
-      return NextResponse.redirect(new URL('/hub', request.url));
-    }
-    // Block /mek-rate-logging on game domain
-    if (pathname === '/mek-rate-logging') {
       return NextResponse.redirect(new URL('/hub', request.url));
     }
     return NextResponse.next();
   }
 
-  // For all other domains (including Vercel default and meks.mektycoon.com)
-  // Only allow /mek-rate-logging
-  if (pathname !== '/mek-rate-logging' && !pathname.startsWith('/_next') && !pathname.startsWith('/api')) {
-    return NextResponse.redirect(new URL('/mek-rate-logging', request.url));
+  // For all other domains (including Vercel default and mek.overexposed.io)
+  // Only allow root (/) and necessary Next.js routes
+  if (pathname !== '/' && !pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.startsWith('/mek-images')) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();
