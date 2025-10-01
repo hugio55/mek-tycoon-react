@@ -14,7 +14,7 @@ import GoldLeaderboard from "@/components/GoldLeaderboard";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import { calculateCurrentGold } from "@/convex/lib/goldCalculations";
 
-// Animated Number Component
+// Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
   const [displayValue, setDisplayValue] = useState(value);
   const animationRef = useRef<number | null>(null);
@@ -22,14 +22,14 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
   useEffect(() => {
     const startValue = displayValue;
     const endValue = value;
-    const duration = 500; // milliseconds
+    const duration = 800; // milliseconds - longer for better visibility
     const startTime = Date.now();
 
     const animate = () => {
       const now = Date.now();
       const progress = Math.min((now - startTime) / duration, 1);
 
-      // Ease-out cubic
+      // Ease-out cubic for smooth deceleration
       const eased = 1 - Math.pow(1 - progress, 3);
       const currentValue = startValue + (endValue - startValue) * eased;
 
@@ -50,9 +50,12 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [value]);
+  }, [value, displayValue]);
 
-  return <>{displayValue.toFixed(decimals)}</>;
+  // Format with commas if no decimals, otherwise show decimals
+  return decimals === 0
+    ? <>{Math.floor(displayValue).toLocaleString('en-US')}</>
+    : <>{displayValue.toFixed(decimals)}</>;
 }
 
 // Simple function to create Pool.pm URL without MeshSDK
@@ -95,7 +98,86 @@ interface MekAsset {
   sourceKey?: string;
 }
 
+// Demo wallet mock data
+const DEMO_MEKS: MekAsset[] = [
+  {
+    assetId: 'demo_mek_179',
+    policyId: MEK_POLICY_ID,
+    assetName: 'Mekanism179',
+    imageUrl: '/mek-images/150px/ki1-jg2-cd2.webp',
+    goldPerHour: 7.74,
+    baseGoldPerHour: 6.45,
+    levelBoostAmount: 1.29,
+    currentLevel: 3,
+    rarityRank: 1916,
+    mekNumber: 179,
+    sourceKey: 'ki1-jg2-cd2',
+  },
+  {
+    assetId: 'demo_mek_2922',
+    policyId: MEK_POLICY_ID,
+    assetName: 'Mekanism2922',
+    imageUrl: '/mek-images/150px/bc6-cb1-of2.webp',
+    goldPerHour: 30.53,
+    baseGoldPerHour: 21.81,
+    levelBoostAmount: 8.72,
+    currentLevel: 5,
+    rarityRank: 554,
+    mekNumber: 2922,
+    sourceKey: 'bc6-cb1-of2',
+  },
+  {
+    assetId: 'demo_mek_3972',
+    policyId: MEK_POLICY_ID,
+    assetName: 'Mekanism3972',
+    imageUrl: '/mek-images/150px/jx1-bf3-eh1.webp',
+    goldPerHour: 13.28,
+    baseGoldPerHour: 12.07,
+    levelBoostAmount: 1.21,
+    currentLevel: 2,
+    rarityRank: 1215,
+    mekNumber: 3972,
+    sourceKey: 'jx1-bf3-eh1',
+  },
+  {
+    assetId: 'demo_mek_795',
+    policyId: MEK_POLICY_ID,
+    assetName: 'Mekanism795',
+    imageUrl: '/mek-images/150px/jx2-jg2-nm1.webp',
+    goldPerHour: 11.55,
+    baseGoldPerHour: 11.55,
+    levelBoostAmount: 0,
+    currentLevel: 1,
+    rarityRank: 1265,
+    mekNumber: 795,
+    sourceKey: 'jx2-jg2-nm1',
+  },
+  {
+    assetId: 'demo_mek_2685',
+    policyId: MEK_POLICY_ID,
+    assetName: 'Mekanism2685',
+    imageUrl: '/mek-images/150px/bc5-ee1-ap1.webp',
+    goldPerHour: 7.46,
+    baseGoldPerHour: 7.46,
+    levelBoostAmount: 0,
+    currentLevel: 1,
+    rarityRank: 1753,
+    mekNumber: 2685,
+    sourceKey: 'bc5-ee1-ap1',
+  },
+];
+
 export default function MekRateLoggingPage() {
+  // Demo mode detection
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setIsDemoMode(params.get('demo') === 'true');
+    }
+  }, []);
+
   // Background stars
   const [backgroundStars, setBackgroundStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
 
@@ -634,6 +716,24 @@ export default function MekRateLoggingPage() {
     });
     setSatellites(generatedSatellites);
 
+    // DEMO MODE: Initialize with demo data and skip wallet detection
+    if (isDemoMode) {
+      console.log('[DEMO MODE] Initializing with mock data...');
+      setWalletConnected(true);
+      setWalletAddress('stake1demo_test_wallet');
+      setWalletType('Demo');
+      setOwnedMeks(DEMO_MEKS);
+      setIsAutoReconnecting(false);
+      // Start with 30,000 gold for testing leveling
+      setCurrentGold(30000);
+      // Auto-complete blockchain verification in demo mode
+      setIsSignatureVerified(true);
+      setIsVerifyingBlockchain(false);
+      setVerificationStatus({ isVerified: true, status: 'verified' });
+      setShowVerificationPanel(false); // Hide verification panel
+      return; // Skip wallet detection and auto-reconnect
+    }
+
     // Check for available wallets
     detectAvailableWallets();
 
@@ -666,7 +766,38 @@ export default function MekRateLoggingPage() {
       // Always set auto-reconnecting to false after attempt
       setIsAutoReconnecting(false);
     }, 1500); // Wait for cardano object to be available
-  }, []);
+  }, [isDemoMode]);
+
+  // DEMO MODE: Continuous gold accumulation
+  useEffect(() => {
+    if (!isDemoMode) return;
+
+    // Calculate total gold per hour from demo Meks (70.56 total)
+    const totalGoldPerHour = DEMO_MEKS.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+    const goldPerSecond = totalGoldPerHour / 3600;
+
+    let lastTimestamp = performance.now();
+    let animationFrameId: number;
+
+    const accumulateGold = (timestamp: number) => {
+      const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+      lastTimestamp = timestamp;
+
+      setCurrentGold(prev => prev + (goldPerSecond * deltaTime));
+
+      animationFrameId = requestAnimationFrame(accumulateGold);
+    };
+
+    // Start accumulation
+    animationFrameId = requestAnimationFrame(accumulateGold);
+
+    // Cleanup on unmount or when demo mode changes
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isDemoMode]);
 
   // Detect available Cardano wallets
   const detectAvailableWallets = () => {
@@ -1470,11 +1601,11 @@ export default function MekRateLoggingPage() {
       {isConnecting && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="relative max-w-md w-full mx-4">
-            {/* Corner brackets */}
-            <div className="absolute -top-4 -left-4 w-12 h-12 border-l-2 border-t-2 border-yellow-500/50" />
-            <div className="absolute -top-4 -right-4 w-12 h-12 border-r-2 border-t-2 border-yellow-500/50" />
-            <div className="absolute -bottom-4 -left-4 w-12 h-12 border-l-2 border-b-2 border-yellow-500/50" />
-            <div className="absolute -bottom-4 -right-4 w-12 h-12 border-r-2 border-b-2 border-yellow-500/50" />
+            {/* Corner brackets - hidden on mobile */}
+            <div className="hidden sm:block absolute -top-4 -left-4 w-12 h-12 border-l-2 border-t-2 border-yellow-500/50" />
+            <div className="hidden sm:block absolute -top-4 -right-4 w-12 h-12 border-r-2 border-t-2 border-yellow-500/50" />
+            <div className="hidden sm:block absolute -bottom-4 -left-4 w-12 h-12 border-l-2 border-b-2 border-yellow-500/50" />
+            <div className="hidden sm:block absolute -bottom-4 -right-4 w-12 h-12 border-r-2 border-b-2 border-yellow-500/50" />
 
             <div className="bg-black/40 border-2 border-yellow-500/30 p-8 backdrop-blur-md">
               {/* Spinning loader */}
@@ -1501,7 +1632,7 @@ export default function MekRateLoggingPage() {
       )}
 
       {/* Main Content - Mobile-optimized padding and overflow */}
-      <div className="relative z-10 h-screen overflow-auto p-4 md:p-6 lg:p-8 mobile-scroll">
+      <div className="relative z-10 h-screen overflow-auto p-4 md:p-6 lg:p-8 mobile-scroll scale-95 sm:scale-100 origin-top">
         {isAutoReconnecting ? (
           // Loading spinner while auto-reconnecting
           <div className="flex flex-col items-center justify-center h-full min-h-[100vh]">
@@ -1527,12 +1658,12 @@ export default function MekRateLoggingPage() {
           // Wallet Connection Screen - Mobile-optimized
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] md:h-full py-8 md:py-0">
             {/* Main connection card with corner brackets */}
-            <div className="relative max-w-2xl w-full px-2 sm:px-4 md:px-0">
-              {/* Corner brackets */}
-              <div className="absolute -top-2 -left-2 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
-              <div className="absolute -top-2 -right-2 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
-              <div className="absolute -bottom-2 -left-2 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
+            <div className="relative max-w-[600px] w-full px-2 sm:px-4 md:px-0">
+              {/* Corner brackets - hidden on mobile */}
+              <div className="hidden sm:block absolute -top-2 -left-2 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -top-2 -right-2 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -bottom-2 -left-2 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -bottom-2 -right-2 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
 
               <div className="bg-black/20 border border-yellow-500/20 p-6 sm:p-8 md:p-12 backdrop-blur-md relative overflow-hidden">
                 {/* Scan line effect */}
@@ -1612,7 +1743,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Leaderboard below connection card */}
-            <div className="mt-8 flex justify-center">
+            <div className="mt-8 flex justify-center w-full">
               <GoldLeaderboard />
             </div>
           </div>
@@ -1620,7 +1751,7 @@ export default function MekRateLoggingPage() {
           // Gold Mining Dashboard
           <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
             {/* Wallet dropdown and company name in top left corner */}
-            <div className="absolute top-0 left-0 z-20 flex items-center gap-3">
+            <div className="absolute top-0 left-0 z-20 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <div className="relative wallet-dropdown">
                 <button
                   onClick={() => setWalletDropdownOpen(!walletDropdownOpen)}
@@ -1633,13 +1764,13 @@ export default function MekRateLoggingPage() {
                 </button>
 
                 {walletDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-56 sm:w-64 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-md rounded-sm shadow-lg">
+                  <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-md rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left">
                     {/* Corporation name and wallet address */}
-                    <div className="px-4 py-3 border-b border-yellow-500/20 space-y-2">
+                    <div className="px-4 py-4 border-b border-yellow-500/20 space-y-3 touch-manipulation">
                       {/* Corporation name */}
                       {companyNameData?.companyName ? (
                         <div
-                          className="text-yellow-400 font-bold text-sm cursor-pointer hover:text-yellow-300 transition-colors"
+                          className="text-yellow-400 font-bold text-base sm:text-sm cursor-pointer hover:text-yellow-300 transition-colors min-h-[44px] flex items-center touch-manipulation"
                           onClick={() => {
                             setCompanyNameModalMode('edit');
                             setShowCompanyNameModal(true);
@@ -1657,23 +1788,23 @@ export default function MekRateLoggingPage() {
                             setShowCompanyNameModal(true);
                             setWalletDropdownOpen(false);
                           }}
-                          className="text-yellow-400/60 text-sm italic hover:text-yellow-400 transition-colors"
+                          className="text-yellow-400/60 text-base sm:text-sm italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
                         >
                           + Set corporation name
                         </button>
                       )}
 
                       {/* Wallet address */}
-                      <div className="text-gray-400 font-mono text-xs">
+                      <div className="text-gray-400 font-mono text-sm sm:text-xs break-all">
                         {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
                       </div>
                     </div>
 
                     {/* Cumulative Gold Display */}
-                    <div className="px-4 py-3 border-b border-yellow-500/20">
+                    <div className="px-4 py-4 border-b border-yellow-500/20">
                       <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Cumulative Gold</div>
-                      <div className="text-yellow-400 font-bold text-lg font-mono">
-                        {cumulativeGold.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      <div className="text-yellow-400 font-bold text-xl sm:text-lg font-mono">
+                        <AnimatedNumber value={cumulativeGold} decimals={0} />
                       </div>
                     </div>
 
@@ -1701,7 +1832,7 @@ export default function MekRateLoggingPage() {
                           console.error('Rescan error:', error);
                         }
                       }}
-                      className="w-full px-4 py-3 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-xs font-['Orbitron'] font-bold min-h-[44px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-sm sm:text-xs font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
                       RESCAN WALLET
                     </button>
@@ -1711,7 +1842,7 @@ export default function MekRateLoggingPage() {
                         setWalletDropdownOpen(false);
                         disconnectWallet();
                       }}
-                      className="w-full px-4 py-3 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-xs font-['Orbitron'] font-bold min-h-[44px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-sm sm:text-xs font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
                       DISCONNECT
                     </button>
@@ -1719,10 +1850,10 @@ export default function MekRateLoggingPage() {
                 )}
               </div>
 
-              {/* Corporation name display */}
+              {/* Corporation name display - hidden on mobile (already in dropdown) */}
               {companyNameData?.companyName && (
                 <div
-                  className="cursor-pointer hover:text-white/90 transition-colors flex items-center gap-2"
+                  className="hidden sm:flex cursor-pointer hover:text-white/90 transition-colors items-center gap-2 touch-manipulation"
                   onClick={() => {
                     setCompanyNameModalMode('edit');
                     setShowCompanyNameModal(true);
@@ -1768,8 +1899,8 @@ export default function MekRateLoggingPage() {
               />
             </div>
 
-            {/* Information text floating in the night sky - moved up 140px total */}
-            <div className="text-center mb-[50px] px-4 pt-8 sm:pt-[10px]">
+            {/* Information text floating in the night sky - moved up 140px total on desktop, down 80px on mobile */}
+            <div className="text-center mb-[50px] px-4 pt-[88px] sm:pt-[70px]">
               <p className="max-w-xl mx-auto mb-8">
                 <span className="text-xs sm:text-sm font-mono text-gray-400">
                   <span className="font-bold">This website is for testing a core mechanic of a future Over Exposed product.</span> Each Mekanism has an upgradeable income that feeds your corporation. Level up, accumulate gold and top the chart. Please share bugs and feedback{' '}
@@ -1786,20 +1917,28 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Combined Card - Stacked Layout */}
-            <div className="mb-8 flex justify-center px-4" style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+            <div className="mb-8 flex justify-center px-0 sm:px-4 w-full max-w-[100vw] sm:max-w-[600px] mx-auto">
               <div className="relative w-full">
-                {/* Outer corner brackets for unified card */}
-                <div className="absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
-                <div className="absolute -top-3 -right-3 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
-                <div className="absolute -bottom-3 -left-3 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
-                <div className="absolute -bottom-3 -right-3 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
+                {/* Outer corner brackets for unified card - hidden on mobile */}
+                <div className="hidden sm:block absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
+                <div className="hidden sm:block absolute -top-3 -right-3 w-8 h-8 border-r-2 border-t-2 border-yellow-500/50" />
+                <div className="hidden sm:block absolute -bottom-3 -left-3 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
+                <div className="hidden sm:block absolute -bottom-3 -right-3 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
 
-                <div className="bg-black/10 border-2 border-yellow-500/30 backdrop-blur-xl relative overflow-hidden">
+                <div className="bg-black/90 border-2 border-yellow-500/30 backdrop-blur-xl relative overflow-hidden">
                     {/* Top section - Total Gold */}
                     <div className="p-4 sm:p-6 md:p-8 relative">
+                      {/* Gradient background */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: `radial-gradient(ellipse at center, rgba(250, 182, 23, 0.03) 0%, rgba(0, 0, 0, 0) 70%)`
+                        }}
+                      />
+
                       {/* Grid pattern overlay */}
                       <div
-                        className="absolute inset-0 opacity-5"
+                        className="absolute inset-0 opacity-[0.07]"
                         style={{
                           backgroundImage: `
                             repeating-linear-gradient(0deg, transparent, transparent 19px, #FAB617 19px, #FAB617 20px),
@@ -1903,8 +2042,8 @@ export default function MekRateLoggingPage() {
                         )}
                       </div>
 
-                      {/* Mek count and verification in one line */}
-                      <div className="flex items-center justify-center gap-4 text-xs font-mono">
+                      {/* Mek count and verification - single column on mobile, one line on desktop */}
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs font-mono">
                         <div className="text-gray-500">
                           Rate across all {ownedMeks.length} Meks
                         </div>
@@ -1923,7 +2062,7 @@ export default function MekRateLoggingPage() {
                     <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
 
                     {/* Bottom section - Leaderboard */}
-                    <div className="p-4 flex justify-center">
+                    <div className="sm:p-4 flex justify-center">
                       <GoldLeaderboard currentWallet={walletAddress || undefined} />
                     </div>
                 </div>
@@ -1933,11 +2072,11 @@ export default function MekRateLoggingPage() {
             {/* Verify on Blockchain Button */}
             <div className="mb-12">
               {!verificationStatus?.verified && (
-                <div className="mt-[69px]">
+                <div className="mt-[34px] sm:mt-[44px]">
                   <div className="w-full max-w-xs mx-auto relative">
                     <div className="relative">
                       <HolographicButton
-                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKCHAIN..." : isProcessingSignature ? "VERIFYING..." : "Blockchain Verify"}
+                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Blockfrost Verify"}
                         onClick={() => {
                           if (!isProcessingSignature && !isVerifyingBlockchain) {
                             const verifyButton = document.querySelector('[data-verify-blockchain]');
@@ -1962,8 +2101,8 @@ export default function MekRateLoggingPage() {
                       )}
                     </div>
 
-                    <p className="text-gray-400 text-sm text-center mt-[22px] font-mono">
-                      For an added layer of security, please verify on blockchain to begin.
+                    <p className="text-gray-400 text-xs sm:text-sm text-center mt-[22px] font-mono">
+                      For an added layer of security, please verify on Blockfrost to begin.
                     </p>
                   </div>
                 </div>
@@ -1972,7 +2111,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Controls Row - Search bar and Sort button */}
-            <div className={`flex gap-3 items-center justify-between mb-3 sm:mb-4 ${
+            <div className={`flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
               ownedMeks.length === 1 ? 'max-w-md mx-auto' :
               ownedMeks.length === 2 ? 'max-w-3xl mx-auto' :
               ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
@@ -1980,8 +2119,10 @@ export default function MekRateLoggingPage() {
             }`}>
               {/* Search Bar - Minimalist Tech Style */}
               <div className="max-w-lg relative">
-                <div className="text-xs text-gray-500 mb-1 px-1">
-                  Search by Mek # or variation (e.g., bumblebee, seafoam)
+                <div className="text-gray-500 mb-1 px-1 whitespace-nowrap" style={{
+                  fontSize: 'clamp(0.5rem, 2.5vw, 0.75rem)'
+                }}>
+                  Search by Mek # or variation (e.g., bumblebee)
                 </div>
                 <div className="relative group">
                   <input
@@ -2037,7 +2178,7 @@ export default function MekRateLoggingPage() {
                           setSortType('rate');
                           setSortDropdownOpen(false);
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200"
+                        className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
                         style={{
                           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
                           fontWeight: sortType === 'rate' ? '400' : '300',
@@ -2051,7 +2192,7 @@ export default function MekRateLoggingPage() {
                           setSortType('level');
                           setSortDropdownOpen(false);
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200"
+                        className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
                         style={{
                           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
                           fontWeight: sortType === 'level' ? '400' : '300',
@@ -2193,19 +2334,45 @@ export default function MekRateLoggingPage() {
                       {/* Image container with border */}
                       <div className="aspect-square bg-black/30 overflow-hidden relative border border-yellow-500/20">
                         {mek.mekNumber ? (
-                          <img
-                            src={getMekImageUrl(mek.mekNumber, '1000px')}
-                            alt={mek.assetName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+                              <div className="w-12 h-12 border-2 border-yellow-500/30 border-t-yellow-500/60 rounded-full animate-spin" />
+                            </div>
+                            <img
+                              src={getMekImageUrl(mek.mekNumber, '1000px')}
+                              alt={mek.assetName}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
+                              loading="lazy"
+                              onLoad={(e) => {
+                                const parent = e.currentTarget.parentElement;
+                                const loader = parent?.querySelector('div');
+                                if (loader) loader.style.display = 'none';
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </>
                         ) : mek.imageUrl ? (
-                          <img
-                            src={mek.imageUrl}
-                            alt={mek.assetName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+                              <div className="w-12 h-12 border-2 border-yellow-500/30 border-t-yellow-500/60 rounded-full animate-spin" />
+                            </div>
+                            <img
+                              src={mek.imageUrl}
+                              alt={mek.assetName}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
+                              loading="lazy"
+                              onLoad={(e) => {
+                                const parent = e.currentTarget.parentElement;
+                                const loader = parent?.querySelector('div');
+                                if (loader) loader.style.display = 'none';
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono text-xs">
                             NO IMAGE
@@ -2218,11 +2385,11 @@ export default function MekRateLoggingPage() {
                         {/* Holographic background effect */}
                         <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-purple-500/5 to-yellow-500/5 blur-xl" />
 
-                        <div className="relative space-y-2 p-3 bg-black/80 backdrop-blur-sm">
+                        <div className="relative space-y-2 p-2 sm:p-3 bg-black/80 backdrop-blur-sm">
                           {/* Layer 1: Mek Identity */}
                           <div className="relative group">
                             <div
-                              className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border rounded-lg p-2"
+                              className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border rounded-lg p-2 sm:p-2"
                               style={{
                                 borderColor: (() => {
                                   const level = mek.currentLevel || 1;
@@ -2244,9 +2411,9 @@ export default function MekRateLoggingPage() {
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Mechanism Unit</div>
+                                  <div className="text-[9px] sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Mechanism Unit</div>
                                   {/* Mek Number - color matches level */}
-                                  <div className="text-xl font-medium leading-tight" style={{
+                                  <div className="text-lg sm:text-xl font-medium leading-tight" style={{
                                     color: (() => {
                                       const level = mek.currentLevel || 1;
                                       const colors = [
@@ -2309,8 +2476,8 @@ export default function MekRateLoggingPage() {
                           {/* Level Progress Bar */}
                           <div className="relative">
                             <div className="bg-black/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-2">
-                              {/* Bar Indicators - Locked Style */}
-                              <div className="flex justify-between gap-1.5 h-8">
+                              {/* Bar Indicators - Mobile optimized with better touch targets */}
+                              <div className="flex justify-between gap-1 sm:gap-1.5 h-10 sm:h-8">
                                 {Array.from({ length: 10 }, (_, i) => {
                                   const level = i + 1;
                                   const currentLevel = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
@@ -2321,7 +2488,7 @@ export default function MekRateLoggingPage() {
                                   return (
                                     <div
                                       key={level}
-                                      className="flex-1 transition-all duration-500 relative overflow-hidden rounded-sm"
+                                      className="flex-1 transition-all duration-500 relative overflow-hidden rounded-sm min-w-[6px] touch-manipulation"
                                       style={{
                                         backgroundColor: isActive ? currentLevelColor : '#1a1a1a',
                                         border: isActive ? `1px solid ${currentLevelColor}` : '1px solid #333',
@@ -2358,32 +2525,32 @@ export default function MekRateLoggingPage() {
 
                           {/* Layer 2: Gold Production */}
                           <div className="relative group">
-                            <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 backdrop-blur-md border border-yellow-500/30 rounded-lg p-3">
-                              <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Income Rate</div>
+                            <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 backdrop-blur-md border border-yellow-500/30 rounded-lg p-2 sm:p-3">
+                              <div className="text-[9px] sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Income Rate</div>
                               <div className="flex flex-col gap-1">
                                 {/* Base rate */}
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-[11px] text-gray-500">BASE:</span>
-                                    <span className="text-xl font-bold text-yellow-400">{(mek.baseGoldPerHour || mek.goldPerHour).toFixed(1)}</span>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                  <div className="flex items-baseline gap-1.5 sm:gap-2">
+                                    <span className="text-[10px] sm:text-[11px] text-gray-500">BASE:</span>
+                                    <span className="text-lg sm:text-xl font-bold text-yellow-400">{(mek.baseGoldPerHour || mek.goldPerHour).toFixed(1)}</span>
                                     <span className="text-xs text-gray-400">gold/hr</span>
                                   </div>
                                 </div>
 
                                 {/* Bonus rate - always shown */}
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-[11px] text-gray-500">BONUS:</span>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                  <div className="flex items-baseline gap-1.5 sm:gap-2">
+                                    <span className="text-[10px] sm:text-[11px] text-gray-500">BONUS:</span>
                                     {(animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) && (animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) > 0 ? (
                                       <>
-                                        <span className={`text-xl font-bold text-green-400 transition-all duration-700 ${upgradingMeks.has(mek.assetId) ? 'scale-110' : ''}`}>
+                                        <span className={`text-lg sm:text-xl font-bold text-green-400 transition-all duration-700 ${upgradingMeks.has(mek.assetId) ? 'scale-110' : ''}`}>
                                           +<AnimatedNumber value={animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount || 0} decimals={1} />
                                         </span>
                                         <span className="text-xs text-gray-400">gold/hr</span>
                                       </>
                                     ) : (
                                       <>
-                                        <span className="text-xl font-bold text-gray-600">+0.0</span>
+                                        <span className="text-lg sm:text-xl font-bold text-gray-600">+0.0</span>
                                         <span className="text-xs text-gray-400">gold/hr</span>
                                       </>
                                     )}
@@ -2394,9 +2561,9 @@ export default function MekRateLoggingPage() {
                                 <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-1" />
 
                                 {/* Total - always shown */}
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-[11px] text-gray-500">TOTAL:</span>
-                                  <span className="text-2xl font-black text-white" style={{
+                                <div className="flex items-baseline gap-1.5 sm:gap-2">
+                                  <span className="text-[10px] sm:text-[11px] text-gray-500">TOTAL:</span>
+                                  <span className="text-xl sm:text-2xl font-black text-white" style={{
                                     textShadow: '0 0 15px rgba(250, 182, 23, 0.8)'
                                   }}>
                                     <AnimatedNumber value={animatedMekValues[mek.assetId]?.goldRate || ((mek.baseGoldPerHour || mek.goldPerHour) + (mek.levelBoostAmount || 0))} decimals={1} />
@@ -2407,16 +2574,16 @@ export default function MekRateLoggingPage() {
                             </div>
                           </div>
 
-                          {/* Layer 4: Upgrade Interface - EXACT COPY FROM DEMO */}
+                          {/* Layer 4: Upgrade Interface - Mobile optimized */}
                           {walletAddress && mek.currentLevel < 10 ? (
                             <div className="relative group">
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
 
-                              <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-green-500/30 rounded-lg p-3">
+                              <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-green-500/30 rounded-lg p-2 sm:p-3">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <div className="text-[10px] text-green-400 uppercase tracking-wider">Upgrade Cost</div>
-                                    <div className={`text-xl font-bold ${
+                                    <div className="text-[9px] sm:text-[10px] text-green-400 uppercase tracking-wider">Upgrade Cost</div>
+                                    <div className={`text-lg sm:text-xl font-bold ${
                                       (() => {
                                         const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
                                         const currentLevel = mek.currentLevel || 1;
@@ -2570,7 +2737,7 @@ export default function MekRateLoggingPage() {
                                       return currentGold < upgradeCost;
                                     })()}
                                     className={`
-                                      px-4 py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-200 text-sm
+                                      px-4 py-3 sm:py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-200 text-sm min-h-[48px] sm:min-h-0 touch-manipulation
                                       ${(() => {
                                         const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
                                         const currentLevel = mek.currentLevel || 1;

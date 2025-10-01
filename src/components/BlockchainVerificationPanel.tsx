@@ -118,6 +118,35 @@ export default function BlockchainVerificationPanel({
     console.log('[Verification] MEKs count:', meks.length);
     console.log('[Verification] MEKs data:', meks);
 
+    // DEMO MODE: Auto-complete verification instantly
+    const isDemoMode = walletAddress?.includes('demo');
+    if (isDemoMode) {
+      console.log('[DEMO MODE] Auto-completing blockchain verification...');
+      setIsVerifying(true);
+      onVerificationStart?.();
+      setProgressPercent(100);
+      setVerificationProgress('✓ Verified (Demo Mode)');
+
+      // Simulate brief verification animation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const demoStatus: VerificationStatus = {
+        verified: true,
+        source: 'wallet',
+        lastVerified: Date.now(),
+        walletCount: meks.length,
+        blockchainCount: meks.length,
+        discrepancies: 0
+      };
+
+      setVerificationStatus(demoStatus);
+      setSignatureStatus('verified');
+      onVerificationComplete?.(demoStatus);
+      setIsVerifying(false);
+      onVerificationEnd?.();
+      return;
+    }
+
     if (!walletAddress) {
       setVerificationError('No wallet address available');
       console.error('[Verification] No wallet address');

@@ -54,10 +54,11 @@ export const Modal: React.FC<ModalProps> = ({
       />
       
       <div className={`
-        relative w-full ${sizeClasses[size]} 
-        bg-gradient-to-b from-gray-900 to-black 
-        border-2 border-yellow-400/30 rounded-xl 
+        relative w-full ${sizeClasses[size]}
+        bg-gradient-to-b from-gray-900 to-black
+        border-2 border-yellow-400/30 rounded-xl
         shadow-[0_0_40px_rgba(250,182,23,0.2)]
+        scale-75 sm:scale-90
         ${className}
       `}>
         {title && (

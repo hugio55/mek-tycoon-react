@@ -84,7 +84,7 @@ export default function GlobalBackground() {
   return (
     <>
       {/* Background Effects Container - exact copy from shop page */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -1, minWidth: '100vw', minHeight: '100vh', width: '100vw', height: '100vh' }}>
         {/* Gradient orbs - gaseous and smoky nebula clouds with smoother gradients */}
         <div 
           className="absolute left-0 top-0 w-full h-full"

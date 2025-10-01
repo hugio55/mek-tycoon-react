@@ -9,7 +9,25 @@ import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
 import { toastError, toastSuccess } from "@/lib/toast";
 
+// Demo wallet mock data
+const DEMO_WALLET_DATA = {
+  walletAddress: 'stake1demo_test_wallet',
+  companyName: 'Demo Industries',
+  totalGoldPerHour: 70.56,
+  accumulatedGold: 1250.75,
+  totalCumulativeGold: 8943.22,
+};
+
 export default function HubPage() {
+  // Check for demo mode via URL
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setIsDemoMode(params.get('demo') === 'true');
+    }
+  }, []);
 
   const [liveGold, setLiveGold] = useState(0);
   const [totalGold, setTotalGold] = useState(0);
@@ -88,6 +106,34 @@ export default function HubPage() {
   );
 
   useEffect(() => {
+    // DEMO MODE: Initialize with demo data immediately
+    if (isDemoMode) {
+      setWalletAddress(DEMO_WALLET_DATA.walletAddress);
+      setDisplayName(DEMO_WALLET_DATA.companyName);
+      setLiveGold(DEMO_WALLET_DATA.accumulatedGold);
+      setTotalGold(DEMO_WALLET_DATA.totalCumulativeGold);
+      setGoldPerSecond(DEMO_WALLET_DATA.totalGoldPerHour / 3600);
+      setCachedGoldData({
+        goldPerHour: DEMO_WALLET_DATA.totalGoldPerHour,
+        goldPerSecond: DEMO_WALLET_DATA.totalGoldPerHour / 3600
+      });
+      setUserId("demo_user_id" as any); // Fake user ID for demo mode
+
+      // Generate stars for demo mode
+      setStars([...Array(60)].map((_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        size: Math.random() * 3 + 0.5,
+        opacity: Math.random() * 0.8 + 0.2,
+        twinkle: Math.random() > 0.5,
+        direction: Math.random() > 0.5 ? 'horizontal' : 'vertical',
+        speed: Math.random() * 60 + 120,
+        delay: Math.random() * 60,
+      })));
+      return;
+    }
+
     const initUser = async () => {
       try {
         // Get wallet from localStorage or use demo
@@ -151,7 +197,7 @@ export default function HubPage() {
         delay: Math.random() * 60, // Random delay up to 60 seconds
       }));
     });
-  }, [getOrCreateUser, getInitialGold]);
+  }, [getOrCreateUser, getInitialGold, isDemoMode]);
 
   // DIAGNOSTIC LOGGING: Track goldMiningData changes
   useEffect(() => {
@@ -208,9 +254,9 @@ export default function HubPage() {
       goldPerHour: cachedGoldData.goldPerHour
     });
 
-    // Demo wallet: always allow gold accumulation
-    if (walletAddress === "demo_wallet_123") {
-      console.log('[Hub] Demo wallet - enabling gold accumulation');
+    // Demo mode: always allow gold accumulation
+    if (isDemoMode || walletAddress === "demo_wallet_123") {
+      console.log('[Hub] Demo mode - enabling gold accumulation');
       setGoldPerSecond(cachedGoldData.goldPerSecond);
       return;
     }
@@ -231,7 +277,7 @@ export default function HubPage() {
       console.log('[Hub] Waiting for verification status...');
       setGoldPerSecond(0);
     }
-  }, [verificationStatus, cachedGoldData, walletAddress]);
+  }, [verificationStatus, cachedGoldData, walletAddress, isDemoMode]);
 
   // Check if user has set display name
   useEffect(() => {
@@ -269,8 +315,8 @@ export default function HubPage() {
   
   // Animate live gold counter with smooth visual updates using direct DOM manipulation
   useEffect(() => {
-    // ONLY animate if verified OR if using demo wallet
-    const isVerified = verificationStatus?.isVerified || walletAddress === "demo_wallet_123";
+    // ONLY animate if verified OR if using demo mode
+    const isVerified = verificationStatus?.isVerified || walletAddress === "demo_wallet_123" || isDemoMode;
 
     if (goldPerSecond > 0 && isVerified && liveGold !== null) {
       let lastTimestamp = performance.now();

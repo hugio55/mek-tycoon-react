@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 // import { BrowserWallet } from '@meshsdk/core'; // Disabled - causing runtime errors
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -16,7 +15,6 @@ interface WalletInfo {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   const [isConnecting, setIsConnecting] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
@@ -29,16 +27,6 @@ export default function HomePage() {
   const [backgroundStars, setBackgroundStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [tempWalletAddress, setTempWalletAddress] = useState<string | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-
-  // DEMO MODE: Skip wallet connection and go straight to hub
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('demo') === 'true') {
-      setIsDemoMode(true);
-      router.push('/hub?demo=true');
-    }
-  }, [router]);
 
   // Generate particles on client side only
   useEffect(() => {
@@ -148,22 +136,6 @@ export default function HomePage() {
       setIsConnecting(false);
     }
   };
-
-  // Show redirect message if in demo mode
-  if (isDemoMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="text-yellow-400 text-3xl font-bold mb-4 animate-pulse">
-            🎭 DEMO MODE
-          </div>
-          <div className="text-white text-xl">
-            Redirecting to hub...
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">

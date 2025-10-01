@@ -5,7 +5,6 @@ import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Navigation from "@/components/Navigation";
 import { SoundProvider } from "@/contexts/SoundContext";
-import SaveButton from "@/components/SaveButton";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -19,7 +18,6 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ConvexProvider client={convex}>
       <SoundProvider>
-        <SaveButton />
         <div className="min-h-screen relative">
           {isWelcomePage || isTalentBuilder || isMekRateLogging ? (
             // Welcome page, talent builder, and mek-rate-logging without navigation

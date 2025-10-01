@@ -41,9 +41,11 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
     return () => clearTimeout(timer);
   }, [companyName]);
 
+  // Skip availability check in demo mode
+  const isDemoMode = walletAddress.includes('demo');
   const checkAvailability = useQuery(
     api.goldMining.checkCompanyNameAvailability,
-    debouncedCompanyName.trim().length >= 2 ? {
+    !isDemoMode && debouncedCompanyName.trim().length >= 2 ? {
       companyName: debouncedCompanyName.trim(),
       currentWalletAddress: walletAddress
     } : 'skip'
@@ -51,7 +53,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
 
   const currentCompanyName = useQuery(
     api.goldMining.getCompanyName,
-    walletAddress ? { walletAddress } : 'skip'
+    !isDemoMode && walletAddress ? { walletAddress } : 'skip'
   );
 
   // Set current corporation name when editing
@@ -100,6 +102,16 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
 
     if (trimmedName.length > 30) {
       setError('Corporation name must be 30 characters or less');
+      return;
+    }
+
+    // DEMO MODE: Skip database and just accept the name
+    const isDemoMode = walletAddress.includes('demo');
+    if (isDemoMode) {
+      console.log('[DEMO MODE] Accepting corporation name without database save:', trimmedName);
+      onSuccess?.(trimmedName);
+      onClose();
+      setCompanyName('');
       return;
     }
 
@@ -158,9 +170,10 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
     }
   };
 
-  const isAvailable = checkAvailability?.available;
-  const isChecking = companyName.trim().length >= 2 && checkAvailability === undefined;
-  const showAvailabilityStatus = companyName.trim().length >= 2 && !error && !isTyping;
+  // In demo mode, all names are available
+  const isAvailable = isDemoMode ? true : checkAvailability?.available;
+  const isChecking = isDemoMode ? false : (companyName.trim().length >= 2 && checkAvailability === undefined);
+  const showAvailabilityStatus = isDemoMode ? false : (companyName.trim().length >= 2 && !error && !isTyping);
 
   return (
     <Modal
@@ -256,7 +269,7 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
                 isSubmitting ||
                 !companyName.trim() ||
                 companyName.trim().length < 2 ||
-                (checkAvailability && !checkAvailability.available) ||
+                (!isDemoMode && checkAvailability && !checkAvailability.available) ||
                 isChecking
               }
             >

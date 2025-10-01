@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
 import "@/styles/special-buttons.css";
+import "@/styles/typography-system.css";
 import { Providers } from "./providers";
 import { GlobalClickSound } from "@/components/GlobalClickSound";
 import GlobalBackground from "@/components/GlobalBackground";
+import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +16,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -28,18 +36,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', overflow: 'hidden' }}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
-        style={{ backgroundColor: '#0a0a0a' }}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased min-h-screen overflow-x-hidden`}
+        style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}
       >
         {/* Global background with animated stars and particles */}
-        <GlobalBackground />
+        <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
+          <GlobalBackground />
+        </div>
         
         {/* Content layer */}
         <div className="relative z-10">
           <GlobalClickSound />
-          <Providers>{children}</Providers>
+          <DemoModeWrapper>
+            <Providers>{children}</Providers>
+          </DemoModeWrapper>
         </div>
       </body>
     </html>

@@ -101,8 +101,8 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
   return (
     <>
       {/* Top Corporations styled like Mek cards */}
-      <div className="w-[500px]">
-        <div className="bg-black/10 border-2 border-yellow-500/50 backdrop-blur-xl relative overflow-hidden">
+      <div className="w-full sm:max-w-[600px]">
+        <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden">
           {/* Subtle grid overlay */}
           <div
             className="absolute inset-0 opacity-5"
@@ -115,17 +115,31 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
           />
 
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border-b border-yellow-500/30 p-2">
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-black text-white" style={{
+          <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border-b border-yellow-500/30">
+            {/* Hazmat diagonal stripes */}
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, #FAB617 20px, #FAB617 40px)',
+              }}
+            />
+            <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 relative">
+              <div className="font-black text-white whitespace-nowrap" style={{
                 textShadow: '0 0 20px rgba(250, 182, 23, 0.5)',
-                fontFamily: 'Orbitron, monospace'
+                fontFamily: 'Orbitron, monospace',
+                fontSize: 'clamp(0.875rem, 4vw, 1.5rem)'
               }}>
                 TOP CORPORATIONS
               </div>
-              <div className="text-right">
-                <div className="text-sm font-bold text-yellow-400">Cumulative Gold</div>
-                <div className="text-[10px] text-gray-500">Gold/hr</div>
+              <div className="text-right flex-shrink-0 whitespace-nowrap">
+                <div className="font-bold text-yellow-400" style={{
+                  fontSize: 'clamp(0.625rem, 2.5vw, 0.875rem)'
+                }}>
+                  Cumulative Gold
+                </div>
+                <div className="text-gray-500" style={{
+                  fontSize: 'clamp(0.5rem, 2vw, 0.625rem)'
+                }}>Gold/hr</div>
               </div>
             </div>
           </div>
@@ -150,18 +164,18 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
 
               return (
                 <div key={`slot-${rank}`} className="relative group">
-                  <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30 p-2">
+                  <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30">
                     {miner ? (
                       <>
                         {/* Active company */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between p-3 sm:p-2">
+                          <div className="flex items-center gap-1 sm:gap-3">
                             {/* Rank */}
-                            <div className="text-3xl font-black" style={{
+                            <div className="text-2xl sm:text-3xl font-black" style={{
                               color: rankColor,
                               textShadow: rankGlow,
                               fontFamily: 'Orbitron, monospace',
-                              minWidth: '40px'
+                              minWidth: '32px sm:40px'
                             }}>
                               {rank}
                             </div>
@@ -169,31 +183,31 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                             {/* Company info */}
                             <button
                               onClick={() => setSelectedWallet(miner.walletAddress)}
-                              className="text-left hover:text-yellow-400 transition-colors"
+                              className="text-left hover:text-yellow-400 transition-colors touch-manipulation min-h-[44px] sm:min-h-0 flex flex-col justify-center"
                             >
-                              <div className="text-sm font-bold text-white">
+                              <div className="text-base sm:text-sm font-bold text-white">
                                 {miner.displayWallet}
                                 {miner.isCurrentUser && (
                                   <span className="ml-2 text-[10px] text-yellow-400 bg-yellow-400/20 px-1.5 py-0.5 rounded">YOU</span>
                                 )}
                               </div>
-                              <div className="text-[10px] text-gray-500">{miner.mekCount} Meks</div>
+                              <div className="text-xs sm:text-[10px] text-gray-500">{miner.mekCount} Meks</div>
                             </button>
                           </div>
 
                           {/* Gold stats */}
                           <div className="text-right">
-                            <div className="text-lg font-bold text-yellow-400">
+                            <div className="text-base sm:text-lg font-bold text-yellow-400">
                               {Math.floor(displayGold).toLocaleString()}
                             </div>
-                            <div className="text-[10px] text-gray-500">{miner.hourlyRate.toFixed(0)}/hr</div>
+                            <div className="text-xs sm:text-[10px] text-gray-500">{miner.hourlyRate.toFixed(0)}/hr</div>
                           </div>
                         </div>
                       </>
                     ) : (
                       <>
                         {/* Empty slot */}
-                        <div className="flex items-center justify-between opacity-30">
+                        <div className="flex items-center justify-between opacity-30 p-3 sm:p-2">
                           <div className="flex items-center gap-3">
                             {/* Rank */}
                             <div className="text-3xl font-black" style={{
@@ -231,27 +245,27 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
       {/* Meks Lightbox - Clean Detail View */}
       {isMounted && selectedWallet && walletMeks && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
           onClick={() => setSelectedWallet(null)}
         >
           <div
-            className="relative w-full max-w-6xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-8 my-8"
+            className="relative w-full max-w-6xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-4 sm:p-8 my-8"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={() => setSelectedWallet(null)}
-              className="absolute top-4 right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-yellow-500 hover:text-yellow-300 text-4xl sm:text-3xl font-bold z-10 transition-colors w-12 h-12 flex items-center justify-center touch-manipulation"
             >
               ×
             </button>
 
             {/* Header */}
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+            <div className="mb-6 sm:mb-8 text-center pr-12">
+              <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
                 {walletMeks.displayWallet}
               </h2>
-              <p className="text-gray-400 font-mono text-lg">
+              <p className="text-gray-400 font-mono text-base sm:text-lg">
                 {walletMeks.totalMeks} Meks • {walletMeks.totalGoldPerHour?.toFixed(1)} Gold/hr
               </p>
             </div>
@@ -335,17 +349,18 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
       {/* Single Mek Detail View */}
       {isMounted && selectedMek && createPortal(
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg overflow-y-auto"
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-lg"
           onClick={() => setSelectedMek(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-8"
+            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-4 sm:p-8"
             onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '95vh', display: 'flex', flexDirection: 'column' }}
           >
             {/* Back button - Upper Left */}
             <button
               onClick={() => setSelectedMek(null)}
-              className="absolute top-4 left-4 px-4 py-2 bg-black/60 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all font-bold text-sm uppercase tracking-wider z-10"
+              className="absolute top-2 sm:top-4 left-2 sm:left-4 px-4 py-3 sm:py-2 bg-black/60 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all font-bold text-sm uppercase tracking-wider z-10 min-h-[48px] sm:min-h-0 touch-manipulation"
             >
               ← Back
             </button>
@@ -356,15 +371,15 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                 setSelectedMek(null);
                 setSelectedWallet(null);
               }}
-              className="absolute top-4 right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold transition-colors z-10"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-yellow-500 hover:text-yellow-300 text-4xl sm:text-3xl font-bold transition-colors z-10 w-12 h-12 flex items-center justify-center touch-manipulation"
             >
               ×
             </button>
 
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center pt-12 sm:pt-0" style={{ minHeight: 0, flex: 1 }}>
               {/* Large Mek Image */}
-              <div className="relative w-full max-w-3xl mb-6">
-                <div className="relative aspect-square bg-black overflow-hidden">
+              <div className="relative w-full max-w-3xl mb-4 sm:mb-6" style={{ maxHeight: '55vh', display: 'flex', alignItems: 'center' }}>
+                <div className="relative w-full bg-black overflow-hidden" style={{ maxHeight: '55vh' }}>
                   {(() => {
                     console.log('[MEK LIGHTBOX] Image loading:', {
                       mekNumber: selectedMek.mekNumber,
@@ -380,7 +395,8 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                         <img
                           src={highResUrl}
                           alt={selectedMek.assetName}
-                          className="w-full h-full object-contain"
+                          className="w-full object-contain"
+                          style={{ maxHeight: '55vh' }}
                         />
                       );
                     } else if (selectedMek.imageUrl) {
@@ -389,12 +405,13 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                         <img
                           src={selectedMek.imageUrl}
                           alt={selectedMek.assetName}
-                          className="w-full h-full object-contain"
+                          className="w-full object-contain"
+                          style={{ maxHeight: '55vh' }}
                         />
                       );
                     } else {
                       return (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono">
+                        <div className="w-full flex items-center justify-center text-gray-600 font-mono" style={{ height: '200px' }}>
                           NO IMAGE
                         </div>
                       );
@@ -407,10 +424,10 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
               <div className="w-full max-w-3xl space-y-4">
                 {/* Mek Name and Rank */}
                 <div className="text-center">
-                  <h2 className="text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
                     {selectedMek.assetName}
                   </h2>
-                  <p className="text-gray-400 font-mono text-lg">
+                  <p className="text-gray-400 font-mono text-base sm:text-lg">
                     RANK {selectedMek.rarityRank || '???'}
                   </p>
                 </div>

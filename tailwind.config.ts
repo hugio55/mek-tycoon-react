@@ -14,7 +14,7 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        'orbitron': ['Orbitron', 'monospace'],
+        'orbitron': ['var(--font-orbitron)', 'Orbitron', 'monospace'],
         'rajdhani': ['Rajdhani', 'sans-serif'],
         'bebas': ['Bebas Neue', 'sans-serif'],
       },
