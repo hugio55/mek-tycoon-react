@@ -47,18 +47,19 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4 overflow-y-auto">
+      <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={closeOnBackdrop ? onClose : undefined}
       />
-      
+
       <div className={`
         relative w-full ${sizeClasses[size]}
         bg-gradient-to-b from-gray-900 to-black
         border-2 border-yellow-400/30 rounded-xl
         shadow-[0_0_40px_rgba(250,182,23,0.2)]
         scale-75 sm:scale-90
+        my-auto sm:my-0
         ${className}
       `}>
         {title && (
