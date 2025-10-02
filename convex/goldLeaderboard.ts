@@ -36,9 +36,17 @@ export const getTopGoldMiners = query({
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
-      // Use stored cumulative gold directly (real-time earnings are already saved during checkpoints)
-      // Don't add real-time earnings to cumulative - that's already done in the database
-      const totalCumulativeGold = miner.totalCumulativeGold || 0;
+      // Calculate real-time cumulative gold (base + ongoing earnings)
+      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
+      let baseCumulativeGold = miner.totalCumulativeGold || 0;
+
+      // If totalCumulativeGold not initialized, estimate from current state
+      if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
+        baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
+      }
+
+      // Add real-time earnings to cumulative for accurate display
+      const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
 
       return {
         walletAddress: miner.walletAddress,

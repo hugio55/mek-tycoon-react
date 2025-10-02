@@ -484,12 +484,17 @@ export const getAllWallets = query({
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
-      // Calculate real-time cumulative gold (same logic as userStats.ts)
+      // Calculate real-time cumulative gold for display (base + ongoing earnings)
+      // Note: Database value may be out of date between checkpoints
       const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
-      if (!miner.totalCumulativeGold) {
+
+      // If totalCumulativeGold not initialized, estimate from current state
+      if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
         baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
       }
+
+      // Add real-time earnings to cumulative for accurate display
       const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
 
       // Time since last active

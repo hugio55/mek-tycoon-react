@@ -1694,7 +1694,7 @@ export default function MekRateLoggingPage() {
       )}
 
       {/* Main Content - Mobile-optimized padding and overflow */}
-      <div className="relative z-10 h-screen overflow-auto p-4 md:p-6 lg:p-8 mobile-scroll scale-95 sm:scale-100 origin-top">
+      <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll scale-95 sm:scale-100 origin-top">
         {isAutoReconnecting && !forceNoWallet ? (
           // Loading spinner while auto-reconnecting
           <div className="flex flex-col items-center justify-center h-full min-h-[100vh]">
