@@ -937,6 +937,25 @@ export default function MekRateLoggingPage() {
         async () => {
           console.log('[Wallet Connect] Calling wallet.api.enable()...');
 
+          // Check if wallet is already enabled (prevents some errors)
+          try {
+            const isEnabled = await wallet.api.isEnabled();
+            if (isEnabled) {
+              console.log('[Wallet Connect] Wallet already enabled, using existing connection');
+              // If already enabled, just return the enabled API
+              const api = await wallet.api.enable();
+              return api;
+            }
+          } catch (e) {
+            console.log('[Wallet Connect] Could not check if enabled, proceeding with enable()');
+          }
+
+          // For Eternl, add a small delay to let the DOM bridge initialize
+          if (wallet.name.toLowerCase() === 'eternl') {
+            console.log('[Wallet Connect] Adding 500ms delay for Eternl initialization...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
           // Enable wallet with 30 second timeout
           const api = await Promise.race([
             wallet.api.enable(),
@@ -1160,7 +1179,17 @@ export default function MekRateLoggingPage() {
 
       // Don't override error if it was already set (e.g., from signature error)
       if (!walletError) {
-        const errorMsg = error.message || "Failed to connect wallet";
+        let errorMsg = error.message || "Failed to connect wallet";
+
+        // Provide better error messages for common issues
+        if (error.message?.includes('ApiError') || error.stack?.includes('dom:receive no data')) {
+          errorMsg = `${wallet.name} connection failed. Try:\n1. Refresh the page\n2. Disable/re-enable the wallet extension\n3. Make sure ${wallet.name} is unlocked`;
+        } else if (error.message?.includes('timeout')) {
+          errorMsg = `${wallet.name} took too long to respond. Please try again.`;
+        } else if (error.message?.includes('User declined')) {
+          errorMsg = 'Connection cancelled by user';
+        }
+
         setWalletError(errorMsg);
       }
     } finally {

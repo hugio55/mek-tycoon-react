@@ -54,7 +54,8 @@ export function isAndroid(): boolean {
 
 /**
  * Check if a mobile wallet app is likely installed
- * This is a heuristic check - we can't definitively know without trying to open
+ * This attempts to detect the wallet by trying to open its deep link
+ * and checking if the browser/OS responds successfully
  */
 export function checkMobileWalletInstalled(walletType: MobileWalletType): Promise<boolean> {
   return new Promise((resolve) => {
@@ -63,10 +64,56 @@ export function checkMobileWalletInstalled(walletType: MobileWalletType): Promis
       return;
     }
 
-    // For now, we can't reliably detect if an app is installed without trying to open it
-    // The user will need to try connecting and see if it opens
-    // Some browsers support navigator.canOpenURLScheme but it's not widely supported
-    resolve(true); // Assume it might be installed
+    // Create a test deep link
+    const scheme = MOBILE_WALLET_SCHEMES[walletType];
+    const testLink = `${scheme}`;
+
+    // Create a hidden iframe to test the deep link
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = testLink;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        document.body.removeChild(iframe);
+        // If we timeout, the app likely isn't installed
+        resolve(false);
+      }
+    }, 1000);
+
+    // Listen for page visibility change (indicates app opened)
+    const visibilityHandler = () => {
+      if (document.hidden && !resolved) {
+        resolved = true;
+        clearTimeout(timeout);
+        document.body.removeChild(iframe);
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        // Page went to background, app likely opened
+        resolve(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    // Try to load the deep link
+    document.body.appendChild(iframe);
+
+    // Also check if we can detect the wallet through window.cardano (some mobile wallets inject this)
+    if (typeof window !== 'undefined' && window.cardano) {
+      const walletKey = walletType === 'eternl' ? ['eternl', 'ccvault'] : [walletType];
+      for (const key of walletKey) {
+        if ((window.cardano as any)[key]) {
+          resolved = true;
+          clearTimeout(timeout);
+          document.body.removeChild(iframe);
+          document.removeEventListener('visibilitychange', visibilityHandler);
+          resolve(true);
+          return;
+        }
+      }
+    }
   });
 }
 
@@ -262,6 +309,8 @@ export function getMobileWalletDisplayName(walletType: MobileWalletType): string
 
 /**
  * Get available mobile wallets based on platform
+ * NOTE: This returns ALL possible wallets. Use detectAvailableMobileWallets()
+ * to get only installed wallets.
  */
 export function getAvailableMobileWallets(): MobileWalletType[] {
   if (!isMobileDevice()) return [];
@@ -279,4 +328,33 @@ export function getAvailableMobileWallets(): MobileWalletType[] {
   }
 
   return allWallets;
+}
+
+/**
+ * Detect which mobile wallets are actually installed on the device
+ * This is more reliable than getAvailableMobileWallets() but takes longer
+ * as it tests each wallet
+ */
+export async function detectAvailableMobileWallets(): Promise<MobileWalletType[]> {
+  if (!isMobileDevice()) return [];
+
+  const allWallets: MobileWalletType[] = ['eternl', 'flint', 'typhon', 'vespr', 'nufi', 'yoroi'];
+  const installedWallets: MobileWalletType[] = [];
+
+  // Check each wallet in parallel
+  const checks = allWallets.map(async (wallet) => {
+    try {
+      const isInstalled = await checkMobileWalletInstalled(wallet);
+      if (isInstalled) {
+        installedWallets.push(wallet);
+      }
+    } catch (error) {
+      console.warn(`Error checking ${wallet}:`, error);
+    }
+  });
+
+  await Promise.all(checks);
+
+  console.log('[Mobile Wallet Detection] Found installed wallets:', installedWallets);
+  return installedWallets;
 }

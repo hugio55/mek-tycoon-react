@@ -28,6 +28,8 @@ export const getSnapshotHistory = query({
       totalMekCount: snapshot.totalMekCount,
       totalGoldPerHour: snapshot.totalGoldPerHour,
       meks: snapshot.meks,
+      spendableGold: snapshot.spendableGold,
+      cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
       _creationTime: snapshot._creationTime,
     }));
   },
@@ -64,6 +66,8 @@ export const getWalletSnapshotTimeline = query({
       timestamp: snapshot.snapshotTime,
       mekCount: snapshot.totalMekCount,
       goldPerHour: snapshot.totalGoldPerHour,
+      spendableGold: snapshot.spendableGold,
+      cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
       meks: snapshot.meks.map(mek => ({
         assetId: mek.assetId,
         assetName: mek.assetName,
@@ -208,6 +212,8 @@ export const restoreFromSnapshot = mutation({
       restoredGoldPerHour: snapshot.totalGoldPerHour,
       restoredGold: snapshot.accumulatedGold || 0,
       restoredCumulativeGold: snapshot.totalCumulativeGold || 0,
+      restoredSpendableGold: snapshot.spendableGold || 0,
+      restoredCumulativeGoldEarned: snapshot.cumulativeGoldEarned || 0,
     };
   },
 });

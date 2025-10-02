@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation, internalAction, internalQuery, action } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { internal, api } from "./_generated/api";
+import { calculateCurrentGold } from "./lib/goldCalculations";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";
@@ -231,6 +232,18 @@ export const updateMinerAfterSnapshot = internalMutation({
       };
     }
 
+    // Calculate current spendable gold for this snapshot
+    const spendableGold = calculateCurrentGold({
+      accumulatedGold: miner.accumulatedGold || 0,
+      goldPerHour: miner.totalGoldPerHour,
+      lastSnapshotTime: miner.lastSnapshotTime || miner.createdAt,
+      isVerified: true,
+      consecutiveSnapshotFailures: miner.consecutiveSnapshotFailures || 0
+    });
+
+    // Calculate cumulative gold earned (total earned over all time)
+    const cumulativeGoldEarned = (miner.totalCumulativeGold || 0);
+
     // Store ownership snapshot in history table with COMPLETE game state
     await ctx.db.insert("mekOwnershipHistory", {
       walletAddress: args.walletAddress,
@@ -245,6 +258,10 @@ export const updateMinerAfterSnapshot = internalMutation({
       totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
       lastActiveTime: miner.lastActiveTime,
       lastSnapshotTime: miner.lastSnapshotTime,
+
+      // New gold tracking fields for blockchain snapshot system
+      spendableGold: spendableGold,
+      cumulativeGoldEarned: cumulativeGoldEarned,
 
       verificationStatus: "verified", // This snapshot passed validation
     });

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { calculateGoldDecrease, validateGoldInvariant } from "./lib/goldCalculations";
+import { devLog } from "./lib/devLog";
 
 // Gold cost structure for each level upgrade
 const UPGRADE_COSTS = [
@@ -39,7 +40,7 @@ export function calculateLevelBoost(
   }
   const amount = (baseRate * percent) / 100;
 
-  console.log(`[BOOST CALCULATION] Level ${level}:`, {
+  devLog.log(`[BOOST CALCULATION] Level ${level}:`, {
     baseRate,
     percent,
     amount,
@@ -148,7 +149,7 @@ export const upgradeMekLevel = mutation({
     // CRITICAL: Use baseGoldPerHour if available, NOT goldPerHour (which includes previous boosts)
     const mekBaseRate = ownedMek.baseGoldPerHour || ownedMek.goldPerHour || 0;
 
-    console.log(`[UPGRADE START] Mek data from goldMining:`, {
+    devLog.log(`[UPGRADE START] Mek data from goldMining:`, {
       assetId: args.assetId,
       goldPerHour: ownedMek.goldPerHour,
       baseGoldPerHour: ownedMek.baseGoldPerHour,
@@ -258,7 +259,7 @@ export const upgradeMekLevel = mutation({
       const newLevel = mekLevel.currentLevel + 1;
       const baseRate = mekLevel.baseGoldPerHour || mekBaseRate;
 
-      console.log(`[UPGRADE MUTATION] Calculating boost for upgrade:`, {
+      devLog.log(`[UPGRADE MUTATION] Calculating boost for upgrade:`, {
         assetId: args.assetId,
         currentLevel: mekLevel.currentLevel,
         newLevel,
@@ -309,7 +310,7 @@ export const upgradeMekLevel = mutation({
       );
       const totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
 
-      console.log(`[UPGRADE MUTATION] Total rate calculation:`, {
+      devLog.log(`[UPGRADE MUTATION] Total rate calculation:`, {
         oldTotalRate: goldMiningData.totalGoldPerHour,
         newBaseRate: baseGoldPerHour,
         newBoostRate: boostGoldPerHour,
@@ -319,7 +320,7 @@ export const upgradeMekLevel = mutation({
       });
 
       // LOG: Before database update
-      console.log('[UPGRADE MUTATION] Before DB update:', {
+      devLog.log('[UPGRADE MUTATION] Before DB update:', {
         goldBefore: currentGold,
         upgradeCost,
         newAccumulatedGold,
@@ -337,7 +338,7 @@ export const upgradeMekLevel = mutation({
         newTotalCumulativeGold = currentGold + (goldMiningData.totalGoldSpentOnUpgrades || 0);
       }
 
-      console.log('[UPGRADE MUTATION] Gold decrease calculation:', {
+      devLog.log('[UPGRADE MUTATION] Gold decrease calculation:', {
         oldAccumulated: currentGold,
         newAccumulated: goldDecrease.newAccumulatedGold,
         oldTotalSpent: goldMiningData.totalGoldSpentOnUpgrades || 0,
@@ -345,6 +346,18 @@ export const upgradeMekLevel = mutation({
         cumulativeGold: newTotalCumulativeGold,
         upgradeCost
       });
+
+      // CRITICAL: Check version for race condition protection (optimistic concurrency control)
+      // Re-fetch the latest data to check if version changed during this mutation
+      const latestGoldMiningData = await ctx.db.get(goldMiningData._id);
+      if (!latestGoldMiningData) {
+        throw new Error("Gold mining data was deleted during upgrade");
+      }
+      const currentVersion = goldMiningData.version || 0;
+      const latestVersion = latestGoldMiningData.version || 0;
+      if (currentVersion !== latestVersion) {
+        throw new Error("Concurrent modification detected. Please refresh and try again.");
+      }
 
       // Update goldMining with new rates AND DEDUCT GOLD - Using centralized calculation!
       await ctx.db.patch(goldMiningData._id, {
@@ -359,10 +372,11 @@ export const upgradeMekLevel = mutation({
         totalUpgradesPurchased: (goldMiningData.totalUpgradesPurchased || 0) + 1,
         lastUpgradeSpend: now,
         updatedAt: now,
+        version: currentVersion + 1, // Increment version to detect concurrent modifications
       });
 
       // LOG: After database update
-      console.log('[UPGRADE MUTATION] After DB update - gold deducted:', {
+      devLog.log('[UPGRADE MUTATION] After DB update - gold deducted:', {
         remainingGold: goldDecrease.newAccumulatedGold,
         totalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
         cumulativeGold: newTotalCumulativeGold,
@@ -383,7 +397,7 @@ export const upgradeMekLevel = mutation({
       }
 
       // LOG: Returning result to frontend
-      console.log('[UPGRADE MUTATION] Returning result:', {
+      devLog.log('[UPGRADE MUTATION] Returning result:', {
         success: true,
         newLevel: mekLevel.currentLevel + 1,
         goldSpent: upgradeCost,

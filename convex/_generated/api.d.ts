@@ -84,6 +84,7 @@ import type * as investments from "../investments.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
 import type * as leaderboardUpdater from "../leaderboardUpdater.js";
+import type * as lib_devLog from "../lib/devLog.js";
 import type * as lib_goldCalculations from "../lib/goldCalculations.js";
 import type * as listAllGoldMiningAccounts from "../listAllGoldMiningAccounts.js";
 import type * as loans from "../loans.js";
@@ -217,6 +218,7 @@ declare const fullApi: ApiFromModules<{
   leaderboard: typeof leaderboard;
   leaderboardOptimized: typeof leaderboardOptimized;
   leaderboardUpdater: typeof leaderboardUpdater;
+  "lib/devLog": typeof lib_devLog;
   "lib/goldCalculations": typeof lib_goldCalculations;
   listAllGoldMiningAccounts: typeof listAllGoldMiningAccounts;
   loans: typeof loans;
