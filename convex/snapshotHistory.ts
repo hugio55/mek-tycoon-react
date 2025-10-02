@@ -89,6 +89,26 @@ export const deleteSnapshot = mutation({
   },
 });
 
+// Delete ALL snapshots
+export const deleteAllSnapshots = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allSnapshots = await ctx.db.query("mekOwnershipHistory").collect();
+
+    let deletedCount = 0;
+    for (const snapshot of allSnapshots) {
+      await ctx.db.delete(snapshot._id);
+      deletedCount++;
+    }
+
+    return {
+      success: true,
+      message: `Deleted ${deletedCount} snapshot${deletedCount === 1 ? '' : 's'}`,
+      deletedCount
+    };
+  },
+});
+
 // Restore a wallet's data from a specific snapshot
 export const restoreFromSnapshot = mutation({
   args: {
