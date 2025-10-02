@@ -6,12 +6,15 @@ import { api } from '@/convex/_generated/api';
 
 function SnapshotHistoryViewer() {
   const [walletFilter, setWalletFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
   const [expandedSnapshot, setExpandedSnapshot] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'snapshots' | 'logs'>('snapshots');
 
   const snapshots = useQuery(
     api.snapshotHistory.getSnapshotHistory,
-    walletFilter ? { walletAddress: walletFilter, limit: 100 } : { limit: 50 }
+    walletFilter || companyFilter
+      ? { walletAddress: walletFilter || undefined, companyName: companyFilter || undefined, limit: 100 }
+      : { limit: 50 }
   );
 
   const logs = useQuery(api.snapshotHistory.getSnapshotLogs, { limit: 20 });
@@ -129,15 +132,31 @@ function SnapshotHistoryViewer() {
               type="text"
               placeholder="Filter by wallet address..."
               value={walletFilter}
-              onChange={(e) => setWalletFilter(e.target.value)}
+              onChange={(e) => {
+                setWalletFilter(e.target.value);
+                if (e.target.value) setCompanyFilter(''); // Clear other filter
+              }}
               className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500"
             />
-            {walletFilter && (
+            <input
+              type="text"
+              placeholder="Filter by company name..."
+              value={companyFilter}
+              onChange={(e) => {
+                setCompanyFilter(e.target.value);
+                if (e.target.value) setWalletFilter(''); // Clear other filter
+              }}
+              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+            />
+            {(walletFilter || companyFilter) && (
               <button
-                onClick={() => setWalletFilter('')}
+                onClick={() => {
+                  setWalletFilter('');
+                  setCompanyFilter('');
+                }}
                 className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded-lg transition-colors"
               >
-                Clear Filter
+                Clear Filters
               </button>
             )}
             <button
@@ -153,7 +172,7 @@ function SnapshotHistoryViewer() {
             {snapshots && snapshots.length === 0 ? (
               <div className="p-8 bg-gray-900/50 rounded-lg border border-gray-700 text-center">
                 <p className="text-gray-400">
-                  {walletFilter ? 'No snapshots found for this wallet' : 'No snapshots recorded yet'}
+                  {walletFilter || companyFilter ? 'No snapshots found for this search' : 'No snapshots recorded yet'}
                 </p>
               </div>
             ) : (
@@ -170,6 +189,11 @@ function SnapshotHistoryViewer() {
                       >
                         <div className="text-2xl">{expandedSnapshot === snapshot._id ? '▼' : '▶'}</div>
                         <div>
+                          {snapshot.companyName && (
+                            <div className="text-sm font-semibold text-yellow-400 mb-1">
+                              {snapshot.companyName}
+                            </div>
+                          )}
                           <div className="font-mono text-sm text-gray-300">
                             {snapshot.walletAddress.substring(0, 12)}...{snapshot.walletAddress.substring(snapshot.walletAddress.length - 8)}
                           </div>
@@ -327,7 +351,7 @@ function SnapshotHistoryViewer() {
         <h4 className="text-sm font-semibold text-blue-300 mb-2">💡 Customer Support Tips</h4>
         <ul className="text-xs text-gray-400 space-y-1">
           <li>• Each snapshot records the exact MEKs owned at that point in time (6-hour intervals)</li>
-          <li>• Use wallet filter to search for specific user's complete history</li>
+          <li>• Use wallet filter to search by blockchain address or company filter to search by company name</li>
           <li>• Click any snapshot to expand and see full MEK details with gold rates</li>
           <li>• This is your audit trail - snapshots are never deleted and prove ownership history</li>
           <li>• If a user claims they owned more MEKs, check their snapshot at that timestamp</li>
