@@ -158,6 +158,18 @@ function SnapshotHistoryViewer() {
                           <div className="text-sm text-gray-400">Gold/hr</div>
                           <div className="text-lg font-bold text-green-400">{snapshot.totalGoldPerHour.toFixed(2)}</div>
                         </div>
+                        {snapshot.spendableGold !== undefined && (
+                          <div className="text-right">
+                            <div className="text-sm text-gray-400">Spendable</div>
+                            <div className="text-lg font-bold text-yellow-300">{snapshot.spendableGold.toFixed(2)}</div>
+                          </div>
+                        )}
+                        {snapshot.cumulativeGoldEarned !== undefined && (
+                          <div className="text-right">
+                            <div className="text-sm text-gray-400">Cumulative</div>
+                            <div className="text-lg font-bold text-orange-400">{snapshot.cumulativeGoldEarned.toFixed(2)}</div>
+                          </div>
+                        )}
                         {snapshot.verificationStatus && snapshot.verificationStatus !== 'verified' && (
                           <div className="text-right">
                             <div className="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded border border-red-700">

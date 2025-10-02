@@ -1376,6 +1376,7 @@ export default defineSchema({
     // Metadata
     createdAt: v.number(),
     updatedAt: v.number(),
+    version: v.optional(v.number()), // For optimistic concurrency control (prevents race conditions)
 
     // LEGACY FIELDS (kept for backwards compatibility)
     currentGold: v.optional(v.number()), // LEGACY: Use accumulatedGold instead
@@ -1459,6 +1460,10 @@ export default defineSchema({
     totalGoldSpentOnUpgrades: v.optional(v.number()), // Total gold spent on upgrades
     lastActiveTime: v.optional(v.number()), // Last active time at snapshot
     lastSnapshotTime: v.optional(v.number()), // Previous snapshot time
+
+    // New gold tracking fields for blockchain snapshot system
+    spendableGold: v.optional(v.number()), // Current spendable gold at time of snapshot
+    cumulativeGoldEarned: v.optional(v.number()), // Total gold earned over all time (never decreases)
 
     verificationStatus: v.optional(v.union(
       v.literal("verified"), // Blockchain lookup succeeded

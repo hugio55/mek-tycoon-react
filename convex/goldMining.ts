@@ -3,6 +3,7 @@ import { mutation, query, action } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import { calculateCurrentGold, GOLD_CAP, calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
+import { devLog } from "./lib/devLog";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";
@@ -36,7 +37,7 @@ export const initializeGoldMining = mutation({
 
     // CRITICAL: Only accept stake addresses to prevent duplicates
     if (!args.walletAddress.startsWith('stake1')) {
-      console.error(`[GoldMining] REJECTED non-stake address: ${args.walletAddress}`);
+      devLog.errorAlways(`[GoldMining] REJECTED non-stake address: ${args.walletAddress}`);
       return {
         success: false,
         error: "Only stake addresses are accepted. Please use stake address format."
@@ -62,33 +63,44 @@ export const initializeGoldMining = mutation({
 
     // Merge any found duplicates
     if (potentialDuplicates.length > 0) {
-      console.log(`[GoldMining] Found ${potentialDuplicates.length} potential duplicates to merge`);
+      devLog.log(`[GoldMining] Found ${potentialDuplicates.length} potential duplicates to merge`);
       for (const dup of potentialDuplicates) {
-        console.log(`[GoldMining] Deleting duplicate: ${dup.walletAddress.substring(0, 20)}...`);
+        devLog.log(`[GoldMining] Deleting duplicate: ${dup.walletAddress.substring(0, 20)}...`);
         await ctx.db.delete(dup._id);
       }
     }
 
-    const totalGoldPerHour = args.ownedMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
+    // Calculate separate base and boost rates for accurate tracking
+    const baseGoldPerHour = args.ownedMeks.reduce(
+      (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+      0
+    );
+    const boostGoldPerHour = args.ownedMeks.reduce(
+      (sum, mek) => sum + (mek.levelBoostAmount || 0),
+      0
+    );
+    const totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
 
-    console.log('[INIT MUTATION] ================================');
-    console.log('[INIT MUTATION] initializeGoldMining called:', {
+    devLog.log('[INIT MUTATION] ================================');
+    devLog.log('[INIT MUTATION] initializeGoldMining called:', {
       timestamp: new Date().toISOString(),
       wallet: args.walletAddress.substring(0, 20) + '...',
       mekCount: args.ownedMeks.length,
+      baseGoldPerHour: baseGoldPerHour.toFixed(2),
+      boostGoldPerHour: boostGoldPerHour.toFixed(2),
       totalGoldPerHour: totalGoldPerHour.toFixed(2)
     });
 
     // Check if level boost data is being passed
     const meksWithBoosts = args.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
-    console.log('[INIT MUTATION] Meks with level boosts:', {
+    devLog.log('[INIT MUTATION] Meks with level boosts:', {
       count: meksWithBoosts.length,
       totalBoost: meksWithBoosts.reduce((sum, mek) => sum + (mek.levelBoostAmount || 0), 0).toFixed(2)
     });
 
     // If we have duplicates, merge them NOW
     if (allExisting.length > 1) {
-      console.log(`[GoldMining] Found ${allExisting.length} duplicates for ${args.walletAddress.substring(0, 20)}... - merging`);
+      devLog.log(`[GoldMining] Found ${allExisting.length} duplicates for ${args.walletAddress.substring(0, 20)}... - merging`);
 
       // Keep the oldest record, sum accumulated gold, delete others
       const sorted = allExisting.sort((a, b) => a.createdAt - b.createdAt);
@@ -112,7 +124,9 @@ export const initializeGoldMining = mutation({
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
         ownedMeks: args.ownedMeks,
-        totalGoldPerHour: totalGoldPerHour,
+        baseGoldPerHour,
+        boostGoldPerHour,
+        totalGoldPerHour,
         accumulatedGold: Math.min(50000, totalAccumulatedGold),
         lastSnapshotTime: now,
         lastActiveTime: now,
@@ -124,7 +138,7 @@ export const initializeGoldMining = mutation({
         await ctx.db.delete(dup._id);
       }
 
-      console.log(`[GoldMining] Merged ${duplicates.length} duplicates, total gold: ${totalAccumulatedGold.toFixed(2)}`);
+      devLog.log(`[GoldMining] Merged ${duplicates.length} duplicates, total gold: ${totalAccumulatedGold.toFixed(2)}`);
 
       return {
         currentGold: Math.min(50000, totalAccumulatedGold),
@@ -145,7 +159,7 @@ export const initializeGoldMining = mutation({
       });
 
       // Update the wallet info AND the gold rate when meks change
-      console.log('[INIT MUTATION] Updating existing record:', {
+      devLog.log('[INIT MUTATION] Updating existing record:', {
         existingRate: existing.totalGoldPerHour,
         newRate: totalGoldPerHour,
         existingMekCount: existing.ownedMeks.length,
@@ -156,13 +170,15 @@ export const initializeGoldMining = mutation({
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
         ownedMeks: args.ownedMeks,
-        totalGoldPerHour: totalGoldPerHour, // UPDATE the rate with new meks!
+        baseGoldPerHour, // UPDATE base rate
+        boostGoldPerHour, // UPDATE boost rate
+        totalGoldPerHour, // UPDATE the total rate with new meks!
         lastActiveTime: now,
         updatedAt: now,
       });
 
-      console.log('[INIT MUTATION] Record updated successfully');
-      console.log('[INIT MUTATION] ================================');
+      devLog.log('[INIT MUTATION] Record updated successfully');
+      devLog.log('[INIT MUTATION] ================================');
 
       return {
         currentGold,
@@ -175,6 +191,8 @@ export const initializeGoldMining = mutation({
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
         ownedMeks: args.ownedMeks,
+        baseGoldPerHour,
+        boostGoldPerHour,
         totalGoldPerHour,
         accumulatedGold: 0,
         totalCumulativeGold: 0, // Initialize cumulative gold for new wallets
@@ -183,6 +201,7 @@ export const initializeGoldMining = mutation({
         lastActiveTime: now,
         createdAt: now,
         updatedAt: now,
+        version: 0, // Initialize version for concurrency control
       });
 
       return {
@@ -210,8 +229,8 @@ export const getGoldMiningData = query({
       return null;
     }
 
-    console.log('[QUERY] ===================================');
-    console.log('[QUERY] getGoldMiningData called:', {
+    devLog.log('[QUERY] ===================================');
+    devLog.log('[QUERY] getGoldMiningData called:', {
       timestamp: new Date().toISOString(),
       wallet: args.walletAddress.substring(0, 20) + '...',
       storedTotalRate: data.totalGoldPerHour,
@@ -220,27 +239,22 @@ export const getGoldMiningData = query({
       mekCount: data.ownedMeks.length
     });
 
-    // RECALCULATE total gold rate from ownedMeks (in case levels changed since last mutation)
-    const recalculatedBaseRate = data.ownedMeks.reduce(
-      (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
-      0
-    );
-    const recalculatedBoostRate = data.ownedMeks.reduce(
-      (sum, mek) => sum + (mek.levelBoostAmount || 0),
-      0
-    );
-    const recalculatedTotalRate = recalculatedBaseRate + recalculatedBoostRate;
+    // Use stored rates (updated by mutations) - no need to recalculate on every query
+    // Mutations keep these synchronized, so reading them is fast and accurate
+    const baseRate = data.baseGoldPerHour || 0;
+    const boostRate = data.boostGoldPerHour || 0;
+    const totalRate = data.totalGoldPerHour || 0;
 
-    console.log('[QUERY] Recalculated rates:', {
-      recalculatedBaseRate: recalculatedBaseRate.toFixed(2),
-      recalculatedBoostRate: recalculatedBoostRate.toFixed(2),
-      recalculatedTotalRate: recalculatedTotalRate.toFixed(2)
+    devLog.log('[QUERY] Using stored rates (fast read):', {
+      baseRate: baseRate.toFixed(2),
+      boostRate: boostRate.toFixed(2),
+      totalRate: totalRate.toFixed(2)
     });
 
     // Log each Mek's contribution
-    console.log('[QUERY] Individual Mek rates:');
+    devLog.log('[QUERY] Individual Mek rates:');
     data.ownedMeks.forEach((mek, idx) => {
-      console.log(`  [${idx + 1}] ${mek.assetName}:`, {
+      devLog.log(`  [${idx + 1}] ${mek.assetName}:`, {
         goldPerHour: mek.goldPerHour,
         baseGoldPerHour: mek.baseGoldPerHour,
         currentLevel: mek.currentLevel,
@@ -254,7 +268,7 @@ export const getGoldMiningData = query({
     const meksWithBoosts = data.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
     const meksWithLevelField = data.ownedMeks.filter(mek => mek.currentLevel && mek.currentLevel > 1);
 
-    console.log('[QUERY] Level boost analysis:', {
+    devLog.log('[QUERY] Level boost analysis:', {
       totalMeks: data.ownedMeks.length,
       meksWithBoostAmount: meksWithBoosts.length,
       meksWithLevelField: meksWithLevelField.length,
@@ -262,13 +276,13 @@ export const getGoldMiningData = query({
     });
 
     if (meksWithBoosts.length === 0 && meksWithLevelField.length > 0) {
-      console.warn('[QUERY] ⚠️ WARNING: Meks have currentLevel > 1 but NO levelBoostAmount! This means level data is not being synced!');
+      devLog.warn('[QUERY] ⚠️ WARNING: Meks have currentLevel > 1 but NO levelBoostAmount! This means level data is not being synced!');
     }
 
     // VERIFICATION CHECK: Only accumulate gold if wallet is verified
     const currentGold = calculateCurrentGold({
       accumulatedGold: data.accumulatedGold || 0,
-      goldPerHour: recalculatedTotalRate,
+      goldPerHour: totalRate,
       lastSnapshotTime: data.lastSnapshotTime || data.updatedAt || data.createdAt,
       isVerified: data.isBlockchainVerified === true,
       consecutiveSnapshotFailures: data.consecutiveSnapshotFailures || 0
@@ -277,21 +291,21 @@ export const getGoldMiningData = query({
     const result = {
       ...data,
       currentGold,
-      // Return recalculated rates (not stale stored values)
-      baseGoldPerHour: recalculatedBaseRate,
-      boostGoldPerHour: recalculatedBoostRate,
-      totalGoldPerHour: recalculatedTotalRate,
+      // Use stored rates (already accurate from mutations)
+      baseGoldPerHour: baseRate,
+      boostGoldPerHour: boostRate,
+      totalGoldPerHour: totalRate,
       isVerified: data.isBlockchainVerified === true, // Add verification status to response
     };
 
-    console.log('[QUERY] Returning to frontend:', {
+    devLog.log('[QUERY] Returning to frontend:', {
       baseGoldPerHour: result.baseGoldPerHour.toFixed(2),
       boostGoldPerHour: result.boostGoldPerHour.toFixed(2),
       totalGoldPerHour: result.totalGoldPerHour.toFixed(2),
       currentGold: result.currentGold.toFixed(2),
       mekCount: result.ownedMeks.length
     });
-    console.log('[QUERY] ===================================');
+    devLog.log('[QUERY] ===================================');
 
     return result;
   },
@@ -335,7 +349,7 @@ export const updateGoldCheckpoint = mutation({
       newAccumulatedGold = goldUpdate.newAccumulatedGold;
       newTotalCumulativeGold = goldUpdate.newTotalCumulativeGold;
 
-      console.log('[UPDATE GOLD CHECKPOINT] Gold increase:', {
+      devLog.log('[UPDATE GOLD CHECKPOINT] Gold increase:', {
         goldEarnedThisUpdate,
         oldAccumulated: existing.accumulatedGold || 0,
         newAccumulatedGold,
@@ -411,7 +425,7 @@ export const updateLastActive = mutation({
 
     if (!existing) {
       // Silently return success if wallet not found (user may have disconnected)
-      console.log(`Wallet ${args.walletAddress} not found in database, skipping update`);
+      devLog.log(`Wallet ${args.walletAddress} not found in database, skipping update`);
       return { success: false, message: "Wallet not found" };
     }
 
@@ -599,7 +613,7 @@ export const initializeWithBlockfrost = action({
   },
   handler: async (ctx, args) => {
     try {
-      console.log(`[GoldMining] Fetching NFTs from Blockfrost for ${args.stakeAddress}`);
+      devLog.log(`[GoldMining] Fetching NFTs from Blockfrost for ${args.stakeAddress}`);
 
       // Verify wallet authentication first
       const authCheck = await ctx.runQuery(api.walletAuthentication.checkAuthentication, {
@@ -620,7 +634,7 @@ export const initializeWithBlockfrost = action({
         throw new Error(nftResult.error || "Failed to fetch NFTs from blockchain");
       }
 
-      console.log(`[GoldMining] Found ${nftResult.meks.length} Meks on-chain`);
+      devLog.log(`[GoldMining] Found ${nftResult.meks.length} Meks on-chain`);
 
       // Import getMekDataByNumber function
       const { getMekDataByNumber, getMekImageUrl } = await import("../src/lib/mekNumberToVariation");
@@ -632,7 +646,7 @@ export const initializeWithBlockfrost = action({
         const mekData = getMekDataByNumber(mek.mekNumber);
 
         if (!mekData) {
-          console.warn(`[GoldMining] No data found for Mek #${mek.mekNumber}, skipping`);
+          devLog.warn(`[GoldMining] No data found for Mek #${mek.mekNumber}, skipping`);
           continue;
         }
 
@@ -711,7 +725,7 @@ export const initializeWithBlockfrost = action({
       let finalMeksList = meksForMutation;
 
       if (existingData && existingData.ownedMeks.length > meksForMutation.length) {
-        console.log(`[GoldMining] Merging existing ${existingData.ownedMeks.length} Meks with ${meksForMutation.length} on-chain Meks`);
+        devLog.log(`[GoldMining] Merging existing ${existingData.ownedMeks.length} Meks with ${meksForMutation.length} on-chain Meks`);
 
         // Create a map of on-chain Meks by assetId
         const onChainMekMap = new Map(meksForMutation.map(m => [m.assetId, m]));
@@ -743,7 +757,7 @@ export const initializeWithBlockfrost = action({
           }
         });
 
-        console.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
+        devLog.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
       }
 
       // CRITICAL FIX: Always use stake address for database records
@@ -763,7 +777,7 @@ export const initializeWithBlockfrost = action({
       };
 
     } catch (error: any) {
-      console.error("[GoldMining] Blockfrost initialization error:", error);
+      devLog.errorAlways("[GoldMining] Blockfrost initialization error:", error);
       return {
         success: false,
         error: error.message || "Failed to initialize with Blockfrost",

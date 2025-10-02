@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   isMobileDevice,
-  getAvailableMobileWallets,
+  detectAvailableMobileWallets,
   getMobileWalletDisplayName,
   openMobileWallet,
   type MobileWalletType,
@@ -22,9 +22,26 @@ export default function MobileWalletConnect({
 }: MobileWalletConnectProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<MobileWalletType | null>(null);
+  const [availableWallets, setAvailableWallets] = useState<MobileWalletType[]>([]);
+  const [isDetecting, setIsDetecting] = useState(true);
 
   const isMobile = isMobileDevice();
-  const availableWallets = getAvailableMobileWallets();
+
+  // Detect available wallets on mount
+  useEffect(() => {
+    if (isMobile) {
+      setIsDetecting(true);
+      detectAvailableMobileWallets()
+        .then(wallets => {
+          setAvailableWallets(wallets);
+          setIsDetecting(false);
+        })
+        .catch(error => {
+          console.error('[Mobile Wallet Detection] Error:', error);
+          setIsDetecting(false);
+        });
+    }
+  }, [isMobile]);
 
   if (!isMobile) {
     return null;
@@ -79,8 +96,25 @@ export default function MobileWalletConnect({
         <div className="h-px flex-1 bg-yellow-500/20"></div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {availableWallets.map((walletType) => {
+      {isDetecting ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin"></div>
+            <p className="text-xs text-yellow-500/60 font-['Orbitron']">Detecting wallets...</p>
+          </div>
+        </div>
+      ) : availableWallets.length === 0 ? (
+        <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded">
+          <p className="text-sm text-yellow-500/70 text-center font-['Orbitron']">
+            No Cardano wallet apps detected on your device.
+          </p>
+          <p className="text-xs text-yellow-500/50 text-center font-['Orbitron'] mt-2">
+            Please install Eternl, Flint, Typhon, Vespr, NuFi, or Yoroi from your app store.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {availableWallets.map((walletType) => {
           const isCurrentlyOpening = isOpening && selectedWallet === walletType;
 
           return (
@@ -132,14 +166,17 @@ export default function MobileWalletConnect({
             </button>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      {/* Instructions */}
-      <div className="mt-4 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded">
-        <p className="text-xs text-yellow-500/70 text-center font-['Orbitron']">
-          Tap a wallet to open the app and connect
-        </p>
-      </div>
+      {/* Instructions - only show if wallets are available */}
+      {!isDetecting && availableWallets.length > 0 && (
+        <div className="mt-4 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded">
+          <p className="text-xs text-yellow-500/70 text-center font-['Orbitron']">
+            Tap a wallet to open the app and connect
+          </p>
+        </div>
+      )}
     </div>
   );
 }

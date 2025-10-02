@@ -98,6 +98,15 @@ interface MekAsset {
   sourceKey?: string;
 }
 
+interface VerificationStatus {
+  verified: boolean;
+  isVerified?: boolean; // Alternate field name for compatibility
+  status?: 'verified' | 'pending' | 'failed';
+  source?: 'database' | 'blockchain' | 'manual';
+  lastVerified?: number;
+  error?: string;
+}
+
 // Demo wallet mock data
 const DEMO_MEKS: MekAsset[] = [
   {
@@ -230,7 +239,7 @@ export default function MekRateLoggingPage() {
 
   // Blockchain verification state
   const [showVerificationPanel, setShowVerificationPanel] = useState(true);
-  const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
   const [isSignatureVerified, setIsSignatureVerified] = useState(false);
   const [isProcessingSignature, setIsProcessingSignature] = useState(false);
   const [isVerifyingBlockchain, setIsVerifyingBlockchain] = useState(false);
@@ -561,8 +570,14 @@ export default function MekRateLoggingPage() {
   }, [ownedMeks, walletConnected]);
 
   // Sync level and boost data from goldMiningData and mekLevels into ownedMeks
+  // Debounced to prevent excessive recalculations on rapid data changes
   useEffect(() => {
-    if (goldMiningData?.ownedMeks && ownedMeks.length > 0) {
+    if (!goldMiningData?.ownedMeks || ownedMeks.length === 0) {
+      return;
+    }
+
+    // Debounce the sync operation by 150ms to batch rapid updates
+    const syncTimeout = setTimeout(() => {
       console.log('[Level Sync] Syncing level data from goldMiningData and mekLevels');
       console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
       console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData.totalGoldPerHour);
@@ -640,7 +655,10 @@ export default function MekRateLoggingPage() {
         const newTotalRate = updatedMeks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
         setGoldPerHour(newTotalRate);
       }
-    }
+    }, 150); // 150ms debounce delay
+
+    // Cleanup: cancel pending sync if dependencies change again
+    return () => clearTimeout(syncTimeout);
   }, [goldMiningData?.ownedMeks, mekLevels]); // Include mekLevels in dependencies
 
   // Close dropdown when clicking outside
