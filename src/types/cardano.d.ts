@@ -33,10 +33,13 @@ declare global {
       lace?: CardanoWallet;
       nami?: CardanoWallet;
       eternl?: CardanoWallet;
+      ccvault?: CardanoWallet; // Eternl's old name
       flint?: CardanoWallet;
       yoroi?: CardanoWallet;
       typhon?: CardanoWallet;
+      typhoncip30?: CardanoWallet; // Typhon alternative name
       gerowallet?: CardanoWallet;
+      gero?: CardanoWallet; // Gero alternative name
       nufi?: CardanoWallet;
       vespr?: CardanoWallet;
     };

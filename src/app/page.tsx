@@ -13,6 +13,8 @@ import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
 import GoldLeaderboard from "@/components/GoldLeaderboard";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import { calculateCurrentGold } from "@/convex/lib/goldCalculations";
+import MobileWalletConnect from "@/components/MobileWalletConnect";
+import { isMobileDevice, type MobileWalletType } from "@/lib/mobileWalletSupport";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
@@ -204,6 +206,8 @@ export default function MekRateLoggingPage() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [isAutoReconnecting, setIsAutoReconnecting] = useState(true); // Start with auto-reconnecting state
   const connectionLockRef = useRef<boolean>(false); // Prevent multiple simultaneous connections
+  const [isMobile] = useState(isMobileDevice()); // Detect if on mobile device
+  const [mobileWalletPending, setMobileWalletPending] = useState<MobileWalletType | null>(null); // Track mobile wallet connection attempt
 
   // Mek assets
   const [ownedMeks, setOwnedMeks] = useState<MekAsset[]>([]);
@@ -799,24 +803,113 @@ export default function MekRateLoggingPage() {
     };
   }, [isDemoMode]);
 
+  // Handle mobile wallet selection
+  const handleMobileWalletSelected = (walletType: MobileWalletType) => {
+    console.log('[Mobile Wallet] Selected:', walletType);
+    setMobileWalletPending(walletType);
+    setWalletError(null);
+    setConnectionStatus(`Opening ${walletType} wallet app...`);
+
+    // The deep link will open the wallet app
+    // When user returns, we'll check for the wallet injection
+    // Set up a polling mechanism to detect when wallet becomes available
+    const checkInterval = setInterval(() => {
+      if (typeof window !== 'undefined' && window.cardano) {
+        // Check for wallet with primary name and alternatives
+        const walletMapping: Record<string, string[]> = {
+          eternl: ['eternl', 'ccvault'],
+          typhon: ['typhon', 'typhoncip30'],
+          nufi: ['nufi'],
+          flint: ['flint'],
+          vespr: ['vespr'],
+          yoroi: ['yoroi']
+        };
+
+        const possibleNames = walletMapping[walletType] || [walletType];
+        let foundWallet = null;
+
+        for (const name of possibleNames) {
+          if (window.cardano[name]) {
+            foundWallet = window.cardano[name];
+            console.log('[Mobile Wallet] Wallet detected after deep link:', name);
+            break;
+          }
+        }
+
+        if (foundWallet) {
+          clearInterval(checkInterval);
+
+          // Try to connect automatically
+          const walletInfo: WalletInfo = {
+            name: walletType.charAt(0).toUpperCase() + walletType.slice(1),
+            icon: `/wallet-icons/${walletType}.png`,
+            version: foundWallet.apiVersion || '0.1.0',
+            api: foundWallet
+          };
+
+          connectWallet(walletInfo);
+          setMobileWalletPending(null);
+        }
+      }
+    }, 500);
+
+    // Stop checking after 30 seconds
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      if (mobileWalletPending) {
+        setMobileWalletPending(null);
+        setConnectionStatus('');
+        setWalletError('Wallet connection cancelled or timed out. Please try again.');
+      }
+    }, 30000);
+  };
+
   // Detect available Cardano wallets
   const detectAvailableWallets = () => {
     const wallets: WalletInfo[] = [];
 
     if (typeof window !== 'undefined' && window.cardano) {
-      // Check for each wallet type
-      const walletNames = ['nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi'];
+      // Check for each wallet type with multiple possible registration names
+      const walletConfigs = [
+        { names: ['nami'], display: 'Nami' },
+        { names: ['eternl', 'ccvault'], display: 'Eternl' }, // Eternl was previously CCVault
+        { names: ['flint'], display: 'Flint' },
+        { names: ['yoroi'], display: 'Yoroi' },
+        { names: ['typhon', 'typhoncip30'], display: 'Typhon' }, // Typhon might use typhoncip30
+        { names: ['gerowallet', 'gero'], display: 'Gero' },
+        { names: ['nufi'], display: 'NuFi' },
+        { names: ['lace'], display: 'Lace' }, // Added Lace support
+      ];
 
-      walletNames.forEach(name => {
-        if (window.cardano[name]) {
-          wallets.push({
-            name: name.charAt(0).toUpperCase() + name.slice(1),
-            icon: `/wallet-icons/${name}.png`,
-            version: window.cardano[name].apiVersion || '0.1.0',
-            api: window.cardano[name]
-          });
+      walletConfigs.forEach(config => {
+        // Try each possible name for the wallet
+        for (const name of config.names) {
+          if (window.cardano[name]) {
+            console.log(`[Wallet Detection] Found ${config.display} as window.cardano.${name}`);
+
+            // Check if wallet has required CIP-30 methods
+            const api = window.cardano[name];
+            const hasRequiredMethods = api.enable && api.apiVersion;
+
+            if (!hasRequiredMethods) {
+              console.warn(`[Wallet Detection] ${config.display} missing required CIP-30 methods`);
+              continue;
+            }
+
+            wallets.push({
+              name: config.display,
+              icon: `/wallet-icons/${name}.png`,
+              version: api.apiVersion || '0.1.0',
+              api: api
+            });
+            break; // Found this wallet, don't check other names
+          }
         }
       });
+
+      console.log(`[Wallet Detection] Detected ${wallets.length} compatible wallets:`, wallets.map(w => w.name).join(', '));
+    } else {
+      console.log('[Wallet Detection] window.cardano not available (check if running in browser)');
     }
 
     setAvailableWallets(wallets);
@@ -1598,7 +1691,7 @@ export default function MekRateLoggingPage() {
       />
 
       {/* Connection Status Overlay */}
-      {isConnecting && (
+      {(isConnecting || mobileWalletPending) && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="relative max-w-md w-full mx-4">
             {/* Corner brackets - hidden on mobile */}
@@ -1724,6 +1817,13 @@ export default function MekRateLoggingPage() {
                       </button>
                     ))}
                   </div>
+                ) : isMobile ? (
+                  // Mobile: Show mobile wallet options
+                  <MobileWalletConnect
+                    dappUrl="https://mek.overexposed.io"
+                    onWalletSelected={handleMobileWalletSelected}
+                    onError={(error) => setWalletError(error.message)}
+                  />
                 ) : (
                   <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
                     {/* Subtle grid background */}
