@@ -1,0 +1,27 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Armor/protection theme (Japanese armor) -->
+  <g>
+    <!-- Corner brackets -->
+    <path d="M2 2 L6 2 L6 4 L4 4 L4 6 L2 6 Z" fill="#fab617"/>
+    <path d="M26 2 L30 2 L30 6 L28 6 L28 4 L26 4 Z" fill="#fab617"/>
+    <path d="M2 26 L2 30 L6 30 L6 28 L4 28 L4 26 Z" fill="#fab617"/>
+    <path d="M28 26 L28 28 L26 28 L26 30 L30 30 L30 26 Z" fill="#fab617"/>
+
+    <!-- Shield/armor shape -->
+    <path d="M16 6 L24 10 L24 18 L16 26 L8 18 L8 10 Z"
+          stroke="#fab617" stroke-width="2" fill="#0a0a0a"/>
+
+    <!-- Armor plates (layered protection) -->
+    <path d="M16 8 L22 11 L22 17 L16 23 L10 17 L10 11 Z"
+          stroke="#fab617" stroke-width="1" fill="none"/>
+
+    <!-- Inner core -->
+    <path d="M16 12 L19 14 L19 17 L16 20 L13 17 L13 14 Z"
+          fill="#fab617"/>
+
+    <!-- Armor segments -->
+    <line x1="16" y1="6" x2="16" y2="12" stroke="#fab617" stroke-width="1"/>
+    <line x1="11" y1="12" x2="13" y2="14" stroke="#fab617" stroke-width="0.8"/>
+    <line x1="21" y1="12" x2="19" y2="14" stroke="#fab617" stroke-width="0.8"/>
+  </g>
+</svg>
