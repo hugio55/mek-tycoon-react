@@ -20,17 +20,27 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         // Ignore if nul doesn't exist in staging
       }
-      
+
+      // Check if there are any changes before attempting commit
+      const { stdout: statusOutput } = await execAsync('git status --porcelain');
+
+      if (!statusOutput.trim()) {
+        return NextResponse.json({
+          success: false,
+          error: 'No changes to commit. All files are up to date.',
+        }, { status: 400 });
+      }
+
       // Add all changes except problematic files
       await execAsync('git add -A');
-      
+
       // Create commit with the provided message
       const commitMessage = `${message}
 
 🤖 Generated with Claude Code
 
 Co-Authored-By: Claude <noreply@anthropic.com>`;
-      
+
       // Use a heredoc-style approach for the commit
       const { stdout: commitOutput } = await execAsync(
         `git commit -m "${commitMessage.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`
