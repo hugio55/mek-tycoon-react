@@ -862,8 +862,8 @@ export default function MekRateLoggingPage() {
     const wallets: WalletInfo[] = [];
 
     if (typeof window !== 'undefined' && window.cardano) {
-      // Check for each wallet type
-      const walletNames = ['nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi'];
+      // Check for each wallet type (desktop and mobile)
+      const walletNames = ['lace', 'nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi', 'vespr'];
 
       walletNames.forEach(name => {
         if (window.cardano[name]) {

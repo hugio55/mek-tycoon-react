@@ -30,6 +30,7 @@ declare global {
   interface Window {
     cardano?: {
       [key: string]: CardanoWallet;
+      lace?: CardanoWallet;
       nami?: CardanoWallet;
       eternl?: CardanoWallet;
       flint?: CardanoWallet;
@@ -37,6 +38,7 @@ declare global {
       typhon?: CardanoWallet;
       gerowallet?: CardanoWallet;
       nufi?: CardanoWallet;
+      vespr?: CardanoWallet;
     };
   }
 }
