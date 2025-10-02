@@ -1725,11 +1725,33 @@ export default function MekRateLoggingPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center bg-black/30 border border-red-500/20 p-6 backdrop-blur-sm">
-                    <p className="text-red-500 mb-4 font-['Orbitron'] uppercase tracking-wider font-bold">No Cardano wallets detected</p>
-                    <p className="text-gray-400 text-sm font-mono">
-                      Please install Nami, Eternl, Flint, or another supported wallet
-                    </p>
+                  <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
+                    {/* Subtle grid background */}
+                    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle at center, rgba(250, 182, 23, 0.1) 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
+
+                    {/* Circular radar design */}
+                    <div className="relative mx-auto w-28 h-28 mb-6">
+                      <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full" />
+                      <div className="absolute inset-2 border border-yellow-500/30 rounded-full" />
+                      <div className="absolute inset-4 border border-yellow-500/40 rounded-full" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-0.5 h-1/2 bg-gradient-to-t from-yellow-500/60 to-transparent origin-bottom animate-spin" style={{ animationDuration: '4s' }} />
+                      </div>
+                    </div>
+
+                    <div className="relative space-y-3">
+                      <p className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-sm font-bold">Wallet Connection Required</p>
+                      <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+                      <div className="px-4 space-y-2">
+                        <p className="text-gray-400 font-mono leading-relaxed" style={{ fontSize: 'clamp(0.65rem, 2vw, 0.875rem)' }}>
+                          Please install your Mek-holding Cardano wallet on this device then refresh this page.
+                        </p>
+                        <p className="text-gray-500 text-xs italic font-sans">They will appear here.</p>
+                      </div>
+                      <div className="mt-4 text-xs text-gray-600 font-mono uppercase tracking-wider">
+                        NAMI • ETERNL • FLINT • YOROI • TYPHON • GERO • NUFI
+                      </div>
+                    </div>
                   </div>
                 )}
 
