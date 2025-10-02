@@ -1897,26 +1897,34 @@ export default function MekRateLoggingPage() {
                       </div>
                     )}
 
-                    {/* VARIATION 4: Docking Port B - Circular Radar */}
+                    {/* VARIATION 4: Docking Port B - Orbital Scanner */}
                     {walletCardVariation === 4 && (
                       <div className="relative text-center bg-black/30 border border-yellow-500/30 p-8 backdrop-blur-sm overflow-hidden">
                         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle at center, rgba(250, 182, 23, 0.1) 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
                         <div className="relative mx-auto w-28 h-28 mb-6">
-                          {/* Outer rings */}
+                          {/* Static frame */}
                           <div className="absolute inset-0 border-2 border-yellow-500/20 rounded-full" />
-                          <div className="absolute inset-2 border border-yellow-500/30 rounded-full" />
-                          <div className="absolute inset-4 border border-yellow-500/40 rounded-full" />
-                          {/* Scanning beam */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-0.5 h-1/2 bg-gradient-to-t from-yellow-500/60 to-transparent origin-bottom animate-spin" style={{ animationDuration: '4s' }} />
+                          <div className="absolute inset-0 border border-yellow-500/10 rounded-full"
+                               style={{ clipPath: 'polygon(0 0, 100% 0, 100% 2px, 0 2px)' }} />
+
+                          {/* Orbiting particles - outer orbit */}
+                          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '6s' }}>
+                            <div className="absolute top-0 left-1/2 w-2 h-2 -ml-1 -mt-1 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(250,182,23,0.8)]" />
                           </div>
-                          {/* Center core */}
+
+                          {/* Middle orbit */}
+                          <div className="absolute inset-4 animate-spin" style={{ animationDuration: '4s', animationDirection: 'reverse' }}>
+                            <div className="absolute top-0 left-1/2 w-1.5 h-1.5 -ml-0.5 -mt-0.5 bg-yellow-500/80 rounded-full shadow-[0_0_6px_rgba(250,182,23,0.6)]" />
+                          </div>
+
+                          {/* Inner orbit */}
+                          <div className="absolute inset-8 animate-spin" style={{ animationDuration: '3s' }}>
+                            <div className="absolute top-0 left-1/2 w-1 h-1 -ml-0.5 -mt-0.5 bg-yellow-500/60 rounded-full shadow-[0_0_4px_rgba(250,182,23,0.4)]" />
+                          </div>
+
+                          {/* Center hub */}
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-8 h-8 bg-yellow-500/30 rounded-full animate-pulse" style={{ boxShadow: '0 0 25px rgba(250, 182, 23, 0.5)' }}>
-                              <div className="w-full h-full flex items-center justify-center">
-                                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                              </div>
-                            </div>
+                            <div className="w-3 h-3 bg-yellow-500/40 rounded-full animate-pulse" style={{ animationDuration: '2s' }} />
                           </div>
                         </div>
                         <div className="relative space-y-3">
