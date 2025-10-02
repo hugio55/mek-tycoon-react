@@ -4,6 +4,7 @@ import { v } from "convex/values";
 export const getSnapshotHistory = query({
   args: {
     walletAddress: v.optional(v.string()),
+    companyName: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -21,17 +22,39 @@ export const getSnapshotHistory = query({
       .order("desc")
       .take(limit);
 
-    return snapshots.map(snapshot => ({
-      _id: snapshot._id,
-      walletAddress: snapshot.walletAddress,
-      snapshotTime: snapshot.snapshotTime,
-      totalMekCount: snapshot.totalMekCount,
-      totalGoldPerHour: snapshot.totalGoldPerHour,
-      meks: snapshot.meks,
-      spendableGold: snapshot.spendableGold,
-      cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
-      _creationTime: snapshot._creationTime,
-    }));
+    // Get company names for all wallets and filter by company name if provided
+    const snapshotsWithCompany = await Promise.all(
+      snapshots.map(async (snapshot) => {
+        const miner = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+          .first();
+
+        return {
+          _id: snapshot._id,
+          walletAddress: snapshot.walletAddress,
+          companyName: miner?.companyName || null,
+          snapshotTime: snapshot.snapshotTime,
+          totalMekCount: snapshot.totalMekCount,
+          totalGoldPerHour: snapshot.totalGoldPerHour,
+          meks: snapshot.meks,
+          spendableGold: snapshot.spendableGold,
+          cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
+          verificationStatus: snapshot.verificationStatus,
+          _creationTime: snapshot._creationTime,
+        };
+      })
+    );
+
+    // Filter by company name if provided
+    if (args.companyName) {
+      const searchTerm = args.companyName.toLowerCase();
+      return snapshotsWithCompany.filter(snapshot =>
+        snapshot.companyName?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    return snapshotsWithCompany;
   },
 });
 

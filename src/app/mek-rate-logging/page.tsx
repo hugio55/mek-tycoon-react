@@ -934,6 +934,11 @@ export default function MekRateLoggingPage() {
       });
     }
 
+    console.log('[WALLET DETECTION]', {
+      timestamp: new Date().toISOString(),
+      walletsFound: wallets.length,
+      walletNames: wallets.map(w => w.name)
+    });
     setAvailableWallets(wallets);
   };
 
@@ -952,6 +957,31 @@ export default function MekRateLoggingPage() {
     setWalletError(null);
 
     try {
+      // Check if mobile and attempt deep linking
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        navigator.userAgent.toLowerCase()
+      );
+
+      if (isMobile) {
+        console.log('[Wallet Connect] Mobile device detected - attempting deep link');
+
+        // Try to open wallet app via deep link
+        const walletName = wallet.name.toLowerCase();
+        const dappUrl = window.location.origin + window.location.pathname;
+
+        // Import deep link functionality
+        const { openMobileWallet } = await import('@/lib/mobileWalletSupport');
+
+        try {
+          await openMobileWallet(walletName as any, dappUrl, 5000);
+          console.log('[Wallet Connect] Mobile wallet opened successfully');
+          setConnectionStatus('Waiting for wallet app to authorize...');
+        } catch (deepLinkError) {
+          console.warn('[Wallet Connect] Deep link failed, continuing with standard flow:', deepLinkError);
+          // Continue with standard flow even if deep link fails
+        }
+      }
+
       // Use rate limiter for wallet connection
       const connectResult = await rateLimitedCall(
         wallet.name,
@@ -1062,14 +1092,27 @@ export default function MekRateLoggingPage() {
               errorMsg = `Authentication failed: ${sigError.message || 'Please approve the signature request'}`;
             }
 
+            // Set error but keep wallet available for retry
             setWalletError(errorMsg);
             setIsSignatureVerified(false);
             setIsConnecting(false);
             setConnectionStatus('');
             console.log('[Wallet Connect] isConnecting reset to false after signature error');
+            console.log('[WALLET ERROR STATE]', {
+              timestamp: new Date().toISOString(),
+              errorMsg,
+              availableWalletsCount: availableWallets.length,
+              walletConnected,
+              isConnecting: false,
+              message: 'Error occurred but availableWallets should remain populated for retry'
+            });
+
+            // Release lock to allow retry
+            connectionLockRef.current = false;
 
             // STOP HERE - Do not proceed without valid signature
-            throw sigError; // Re-throw to be caught by outer catch
+            // Don't throw - just return to allow user to retry with same UI
+            return;
           }
 
           return { api, stakeAddress, nonce: verifiedNonce };
@@ -2059,6 +2102,14 @@ export default function MekRateLoggingPage() {
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                       {walletError}
                     </div>
+                    {/* DEBUGGING: Log wallet state when error occurs */}
+                    {console.log('[WALLET ERROR UI]', {
+                      timestamp: new Date().toISOString(),
+                      walletError,
+                      availableWalletsCount: availableWallets.length,
+                      isConnecting,
+                      walletConnected
+                    })}
                   </div>
                 )}
               </div>

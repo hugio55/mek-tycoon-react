@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { GlobalClickSound } from "@/components/GlobalClickSound";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +57,7 @@ export default function RootLayout({
             <Providers>{children}</Providers>
           </DemoModeWrapper>
         </div>
+        <SpeedInsights />
       </body>
     </html>
   );
