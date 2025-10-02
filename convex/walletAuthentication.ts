@@ -264,8 +264,8 @@ export const verifySignature = action({
       }
 
       // REAL CRYPTOGRAPHIC SIGNATURE VERIFICATION
-      // Use simplified verification temporarily while debugging CSL library issues
-      const verificationResult = await ctx.runAction(api.actions.verifyCardanoSignatureSimple.verifyCardanoSignature, {
+      // Using full Ed25519 verification with CSL library
+      const verificationResult = await ctx.runAction(api.actions.verifyCardanoSignature.verifyCardanoSignature, {
         stakeAddress: args.stakeAddress,
         nonce: args.nonce,
         signature: args.signature,

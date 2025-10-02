@@ -1,0 +1,24 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Storm/power theme with lightning bolt -->
+  <g>
+    <!-- Corner brackets -->
+    <path d="M2 2 L6 2 L6 4 L4 4 L4 6 L2 6 Z" fill="#fab617"/>
+    <path d="M26 2 L30 2 L30 6 L28 6 L28 4 L26 4 Z" fill="#fab617"/>
+    <path d="M2 26 L2 30 L6 30 L6 28 L4 28 L4 26 Z" fill="#fab617"/>
+    <path d="M28 26 L28 28 L26 28 L26 30 L30 30 L30 26 Z" fill="#fab617"/>
+
+    <!-- Hexagonal frame -->
+    <path d="M16 6 L22 10 L22 20 L16 24 L10 20 L10 10 Z"
+          stroke="#fab617" stroke-width="2" fill="none"/>
+
+    <!-- Lightning bolt -->
+    <path d="M18 8 L14 15 L17 15 L13 24 L19 16 L15 16 L18 8 Z"
+          fill="#fab617" stroke="#000" stroke-width="0.5"/>
+
+    <!-- Energy lines -->
+    <path d="M11 12 L9 11" stroke="#fab617" stroke-width="1" opacity="0.5"/>
+    <path d="M11 18 L9 19" stroke="#fab617" stroke-width="1" opacity="0.5"/>
+    <path d="M21 12 L23 11" stroke="#fab617" stroke-width="1" opacity="0.5"/>
+    <path d="M21 18 L23 19" stroke="#fab617" stroke-width="1" opacity="0.5"/>
+  </g>
+</svg>

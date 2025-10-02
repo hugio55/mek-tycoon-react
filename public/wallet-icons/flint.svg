@@ -1,0 +1,22 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fire/spark theme with sharp angles -->
+  <g>
+    <!-- Corner brackets -->
+    <path d="M2 2 L6 2 L6 4 L4 4 L4 6 L2 6 Z" fill="#fab617"/>
+    <path d="M26 2 L30 2 L30 6 L28 6 L28 4 L26 4 Z" fill="#fab617"/>
+    <path d="M2 26 L2 30 L6 30 L6 28 L4 28 L4 26 Z" fill="#fab617"/>
+    <path d="M28 26 L28 28 L26 28 L26 30 L30 30 L30 26 Z" fill="#fab617"/>
+
+    <!-- Flame/spark shape - sharp angular -->
+    <path d="M16 6 L20 12 L18 14 L22 18 L20 20 L24 26 L16 22 L8 26 L12 20 L10 18 L14 14 L12 12 Z"
+          fill="#fab617" stroke="#000" stroke-width="1"/>
+
+    <!-- Inner spark lines -->
+    <path d="M16 10 L16 18" stroke="#000" stroke-width="1.5"/>
+    <path d="M14 14 L18 14" stroke="#000" stroke-width="1"/>
+
+    <!-- Edge highlights -->
+    <path d="M12 12 L11 13" stroke="#fab617" stroke-width="1" opacity="0.6"/>
+    <path d="M20 12 L21 13" stroke="#fab617" stroke-width="1" opacity="0.6"/>
+  </g>
+</svg>
