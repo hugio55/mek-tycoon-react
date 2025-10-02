@@ -32,10 +32,15 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
   const triggerDailyBackup = useMutation(api.goldBackups.triggerManualDailyBackup);
   const triggerCleanup = useMutation(api.goldBackups.triggerManualCleanup);
 
+  // Gold invariant validation
+  const checkGoldInvariants = useQuery(api.validateGoldInvariants.checkGoldInvariantViolations);
+  const fixGoldInvariants = useMutation(api.validateGoldInvariants.fixGoldInvariantViolations);
+
   // Loading states
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isFixingGold, setIsFixingGold] = useState(false);
 
   // Handle manual backup creation
   const handleCreateBackup = async () => {
@@ -131,6 +136,30 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
     }
   };
 
+  // Handle cumulative gold fix
+  const handleFixGoldInvariants = async (dryRun: boolean = true) => {
+    if (isFixingGold) return;
+
+    if (!dryRun && !confirm('This will update all wallet records with incorrect cumulative gold values. Continue?')) {
+      return;
+    }
+
+    setIsFixingGold(true);
+    try {
+      const result = await fixGoldInvariants({ dryRun });
+
+      if (dryRun) {
+        alert(`DRY RUN COMPLETE:\n- Records to fix: ${result.fixed.length}\n- Skipped: ${result.skipped.length}\n\n${result.summary}\n\nClick "Fix Cumulative Gold" to apply changes.`);
+      } else {
+        alert(`Fix completed!\n${result.summary}\n- Fixed: ${result.fixed.length}\n- Skipped: ${result.skipped.length}`);
+      }
+    } catch (error) {
+      alert(`Fix failed: ${error}`);
+    } finally {
+      setIsFixingGold(false);
+    }
+  };
+
   if (!allBackups || !systemStats) {
     return <div className="p-4">Loading gold backup system...</div>;
   }
@@ -186,6 +215,50 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
             ))}
           </div>
         </div>
+
+        {/* Cumulative Gold Validation */}
+        {checkGoldInvariants && (
+          <div className="mt-4 p-3 rounded mek-border-sharp-gold">
+            <div className="text-sm text-gray-400 mb-2">Cumulative Gold Integrity</div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2">
+                <div className="text-sm">
+                  {checkGoldInvariants.summary.critical === '✅ No violations' ? (
+                    <span className="text-green-400">{checkGoldInvariants.summary.critical}</span>
+                  ) : (
+                    <span className="text-red-400">{checkGoldInvariants.summary.critical}</span>
+                  )}
+                </div>
+                <div className="text-sm">
+                  {checkGoldInvariants.summary.warnings === '✅ All records initialized' ? (
+                    <span className="text-green-400">{checkGoldInvariants.summary.warnings}</span>
+                  ) : (
+                    <span className="text-yellow-400">{checkGoldInvariants.summary.warnings}</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {checkGoldInvariants.total} total records • {checkGoldInvariants.violations} violations • {checkGoldInvariants.warnings} warnings
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleFixGoldInvariants(true)}
+                  disabled={isFixingGold}
+                  className="px-4 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors disabled:opacity-50"
+                >
+                  {isFixingGold ? 'Checking...' : 'Check Issues'}
+                </button>
+                <button
+                  onClick={() => handleFixGoldInvariants(false)}
+                  disabled={isFixingGold || (checkGoldInvariants.violations === 0 && checkGoldInvariants.warnings === 0)}
+                  className="px-4 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors disabled:opacity-50"
+                >
+                  {isFixingGold ? 'Fixing...' : 'Fix Cumulative Gold'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Manual Backup Creation */}
