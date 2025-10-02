@@ -101,7 +101,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
   return (
     <>
       {/* Top Corporations styled like Mek cards */}
-      <div className="w-full sm:max-w-[600px]">
+      <div className="w-full sm:max-w-[600px] mb-0 sm:mb-8">
         <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden">
           {/* Subtle grid overlay */}
           <div
