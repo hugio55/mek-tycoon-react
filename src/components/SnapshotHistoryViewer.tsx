@@ -16,6 +16,7 @@ function SnapshotHistoryViewer() {
 
   const logs = useQuery(api.snapshotHistory.getSnapshotLogs, { limit: 20 });
   const deleteSnapshot = useMutation(api.snapshotHistory.deleteSnapshot);
+  const deleteAllSnapshots = useMutation(api.snapshotHistory.deleteAllSnapshots);
   const restoreFromSnapshot = useMutation(api.snapshotHistory.restoreFromSnapshot);
 
   const handleDeleteSnapshot = useCallback(async (snapshotId: string) => {
@@ -28,6 +29,28 @@ function SnapshotHistoryViewer() {
       alert('Failed to delete snapshot');
     }
   }, [deleteSnapshot]);
+
+  const handleDeleteAllSnapshots = useCallback(async () => {
+    const totalCount = snapshots?.length || 0;
+    if (totalCount === 0) {
+      alert('No snapshots to delete');
+      return;
+    }
+
+    const confirmMsg = `⚠️⚠️⚠️ DELETE ALL SNAPSHOTS ⚠️⚠️⚠️\n\nYou are about to PERMANENTLY DELETE ALL ${totalCount} snapshot${totalCount === 1 ? '' : 's'}.\n\nThis will:\n• Remove the entire audit trail\n• Delete ALL blockchain verification records\n• Cannot be undone\n\nAre you ABSOLUTELY SURE you want to delete EVERYTHING?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    if (!confirm(`FINAL WARNING: Delete all ${totalCount} snapshots?\n\nType "yes" in the next dialog to confirm.`)) return;
+
+    try {
+      const result = await deleteAllSnapshots({});
+      alert(`✅ ${result.message}\n\n${result.deletedCount} snapshots have been permanently deleted.`);
+    } catch (error: any) {
+      console.error('Failed to delete all snapshots:', error);
+      alert(`Failed to delete snapshots:\n${error.message || error}`);
+    }
+  }, [deleteAllSnapshots, snapshots]);
 
   const handleRestoreSnapshot = useCallback(async (snapshotId: string, walletAddress: string, snapshotTime: number) => {
     const confirmMsg = `⚠️ RESTORE FROM SNAPSHOT ⚠️\n\nThis will restore wallet ${walletAddress.substring(0, 12)}... to the EXACT state from:\n${new Date(snapshotTime).toLocaleString()}\n\nThis will:\n• Replace current Mek ownership data\n• Restore gold per hour rates\n• Restore Mek levels\n• Restore gold balance\n• Restore cumulative gold\n\nAre you ABSOLUTELY SURE you want to do this?`;
@@ -117,6 +140,13 @@ function SnapshotHistoryViewer() {
                 Clear Filter
               </button>
             )}
+            <button
+              onClick={handleDeleteAllSnapshots}
+              className="px-4 py-2 bg-red-900/50 hover:bg-red-900/70 text-red-400 border border-red-700 rounded-lg transition-colors font-semibold"
+              title="Delete all snapshots permanently"
+            >
+              Delete All
+            </button>
           </div>
 
           <div className="space-y-3">
