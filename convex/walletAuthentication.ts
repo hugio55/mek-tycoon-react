@@ -2,6 +2,22 @@ import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 
+// Rate Limiting Configuration
+const NONCE_RATE_LIMIT = {
+  maxAttempts: 5,
+  windowMs: 60 * 60 * 1000, // 1 hour
+};
+
+const SIGNATURE_RATE_LIMIT = {
+  maxAttempts: 10,
+  windowMs: 60 * 60 * 1000, // 1 hour
+};
+
+const FAILED_ATTEMPTS_LOCKOUT = {
+  maxConsecutiveFails: 3,
+  lockoutDurationMs: 60 * 60 * 1000, // 1 hour
+};
+
 // Helper function to convert hex string to bytes array (Convex-compatible)
 function hexToBytes(hex: string): number[] {
   const bytes = [];
@@ -37,6 +53,123 @@ async function verifyCardanoSignature(args: {
   return true; // Always return true here, real check is in the action
 }
 
+// Helper function to check and update rate limits
+async function checkRateLimit(
+  ctx: any,
+  stakeAddress: string,
+  actionType: "nonce_generation" | "signature_verification"
+): Promise<{ allowed: boolean; error?: string; lockedUntil?: number }> {
+  const now = Date.now();
+
+  // Get current rate limit record
+  const rateLimitRecord = await ctx.db
+    .query("walletRateLimits")
+    .withIndex("by_stake_address_action", q =>
+      q.eq("stakeAddress", stakeAddress).eq("actionType", actionType)
+    )
+    .first();
+
+  // Check if wallet is locked out
+  if (rateLimitRecord?.lockedUntil && rateLimitRecord.lockedUntil > now) {
+    const remainingMinutes = Math.ceil((rateLimitRecord.lockedUntil - now) / 60000);
+    return {
+      allowed: false,
+      error: `Too many failed attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+      lockedUntil: rateLimitRecord.lockedUntil,
+    };
+  }
+
+  const limit = actionType === "nonce_generation" ? NONCE_RATE_LIMIT : SIGNATURE_RATE_LIMIT;
+
+  if (!rateLimitRecord) {
+    // First attempt - create new record
+    await ctx.db.insert("walletRateLimits", {
+      stakeAddress,
+      actionType,
+      attemptCount: 1,
+      windowStart: now,
+      lastAttemptAt: now,
+      consecutiveFailures: 0,
+    });
+    return { allowed: true };
+  }
+
+  // Check if we're in a new time window
+  const windowAge = now - rateLimitRecord.windowStart;
+  if (windowAge > limit.windowMs) {
+    // Reset for new window
+    await ctx.db.patch(rateLimitRecord._id, {
+      attemptCount: 1,
+      windowStart: now,
+      lastAttemptAt: now,
+    });
+    return { allowed: true };
+  }
+
+  // Check if limit exceeded
+  if (rateLimitRecord.attemptCount >= limit.maxAttempts) {
+    const remainingMinutes = Math.ceil((limit.windowMs - windowAge) / 60000);
+    return {
+      allowed: false,
+      error: `Rate limit exceeded. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+    };
+  }
+
+  // Increment attempt count
+  await ctx.db.patch(rateLimitRecord._id, {
+    attemptCount: rateLimitRecord.attemptCount + 1,
+    lastAttemptAt: now,
+  });
+
+  return { allowed: true };
+}
+
+// Helper to record failed attempt
+async function recordFailedAttempt(ctx: any, stakeAddress: string): Promise<void> {
+  const now = Date.now();
+
+  const rateLimitRecord = await ctx.db
+    .query("walletRateLimits")
+    .withIndex("by_stake_address_action", q =>
+      q.eq("stakeAddress", stakeAddress).eq("actionType", "signature_verification")
+    )
+    .first();
+
+  if (!rateLimitRecord) return;
+
+  const consecutiveFails = (rateLimitRecord.consecutiveFailures || 0) + 1;
+
+  // Check if we should lock out the wallet
+  if (consecutiveFails >= FAILED_ATTEMPTS_LOCKOUT.maxConsecutiveFails) {
+    const lockedUntil = now + FAILED_ATTEMPTS_LOCKOUT.lockoutDurationMs;
+    await ctx.db.patch(rateLimitRecord._id, {
+      consecutiveFailures: consecutiveFails,
+      lockedUntil,
+    });
+  } else {
+    await ctx.db.patch(rateLimitRecord._id, {
+      consecutiveFailures: consecutiveFails,
+    });
+  }
+}
+
+// Helper to reset failed attempts on success
+async function resetFailedAttempts(ctx: any, stakeAddress: string): Promise<void> {
+  const rateLimitRecord = await ctx.db
+    .query("walletRateLimits")
+    .withIndex("by_stake_address_action", q =>
+      q.eq("stakeAddress", stakeAddress).eq("actionType", "signature_verification")
+    )
+    .first();
+
+  if (rateLimitRecord) {
+    await ctx.db.patch(rateLimitRecord._id, {
+      consecutiveFailures: 0,
+      lockedUntil: undefined,
+    });
+  }
+}
+
 // Generate a unique nonce for wallet signature
 export const generateNonce = mutation({
   args: {
@@ -44,6 +177,12 @@ export const generateNonce = mutation({
     walletName: v.string()
   },
   handler: async (ctx, args) => {
+    // Check rate limit for nonce generation
+    const rateLimitCheck = await checkRateLimit(ctx, args.stakeAddress, "nonce_generation");
+    if (!rateLimitCheck.allowed) {
+      throw new Error(rateLimitCheck.error || "Rate limit exceeded");
+    }
+
     // Generate a random nonce
     const nonce = `mek-auth-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
@@ -78,12 +217,27 @@ export const verifySignature = action({
   },
   handler: async (ctx, args): Promise<{success: boolean, error?: string, verified?: boolean, expiresAt?: number}> => {
     try {
+      // Check rate limit for signature verification
+      const rateLimitCheck = await ctx.runMutation(api.walletAuthentication.checkSignatureRateLimit, {
+        stakeAddress: args.stakeAddress
+      });
+
+      if (!rateLimitCheck.allowed) {
+        return {
+          success: false,
+          error: rateLimitCheck.error || "Rate limit exceeded"
+        };
+      }
+
       // Get the nonce record
       const nonceRecord: any = await ctx.runQuery(api.walletAuthentication.getNonceRecord, {
         nonce: args.nonce
       });
 
       if (!nonceRecord) {
+        await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
+          stakeAddress: args.stakeAddress
+        });
         return {
           success: false,
           error: "Invalid nonce"
@@ -92,6 +246,9 @@ export const verifySignature = action({
 
       // Check if expired
       if (Date.now() > nonceRecord.expiresAt) {
+        await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
+          stakeAddress: args.stakeAddress
+        });
         return {
           success: false,
           error: "Nonce expired. Please generate a new one."
@@ -125,6 +282,11 @@ export const verifySignature = action({
           verified: true
         });
 
+        // Reset failed attempts counter on success
+        await ctx.runMutation(api.walletAuthentication.resetSignatureFailures, {
+          stakeAddress: args.stakeAddress
+        });
+
         // No multi-wallet linking needed - one wallet per account
 
         // Log the successful connection
@@ -142,6 +304,11 @@ export const verifySignature = action({
           expiresAt: nonceRecord.expiresAt
         };
       } else {
+        // Record failed attempt
+        await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
+          stakeAddress: args.stakeAddress
+        });
+
         // Log failed attempt
         await ctx.runMutation(api.auditLogs.logWalletConnection, {
           stakeAddress: args.stakeAddress,
@@ -235,6 +402,36 @@ export const checkAuthentication = query({
   }
 });
 
+// Check signature rate limit (called from action)
+export const checkSignatureRateLimit = mutation({
+  args: {
+    stakeAddress: v.string()
+  },
+  handler: async (ctx, args) => {
+    return await checkRateLimit(ctx, args.stakeAddress, "signature_verification");
+  }
+});
+
+// Record signature failure
+export const recordSignatureFailure = mutation({
+  args: {
+    stakeAddress: v.string()
+  },
+  handler: async (ctx, args) => {
+    await recordFailedAttempt(ctx, args.stakeAddress);
+  }
+});
+
+// Reset signature failures on success
+export const resetSignatureFailures = mutation({
+  args: {
+    stakeAddress: v.string()
+  },
+  handler: async (ctx, args) => {
+    await resetFailedAttempts(ctx, args.stakeAddress);
+  }
+});
+
 // Clean up expired signatures
 export const cleanupExpiredSignatures = mutation({
   args: {},
@@ -250,6 +447,33 @@ export const cleanupExpiredSignatures = mutation({
 
     return {
       cleaned: expired.length
+    };
+  }
+});
+
+// Clean up expired rate limit lockouts
+export const cleanupExpiredLockouts = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Find all rate limit records with expired lockouts
+    const allRateLimits = await ctx.db.query("walletRateLimits").collect();
+
+    let cleanedCount = 0;
+    for (const record of allRateLimits) {
+      if (record.lockedUntil && record.lockedUntil < now) {
+        await ctx.db.patch(record._id, {
+          lockedUntil: undefined,
+          consecutiveFailures: 0,
+        });
+        cleanedCount++;
+      }
+    }
+
+    return {
+      cleaned: cleanedCount,
+      timestamp: now,
     };
   }
 });

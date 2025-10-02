@@ -243,6 +243,19 @@ When user types `/ui-team`, activate these three agents together:
 - `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
+### `/ultra` - Ultimate wallet and database debugging
+When user types `/ultra`, activate these four agents together in parallel:
+
+**Wallet Integration Team:**
+- `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
+- `@blockchain-architecture-specialist` - Design trustless verification and on-chain integration
+
+**Database Team:**
+- `@convex-database-architect` - Fix Convex queries, mutations, schemas, and reactivity
+- `@state-sync-debugger` - Debug state synchronization between database and UI
+
+Use for: wallet connection failures, NFTs not syncing, database/UI desync, cumulative gold errors
+
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:
 

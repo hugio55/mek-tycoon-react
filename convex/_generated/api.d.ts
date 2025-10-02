@@ -128,6 +128,7 @@ import type * as sunspotActions from "../sunspotActions.js";
 import type * as sunspotAntiCheat from "../sunspotAntiCheat.js";
 import type * as sunspots from "../sunspots.js";
 import type * as talentTree from "../talentTree.js";
+import type * as testSessionManagement from "../testSessionManagement.js";
 import type * as updateVariationImages from "../updateVariationImages.js";
 import type * as userStats from "../userStats.js";
 import type * as usernames from "../usernames.js";
@@ -137,6 +138,7 @@ import type * as variationBuffs from "../variationBuffs.js";
 import type * as variationsReference from "../variationsReference.js";
 import type * as walletAuth from "../walletAuth.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
+import type * as walletSession from "../walletSession.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -262,6 +264,7 @@ declare const fullApi: ApiFromModules<{
   sunspotAntiCheat: typeof sunspotAntiCheat;
   sunspots: typeof sunspots;
   talentTree: typeof talentTree;
+  testSessionManagement: typeof testSessionManagement;
   updateVariationImages: typeof updateVariationImages;
   userStats: typeof userStats;
   usernames: typeof usernames;
@@ -271,6 +274,7 @@ declare const fullApi: ApiFromModules<{
   variationsReference: typeof variationsReference;
   walletAuth: typeof walletAuth;
   walletAuthentication: typeof walletAuthentication;
+  walletSession: typeof walletSession;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

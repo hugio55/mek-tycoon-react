@@ -13,6 +13,14 @@ import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
 import GoldLeaderboard from "@/components/GoldLeaderboard";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
 import { calculateCurrentGold } from "@/convex/lib/goldCalculations";
+import {
+  saveWalletSession,
+  restoreWalletSession,
+  clearWalletSession,
+  getCachedMeks,
+  updateCachedMeks,
+  generateSessionId,
+} from "@/lib/walletSessionManager";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
@@ -266,12 +274,18 @@ export default function MekRateLoggingPage() {
     bonusRate: number
   }}>({});
 
-  // Convex mutations
+  // Convex mutations and queries
   const initializeGoldMining = useMutation(api.goldMining.initializeGoldMining);
   const initializeWithBlockfrost = useAction(api.goldMining.initializeWithBlockfrost);
   const updateGoldCheckpoint = useMutation(api.goldMining.updateGoldCheckpoint);
   const updateLastActive = useMutation(api.goldMining.updateLastActive);
   const upgradeMek = useMutation(api.mekLeveling.upgradeMekLevel);
+  const generateNonce = useMutation(api.walletAuthentication.generateNonce);
+  const verifySignature = useAction(api.walletAuthentication.verifySignature);
+  const checkAuth = useQuery(
+    api.walletAuthentication.checkAuthentication,
+    walletAddress ? { stakeAddress: walletAddress } : "skip"
+  );
   const calculateGoldRates = useQuery(api.goldMining.calculateGoldRates,
     ownedMeks.length > 0 ? {
       meks: ownedMeks
@@ -309,9 +323,7 @@ export default function MekRateLoggingPage() {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Blockchain verification hooks
-  const generateNonce = useMutation(api.walletAuthentication.generateNonce);
-  const verifySignature = useAction(api.walletAuthentication.verifySignature);
+  // Blockchain verification hooks (generateNonce and verifySignature declared above)
   const createGoldCheckpoint = useAction(api.goldCheckpointingActions.createGoldCheckpoint);
   const fetchOnChainRates = useAction(api.smartContractArchitecture.fetchOnChainRates);
   // Multi-wallet aggregation removed - one wallet per account
@@ -415,37 +427,42 @@ export default function MekRateLoggingPage() {
       }
 
       try {
-        const savedWalletData = localStorage.getItem('mek_wallet_session');
-        if (!savedWalletData) {
+        // Try new session format first
+        const session = restoreWalletSession();
+        if (!session) {
           setIsAutoReconnecting(false);
           return;
         }
 
-        const { walletName, stakeAddress, paymentAddress, timestamp, cachedMeks } = JSON.parse(savedWalletData);
+        console.log('[Session Restore] Found valid session:', {
+          walletName: session.walletName,
+          platform: session.platform,
+          age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
+        });
 
-        // Immediately display cached Meks for instant load
+        // Load cached Meks immediately for instant display
+        const cachedMeks = getCachedMeks();
         if (cachedMeks && cachedMeks.length > 0) {
           console.log('[Session Restore] Loading', cachedMeks.length, 'cached Meks for instant display');
           setOwnedMeks(cachedMeks);
         }
 
-        // Check if session is still valid (within 24 hours)
-        const sessionAge = Date.now() - timestamp;
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (sessionAge > twentyFourHours) {
-          console.log('[Session Restore] Session expired (>24 hours)');
-          localStorage.removeItem('mek_wallet_session');
-          setIsAutoReconnecting(false);
-          return;
-        }
+        // Validate session with Convex authentication
+        // Set wallet address temporarily to trigger checkAuth query
+        setWalletAddress(session.stakeAddress);
 
-        console.log('[Session Restore] Found saved wallet session:', walletName);
-        console.log('[Session Restore] Session age:', Math.round(sessionAge / 1000 / 60), 'minutes');
+        // Wait a moment for checkAuth to execute
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Note: checkAuth query will be checked in the next render cycle
+        // For now, we proceed with wallet reconnection optimistically
 
         // Check if wallet extension is still available
-        if (!window.cardano || !window.cardano[walletName.toLowerCase()]) {
-          console.log('[Session Restore] Wallet extension not available');
-          localStorage.removeItem('mek_wallet_session');
+        const walletKey = session.walletName.toLowerCase();
+        if (!window.cardano || !window.cardano[walletKey]) {
+          console.log('[Session Restore] Wallet extension not available:', walletKey);
+          clearWalletSession();
+          setWalletAddress(null);
           setIsAutoReconnecting(false);
           return;
         }
@@ -453,12 +470,11 @@ export default function MekRateLoggingPage() {
         console.log('[Session Restore] Reconnecting wallet silently...');
 
         // Enable wallet silently
-        const api = await window.cardano[walletName.toLowerCase()].enable();
+        const api = await window.cardano[walletKey].enable();
 
         setWalletConnected(true);
-        setWalletAddress(stakeAddress);
-        setPaymentAddress(paymentAddress);
-        setWalletType(walletName.toLowerCase());
+        setPaymentAddress(session.walletAddress);
+        setWalletType(walletKey);
         setIsSignatureVerified(true);
 
         // Only show loading if we don't have cached Meks
@@ -471,10 +487,10 @@ export default function MekRateLoggingPage() {
 
         // Initialize with Blockfrost (server will handle existing data in background)
         const initResult = await initializeWithBlockfrost({
-          walletAddress: paymentAddress || stakeAddress,
-          stakeAddress,
-          walletType: walletName.toLowerCase(),
-          paymentAddresses: [paymentAddress].filter(Boolean) // Pass payment addresses for fallback
+          walletAddress: session.walletAddress || session.stakeAddress,
+          stakeAddress: session.stakeAddress,
+          walletType: walletKey,
+          paymentAddresses: [session.walletAddress].filter(Boolean)
         });
 
         if (initResult.success) {
@@ -491,7 +507,8 @@ export default function MekRateLoggingPage() {
 
       } catch (error) {
         console.error('[Session Restore] Failed to restore session:', error);
-        localStorage.removeItem('mek_wallet_session');
+        clearWalletSession();
+        setWalletAddress(null);
         setIsAutoReconnecting(false);
       }
     };
@@ -500,6 +517,34 @@ export default function MekRateLoggingPage() {
   }, [forceNoWallet]);
 
   // Watch authentication status and clear session if expired
+  useEffect(() => {
+    if (!walletConnected || !walletAddress || !checkAuth) {
+      return;
+    }
+
+    console.log('[Auth Check] Authentication status:', checkAuth);
+
+    // If authentication check shows not authenticated, clear session
+    if (checkAuth.authenticated === false) {
+      console.warn('[Auth Check] Session expired or invalid - clearing wallet connection');
+      setToast({
+        message: 'Your session has expired. Please reconnect your wallet.',
+        type: 'info',
+      });
+
+      // Disconnect wallet
+      setWalletConnected(false);
+      setWalletAddress(null);
+      setWalletType(null);
+      setOwnedMeks([]);
+      setIsSignatureVerified(false);
+      clearWalletSession();
+    } else if (checkAuth.authenticated === true) {
+      console.log('[Auth Check] Session valid, expires at:', new Date(checkAuth.expiresAt || 0).toISOString());
+    }
+  }, [checkAuth, walletConnected, walletAddress]);
+
+  // Original useEffect continues below
   useEffect(() => {
     // Only check auth if we're connected, verified, NOT currently connecting, AND not auto-reconnecting
     if (authStatus && walletConnected && isSignatureVerified && !isConnecting && !isAutoReconnecting) {
@@ -559,13 +604,7 @@ export default function MekRateLoggingPage() {
   // Update cached Meks in localStorage whenever they change
   useEffect(() => {
     if (walletConnected && ownedMeks.length > 0) {
-      const savedWalletData = localStorage.getItem('mek_wallet_session');
-      if (savedWalletData) {
-        const sessionData = JSON.parse(savedWalletData);
-        sessionData.cachedMeks = ownedMeks;
-        localStorage.setItem('mek_wallet_session', JSON.stringify(sessionData));
-        console.log('[Session Cache] Updated cached Meks:', ownedMeks.length);
-      }
+      updateCachedMeks(ownedMeks);
     }
   }, [ownedMeks, walletConnected]);
 
@@ -952,12 +991,14 @@ export default function MekRateLoggingPage() {
 
           // Generate nonce for signature verification - REQUIRED
           let signatureVerified = false;
+          let verifiedNonce = ''; // Store nonce for session management
           try {
             console.log('[Wallet Connect] Generating nonce for signature...');
             const nonceResult = await generateNonce({
               stakeAddress,
               walletName: wallet.name
             });
+            verifiedNonce = nonceResult.nonce; // Save nonce
             console.log('[Wallet Connect] Nonce generated successfully');
 
             // Get a payment address for signing (signData doesn't work with stake addresses directly)
@@ -1031,7 +1072,7 @@ export default function MekRateLoggingPage() {
             throw sigError; // Re-throw to be caught by outer catch
           }
 
-          return { api, stakeAddress };
+          return { api, stakeAddress, nonce: verifiedNonce };
         },
         (retryAfter, reason) => {
           setWalletError(`Rate limited: ${reason}. Retry in ${Math.ceil(retryAfter / 1000)}s`);
@@ -1049,7 +1090,7 @@ export default function MekRateLoggingPage() {
 
       console.log('[Wallet Connect] Connection result received:', !!connectResult);
 
-      const { api, stakeAddress } = connectResult;
+      const { api, stakeAddress, nonce } = connectResult;
 
       // Also get payment addresses as backup
       const paymentAddresses = await api.getUsedAddresses();
@@ -1120,16 +1161,17 @@ export default function MekRateLoggingPage() {
         setLoadingMeks(false);
       }
 
-      // Save wallet session to localStorage for 24-hour persistence (including Meks cache)
-      const sessionData = {
+      // Save wallet session using new session manager
+      const sessionId = generateSessionId();
+      saveWalletSession({
         walletName: wallet.name,
         stakeAddress,
         paymentAddress: primaryPaymentAddress,
-        timestamp: Date.now(),
-        cachedMeks: meks
-      };
-      localStorage.setItem('mek_wallet_session', JSON.stringify(sessionData));
-      console.log('[Session Save] Wallet session saved to localStorage with', meks.length, 'cached Meks');
+        nonce: nonce || '', // Use nonce from verification
+        sessionId,
+        cachedMeks: meks,
+      });
+      console.log('[Session Save] Wallet session saved with', meks.length, 'cached Meks, platform info included');
 
       // Set state
       setWalletAddress(stakeAddress);
@@ -1501,13 +1543,11 @@ export default function MekRateLoggingPage() {
     setOwnedMeks([]);
     setCurrentGold(0);
     setGoldPerHour(0);
+    setIsSignatureVerified(false);
     walletApiRef.current = null; // Clear wallet API reference
 
-    // Clear localStorage
-    localStorage.removeItem('goldMiningWallet');
-    localStorage.removeItem('goldMiningWalletType');
-    localStorage.removeItem('mek_wallet_session');
-    console.log('[Session Clear] Wallet session cleared from localStorage');
+    // Clear session using new session manager
+    clearWalletSession();
 
     // Clear intervals
     if (goldIntervalRef.current) {

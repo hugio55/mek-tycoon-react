@@ -209,6 +209,15 @@ export default defineSchema({
     walletVerified: v.optional(v.boolean()), // True if wallet ownership is verified via signature
     walletType: v.optional(v.string()), // e.g., "nami", "eternl", "flint", etc.
 
+    // Session Management & Mobile Tracking
+    lastWalletType: v.optional(v.string()), // Last connected wallet (eternl, nami, etc.)
+    lastConnectionPlatform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop
+    lastConnectionTime: v.optional(v.number()), // Timestamp of last connection
+    activeSessionId: v.optional(v.string()), // Current active session identifier
+    sessionExpiresAt: v.optional(v.number()), // When current session expires
+    preferredWallet: v.optional(v.string()), // User's preferred wallet for auto-connect
+    totalConnectionCount: v.optional(v.number()), // Total number of connections made
+
     // Discord Integration
     discordUserId: v.optional(v.string()), // Discord user ID (snowflake)
     discordUsername: v.optional(v.string()), // Discord username for reference
@@ -286,7 +295,9 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_stake_address", ["walletStakeAddress"])
     .index("by_username", ["username"])
-    .index("by_display_name_lower", ["displayNameLower"]),
+    .index("by_display_name_lower", ["displayNameLower"])
+    .index("by_session_id", ["activeSessionId"])
+    .index("by_session_expiry", ["sessionExpiresAt"]),
 
   // Variations reference table - maps all variations to unique IDs
   variationsReference: defineTable({
@@ -1644,10 +1655,21 @@ export default defineSchema({
     verified: v.boolean(),
     expiresAt: v.number(),
     createdAt: v.number(),
+
+    // Mobile & Platform Tracking
+    platform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop
+    deviceInfo: v.optional(v.object({
+      userAgent: v.optional(v.string()),
+      screenWidth: v.optional(v.number()),
+      screenHeight: v.optional(v.number()),
+      deviceType: v.optional(v.string()), // phone, tablet, desktop
+      os: v.optional(v.string()), // iOS, Android, Windows, macOS, Linux
+    })),
   })
     .index("by_stake_address", ["stakeAddress"])
     .index("by_nonce", ["nonce"])
-    .index("by_expires", ["expiresAt"]),
+    .index("by_expires", ["expiresAt"])
+    .index("by_platform", ["platform"]),
 
   // Multi-wallet aggregation
   walletLinks: defineTable({
@@ -1797,6 +1819,19 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_type", ["type"])
     .index("by_severity", ["severity"]),
+
+  // Wallet Rate Limiting - tracks authentication attempts
+  walletRateLimits: defineTable({
+    stakeAddress: v.string(),
+    actionType: v.string(), // "nonce_generation", "signature_verification"
+    attemptCount: v.number(),
+    windowStart: v.number(), // Start of the current rate limit window
+    consecutiveFailures: v.optional(v.number()), // Track consecutive failed attempts
+    lockedUntil: v.optional(v.number()), // Lockout expiration timestamp
+    lastAttemptAt: v.number(),
+  })
+    .index("by_stake_address_action", ["stakeAddress", "actionType"])
+    .index("by_locked_until", ["lockedUntil"]),
 
   // MEK LEVELING SYSTEM TABLES
 
