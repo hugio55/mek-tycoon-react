@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   title: "Mek Employment",
   description: "This website is for testing purposes only. Mek income is an element of a future product and we are gathering statistics and feedback. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
