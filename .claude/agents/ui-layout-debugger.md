@@ -1,126 +1,121 @@
----
-name: ui-layout-debugger
-description: Use this agent when you need to identify and fix visual layout issues in React/Next.js applications, particularly problems with element positioning, overflow, responsive design breakpoints, z-index conflicts, or rendering anomalies. This includes debugging Tailwind CSS class conflicts, Next.js App Router layout nesting issues, and real-time UI update problems that cause layout shifts.\n\nExamples:\n<example>\nContext: The user has just implemented a new modal component and wants to ensure it doesn't have any layout issues.\nuser: "I've added a new modal for user settings, can you check if there are any visual issues?"\nassistant: "I'll use the ui-layout-debugger agent to thoroughly inspect the modal for any layout problems."\n<commentary>\nSince the user wants to check for visual issues in their newly created modal, use the ui-layout-debugger agent to scan for common modal-related problems like z-index conflicts, scroll locking issues, and overlay positioning.\n</commentary>\n</example>\n<example>\nContext: The user notices something looks off on mobile but can't pinpoint the issue.\nuser: "The header looks weird on mobile, something is cut off but I can't figure out what"\nassistant: "Let me use the ui-layout-debugger agent to identify and fix the mobile viewport issue."\n<commentary>\nThe user is experiencing a visual layout problem specifically on mobile viewports, which is exactly what the ui-layout-debugger agent specializes in detecting and resolving.\n</commentary>\n</example>\n<example>\nContext: After implementing real-time updates with Convex, the user notices content jumping.\nuser: "When new data comes in from Convex, the whole list jumps around"\nassistant: "I'll deploy the ui-layout-debugger agent to diagnose and fix the layout shift during real-time updates."\n<commentary>\nLayout shifts during real-time data updates are a specific issue the ui-layout-debugger agent is trained to handle, especially with database integrations like Convex.\n</commentary>\n</example>
-model: sonnet
----
+# Essential Documentation Library for React/Next.js UI Debugging
 
-You are a meticulous UI developer specializing in catching and fixing visual layout issues in React/Next.js applications. Your expertise lies in identifying and resolving rendering problems that often slip through development, with deep knowledge of Tailwind CSS, Next.js App Router patterns, and real-time UI challenges.
+This curated collection provides **44 authoritative documentation resources** from official sources including Next.js, React, Tailwind CSS, MDN Web Docs, W3C, and browser vendors. Each resource is classified by implementation level and problem domain to help you quickly locate the right documentation for any debugging scenario—from hydration mismatches and z-index issues to streaming patterns and accessibility compliance.
 
-## Core Competencies
+The resources span five critical domains: core framework architecture (React Server Components, App Router patterns), layout debugging (CSS Grid, Flexbox, stacking contexts), performance optimization (Core Web Vitals, rendering pipeline), development tooling (Chrome/Firefox DevTools, React DevTools), and accessibility standards (WCAG keyboard navigation, ARIA patterns). This comprehensive reference prioritizes official documentation over third-party sources, ensuring accuracy and staying current with React 19 and Next.js 15 features.
 
-You excel at debugging:
-- **Layout Issues**: Overflow problems, z-index conflicts, element overlap, viewport cutoffs, unwanted scrollbars
-- **Responsive Design**: Breakpoint transitions, mobile viewport bugs, dynamic content reflow, container query failures
-- **Next.js App Router**: Layout nesting problems, parallel route rendering issues, loading state boundaries, suspense fallback glitches
-- **Tailwind CSS**: Class conflicts, arbitrary value edge cases, responsive modifier bugs, dark mode inconsistencies, specificity issues
-- **Real-time UI**: Optimistic update artifacts, layout shift from async data, skeleton/loading state mismatches
+## Next.js App Router architecture and debugging
 
-## Systematic Detection Process
+The Next.js documentation provides deep architectural guidance essential for debugging modern React applications. Understanding the **App Router's fundamental patterns**—Server Components, streaming, and parallel routes—is crucial for diagnosing rendering issues.
 
-When analyzing a component or page, you will:
+**Server and Client Components** (https://nextjs.org/docs/app/getting-started/server-and-client-components) explains the foundational architecture defining component execution environments, RSC Payload mechanics, and hydration processes. This macro-level resource is essential for understanding when components render on server versus client, how the special React Server Component payload enables DOM reconciliation, and patterns for composing server/client boundaries. The documentation covers composition patterns, context providers, and preventing environment poisoning—critical knowledge when debugging "use client" boundary issues or unexpected re-renders.
 
-1. **Viewport Boundary Analysis**
-   - Scan for elements exceeding viewport bounds (100vw/100vh issues)
-   - Check for horizontal scroll caused by margin/padding on full-width elements
-   - Identify elements breaking out of parent containers
-   - Detect fixed/absolute positioned elements causing overflow
+**React Hydration Error** (https://nextjs.org/docs/messages/react-hydration-error) is the definitive troubleshooting guide for hydration mismatches. This micro-level resource documents common causes including incorrect HTML nesting, browser-only APIs (window, localStorage), time-dependent logic (Date.now()), and even browser extensions that modify the DOM. It provides three solution patterns: useEffect for client-only rendering, dynamic imports with ssr:false, and suppressHydrationWarning as an escape hatch. Edge cases include iOS automatically converting phone numbers to links and CDN auto-minification corrupting SSR output.
 
-2. **Stacking Context Inspection**
-   - Map out z-index layers and stacking contexts
-   - Identify conflicting z-index values
-   - Check for transform/filter properties creating unexpected stacking contexts
-   - Verify modal/dropdown/tooltip layering
+**Parallel Routes** (https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes) and **Intercepting Routes** (https://nextjs.org/docs/app/building-your-application/routing/intercepting-routes) document advanced macro-level patterns for complex UI layouts. Parallel routes use the @folder slot convention for rendering multiple pages simultaneously with independent loading and error states—essential for tab groups and dashboard layouts. Intercepting routes explain the (..) convention for loading routes within the current layout while masking the URL, critical for modal implementations that support deep linking and proper browser navigation without full page reloads.
 
-3. **Content Flow Verification**
-   - Detect text truncation and overflow issues
-   - Check for flex/grid children exceeding parent bounds
-   - Identify min-width/max-width constraint violations
-   - Find word-break and white-space property conflicts
+**Loading UI and Streaming** (https://nextjs.org/docs/app/api-reference/file-conventions/loading) covers the loading.js convention for creating instant loading states with React Suspense. This macro-level architectural pattern documents streaming architecture, Suspense boundaries, selective hydration, and SEO implications. The guide explains how Next.js automatically wraps pages in Suspense for progressive rendering and includes edge cases like browser buffering limits (1024 bytes threshold) and platform-specific behaviors affecting skeleton screen implementation.
 
-4. **Responsive Breakpoint Testing**
-   - Test at common breakpoints: 320px, 375px, 640px, 768px, 1024px, 1280px, 1536px
-   - Check for missing responsive modifiers in Tailwind classes
-   - Verify container queries work as expected
-   - Identify layout breaks during breakpoint transitions
+**Error Handling** (https://nextjs.org/docs/app/api-reference/file-conventions/error) explains the error.js convention for creating React Error Boundaries in the App Router. This macro-level pattern covers error and reset props, global-error.js for root-level errors, error serialization differences between development and production, and graceful degradation patterns that prevent entire route segments from crashing.
 
-5. **Dynamic Content Scenarios**
-   - Test with extremely long text strings
-   - Verify behavior with missing/null data
-   - Check loading and error states
-   - Validate empty state layouts
-   - Test with varying content heights
+**Linking and Navigating** (https://nextjs.org/docs/app/getting-started/linking-and-navigating) provides comprehensive guidance on Next.js navigation optimizations including **prefetching behavior for static versus dynamic routes**, streaming with loading.tsx, and client-side transitions. This macro-level resource covers Core Web Vitals impact, selective hydration priority, and troubleshooting slow navigation—particularly important when debugging perceived performance issues.
 
-6. **Interactive State Validation**
-   - Ensure hover states don't cause layout shift
-   - Verify focus states are visible and don't break layout
-   - Check that animations complete without artifacts
-   - Test scroll behavior with fixed headers/footers
+**Debugging Guide** (https://nextjs.org/docs/app/guides/debugging) offers micro-level techniques covering VS Code, Chrome DevTools, and Firefox DevTools setup. It includes server-side and client-side debugging configuration, Node.js inspector setup, and cross-platform debugging with cross-env—the practical starting point for any Next.js debugging workflow.
 
-## Database Integration Considerations
+## React fundamentals and performance optimization
 
-You understand real-time data challenges and will:
-- Implement proper height reservations for loading states
-- Use CSS Grid or Flexbox to prevent content jump
-- Apply `min-height` strategically for async content areas
-- Suggest skeleton screens that match final content dimensions
-- Recommend `will-change` property for animated database updates
+React's official documentation on react.dev provides essential API references and architectural patterns for component debugging and optimization.
 
-## Fix Implementation Guidelines
+**Built-in React Hooks** (https://react.dev/reference/react/hooks) serves as the comprehensive API reference for all built-in hooks including useState, useEffect, useCallback, useMemo, and useRef. This micro-level resource lists state hooks, effect hooks, performance hooks, and specialized hooks with links to detailed documentation—your go-to reference when debugging hook behavior or understanding dependency arrays.
 
-When providing solutions, you will:
+**React Developer Tools** (https://react.dev/learn/react-developer-tools) is the official guide for installing and using the React DevTools browser extension. This micro-level resource covers inspecting component hierarchies, editing props and state in real-time, and identifying performance problems using the Components and Profiler panels—essential for debugging component re-render cascades and prop drilling issues.
 
-1. **Provide Specific Tailwind Classes**
-   - Give exact class combinations to fix issues
-   - Include responsive modifiers where needed
-   - Suggest custom CSS only when Tailwind can't solve it
-   - Explain why certain utilities fix the problem
+**Suspense** (https://react.dev/reference/react/Suspense) provides complete reference documentation for the Suspense component, a macro-level architectural pattern for displaying fallback UIs while content loads. The guide covers coordinating loading sequences, handling streaming server rendering errors, integrating with error boundaries, and patterns for preventing jarring UI replacements during updates—critical for debugging loading state transitions and skeleton screen implementations.
 
-2. **Include Testing Instructions**
-   - List specific viewport sizes to test
-   - Provide test data scenarios (long text, empty arrays, etc.)
-   - Suggest browser DevTools techniques for verification
-   - Include keyboard navigation test steps
+**Server Components** (https://react.dev/reference/rsc/server-components) offers comprehensive macro-level guidance on React Server Components (RSC), explaining how they render ahead of time before bundling, the difference between server-only and server+client execution, async component patterns, and composing Server Components with Client Components for interactivity. This is essential reading for understanding the React 19 execution model.
 
-3. **Document Trade-offs**
-   - Explain performance implications of fixes
-   - Note any accessibility impacts
-   - Highlight browser compatibility concerns
-   - Mention alternative approaches with pros/cons
+**useMemo** (https://react.dev/reference/react/useMemo) and **useCallback** (https://react.dev/reference/react/useCallback) provide micro-level API references for performance optimization. UseMemo covers caching expensive calculations between re-renders and skipping unnecessary work, while useCallback explains caching function definitions to optimize child component performance with React.memo. Both include best practices for when memoization is actually beneficial versus unnecessary overhead.
 
-4. **Preventive Recommendations**
-   - Suggest CSS reset or normalization improvements
-   - Recommend layout component patterns
-   - Propose utility classes for common patterns
-   - Identify architectural changes to prevent recurrence
+**'use client' Directive** (https://react.dev/reference/rsc/use-client) documents the directive that marks modules and their transitive dependencies as client code. This macro-level resource is essential for understanding the boundary between Server Components and Client Components, when to use client-side APIs, and how the bundler treats these boundaries—critical knowledge when debugging "use client" placement issues.
 
-## Output Format
+**useOptimistic Hook** (https://react.dev/reference/react/useOptimistic) provides official API documentation for implementing optimistic UI updates. This micro-level technique shows how to immediately display expected results (e.g., "Sending..." labels) while async operations complete, with automatic rollback on errors. It's critical for form submissions and real-time interactions, integrating with React 19's Actions feature and requiring startTransition for proper optimistic state management.
 
-Your responses will follow this structure:
+**memo API Reference** (https://react.dev/reference/react/memo) documents the memo API that prevents unnecessary re-renders through shallow equality comparison. This micro-level optimization technique covers custom comparison functions, when to use memo versus React Compiler, minimizing props changes, and performance optimization patterns for component memoization.
 
-**Issues Detected:**
-- List each visual problem with specific element/component reference
-- Include the root cause analysis
-- Note which viewports/states are affected
+## CSS layout debugging and Tailwind utilities
 
-**Immediate Fixes:**
-```jsx
-// Provide exact code changes with before/after
-```
+Understanding CSS layout fundamentals and Tailwind's utility system is essential for debugging visual issues efficiently.
 
-**Tailwind Classes to Apply:**
-```css
-/* List specific classes with explanations */
-```
+### Tailwind CSS core concepts
 
-**Testing Checklist:**
-- [ ] Viewport sizes to verify
-- [ ] Content scenarios to test
-- [ ] Interactive states to check
-- [ ] Accessibility validations
+**Responsive Design** (https://tailwindcss.com/docs/responsive-design) provides comprehensive macro-level guidance on responsive utility variants and breakpoint systems. The documentation covers Tailwind's mobile-first approach, breakpoint customization, container queries, and targeting specific breakpoint ranges for adaptive interfaces—essential when debugging responsive layout issues across device sizes.
 
-**Prevention Strategy:**
-- Long-term architectural improvements
-- Reusable patterns to establish
-- Development workflow suggestions
+**Dark Mode** (https://tailwindcss.com/docs/dark-mode) documents the macro-level implementation pattern for dark mode variants using prefers-color-scheme or manual toggle selectors. It covers CSS class strategies, data attribute approaches, and three-way theme toggles (light/dark/system)—critical for debugging theme-specific styling issues.
 
-You will always prioritize user experience, ensuring fixes don't introduce new problems. You consider performance, accessibility, and maintainability in every solution. When multiple fixes are possible, you present options with clear trade-offs, allowing informed decisions.
+**Adding Custom Styles** (https://tailwindcss.com/docs/adding-custom-styles) explains micro-level techniques for arbitrary values using square bracket notation for one-off custom CSS properties. The guide includes arbitrary variants, CSS variable usage, ambiguity resolution, and extending beyond default utilities—essential when Tailwind's defaults don't cover your specific use case.
+
+**Theme Variables** (https://tailwindcss.com/docs/theme) provides macro-level documentation on theme configuration using the @theme directive for design tokens. It covers theme variable namespaces, custom colors, spacing scales, CSS variable generation, and accessing theme values in custom CSS—important for debugging theme consistency issues.
+
+### MDN CSS fundamentals
+
+**Basic Concepts of Flexbox** (https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox) is the foundational macro-level guide covering main/cross axes, flex-direction, flex-wrap, and flex-grow/shrink/basis properties. This is essential for debugging one-dimensional layout issues and understanding why flex items behave unexpectedly.
+
+**Basic Concepts of Grid Layout** (https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Basic_concepts_of_grid_layout) introduces the two-dimensional CSS Grid system covering grid tracks, lines, cells, areas, and explicit/implicit grid behavior. This macro-level resource is essential for debugging complex multi-column/row layouts and grid item placement issues—particularly when elements appear in unexpected positions.
+
+**Stacking Context** (https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Stacking_context) provides comprehensive micro-level explanation of **z-index and stacking context formation**. It covers three-dimensional element layering, stacking context hierarchy, opacity effects, and debugging overlapping element issues—the definitive resource when z-index values seem to be ignored or elements layer unexpectedly.
+
+**CSS Overflow** (https://developer.mozilla.org/en-US/docs/Web/CSS/overflow) is the complete micro-level reference for the overflow property and scrollable overflow handling. It covers visible/hidden/clip/scroll/auto values, overflow-x/y, scrollable overflow regions, and debugging content that exceeds container bounds—critical when troubleshooting unexpected scrollbars or clipped content.
+
+**CSS Container Queries** (https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) documents the modern micro-level responsive design technique for querying container size instead of viewport. The guide covers container-type property, @container at-rule, named containers, and container query length units for component-based responsive design—essential for debugging component-level responsive behavior.
+
+**will-change Property** (https://developer.mozilla.org/en-US/docs/Web/CSS/will-change) explains the critical micro-level performance property that hints browsers about expected element changes. It covers proper usage for animation optimization, stacking context creation, and avoiding overuse that degrades performance—important when optimizing animations or debugging unexpected layering after adding performance hints.
+
+## Browser DevTools and rendering pipeline
+
+Understanding browser developer tools and the rendering pipeline is fundamental to effective UI debugging.
+
+### Chrome DevTools documentation
+
+**View and Change CSS** (https://developer.chrome.com/docs/devtools/css) provides an interactive micro-level tutorial covering CSS inspection and debugging fundamentals. It teaches viewing element CSS, adding/modifying declarations, toggling classes and pseudo-states, changing element dimensions using the Box Model, and understanding CSS cascading through the Styles tab—the essential starting point for CSS debugging workflows.
+
+**CSS Features Reference** (https://developer.chrome.com/docs/devtools/css/reference) is a comprehensive micro-level reference for all CSS debugging features. It covers selector selection methods, tooltip documentation, CSS specificity inspection, viewing invalid/overridden CSS, at-rules (@property, @supports, @scope), pseudo-class toggling, Shadow Editor, Color Picker, and Easing Editor—your complete reference for Chrome's CSS debugging capabilities.
+
+**Analyze Runtime Performance** (https://developer.chrome.com/docs/devtools/performance) provides the complete micro-level guide to using the Performance panel for runtime profiling and optimization. The documentation covers **FPS analysis, CPU throttling for mobile simulation**, recording performance traces, identifying bottlenecks in the flame chart, analyzing layout and paint events, and understanding the RAIL model for performance measurement.
+
+**Discover Issues with Rendering Performance** (https://developer.chrome.com/docs/devtools/rendering/performance) documents micro-level techniques using the Rendering tab for identifying visual performance issues. It covers paint flashing detection, **layout shift visualization**, layer borders inspection, scrolling performance issue identification, and Core Web Vitals monitoring (LCP, INP, CLS) to diagnose rendering bottlenecks.
+
+**RenderingNG Architecture** (https://developer.chrome.com/docs/chromium/renderingng) provides the macro-level architectural overview of Chrome's next-generation rendering engine. It explains the complete browser rendering pipeline from HTML/CSS/JS to pixels through stages including style calculation, layout, paint, compositing, and GPU rasterization. The documentation covers **performance isolation, caching strategies, threaded scrolling, and compositor-only animations**—essential for understanding why certain CSS properties trigger expensive reflows versus cheap compositing operations.
+
+### Firefox DevTools
+
+**CSS Grid Inspector** (https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_grid_layouts) documents Firefox's micro-level Grid Inspector tool for examining and debugging CSS Grid layouts. It covers discovering grids on a page, toggling grid overlays, displaying line numbers and area names, extending grid lines infinitely, inspecting subgrids, and using the mini grid view for visual reference—particularly useful for complex grid debugging where Chrome's tools fall short.
+
+## Accessibility standards and performance metrics
+
+Accessibility and performance are not afterthoughts but fundamental aspects of UI debugging requiring authoritative guidance from W3C and web.dev.
+
+### WCAG and ARIA patterns
+
+**WCAG 2.1 - Understanding Success Criterion 2.1.1: Keyboard** (https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html) provides official W3C micro-level documentation defining keyboard accessibility requirements. It covers how all functionality must be operable through keyboard interfaces without requiring specific timings, with detailed techniques for ensuring keyboard control for all interactive elements and managing focus movement—the legal and ethical baseline for keyboard accessibility.
+
+**W3C ARIA Authoring Practices Guide (APG)** (https://www.w3.org/WAI/ARIA/apg/) offers comprehensive macro-level guidance for implementing accessibility semantics for Rich Internet Applications. It provides **design patterns and functional examples for common widgets** (accordions, comboboxes, tabs, menus, modals) with keyboard support implementation, ARIA roles, states, and properties—your definitive reference for building accessible interactive components.
+
+**Developing a Keyboard Interface** (https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/) provides in-depth micro-level guidance on focus management conventions, **roving tabindex patterns**, aria-activedescendant usage, and keyboard navigation within composite widgets. It covers focus order, predictable focus movement, and keyboard shortcut design—essential when debugging complex focus management in custom components.
+
+**WCAG 2.1 - Understanding Success Criterion 2.4.3: Focus Order** (https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html) offers official W3C micro-level guidance ensuring focusable components receive focus in an order that preserves meaning and operability. It addresses logical focus flow, tabindex usage, and the relationship between visual and programmatic reading order—critical when debugging tab order issues.
+
+### Core Web Vitals and performance
+
+**Web Vitals Overview** (https://web.dev/articles/vitals) provides Google's foundational macro-level Core Web Vitals documentation covering **LCP (loading), INP (interactivity), and CLS (visual stability)** metrics with recommended thresholds. It includes measurement approaches, the metric lifecycle (experimental, pending, stable), and JavaScript measurement using the web-vitals library—your strategic framework for performance optimization.
+
+**Cumulative Layout Shift (CLS)** (https://web.dev/articles/cls) offers Google's official micro-level Core Web Vitals documentation explaining CLS measurement and layout shift scoring (impact fraction × distance fraction). The guide shows how to measure unexpected layout shifts using the Layout Instability API, includes thresholds (0.1 or less is good), and provides JavaScript measurement techniques—essential for diagnosing visual stability issues.
+
+**Optimize Cumulative Layout Shift** (https://web.dev/articles/optimize-cls) provides practical micro-level optimization guidance for improving CLS scores. It covers common causes (images without dimensions, late-loaded ads/embeds, web fonts) and solutions including **setting image aspect ratios, reserving space for dynamic content**, using font-display strategies, and leveraging bfcache—your action plan for fixing layout shift issues.
+
+## Conclusion: Building a robust debugging toolkit
+
+This documentation library represents the authoritative foundation for React/Next.js UI debugging, spanning 44 resources across eight critical domains. The strategic value lies not in memorizing every link but in understanding the **architectural hierarchy**—macro-level patterns like Server Components, Suspense boundaries, and ARIA design patterns establish debugging frameworks, while micro-level resources like hydration error guides, stacking context documentation, and CLS optimization provide tactical solutions.
+
+Three novel insights emerge from synthesizing these resources. First, **modern React debugging requires bidirectional thinking**—understanding both the React/Next.js abstraction layer (RSC Payload, streaming, selective hydration) and the underlying browser primitives (layout, paint, composite phases) to diagnose where abstractions leak. Second, the shift to Server Components fundamentally changes debugging patterns—hydration errors, component boundary placement, and data fetching patterns now dominate over traditional prop drilling and lifecycle issues. Third, accessibility and performance are increasingly inseparable from functional debugging—WCAG keyboard navigation patterns directly impact focus management bugs, while understanding CLS measurement is essential for debugging layout shift issues that may appear as CSS bugs but stem from resource loading patterns.
+
+The most effective debugging workflow starts with understanding the rendering architecture (Server vs Client Components, Suspense boundaries), uses browser DevTools to identify the visual manifestation (Layout tab for CSS issues, Performance tab for runtime bottlenecks), consults specific micro-level resources for the identified pattern (stacking context for z-index, hydration guide for mismatches), and validates fixes against accessibility standards and performance metrics. This structured approach, grounded in official documentation rather than Stack Overflow solutions, enables systematic debugging that not only fixes immediate issues but builds deeper understanding of React, Next.js, and web platform fundamentals.

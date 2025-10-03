@@ -23,9 +23,49 @@
       "description": "Tests visual changes in the browser using Playwright",
       "enabled": true
     },
-    "design-review": {
-      "name": "Design Review Agent",
-      "description": "Comprehensive UI/UX review for pull requests",
+    "state-sync-debugger": {
+      "name": "State Sync Debugger",
+      "description": "Debugs state synchronization between database and UI",
+      "enabled": true
+    },
+    "ui-layout-debugger": {
+      "name": "UI Layout Debugger",
+      "description": "Identifies and fixes visual layout issues",
+      "enabled": true
+    },
+    "syntax-error-fixer": {
+      "name": "Syntax Error Fixer",
+      "description": "Fixes React, TypeScript, and JSX syntax errors",
+      "enabled": true
+    },
+    "scifi-ui-designer": {
+      "name": "Sci-Fi UI Designer",
+      "description": "Designs interfaces with industrial sci-fi aesthetic",
+      "enabled": true
+    },
+    "code-modularizer": {
+      "name": "Code Modularizer",
+      "description": "Refactors monolithic code into modular architecture",
+      "enabled": true
+    },
+    "mobile-responsive-optimizer": {
+      "name": "Mobile Responsive Optimizer",
+      "description": "Optimizes applications for mobile devices",
+      "enabled": true
+    },
+    "cardano-wallet-integrator": {
+      "name": "Cardano Wallet Integrator",
+      "description": "Implements Cardano wallet connections and NFT extraction",
+      "enabled": true
+    },
+    "blockchain-architecture-specialist": {
+      "name": "Blockchain Architecture Specialist",
+      "description": "Designs trustless verification and on-chain integration systems",
+      "enabled": true
+    },
+    "convex-database-architect": {
+      "name": "Convex Database Architect",
+      "description": "Expert in Convex database design, queries, mutations, and optimization",
       "enabled": true
     }
   },

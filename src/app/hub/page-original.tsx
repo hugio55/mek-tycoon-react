@@ -7,6 +7,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
+import "./hub-animations.css";
 
 export default function HubPage() {
   
@@ -305,51 +306,6 @@ export default function HubPage() {
   
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative z-10">
-      <style jsx>{`
-        @keyframes collectGold {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.2) rotate(5deg); box-shadow: 0 0 30px rgba(250, 182, 23, 0.8); }
-          100% { transform: scale(1); }
-        }
-        .collecting {
-          animation: collectGold 0.5s ease-in-out;
-        }
-        @keyframes pulsateGlow {
-          0%, 100% { 
-            box-shadow: 0 0 20px rgba(250, 182, 23, 0.6), 0 0 40px rgba(250, 182, 23, 0.3), inset 0 0 20px rgba(250, 182, 23, 0.1);
-            transform: scale(1);
-          }
-          50% { 
-            box-shadow: 0 0 30px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.4), inset 0 0 30px rgba(250, 182, 23, 0.2);
-            transform: scale(1.05);
-          }
-        }
-        .pulsate-glow {
-          animation: pulsateGlow 2s ease-in-out infinite;
-        }
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 1; }
-        }
-        @keyframes drift {
-          from { transform: translateX(-100px); }
-          to { transform: translateX(calc(100vw + 100px)); }
-        }
-        @keyframes goldPopup {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.5);
-          }
-          20% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(1) translateY(-50px);
-          }
-        }
-      `}</style>
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Yellow gradient orbs from sides - offset vertically */}
@@ -680,7 +636,7 @@ export default function HubPage() {
             </div>
             </div>
           </div>
-          
+
           {/* Employee data */}
           {(() => {
             const employees = [
@@ -1121,8 +1077,7 @@ export default function HubPage() {
           </div>
         </div>
 
-      {/* Quick Actions */}
-      <div>
+        {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link href="/crafting" className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-yellow-500 transition-all text-center">
             <div className="text-2xl mb-2">🔨</div>
@@ -1141,10 +1096,9 @@ export default function HubPage() {
             <div className="font-semibold">My Meks</div>
           </Link>
         </div>
-      </div>
 
-      {/* Username Modal */}
-      {showUsernameModal && walletAddress && (
+        {/* Username Modal */}
+        {showUsernameModal && walletAddress && (
         <UsernameModal
           isOpen={showUsernameModal}
           walletAddress={walletAddress}
@@ -1154,8 +1108,8 @@ export default function HubPage() {
             setShowUsernameModal(false);
           }}
         />
-      )}
-      
+        )}
+      </div>
     </div>
   );
 }
