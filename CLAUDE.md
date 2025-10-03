@@ -244,7 +244,12 @@ When user types `/ui-team`, activate these three agents together:
 - `@visual-test` - Test visual changes
 
 ### `/ultra` - Ultimate wallet and database debugging
-When user types `/ultra`, activate these four agents together in parallel:
+When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using a single message with multiple Task tool calls. The project-lead coordinates while all specialists work simultaneously:
+
+**IMPORTANT**: Must launch all agents in parallel in a single response, not sequentially.
+
+**Project Coordination:**
+- `@project-lead` - Delegates tasks to specialist agents, sequences work order, tracks progress across teams
 
 **Wallet Integration Team:**
 - `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
@@ -254,7 +259,17 @@ When user types `/ultra`, activate these four agents together in parallel:
 - `@convex-database-architect` - Fix Convex queries, mutations, schemas, and reactivity
 - `@state-sync-debugger` - Debug state synchronization between database and UI
 
-Use for: wallet connection failures, NFTs not syncing, database/UI desync, cumulative gold errors
+**Code Quality Team:**
+- `@code-modularizer` - Refactor monolithic code into clean, modular architecture
+- `@syntax-error-fixer` - Fix syntax errors, bracket mismatches, and parsing errors
+
+**UI & Design Team:**
+- `@scifi-ui-designer` - Apply industrial sci-fi aesthetic and design systems
+- `@ui-layout-debugger` - Debug layout issues, positioning, and responsive design
+- `@visual-test` - Verify visual changes in browser and check console errors
+- `@mobile-responsive-optimizer` - Transform desktop UI to mobile-responsive design
+
+Use for: wallet connection failures, NFTs not syncing, database/UI desync, cumulative gold errors, code quality issues, UI/UX problems
 
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:
