@@ -28,16 +28,9 @@ const orbitron = Orbitron({
 export const metadata: Metadata = {
   title: "Mek Employment",
   description: "This website is for testing purposes only. Mek income is an element of a future product and we are gathering statistics and feedback. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
-  manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   icons: {
     icon: '/fav2.png',
-    apple: '/fav2.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Mek Tycoon',
   },
 };
 
@@ -47,13 +40,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ margin: 0, padding: 0, width: '100%', overflowX: 'hidden' }}>
+    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', overflowX: 'hidden' }}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased min-h-screen overflow-x-hidden`}
-        style={{ backgroundColor: '#0a0a0a', width: '100%', maxWidth: '100%', margin: 0, padding: 0 }}
+        style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}
       >
         {/* Global background with animated stars and particles */}
-        <div style={{ position: 'fixed', inset: 0, width: '100%', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
+        <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
           <GlobalBackground />
         </div>
         
