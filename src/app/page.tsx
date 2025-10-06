@@ -382,13 +382,27 @@ export default function MekRateLoggingPage() {
     walletAddress ? { walletAddress } : "skip"
   );
 
+  // LOG: ownedMeks state changes (CRITICAL FOR DEBUGGING WALLET SWITCH BUG)
+  useEffect(() => {
+    console.log('[STATE CHANGE] ownedMeks updated:', {
+      count: ownedMeks.length,
+      firstMek: ownedMeks[0]?.assetName,
+      assetIds: ownedMeks.slice(0, 3).map(m => m.assetId),
+      timestamp: new Date().toISOString(),
+      stack: new Error().stack?.split('\n').slice(2, 5).join('\n') // Show call stack
+    });
+  }, [ownedMeks]);
+
   // LOG: Query data updates
   useEffect(() => {
     if (goldMiningData) {
       console.log('[QUERY] goldMiningData updated:', {
+        walletAddress: goldMiningData.walletAddress?.slice(0, 12) + '...',
         accumulatedGold: goldMiningData.accumulatedGold,
         lastSnapshotTime: goldMiningData.lastSnapshotTime,
         totalGoldPerHour: goldMiningData.totalGoldPerHour,
+        ownedMeksCount: goldMiningData.ownedMeks?.length,
+        firstMek: goldMiningData.ownedMeks?.[0]?.assetName,
         updatedAt: goldMiningData.updatedAt,
         timestamp: new Date().toISOString()
       });
@@ -588,36 +602,61 @@ export default function MekRateLoggingPage() {
   // Restore wallet connection from localStorage on mount
   useEffect(() => {
     const restoreWalletConnection = async () => {
+      console.log('[Session Restore] === EFFECT TRIGGERED ===');
+      console.log('[Session Restore] walletConnected:', walletConnected);
+      console.log('[Session Restore] isConnecting:', isConnecting);
+
       // Guard against SSR - only run in browser
       if (typeof window === 'undefined') {
+        console.log('[Session Restore] SSR detected - skipping');
+        return;
+      }
+
+      // CRITICAL: Skip if already connecting (prevents overwriting new connection)
+      if (isConnecting) {
+        console.log('[Session Restore] ⚠️ Connection in progress - SKIPPING restoration to prevent override');
+        return;
+      }
+
+      // Skip if already connected (prevents re-restoration loops)
+      if (walletConnected) {
+        console.log('[Session Restore] Already connected - skipping restoration');
         return;
       }
 
       // Skip auto-reconnect if forceNoWallet mode is enabled
       if (forceNoWallet) {
+        console.log('[Session Restore] forceNoWallet mode - skipping');
         setIsAutoReconnecting(false);
         return;
       }
 
       try {
+        console.log('[Session Restore] Attempting to restore session...');
         // Try new session format first (with decryption)
         const session = await restoreWalletSession();
         if (!session) {
+          console.log('[Session Restore] No session found');
           setIsAutoReconnecting(false);
           return;
         }
 
         console.log('[Session Restore] Found valid session:', {
           walletName: session.walletName,
+          stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
           platform: session.platform,
           age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
         });
 
         // Load cached Meks immediately for instant display
-        const cachedMeks = getCachedMeks();
+        // CRITICAL: Pass wallet address to validate cached Meks belong to this wallet
+        const cachedMeks = getCachedMeks(session.stakeAddress);
         if (cachedMeks && cachedMeks.length > 0) {
           console.log('[Session Restore] Loading', cachedMeks.length, 'cached Meks for instant display');
+          console.log('[Session Restore] First cached Mek:', cachedMeks[0]?.assetName);
           setOwnedMeks(cachedMeks);
+        } else {
+          console.log('[Session Restore] No cached Meks found or mismatched wallet');
         }
 
         // Validate session with Convex authentication
@@ -1190,19 +1229,29 @@ export default function MekRateLoggingPage() {
       return;
     }
 
-    console.log('[Wallet Connect] Starting connection to', wallet.name);
+    console.log('[Wallet Connect] === STARTING CONNECTION TO', wallet.name, '===');
+    console.log('[Wallet Connect] Current state BEFORE clearing:');
+    console.log('[Wallet Connect]   - walletAddress:', walletAddress);
+    console.log('[Wallet Connect]   - ownedMeks count:', ownedMeks.length);
+    console.log('[Wallet Connect]   - currentGold:', currentGold);
+    console.log('[Wallet Connect]   - walletConnected:', walletConnected);
 
     // CRITICAL: Clear old session data before connecting new wallet
+    console.log('[Wallet Connect] Step 1: Clearing localStorage...');
     clearWalletSession();
+    console.log('[Wallet Connect] Step 2: Clearing React state...');
     setWalletAddress(null);
+    setPaymentAddress(null);
     setWalletConnected(false);
     setWalletType(null);
     setOwnedMeks([]);
+    setSelectedMek(null);
     setIsSignatureVerified(false);
     setCurrentGold(0);
     setCumulativeGold(0);
     setGoldPerHour(0);
-    console.log('[Wallet Connect] Cleared old session data');
+    setVerificationStatus(null);
+    console.log('[Wallet Connect] All old data cleared');
 
     connectionLockRef.current = true;
     setIsConnecting(true);
@@ -1770,13 +1819,27 @@ export default function MekRateLoggingPage() {
       console.log('[Session Save] Encrypted wallet session saved with', meks.length, 'cached Meks, security validated');
 
       // Set state
+      console.log('[Wallet Connect] === SETTING NEW WALLET STATE ===');
+      console.log('[Wallet Connect] New stakeAddress:', stakeAddress);
+      console.log('[Wallet Connect] New Meks count:', meks.length);
+      console.log('[Wallet Connect] First Mek:', meks[0]?.assetName);
+
       setWalletAddress(stakeAddress);
+      console.log('[Wallet Connect] ✓ setWalletAddress called');
+
       setWalletType(wallet.name.toLowerCase());
+      console.log('[Wallet Connect] ✓ setWalletType called');
+
       setWalletConnected(true);
+      console.log('[Wallet Connect] ✓ setWalletConnected called');
+
       setOwnedMeks(meks);
+      console.log('[Wallet Connect] ✓ setOwnedMeks called with', meks.length, 'Meks');
 
       // Store wallet API reference for event listeners
       walletApiRef.current = api;
+
+      console.log('[Wallet Connect] === NEW WALLET STATE SET COMPLETE ===');
 
     } catch (error: any) {
       console.error('[Wallet Connect] Wallet connection error:', error);
@@ -2125,6 +2188,10 @@ export default function MekRateLoggingPage() {
 
   // Disconnect wallet
   const disconnectWallet = async () => {
+    console.log('[Wallet Disconnect] === STARTING DISCONNECT ===');
+    console.log('[Wallet Disconnect] Current wallet:', walletAddress);
+    console.log('[Wallet Disconnect] Current Meks count:', ownedMeks.length);
+
     // Update last active time before disconnecting
     if (walletAddress) {
       await updateLastActive({
@@ -2132,18 +2199,23 @@ export default function MekRateLoggingPage() {
       });
     }
 
-    // Clear state
+    // CRITICAL: Clear state FIRST
+    console.log('[Wallet Disconnect] Clearing React state...');
     setWalletConnected(false);
     setWalletAddress(null);
     setWalletType(null);
     setOwnedMeks([]);
     setCurrentGold(0);
     setGoldPerHour(0);
+    setCumulativeGold(0);
     setIsSignatureVerified(false);
     walletApiRef.current = null; // Clear wallet API reference
+    console.log('[Wallet Disconnect] React state cleared');
 
-    // Clear session using new session manager
+    // CRITICAL: Clear session storage (this clears localStorage)
+    console.log('[Wallet Disconnect] Clearing localStorage...');
     clearWalletSession();
+    console.log('[Wallet Disconnect] localStorage cleared');
 
     // Clear intervals
     if (goldIntervalRef.current) {
@@ -2152,6 +2224,8 @@ export default function MekRateLoggingPage() {
     if (checkpointIntervalRef.current) {
       clearInterval(checkpointIntervalRef.current);
     }
+
+    console.log('[Wallet Disconnect] === DISCONNECT COMPLETE ===');
   };
 
   // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
@@ -3064,7 +3138,7 @@ export default function MekRateLoggingPage() {
                     </div>
 
                     <p className="text-gray-400 text-xs sm:text-sm text-center mt-[22px] font-mono">
-                      For an added layer of security, please verify on Blockfrost to begin.
+                      for an added layer of validation, please verify on Blockfrost to begin.
                     </p>
                   </div>
                 </div>

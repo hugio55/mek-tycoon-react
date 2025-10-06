@@ -93,11 +93,14 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
 export function clearWalletSession(): void {
   clearSession();
 
-  // Also clear legacy format
+  // Also clear legacy format and additional wallet keys
   try {
     localStorage.removeItem('mek_wallet_session');
     localStorage.removeItem('goldMiningWallet');
     localStorage.removeItem('goldMiningWalletType');
+    localStorage.removeItem('walletAddress'); // Clear payment address
+    localStorage.removeItem('stakeAddress'); // Clear stake address
+    localStorage.removeItem('paymentAddress'); // Clear payment address (alt key)
     console.log('[Session Manager] Cleared all session data (new and legacy formats)');
   } catch (error) {
     console.error('[Session Manager] Error clearing legacy formats:', error);
@@ -107,13 +110,28 @@ export function clearWalletSession(): void {
 /**
  * Get cached Meks from legacy session format
  * This maintains backwards compatibility while migrating to new format
+ * IMPORTANT: Validates that cached Meks belong to the specified wallet address
+ *
+ * @param walletAddress - The stake address of the currently connected wallet
+ * @returns Cached Meks if they match the wallet, null otherwise
  */
-export function getCachedMeks(): any[] | null {
+export function getCachedMeks(walletAddress?: string): any[] | null {
   try {
     const legacyData = localStorage.getItem('mek_wallet_session');
     if (!legacyData) return null;
 
     const parsed = JSON.parse(legacyData);
+
+    // CRITICAL: Validate cached Meks belong to current wallet
+    if (walletAddress && parsed.stakeAddress !== walletAddress) {
+      console.warn('[Session Manager] Cached Meks belong to different wallet - ignoring');
+      console.log('[Session Manager] Cached wallet:', parsed.stakeAddress?.slice(0, 12) + '...');
+      console.log('[Session Manager] Current wallet:', walletAddress?.slice(0, 12) + '...');
+      // Clear the mismatched cache
+      localStorage.removeItem('mek_wallet_session');
+      return null;
+    }
+
     return parsed.cachedMeks || null;
   } catch (error) {
     console.error('[Session Manager] Error reading cached Meks:', error);
