@@ -4,12 +4,12 @@ import { api } from "./_generated/api";
 
 // Rate Limiting Configuration
 const NONCE_RATE_LIMIT = {
-  maxAttempts: 5,
+  maxAttempts: 50, // Increased from 5 to 50 - allow more reconnections
   windowMs: 60 * 60 * 1000, // 1 hour
 };
 
 const SIGNATURE_RATE_LIMIT = {
-  maxAttempts: 10,
+  maxAttempts: 50, // Increased from 10 to 50 - allow more authentication attempts
   windowMs: 60 * 60 * 1000, // 1 hour
 };
 
@@ -230,7 +230,8 @@ export const generateNonce = mutation({
     // Generate a cryptographically random nonce
     const nonce = `mek-auth-${Date.now()}-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
-    // Session duration: 24 hours
+    // Nonce expiration: 24 hours (how long the nonce can be used to sign)
+    // Note: Session duration is set separately when signature is verified
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
     // Check for existing nonce with same stake address + device (prevent duplicates)
@@ -406,11 +407,15 @@ export const verifySignature = action({
       console.log(`[Auth] Verification result for ${args.stakeAddress}:`, verificationResult);
 
       if (verificationResult.valid) {
-        // Update the signature record (set verified=true for backwards compatibility)
+        // Calculate session expiration: 24 hours from NOW (not from nonce generation)
+        const sessionExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+
+        // Update the signature record with verified=true and new session expiration
         await ctx.runMutation(api.walletAuthentication.updateSignatureRecord, {
           nonce: args.nonce,
           signature: args.signature,
-          verified: true
+          verified: true,
+          expiresAt: sessionExpiresAt
         });
 
         // Reset failed attempts counter on success
@@ -427,12 +432,12 @@ export const verifySignature = action({
           timestamp: Date.now()
         });
 
-        console.log(`[Auth] SUCCESS: Wallet ${args.stakeAddress} authenticated successfully`);
+        console.log(`[Auth] SUCCESS: Wallet ${args.stakeAddress} authenticated successfully, session expires at ${new Date(sessionExpiresAt).toISOString()}`);
 
         return {
           success: true,
           verified: true,
-          expiresAt: nonceRecord.expiresAt
+          expiresAt: sessionExpiresAt
         };
       } else {
         // IMPORTANT: Even though verification failed, nonce is already consumed
@@ -487,7 +492,8 @@ export const updateSignatureRecord = mutation({
   args: {
     nonce: v.string(),
     signature: v.string(),
-    verified: v.boolean()
+    verified: v.boolean(),
+    expiresAt: v.optional(v.number()) // Optional: update session expiration
   },
   handler: async (ctx, args) => {
     const record = await ctx.db
@@ -496,10 +502,17 @@ export const updateSignatureRecord = mutation({
       .first();
 
     if (record) {
-      await ctx.db.patch(record._id, {
+      const updates: any = {
         signature: args.signature,
         verified: args.verified
-      });
+      };
+
+      // If expiresAt provided, update the session expiration
+      if (args.expiresAt !== undefined) {
+        updates.expiresAt = args.expiresAt;
+      }
+
+      await ctx.db.patch(record._id, updates);
     }
   }
 });
