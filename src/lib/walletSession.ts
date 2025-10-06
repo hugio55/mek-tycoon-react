@@ -86,11 +86,23 @@ export async function getSession(): Promise<WalletSession | null> {
     } else {
       // Legacy plaintext session - migrate to encrypted format
       // Check if we've already attempted migration to prevent loops
+      const migrationStatus = migrationTracker.getStatus();
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+
+      // Only block if migration failed recently (within last hour)
       if (migrationTracker.hasAttempted() && !migrationTracker.wasSuccessful()) {
-        console.error('[Session] Migration previously failed, clearing session to prevent loop');
-        clearSession();
-        migrationTracker.reset(); // Reset for next login attempt
-        return null;
+        if (migrationStatus && migrationStatus.timestamp > oneHourAgo) {
+          console.error('[Session] Migration failed recently, clearing session to prevent loop');
+          console.error('[Session] Migration error:', migrationStatus.error);
+          console.log('[Session] Will retry after 1 hour from:', new Date(migrationStatus.timestamp));
+          clearSession();
+          migrationTracker.reset(); // Reset for next login attempt
+          return null;
+        } else {
+          // Failed migration is old - reset and try again
+          console.log('[Session] Previous migration failure is old (>1hr), resetting and retrying');
+          migrationTracker.reset();
+        }
       }
 
       const logger = new SecurityStateLogger('SessionMigration');
