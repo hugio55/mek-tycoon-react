@@ -620,24 +620,23 @@ export default function HubPage() {
               }}>
                 Active Employees
               </h3>
-            <div className="flex gap-2 flex-wrap">
-              <Link 
-                href="/meks" 
-                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition-all duration-200 border border-gray-600"
-              >
-                See All Meks
-              </Link>
-              <button
-                onClick={collectAllGold}
-                className="px-3 py-1.5 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-semibold rounded transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Collect All
-              </button>
+              <div className="flex gap-2 flex-wrap">
+                <Link
+                  href="/meks"
+                  className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition-all duration-200 border border-gray-600"
+                >
+                  See All Meks
+                </Link>
+                <button
+                  onClick={collectAllGold}
+                  className="px-3 py-1.5 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-semibold rounded transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Collect All
+                </button>
+              </div>
             </div>
-            </div>
-          </div>
 
-          {/* Employee data */}
+            {/* Employee data */}
           {(() => {
             const employees = [
               // Full gold meks first (sorted by progress: 100)
@@ -756,46 +755,46 @@ export default function HubPage() {
               );
             });
           })()}
-          
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <button 
-              onClick={() => setCurrentEmployeePage(Math.max(0, currentEmployeePage - 1))}
-              disabled={currentEmployeePage === 0}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
-            >
-              ← Previous
-            </button>
-            <div className="flex gap-2">
-              {[0, 1].map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentEmployeePage(page)}
-                  className={`w-8 h-8 rounded ${currentEmployeePage === page ? 'bg-yellow-500 text-black' : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'} transition-colors`}
-                >
-                  {page + 1}
-                </button>
-              ))}
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={() => setCurrentEmployeePage(Math.max(0, currentEmployeePage - 1))}
+                disabled={currentEmployeePage === 0}
+                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
+              >
+                ← Previous
+              </button>
+              <div className="flex gap-2">
+                {[0, 1].map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentEmployeePage(page)}
+                    className={`w-8 h-8 rounded ${currentEmployeePage === page ? 'bg-yellow-500 text-black' : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'} transition-colors`}
+                  >
+                    {page + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentEmployeePage(Math.min(1, currentEmployeePage + 1))}
+                disabled={currentEmployeePage === 1}
+                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
+              >
+                Next →
+              </button>
             </div>
-            <button 
-              onClick={() => setCurrentEmployeePage(Math.min(1, currentEmployeePage + 1))}
-              disabled={currentEmployeePage === 1}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
-            >
-              Next →
-            </button>
-          </div>
           
-          <div className="text-center mt-4">
-            <button 
-              onClick={() => setShowSlotBuffsModal(true)}
-              className="px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 rounded transition-all duration-200 font-semibold"
-            >
-              <span className="mr-2">+</span> Add Slot
-            </button>
+            <div className="text-center mt-4">
+              <button
+                onClick={() => setShowSlotBuffsModal(true)}
+                className="px-6 py-3 bg-transparent border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 rounded transition-all duration-200 font-semibold"
+              >
+                <span className="mr-2">+</span> Add Slot
+              </button>
+            </div>
           </div>
-          </div>
-          
+
           {/* Gold Stats Card - Right Column */}
           <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
             <div className="text-center mb-4">
@@ -910,8 +909,8 @@ export default function HubPage() {
                 <button
                   onClick={() => setChartPeriod('7d')}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
-                    chartPeriod === '7d' 
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                    chartPeriod === '7d'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
@@ -920,8 +919,8 @@ export default function HubPage() {
                 <button
                   onClick={() => setChartPeriod('30d')}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
-                    chartPeriod === '30d' 
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                    chartPeriod === '30d'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
@@ -930,8 +929,8 @@ export default function HubPage() {
                 <button
                   onClick={() => setChartPeriod('all')}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
-                    chartPeriod === 'all' 
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                    chartPeriod === 'all'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
@@ -939,7 +938,7 @@ export default function HubPage() {
                 </button>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               {/* Base Mek Gold */}
               <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
@@ -1000,7 +999,7 @@ export default function HubPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Essence at a Glance Section */}
         <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
           <h3 className="text-lg font-bold text-center mb-4" style={{
@@ -1061,7 +1060,7 @@ export default function HubPage() {
           </div>
         </div>
         
-        {/* Recent Activity Card */
+        {/* Recent Activity Card */}
         <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
           <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
           <div className="space-y-2 text-sm text-gray-300">

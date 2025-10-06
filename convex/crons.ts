@@ -31,4 +31,22 @@ crons.interval(
   internal.leaderboardUpdater.updateGoldLeaderboard
 );
 
+// Clean up expired wallet authentication nonces every 15 minutes
+crons.interval(
+  "cleanup expired nonces",
+  {
+    minutes: 15
+  },
+  internal.walletAuthentication.cleanupExpiredNonces
+);
+
+// Clean up expired rate limit lockouts every hour
+crons.interval(
+  "cleanup expired lockouts",
+  {
+    hours: 1
+  },
+  internal.walletAuthentication.cleanupExpiredLockouts
+);
+
 export default crons;

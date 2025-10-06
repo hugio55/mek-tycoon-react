@@ -224,6 +224,33 @@ export function getPlatformDisplayName(platform?: PlatformType): string {
 }
 
 /**
+ * Detect if user is in a wallet's WebView (in-app browser)
+ * This detects when a wallet app (like Eternl) has opened the dApp in its embedded browser
+ *
+ * DEPRECATED: Use detectWebViewWallet() from @/lib/walletDetection instead
+ * This function is kept for backwards compatibility
+ */
+export function isWalletWebView(): boolean {
+  // Import at runtime to avoid circular dependencies
+  const { detectWebViewWallet } = require('./walletDetection');
+  const result = detectWebViewWallet();
+  return result.isWebView;
+}
+
+/**
+ * Get the wallet type from user agent if in WebView
+ *
+ * DEPRECATED: Use detectWebViewWallet() from @/lib/walletDetection instead
+ * This function is kept for backwards compatibility
+ */
+export function getWebViewWalletType(): string | null {
+  // Import at runtime to avoid circular dependencies
+  const { detectWebViewWallet } = require('./walletDetection');
+  const result = detectWebViewWallet();
+  return result.walletType || null;
+}
+
+/**
  * Get full platform info
  */
 export function getPlatformInfo() {
@@ -235,5 +262,7 @@ export function getPlatformInfo() {
     os: getOSName(),
     isMobile: isMobileDevice(),
     displayName: getPlatformDisplayName(),
+    isWebView: isWalletWebView(),
+    webViewWallet: getWebViewWalletType(),
   };
 }

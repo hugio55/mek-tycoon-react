@@ -102,7 +102,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
     <>
       {/* Top Corporations styled like Mek cards */}
       <div className="w-full sm:max-w-[600px] mb-0 sm:mb-8">
-        <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden">
+        <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden pb-0">
           {/* Subtle grid overlay */}
           <div
             className="absolute inset-0 opacity-5"
@@ -145,7 +145,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
           </div>
 
           {/* Company slots */}
-          <div className="relative space-y-1 p-2 bg-black/80 backdrop-blur-sm">
+          <div className="relative px-2 pt-2 pb-2 bg-black/80 backdrop-blur-sm">
             {displayData.map((miner, index) => {
               const rank = index + 1;
               // Display database value directly (no animation)
@@ -163,7 +163,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                                 rank === 3 ? '0 0 10px rgba(205, 127, 50, 0.6)' : 'none';
 
               return (
-                <div key={`slot-${rank}`} className="relative group">
+                <div key={`slot-${rank}`} className={`relative group ${index < displayData.length - 1 ? 'mb-1' : 'mb-0'}`}>
                   <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30">
                     {miner ? (
                       <>
