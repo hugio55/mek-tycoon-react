@@ -1205,7 +1205,16 @@ export default function MekRateLoggingPage() {
         // Only execute deep-link flow if not in WebView
         if (!webViewCheck.isWebView) {
           const { openMobileWallet } = await import('@/lib/mobileWalletSupport');
-          const dappUrl = window.location.origin + window.location.pathname;
+
+          // IMPORTANT: Mobile wallets need a publicly accessible URL
+          // Localhost URLs don't work because the wallet app can't reach your computer
+          let dappUrl = window.location.origin + window.location.pathname;
+
+          // If on localhost, use production URL for mobile wallet connections
+          if (dappUrl.includes('localhost') || dappUrl.includes('127.0.0.1')) {
+            dappUrl = 'https://mek.overexposed.io';
+            console.log('[Wallet Connect - Mobile] 🔄 Localhost detected, using production URL:', dappUrl);
+          }
 
           try {
             setConnectionStatus('Opening wallet app...');
@@ -1414,9 +1423,21 @@ export default function MekRateLoggingPage() {
 
           // Check if already authenticated - skip signature if valid session exists
           console.log('[Wallet Connect] Checking existing authentication...');
-          const existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
-            stakeAddress
-          });
+          let existingAuth = null;
+
+          try {
+            // Ensure convex and api are available before querying
+            if (!convex || !api || !api.walletAuthentication || !api.walletAuthentication.checkAuthentication) {
+              console.warn('[Wallet Connect] Convex API not fully initialized, skipping auth check');
+            } else {
+              existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
+                stakeAddress
+              });
+            }
+          } catch (authCheckError) {
+            console.error('[Wallet Connect] Error checking authentication:', authCheckError);
+            // Continue without existing auth - will request signature
+          }
 
           let signatureVerified = false;
           let verifiedNonce = ''; // Store nonce for session management
