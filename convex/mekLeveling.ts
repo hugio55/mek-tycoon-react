@@ -327,14 +327,32 @@ export const upgradeMekLevel = mutation({
         timestamp: new Date(now).toISOString()
       });
 
+      // CRITICAL FIX: Snapshot the time-based gold accumulation BEFORE spending
+      // The bug was: calculateGoldDecrease uses goldMiningData.accumulatedGold (old value),
+      // but currentGold includes time-based earnings that aren't in accumulatedGold yet.
+      // Solution: Create a snapshot record with currentGold as the new accumulatedGold
+      const snapshotRecord = {
+        ...goldMiningData,
+        accumulatedGold: currentGold, // Use calculated current gold (includes time-based earnings)
+        lastSnapshotTime: now
+      };
+
+      devLog.log('[UPGRADE MUTATION] Gold snapshot for spending:', {
+        oldAccumulatedGold: goldMiningData.accumulatedGold,
+        goldSinceSnapshot: goldSinceSnapshot,
+        snapshotAccumulatedGold: currentGold,
+        upgradeCost,
+        willRemain: currentGold - upgradeCost
+      });
+
       // CRITICAL: Use centralized gold decrease function to maintain invariants
       // When spending gold, totalCumulativeGold stays the same, but totalGoldSpentOnUpgrades increases
-      const goldDecrease = calculateGoldDecrease(goldMiningData, upgradeCost);
+      const goldDecrease = calculateGoldDecrease(snapshotRecord, upgradeCost);
 
       // Ensure totalCumulativeGold is initialized if not already
       let newTotalCumulativeGold = goldMiningData.totalCumulativeGold;
       if (!newTotalCumulativeGold || newTotalCumulativeGold === 0) {
-        // Initialize from current state
+        // Initialize from current state (use snapshotRecord which has correct accumulated gold)
         newTotalCumulativeGold = currentGold + (goldMiningData.totalGoldSpentOnUpgrades || 0);
       }
 
