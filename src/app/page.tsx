@@ -454,24 +454,35 @@ export default function MekRateLoggingPage() {
   // Auto-connect to wallet if in WebView (before localStorage restore)
   useEffect(() => {
     const autoConnectWebView = async () => {
+      console.log('[WebView Auto-Connect] Effect running...');
+
       // Guard against SSR
       if (typeof window === 'undefined') {
+        console.log('[WebView Auto-Connect] Skipping - SSR');
         return;
       }
 
       // Skip in forceNoWallet mode
       if (forceNoWallet) {
+        console.log('[WebView Auto-Connect] Skipping - forceNoWallet mode');
         return;
       }
 
       // Skip if already connected
       if (walletConnected) {
+        console.log('[WebView Auto-Connect] Skipping - already connected');
         return;
       }
+
+      console.log('[WebView Auto-Connect] Checking for WebView...');
+      console.log('[WebView Auto-Connect] User Agent:', navigator.userAgent);
+      console.log('[WebView Auto-Connect] window.cardano:', window.cardano ? Object.keys(window.cardano) : 'undefined');
 
       // Check if we're in a wallet's WebView
       const { detectWebViewWallet, getWalletDisplayName } = await import('@/lib/walletDetection');
       const webViewCheck = detectWebViewWallet();
+
+      console.log('[WebView Auto-Connect] Detection result:', webViewCheck);
 
       if (webViewCheck.isWebView && webViewCheck.walletType) {
         console.log('[WebView Auto-Connect] Detected WebView for wallet:', webViewCheck.walletType);
@@ -925,34 +936,48 @@ export default function MekRateLoggingPage() {
     // Check for available wallets
     detectAvailableWallets();
 
+    // Failsafe: Always turn off auto-reconnecting after max 5 seconds
+    const failsafeTimeout = setTimeout(() => {
+      console.log('[Auto-Reconnect] Failsafe timeout - turning off loading screen');
+      setIsAutoReconnecting(false);
+    }, 5000);
+
     // Auto-reconnect if previously connected (session persistence)
     setTimeout(async () => {
-      // Guard against SSR
-      if (typeof window === 'undefined') {
-        return;
-      }
-
-      const savedWallet = localStorage.getItem('goldMiningWallet');
-      const savedWalletType = localStorage.getItem('goldMiningWalletType');
-
-      if (savedWallet && savedWalletType && window.cardano && window.cardano[savedWalletType]) {
-        console.log('Auto-reconnecting to', savedWalletType, 'wallet...');
-
-        const walletApi = window.cardano[savedWalletType];
-        if (walletApi) {
-          const wallet: WalletInfo = {
-            name: savedWalletType.charAt(0).toUpperCase() + savedWalletType.slice(1),
-            icon: `/wallet-icons/${savedWalletType}.png`,
-            version: walletApi.apiVersion || '0.1.0',
-            api: walletApi
-          };
-
-          // Automatically reconnect to the wallet
-          await connectWallet(wallet);
+      try {
+        // Guard against SSR
+        if (typeof window === 'undefined') {
+          setIsAutoReconnecting(false);
+          clearTimeout(failsafeTimeout);
+          return;
         }
+
+        const savedWallet = localStorage.getItem('goldMiningWallet');
+        const savedWalletType = localStorage.getItem('goldMiningWalletType');
+
+        if (savedWallet && savedWalletType && window.cardano && window.cardano[savedWalletType]) {
+          console.log('Auto-reconnecting to', savedWalletType, 'wallet...');
+
+          const walletApi = window.cardano[savedWalletType];
+          if (walletApi) {
+            const wallet: WalletInfo = {
+              name: savedWalletType.charAt(0).toUpperCase() + savedWalletType.slice(1),
+              icon: `/wallet-icons/${savedWalletType}.png`,
+              version: walletApi.apiVersion || '0.1.0',
+              api: walletApi
+            };
+
+            // Automatically reconnect to the wallet (with timeout protection)
+            await connectWallet(wallet);
+          }
+        }
+      } catch (error) {
+        console.error('[Auto-Reconnect] Error during auto-reconnect:', error);
+      } finally {
+        // Always set auto-reconnecting to false after attempt
+        setIsAutoReconnecting(false);
+        clearTimeout(failsafeTimeout);
       }
-      // Always set auto-reconnecting to false after attempt
-      setIsAutoReconnecting(false);
     }, 1500); // Wait for cardano object to be available
   }, [isDemoMode]);
 
