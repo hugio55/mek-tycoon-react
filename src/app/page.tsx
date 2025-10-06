@@ -648,6 +648,12 @@ export default function MekRateLoggingPage() {
 
   // Watch authentication status and clear session if expired
   useEffect(() => {
+    // Skip auth check if we're currently auto-reconnecting from session restore
+    if (isAutoReconnecting) {
+      console.log('[Auth Check] Skipping check during session restore');
+      return;
+    }
+
     if (!walletConnected || !walletAddress || !checkAuth) {
       return;
     }
@@ -672,7 +678,7 @@ export default function MekRateLoggingPage() {
     } else if (checkAuth.authenticated === true) {
       console.log('[Auth Check] Session valid, expires at:', new Date(checkAuth.expiresAt || 0).toISOString());
     }
-  }, [checkAuth, walletConnected, walletAddress]);
+  }, [checkAuth?.authenticated, checkAuth?.expiresAt, walletConnected, walletAddress, isAutoReconnecting]);
 
   // Original useEffect continues below
   useEffect(() => {
@@ -3446,7 +3452,7 @@ export default function MekRateLoggingPage() {
             )}
 
             {ownedMeks.length === 0 && !loadingMeks && (
-              <div className="text-center mt-8 sm:mt-12 px-4">
+              <div className="text-center mt-0 mb-16 sm:mb-24 px-4">
                 <div className="inline-block bg-black/20 border border-yellow-500/20 px-6 sm:px-8 py-5 sm:py-6 backdrop-blur-sm rounded-sm">
                   <p className="text-gray-500 font-mono uppercase tracking-wider text-sm sm:text-base">
                     No Meks detected in wallet
