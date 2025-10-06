@@ -1392,7 +1392,7 @@ export default function MekRateLoggingPage() {
           console.log('[Wallet Connect] Calling wallet.api.enable()...');
 
           // Enable wallet with 30 second timeout
-          const api = await Promise.race([
+          const walletApi = await Promise.race([
             wallet.api.enable(),
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Wallet connection timeout after 30 seconds')), 30000)
@@ -1400,7 +1400,7 @@ export default function MekRateLoggingPage() {
           ]) as any;
 
           // Get stake addresses (used for NFT ownership)
-          const stakeAddresses = await api.getRewardAddresses();
+          const stakeAddresses = await walletApi.getRewardAddresses();
 
           if (!stakeAddresses || stakeAddresses.length === 0) {
             throw new Error("No stake addresses found in wallet");
@@ -1426,9 +1426,10 @@ export default function MekRateLoggingPage() {
           let existingAuth = null;
 
           try {
-            // Ensure convex and api are available before querying
-            if (!convex || !api || !api.walletAuthentication || !api.walletAuthentication.checkAuthentication) {
-              console.warn('[Wallet Connect] Convex API not fully initialized, skipping auth check');
+            // Check if Convex client is available
+            // Note: 'api' here refers to Convex API (imported at top), not wallet API
+            if (!convex) {
+              console.warn('[Wallet Connect] Convex client not initialized, skipping auth check');
             } else {
               existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
                 stakeAddress
@@ -1455,7 +1456,7 @@ export default function MekRateLoggingPage() {
               console.log('[Wallet Connect] Generating secure nonce...');
 
               // Get a payment address for signing (signData doesn't work with stake addresses directly)
-              const usedAddresses = await api.getUsedAddresses();
+              const usedAddresses = await walletApi.getUsedAddresses();
               const paymentAddress = usedAddresses[0];
 
               // Use secure nonce generation
@@ -1499,7 +1500,7 @@ export default function MekRateLoggingPage() {
               verifySignatureAction: verifySignature,
               generateNonceMutation: generateNonce,
               signDataFunction: async (addr, payload) => {
-                const sig = await api.signData(paymentAddress, payload);
+                const sig = await walletApi.signData(paymentAddress, payload);
                 return sig.signature || sig;
               },
               updateState: (update) => {
@@ -1570,7 +1571,7 @@ export default function MekRateLoggingPage() {
           }
           } // End of signature request else block
 
-          return { api, stakeAddress, nonce: verifiedNonce };
+          return { api: walletApi, stakeAddress, nonce: verifiedNonce };
         },
         (retryAfter, reason) => {
           setWalletError(`Rate limited: ${reason}. Retry in ${Math.ceil(retryAfter / 1000)}s`);
@@ -1588,10 +1589,10 @@ export default function MekRateLoggingPage() {
 
       console.log('[Wallet Connect] Connection result received:', !!connectResult);
 
-      const { api, stakeAddress, nonce } = connectResult;
+      const { api: walletApi, stakeAddress, nonce } = connectResult;
 
       // Also get payment addresses as backup
-      const paymentAddresses = await api.getUsedAddresses();
+      const paymentAddresses = await walletApi.getUsedAddresses();
       console.log('Payment addresses:', paymentAddresses);
 
       if (!stakeAddress) {
