@@ -1191,6 +1191,19 @@ export default function MekRateLoggingPage() {
     }
 
     console.log('[Wallet Connect] Starting connection to', wallet.name);
+
+    // CRITICAL: Clear old session data before connecting new wallet
+    clearWalletSession();
+    setWalletAddress(null);
+    setWalletConnected(false);
+    setWalletType(null);
+    setOwnedMeks([]);
+    setIsSignatureVerified(false);
+    setCurrentGold(0);
+    setCumulativeGold(0);
+    setGoldPerHour(0);
+    console.log('[Wallet Connect] Cleared old session data');
+
     connectionLockRef.current = true;
     setIsConnecting(true);
     setConnectionStatus('Initializing wallet connection...');
