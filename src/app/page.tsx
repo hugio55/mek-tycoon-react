@@ -113,7 +113,7 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   }, [expiresAt]);
 
   return (
-    <div className={`font-mono text-xs ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
+    <div className={`font-mono text-xs sm:text-sm ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
       {timeRemaining}
     </div>
   );
@@ -2862,7 +2862,7 @@ export default function MekRateLoggingPage() {
                       {/* Corporation name */}
                       {companyNameData?.companyName ? (
                         <div
-                          className="text-yellow-400 font-bold text-base sm:text-sm cursor-pointer hover:text-yellow-300 transition-colors min-h-[44px] flex items-center touch-manipulation"
+                          className="text-yellow-400 font-bold text-base sm:text-base cursor-pointer hover:text-yellow-300 transition-colors min-h-[44px] flex items-center touch-manipulation"
                           onClick={() => {
                             setCompanyNameModalMode('edit');
                             setShowCompanyNameModal(true);
@@ -2880,21 +2880,21 @@ export default function MekRateLoggingPage() {
                             setShowCompanyNameModal(true);
                             setWalletDropdownOpen(false);
                           }}
-                          className="text-yellow-400/60 text-base sm:text-sm italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
+                          className="text-yellow-400/60 text-base sm:text-base italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
                         >
                           + Set corporation name
                         </button>
                       )}
 
                       {/* Wallet address */}
-                      <div className="text-gray-400 font-mono text-sm sm:text-xs break-all">
+                      <div className="text-gray-400 font-mono text-sm sm:text-sm break-all">
                         {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
                       </div>
 
                       {/* Session expiration timer */}
                       {checkAuth?.expiresAt && (
                         <div className="mt-2 pt-2 border-t border-yellow-500/10">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">
+                          <div className="text-gray-500 text-xs sm:text-sm uppercase tracking-wider mb-1">
                             Session Expires
                           </div>
                           <SessionTimer expiresAt={checkAuth.expiresAt} />
@@ -2904,8 +2904,8 @@ export default function MekRateLoggingPage() {
 
                     {/* Cumulative Gold Display */}
                     <div className="px-4 py-4 border-b border-yellow-500/20">
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Cumulative Gold</div>
-                      <div className="text-yellow-400 font-bold text-xl sm:text-lg font-mono">
+                      <div className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Cumulative Gold</div>
+                      <div className="text-yellow-400 font-bold text-xl sm:text-xl font-mono">
                         <AnimatedNumber value={cumulativeGold} decimals={0} />
                       </div>
                     </div>
@@ -2934,7 +2934,7 @@ export default function MekRateLoggingPage() {
                           console.error('Rescan error:', error);
                         }
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-sm sm:text-xs font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-sm sm:text-sm font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
                       RESCAN WALLET
                     </button>
@@ -2944,7 +2944,7 @@ export default function MekRateLoggingPage() {
                         setWalletDropdownOpen(false);
                         disconnectWallet();
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-sm sm:text-xs font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-sm sm:text-sm font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
                       DISCONNECT
                     </button>
@@ -3060,7 +3060,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Combined Card - Stacked Layout */}
-            <div style={{ marginBottom: '85px' }} className="flex justify-center px-0 sm:px-4 w-full max-w-full sm:max-w-[600px] mx-auto">
+            <div style={{ marginBottom: '25px' }} className="flex justify-center px-0 sm:px-4 w-full max-w-full sm:max-w-[600px] mx-auto">
               <div className="relative w-full">
                 {/* Outer corner brackets for unified card - hidden on mobile */}
                 <div className="hidden sm:block absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
@@ -3483,7 +3483,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {ownedMeks.length === 0 && loadingMeks && (
-              <div className="text-center mt-8 sm:mt-12 px-4">
+              <div className="text-center mt-0 px-4">
                 <div className="inline-block bg-black/20 border border-yellow-500/30 px-8 sm:px-12 py-8 sm:py-10 backdrop-blur-sm rounded-sm">
                   <div className="relative mb-6 flex justify-center">
                     {/* Large Spinning border */}
