@@ -371,9 +371,9 @@ export default function StoryClimbPage() {
   // Determine which chapter to load (currently fixed to Chapter 1)
   const currentChapter = previewMode ? previewChapter : 1;
 
-  // Fetch deployed event data - ONLY for current chapter to save bandwidth
-  // This reduces bandwidth usage by ~90% compared to fetching all chapters
-  const activeDeployment = useQuery(api.deployedNodeData.getActiveDeploymentByChapter, {
+  // Fetch deployed event data - OPTIMIZED new schema (~90% bandwidth reduction)
+  // Uses per-chapter storage instead of giant JSON blob
+  const activeDeployment = useQuery(api.storyClimbOptimized.getChapterData, {
     chapter: currentChapter
   });
   const attributeRarity = useQuery(api.attributeRarity.getAttributeRarity);

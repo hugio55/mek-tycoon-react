@@ -37,7 +37,7 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
   useEffect(() => {
     const startValue = startValueRef.current;
     const endValue = value;
-    const duration = 800; // milliseconds - longer for better visibility
+    const duration = 400; // Faster animation for smoother upgrade experience
     const startTime = Date.now();
 
     const animate = () => {

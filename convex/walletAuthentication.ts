@@ -180,6 +180,21 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3003',
 ];
 
+// Check if origin is allowed (includes ngrok support for development)
+function isOriginAllowed(origin: string): boolean {
+  // Check exact matches
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+
+  // Allow ngrok URLs for development (ngrok-free.dev or ngrok.io)
+  if (origin.includes('.ngrok-free.dev') || origin.includes('.ngrok.io')) {
+    return true;
+  }
+
+  return false;
+}
+
 // Generate a unique nonce for wallet signature
 export const generateNonce = mutation({
   args: {
@@ -190,7 +205,7 @@ export const generateNonce = mutation({
   },
   handler: async (ctx, args) => {
     // Validate origin (CORS protection)
-    if (args.origin && !ALLOWED_ORIGINS.includes(args.origin)) {
+    if (args.origin && !isOriginAllowed(args.origin)) {
       console.error(`[Security] Unauthorized origin attempt: ${args.origin} for wallet ${args.stakeAddress}`);
 
       // Log security event
