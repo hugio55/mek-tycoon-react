@@ -76,6 +76,49 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
     : <>{displayValue.toFixed(decimals)}</>;
 }
 
+// Session Timer Component - Shows countdown to session expiration
+function SessionTimer({ expiresAt }: { expiresAt: number }) {
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [isExpiringSoon, setIsExpiringSoon] = useState(false);
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = expiresAt - now;
+
+      if (remaining <= 0) {
+        setTimeRemaining('Expired');
+        setIsExpiringSoon(true);
+        return;
+      }
+
+      // Check if expiring soon (less than 1 hour)
+      setIsExpiringSoon(remaining < 60 * 60 * 1000);
+
+      // Format time remaining
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+      if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m`);
+      } else {
+        setTimeRemaining(`${minutes}m`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  return (
+    <div className={`font-mono text-xs ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
+      {timeRemaining}
+    </div>
+  );
+}
+
 // Simple function to create Pool.pm URL without MeshSDK
 function createPoolPmUrl(policyId: string, assetName: string): string {
   // Pool.pm accepts policy ID and asset name directly
@@ -2847,6 +2890,16 @@ export default function MekRateLoggingPage() {
                       <div className="text-gray-400 font-mono text-sm sm:text-xs break-all">
                         {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
                       </div>
+
+                      {/* Session expiration timer */}
+                      {checkAuth?.expiresAt && (
+                        <div className="mt-2 pt-2 border-t border-yellow-500/10">
+                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">
+                            Session Expires
+                          </div>
+                          <SessionTimer expiresAt={checkAuth.expiresAt} />
+                        </div>
+                      )}
                     </div>
 
                     {/* Cumulative Gold Display */}
@@ -3159,13 +3212,14 @@ export default function MekRateLoggingPage() {
               </div>
             </div>
 
-            {/* Controls Row - Search bar and Sort button */}
-            <div className={`flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
-              ownedMeks.length === 1 ? 'max-w-md mx-auto' :
-              ownedMeks.length === 2 ? 'max-w-3xl mx-auto' :
-              ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
-              'max-w-7xl mx-auto'
-            }`}>
+            {/* Controls Row - Search bar and Sort button - Hidden when no meks */}
+            {ownedMeks.length > 0 && (
+              <div className={`flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
+                ownedMeks.length === 1 ? 'max-w-md mx-auto' :
+                ownedMeks.length === 2 ? 'max-w-3xl mx-auto' :
+                ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
+                'max-w-7xl mx-auto'
+              }`}>
               {/* Search Bar - Minimalist Tech Style - Hidden when no meks */}
               {ownedMeks.length > 0 && (
                 <div className="max-w-lg relative">
@@ -3257,10 +3311,11 @@ export default function MekRateLoggingPage() {
                   )}
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
             {/* Blockchain Verification Panel - Hidden, but keep component for functionality */}
-            <div className="mb-6 hidden">
+            <div className="hidden">
               <BlockchainVerificationPanel
                   walletAddress={walletAddress}
                   paymentAddress={paymentAddress}
