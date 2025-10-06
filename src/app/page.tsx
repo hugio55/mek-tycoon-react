@@ -670,9 +670,26 @@ export default function MekRateLoggingPage() {
         // For now, we proceed with wallet reconnection optimistically
 
         // Check if wallet extension is still available
+        // On hard refresh, wallet might not be loaded yet - wait up to 3 seconds
         const walletKey = session.walletName.toLowerCase();
-        if (!window.cardano || !window.cardano[walletKey]) {
-          console.log('[Session Restore] Wallet extension not available:', walletKey);
+        let walletAvailable = false;
+        let retries = 0;
+        const maxRetries = 6; // 6 retries = 3 seconds
+
+        while (retries < maxRetries && !walletAvailable) {
+          if (window.cardano && window.cardano[walletKey]) {
+            walletAvailable = true;
+            console.log('[Session Restore] Wallet extension found:', walletKey);
+            break;
+          }
+
+          console.log(`[Session Restore] Waiting for wallet extension... (attempt ${retries + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
+
+        if (!walletAvailable) {
+          console.log('[Session Restore] Wallet extension not available after waiting:', walletKey);
           clearWalletSession();
           setWalletAddress(null);
           setIsAutoReconnecting(false);
