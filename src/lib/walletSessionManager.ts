@@ -101,6 +101,7 @@ export function clearWalletSession(): void {
     localStorage.removeItem('walletAddress'); // Clear payment address
     localStorage.removeItem('stakeAddress'); // Clear stake address
     localStorage.removeItem('paymentAddress'); // Clear payment address (alt key)
+    localStorage.removeItem('mek_migration_status'); // CRITICAL: Clear failed migration tracker
     console.log('[Session Manager] Cleared all session data (new and legacy formats)');
   } catch (error) {
     console.error('[Session Manager] Error clearing legacy formats:', error);
