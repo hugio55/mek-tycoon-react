@@ -476,8 +476,12 @@ export default function MekRateLoggingPage() {
       if (webViewCheck.isWebView && webViewCheck.walletType) {
         console.log('[WebView Auto-Connect] Detected WebView for wallet:', webViewCheck.walletType);
 
-        // Set WebView mode flags
+        // Reset rate limiter for WebView auto-connect (user is already in the wallet app)
         const displayName = getWalletDisplayName(webViewCheck.walletType);
+        walletRateLimiter.reset(displayName);
+        console.log('[WebView Auto-Connect] Rate limiter reset for', displayName);
+
+        // Set WebView mode flags
         setIsWebViewMode(true);
         setWebViewWalletName(displayName);
         setConnectionStatus(`Connecting to ${displayName}...`);
