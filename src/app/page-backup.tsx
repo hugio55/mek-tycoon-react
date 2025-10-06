@@ -21,8 +21,6 @@ import {
   updateCachedMeks,
   generateSessionId,
 } from "@/lib/walletSessionManager";
-import { useSecureWalletConnection } from '@/hooks/useSecureWalletConnection';
-import { generateSecureNonce, verifySignatureWithRetry, saveSessionSecurely } from '@/lib/secureWalletConnection';
 import { VirtualMekGrid } from "@/components/VirtualMekGrid";
 import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/AnimatedNumber";
 import { MekCard } from "@/components/MekCard";
@@ -274,27 +272,6 @@ export default function MekRateLoggingPage() {
   // Toast notification state
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'info' | 'error' } | null>(null);
 
-  // Secure wallet connection hook
-  const {
-    connectWallet: connectWalletSecure,
-    connectionState,
-    isConnecting: isSecureConnecting,
-    error: secureConnectionError
-  } = useSecureWalletConnection({
-    maxRetries: 2,
-    onConnectionSuccess: async (session) => {
-      console.log('[Secure Connection] Wallet connected successfully');
-      setWalletAddress(session.walletAddress);
-      setWalletType(session.walletType);
-      setIsConnecting(false);
-      setWalletConnected(true);
-    },
-    onConnectionError: (error) => {
-      console.error('[Secure Connection] Connection failed:', error);
-      setWalletError(error.message);
-      setIsConnecting(false);
-    }
-  });
 
   // Gold tracking
   const [currentGold, setCurrentGold] = useState(0);
@@ -542,8 +519,8 @@ export default function MekRateLoggingPage() {
       }
 
       try {
-        // Try new session format first (with decryption)
-        const session = await restoreWalletSession();
+        // Try new session format first
+        const session = restoreWalletSession();
         if (!session) {
           setIsAutoReconnecting(false);
           return;
@@ -1431,28 +1408,19 @@ export default function MekRateLoggingPage() {
             console.log('[Wallet Connect] No valid session - requesting signature...');
             // Generate nonce for signature verification - REQUIRED
             try {
-              console.log('[Wallet Connect] Generating secure nonce...');
-
-              // Get a payment address for signing (signData doesn't work with stake addresses directly)
-              const usedAddresses = await api.getUsedAddresses();
-              const paymentAddress = usedAddresses[0];
-
-              // Use secure nonce generation
-              const nonceResult = await generateSecureNonce({
+              console.log('[Wallet Connect] Generating nonce for signature...');
+              const nonceResult = await generateNonce({
                 stakeAddress,
-                walletName: wallet.name,
-                generateNonceMutation: generateNonce,
-                updateState: (update) => {
-                  if (update.originVerified) {
-                    console.log('[Secure Connect] Origin validated');
-                  }
-                  if (update.nonceGenerated) {
-                    console.log('[Secure Connect] Secure nonce generated');
-                  }
-                }
+                walletName: wallet.name
               });
               verifiedNonce = nonceResult.nonce; // Save nonce
-              console.log('[Wallet Connect] Secure nonce generated successfully');
+              console.log('[Wallet Connect] Nonce generated successfully');
+
+            // Get a payment address for signing (signData doesn't work with stake addresses directly)
+            console.log('[Wallet Connect] Getting payment addresses...');
+            const usedAddresses = await api.getUsedAddresses();
+            const paymentAddress = usedAddresses[0];
+            console.log('[Wallet Connect] Payment address retrieved');
 
             // Request signature from wallet with 60 second timeout - MANDATORY (using payment address)
             console.log('[Wallet Connect] Requesting signature from user...');
@@ -1469,31 +1437,15 @@ export default function MekRateLoggingPage() {
             console.log('[Wallet Connect] Signature received');
             setConnectionStatus('Signature received! Verifying...');
 
-            // Verify signature with retry logic - MUST SUCCEED
-            const verificationResult = await verifySignatureWithRetry({
+            // Verify signature - MUST SUCCEED
+            const verificationResult = await verifySignature({
               stakeAddress,
-              walletName: wallet.name,
-              signature: signature.signature || signature,
               nonce: nonceResult.nonce,
-              verifySignatureAction: verifySignature,
-              generateNonceMutation: generateNonce,
-              signDataFunction: async (addr, payload) => {
-                const sig = await api.signData(paymentAddress, payload);
-                return sig.signature || sig;
-              },
-              updateState: (update) => {
-                if (update.signatureVerified) {
-                  console.log('[Secure Connect] Signature verified');
-                }
-                if (update.retryAttempt) {
-                  console.log('[Secure Connect] Retry attempt:', update.retryAttempt);
-                  setConnectionStatus(`Retrying verification (${update.retryAttempt}/2)...`);
-                }
-              },
-              maxRetries: 2
+              signature: signature.signature || signature,
+              walletName: wallet.name
             });
 
-            if (!verificationResult.success || !verificationResult.verified) {
+            if (!verificationResult.success) {
               throw new Error(verificationResult.error || 'Signature verification failed');
             }
 
@@ -1502,7 +1454,7 @@ export default function MekRateLoggingPage() {
 
             // Show toast notification immediately after signature
             setToast({
-              message: '✓ Signature verified securely! Connecting...',
+              message: '✓ Signature received! Starting verification...',
               type: 'info'
             });
             setIsProcessingSignature(true);
@@ -1638,23 +1590,17 @@ export default function MekRateLoggingPage() {
         setLoadingMeks(false);
       }
 
-      // Save wallet session using secure session manager (with async encryption)
+      // Save wallet session using new session manager
       const sessionId = generateSessionId();
-      await saveSessionSecurely({
-        walletAddress: stakeAddress,
-        stakeAddress,
+      saveWalletSession({
         walletName: wallet.name,
-        sessionId,
-        nonce: nonce || '', // Use nonce from verification
+        stakeAddress,
         paymentAddress: primaryPaymentAddress,
+        nonce: nonce || '', // Use nonce from verification
+        sessionId,
         cachedMeks: meks,
-        updateState: (update) => {
-          if (update.sessionEncrypted) {
-            console.log('[Session Save] Session encrypted securely');
-          }
-        }
       });
-      console.log('[Session Save] Encrypted wallet session saved with', meks.length, 'cached Meks, security validated');
+      console.log('[Session Save] Wallet session saved with', meks.length, 'cached Meks, platform info included');
 
       // Set state
       setWalletAddress(stakeAddress);
@@ -2685,49 +2631,6 @@ export default function MekRateLoggingPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                       <span>{walletError}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Security Status Indicators - shown during connection */}
-                {isConnecting && connectionState && (
-                  <div className="mt-6 p-4 bg-black/40 border border-yellow-500/20 backdrop-blur-sm">
-                    <div className="text-xs text-gray-400 mb-3 font-mono uppercase tracking-wider">
-                      Security Status
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className={`w-1.5 h-1.5 rounded-full ${connectionState.originVerified ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        <span className={connectionState.originVerified ? 'text-green-400' : 'text-gray-500'}>
-                          Origin Validated
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className={`w-1.5 h-1.5 rounded-full ${connectionState.nonceGenerated ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        <span className={connectionState.nonceGenerated ? 'text-green-400' : 'text-gray-500'}>
-                          Secure Nonce Generated
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className={`w-1.5 h-1.5 rounded-full ${connectionState.signatureVerified ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        <span className={connectionState.signatureVerified ? 'text-green-400' : 'text-gray-500'}>
-                          Signature Verified
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className={`w-1.5 h-1.5 rounded-full ${connectionState.sessionEncrypted ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        <span className={connectionState.sessionEncrypted ? 'text-green-400' : 'text-gray-500'}>
-                          Session Encrypted
-                        </span>
-                      </div>
-                      {connectionState.retryAttempt > 0 && (
-                        <div className="flex items-center gap-3 text-xs mt-3 pt-3 border-t border-yellow-500/20">
-                          <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
-                          <span className="text-yellow-400">
-                            Retry Attempt {connectionState.retryAttempt}/{connectionState.maxRetries}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

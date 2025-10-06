@@ -1,13 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import {
-  isMobileDevice,
-  detectAvailableMobileWallets,
-  getMobileWalletDisplayName,
-  openMobileWallet,
-  type MobileWalletType,
-} from '@/lib/mobileWalletSupport';
+import { useIsMobile } from '@/hooks/useWalletDetection';
+import { useMobileWalletManager } from '@/hooks/useMobileWallets';
+import { getWalletDisplayName, type MobileWalletType } from '@/lib/walletDetection';
 
 interface MobileWalletConnectProps {
   dappUrl: string;
@@ -20,60 +15,26 @@ export default function MobileWalletConnect({
   onWalletSelected,
   onError,
 }: MobileWalletConnectProps) {
-  const [isOpening, setIsOpening] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<MobileWalletType | null>(null);
-  const [availableWallets, setAvailableWallets] = useState<MobileWalletType[]>([]);
-  const [isDetecting, setIsDetecting] = useState(true);
+  const isMobile = useIsMobile();
 
-  const isMobile = isMobileDevice();
-
-  // Detect available wallets on mount
-  useEffect(() => {
-    if (isMobile) {
-      setIsDetecting(true);
-      detectAvailableMobileWallets()
-        .then(wallets => {
-          setAvailableWallets(wallets);
-          setIsDetecting(false);
-        })
-        .catch(error => {
-          console.error('[Mobile Wallet Detection] Error:', error);
-          setIsDetecting(false);
-        });
-    }
-  }, [isMobile]);
+  // Use the combined mobile wallet manager hook
+  const {
+    wallets: availableWallets,
+    isDetecting,
+    isConnecting,
+    selectedWallet,
+    connectWallet,
+  } = useMobileWalletManager(dappUrl, {
+    onWalletOpened: onWalletSelected,
+    onError,
+  });
 
   if (!isMobile) {
     return null;
   }
 
   const handleWalletClick = async (walletType: MobileWalletType) => {
-    setIsOpening(true);
-    setSelectedWallet(walletType);
-
-    try {
-      // Notify parent component
-      onWalletSelected(walletType);
-
-      // Try to open the wallet app
-      await openMobileWallet(walletType, dappUrl);
-
-      // If successful, the app should open
-      console.log(`[Mobile Wallet] Successfully opened ${walletType}`);
-    } catch (error) {
-      console.error(`[Mobile Wallet] Failed to open ${walletType}:`, error);
-
-      if (onError) {
-        onError(
-          error instanceof Error
-            ? error
-            : new Error(`Failed to open ${walletType} wallet`)
-        );
-      }
-    } finally {
-      setIsOpening(false);
-      setSelectedWallet(null);
-    }
+    await connectWallet(walletType);
   };
 
   // Wallet icons mapping
@@ -150,13 +111,13 @@ export default function MobileWalletConnect({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {availableWallets.map((walletType) => {
-          const isCurrentlyOpening = isOpening && selectedWallet === walletType;
+          const isCurrentlyOpening = isConnecting && selectedWallet === walletType;
 
           return (
             <button
               key={walletType}
               onClick={() => handleWalletClick(walletType)}
-              disabled={isOpening}
+              disabled={isConnecting}
               className="group relative bg-black/40 border-2 border-yellow-500/30 text-yellow-500 px-4 py-4 sm:px-6 sm:py-5 transition-all hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/20 active:bg-yellow-500/20 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed uppercase tracking-wider sm:tracking-widest font-['Orbitron'] font-bold backdrop-blur-sm overflow-hidden min-h-[60px] touch-manipulation rounded"
               style={{
                 touchAction: 'manipulation',
@@ -179,7 +140,7 @@ export default function MobileWalletConnect({
                 <div className="w-7 h-7 sm:w-8 sm:h-8 relative flex-shrink-0 transition-transform group-hover:scale-110">
                   <img
                     src={walletIcons[walletType]}
-                    alt={getMobileWalletDisplayName(walletType)}
+                    alt={getWalletDisplayName(walletType)}
                     className="w-full h-full object-contain drop-shadow-lg"
                     onError={(e) => {
                       // Fallback to text if icon fails to load
@@ -190,7 +151,7 @@ export default function MobileWalletConnect({
 
                 {/* Wallet name */}
                 <span className="text-sm sm:text-base flex-1 text-center">
-                  {isCurrentlyOpening ? 'Opening Wallet...' : getMobileWalletDisplayName(walletType)}
+                  {isCurrentlyOpening ? 'Opening Wallet...' : getWalletDisplayName(walletType)}
                 </span>
 
                 {/* Loading indicator */}

@@ -2,6 +2,7 @@
  * Wallet Session Manager
  * High-level orchestration layer for wallet session management
  * Combines walletSession.ts (storage) with Convex authentication validation
+ * Includes async session encryption and origin validation
  */
 
 import { saveSession, getSession, clearSession, WalletSession } from './walletSession';
@@ -17,10 +18,11 @@ export interface SessionData {
 }
 
 /**
- * Save a wallet connection session
+ * Save a wallet connection session with async encryption
  * Combines localStorage persistence with platform detection
+ * @returns Promise that resolves when encryption is complete
  */
-export function saveWalletSession(data: SessionData): void {
+export async function saveWalletSession(data: SessionData): Promise<void> {
   const platform = detectPlatform();
   const deviceId = generateDeviceId();
 
@@ -35,7 +37,8 @@ export function saveWalletSession(data: SessionData): void {
     deviceId,
   };
 
-  saveSession(session);
+  // Save encrypted session (this is now async due to encryption)
+  await saveSession(session);
 
   // Also save Meks cache separately for backwards compatibility
   if (data.cachedMeks && data.cachedMeks.length > 0) {
@@ -56,25 +59,32 @@ export function saveWalletSession(data: SessionData): void {
 }
 
 /**
- * Restore a wallet session
+ * Restore a wallet session with async decryption
  * Returns session data if valid, null if expired or invalid
+ * Automatically migrates legacy plaintext sessions to encrypted format
+ * @returns Promise that resolves to session or null
  */
-export function restoreWalletSession(): WalletSession | null {
-  const session = getSession();
+export async function restoreWalletSession(): Promise<WalletSession | null> {
+  try {
+    const session = await getSession();
 
-  if (!session) {
-    console.log('[Session Manager] No valid session found');
+    if (!session) {
+      console.log('[Session Manager] No valid session found');
+      return null;
+    }
+
+    console.log('[Session Manager] Restored encrypted session:', {
+      walletAddress: session.walletAddress.slice(0, 12) + '...',
+      platform: session.platform,
+      walletName: session.walletName,
+      age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
+    });
+
+    return session;
+  } catch (error) {
+    console.error('[Session Manager] Failed to restore session:', error);
     return null;
   }
-
-  console.log('[Session Manager] Restored session:', {
-    walletAddress: session.walletAddress.slice(0, 12) + '...',
-    platform: session.platform,
-    walletName: session.walletName,
-    age: Math.floor((Date.now() - session.createdAt) / 1000 / 60) + ' minutes',
-  });
-
-  return session;
 }
 
 /**

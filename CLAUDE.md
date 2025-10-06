@@ -244,12 +244,15 @@ When user types `/ui-team`, activate these three agents together:
 - `@visual-test` - Test visual changes
 
 ### `/ultra` - Ultimate wallet and database debugging
-When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using a single message with multiple Task tool calls. The project-lead coordinates while all specialists work simultaneously:
+When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using a single message with multiple Task tool calls. **The project-lead agent is the primary coordinator** - it analyzes the problem, delegates specific tasks to specialist agents, sequences the work order, and ensures all teams stay aligned.
 
-**IMPORTANT**: Must launch all agents in parallel in a single response, not sequentially.
+**IMPORTANT**:
+- Must launch all agents in parallel in a single response, not sequentially
+- **The project-lead should actively delegate and coordinate** - don't just launch agents independently
+- Project-lead analyzes the issue, identifies which specialists are needed, and assigns specific tasks to each
 
-**Project Coordination:**
-- `@project-lead` - Delegates tasks to specialist agents, sequences work order, tracks progress across teams
+**Project Coordination (PRIMARY ROLE):**
+- `@project-lead` - **Main delegator**: analyzes problems, assigns tasks to specialists, sequences work order, tracks progress, integrates solutions across teams
 
 **Wallet Integration Team:**
 - `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
@@ -301,6 +304,7 @@ Example transformation:
 - Use TodoWrite tool for complex multi-step tasks
 - NEVER suggest `npm update` or upgrading to latest packages
 - NEVER use styled-jsx (causes build errors)
+- **NEVER create documentation files (*.md) unless explicitly requested** - User will not read them. Give verbal summaries instead
 
 ## 🚨 CRITICAL SAVE SYSTEM PROTECTION 🚨
 **NEVER modify these files without asking the user TWICE:**

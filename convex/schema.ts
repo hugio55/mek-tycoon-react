@@ -1652,9 +1652,14 @@ export default defineSchema({
     nonce: v.string(),
     signature: v.string(),
     walletName: v.string(),
-    verified: v.boolean(),
+    verified: v.boolean(), // DEPRECATED - use usedAt instead
     expiresAt: v.number(),
     createdAt: v.number(),
+
+    // Security enhancements
+    deviceId: v.optional(v.string()), // Device identifier for binding
+    origin: v.optional(v.string()), // Origin URL for CORS validation
+    usedAt: v.optional(v.number()), // Timestamp when nonce was consumed (replaces verified boolean)
 
     // Mobile & Platform Tracking
     platform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop
@@ -1669,7 +1674,9 @@ export default defineSchema({
     .index("by_stake_address", ["stakeAddress"])
     .index("by_nonce", ["nonce"])
     .index("by_expires", ["expiresAt"])
-    .index("by_platform", ["platform"]),
+    .index("by_platform", ["platform"])
+    .index("by_used", ["usedAt"]) // For cleanup queries
+    .index("by_nonce_stake_device", ["nonce", "stakeAddress", "deviceId"]), // Unique constraint enforcement
 
   // Multi-wallet aggregation
   walletLinks: defineTable({

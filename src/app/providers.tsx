@@ -20,7 +20,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <SoundProvider>
         <div className="min-h-screen relative">
           {isWelcomePage || isTalentBuilder || isMekRateLogging ? (
-            // Welcome page, talent builder, and mek-rate-logging without navigation
+            // Root page, talent builder, and mek-rate-logging without navigation
             children
           ) : isAdminPage ? (
             // Admin pages with full width layout

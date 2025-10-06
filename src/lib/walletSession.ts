@@ -1,7 +1,11 @@
 /**
  * Wallet Session Storage Management
  * Handles localStorage-based session persistence for wallet connections
+ * Sessions are encrypted using Web Crypto API with device-bound keys
  */
+
+import { encryptSession, decryptSession, isEncryptedSession } from './sessionEncryption';
+import { SecurityStateLogger, SessionMigrationTracker } from './securityStateLogger';
 
 const SESSION_KEY = 'mek_wallet_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -21,9 +25,9 @@ export interface WalletSession {
 }
 
 /**
- * Save wallet session to localStorage
+ * Save wallet session to localStorage (encrypted)
  */
-export function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresAt'>): void {
+export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresAt'>): Promise<void> {
   if (typeof window === 'undefined') return;
 
   const now = Date.now();
@@ -34,23 +38,30 @@ export function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresA
   };
 
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(fullSession));
-    console.log('[Session] Saved wallet session:', {
+    // Encrypt session before storing
+    const encryptedSession = await encryptSession(fullSession);
+    localStorage.setItem(SESSION_KEY, encryptedSession);
+
+    console.log('[Session] Saved encrypted wallet session:', {
       walletAddress: session.walletAddress.slice(0, 12) + '...',
       expiresAt: new Date(fullSession.expiresAt).toISOString(),
       platform: session.platform,
     });
   } catch (error) {
     console.error('[Session] Failed to save session:', error);
+    throw error;
   }
 }
 
 /**
- * Get and validate session from localStorage
+ * Get and validate session from localStorage (with decryption)
  * Returns null if session is expired or invalid
+ * Handles migration from legacy plaintext sessions
  */
-export function getSession(): WalletSession | null {
+export async function getSession(): Promise<WalletSession | null> {
   if (typeof window === 'undefined') return null;
+
+  const migrationTracker = new SessionMigrationTracker();
 
   try {
     const stored = localStorage.getItem(SESSION_KEY);
@@ -59,7 +70,63 @@ export function getSession(): WalletSession | null {
       return null;
     }
 
-    const session: WalletSession = JSON.parse(stored);
+    let session: WalletSession;
+
+    // Check if this is an encrypted session or legacy plaintext
+    if (isEncryptedSession(stored)) {
+      // Decrypt the session
+      try {
+        session = await decryptSession(stored);
+        console.log('[Session] Decrypted session successfully');
+      } catch (decryptError) {
+        console.error('[Session] Failed to decrypt session:', decryptError);
+        clearSession();
+        return null;
+      }
+    } else {
+      // Legacy plaintext session - migrate to encrypted format
+      // Check if we've already attempted migration to prevent loops
+      if (migrationTracker.hasAttempted() && !migrationTracker.wasSuccessful()) {
+        console.error('[Session] Migration previously failed, clearing session to prevent loop');
+        clearSession();
+        migrationTracker.reset(); // Reset for next login attempt
+        return null;
+      }
+
+      const logger = new SecurityStateLogger('SessionMigration');
+      logger.log('session_migrate_start', { sessionSize: stored.length });
+
+      try {
+        session = JSON.parse(stored);
+
+        // Re-save as encrypted
+        await saveSession({
+          walletAddress: session.walletAddress,
+          stakeAddress: session.stakeAddress,
+          sessionId: session.sessionId,
+          nonce: session.nonce,
+          walletType: session.walletType,
+          walletName: session.walletName,
+          platform: session.platform,
+          deviceId: session.deviceId,
+          lastValidated: session.lastValidated,
+        });
+
+        logger.log('session_migrate_complete', {
+          walletAddress: session.walletAddress.slice(0, 12) + '...',
+          platform: session.platform
+        });
+        logger.complete({ migrated: true });
+
+        migrationTracker.markAttempted(true);
+      } catch (migrateError) {
+        logger.error('session_migrate_error', migrateError);
+        migrationTracker.markAttempted(false, (migrateError as Error).message);
+        clearSession();
+        return null;
+      }
+    }
+
     const now = Date.now();
 
     // Check if session is expired
@@ -117,16 +184,18 @@ export function clearSession(): void {
 /**
  * Update session last validated timestamp
  */
-export function updateSessionValidation(): void {
+export async function updateSessionValidation(): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  const session = getSession();
+  const session = await getSession();
   if (!session) return;
 
   session.lastValidated = Date.now();
 
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    // Re-encrypt and save updated session
+    const encryptedSession = await encryptSession(session);
+    localStorage.setItem(SESSION_KEY, encryptedSession);
     console.log('[Session] Updated session validation timestamp');
   } catch (error) {
     console.error('[Session] Failed to update validation:', error);
@@ -136,18 +205,18 @@ export function updateSessionValidation(): void {
 /**
  * Check if session exists and is valid (without retrieving full data)
  */
-export function hasValidSession(): boolean {
+export async function hasValidSession(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
 
-  const session = getSession();
+  const session = await getSession();
   return session !== null;
 }
 
 /**
  * Get session expiry time in milliseconds
  */
-export function getSessionTimeRemaining(): number | null {
-  const session = getSession();
+export async function getSessionTimeRemaining(): Promise<number | null> {
+  const session = await getSession();
   if (!session) return null;
 
   return Math.max(0, session.expiresAt - Date.now());
@@ -156,14 +225,16 @@ export function getSessionTimeRemaining(): number | null {
 /**
  * Extend session expiration by 24 hours
  */
-export function extendSession(): boolean {
-  const session = getSession();
+export async function extendSession(): Promise<boolean> {
+  const session = await getSession();
   if (!session) return false;
 
   session.expiresAt = Date.now() + SESSION_DURATION;
 
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    // Re-encrypt and save updated session
+    const encryptedSession = await encryptSession(session);
+    localStorage.setItem(SESSION_KEY, encryptedSession);
     console.log('[Session] Extended session expiration:', {
       newExpiry: new Date(session.expiresAt).toISOString(),
     });

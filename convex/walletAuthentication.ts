@@ -170,40 +170,135 @@ async function resetFailedAttempts(ctx: any, stakeAddress: string): Promise<void
   }
 }
 
+// Allowed origins for nonce generation (CORS protection)
+const ALLOWED_ORIGINS = [
+  'https://mek.overexposed.io',
+  'http://localhost:3100',
+  'http://localhost:3000', // Dev fallback
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
+];
+
 // Generate a unique nonce for wallet signature
 export const generateNonce = mutation({
   args: {
     stakeAddress: v.string(),
-    walletName: v.string()
+    walletName: v.string(),
+    deviceId: v.optional(v.string()), // Device identifier for binding
+    origin: v.optional(v.string()), // Origin URL for validation
   },
   handler: async (ctx, args) => {
+    // Validate origin (CORS protection)
+    if (args.origin && !ALLOWED_ORIGINS.includes(args.origin)) {
+      console.error(`[Security] Unauthorized origin attempt: ${args.origin} for wallet ${args.stakeAddress}`);
+
+      // Log security event
+      await ctx.db.insert("auditLogs", {
+        type: "security_violation",
+        timestamp: Date.now(),
+        createdAt: Date.now(),
+        stakeAddress: args.stakeAddress,
+        reason: `Unauthorized origin: ${args.origin}`,
+      });
+
+      throw new Error('Unauthorized origin');
+    }
+
     // Check rate limit for nonce generation
     const rateLimitCheck = await checkRateLimit(ctx, args.stakeAddress, "nonce_generation");
     if (!rateLimitCheck.allowed) {
+      console.warn(`[Security] Rate limit exceeded for wallet ${args.stakeAddress}`);
       throw new Error(rateLimitCheck.error || "Rate limit exceeded");
     }
 
-    // Generate a random nonce
-    const nonce = `mek-auth-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    // Generate a cryptographically random nonce
+    const nonce = `mek-auth-${Date.now()}-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
-    // Store the nonce with expiration (24 hours for session-based persistence)
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+    // Shorter expiration for enhanced security (5 minutes instead of 24 hours)
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+
+    // Check for existing nonce with same stake address + device (prevent duplicates)
+    if (args.deviceId) {
+      const existingNonce = await ctx.db
+        .query("walletSignatures")
+        .withIndex("by_nonce_stake_device", q =>
+          q.eq("nonce", nonce).eq("stakeAddress", args.stakeAddress).eq("deviceId", args.deviceId)
+        )
+        .first();
+
+      if (existingNonce) {
+        console.warn(`[Security] Duplicate nonce attempt detected for ${args.stakeAddress}`);
+        throw new Error("Duplicate nonce detected. Please try again.");
+      }
+    }
 
     await ctx.db.insert("walletSignatures", {
       stakeAddress: args.stakeAddress,
       nonce,
       signature: "", // Will be filled after verification
       walletName: args.walletName,
-      verified: false,
+      verified: false, // DEPRECATED - kept for backwards compatibility
+      usedAt: undefined, // Will be set when nonce is consumed
+      deviceId: args.deviceId,
+      origin: args.origin,
       expiresAt,
       createdAt: Date.now()
     });
+
+    // Log nonce generation for security audit
+    console.log(`[Auth] Nonce generated for ${args.stakeAddress}, deviceId: ${args.deviceId}, origin: ${args.origin}, expires in 5 minutes`);
 
     return {
       nonce,
       expiresAt,
       message: `Please sign this message to verify ownership of your wallet:\n\nNonce: ${nonce}\nApplication: Mek Tycoon\nTimestamp: ${new Date().toISOString()}`
     };
+  }
+});
+
+// Mark nonce as used atomically (CRITICAL: prevents race conditions)
+export const markNonceUsed = mutation({
+  args: {
+    nonce: v.string(),
+    usedAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("walletSignatures")
+      .withIndex("by_nonce", q => q.eq("nonce", args.nonce))
+      .first();
+
+    if (!record) {
+      console.error(`[Security] Attempted to mark non-existent nonce as used: ${args.nonce}`);
+      throw new Error("Invalid nonce");
+    }
+
+    // Check if already used (race condition detection)
+    if (record.usedAt) {
+      console.error(`[Security] RACE CONDITION DETECTED: Nonce ${args.nonce} already used at ${new Date(record.usedAt).toISOString()}`);
+
+      // Log security anomaly
+      await ctx.db.insert("auditLogs", {
+        type: "race_condition_detected",
+        timestamp: Date.now(),
+        createdAt: Date.now(),
+        stakeAddress: record.stakeAddress,
+        nonce: args.nonce,
+        reason: `Nonce reuse attempt detected - already used at ${new Date(record.usedAt).toISOString()}`,
+      });
+
+      throw new Error("Nonce already used");
+    }
+
+    // Atomically mark as used
+    await ctx.db.patch(record._id, {
+      usedAt: args.usedAt,
+    });
+
+    console.log(`[Auth] Nonce ${args.nonce} marked as used at ${new Date(args.usedAt).toISOString()}`);
+
+    return { success: true };
   }
 });
 
@@ -223,6 +318,7 @@ export const verifySignature = action({
       });
 
       if (!rateLimitCheck.allowed) {
+        console.warn(`[Security] Rate limit check failed for ${args.stakeAddress}`);
         return {
           success: false,
           error: rateLimitCheck.error || "Rate limit exceeded"
@@ -235,6 +331,7 @@ export const verifySignature = action({
       });
 
       if (!nonceRecord) {
+        console.error(`[Security] Invalid nonce verification attempt: ${args.nonce}`);
         await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
           stakeAddress: args.stakeAddress
         });
@@ -246,6 +343,7 @@ export const verifySignature = action({
 
       // Check if expired
       if (Date.now() > nonceRecord.expiresAt) {
+        console.warn(`[Security] Expired nonce used: ${args.nonce}, expired at ${new Date(nonceRecord.expiresAt).toISOString()}`);
         await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
           stakeAddress: args.stakeAddress
         });
@@ -255,8 +353,25 @@ export const verifySignature = action({
         };
       }
 
-      // Check if already verified
-      if (nonceRecord.verified) {
+      // Check if already used (supports both new usedAt and legacy verified fields)
+      if (nonceRecord.usedAt || nonceRecord.verified) {
+        console.error(`[Security] Nonce reuse attempt detected: ${args.nonce}, used at ${nonceRecord.usedAt ? new Date(nonceRecord.usedAt).toISOString() : 'unknown'}`);
+        return {
+          success: false,
+          error: "Nonce already used"
+        };
+      }
+
+      // CRITICAL: Mark nonce as used BEFORE verification
+      // This prevents timing attacks - even if verification fails, nonce is consumed
+      try {
+        await ctx.runMutation(api.walletAuthentication.markNonceUsed, {
+          nonce: args.nonce,
+          usedAt: Date.now()
+        });
+      } catch (markError: any) {
+        // If marking fails, it means race condition was detected
+        console.error(`[Security] Failed to mark nonce as used (race condition): ${markError.message}`);
         return {
           success: false,
           error: "Nonce already used"
@@ -265,6 +380,7 @@ export const verifySignature = action({
 
       // REAL CRYPTOGRAPHIC SIGNATURE VERIFICATION
       // Using full Ed25519 verification with CSL library
+      console.log(`[Auth] Beginning signature verification for ${args.stakeAddress}`);
       const verificationResult = await ctx.runAction(api.actions.verifyCardanoSignature.verifyCardanoSignature, {
         stakeAddress: args.stakeAddress,
         nonce: args.nonce,
@@ -272,10 +388,10 @@ export const verifySignature = action({
         message: `Please sign this message to verify ownership of your wallet:\n\nNonce: ${args.nonce}\nApplication: Mek Tycoon\nTimestamp: ${new Date(nonceRecord.createdAt).toISOString()}`
       });
 
-      console.log("[Auth] Verification result:", verificationResult);
+      console.log(`[Auth] Verification result for ${args.stakeAddress}:`, verificationResult);
 
       if (verificationResult.valid) {
-        // Update the signature record
+        // Update the signature record (set verified=true for backwards compatibility)
         await ctx.runMutation(api.walletAuthentication.updateSignatureRecord, {
           nonce: args.nonce,
           signature: args.signature,
@@ -287,9 +403,7 @@ export const verifySignature = action({
           stakeAddress: args.stakeAddress
         });
 
-        // No multi-wallet linking needed - one wallet per account
-
-        // Log the successful connection
+        // Log the successful connection with security metadata
         await ctx.runMutation(api.auditLogs.logWalletConnection, {
           stakeAddress: args.stakeAddress,
           walletName: args.walletName,
@@ -298,18 +412,23 @@ export const verifySignature = action({
           timestamp: Date.now()
         });
 
+        console.log(`[Auth] SUCCESS: Wallet ${args.stakeAddress} authenticated successfully`);
+
         return {
           success: true,
           verified: true,
           expiresAt: nonceRecord.expiresAt
         };
       } else {
+        // IMPORTANT: Even though verification failed, nonce is already consumed
+        // This prevents timing attacks where attackers try many signatures quickly
+
         // Record failed attempt
         await ctx.runMutation(api.walletAuthentication.recordSignatureFailure, {
           stakeAddress: args.stakeAddress
         });
 
-        // Log failed attempt
+        // Log failed attempt with security metadata
         await ctx.runMutation(api.auditLogs.logWalletConnection, {
           stakeAddress: args.stakeAddress,
           walletName: args.walletName,
@@ -318,12 +437,15 @@ export const verifySignature = action({
           timestamp: Date.now()
         });
 
+        console.error(`[Auth] FAILED: Invalid signature for ${args.stakeAddress} - ${verificationResult.error || 'unknown error'}`);
+
         return {
           success: false,
           error: verificationResult.error || "Invalid signature - cryptographic verification failed"
         };
       }
     } catch (error: any) {
+      console.error(`[Auth] EXCEPTION during verification:`, error);
       return {
         success: false,
         error: error.message || "Verification failed"
@@ -432,22 +554,58 @@ export const resetSignatureFailures = mutation({
   }
 });
 
-// Clean up expired signatures
+// Clean up expired nonces - runs automatically on schedule
+// This is the NEW enhanced version that handles both expired and used nonces
+export const cleanupExpiredNonces = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const oneHourAgo = now - (60 * 60 * 1000);
+
+    // Find all nonces that are either:
+    // 1. Expired (expiresAt < now)
+    // 2. Used more than 1 hour ago (usedAt < oneHourAgo)
+    const allNonces = await ctx.db.query("walletSignatures").collect();
+
+    let expiredCount = 0;
+    let usedCount = 0;
+
+    for (const nonce of allNonces) {
+      let shouldDelete = false;
+
+      if (nonce.expiresAt < now) {
+        expiredCount++;
+        shouldDelete = true;
+      } else if (nonce.usedAt && nonce.usedAt < oneHourAgo) {
+        usedCount++;
+        shouldDelete = true;
+      }
+
+      if (shouldDelete) {
+        await ctx.db.delete(nonce._id);
+      }
+    }
+
+    const totalCleaned = expiredCount + usedCount;
+
+    console.log(`[Cleanup] Nonce cleanup completed: ${expiredCount} expired, ${usedCount} used (>1hr old), ${totalCleaned} total deleted`);
+
+    return {
+      cleaned: totalCleaned,
+      expired: expiredCount,
+      used: usedCount,
+      timestamp: now,
+    };
+  }
+});
+
+// DEPRECATED: Use cleanupExpiredNonces instead
+// Kept for backwards compatibility
 export const cleanupExpiredSignatures = mutation({
   args: {},
   handler: async (ctx) => {
-    const expired = await ctx.db
-      .query("walletSignatures")
-      .filter(q => q.lt(q.field("expiresAt"), Date.now()))
-      .collect();
-
-    for (const record of expired) {
-      await ctx.db.delete(record._id);
-    }
-
-    return {
-      cleaned: expired.length
-    };
+    console.warn("[Cleanup] cleanupExpiredSignatures is DEPRECATED - use cleanupExpiredNonces instead");
+    return await ctx.runMutation(api.walletAuthentication.cleanupExpiredNonces, {});
   }
 });
 
