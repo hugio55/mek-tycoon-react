@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useAction, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getMekDataByNumber, getMekImageUrl, parseMekNumber } from "@/lib/mekNumberToVariation";
 import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
@@ -21,14 +21,19 @@ import {
   updateCachedMeks,
   generateSessionId,
 } from "@/lib/walletSessionManager";
+import { VirtualMekGrid } from "@/components/VirtualMekGrid";
+import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/AnimatedNumber";
+import { MekCard } from "@/components/MekCard";
+import { AnimatedMekValues } from "@/components/MekCard/types";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
   const [displayValue, setDisplayValue] = useState(value);
   const animationRef = useRef<number | null>(null);
+  const startValueRef = useRef(value);
 
   useEffect(() => {
-    const startValue = displayValue;
+    const startValue = startValueRef.current;
     const endValue = value;
     const duration = 800; // milliseconds - longer for better visibility
     const startTime = Date.now();
@@ -45,6 +50,9 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
 
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Animation complete - update start value for next animation
+        startValueRef.current = endValue;
       }
     };
 
@@ -58,7 +66,7 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [value, displayValue]);
+  }, [value]); // Removed displayValue from dependencies to prevent infinite loop
 
   // Format with commas if no decimals, otherwise show decimals
   return decimals === 0
@@ -185,6 +193,9 @@ const DEMO_MEKS: MekAsset[] = [
 ];
 
 export default function MekRateLoggingPage() {
+  // Convex client for direct queries
+  const convex = useConvex();
+
   // Demo mode detection
   const [isDemoMode, setIsDemoMode] = useState(false);
   // Force no wallet mode for UI tweaking
@@ -224,9 +235,12 @@ export default function MekRateLoggingPage() {
   const [walletType, setWalletType] = useState<string | null>(null);
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [walletInstructions, setWalletInstructions] = useState<string | null>(null); // Separate state for instructions modal
+  const [showConnectionStatus, setShowConnectionStatus] = useState(false); // Control connection status modal
   const [isAutoReconnecting, setIsAutoReconnecting] = useState(true); // Start with auto-reconnecting state
   const connectionLockRef = useRef<boolean>(false); // Prevent multiple simultaneous connections
   const walletApiRef = useRef<any>(null); // Store wallet API reference for event listeners
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null); // Track polling interval for cancellation
 
   // Mek assets
   const [ownedMeks, setOwnedMeks] = useState<MekAsset[]>([]);
@@ -328,66 +342,65 @@ export default function MekRateLoggingPage() {
   const fetchOnChainRates = useAction(api.smartContractArchitecture.fetchOnChainRates);
   // Multi-wallet aggregation removed - one wallet per account
 
-  // CSS transition handles smooth counting animation (no JS animation needed)
+  // Memoize expected total with boosts to prevent recalculation on every render
+  const expectedTotalWithBoosts = useMemo(() => {
+    if (!mekLevels || mekLevels.length === 0 || !goldMiningData?.ownedMeks) {
+      return 0;
+    }
 
-  // Update gold display when goldMiningData changes
+    return goldMiningData.ownedMeks.reduce((sum, mek) => {
+      const levelData = mekLevels.find(l => l.assetId === mek.assetId);
+      const boost = levelData?.currentBoostAmount || 0;
+      const baseRate = mek.goldPerHour - boost;
+      const effectiveRate = Math.max(mek.goldPerHour, baseRate + boost);
+      return sum + effectiveRate;
+    }, 0);
+  }, [goldMiningData?.ownedMeks, mekLevels]);
+
+  // Memoize cumulative gold calculation
+  const calculatedCumulativeGold = useMemo(() => {
+    if (!goldMiningData) return 0;
+
+    const now = Date.now();
+    let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
+
+    if (!goldMiningData.totalCumulativeGold) {
+      baseCumulativeGold = (goldMiningData.accumulatedGold || 0) + (goldMiningData.totalGoldSpentOnUpgrades || 0);
+    }
+
+    if (goldMiningData.isBlockchainVerified === true) {
+      const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
+      const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+      const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
+      return baseCumulativeGold + goldSinceLastUpdate;
+    }
+
+    return baseCumulativeGold;
+  }, [goldMiningData]);
+
+  // Update gold display when goldMiningData changes - optimized to prevent unnecessary re-renders
   useEffect(() => {
     if (goldMiningData) {
       setCurrentGold(goldMiningData.currentGold);
 
       if (initialLoadRef.current) {
-        initialLoadRef.current = false; // Mark initial load as complete
+        initialLoadRef.current = false;
       }
 
-      // Check if we need to refresh rates with level boosts
-      // This happens when the stored totalGoldPerHour doesn't match what it should be with boosts
-      if (mekLevels && mekLevels.length > 0 && goldMiningData.ownedMeks) {
-        const expectedTotalWithBoosts = goldMiningData.ownedMeks.reduce((sum, mek) => {
-          const levelData = mekLevels.find(l => l.assetId === mek.assetId);
-          const boost = levelData?.currentBoostAmount || 0;
-          // The stored goldPerHour might already include boost if we just upgraded
-          // But on page reload it might not, so we need to check
-          const baseRate = mek.goldPerHour - boost; // Try to extract base rate
-          const effectiveRate = Math.max(mek.goldPerHour, baseRate + boost);
-          return sum + effectiveRate;
-        }, 0);
-
-        // If there's a significant mismatch, we need to reinitialize
-        if (Math.abs(expectedTotalWithBoosts - goldMiningData.totalGoldPerHour) > 1) {
-          console.log('[Level Boost Check] Rate mismatch detected on page load:', {
-            storedTotal: goldMiningData.totalGoldPerHour,
-            expectedWithBoosts: expectedTotalWithBoosts,
-            difference: expectedTotalWithBoosts - goldMiningData.totalGoldPerHour,
-            mekLevels: mekLevels.length
-          });
-          // The level sync effect will handle updating the rates
-        }
+      // Check for boost mismatch (now using memoized value)
+      if (expectedTotalWithBoosts > 0 && Math.abs(expectedTotalWithBoosts - goldMiningData.totalGoldPerHour) > 1) {
+        console.log('[Level Boost Check] Rate mismatch detected on page load:', {
+          storedTotal: goldMiningData.totalGoldPerHour,
+          expectedWithBoosts: expectedTotalWithBoosts,
+          difference: expectedTotalWithBoosts - goldMiningData.totalGoldPerHour,
+          mekLevels: mekLevels?.length || 0
+        });
       }
 
       setGoldPerHour(goldMiningData.totalGoldPerHour);
-
-      // Initialize cumulative gold (matching userStats.ts logic)
-      const now = Date.now();
-
-      // Start with stored cumulative gold
-      let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
-
-      // If totalCumulativeGold isn't set yet, estimate from accumulated gold + spent gold
-      if (!goldMiningData.totalCumulativeGold) {
-        baseCumulativeGold = (goldMiningData.accumulatedGold || 0) + (goldMiningData.totalGoldSpentOnUpgrades || 0);
-      }
-
-      // Add real-time earnings since last checkpoint (only if verified)
-      if (goldMiningData.isBlockchainVerified === true) {
-        const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
-        setCumulativeGold(baseCumulativeGold + goldSinceLastUpdate);
-      } else {
-        setCumulativeGold(baseCumulativeGold);
-      }
+      setCumulativeGold(calculatedCumulativeGold);
     }
-  }, [goldMiningData, mekLevels]);
+  }, [goldMiningData, expectedTotalWithBoosts, calculatedCumulativeGold, mekLevels]);
 
   // Query to check backend authentication status
   // CRITICAL: Only check auth AFTER connection is complete to avoid interfering with connection process
@@ -918,8 +931,35 @@ export default function MekRateLoggingPage() {
   const detectAvailableWallets = () => {
     const wallets: WalletInfo[] = [];
 
-    if (typeof window !== 'undefined' && window.cardano) {
-      // Check for each wallet type (desktop and mobile)
+    // Check if on mobile
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      navigator.userAgent.toLowerCase()
+    );
+
+    if (isMobile) {
+      // On mobile, show all major wallets as they use deep links
+      const mobileWallets = [
+        { name: 'Eternl', icon: '/wallet-icons/eternl.png' },
+        { name: 'Flint', icon: '/wallet-icons/flint.png' },
+        { name: 'Yoroi', icon: '/wallet-icons/yoroi.png' },
+        { name: 'Vespr', icon: '/wallet-icons/vespr.png' },
+        { name: 'Typhon', icon: '/wallet-icons/typhon.png' },
+        { name: 'NuFi', icon: '/wallet-icons/nufi.png' },
+        { name: 'Lace', icon: '/wallet-icons/lace.png' },
+      ];
+
+      mobileWallets.forEach(wallet => {
+        wallets.push({
+          name: wallet.name,
+          icon: wallet.icon,
+          version: 'mobile',
+          api: null // Mobile wallets use deep links, not direct API
+        });
+      });
+
+      console.log('[WALLET DETECTION] Mobile device detected, showing all wallet options');
+    } else if (typeof window !== 'undefined' && window.cardano) {
+      // Desktop: Check for browser extensions
       const walletNames = ['lace', 'nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi', 'vespr'];
 
       walletNames.forEach(name => {
@@ -937,9 +977,29 @@ export default function MekRateLoggingPage() {
     console.log('[WALLET DETECTION]', {
       timestamp: new Date().toISOString(),
       walletsFound: wallets.length,
-      walletNames: wallets.map(w => w.name)
+      walletNames: wallets.map(w => w.name),
+      platform: isMobile ? 'mobile' : 'desktop'
     });
     setAvailableWallets(wallets);
+  };
+
+  // Cancel connection attempt
+  const cancelConnection = () => {
+    console.log('[Wallet Connect] User cancelled connection');
+
+    // Stop polling
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
+    // Reset state
+    setIsConnecting(false);
+    setConnectionStatus('');
+    setShowConnectionStatus(false); // Hide connection status modal
+    connectionLockRef.current = false;
+
+    // Don't set error - just close silently
   };
 
   // Connect wallet with signature verification
@@ -957,31 +1017,206 @@ export default function MekRateLoggingPage() {
     setWalletError(null);
 
     try {
-      // Check if mobile and attempt deep linking
-      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-        navigator.userAgent.toLowerCase()
-      );
+      // Check if this is a mobile wallet (api is null for mobile)
+      if (wallet.api === null) {
+        console.log('[Wallet Connect - Mobile] 📱 Mobile wallet detected:', wallet.name);
 
-      if (isMobile) {
-        console.log('[Wallet Connect] Mobile device detected - attempting deep link');
-
-        // Try to open wallet app via deep link
         const walletName = wallet.name.toLowerCase();
-        const dappUrl = window.location.origin + window.location.pathname;
 
-        // Import deep link functionality
+        // Only Flint and Vespr support deep links reliably
+        const supportsDeepLink = wallet.name === 'Flint' || wallet.name === 'Vespr';
+
+        if (!supportsDeepLink) {
+          // Show instructions modal for wallets without deep link support
+          console.log('[Wallet Connect - Mobile] 📋 Showing DApp browser instructions for:', wallet.name);
+
+          // Create instructions based on wallet
+          let instructions = '';
+          if (wallet.name === 'Eternl') {
+            instructions = `To connect with ${wallet.name}:\n\n` +
+              `1. Open your ${wallet.name} app\n` +
+              `2. Tap the "DApps" tab (bottom right corner)\n` +
+              `3. Paste this URL: mek.overexposed.io\n` +
+              `4. Tap Submit/Go\n` +
+              `5. Connect your wallet normally`;
+          } else {
+            instructions = `To connect with ${wallet.name}:\n\n` +
+              `1. Open your ${wallet.name} app\n` +
+              `2. Find the DApp browser or Browse tab\n` +
+              `3. Navigate to: mek.overexposed.io\n` +
+              `4. Connect your wallet normally`;
+          }
+
+          setWalletInstructions(instructions); // Show instructions modal instead of error
+
+          connectionLockRef.current = false;
+          setIsConnecting(false);
+          setConnectionStatus('');
+          setShowConnectionStatus(false);
+          return;
+        }
+
+        // For Flint and Vespr: Try to open wallet app via deep link
+        const dappUrl = window.location.origin + window.location.pathname;
+        console.log('[Wallet Connect - Mobile] 🔗 Attempting deep link for:', wallet.name);
+
         const { openMobileWallet } = await import('@/lib/mobileWalletSupport');
 
         try {
+          setConnectionStatus('Opening wallet app...');
+          setShowConnectionStatus(true); // Show dismissible modal
+          console.log('[Wallet Connect - Mobile] 🔗 Opening deep link for:', walletName, 'URL:', dappUrl);
+
+          // Open the wallet app
           await openMobileWallet(walletName as any, dappUrl, 5000);
-          console.log('[Wallet Connect] Mobile wallet opened successfully');
-          setConnectionStatus('Waiting for wallet app to authorize...');
-        } catch (deepLinkError) {
-          console.warn('[Wallet Connect] Deep link failed, continuing with standard flow:', deepLinkError);
-          // Continue with standard flow even if deep link fails
+
+          console.log('[Wallet Connect - Mobile] ✓ Deep link opened successfully');
+          setConnectionStatus('Waiting for wallet to return...');
+
+          setToast({
+            message: `Opening ${wallet.name}... Please approve the connection in the wallet app.`,
+            type: 'info'
+          });
+
+          // Wait for wallet to inject window.cardano API when user returns
+          console.log('[Wallet Connect - Mobile] 🔄 Starting to poll for window.cardano API injection...');
+          setConnectionStatus('Please approve in wallet app, then return here...');
+
+          // Poll for window.cardano with the wallet's API
+          const maxAttempts = 120; // 60 seconds total (500ms intervals) - increased for mobile
+          let attempts = 0;
+          const walletKey = walletName === 'eternl' ? 'eternl' : walletName;
+
+          // Track visibility changes
+          let userReturnedToApp = false;
+          const visibilityHandler = () => {
+            const isVisible = !document.hidden;
+            console.log('[Wallet Connect - Mobile] 👁️ Visibility changed:', {
+              isVisible,
+              timestamp: new Date().toISOString()
+            });
+
+            if (isVisible && !userReturnedToApp) {
+              userReturnedToApp = true;
+              console.log('[Wallet Connect - Mobile] ✓ User returned to dApp from wallet');
+              setConnectionStatus('Checking for wallet connection...');
+            }
+          };
+
+          document.addEventListener('visibilitychange', visibilityHandler);
+
+          const pollForWallet = async (): Promise<any> => {
+            return new Promise((resolve, reject) => {
+              const pollInterval = setInterval(() => {
+                attempts++;
+
+                // Store interval in ref for cancellation
+                pollingIntervalRef.current = pollInterval;
+
+                // Log every 4 attempts (every 2 seconds)
+                if (attempts % 4 === 0) {
+                  console.log('[Wallet Connect - Mobile] 🔍 Polling status:', {
+                    attempt: `${attempts}/${maxAttempts}`,
+                    elapsed: `${(attempts * 0.5).toFixed(1)}s`,
+                    walletKey,
+                    isVisible: !document.hidden,
+                    userReturned: userReturnedToApp,
+                    cardanoExists: !!(window.cardano),
+                    walletAPIExists: !!(window.cardano && (window.cardano as any)[walletKey])
+                  });
+                }
+
+                // Check if wallet API is now available
+                if (typeof window !== 'undefined' && window.cardano && (window.cardano as any)[walletKey]) {
+                  clearInterval(pollInterval);
+                  pollingIntervalRef.current = null;
+                  document.removeEventListener('visibilitychange', visibilityHandler);
+                  console.log('[Wallet Connect - Mobile] ✅ Found wallet API!', {
+                    walletName,
+                    attempts,
+                    timeElapsed: `${(attempts * 0.5).toFixed(1)}s`,
+                    apiVersion: (window.cardano as any)[walletKey]?.apiVersion
+                  });
+                  resolve((window.cardano as any)[walletKey]);
+                  return;
+                }
+
+                // Timeout after max attempts
+                if (attempts >= maxAttempts) {
+                  clearInterval(pollInterval);
+                  pollingIntervalRef.current = null;
+                  document.removeEventListener('visibilitychange', visibilityHandler);
+                  console.error('[Wallet Connect - Mobile] ❌ Timeout waiting for wallet API:', {
+                    walletName,
+                    maxAttempts,
+                    userReturned: userReturnedToApp,
+                    cardanoExists: !!(window.cardano)
+                  });
+                  reject(new Error(`Timeout waiting for ${wallet.name} to inject API. Please try again.`));
+                }
+              }, 500);
+            });
+          };
+
+          try {
+            // Wait for wallet API to become available
+            const walletApi = await pollForWallet();
+            console.log('[Wallet Connect - Mobile] 🔌 Wallet API detected, updating wallet object...');
+
+            // CRITICAL FIX: Update wallet object with injected API
+            wallet.api = walletApi;
+            wallet.version = walletApi.apiVersion || '1.0.0';
+
+            console.log('[Wallet Connect - Mobile] ⚡ Updated wallet object:', {
+              name: wallet.name,
+              version: wallet.version,
+              hasAPI: !!wallet.api
+            });
+
+            // CRITICAL FIX: Don't duplicate logic - fall through to desktop flow
+            // The desktop flow handles: enable(), stake address, signature, Mek extraction, session save
+            console.log('[Wallet Connect - Mobile] ➡️ Proceeding to desktop flow for full connection...');
+
+          } catch (pollError: any) {
+            console.error('[Wallet Connect - Mobile] ❌ Error during wallet API polling:', {
+              error: pollError.message,
+              stack: pollError.stack,
+              walletName
+            });
+            setWalletError(pollError.message || `Failed to connect to ${wallet.name} after approval`);
+            setToast({
+              message: pollError.message || `Failed to complete ${wallet.name} connection`,
+              type: 'error'
+            });
+            connectionLockRef.current = false;
+            setIsConnecting(false);
+            setConnectionStatus('');
+            setShowConnectionStatus(false); // Hide connection status modal
+            return;
+          }
+
+          // NOTE: We DON'T return here - we fall through to the desktop flow below
+
+        } catch (deepLinkError: any) {
+          console.error('[Wallet Connect - Mobile] ❌ Failed to open mobile wallet:', {
+            error: deepLinkError.message,
+            stack: deepLinkError.stack,
+            walletName
+          });
+          setWalletError(deepLinkError.message || `Could not open ${wallet.name}. Please make sure it's installed.`);
+          setToast({
+            message: `${wallet.name} not installed. Please install it from the App Store.`,
+            type: 'error'
+          });
+          connectionLockRef.current = false;
+          setIsConnecting(false);
+          setConnectionStatus('');
+          setShowConnectionStatus(false); // Hide connection status modal
+          return;
         }
       }
 
+      // Desktop wallet flow (has wallet.api)
       // Use rate limiter for wallet connection
       const connectResult = await rateLimitedCall(
         wallet.name,
@@ -1019,17 +1254,32 @@ export default function MekRateLoggingPage() {
           const stakeAddress = ensureBech32StakeAddress(stakeAddressRaw);
           console.log('[Wallet Connect] Stake address converted:', stakeAddressRaw.substring(0, 20), '->', stakeAddress.substring(0, 20));
 
-          // Generate nonce for signature verification - REQUIRED
+          // Check if already authenticated - skip signature if valid session exists
+          console.log('[Wallet Connect] Checking existing authentication...');
+          const existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
+            stakeAddress
+          });
+
           let signatureVerified = false;
           let verifiedNonce = ''; // Store nonce for session management
-          try {
-            console.log('[Wallet Connect] Generating nonce for signature...');
-            const nonceResult = await generateNonce({
-              stakeAddress,
-              walletName: wallet.name
-            });
-            verifiedNonce = nonceResult.nonce; // Save nonce
-            console.log('[Wallet Connect] Nonce generated successfully');
+
+          if (existingAuth && existingAuth.authenticated) {
+            console.log('[Wallet Connect] ✓ Valid session found - skipping signature request');
+            console.log('[Wallet Connect] Session expires at:', new Date(existingAuth.expiresAt || 0).toISOString());
+            signatureVerified = true;
+            setIsSignatureVerified(true);
+            setConnectionStatus('Valid session found - connecting...');
+          } else {
+            console.log('[Wallet Connect] No valid session - requesting signature...');
+            // Generate nonce for signature verification - REQUIRED
+            try {
+              console.log('[Wallet Connect] Generating nonce for signature...');
+              const nonceResult = await generateNonce({
+                stakeAddress,
+                walletName: wallet.name
+              });
+              verifiedNonce = nonceResult.nonce; // Save nonce
+              console.log('[Wallet Connect] Nonce generated successfully');
 
             // Get a payment address for signing (signData doesn't work with stake addresses directly)
             console.log('[Wallet Connect] Getting payment addresses...');
@@ -1114,6 +1364,7 @@ export default function MekRateLoggingPage() {
             // Don't throw - just return to allow user to retry with same UI
             return;
           }
+          } // End of signature request else block
 
           return { api, stakeAddress, nonce: verifiedNonce };
         },
@@ -1601,7 +1852,7 @@ export default function MekRateLoggingPage() {
     }
   };
 
-  // Start gold counter - 30 FPS update rate for smooth animation
+  // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
   // CRITICAL: Only accumulate gold if wallet is VERIFIED
   useEffect(() => {
     if (walletConnected && goldMiningData) {
@@ -1617,8 +1868,15 @@ export default function MekRateLoggingPage() {
 
       console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation');
 
-      // CSS-based animation: Update once per second, let CSS handle smooth transitions
-      const updateGold = () => {
+      let animationFrameId: number;
+      let lastUpdateTime = Date.now();
+
+      // Smooth gold accumulation using requestAnimationFrame for perfect 60 FPS
+      const animateGold = () => {
+        const now = Date.now();
+        const timeSinceLastUpdate = now - lastUpdateTime;
+
+        // Update gold calculation every frame for smoothest animation
         if (goldMiningData) {
           // Use shared calculation utility
           const calculatedGold = calculateCurrentGold({
@@ -1628,7 +1886,7 @@ export default function MekRateLoggingPage() {
             isVerified: true
           });
 
-          // Update state once per second - CSS transition handles smooth animation
+          // Update state - requestAnimationFrame ensures smooth 60 FPS updates
           setCurrentGold(calculatedGold);
 
           // Also update cumulative gold in real-time
@@ -1643,13 +1901,13 @@ export default function MekRateLoggingPage() {
             setCumulativeGold(baseCumulativeGold);
           }
         }
+
+        lastUpdateTime = now;
+        animationFrameId = requestAnimationFrame(animateGold);
       };
 
-      // Update 60 times per second (~16.67ms) - CSS handles smooth animation
-      const animationInterval = setInterval(updateGold, 16.67);
-
-      // Initial update
-      updateGold();
+      // Start animation loop
+      animationFrameId = requestAnimationFrame(animateGold);
 
       // Update last active time every 5 minutes (only if verified)
       checkpointIntervalRef.current = setInterval(async () => {
@@ -1661,7 +1919,7 @@ export default function MekRateLoggingPage() {
       }, 5 * 60 * 1000);
 
       return () => {
-        clearInterval(animationInterval);
+        cancelAnimationFrame(animationFrameId);
         if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
       };
     }
@@ -1700,11 +1958,11 @@ export default function MekRateLoggingPage() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black touch-manipulation">
-      {/* Deep space background */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-950 to-black" />
+      {/* Deep space background - GPU accelerated */}
+      <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
 
-      {/* Night sky stars */}
-      <div className="fixed inset-0">
+      {/* Night sky stars - GPU layer */}
+      <div className="fixed inset-0" style={{ transform: 'translateZ(0)', willChange: 'auto' }}>
         {backgroundStars.map((star) => (
           <div
             key={star.id}
@@ -1717,7 +1975,9 @@ export default function MekRateLoggingPage() {
               opacity: star.opacity,
               animation: star.twinkle ? 'starTwinkle 3s ease-in-out infinite' : 'none',
               animationDelay: star.twinkle ? `${Math.random() * 3}s` : '0s',
-              boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, ${star.opacity * 0.5})`
+              boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, ${star.opacity * 0.5})`,
+              transform: 'translateZ(0)',
+              willChange: star.twinkle ? 'opacity' : 'auto'
             }}
           />
         ))}
@@ -1760,10 +2020,16 @@ export default function MekRateLoggingPage() {
         }}
       />
 
-      {/* Connection Status Overlay */}
+      {/* Connection Status Modal - Dismissible */}
       {isConnecting && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="relative max-w-md w-full mx-4">
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={cancelConnection}
+        >
+          <div
+            className="relative max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Corner brackets - hidden on mobile */}
             <div className="hidden sm:block absolute -top-4 -left-4 w-12 h-12 border-l-2 border-t-2 border-yellow-500/50" />
             <div className="hidden sm:block absolute -top-4 -right-4 w-12 h-12 border-r-2 border-t-2 border-yellow-500/50" />
@@ -1785,10 +2051,25 @@ export default function MekRateLoggingPage() {
               </h2>
 
               {connectionStatus && (
-                <p className="text-yellow-400/80 text-center font-mono text-sm">
+                <p className="text-yellow-400/80 text-center font-mono text-sm mb-6">
                   {connectionStatus}
                 </p>
               )}
+
+              {/* Cancel button */}
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={cancelConnection}
+                  className="group relative bg-black/30 border border-yellow-500/30 text-yellow-500 px-6 py-2 transition-all hover:bg-yellow-500/10 hover:border-yellow-500/50 active:bg-yellow-500/20 uppercase tracking-wider font-['Orbitron'] font-bold"
+                >
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/60" />
+                  <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/60" />
+                  <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/60" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/60" />
+                  <span className="relative z-10">Cancel</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2096,20 +2377,67 @@ export default function MekRateLoggingPage() {
                   </>
                 )}
 
+                {/* Wallet Instructions Modal - DApp Browser Setup (separate from errors) */}
+                {walletInstructions && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                    onClick={() => setWalletInstructions(null)}
+                  >
+                    {/* Modal content */}
+                    <div
+                      className="relative bg-gray-900 border-2 border-yellow-500/50 p-6 max-w-md w-full shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Corner brackets */}
+                      <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-yellow-500" />
+                      <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-yellow-500" />
+                      <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-yellow-500" />
+                      <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-yellow-500" />
+
+                      {/* Close button */}
+                      <button
+                        onClick={() => setWalletInstructions(null)}
+                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors border border-yellow-500/30 hover:border-yellow-500/60"
+                        aria-label="Close"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+
+                      {/* Header */}
+                      <div className="mb-4 pr-8">
+                        <h3 className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-lg font-bold">
+                          Connection Instructions
+                        </h3>
+                        <div className="h-px bg-gradient-to-r from-yellow-500/50 to-transparent mt-2" />
+                      </div>
+
+                      {/* Instructions */}
+                      <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line font-mono">
+                        {walletInstructions}
+                      </div>
+
+                      {/* Bottom close button */}
+                      <div className="mt-6 flex justify-center">
+                        <button
+                          onClick={() => setWalletInstructions(null)}
+                          className="px-6 py-2 border-2 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 font-['Orbitron'] uppercase tracking-wider text-sm transition-all"
+                        >
+                          Got It
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Wallet Error Display - Inline error text only (NOT a modal) */}
                 {walletError && (
                   <div className="mt-6 p-4 bg-red-900/10 border border-red-500/30 text-red-400 text-sm font-mono backdrop-blur-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      {walletError}
+                      <span>{walletError}</span>
                     </div>
-                    {/* DEBUGGING: Log wallet state when error occurs */}
-                    {console.log('[WALLET ERROR UI]', {
-                      timestamp: new Date().toISOString(),
-                      walletError,
-                      availableWalletsCount: availableWallets.length,
-                      isConnecting,
-                      walletConnected
-                    })}
                   </div>
                 )}
               </div>
@@ -2137,7 +2465,7 @@ export default function MekRateLoggingPage() {
                 </button>
 
                 {walletDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-md rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left">
+                  <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-sm rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left" style={{ willChange: 'opacity, transform' }}>
                     {/* Corporation name and wallet address */}
                     <div className="px-4 py-4 border-b border-yellow-500/20 space-y-3 touch-manipulation">
                       {/* Corporation name */}
@@ -2289,8 +2617,49 @@ export default function MekRateLoggingPage() {
               </p>
             </div>
 
+            {/* Verify on Blockchain Button */}
+            <div className="mb-12">
+              {!verificationStatus?.verified && (
+                <div className="mt-[34px] sm:mt-[44px]">
+                  <div className="w-full max-w-xs mx-auto relative">
+                    <div className="relative">
+                      <HolographicButton
+                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Blockfrost Verify"}
+                        onClick={() => {
+                          if (!isProcessingSignature && !isVerifyingBlockchain) {
+                            const verifyButton = document.querySelector('[data-verify-blockchain]');
+                            if (verifyButton) {
+                              (verifyButton as HTMLElement).click();
+                            }
+                          }
+                        }}
+                        isActive={!isProcessingSignature && !isVerifyingBlockchain}
+                        variant="yellow"
+                        alwaysOn={true}
+                        disabled={isProcessingSignature || isVerifyingBlockchain}
+                        className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+                      />
+                      {isVerifyingBlockchain && (
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-3">
+                          <div className="relative w-5 h-5">
+                            <div className="absolute inset-0 border-3 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
+                            <div className="absolute inset-0 border-3 border-transparent border-b-yellow-400 rounded-full animate-spin" style={{ animationDirection: 'reverse' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-gray-400 text-xs sm:text-sm text-center mt-[22px] font-mono">
+                      For an added layer of security, please verify on Blockfrost to begin.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
             {/* Combined Card - Stacked Layout */}
-            <div className="mb-8 flex justify-center px-0 sm:px-4 w-full max-w-[100vw] sm:max-w-[600px] mx-auto">
+            <div style={{ marginBottom: '85px' }} className="flex justify-center px-0 sm:px-4 w-full max-w-full sm:max-w-[600px] mx-auto">
               <div className="relative w-full">
                 {/* Outer corner brackets for unified card - hidden on mobile */}
                 <div className="hidden sm:block absolute -top-3 -left-3 w-8 h-8 border-l-2 border-t-2 border-yellow-500/50" />
@@ -2298,7 +2667,7 @@ export default function MekRateLoggingPage() {
                 <div className="hidden sm:block absolute -bottom-3 -left-3 w-8 h-8 border-l-2 border-b-2 border-yellow-500/50" />
                 <div className="hidden sm:block absolute -bottom-3 -right-3 w-8 h-8 border-r-2 border-b-2 border-yellow-500/50" />
 
-                <div className="bg-black/90 border-2 border-yellow-500/30 backdrop-blur-xl relative overflow-hidden">
+                <div className="bg-black/90 border-2 border-yellow-500/30 backdrop-blur-md relative overflow-hidden" style={{ transform: 'translate3d(0,0,0)' }}>
                     {/* Top section - Total Gold */}
                     <div className="p-4 sm:p-6 md:p-8 relative">
                       {/* Gradient background */}
@@ -2442,47 +2811,6 @@ export default function MekRateLoggingPage() {
               </div>
             </div>
 
-            {/* Verify on Blockchain Button */}
-            <div className="mb-12">
-              {!verificationStatus?.verified && (
-                <div className="mt-[34px] sm:mt-[44px]">
-                  <div className="w-full max-w-xs mx-auto relative">
-                    <div className="relative">
-                      <HolographicButton
-                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Blockfrost Verify"}
-                        onClick={() => {
-                          if (!isProcessingSignature && !isVerifyingBlockchain) {
-                            const verifyButton = document.querySelector('[data-verify-blockchain]');
-                            if (verifyButton) {
-                              (verifyButton as HTMLElement).click();
-                            }
-                          }
-                        }}
-                        isActive={!isProcessingSignature && !isVerifyingBlockchain}
-                        variant="yellow"
-                        alwaysOn={true}
-                        disabled={isProcessingSignature || isVerifyingBlockchain}
-                        className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
-                      />
-                      {isVerifyingBlockchain && (
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-3">
-                          <div className="relative w-5 h-5">
-                            <div className="absolute inset-0 border-3 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
-                            <div className="absolute inset-0 border-3 border-transparent border-b-yellow-400 rounded-full animate-spin" style={{ animationDirection: 'reverse' }} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-gray-400 text-xs sm:text-sm text-center mt-[22px] font-mono">
-                      For an added layer of security, please verify on Blockfrost to begin.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
             {/* Controls Row - Search bar and Sort button */}
             <div className={`flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
               ownedMeks.length === 1 ? 'max-w-md mx-auto' :
@@ -2544,7 +2872,8 @@ export default function MekRateLoggingPage() {
 
                   {sortDropdownOpen && (
                     <div
-                      className="absolute right-0 mt-1 z-50 min-w-[140px] bg-black/90 backdrop-blur-xl border border-white/20 overflow-hidden"
+                      className="absolute right-0 mt-1 z-50 min-w-[140px] bg-black/90 backdrop-blur-md border border-white/20 overflow-hidden"
+                      style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
                     >
                       <button
                         onClick={() => {
@@ -2662,489 +2991,90 @@ export default function MekRateLoggingPage() {
                     return aRank - bRank;  // Best rank (lowest number) first
                   }
                 })
-                .map(mek => {
-                const maxGoldRate = Math.max(...ownedMeks.map(m => m.goldPerHour));
-                const relativeRate = (mek.goldPerHour / maxGoldRate) * 100;
-
-                return (
-                  <div
+                .map(mek => (
+                  <MekCard
                     key={mek.assetId}
-                    className="group relative cursor-pointer touch-manipulation"
+                    mek={mek}
+                    getMekImageUrl={getMekImageUrl}
+                    currentGold={currentGold}
+                    walletAddress={walletAddress}
+                    animatedValues={animatedMekValues[mek.assetId]}
+                    upgradingMeks={upgradingMeks}
                     onClick={() => setSelectedMek(mek)}
-                  >
-                    <div
-                      className="bg-black/10 border sm:border-2 backdrop-blur-xl transition-all relative overflow-hidden group-hover:bg-black/20"
-                      style={{
-                        borderColor: (() => {
-                          const level = mek.currentLevel || 1;
-                          const colors = [
-                            '#CCCCCC', // Level 1: light gray
-                            '#80FF80', // Level 2: medium light green
-                            '#00FF00', // Level 3: saturated green
-                            '#32CD32', // Level 4: green
-                            '#4169E1', // Level 5: blue
-                            '#9370DB', // Level 6: light purple
-                            '#6A0DAD', // Level 7: dark purple
-                            '#FFA500', // Level 8: orange
-                            '#FF6B00', // Level 9: saturated orange
-                            '#FF0000', // Level 10: red
-                          ];
-                          return `${colors[level - 1] || '#FFFFFF'}80`; // 80 = 50% opacity in hex
-                        })()
-                      }}
-                    >
-                      {/* Subtle grid overlay */}
-                      <div
-                        className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none"
-                        style={{
-                          backgroundImage: `
-                            repeating-linear-gradient(0deg, transparent, transparent 9px, #FAB617 9px, #FAB617 10px),
-                            repeating-linear-gradient(90deg, transparent, transparent 9px, #FAB617 9px, #FAB617 10px)
-                          `
-                        }}
-                      />
+                    onGoldSpentAnimation={(animationId, amount) => {
+                      setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
+                      setTimeout(() => {
+                        setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+                      }, 2000);
+                    }}
+                    onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
+                      setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
 
-                      {/* Image container with border */}
-                      <div className="aspect-square bg-black/30 overflow-hidden relative border border-yellow-500/20">
-                        {mek.mekNumber ? (
-                          <>
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-                              <div className="w-12 h-12 border-2 border-yellow-500/30 border-t-yellow-500/60 rounded-full animate-spin" />
-                            </div>
-                            <img
-                              src={getMekImageUrl(mek.mekNumber, '1000px')}
-                              alt={mek.assetName}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
-                              loading="lazy"
-                              onLoad={(e) => {
-                                const parent = e.currentTarget.parentElement;
-                                const loader = parent?.querySelector('div');
-                                if (loader) loader.style.display = 'none';
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </>
-                        ) : mek.imageUrl ? (
-                          <>
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-                              <div className="w-12 h-12 border-2 border-yellow-500/30 border-t-yellow-500/60 rounded-full animate-spin" />
-                            </div>
-                            <img
-                              src={mek.imageUrl}
-                              alt={mek.assetName}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
-                              loading="lazy"
-                              onLoad={(e) => {
-                                const parent = e.currentTarget.parentElement;
-                                const loader = parent?.querySelector('div');
-                                if (loader) loader.style.display = 'none';
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono text-xs">
-                            NO IMAGE
-                          </div>
-                        )}
-                      </div>
+                      setAnimatedMekValues(prev => ({
+                        ...prev,
+                        [mek.assetId]: {
+                          level: newLevel,
+                          goldRate: newTotalRate,
+                          bonusRate: newBonusRate
+                        }
+                      }));
 
-                      {/* HOLOGRAPHIC STACK LAYOUT - Exact copy from demo */}
-                      <div className="w-full relative">
-                        {/* Holographic background effect */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-purple-500/5 to-yellow-500/5 blur-xl" />
+                      try {
+                        console.log('[UPGRADE] Before mutation call:', {
+                          currentGold,
+                          upgradeCost,
+                          expectedRemaining: currentGold - upgradeCost,
+                          timestamp: new Date().toISOString()
+                        });
 
-                        <div className="relative space-y-2 p-2 sm:p-3 bg-black/80 backdrop-blur-sm">
-                          {/* Layer 1: Mek Identity */}
-                          <div className="relative group">
-                            <div
-                              className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border rounded-lg p-2 sm:p-2"
-                              style={{
-                                borderColor: (() => {
-                                  const level = mek.currentLevel || 1;
-                                  const colors = [
-                                    '#CCCCCC', // Level 1: light gray
-                                    '#80FF80', // Level 2: medium light green
-                                    '#00FF00', // Level 3: saturated green
-                                    '#32CD32', // Level 4: green
-                                    '#4169E1', // Level 5: blue
-                                    '#9370DB', // Level 6: light purple
-                                    '#6A0DAD', // Level 7: dark purple
-                                    '#FFA500', // Level 8: orange
-                                    '#FF6B00', // Level 9: saturated orange
-                                    '#FF0000', // Level 10: red
-                                  ];
-                                  return `${colors[level - 1] || '#FFFFFF'}4D`; // 4D = 30% opacity in hex
-                                })()
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="text-[9px] sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Mechanism Unit</div>
-                                  {/* Mek Number - color matches level */}
-                                  <div className="text-lg sm:text-xl font-medium leading-tight" style={{
-                                    color: (() => {
-                                      const level = mek.currentLevel || 1;
-                                      const colors = [
-                                        '#CCCCCC', // Level 1: light gray
-                                        '#80FF80', // Level 2: medium light green
-                                        '#00FF00', // Level 3: saturated green
-                                        '#32CD32', // Level 4: green
-                                        '#4169E1', // Level 5: blue
-                                        '#9370DB', // Level 6: light purple
-                                        '#6A0DAD', // Level 7: dark purple
-                                        '#FFA500', // Level 8: orange
-                                        '#FF6B00', // Level 9: saturated orange
-                                        '#FF0000', // Level 10: red
-                                      ];
-                                      return colors[level - 1] || '#FFFFFF';
-                                    })(),
-                                    fontFamily: 'Orbitron, monospace',
-                                    letterSpacing: '0.05em',
-                                    opacity: 0.7
-                                  }}>
-                                    MEK #{mek.mekNumber ? mek.mekNumber.toString().padStart(4, '0') : '????'}
-                                  </div>
-                                  {/* Rank display */}
-                                  {mek.rarityRank && (
-                                    <div className="text-sm text-gray-300 uppercase tracking-wider mt-0.5" style={{
-                                      fontFamily: 'monospace',
-                                      opacity: 0.85
-                                    }}>
-                                      Rank: {mek.rarityRank}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">Level</div>
-                                  <div className={`text-2xl font-black leading-tight`} style={{
-                                    color: (() => {
-                                      const level = mek.currentLevel || 1;
-                                      const colors = [
-                                        '#CCCCCC', // Level 1: light gray
-                                        '#80FF80', // Level 2: medium light green
-                                        '#00FF00', // Level 3: saturated green
-                                        '#32CD32', // Level 4: green
-                                        '#4169E1', // Level 5: blue
-                                        '#9370DB', // Level 6: light purple
-                                        '#6A0DAD', // Level 7: dark purple
-                                        '#FFA500', // Level 8: orange
-                                        '#FF6B00', // Level 9: saturated orange
-                                        '#FF0000', // Level 10: red
-                                      ];
-                                      return colors[level - 1] || '#FFFFFF';
-                                    })()
-                                  }}>
-                                    {mek.currentLevel || 1}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                        const result = await upgradeMek({
+                          walletAddress,
+                          assetId: mek.assetId,
+                          mekNumber: mek.mekNumber,
+                        });
 
-                          {/* Level Progress Bar */}
-                          <div className="relative">
-                            <div className="bg-black/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-2">
-                              {/* Bar Indicators - Mobile optimized with better touch targets */}
-                              <div className="flex justify-between gap-1 sm:gap-1.5 h-10 sm:h-8">
-                                {Array.from({ length: 10 }, (_, i) => {
-                                  const level = i + 1;
-                                  const currentLevel = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
-                                  const isActive = level <= currentLevel;
-                                  const colors = ['#CCCCCC', '#80FF80', '#00FF00', '#32CD32', '#4169E1', '#9370DB', '#6A0DAD', '#FFA500', '#FF6B00', '#FF0000'];
-                                  const currentLevelColor = colors[currentLevel - 1] || '#FFFFFF';
+                        console.log('[UPGRADE] Mutation result:', {
+                          result,
+                          timestamp: new Date().toISOString()
+                        });
 
-                                  return (
-                                    <div
-                                      key={level}
-                                      className="flex-1 transition-all duration-500 relative overflow-hidden rounded-sm min-w-[6px] touch-manipulation"
-                                      style={{
-                                        backgroundColor: isActive ? currentLevelColor : '#1a1a1a',
-                                        border: isActive ? `1px solid ${currentLevelColor}` : '1px solid #333',
-                                        boxShadow: isActive ? `0 0 12px ${currentLevelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)` : 'inset 0 2px 4px rgba(0,0,0,0.8)',
-                                        opacity: isActive ? 1 : 0.3
-                                      }}
-                                    >
-                                      {/* Animated fill effect */}
-                                      {isActive && (
-                                        <div
-                                          className="absolute bottom-0 left-0 right-0 transition-all duration-500"
-                                          style={{
-                                            height: '100%',
-                                            background: `linear-gradient(to top, ${currentLevelColor}, ${currentLevelColor}80 50%, transparent)`,
-                                            animation: 'pulse 2s ease-in-out infinite'
-                                          }}
-                                        />
-                                      )}
-                                      {/* Highlight stripe */}
-                                      {isActive && (
-                                        <div
-                                          className="absolute top-0 left-0 right-0 h-1/4"
-                                          style={{
-                                            background: `linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)`
-                                          }}
-                                        />
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
+                        console.log('[UPGRADE] Waiting for query to refresh with deducted gold:', {
+                          expectedGold: result.remainingGold,
+                          currentGold,
+                          costDeducted: upgradeCost,
+                          timestamp: new Date().toISOString()
+                        });
 
-                          {/* Layer 2: Gold Production */}
-                          <div className="relative group">
-                            <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 backdrop-blur-md border border-yellow-500/30 rounded-lg p-2 sm:p-3">
-                              <div className="text-[9px] sm:text-[10px] text-yellow-400 uppercase tracking-wider mb-2">Income Rate</div>
-                              <div className="flex flex-col gap-1">
-                                {/* Base rate */}
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                  <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                    <span className="text-[10px] sm:text-[11px] text-gray-500">BASE:</span>
-                                    <span className="text-lg sm:text-xl font-bold text-yellow-400">{(mek.baseGoldPerHour || mek.goldPerHour).toFixed(1)}</span>
-                                    <span className="text-xs text-gray-400">gold/hr</span>
-                                  </div>
-                                </div>
+                        console.log('[UPGRADE] Mek upgraded successfully');
 
-                                {/* Bonus rate - always shown */}
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                  <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                    <span className="text-[10px] sm:text-[11px] text-gray-500">BONUS:</span>
-                                    {(animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) && (animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount) > 0 ? (
-                                      <>
-                                        <span className={`text-lg sm:text-xl font-bold text-green-400 transition-all duration-700 ${upgradingMeks.has(mek.assetId) ? 'scale-110' : ''}`}>
-                                          +<AnimatedNumber value={animatedMekValues[mek.assetId]?.bonusRate || mek.levelBoostAmount || 0} decimals={1} />
-                                        </span>
-                                        <span className="text-xs text-gray-400">gold/hr</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <span className="text-lg sm:text-xl font-bold text-gray-600">+0.0</span>
-                                        <span className="text-xs text-gray-400">gold/hr</span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Separator with glow - always shown */}
-                                <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-1" />
-
-                                {/* Total - always shown */}
-                                <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                  <span className="text-[10px] sm:text-[11px] text-gray-500">TOTAL:</span>
-                                  <span className="text-xl sm:text-2xl font-black text-white" style={{
-                                    textShadow: '0 0 15px rgba(250, 182, 23, 0.8)'
-                                  }}>
-                                    <AnimatedNumber value={animatedMekValues[mek.assetId]?.goldRate || ((mek.baseGoldPerHour || mek.goldPerHour) + (mek.levelBoostAmount || 0))} decimals={1} />
-                                  </span>
-                                  <span className="text-sm text-yellow-400 font-bold">gold/hr</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Layer 4: Upgrade Interface - Mobile optimized */}
-                          {walletAddress && mek.currentLevel < 10 ? (
-                            <div className="relative group">
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
-
-                              <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-green-500/30 rounded-lg p-2 sm:p-3">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className="text-[9px] sm:text-[10px] text-green-400 uppercase tracking-wider">Upgrade Cost</div>
-                                    <div className={`text-lg sm:text-xl font-bold ${
-                                      (() => {
-                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
-                                        const currentLevel = mek.currentLevel || 1;
-                                        const cost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
-                                        return currentGold >= cost ? 'text-yellow-400' : 'text-red-500';
-                                      })()
-                                    }`}>
-                                      {(() => {
-                                        // Calculate upgrade cost inline
-                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
-                                        const currentLevel = mek.currentLevel || 1;
-                                        const cost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
-                                        return cost.toLocaleString();
-                                      })()} gold
-                                    </div>
-                                    <div className="text-xs text-green-400 mt-1 transition-all duration-500">
-                                      Bonus: +{(() => {
-                                        const currentLevel = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
-                                        const nextLevel = currentLevel + 1;
-                                        const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
-
-                                        // Calculate total bonus percentage at next level
-                                        let nextLevelPercent = 0;
-                                        for (let i = 2; i <= nextLevel; i++) {
-                                          nextLevelPercent += 5 + (i - 1) * 5; // 10, 15, 20, 25...
-                                        }
-
-                                        const nextLevelBonus = baseRate * (nextLevelPercent / 100);
-                                        return nextLevelBonus.toFixed(1);
-                                      })()} g/hr
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={async (e) => {
-                                      // Prevent event bubbling to card click
-                                      e.stopPropagation();
-
-                                      // Handle upgrade logic
-                                      const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
-                                      const currentLevel = mek.currentLevel || 1;
-                                      const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
-                                      const canAfford = currentGold >= upgradeCost;
-
-                                      if (!canAfford || currentLevel >= 10) return;
-
-                                      // Add to upgrading set for animation
-                                      setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
-
-                                      // Trigger gold spent animation
-                                      const animationId = `${mek.assetId}-${Date.now()}`;
-                                      setGoldSpentAnimations(prev => [...prev, { id: animationId, amount: upgradeCost }]);
-
-                                      // Remove animation after 2 seconds
-                                      setTimeout(() => {
-                                        setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
-                                      }, 2000);
-
-                                      // Animate the Mek values immediately
-                                      const newLevel = currentLevel + 1;
-                                      const baseRate = mek.baseGoldPerHour || mek.goldPerHour;
-
-                                      // Calculate cumulative bonus percentage for new level
-                                      let newBonusPercent = 0;
-                                      for (let i = 2; i <= newLevel; i++) {
-                                        newBonusPercent += 5 + (i - 1) * 5; // 10, 15, 20, 25...
-                                      }
-
-                                      const newBonusRate = baseRate * (newBonusPercent / 100);
-                                      const newTotalRate = baseRate + newBonusRate;
-
-                                      // Start animating values
-                                      setAnimatedMekValues(prev => ({
-                                        ...prev,
-                                        [mek.assetId]: {
-                                          level: newLevel,
-                                          goldRate: newTotalRate,
-                                          bonusRate: newBonusRate
-                                        }
-                                      }));
-
-                                      try {
-                                        // LOG: Before mutation call
-                                        console.log('[UPGRADE] Before mutation call:', {
-                                          currentGold,
-                                          upgradeCost,
-                                          expectedRemaining: currentGold - upgradeCost,
-                                          timestamp: new Date().toISOString()
-                                        });
-
-                                        // Call the upgrade mutation
-                                        const result = await upgradeMek({
-                                          walletAddress,
-                                          assetId: mek.assetId,
-                                          mekNumber: mek.mekNumber,
-                                        });
-
-                                        // LOG: Mutation result
-                                        console.log('[UPGRADE] Mutation result:', {
-                                          result,
-                                          timestamp: new Date().toISOString()
-                                        });
-
-                                        // CRITICAL FIX: Don't manually update currentGold state!
-                                        // The animation loop (line 1268) overwrites any manual setState calls
-                                        // within 33ms. Instead, let the query refresh naturally and the animation
-                                        // loop will pick up the new goldMiningData.accumulatedGold value.
-                                        console.log('[UPGRADE] Waiting for query to refresh with deducted gold:', {
-                                          expectedGold: result.remainingGold,
-                                          currentGold,
-                                          costDeducted: upgradeCost,
-                                          timestamp: new Date().toISOString()
-                                        });
-
-                                        // Refresh will happen automatically via Convex reactivity
-                                        console.log('[UPGRADE] Mek upgraded successfully');
-
-                                        // Remove from upgrading set after success
-                                        setTimeout(() => {
-                                          setUpgradingMeks(prev => {
-                                            const newSet = new Set(prev);
-                                            newSet.delete(mek.assetId);
-                                            return newSet;
-                                          });
-                                          // Clear animated values after data refreshes
-                                          setAnimatedMekValues(prev => {
-                                            const newValues = { ...prev };
-                                            delete newValues[mek.assetId];
-                                            return newValues;
-                                          });
-                                        }, 1000);
-                                      } catch (error) {
-                                        console.error('Upgrade failed:', error);
-                                        // Remove from upgrading set on error
-                                        setUpgradingMeks(prev => {
-                                          const newSet = new Set(prev);
-                                          newSet.delete(mek.assetId);
-                                          return newSet;
-                                        });
-                                        // Clear animated values on error
-                                        setAnimatedMekValues(prev => {
-                                          const newValues = { ...prev };
-                                          delete newValues[mek.assetId];
-                                          return newValues;
-                                        });
-                                      }
-                                    }}
-                                    disabled={(() => {
-                                      const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
-                                      const currentLevel = mek.currentLevel || 1;
-                                      const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
-                                      return currentGold < upgradeCost;
-                                    })()}
-                                    className={`
-                                      px-4 py-3 sm:py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-200 text-sm min-h-[48px] sm:min-h-0 touch-manipulation
-                                      ${(() => {
-                                        const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
-                                        const currentLevel = mek.currentLevel || 1;
-                                        const upgradeCost = currentLevel < 10 ? UPGRADE_COSTS[currentLevel + 1] : 0;
-                                        const canAfford = currentGold >= upgradeCost;
-
-                                        return canAfford
-                                          ? 'bg-gradient-to-r from-green-500/20 to-green-400/20 border-2 border-green-400 text-green-400 hover:from-green-500/30 hover:to-green-400/30 hover:scale-105'
-                                          : 'bg-gray-800/40 border border-gray-700 text-gray-500 cursor-not-allowed opacity-50';
-                                      })()}
-                                    `}
-                                  >
-                                    UPGRADE
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : walletAddress && mek.currentLevel >= 10 ? (
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 blur-xl animate-pulse" />
-                              <div className="relative bg-gradient-to-r from-yellow-500/10 via-yellow-400/20 to-yellow-500/10 backdrop-blur-md border-2 border-yellow-400 rounded-lg p-4 text-center">
-                                <div className="text-3xl font-black text-yellow-400 uppercase tracking-wider">
-                                  MAXIMUM
-                                </div>
-                                <div className="text-sm text-gray-300">Optimization Complete</div>
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                        setTimeout(() => {
+                          setUpgradingMeks(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(mek.assetId);
+                            return newSet;
+                          });
+                          setAnimatedMekValues(prev => {
+                            const newValues = { ...prev };
+                            delete newValues[mek.assetId];
+                            return newValues;
+                          });
+                        }, 1000);
+                      } catch (error) {
+                        console.error('Upgrade failed:', error);
+                        setUpgradingMeks(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(mek.assetId);
+                          return newSet;
+                        });
+                        setAnimatedMekValues(prev => {
+                          const newValues = { ...prev };
+                          delete newValues[mek.assetId];
+                          return newValues;
+                        });
+                      }
+                    }}
+                  />
+                ))}
             </div>
 
             {ownedMeks.length === 0 && loadingMeks && (
@@ -3191,10 +3121,12 @@ export default function MekRateLoggingPage() {
       {selectedMek && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm overflow-y-auto"
+          style={{ willChange: 'backdrop-filter' }}
           onClick={() => setSelectedMek(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-8"
+            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-md border border-yellow-500/40 p-8"
+            style={{ transform: 'translate3d(0,0,0)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
