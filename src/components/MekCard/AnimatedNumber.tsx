@@ -8,11 +8,12 @@ interface AnimatedNumberProps {
 export function AnimatedNumber({ value, decimals = 1 }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(value);
   const animationRef = useRef<number | null>(null);
+  const startValueRef = useRef(value);
 
   useEffect(() => {
-    const startValue = displayValue;
+    const startValue = startValueRef.current;
     const endValue = value;
-    const duration = 800;
+    const duration = 400; // Faster animation (was 800ms)
     const startTime = Date.now();
 
     const animate = () => {
@@ -26,6 +27,9 @@ export function AnimatedNumber({ value, decimals = 1 }: AnimatedNumberProps) {
 
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Animation complete - update start value for next animation
+        startValueRef.current = endValue;
       }
     };
 
@@ -39,7 +43,7 @@ export function AnimatedNumber({ value, decimals = 1 }: AnimatedNumberProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [value, displayValue]);
+  }, [value]); // Fixed: removed displayValue from dependencies
 
   return decimals === 0
     ? <>{Math.floor(displayValue).toLocaleString('en-US')}</>

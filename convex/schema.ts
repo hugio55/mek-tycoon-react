@@ -959,7 +959,7 @@ export default defineSchema({
   })
     .index("by_user", ["userId"]),
 
-  // Deployed Story Climb node data - live configuration
+  // Deployed Story Climb node data - live configuration (LEGACY - use storyClimbDeployments + storyClimbChapters instead)
   deployedStoryClimbData: defineTable({
     deploymentId: v.string(), // Unique deployment ID
     deployedAt: v.number(), // Timestamp
@@ -982,6 +982,50 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_deployed_by", ["deployedBy"])
     .index("by_deployment_id", ["deploymentId"]),
+
+  // NEW OPTIMIZED SCHEMA - Story Climb Deployments (metadata only)
+  storyClimbDeployments: defineTable({
+    deploymentId: v.string(), // Unique deployment ID
+    deployedAt: v.number(), // Timestamp
+    deployedBy: v.string(), // User ID who deployed
+    version: v.number(), // Version number for tracking
+    status: v.union(v.literal("pending"), v.literal("active"), v.literal("archived")),
+
+    // Metadata
+    configurationName: v.optional(v.string()),
+    configurationId: v.optional(v.string()),
+    notes: v.optional(v.string()),
+
+    // Stats for convenience
+    totalEventNodes: v.optional(v.number()),
+    totalNormalNodes: v.optional(v.number()),
+    totalChallengerNodes: v.optional(v.number()),
+    totalMiniBossNodes: v.optional(v.number()),
+    totalFinalBossNodes: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_deployed_by", ["deployedBy"])
+    .index("by_deployment_id", ["deploymentId"]),
+
+  // NEW OPTIMIZED SCHEMA - Story Climb Chapters (per-chapter data, ~90% bandwidth reduction)
+  storyClimbChapters: defineTable({
+    deploymentId: v.string(), // Links to storyClimbDeployments
+    chapter: v.number(), // Chapter number (1-10)
+
+    // JSON stringified node data arrays (per chapter only - ~400 nodes vs 4,000)
+    eventNodes: v.string(), // EventNodeData[] for this chapter
+    normalNodes: v.string(), // NormalMekNodeData[] for this chapter (~350 nodes)
+    challengerNodes: v.string(), // ChallengerNodeData[] for this chapter (~40 nodes)
+    miniBossNodes: v.string(), // MiniBossNodeData[] for this chapter (~9 nodes)
+    finalBossNodes: v.string(), // FinalBossNodeData[] for this chapter (~1 node)
+
+    // Cached for quick lookups
+    nodeCount: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_deployment_id", ["deploymentId"])
+    .index("by_deployment_and_chapter", ["deploymentId", "chapter"])
+    .index("by_chapter", ["chapter"]),
 
   // Chip Definitions - templates for all possible chips
   chipDefinitions: defineTable({

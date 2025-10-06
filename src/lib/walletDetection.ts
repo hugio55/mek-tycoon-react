@@ -39,6 +39,16 @@ export function detectWebViewWallet(): WalletWebViewInfo {
     hasCardano: typeof window.cardano !== 'undefined',
   });
 
+  // FIRST: Check if user is on mobile/tablet (WebViews only exist on mobile)
+  const isMobileUA = /android|iphone|ipad|ipod|mobile|webos|blackberry|iemobile|opera mini/i.test(userAgentLower);
+
+  if (!isMobileUA) {
+    console.log('[Wallet Detection] ✗ Desktop browser detected - not a WebView');
+    return { isWebView: false };
+  }
+
+  console.log('[Wallet Detection] ✓ Mobile device detected, checking for WebView...');
+
   // Check for wallet-specific WebView indicators in user agent
   const walletPatterns: { pattern: string; type: MobileWalletType }[] = [
     { pattern: 'eternl', type: 'eternl' },
@@ -59,8 +69,9 @@ export function detectWebViewWallet(): WalletWebViewInfo {
   }
 
   // Check if window.cardano exists (wallet injected CIP-30 API into WebView)
+  // NOTE: Only check this on mobile - desktop extensions also inject window.cardano!
   if (typeof window.cardano === 'object' && window.cardano !== null) {
-    console.log('[Wallet Detection] window.cardano found, checking wallet types...');
+    console.log('[Wallet Detection] window.cardano found on mobile, checking wallet types...');
 
     // Map of cardano API properties to wallet types
     const cardanoApiMap: { key: string; type: MobileWalletType }[] = [
