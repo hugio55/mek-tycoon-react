@@ -230,8 +230,8 @@ export const generateNonce = mutation({
     // Generate a cryptographically random nonce
     const nonce = `mek-auth-${Date.now()}-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
-    // Shorter expiration for enhanced security (5 minutes instead of 24 hours)
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    // Session duration: 24 hours
+    const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
     // Check for existing nonce with same stake address + device (prevent duplicates)
     if (args.deviceId) {
