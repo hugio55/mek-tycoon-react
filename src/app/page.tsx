@@ -1509,7 +1509,7 @@ export default function MekRateLoggingPage() {
             console.log('[Wallet Connect] Requesting signature from user...');
             setConnectionStatus('Awaiting signature from wallet...');
             const signature = await Promise.race([
-              api.signData(
+              walletApi.signData(
                 paymentAddress,
                 Buffer.from(nonceResult.message).toString('hex')
               ),
@@ -3160,41 +3160,43 @@ export default function MekRateLoggingPage() {
               ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
               'max-w-7xl mx-auto'
             }`}>
-              {/* Search Bar - Minimalist Tech Style */}
-              <div className="max-w-lg relative">
-                <div className="text-gray-500 mb-1 px-1 whitespace-nowrap" style={{
-                  fontSize: 'clamp(0.5rem, 2.5vw, 0.75rem)'
-                }}>
-                  Search by Mek # or variation (e.g., bumblebee)
+              {/* Search Bar - Minimalist Tech Style - Hidden when no meks */}
+              {ownedMeks.length > 0 && (
+                <div className="max-w-lg relative">
+                  <div className="text-gray-500 mb-1 px-1 whitespace-nowrap" style={{
+                    fontSize: 'clamp(0.5rem, 2.5vw, 0.75rem)'
+                  }}>
+                    Search by Mek # or variation (e.g., bumblebee)
+                  </div>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white placeholder-white/30 focus:border-white/40 focus:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out"
+                      style={{
+                        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                        fontWeight: '300',
+                        letterSpacing: '0.02em'
+                      }}
+                    />
+                    <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-focus-within:w-full transition-all duration-700 ease-out" />
+                    {!searchTerm ? (
+                      <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    ) : (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xl w-5 h-5 flex items-center justify-center transition-colors duration-200"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white placeholder-white/30 focus:border-white/40 focus:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out"
-                    style={{
-                      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-                      fontWeight: '300',
-                      letterSpacing: '0.02em'
-                    }}
-                  />
-                  <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-focus-within:w-full transition-all duration-700 ease-out" />
-                  {!searchTerm ? (
-                    <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  ) : (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xl w-5 h-5 flex items-center justify-center transition-colors duration-200"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              </div>
+              )}
 
               {/* Sort Dropdown - Minimalist Tech Style - Hidden when 2 or fewer meks */}
               {ownedMeks.length > 2 && (
@@ -3452,6 +3454,14 @@ export default function MekRateLoggingPage() {
                   <p className="text-gray-600 text-xs sm:text-sm mt-2 font-mono">
                     Acquire Meks to begin gold extraction
                   </p>
+                  <a
+                    href="https://www.jpg.store/collection/overexposedmekanism"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-4 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all rounded font-mono uppercase tracking-wider text-xs sm:text-sm"
+                  >
+                    Aftermarket Mekanisms →
+                  </a>
                 </div>
               </div>
             )}
