@@ -26,6 +26,7 @@ export default function WalletManagementAdmin() {
   const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
   const fixCumulativeGold = useMutation(api.adminVerificationReset.fixCumulativeGold);
   const reconstructCumulativeFromSnapshots = useMutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots);
+  const reconstructCumulativeGoldExact = useMutation(api.adminVerificationReset.reconstructCumulativeGoldExact);
   const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
 
@@ -116,6 +117,42 @@ export default function WalletManagementAdmin() {
     } catch (error) {
       setStatusMessage({ type: 'error', message: 'Failed to reconstruct cumulative gold from snapshots' });
       setTimeout(() => setStatusMessage(null), 5000);
+    }
+  };
+
+  const handleReconstructExact = async (walletAddress: string) => {
+    if (!confirm(`Run 100% accurate cumulative gold reconstruction for ${walletAddress.substring(0, 20)}...?\n\nThis will:\n- Analyze ALL snapshots chronologically\n- Track rate changes from every upgrade\n- Build complete timeline\n- Verify against snapshot data\n\nFull timeline will be logged to console.`)) return;
+
+    try {
+      const result = await reconstructCumulativeGoldExact({ walletAddress });
+
+      // Show detailed results in status message
+      const details = `
+Reconstructed Cumulative: ${result.reconstructedCumulative?.toFixed(2) || 'N/A'}
+Total Gold Earned: ${result.totalGoldEarned?.toFixed(2) || 'N/A'}
+Total Gold Spent: ${result.totalGoldSpent?.toFixed(2) || 'N/A'}
+Current Spendable: ${result.currentSpendable?.toFixed(2) || 'N/A'}
+Invariant: ${result.invariantValid ? '✓ VALID' : '✗ VIOLATED'}
+
+Check console for full timeline.
+      `.trim();
+
+      setStatusMessage({
+        type: result.invariantValid ? 'success' : 'error',
+        message: result.message + '\n\n' + details
+      });
+
+      // Also log timeline to console
+      if (result.timeline) {
+        console.log('\n========== RECONSTRUCTION TIMELINE ==========');
+        console.log(result.timeline.join('\n'));
+        console.log('============================================\n');
+      }
+
+      setTimeout(() => setStatusMessage(null), 15000); // Longer display time for detailed results
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to reconstruct: ' + String(error) });
+      setTimeout(() => setStatusMessage(null), 8000);
     }
   };
 
@@ -564,6 +601,13 @@ export default function WalletManagementAdmin() {
                           </button>
                         </>
                       )}
+                      <button
+                        onClick={() => handleReconstructExact(wallet.walletAddress)}
+                        className="px-3 py-1 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
+                        title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                      >
+                        🎯 Exact Reconstruction
+                      </button>
                       <button
                         onClick={() => handleResetMekLevels(wallet.walletAddress)}
                         className="px-3 py-1 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
