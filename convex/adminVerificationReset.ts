@@ -532,6 +532,68 @@ export const getAllWallets = query({
   }
 });
 
+// Admin function to fix corrupted cumulative gold values
+// Ensures the invariant: totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
+export const fixCumulativeGold = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldMiningRecord) {
+      return {
+        success: false,
+        message: "Wallet not found in goldMining table"
+      };
+    }
+
+    const now = Date.now();
+
+    // Calculate what cumulative SHOULD be (minimum valid value)
+    const currentAccumulated = goldMiningRecord.accumulatedGold || 0;
+    const totalSpent = goldMiningRecord.totalGoldSpentOnUpgrades || 0;
+    const currentCumulative = goldMiningRecord.totalCumulativeGold || 0;
+
+    // Cumulative must be AT LEAST (accumulated + spent)
+    const minimumCumulative = currentAccumulated + totalSpent;
+
+    // If cumulative is already correct, no fix needed
+    if (currentCumulative >= minimumCumulative) {
+      return {
+        success: true,
+        message: `Cumulative gold is already correct: ${currentCumulative.toFixed(2)}`,
+        noFixNeeded: true
+      };
+    }
+
+    // Fix the cumulative gold
+    const newCumulative = minimumCumulative;
+
+    await ctx.db.patch(goldMiningRecord._id, {
+      totalCumulativeGold: newCumulative,
+      updatedAt: now
+    });
+
+    console.log(`[Admin] FIXED cumulative gold for wallet ${args.walletAddress.substring(0, 20)}...`, {
+      oldCumulative: currentCumulative,
+      newCumulative: newCumulative,
+      accumulated: currentAccumulated,
+      spent: totalSpent
+    });
+
+    return {
+      success: true,
+      message: `Fixed cumulative gold: ${currentCumulative.toFixed(2)} → ${newCumulative.toFixed(2)}`,
+      oldValue: currentCumulative,
+      newValue: newCumulative
+    };
+  }
+});
+
 // Admin function to completely reset all gold values to zero
 // WARNING: This bypasses the normal gold invariant protections
 export const resetAllGoldToZero = mutation({
