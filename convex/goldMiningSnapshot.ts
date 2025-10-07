@@ -267,25 +267,36 @@ export const updateMinerAfterSnapshot = internalMutation({
     });
 
     // CRITICAL: Calculate accumulated gold properly
+    // BUT ONLY IF USER IS VERIFIED!
     // If this is the first snapshot, we need to calculate from creation time
     // If this is a subsequent snapshot, calculate from last snapshot time
     let accumulatedGold: number;
 
-    if (miner.lastSnapshotTime) {
-      // Subsequent snapshot - calculate gold since last snapshot
-      const hoursSinceLastSnapshot = (now - miner.lastSnapshotTime) / (1000 * 60 * 60);
-      const goldSinceLastSnapshot = miner.totalGoldPerHour * hoursSinceLastSnapshot;
-      accumulatedGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
+    // CHECK VERIFICATION STATUS BEFORE GIVING GOLD
+    const isVerified = miner.isBlockchainVerified === true;
+
+    if (isVerified) {
+      if (miner.lastSnapshotTime) {
+        // Subsequent snapshot - calculate gold since last snapshot
+        const hoursSinceLastSnapshot = (now - miner.lastSnapshotTime) / (1000 * 60 * 60);
+        const goldSinceLastSnapshot = miner.totalGoldPerHour * hoursSinceLastSnapshot;
+        accumulatedGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
+      } else {
+        // First snapshot - calculate ALL gold from creation
+        const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
+        const totalGoldEarned = miner.totalGoldPerHour * hoursSinceCreation;
+        accumulatedGold = Math.min(50000, totalGoldEarned);
+      }
     } else {
-      // First snapshot - calculate ALL gold from creation
-      const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
-      const totalGoldEarned = miner.totalGoldPerHour * hoursSinceCreation;
-      accumulatedGold = Math.min(50000, totalGoldEarned);
+      // UNVERIFIED USER - DON'T GIVE THEM ANY GOLD
+      console.log(`[Snapshot Security] Skipping gold accumulation for unverified wallet: ${args.walletAddress}`);
+      accumulatedGold = miner.accumulatedGold || 0; // Keep existing gold, don't add more
     }
 
     // Update with new Mek count and rate, saving accumulated gold
+    // ONLY give gold rate to verified users
     const patchData: any = {
-      totalGoldPerHour: args.totalGoldPerHour,
+      totalGoldPerHour: isVerified ? args.totalGoldPerHour : 0, // ✅ ZERO rate for unverified
       lastSnapshotTime: now,
       snapshotMekCount: args.mekCount,
       updatedAt: now,
