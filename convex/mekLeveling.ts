@@ -32,12 +32,22 @@ export function calculateLevelBoost(
   baseRate: number,
   level: number
 ): { percent: number; amount: number } {
-  // Progressive boost: Level 1 = 0%, Level 2 = 10%, Level 3 = 25%, Level 4 = 45%, etc.
-  // Each level adds 5% more than the previous (10%, 15%, 20%, 25%, ...)
-  let percent = 0;
-  for (let i = 2; i <= level; i++) {
-    percent += 5 + (i - 1) * 5; // 10, 15, 20, 25, 30, 35, 40, 45, 50
-  }
+  // Accelerating percentage system: Level 1 = 0%, Level 2 = 25%, Level 3 = 60%, etc.
+  // Provides much more exciting growth for low-rate Meks
+  const percentages = [
+    0,      // Level 1
+    25,     // Level 2
+    60,     // Level 3
+    110,    // Level 4
+    180,    // Level 5
+    270,    // Level 6
+    400,    // Level 7
+    600,    // Level 8
+    900,    // Level 9
+    1400,   // Level 10
+  ];
+
+  const percent = percentages[level - 1] || 0;
   const amount = (baseRate * percent) / 100;
 
   devLog.log(`[BOOST CALCULATION] Level ${level}:`, {

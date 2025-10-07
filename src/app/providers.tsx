@@ -18,28 +18,28 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ConvexProvider client={convex}>
       <SoundProvider>
-        <div className="min-h-screen relative">
-          {isWelcomePage || isTalentBuilder || isMekRateLogging ? (
-            // Root page, talent builder, and mek-rate-logging without navigation
-            children
-          ) : isAdminPage ? (
-            // Admin pages with full width layout
-            <>
-              <Navigation fullWidth />
-              <div className="relative z-10">
-                {children}
-              </div>
-            </>
-          ) : (
-            // All other pages with constrained width navigation
-            <div className="max-w-[900px] mx-auto px-5 relative">
-              <Navigation />
-              <div className="relative z-10">
-                {children}
-              </div>
+      <div className="min-h-screen relative">
+        {isWelcomePage || isTalentBuilder || isMekRateLogging ? (
+          // Root page, talent builder, and mek-rate-logging without navigation
+          children
+        ) : isAdminPage ? (
+          // Admin pages with full width layout
+          <>
+            <Navigation fullWidth />
+            <div className="relative z-10">
+              {children}
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          // All other pages with constrained width navigation
+          <div className="max-w-[900px] mx-auto px-5 relative">
+            <Navigation />
+            <div className="relative z-10">
+              {children}
+            </div>
+          </div>
+        )}
+      </div>
       </SoundProvider>
     </ConvexProvider>
   );

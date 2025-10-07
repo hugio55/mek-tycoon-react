@@ -1,10 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
 import "@/styles/special-buttons.css";
 import "@/styles/typography-system.css";
 import { Providers } from "./providers";
-import { GlobalClickSound } from "@/components/GlobalClickSound";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -27,11 +26,17 @@ const orbitron = Orbitron({
 
 export const metadata: Metadata = {
   title: "Mek Employment",
-  description: "This website is for testing purposes only. Mek income is an element of a future product and we are gathering statistics and feedback. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+  description: "This website is for testing a core mechanic of a future Over Exposed product. It is not an actual game and it offers no rewards. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
   icons: {
     icon: '/fav2.png',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -52,7 +57,6 @@ export default function RootLayout({
         
         {/* Content layer */}
         <div className="relative z-10">
-          <GlobalClickSound />
           <DemoModeWrapper>
             <Providers>{children}</Providers>
           </DemoModeWrapper>

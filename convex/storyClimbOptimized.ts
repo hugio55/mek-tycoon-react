@@ -14,123 +14,155 @@ import { mutation, query } from "./_generated/server";
 // ============================================================================
 
 /**
- * Migrate existing deployedStoryClimbData to new optimized schema
- * This can be run safely multiple times - it skips already migrated deployments
+ * STEP 1: Create deployment metadata (lightweight - no JSON parsing)
+ * This only creates the header record, doesn't process any node data
  */
-export const migrateToOptimizedSchema = mutation({
+export const migrateDeploymentMetadata = mutation({
   args: {
-    deploymentId: v.optional(v.string()), // Optional: migrate specific deployment, or all if not provided
+    deploymentId: v.string(),
   },
   handler: async (ctx, args) => {
     try {
-      // Get deployments to migrate
-      let deploymentsToMigrate;
-      if (args.deploymentId) {
-        const specific = await ctx.db
-          .query("deployedStoryClimbData")
-          .withIndex("by_deployment_id", q => q.eq("deploymentId", args.deploymentId))
-          .first();
-        deploymentsToMigrate = specific ? [specific] : [];
-      } else {
-        // Migrate all
-        deploymentsToMigrate = await ctx.db
-          .query("deployedStoryClimbData")
-          .collect();
-      }
+      // Check if already migrated
+      const existing = await ctx.db
+        .query("storyClimbDeployments")
+        .withIndex("by_deployment_id", q => q.eq("deploymentId", args.deploymentId))
+        .first();
 
-      if (deploymentsToMigrate.length === 0) {
+      if (existing) {
         return {
           success: true,
-          message: "No deployments to migrate",
-          migrated: 0,
+          message: "Deployment metadata already migrated",
+          alreadyMigrated: true,
         };
       }
 
-      let migratedCount = 0;
-      let skippedCount = 0;
+      // Get old deployment
+      const oldDeployment = await ctx.db
+        .query("deployedStoryClimbData")
+        .withIndex("by_deployment_id", q => q.eq("deploymentId", args.deploymentId))
+        .first();
 
-      for (const oldDeployment of deploymentsToMigrate) {
-        // Check if already migrated
-        const existing = await ctx.db
-          .query("storyClimbDeployments")
-          .withIndex("by_deployment_id", q => q.eq("deploymentId", oldDeployment.deploymentId))
-          .first();
-
-        if (existing) {
-          console.log(`Skipping already migrated deployment: ${oldDeployment.deploymentId}`);
-          skippedCount++;
-          continue;
-        }
-
-        // Parse old data
-        const allEventNodes = JSON.parse(oldDeployment.eventNodes || "[]");
-        const allNormalNodes = JSON.parse(oldDeployment.normalNodes || "[]");
-        const allChallengerNodes = JSON.parse(oldDeployment.challengerNodes || "[]");
-        const allMiniBossNodes = JSON.parse(oldDeployment.miniBossNodes || "[]");
-        const allFinalBossNodes = JSON.parse(oldDeployment.finalBossNodes || "[]");
-
-        // Create deployment header
-        await ctx.db.insert("storyClimbDeployments", {
-          deploymentId: oldDeployment.deploymentId,
-          deployedAt: oldDeployment.deployedAt,
-          deployedBy: oldDeployment.deployedBy,
-          version: oldDeployment.version,
-          status: oldDeployment.status,
-          configurationName: oldDeployment.configurationName,
-          configurationId: oldDeployment.configurationId,
-          notes: oldDeployment.notes,
-          totalEventNodes: allEventNodes.length,
-          totalNormalNodes: allNormalNodes.length,
-          totalChallengerNodes: allChallengerNodes.length,
-          totalMiniBossNodes: allMiniBossNodes.length,
-          totalFinalBossNodes: allFinalBossNodes.length,
-        });
-
-        // Split data by chapter and create chapter records
-        for (let chapter = 1; chapter <= 10; chapter++) {
-          // Filter nodes for this chapter
-          const chapterEventNodes = allEventNodes.filter((node: any) => {
-            const eventChapter = Math.ceil(node.eventNumber / 20);
-            return eventChapter === chapter;
-          });
-
-          const chapterNormalNodes = allNormalNodes.filter((node: any) => node.chapter === chapter);
-          const chapterChallengerNodes = allChallengerNodes.filter((node: any) => node.chapter === chapter);
-          const chapterMiniBossNodes = allMiniBossNodes.filter((node: any) => node.chapter === chapter);
-          const chapterFinalBossNodes = allFinalBossNodes.filter((node: any) => node.chapter === chapter);
-
-          const totalNodes = chapterEventNodes.length + chapterNormalNodes.length +
-            chapterChallengerNodes.length + chapterMiniBossNodes.length + chapterFinalBossNodes.length;
-
-          // Create chapter record (even if empty, for consistency)
-          await ctx.db.insert("storyClimbChapters", {
-            deploymentId: oldDeployment.deploymentId,
-            chapter,
-            eventNodes: JSON.stringify(chapterEventNodes),
-            normalNodes: JSON.stringify(chapterNormalNodes),
-            challengerNodes: JSON.stringify(chapterChallengerNodes),
-            miniBossNodes: JSON.stringify(chapterMiniBossNodes),
-            finalBossNodes: JSON.stringify(chapterFinalBossNodes),
-            nodeCount: totalNodes,
-            createdAt: Date.now(),
-          });
-
-          console.log(`Migrated chapter ${chapter} for deployment ${oldDeployment.deploymentId}: ${totalNodes} nodes`);
-        }
-
-        migratedCount++;
-        console.log(`Successfully migrated deployment: ${oldDeployment.deploymentId}`);
+      if (!oldDeployment) {
+        throw new Error(`Deployment ${args.deploymentId} not found`);
       }
+
+      // Create metadata only (no JSON parsing - just get lengths)
+      await ctx.db.insert("storyClimbDeployments", {
+        deploymentId: oldDeployment.deploymentId,
+        deployedAt: oldDeployment.deployedAt,
+        deployedBy: oldDeployment.deployedBy,
+        version: oldDeployment.version,
+        status: oldDeployment.status,
+        configurationName: oldDeployment.configurationName,
+        configurationId: oldDeployment.configurationId,
+        notes: oldDeployment.notes,
+        totalEventNodes: 0, // Will update after chapters are migrated
+        totalNormalNodes: 0,
+        totalChallengerNodes: 0,
+        totalMiniBossNodes: 0,
+        totalFinalBossNodes: 0,
+      });
+
+      console.log(`Created metadata for deployment: ${oldDeployment.deploymentId}`);
 
       return {
         success: true,
-        message: `Migration complete`,
-        migrated: migratedCount,
-        skipped: skippedCount,
-        total: deploymentsToMigrate.length,
+        message: "Deployment metadata created",
+        deploymentId: args.deploymentId,
       };
     } catch (error) {
-      console.error("Migration error:", error);
+      console.error("Metadata migration error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  },
+});
+
+/**
+ * STEP 2: Migrate a single chapter (processes only ~400 nodes instead of 4,000)
+ * Call this 10 times per deployment (once for each chapter)
+ */
+export const migrateChapter = mutation({
+  args: {
+    deploymentId: v.string(),
+    chapter: v.number(), // 1-10
+  },
+  handler: async (ctx, args) => {
+    try {
+      // Check if chapter already migrated
+      const existing = await ctx.db
+        .query("storyClimbChapters")
+        .withIndex("by_deployment_and_chapter", q =>
+          q.eq("deploymentId", args.deploymentId).eq("chapter", args.chapter)
+        )
+        .first();
+
+      if (existing) {
+        return {
+          success: true,
+          message: `Chapter ${args.chapter} already migrated`,
+          alreadyMigrated: true,
+        };
+      }
+
+      // Get old deployment
+      const oldDeployment = await ctx.db
+        .query("deployedStoryClimbData")
+        .withIndex("by_deployment_id", q => q.eq("deploymentId", args.deploymentId))
+        .first();
+
+      if (!oldDeployment) {
+        throw new Error(`Deployment ${args.deploymentId} not found`);
+      }
+
+      // Parse only the data we need (still large but ~10x smaller than all chapters)
+      const allEventNodes = JSON.parse(oldDeployment.eventNodes || "[]");
+      const allNormalNodes = JSON.parse(oldDeployment.normalNodes || "[]");
+      const allChallengerNodes = JSON.parse(oldDeployment.challengerNodes || "[]");
+      const allMiniBossNodes = JSON.parse(oldDeployment.miniBossNodes || "[]");
+      const allFinalBossNodes = JSON.parse(oldDeployment.finalBossNodes || "[]");
+
+      // Filter for this chapter only
+      const chapterEventNodes = allEventNodes.filter((node: any) => {
+        const eventChapter = Math.ceil(node.eventNumber / 20);
+        return eventChapter === args.chapter;
+      });
+
+      const chapterNormalNodes = allNormalNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterChallengerNodes = allChallengerNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterMiniBossNodes = allMiniBossNodes.filter((node: any) => node.chapter === args.chapter);
+      const chapterFinalBossNodes = allFinalBossNodes.filter((node: any) => node.chapter === args.chapter);
+
+      const totalNodes = chapterEventNodes.length + chapterNormalNodes.length +
+        chapterChallengerNodes.length + chapterMiniBossNodes.length + chapterFinalBossNodes.length;
+
+      // Create chapter record
+      await ctx.db.insert("storyClimbChapters", {
+        deploymentId: args.deploymentId,
+        chapter: args.chapter,
+        eventNodes: JSON.stringify(chapterEventNodes),
+        normalNodes: JSON.stringify(chapterNormalNodes),
+        challengerNodes: JSON.stringify(chapterChallengerNodes),
+        miniBossNodes: JSON.stringify(chapterMiniBossNodes),
+        finalBossNodes: JSON.stringify(chapterFinalBossNodes),
+        nodeCount: totalNodes,
+        createdAt: Date.now(),
+      });
+
+      console.log(`Migrated chapter ${args.chapter} for ${args.deploymentId}: ${totalNodes} nodes`);
+
+      return {
+        success: true,
+        message: `Chapter ${args.chapter} migrated`,
+        nodeCount: totalNodes,
+        chapter: args.chapter,
+        deploymentId: args.deploymentId,
+      };
+    } catch (error) {
+      console.error(`Chapter ${args.chapter} migration error:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error occurred",

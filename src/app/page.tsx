@@ -29,7 +29,7 @@ import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 
 // Animated Number Component with smooth counting animation
-function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: number }) {
+function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
   const [displayValue, setDisplayValue] = useState(value);
   const animationRef = useRef<number | null>(null);
   const startValueRef = useRef(value);
@@ -37,6 +37,15 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
   useEffect(() => {
     const startValue = startValueRef.current;
     const endValue = value;
+    const difference = Math.abs(endValue - startValue);
+
+    // Skip animation if change is below threshold (prevents jitter)
+    if (difference < threshold) {
+      setDisplayValue(endValue);
+      startValueRef.current = endValue;
+      return;
+    }
+
     const duration = 400; // Faster animation for smoother upgrade experience
     const startTime = Date.now();
 
@@ -68,7 +77,7 @@ function AnimatedNumber({ value, decimals = 1 }: { value: number; decimals?: num
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [value]); // Removed displayValue from dependencies to prevent infinite loop
+  }, [value, threshold]); // Removed displayValue from dependencies to prevent infinite loop
 
   // Format with commas if no decimals, otherwise show decimals
   return decimals === 0
@@ -113,7 +122,7 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   }, [expiresAt]);
 
   return (
-    <div className={`font-mono text-xs sm:text-sm ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
+    <div className={`font-mono text-sm sm:text-base ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
       {timeRemaining}
     </div>
   );
@@ -702,7 +711,8 @@ export default function MekRateLoggingPage() {
         const api = await window.cardano[walletKey].enable();
 
         setWalletConnected(true);
-        setPaymentAddress(session.walletAddress);
+        // Use paymentAddress if available, otherwise fallback to stake address
+        setPaymentAddress(session.paymentAddress || session.stakeAddress);
         setWalletType(walletKey);
         setIsSignatureVerified(true);
 
@@ -716,10 +726,10 @@ export default function MekRateLoggingPage() {
 
         // Initialize with Blockfrost (server will handle existing data in background)
         const initResult = await initializeWithBlockfrost({
-          walletAddress: session.walletAddress || session.stakeAddress,
+          walletAddress: session.stakeAddress, // Always use stake address as primary identifier
           stakeAddress: session.stakeAddress,
           walletType: walletKey,
-          paymentAddresses: [session.walletAddress].filter(Boolean)
+          paymentAddresses: session.paymentAddress ? [session.paymentAddress] : []
         });
 
         if (initResult.success) {
@@ -1139,28 +1149,38 @@ export default function MekRateLoggingPage() {
       }, 2000);
     };
 
-    // Try to set up the account change listener
-    // CIP-30 wallets may have experimental.on() method
-    try {
-      const api = walletApiRef.current;
+    // Delay listener setup to avoid false positives during initial connection
+    // Wait 3 seconds after wallet connects before monitoring for account changes
+    const setupDelay = setTimeout(() => {
+      // Try to set up the account change listener
+      // CIP-30 wallets may have experimental.on() method
+      try {
+        const api = walletApiRef.current;
 
-      if (api.experimental && typeof api.experimental.on === 'function') {
-        console.log('[Wallet Account Change] Setting up account change listener');
-        api.experimental.on('accountChange', handleAccountChange);
-
-        // Cleanup function
-        return () => {
-          if (api.experimental && typeof api.experimental.off === 'function') {
-            console.log('[Wallet Account Change] Removing account change listener');
-            api.experimental.off('accountChange', handleAccountChange);
-          }
-        };
-      } else {
-        console.log('[Wallet Account Change] Wallet does not support account change events');
+        if (api && api.experimental && typeof api.experimental.on === 'function') {
+          console.log('[Wallet Account Change] Setting up account change listener (after delay)');
+          api.experimental.on('accountChange', handleAccountChange);
+        } else {
+          console.log('[Wallet Account Change] Wallet does not support account change events');
+        }
+      } catch (error) {
+        console.warn('[Wallet Account Change] Failed to set up listener:', error);
       }
-    } catch (error) {
-      console.warn('[Wallet Account Change] Failed to set up listener:', error);
-    }
+    }, 3000);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(setupDelay);
+      try {
+        const api = walletApiRef.current;
+        if (api && api.experimental && typeof api.experimental.off === 'function') {
+          console.log('[Wallet Account Change] Removing account change listener');
+          api.experimental.off('accountChange', handleAccountChange);
+        }
+      } catch (error) {
+        console.warn('[Wallet Account Change] Failed to remove listener:', error);
+      }
+    };
   }, [walletConnected, walletAddress]);
 
   // Detect available Cardano wallets
@@ -1819,6 +1839,18 @@ export default function MekRateLoggingPage() {
 
       // Save wallet session using secure session manager (with async encryption)
       const sessionId = generateSessionId();
+      console.log('[TRACE-CALL-SAVE] About to call saveSessionSecurely with:', {
+        walletAddress: stakeAddress?.slice(0, 12) + '...',
+        stakeAddress: stakeAddress?.slice(0, 12) + '...',
+        paymentAddress: primaryPaymentAddress?.slice(0, 12) + '...',
+        walletName: wallet.name,
+        hasNonce: !!(nonce || ''),
+        hasSessionId: !!sessionId,
+        walletAddressIsUndefined: stakeAddress === undefined,
+        stakeAddressIsUndefined: stakeAddress === undefined,
+        paymentAddressIsUndefined: primaryPaymentAddress === undefined,
+        timestamp: new Date().toISOString()
+      });
       await saveSessionSecurely({
         walletAddress: stakeAddress,
         stakeAddress,
@@ -2469,7 +2501,7 @@ export default function MekRateLoggingPage() {
       )}
 
       {/* Main Content - Mobile-optimized padding and overflow */}
-      <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll scale-95 sm:scale-100 origin-top">
+      <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll">
         {isAutoReconnecting && !forceNoWallet ? (
           // Loading spinner while auto-reconnecting
           <div className="flex flex-col items-center justify-center h-full min-h-[100vh]">
@@ -2806,7 +2838,7 @@ export default function MekRateLoggingPage() {
                   >
                     {/* Modal content */}
                     <div
-                      className="relative bg-gray-900 border-2 border-yellow-500/50 p-6 max-w-md w-full shadow-2xl"
+                      className="relative bg-gray-900 border-2 border-yellow-500/50 p-4 max-w-sm w-full shadow-2xl"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Corner brackets */}
@@ -2818,24 +2850,24 @@ export default function MekRateLoggingPage() {
                       {/* Close button */}
                       <button
                         onClick={() => setWalletInstructions(null)}
-                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors border border-yellow-500/30 hover:border-yellow-500/60"
+                        className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors border border-yellow-500/30 hover:border-yellow-500/60"
                         aria-label="Close"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
 
                       {/* Header */}
-                      <div className="mb-4 pr-8">
-                        <h3 className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-lg font-bold">
+                      <div className="mb-3 pr-7">
+                        <h3 className="text-yellow-500 font-['Orbitron'] uppercase tracking-wider text-base font-bold">
                           Connection Instructions
                         </h3>
-                        <div className="h-px bg-gradient-to-r from-yellow-500/50 to-transparent mt-2" />
+                        <div className="h-px bg-gradient-to-r from-yellow-500/50 to-transparent mt-1.5" />
                       </div>
 
                       {/* Instructions */}
-                      <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line font-mono">
+                      <div className="text-gray-300 text-xs leading-relaxed whitespace-pre-line font-mono">
                         {walletInstructions}
                       </div>
 
@@ -2850,7 +2882,7 @@ export default function MekRateLoggingPage() {
                             console.error('Failed to copy URL:', err);
                           }
                         }}
-                        className="mt-4 w-full px-6 py-3 border-2 border-yellow-500/50 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 font-['Orbitron'] uppercase tracking-wider text-sm transition-all relative overflow-hidden"
+                        className="mt-3 w-full px-4 py-2 border-2 border-yellow-500/50 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 font-['Orbitron'] uppercase tracking-wider text-xs transition-all relative overflow-hidden"
                       >
                         <span className={`transition-opacity ${urlCopied ? 'opacity-0' : 'opacity-100'}`}>
                           📋 Copy URL to Clipboard
@@ -2861,20 +2893,20 @@ export default function MekRateLoggingPage() {
                       </button>
 
                       {/* Fallback: Manual copy */}
-                      <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
-                        <code className="text-yellow-500 font-mono text-sm select-all block text-center">
+                      <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded">
+                        <code className="text-yellow-500 font-mono text-xs select-all block text-center">
                           mek.overexposed.io
                         </code>
-                        <p className="text-xs text-yellow-500/60 text-center mt-1">
+                        <p className="text-[10px] text-yellow-500/60 text-center mt-0.5">
                           Or long-press to copy manually
                         </p>
                       </div>
 
                       {/* Bottom close button */}
-                      <div className="mt-6 flex justify-center">
+                      <div className="mt-4 flex justify-center">
                         <button
                           onClick={() => setWalletInstructions(null)}
-                          className="px-6 py-2 border-2 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 font-['Orbitron'] uppercase tracking-wider text-sm transition-all"
+                          className="px-5 py-1.5 border-2 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 font-['Orbitron'] uppercase tracking-wider text-xs transition-all"
                         >
                           Got It
                         </button>
@@ -2991,14 +3023,14 @@ export default function MekRateLoggingPage() {
                       )}
 
                       {/* Wallet address */}
-                      <div className="text-gray-400 font-mono text-sm sm:text-sm break-all">
+                      <div className="text-gray-400 font-mono text-base sm:text-base break-all">
                         {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
                       </div>
 
                       {/* Session expiration timer */}
                       {checkAuth?.expiresAt && (
                         <div className="mt-2 pt-2 border-t border-yellow-500/10">
-                          <div className="text-gray-500 text-xs sm:text-sm uppercase tracking-wider mb-1">
+                          <div className="text-gray-500 text-sm sm:text-base uppercase tracking-wider mb-1">
                             Session Expires
                           </div>
                           <SessionTimer expiresAt={checkAuth.expiresAt} />
@@ -3010,7 +3042,7 @@ export default function MekRateLoggingPage() {
                     <div className="px-4 py-4 border-b border-yellow-500/20">
                       <div className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Cumulative Gold</div>
                       <div className="text-yellow-400 font-bold text-xl sm:text-xl font-mono">
-                        <AnimatedNumber value={cumulativeGold} decimals={0} />
+                        <AnimatedNumber value={cumulativeGold} decimals={0} threshold={0.5} />
                       </div>
                     </div>
 
@@ -3098,18 +3130,26 @@ export default function MekRateLoggingPage() {
 
             {/* Logo in top right corner */}
             <div className="absolute right-0 z-20" style={{ top: '-20px' }}>
-              <img
-                src="/random-images/OE logo.png"
-                alt="OE Logo"
-                className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity"
-              />
+              <a
+                href="https://overexposed.io"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="/random-images/OE logo.png"
+                  alt="OE Logo"
+                  className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+                />
+              </a>
             </div>
 
             {/* Information text floating in the night sky - moved up 140px total on desktop, down 80px on mobile */}
-            <div className="text-center mb-[50px] px-4 pt-[88px] sm:pt-[70px]">
+            <div className="text-center mb-[50px] px-4 pt-[60px] sm:pt-[50px]">
               <p className="max-w-xl mx-auto mb-8">
                 <span className="text-xs sm:text-sm font-mono text-gray-400">
-                  <span className="font-bold">This website is for testing a core mechanic of a future Over Exposed product.</span> Each Mekanism has an upgradeable income that feeds your corporation. Level up, accumulate gold and top the chart. Please share bugs and feedback{' '}
+                  <span className="font-bold">This website is for testing a core mechanic of a future Over Exposed product. It is <span className="teal-glow-pulse">not</span> an actual game and it offers no rewards.</span>
+                  <br /><br />
+                  <span className="text-white font-bold" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)' }}>How it works:</span> each Mekanism has an upgradeable income that feeds your corporation. Level up, accumulate gold and top the chart. Please share bugs and feedback{' '}
                   <a
                     href="https://discord.gg/kHkvnPbfmm"
                     target="_blank"
@@ -3174,7 +3214,7 @@ export default function MekRateLoggingPage() {
 
                 <div className="bg-black/90 border-2 border-yellow-500/30 backdrop-blur-md relative overflow-hidden" style={{ transform: 'translate3d(0,0,0)' }}>
                     {/* Top section - Total Gold */}
-                    <div className="p-4 sm:p-6 md:p-8 relative">
+                    <div className="p-3 sm:p-4 md:p-5 relative">
                       {/* Gradient background */}
                       <div
                         className="absolute inset-0"
@@ -3219,7 +3259,7 @@ export default function MekRateLoggingPage() {
                         className="text-4xl sm:text-5xl md:text-6xl font-black text-yellow-500 mb-3 tabular-nums font-mono relative text-center"
                         style={{
                           textShadow: '0 0 15px rgba(250, 182, 23, 0.6)',
-                          fontSize: 'clamp(2rem, 8vw, 3.75rem)'
+                          fontSize: 'clamp(1.75rem, 5vw, 2.75rem)'
                         }}
                       >
                         <div className="relative">
@@ -3318,7 +3358,7 @@ export default function MekRateLoggingPage() {
 
             {/* Controls Row - Search bar and Sort button - Hidden when no meks */}
             {ownedMeks.length > 0 && (
-              <div className={`flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
+              <div className={`mt-6 flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
                 ownedMeks.length === 1 ? 'max-w-md mx-auto' :
                 ownedMeks.length === 2 ? 'max-w-3xl mx-auto' :
                 ownedMeks.length === 3 ? 'max-w-5xl mx-auto' :
@@ -3327,9 +3367,7 @@ export default function MekRateLoggingPage() {
               {/* Search Bar - Minimalist Tech Style - Hidden when no meks */}
               {ownedMeks.length > 0 && (
                 <div className="max-w-lg relative">
-                  <div className="text-gray-500 mb-1 px-1 whitespace-nowrap" style={{
-                    fontSize: 'clamp(0.5rem, 2.5vw, 0.75rem)'
-                  }}>
+                  <div className="text-gray-500 mb-1 px-1 whitespace-nowrap text-xs">
                     Search by Mek # or variation (e.g., bumblebee)
                   </div>
                   <div className="relative group">
@@ -3338,7 +3376,7 @@ export default function MekRateLoggingPage() {
                       placeholder="Search"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white placeholder-white/30 focus:border-white/40 focus:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out"
+                      className="w-full px-3 sm:px-5 py-2 sm:py-3 bg-white/5 border-b-2 border-white/20 text-white placeholder-white/30 focus:border-white/40 focus:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] sm:min-h-0 transition-all duration-500 ease-out text-sm sm:text-base"
                       style={{
                         fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
                         fontWeight: '300',
@@ -3367,7 +3405,7 @@ export default function MekRateLoggingPage() {
                 <div className="relative sort-dropdown-container">
                   <button
                     onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                    className="relative px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] transition-all duration-500 ease-out group"
+                    className="relative px-3 sm:px-5 py-2 sm:py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] sm:min-h-0 transition-all duration-500 ease-out group text-sm sm:text-base"
                     style={{
                       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
                       fontWeight: '300',
@@ -3464,7 +3502,7 @@ export default function MekRateLoggingPage() {
               ownedMeks.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
               ownedMeks.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' :
               ownedMeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto' :
-              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto'
+              'grid-cols-1 sm:grid-cols-2 breakpoint-3col:grid-cols-3 breakpoint-4col:grid-cols-4 max-w-7xl mx-auto'
             }`}>
               {[...ownedMeks]
                 .filter(mek => {
@@ -3637,55 +3675,53 @@ export default function MekRateLoggingPage() {
       {/* Lightbox for selected Mek - Clean Detail View */}
       {selectedMek && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
           style={{ willChange: 'backdrop-filter' }}
           onClick={() => setSelectedMek(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-md border border-yellow-500/40 p-8"
+            className="relative w-full max-w-3xl bg-black/80 backdrop-blur-md border border-yellow-500/40 p-6 sm:p-8 flex flex-col max-h-[95vh]"
             style={{ transform: 'translate3d(0,0,0)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={() => setSelectedMek(null)}
-              className="absolute top-4 right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
             >
               ×
             </button>
 
-            <div className="flex flex-col items-center">
-              {/* Large Mek Image - Nearly full screen */}
-              <div className="relative w-full max-w-3xl mb-6">
-                <div className="relative aspect-square bg-black overflow-hidden">
-                  {selectedMek.mekNumber ? (
-                    <img
-                      src={getMekImageUrl(selectedMek.mekNumber, '1000px')}
-                      alt={selectedMek.assetName}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : selectedMek.imageUrl ? (
-                    <img
-                      src={selectedMek.imageUrl}
-                      alt={selectedMek.assetName}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono">
-                      NO IMAGE
-                    </div>
-                  )}
-                </div>
+            <div className="flex flex-col items-center flex-1 min-h-0">
+              {/* Large Mek Image - Scales to fit */}
+              <div className="relative w-full flex items-center justify-center mb-4 flex-shrink">
+                {selectedMek.mekNumber ? (
+                  <img
+                    src={getMekImageUrl(selectedMek.mekNumber, '1000px')}
+                    alt={selectedMek.assetName}
+                    className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
+                  />
+                ) : selectedMek.imageUrl ? (
+                  <img
+                    src={selectedMek.imageUrl}
+                    alt={selectedMek.assetName}
+                    className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-32 flex items-center justify-center text-gray-600 font-mono">
+                    NO IMAGE
+                  </div>
+                )}
               </div>
 
-              {/* Mek Info Below */}
-              <div className="w-full max-w-3xl space-y-4">
+              {/* Mek Info Below - Flexible shrink */}
+              <div className="w-full space-y-2 sm:space-y-4 flex-shrink-0">
                 {/* Mek Name and Rank */}
                 <div className="text-center">
-                  <h2 className="text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-1 sm:mb-2">
                     {selectedMek.assetName}
                   </h2>
-                  <p className="text-gray-400 font-mono text-lg">
+                  <p className="text-gray-400 font-mono text-base sm:text-lg">
                     RANK {selectedMek.rarityRank || '???'}
                   </p>
                 </div>

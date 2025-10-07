@@ -11,8 +11,9 @@ const SESSION_KEY = 'mek_wallet_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 export interface WalletSession {
-  walletAddress: string;
+  walletAddress: string; // Primary identifier (stake address)
   stakeAddress: string;
+  paymentAddress?: string; // Optional payment address for blockchain verification
   sessionId: string;
   nonce: string;
   expiresAt: number;
@@ -30,6 +31,14 @@ export interface WalletSession {
 export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'expiresAt'>): Promise<void> {
   if (typeof window === 'undefined') return;
 
+  console.log('[TRACE-SAVE-3] saveSession called with:', {
+    walletAddress: session.walletAddress?.slice(0, 12) + '...',
+    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+    walletAddressIsUndefined: session.walletAddress === undefined,
+    stakeAddressIsUndefined: session.stakeAddress === undefined,
+    timestamp: new Date().toISOString()
+  });
+
   const now = Date.now();
   const fullSession: WalletSession = {
     ...session,
@@ -37,13 +46,36 @@ export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'ex
     expiresAt: now + SESSION_DURATION,
   };
 
+  console.log('[TRACE-SAVE-4] fullSession before encryption:', {
+    walletAddress: fullSession.walletAddress?.slice(0, 12) + '...',
+    stakeAddress: fullSession.stakeAddress?.slice(0, 12) + '...',
+    walletAddressIsUndefined: fullSession.walletAddress === undefined,
+    timestamp: new Date().toISOString()
+  });
+
   try {
     // Encrypt session before storing
     const encryptedSession = await encryptSession(fullSession);
+
+    console.log('[TRACE-SAVE-5] Session encrypted, saving to localStorage');
+    console.log('[TRACE-SAVE-5b] SESSION_KEY:', SESSION_KEY);
+    console.log('[TRACE-SAVE-5c] Encrypted session length:', encryptedSession.length);
     localStorage.setItem(SESSION_KEY, encryptedSession);
 
+    console.log('[TRACE-SAVE-6] Saved to localStorage, verifying...');
+    const storedValue = localStorage.getItem(SESSION_KEY);
+    console.log('[TRACE-SAVE-7] Verification:', {
+      exists: !!storedValue,
+      length: storedValue?.length,
+      matchesEncrypted: storedValue === encryptedSession,
+      key: SESSION_KEY
+    });
+
+    // Additional verification - check ALL localStorage keys
+    console.log('[TRACE-SAVE-8] All localStorage keys:', Object.keys(localStorage));
+
     console.log('[Session] Saved encrypted wallet session:', {
-      walletAddress: session.walletAddress.slice(0, 12) + '...',
+      walletAddress: session.walletAddress?.slice(0, 12) + '...',
       expiresAt: new Date(fullSession.expiresAt).toISOString(),
       platform: session.platform,
     });
@@ -61,10 +93,22 @@ export async function saveSession(session: Omit<WalletSession, 'createdAt' | 'ex
 export async function getSession(): Promise<WalletSession | null> {
   if (typeof window === 'undefined') return null;
 
+  console.log('[TRACE-GET-1] getSession called at', new Date().toISOString());
+  console.log('[TRACE-GET-1b] SESSION_KEY:', SESSION_KEY);
+  console.log('[TRACE-GET-1c] All localStorage keys:', Object.keys(localStorage));
+
   const migrationTracker = new SessionMigrationTracker();
 
   try {
     const stored = localStorage.getItem(SESSION_KEY);
+    console.log('[TRACE-GET-2] Retrieved from localStorage:', {
+      exists: !!stored,
+      length: stored?.length,
+      key: SESSION_KEY,
+      firstChars: stored?.substring(0, 50),
+      timestamp: new Date().toISOString()
+    });
+
     if (!stored) {
       console.log('[Session] No stored session found');
       return null;
@@ -74,9 +118,16 @@ export async function getSession(): Promise<WalletSession | null> {
 
     // Check if this is an encrypted session or legacy plaintext
     if (isEncryptedSession(stored)) {
+      console.log('[TRACE-GET-3] Detected encrypted session, decrypting...');
       // Decrypt the session
       try {
         session = await decryptSession(stored);
+        console.log('[TRACE-GET-4] Decryption successful:', {
+          walletAddress: session.walletAddress?.slice(0, 12) + '...',
+          stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+          walletAddressIsUndefined: session.walletAddress === undefined,
+          timestamp: new Date().toISOString()
+        });
         console.log('[Session] Decrypted session successfully');
       } catch (decryptError) {
         console.error('[Session] Failed to decrypt session:', decryptError);
@@ -109,12 +160,45 @@ export async function getSession(): Promise<WalletSession | null> {
       logger.log('session_migrate_start', { sessionSize: stored.length });
 
       try {
-        session = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
 
-        // Re-save as encrypted
+        console.log('[Migration] Parsed legacy data:', {
+          hasWalletAddress: !!parsed.walletAddress,
+          hasStakeAddress: !!parsed.stakeAddress,
+          hasPaymentAddress: !!parsed.paymentAddress,
+          hasSessionId: !!parsed.sessionId,
+          hasNonce: !!parsed.nonce,
+          hasCachedMeks: !!parsed.cachedMeks,
+          hasTimestamp: !!parsed.timestamp,
+          isLikelyCache: !!parsed.cachedMeks && !parsed.sessionId,
+        });
+
+        // Check if this is cache data (has cachedMeks but no sessionId)
+        if (parsed.cachedMeks && !parsed.sessionId) {
+          console.log('[Migration] Detected cache data, not session - skipping migration');
+          logger.log('session_migrate_skip', { reason: 'Cache data, not session' });
+          logger.complete({ migrated: false, skipped: true });
+          migrationTracker.markAttempted(true); // Mark as successful "migration" (skip)
+          // Don't clear - leave cache data for getCachedMeks()
+          return null;
+        }
+
+        session = parsed;
+
+        // Validate legacy session has required fields
+        if (!session.stakeAddress) {
+          console.error('[Migration] Legacy session missing stakeAddress - cannot migrate');
+          logger.error('session_migrate_error', new Error('Missing stakeAddress in legacy session'));
+          migrationTracker.markAttempted(false, 'Missing stakeAddress');
+          clearSession();
+          return null;
+        }
+
+        // Re-save as encrypted (use stakeAddress as walletAddress if walletAddress is missing)
         await saveSession({
-          walletAddress: session.walletAddress,
+          walletAddress: session.stakeAddress, // Always use stakeAddress
           stakeAddress: session.stakeAddress,
+          paymentAddress: session.paymentAddress,
           sessionId: session.sessionId,
           nonce: session.nonce,
           walletType: session.walletType,
@@ -125,13 +209,18 @@ export async function getSession(): Promise<WalletSession | null> {
         });
 
         logger.log('session_migrate_complete', {
-          walletAddress: session.walletAddress.slice(0, 12) + '...',
+          walletAddress: session.stakeAddress.slice(0, 12) + '...',
           platform: session.platform
         });
         logger.complete({ migrated: true });
 
         migrationTracker.markAttempted(true);
       } catch (migrateError) {
+        console.error('[Migration] Failed to migrate session:', migrateError);
+        console.error('[Migration] Error details:', {
+          message: (migrateError as Error).message,
+          stack: (migrateError as Error).stack,
+        });
         logger.error('session_migrate_error', migrateError);
         migrationTracker.markAttempted(false, (migrateError as Error).message);
         clearSession();
@@ -151,19 +240,37 @@ export async function getSession(): Promise<WalletSession | null> {
       return null;
     }
 
-    // Validate session structure
+    // Validate session structure (nonce is optional - may not exist if using existing backend session)
+    console.log('[TRACE-GET-5] Validating session structure:', {
+      hasWalletAddress: !!session.walletAddress,
+      hasStakeAddress: !!session.stakeAddress,
+      hasSessionId: !!session.sessionId,
+      hasNonce: !!session.nonce,
+      hasWalletType: !!session.walletType,
+      walletAddress: session.walletAddress?.slice(0, 12) + '...',
+      stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+      timestamp: new Date().toISOString()
+    });
+
+    // CRITICAL: Only require fields that MUST exist (nonce is optional for existing backend sessions)
     if (
       !session.walletAddress ||
       !session.stakeAddress ||
       !session.sessionId ||
-      !session.nonce ||
       !session.walletType
     ) {
-      console.warn('[Session] Invalid session structure, clearing');
+      console.warn('[TRACE-GET-6] Invalid session structure detected - clearing');
+      console.warn('[TRACE-GET-6-DETAIL] Missing fields:', {
+        walletAddress: !session.walletAddress,
+        stakeAddress: !session.stakeAddress,
+        sessionId: !session.sessionId,
+        walletType: !session.walletType
+      });
       clearSession();
       return null;
     }
 
+    console.log('[TRACE-GET-7] Session valid, returning');
     console.log('[Session] Retrieved valid session:', {
       walletAddress: session.walletAddress.slice(0, 12) + '...',
       expiresAt: new Date(session.expiresAt).toISOString(),

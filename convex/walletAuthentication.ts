@@ -663,3 +663,30 @@ export const cleanupExpiredLockouts = mutation({
     };
   }
 });
+
+// Reset rate limit for a specific wallet (admin/debug use)
+export const resetWalletRateLimit = mutation({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const records = await ctx.db
+      .query("walletRateLimits")
+      .filter(q => q.eq(q.field("stakeAddress"), args.stakeAddress))
+      .collect();
+
+    let resetCount = 0;
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+      resetCount++;
+    }
+
+    console.log(`[Admin] Reset ${resetCount} rate limit records for wallet ${args.stakeAddress}`);
+
+    return {
+      success: true,
+      resetCount,
+      stakeAddress: args.stakeAddress,
+    };
+  }
+});

@@ -9,6 +9,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        'breakpoint-3col': '875px', // Custom breakpoint for 3-column grid (right before Mek number wraps)
+        'breakpoint-4col': '1100px', // Custom breakpoint for 4-column grid (stay at 3 cols a bit longer)
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -45,7 +49,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/container-queries'),
+  ],
 };
 
 export default config;

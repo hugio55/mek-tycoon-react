@@ -537,9 +537,9 @@ export default function ProfilePage() {
                     {/* Mek Grid - Tighter spacing */}
                     <div className="grid grid-cols-5 gap-1">
                       {paginatedMeks.map(mek => (
-                        <div
+                        <button
                           key={mek.id}
-                          className="relative group cursor-pointer"
+                          className="relative group cursor-pointer w-full"
                           onClick={() => window.location.href = `/mek/${mek.id}`}
                         >
                           {/* Mek Frame */}
@@ -564,7 +564,7 @@ export default function ProfilePage() {
                               <div className="absolute left-1/2 -translate-x-1/2 -top-[7px] w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-black"></div>
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                     
