@@ -21,17 +21,30 @@ export interface AnimatedMekValues {
   bonusRate: number;
 }
 
-export const LEVEL_COLORS = [
-  '#CCCCCC',
-  '#80FF80',
-  '#00FF00',
-  '#32CD32',
-  '#4169E1',
-  '#9370DB',
-  '#6A0DAD',
-  '#FFA500',
-  '#FF6B00',
-  '#FF0000',
+// Default colors for levels 1-10 (fallback only)
+export const DEFAULT_LEVEL_COLORS = [
+  '#4ade80', // Level 1 - Green
+  '#22c55e', // Level 2 - Darker Green
+  '#10b981', // Level 3 - Emerald
+  '#14b8a6', // Level 4 - Teal
+  '#06b6d4', // Level 5 - Cyan
+  '#0ea5e9', // Level 6 - Sky Blue
+  '#3b82f6', // Level 7 - Blue
+  '#6366f1', // Level 8 - Indigo
+  '#8b5cf6', // Level 9 - Violet
+  '#a855f7', // Level 10 - Purple
 ];
+
+// NOTE: Level colors are now stored in Convex database
+// MekCard components should use useQuery(api.levelColors.getLevelColors)
+// This function is kept for SSR/fallback compatibility only
+export const getLevelColors = (): string[] => {
+  // This function now only returns defaults - components should use Convex query
+  return DEFAULT_LEVEL_COLORS;
+};
+
+// Deprecated: Don't use this directly
+// Kept for backwards compatibility
+export const LEVEL_COLORS = DEFAULT_LEVEL_COLORS;
 
 export const UPGRADE_COSTS = [0, 0, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];

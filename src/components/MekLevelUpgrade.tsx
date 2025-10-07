@@ -35,14 +35,21 @@ function calculateUpgradeCost(currentLevel: number): number {
   return UPGRADE_COSTS[currentLevel + 1];
 }
 
-// Progressive boost calculation matching backend formula
+// Accelerating percentage boost calculation matching backend formula
 function calculateLevelBoostPercent(level: number): number {
-  if (level <= 1) return 0;
-  let percent = 0;
-  for (let i = 2; i <= level; i++) {
-    percent += 5 + (i - 1) * 5; // 10, 15, 20, 25, 30, 35, 40, 45, 50
-  }
-  return percent;
+  const percentages = [
+    0,      // Level 1
+    25,     // Level 2
+    60,     // Level 3
+    110,    // Level 4
+    180,    // Level 5
+    270,    // Level 6
+    400,    // Level 7
+    600,    // Level 8
+    900,    // Level 9
+    1400,   // Level 10
+  ];
+  return percentages[level - 1] || 0;
 }
 
 export default function MekLevelUpgrade({
@@ -200,6 +207,11 @@ export default function MekLevelUpgrade({
               <div className={`font-bold ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
                 {upgradeCost.toLocaleString()} Gold
               </div>
+            </div>
+            <div className="mt-1 text-center">
+              <span className="text-green-400 text-sm font-bold">
+                +{nextBoostPercent}% Boost
+              </span>
             </div>
           </div>
 

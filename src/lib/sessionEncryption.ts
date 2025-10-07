@@ -131,6 +131,13 @@ export async function encryptSession(session: any): Promise<string> {
     throw new Error('[Encryption] Cannot encrypt on server side');
   }
 
+  console.log('[TRACE-ENCRYPT-1] encryptSession called with:', {
+    walletAddress: session.walletAddress?.slice(0, 12) + '...',
+    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+    walletAddressIsUndefined: session.walletAddress === undefined,
+    timestamp: new Date().toISOString()
+  });
+
   const logger = new SecurityStateLogger('SessionEncrypt');
 
   try {
@@ -149,6 +156,13 @@ export async function encryptSession(session: any): Promise<string> {
     // Convert session to JSON and encode
     const encoder = new TextEncoder();
     const sessionJson = JSON.stringify(session);
+    console.log('[TRACE-ENCRYPT-2] Session stringified, checking content');
+    const sessionDataCheck = JSON.parse(sessionJson); // Verify it can be parsed
+    console.log('[TRACE-ENCRYPT-3] Parsed check:', {
+      walletAddress: sessionDataCheck.walletAddress?.slice(0, 12) + '...',
+      walletAddressIsUndefined: sessionDataCheck.walletAddress === undefined,
+      timestamp: new Date().toISOString()
+    });
     const sessionData = encoder.encode(sessionJson);
 
     // Encrypt data
@@ -258,7 +272,15 @@ export async function decryptSession(encryptedString: string): Promise<any> {
     // Convert decrypted buffer to JSON
     const decoder = new TextDecoder();
     const sessionJson = decoder.decode(decryptedBuffer);
+    console.log('[TRACE-DECRYPT-1] Decrypted JSON string (first 200 chars):', sessionJson.substring(0, 200));
+
     const session = JSON.parse(sessionJson);
+    console.log('[TRACE-DECRYPT-2] Parsed session object:', {
+      walletAddress: session.walletAddress?.slice(0, 12) + '...',
+      stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+      walletAddressIsUndefined: session.walletAddress === undefined,
+      timestamp: new Date().toISOString()
+    });
 
     logger.log('session_decrypt_complete', {
       deviceId: encryptedData.deviceId.substring(0, 16) + '...',

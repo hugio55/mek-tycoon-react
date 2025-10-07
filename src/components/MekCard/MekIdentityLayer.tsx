@@ -1,20 +1,33 @@
 import React from 'react';
-import { MekAsset, LEVEL_COLORS } from './types';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { MekAsset, DEFAULT_LEVEL_COLORS } from './types';
 
 interface MekIdentityLayerProps {
   mek: MekAsset;
 }
 
-export const MekIdentityLayer = React.memo(({ mek }: MekIdentityLayerProps) => {
+export const MekIdentityLayer = ({ mek }: MekIdentityLayerProps) => {
   const level = mek.currentLevel || 1;
-  const borderColor = `${LEVEL_COLORS[level - 1] || '#FFFFFF'}4D`;
-  const textColor = LEVEL_COLORS[level - 1] || '#FFFFFF';
+
+  // Load level colors from Convex database
+  const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
+  const levelColors = levelColorsFromDb || DEFAULT_LEVEL_COLORS;
+
+  const borderColor = `${levelColors[level - 1] || '#FFFFFF'}4D`;
+  const textColor = levelColors[level - 1] || '#FFFFFF';
 
   return (
     <div className="relative group">
       <div
         className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border rounded-lg p-2 sm:p-2"
-        style={{ borderColor }}
+        style={{
+          borderColor,
+          backgroundImage: `
+            repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(255, 255, 255, 0.015) 8px, rgba(255, 255, 255, 0.015) 9px),
+            repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255, 255, 255, 0.015) 8px, rgba(255, 255, 255, 0.015) 9px)
+          `,
+        }}
       >
         <div className="flex items-center justify-between">
           <div>
@@ -56,11 +69,4 @@ export const MekIdentityLayer = React.memo(({ mek }: MekIdentityLayerProps) => {
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  return prevProps.mek.assetId === nextProps.mek.assetId &&
-         prevProps.mek.currentLevel === nextProps.mek.currentLevel &&
-         prevProps.mek.mekNumber === nextProps.mek.mekNumber &&
-         prevProps.mek.rarityRank === nextProps.mek.rarityRank;
-});
-
-MekIdentityLayer.displayName = 'MekIdentityLayer';
+};

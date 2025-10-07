@@ -153,29 +153,43 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
   // State for real-time cumulative gold
   const [realtimeCumulativeGold, setRealtimeCumulativeGold] = useState(0);
 
-  // Update cumulative gold in real-time
+  // Track the base values separately to avoid resetting the animation
+  const [baseGold, setBaseGold] = useState(0);
+  const [goldPerHour, setGoldPerHour] = useState(0);
+
+  // Update base values only when they actually change from the database
   useEffect(() => {
     if (!userStats) return;
 
-    // Set initial value from query
-    const initialValue = userStats.totalCumulativeGold || 0;
-    setRealtimeCumulativeGold(initialValue);
-
-    // If gold per hour is greater than 0, start real-time updates
-    if (userStats.goldPerHour > 0) {
-      // Track the start time for accurate calculation
-      const startTime = Date.now();
-      const startValue = initialValue;
-
-      const interval = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000; // seconds elapsed
-        const goldEarned = (userStats.goldPerHour / 3600) * elapsed; // gold earned since start
-        setRealtimeCumulativeGold(startValue + goldEarned);
-      }, 100); // Update every 100ms for smooth counting
-
-      return () => clearInterval(interval);
+    // Update base gold if it changed significantly (more than what we'd accumulate in 1 second)
+    const tolerance = (goldPerHour / 3600) * 2; // 2 seconds worth of accumulation
+    if (Math.abs((userStats.totalCumulativeGold || 0) - baseGold) > tolerance) {
+      setBaseGold(userStats.totalCumulativeGold || 0);
     }
-  }, [userStats]); // Re-run when userStats changes
+
+    // Update rate if it changed
+    if (userStats.goldPerHour !== goldPerHour) {
+      setGoldPerHour(userStats.goldPerHour);
+    }
+  }, [userStats, baseGold, goldPerHour]);
+
+  // Real-time gold accumulation (runs independently of database updates)
+  useEffect(() => {
+    setRealtimeCumulativeGold(baseGold);
+
+    if (goldPerHour <= 0) return;
+
+    const startTime = Date.now();
+    const startValue = baseGold;
+
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000; // seconds elapsed
+      const goldEarned = (goldPerHour / 3600) * elapsed; // gold earned since start
+      setRealtimeCumulativeGold(startValue + goldEarned);
+    }, 100); // Update every 100ms for smooth counting
+
+    return () => clearInterval(interval);
+  }, [baseGold, goldPerHour]); // Only reset when base values change
 
   const toggleCategory = (categoryId: string) => {
     playClickSound();

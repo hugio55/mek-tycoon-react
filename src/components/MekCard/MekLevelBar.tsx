@@ -1,14 +1,32 @@
 import React from 'react';
-import { MekAsset, LEVEL_COLORS, AnimatedMekValues } from './types';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { MekAsset, DEFAULT_LEVEL_COLORS, AnimatedMekValues } from './types';
 
 interface MekLevelBarProps {
   mek: MekAsset;
   animatedLevel?: number;
 }
 
-export const MekLevelBar = React.memo(({ mek, animatedLevel }: MekLevelBarProps) => {
+export const MekLevelBar = ({ mek, animatedLevel }: MekLevelBarProps) => {
   const currentLevel = animatedLevel || mek.currentLevel || 1;
-  const currentLevelColor = LEVEL_COLORS[currentLevel - 1] || '#FFFFFF';
+
+  // Load level colors from Convex database
+  const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
+  const levelColors = levelColorsFromDb || DEFAULT_LEVEL_COLORS;
+
+  // Diagnostic logging
+  React.useEffect(() => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] [MekLevelBar] Query result:`, {
+      fromDb: levelColorsFromDb ? 'YES' : 'NO',
+      level10Color: levelColors[9],
+      usingDefaults: !levelColorsFromDb,
+      mekNumber: mek.mekNumber
+    });
+  }, [levelColorsFromDb, levelColors, mek.mekNumber]);
+
+  const currentLevelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
   return (
     <div className="relative">
@@ -24,13 +42,16 @@ export const MekLevelBar = React.memo(({ mek, animatedLevel }: MekLevelBarProps)
                 className="flex-1 transition-all duration-500 relative overflow-hidden rounded-sm min-w-[6px] touch-manipulation"
                 style={{
                   backgroundColor: isActive ? currentLevelColor : '#1a1a1a',
+                  backgroundImage: isActive
+                    ? 'none'
+                    : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
                   border: isActive
                     ? `1px solid ${currentLevelColor}`
-                    : '1px solid #333',
+                    : '1px solid #666',
                   boxShadow: isActive
                     ? `0 0 12px ${currentLevelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
-                    : 'inset 0 2px 4px rgba(0,0,0,0.8)',
-                  opacity: isActive ? 1 : 0.3,
+                    : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
+                  opacity: isActive ? 1 : 0.5,
                 }}
               >
                 {isActive && (
@@ -58,10 +79,4 @@ export const MekLevelBar = React.memo(({ mek, animatedLevel }: MekLevelBarProps)
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  return prevProps.mek.assetId === nextProps.mek.assetId &&
-         prevProps.animatedLevel === nextProps.animatedLevel &&
-         prevProps.mek.currentLevel === nextProps.mek.currentLevel;
-});
-
-MekLevelBar.displayName = 'MekLevelBar';
+};

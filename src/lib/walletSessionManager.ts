@@ -23,12 +23,28 @@ export interface SessionData {
  * @returns Promise that resolves when encryption is complete
  */
 export async function saveWalletSession(data: SessionData): Promise<void> {
+  console.log('[TRACE-SAVE-1] saveWalletSession called with data:', {
+    walletName: data.walletName,
+    stakeAddress: data.stakeAddress?.slice(0, 12) + '...',
+    paymentAddress: data.paymentAddress?.slice(0, 12) + '...',
+    hasNonce: !!data.nonce,
+    hasSessionId: !!data.sessionId,
+    timestamp: new Date().toISOString()
+  });
+
   const platform = detectPlatform();
   const deviceId = generateDeviceId();
 
+  // CRITICAL: Validate required fields before creating session
+  if (!data.stakeAddress) {
+    throw new Error('[Session Manager] Cannot save session: stakeAddress is required');
+  }
+
   const session: Omit<WalletSession, 'createdAt' | 'expiresAt'> = {
-    walletAddress: data.paymentAddress || data.stakeAddress,
+    // Always use stake address as primary identifier (payment address can be empty)
+    walletAddress: data.stakeAddress,
     stakeAddress: data.stakeAddress,
+    paymentAddress: data.paymentAddress, // Store separately for blockchain verification
     sessionId: data.sessionId,
     nonce: data.nonce,
     walletType: data.walletName.toLowerCase(),
@@ -37,23 +53,32 @@ export async function saveWalletSession(data: SessionData): Promise<void> {
     deviceId,
   };
 
+  console.log('[TRACE-SAVE-2] Session object constructed:', {
+    walletAddress: session.walletAddress?.slice(0, 12) + '...',
+    stakeAddress: session.stakeAddress?.slice(0, 12) + '...',
+    walletAddressIsUndefined: session.walletAddress === undefined,
+    stakeAddressIsUndefined: session.stakeAddress === undefined,
+    timestamp: new Date().toISOString()
+  });
+
   // Save encrypted session (this is now async due to encryption)
   await saveSession(session);
 
-  // Also save Meks cache separately for backwards compatibility
+  // Save Meks cache separately (using different key to avoid overwriting encrypted session)
   if (data.cachedMeks && data.cachedMeks.length > 0) {
     try {
-      const legacyData = {
+      const cacheData = {
         walletName: data.walletName,
         stakeAddress: data.stakeAddress,
         paymentAddress: data.paymentAddress,
         timestamp: Date.now(),
         cachedMeks: data.cachedMeks,
       };
-      localStorage.setItem('mek_wallet_session', JSON.stringify(legacyData));
-      console.log('[Session Manager] Saved legacy session format with', data.cachedMeks.length, 'cached Meks');
+      // CRITICAL: Use separate key to avoid race condition with encrypted session
+      localStorage.setItem('mek_cached_meks', JSON.stringify(cacheData));
+      console.log('[Session Manager] Saved Meks cache with', data.cachedMeks.length, 'Meks');
     } catch (error) {
-      console.error('[Session Manager] Failed to save legacy format:', error);
+      console.error('[Session Manager] Failed to save Meks cache:', error);
     }
   }
 }
@@ -93,24 +118,24 @@ export async function restoreWalletSession(): Promise<WalletSession | null> {
 export function clearWalletSession(): void {
   clearSession();
 
-  // Also clear legacy format and additional wallet keys
+  // Also clear cache and additional wallet keys
   try {
-    localStorage.removeItem('mek_wallet_session');
+    localStorage.removeItem('mek_cached_meks'); // New cache key
+    localStorage.removeItem('mek_wallet_session'); // Legacy key (may still exist)
     localStorage.removeItem('goldMiningWallet');
     localStorage.removeItem('goldMiningWalletType');
     localStorage.removeItem('walletAddress'); // Clear payment address
     localStorage.removeItem('stakeAddress'); // Clear stake address
     localStorage.removeItem('paymentAddress'); // Clear payment address (alt key)
     localStorage.removeItem('mek_migration_status'); // CRITICAL: Clear failed migration tracker
-    console.log('[Session Manager] Cleared all session data (new and legacy formats)');
+    console.log('[Session Manager] Cleared all session data and caches');
   } catch (error) {
-    console.error('[Session Manager] Error clearing legacy formats:', error);
+    console.error('[Session Manager] Error clearing session data:', error);
   }
 }
 
 /**
- * Get cached Meks from legacy session format
- * This maintains backwards compatibility while migrating to new format
+ * Get cached Meks from separate cache storage
  * IMPORTANT: Validates that cached Meks belong to the specified wallet address
  *
  * @param walletAddress - The stake address of the currently connected wallet
@@ -118,17 +143,28 @@ export function clearWalletSession(): void {
  */
 export function getCachedMeks(walletAddress?: string): any[] | null {
   try {
-    const legacyData = localStorage.getItem('mek_wallet_session');
-    if (!legacyData) return null;
+    // Try new cache key first
+    let cacheData = localStorage.getItem('mek_cached_meks');
 
-    const parsed = JSON.parse(legacyData);
+    // Fall back to legacy key for backwards compatibility
+    if (!cacheData) {
+      cacheData = localStorage.getItem('mek_wallet_session');
+      if (cacheData) {
+        console.log('[Session Manager] Found legacy cache, will migrate on next save');
+      }
+    }
+
+    if (!cacheData) return null;
+
+    const parsed = JSON.parse(cacheData);
 
     // CRITICAL: Validate cached Meks belong to current wallet
     if (walletAddress && parsed.stakeAddress !== walletAddress) {
       console.warn('[Session Manager] Cached Meks belong to different wallet - ignoring');
       console.log('[Session Manager] Cached wallet:', parsed.stakeAddress?.slice(0, 12) + '...');
       console.log('[Session Manager] Current wallet:', walletAddress?.slice(0, 12) + '...');
-      // Clear the mismatched cache
+      // Clear the mismatched caches
+      localStorage.removeItem('mek_cached_meks');
       localStorage.removeItem('mek_wallet_session');
       return null;
     }
@@ -141,19 +177,29 @@ export function getCachedMeks(walletAddress?: string): any[] | null {
 }
 
 /**
- * Update cached Meks in session
+ * Update cached Meks in separate cache storage
  */
 export function updateCachedMeks(meks: any[]): void {
   try {
-    const legacyData = localStorage.getItem('mek_wallet_session');
-    if (!legacyData) {
-      console.warn('[Session Manager] No session found to update Meks cache');
+    // Try new cache key first
+    let cacheData = localStorage.getItem('mek_cached_meks');
+
+    // Fall back to legacy key
+    if (!cacheData) {
+      cacheData = localStorage.getItem('mek_wallet_session');
+    }
+
+    if (!cacheData) {
+      console.warn('[Session Manager] No cache found to update Meks');
       return;
     }
 
-    const parsed = JSON.parse(legacyData);
+    const parsed = JSON.parse(cacheData);
     parsed.cachedMeks = meks;
-    localStorage.setItem('mek_wallet_session', JSON.stringify(parsed));
+    parsed.timestamp = Date.now();
+
+    // Save to new cache key
+    localStorage.setItem('mek_cached_meks', JSON.stringify(parsed));
     console.log('[Session Manager] Updated cached Meks:', meks.length);
   } catch (error) {
     console.error('[Session Manager] Error updating cached Meks:', error);

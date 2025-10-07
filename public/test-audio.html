@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #fab617;
+            border: none;
+            border-radius: 4px;
+            color: #000;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        .log {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #222;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #fab617; }
+    </style>
+</head>
+<body>
+    <h1>Audio System Debug Test</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Direct Audio Element</h2>
+        <button onclick="testDirectAudio()">Play with Audio Element</button>
+        <div id="log1" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: With Source Element (Current Implementation)</h2>
+        <button onclick="testWithSource()">Play with Source Element</button>
+        <div id="log2" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Audio Context API</h2>
+        <button onclick="testAudioContext()">Play with AudioContext</button>
+        <div id="log3" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Preload and Play</h2>
+        <button onclick="initPreload()">Initialize Preload</button>
+        <button onclick="playPreloaded()">Play Preloaded</button>
+        <div id="log4" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 5: Check File Properties</h2>
+        <button onclick="checkFileProperties()">Check File Info</button>
+        <div id="log5" class="log"></div>
+    </div>
+
+    <script>
+        let preloadedAudio = null;
+        let audioContext = null;
+        let audioBuffer = null;
+
+        function log(logId, message, type = 'info') {
+            const logDiv = document.getElementById(logId);
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${logId}]`, message);
+        }
+
+        function testDirectAudio() {
+            log('log1', 'Creating audio element with direct src...', 'info');
+            const audio = new Audio('/sounds/main_click.mp3');
+            audio.volume = 0.5;
+
+            audio.addEventListener('loadedmetadata', () => {
+                log('log1', `Metadata loaded - Duration: ${audio.duration}s`, 'success');
+            });
+
+            audio.addEventListener('canplay', () => {
+                log('log1', 'Audio can play', 'success');
+            });
+
+            audio.addEventListener('error', (e) => {
+                log('log1', `Error: ${e.message || 'Unknown error'}`, 'error');
+            });
+
+            log('log1', 'Attempting to play...', 'info');
+            audio.play()
+                .then(() => log('log1', 'Playback started successfully!', 'success'))
+                .catch(err => log('log1', `Play failed: ${err.message}`, 'error'));
+        }
+
+        function testWithSource() {
+            log('log2', 'Creating audio with source element...', 'info');
+            const audio = document.createElement('audio');
+            audio.volume = 0.5;
+
+            const source = document.createElement('source');
+            source.src = '/sounds/main_click.mp3';
+            source.type = 'audio/mpeg';
+            audio.appendChild(source);
+
+            audio.addEventListener('loadedmetadata', () => {
+                log('log2', `Metadata loaded - Duration: ${audio.duration}s`, 'success');
+            });
+
+            audio.addEventListener('canplay', () => {
+                log('log2', 'Audio can play', 'success');
+            });
+
+            audio.addEventListener('error', (e) => {
+                log('log2', `Error: ${audio.error?.message || 'Unknown error'}`, 'error');
+            });
+
+            audio.load();
+            log('log2', 'Audio.load() called, attempting to play...', 'info');
+
+            audio.play()
+                .then(() => log('log2', 'Playback started successfully!', 'success'))
+                .catch(err => log('log2', `Play failed: ${err.message}`, 'error'));
+        }
+
+        async function testAudioContext() {
+            log('log3', 'Creating AudioContext...', 'info');
+
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                log('log3', `AudioContext created - State: ${audioContext.state}`, 'success');
+            }
+
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                log('log3', 'AudioContext resumed', 'success');
+            }
+
+            if (!audioBuffer) {
+                log('log3', 'Fetching audio file...', 'info');
+                try {
+                    const response = await fetch('/sounds/main_click.mp3');
+                    const arrayBuffer = await response.arrayBuffer();
+                    log('log3', `File fetched - Size: ${arrayBuffer.byteLength} bytes`, 'success');
+
+                    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    log('log3', `Audio decoded - Duration: ${audioBuffer.duration}s, Channels: ${audioBuffer.numberOfChannels}, Sample Rate: ${audioBuffer.sampleRate}Hz`, 'success');
+                } catch (err) {
+                    log('log3', `Fetch/decode failed: ${err.message}`, 'error');
+                    return;
+                }
+            }
+
+            log('log3', 'Creating buffer source and playing...', 'info');
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 0.5;
+
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            source.start(0);
+            log('log3', 'Playback started with AudioContext!', 'success');
+        }
+
+        function initPreload() {
+            log('log4', 'Preloading audio...', 'info');
+            preloadedAudio = document.createElement('audio');
+            preloadedAudio.preload = 'auto';
+            preloadedAudio.volume = 0.5;
+
+            const source = document.createElement('source');
+            source.src = '/sounds/main_click.mp3';
+            source.type = 'audio/mpeg';
+            preloadedAudio.appendChild(source);
+
+            preloadedAudio.addEventListener('loadedmetadata', () => {
+                log('log4', `Preload complete - Duration: ${preloadedAudio.duration}s`, 'success');
+            });
+
+            preloadedAudio.addEventListener('canplaythrough', () => {
+                log('log4', 'Can play through without buffering', 'success');
+            });
+
+            preloadedAudio.addEventListener('error', (e) => {
+                log('log4', `Preload error: ${preloadedAudio.error?.message || 'Unknown'}`, 'error');
+            });
+
+            preloadedAudio.load();
+            log('log4', 'Preload initiated', 'info');
+        }
+
+        function playPreloaded() {
+            if (!preloadedAudio) {
+                log('log4', 'No preloaded audio! Click Initialize first', 'error');
+                return;
+            }
+
+            log('log4', `Ready state: ${preloadedAudio.readyState}, Network state: ${preloadedAudio.networkState}`, 'info');
+            log('log4', 'Attempting to play preloaded audio...', 'info');
+
+            preloadedAudio.currentTime = 0;
+            preloadedAudio.play()
+                .then(() => log('log4', 'Preloaded audio playing!', 'success'))
+                .catch(err => log('log4', `Play failed: ${err.message}`, 'error'));
+        }
+
+        async function checkFileProperties() {
+            log('log5', 'Fetching file info...', 'info');
+
+            try {
+                const response = await fetch('/sounds/main_click.mp3');
+                const contentType = response.headers.get('content-type');
+                const contentLength = response.headers.get('content-length');
+
+                log('log5', `Content-Type: ${contentType}`, 'info');
+                log('log5', `Content-Length: ${contentLength} bytes`, 'info');
+                log('log5', `Status: ${response.status} ${response.statusText}`, contentType?.includes('audio') ? 'success' : 'error');
+
+                // Try to read first bytes to check if it's valid MP3
+                const arrayBuffer = await response.arrayBuffer();
+                const bytes = new Uint8Array(arrayBuffer);
+                const header = `${bytes[0].toString(16).padStart(2, '0')} ${bytes[1].toString(16).padStart(2, '0')} ${bytes[2].toString(16).padStart(2, '0')}`;
+
+                log('log5', `First 3 bytes (hex): ${header}`, 'info');
+                log('log5', `Expected MP3 header: ff fb or ff f3`, header.startsWith('ff f') ? 'success' : 'error');
+
+                // Try to create an audio element and get duration
+                const testAudio = new Audio();
+                testAudio.src = URL.createObjectURL(new Blob([arrayBuffer], { type: 'audio/mpeg' }));
+
+                testAudio.addEventListener('loadedmetadata', () => {
+                    log('log5', `Valid audio file - Duration: ${testAudio.duration}s`, 'success');
+                });
+
+            } catch (err) {
+                log('log5', `Check failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Auto-log on page load
+        window.addEventListener('load', () => {
+            console.log('Audio test page loaded');
+            log('log5', 'Page loaded - Click buttons to test', 'info');
+        });
+    </script>
+</body>
+</html>

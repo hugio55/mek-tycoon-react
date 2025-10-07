@@ -61,12 +61,6 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
   useEffect(() => {
     if (!topMiners) return;
 
-    console.log('[LEADERBOARD SYNC] Database values:', topMiners.map(m => ({
-      wallet: m.displayWallet,
-      cumulativeGold: m.currentGold,
-      hourlyRate: m.hourlyRate
-    })));
-
     // Set gold values directly from database
     const goldMap = new Map();
     topMiners.forEach(miner => {
@@ -78,12 +72,6 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
   // Update when real-time data changes
   useEffect(() => {
     if (realtimeData) {
-      console.log('[LEADERBOARD REALTIME] Real-time update:', realtimeData.map(m => ({
-        wallet: m.walletAddress.slice(0, 8),
-        cumulativeGold: m.currentGold,
-        hourlyRate: m.hourlyRate
-      })));
-
       const goldMap = new Map();
       realtimeData.forEach(miner => {
         goldMap.set(miner.walletAddress, miner.currentGold);
@@ -101,7 +89,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
   return (
     <>
       {/* Top Corporations styled like Mek cards */}
-      <div className="w-full sm:max-w-[600px] mb-0 sm:mb-8">
+      <div className="w-full sm:max-w-[600px] mb-0">
         <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden pb-0">
           {/* Subtle grid overlay */}
           <div
@@ -145,16 +133,11 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
           </div>
 
           {/* Company slots */}
-          <div className="relative px-2 pt-2 pb-2 bg-black/80 backdrop-blur-sm">
+          <div className="relative px-2 pt-2 pb-[10px] bg-black/80 backdrop-blur-sm">
             {displayData.map((miner, index) => {
               const rank = index + 1;
               // Display database value directly (no animation)
               const displayGold = miner ? miner.currentGold : 0;
-
-              // Debug logging for rendered value
-              if (miner && index === 0) {
-                console.log(`[LEADERBOARD RENDER] Rank ${rank} (${miner.displayWallet}): ${Math.floor(displayGold)} gold`);
-              }
 
               // Rank colors
               const rankColor = rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#FFFFFF';
@@ -381,16 +364,8 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
               <div className="relative w-full max-w-3xl mb-4 sm:mb-6" style={{ maxHeight: '55vh', display: 'flex', alignItems: 'center' }}>
                 <div className="relative w-full bg-black overflow-hidden" style={{ maxHeight: '55vh' }}>
                   {(() => {
-                    console.log('[MEK LIGHTBOX] Image loading:', {
-                      mekNumber: selectedMek.mekNumber,
-                      imageUrl: selectedMek.imageUrl,
-                      sourceKey: selectedMek.sourceKey,
-                      willUseHighRes: !!selectedMek.mekNumber
-                    });
-
                     if (selectedMek.mekNumber) {
                       const highResUrl = getMekImageUrl(selectedMek.mekNumber, '1000px');
-                      console.log('[MEK LIGHTBOX] Using high-res:', highResUrl);
                       return (
                         <img
                           src={highResUrl}
@@ -400,7 +375,6 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                         />
                       );
                     } else if (selectedMek.imageUrl) {
-                      console.log('[MEK LIGHTBOX] Falling back to imageUrl:', selectedMek.imageUrl);
                       return (
                         <img
                           src={selectedMek.imageUrl}

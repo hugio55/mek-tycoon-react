@@ -47,6 +47,21 @@
   .animate-scan {
     animation: scan 2s ease-in-out infinite;
   }
+
+  /* Teal glow pulse - keeps text visible throughout */
+  @keyframes teal-glow {
+    0%, 100% {
+      text-shadow: 0 0 10px rgba(94, 234, 212, 0.9), 0 0 20px rgba(94, 234, 212, 0.6);
+    }
+    50% {
+      text-shadow: 0 0 20px rgba(94, 234, 212, 1), 0 0 30px rgba(94, 234, 212, 0.8);
+    }
+  }
+  .teal-glow-pulse {
+    color: #5eead4;
+    text-shadow: 0 0 10px rgba(94, 234, 212, 0.9), 0 0 20px rgba(94, 234, 212, 0.6);
+    animation: teal-glow 2s ease-in-out infinite;
+  }
 }
 
 /* Global overflow prevention */
