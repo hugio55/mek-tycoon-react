@@ -24,6 +24,7 @@ export default function WalletManagementAdmin() {
   const manualSetMeks = useMutation(api.fixWalletSnapshot.manualSetMekOwnership);
   const updateWalletGold = useMutation(api.adminVerificationReset.updateWalletGold);
   const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
+  const fixCumulativeGold = useMutation(api.adminVerificationReset.fixCumulativeGold);
   const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
 
@@ -92,6 +93,17 @@ export default function WalletManagementAdmin() {
       setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsMerging(false);
+    }
+  };
+
+  const handleFixCumulativeGold = async (walletAddress: string) => {
+    try {
+      const result = await fixCumulativeGold({ walletAddress });
+      setStatusMessage({ type: 'success', message: result.message });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to fix cumulative gold' });
+      setTimeout(() => setStatusMessage(null), 5000);
     }
   };
 
@@ -520,6 +532,15 @@ export default function WalletManagementAdmin() {
                           title="Manually fix MEK ownership"
                         >
                           Fix MEKs
+                        </button>
+                      )}
+                      {wallet.totalCumulativeGold < wallet.currentGold && (
+                        <button
+                          onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
+                          className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                          title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                        >
+                          🔧 Fix Cumulative
                         </button>
                       )}
                       <button
