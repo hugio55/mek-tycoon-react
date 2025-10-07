@@ -59,30 +59,58 @@ export const runNightlySnapshot = internalAction({
           // Calculate new gold rate based on current Mek ownership
           const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
 
-          // CRITICAL FIX: Look up existing gold rates from ownedMeks instead of recalculating
-          // Create a map of assetId -> existing Mek data with correct gold rates
+          // CRITICAL FIX: Query mekLevels table for ACTUAL level data (source of truth)
+          // Don't trust ownedMeks which might be stale from previous snapshot corruption
+          const allMekLevels = await ctx.db
+            .query("mekLevels")
+            .withIndex("by_wallet", (q) => q.eq("walletAddress", miner.walletAddress))
+            .collect();
+
+          const mekLevelsMap = new Map(
+            allMekLevels.map(level => [level.assetId, level])
+          );
+
+          // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
             miner.ownedMeks.map(mek => [mek.assetId, mek])
           );
 
-          // For each blockchain Mek, use existing rate if available, otherwise fetch proper rate
+          // For each blockchain Mek, use level data from mekLevels (source of truth)
           const mekDetails = [];
           let totalGoldPerHour = 0;
 
           for (const blockchainMek of walletData.meks) {
+            const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
             const existingMek = existingMeksMap.get(blockchainMek.assetId);
 
-            if (existingMek) {
-              // Mek exists in database - use its existing gold rate (includes level boosts!)
+            if (mekLevel) {
+              // Mek has level data - use it! (source of truth)
+              const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
+              const levelBoostAmount = mekLevel.currentBoostAmount || 0;
+              const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
+
               mekDetails.push({
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
-                goldPerHour: existingMek.goldPerHour, // Use existing rate (includes boosts)
+                goldPerHour: effectiveGoldPerHour,
+                rarityRank: existingMek?.rarityRank,
+                baseGoldPerHour: baseGoldPerHour,
+                currentLevel: mekLevel.currentLevel,
+                levelBoostPercent: mekLevel.currentBoostPercent || 0,
+                levelBoostAmount: levelBoostAmount,
+              });
+              totalGoldPerHour += effectiveGoldPerHour;
+            } else if (existingMek) {
+              // Fallback to ownedMeks if no mekLevel found (shouldn't happen for upgraded Meks)
+              mekDetails.push({
+                assetId: blockchainMek.assetId,
+                assetName: blockchainMek.assetName,
+                goldPerHour: existingMek.goldPerHour,
                 rarityRank: existingMek.rarityRank,
                 baseGoldPerHour: existingMek.baseGoldPerHour,
-                currentLevel: existingMek.currentLevel,
-                levelBoostPercent: existingMek.levelBoostPercent,
-                levelBoostAmount: existingMek.levelBoostAmount,
+                currentLevel: existingMek.currentLevel || 1,
+                levelBoostPercent: existingMek.levelBoostPercent || 0,
+                levelBoostAmount: existingMek.levelBoostAmount || 0,
               });
               totalGoldPerHour += existingMek.goldPerHour;
             } else {
@@ -536,30 +564,58 @@ export const runManualSnapshot = internalAction({
           // Calculate new gold rate based on current Mek ownership
           const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
 
-          // CRITICAL FIX: Look up existing gold rates from ownedMeks instead of recalculating
-          // Create a map of assetId -> existing Mek data with correct gold rates
+          // CRITICAL FIX: Query mekLevels table for ACTUAL level data (source of truth)
+          // Don't trust ownedMeks which might be stale from previous snapshot corruption
+          const allMekLevels = await ctx.db
+            .query("mekLevels")
+            .withIndex("by_wallet", (q) => q.eq("walletAddress", miner.walletAddress))
+            .collect();
+
+          const mekLevelsMap = new Map(
+            allMekLevels.map(level => [level.assetId, level])
+          );
+
+          // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
             miner.ownedMeks.map(mek => [mek.assetId, mek])
           );
 
-          // For each blockchain Mek, use existing rate if available, otherwise fetch proper rate
+          // For each blockchain Mek, use level data from mekLevels (source of truth)
           const mekDetails = [];
           let totalGoldPerHour = 0;
 
           for (const blockchainMek of walletData.meks) {
+            const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
             const existingMek = existingMeksMap.get(blockchainMek.assetId);
 
-            if (existingMek) {
-              // Mek exists in database - use its existing gold rate (includes level boosts!)
+            if (mekLevel) {
+              // Mek has level data - use it! (source of truth)
+              const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
+              const levelBoostAmount = mekLevel.currentBoostAmount || 0;
+              const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
+
               mekDetails.push({
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
-                goldPerHour: existingMek.goldPerHour, // Use existing rate (includes boosts)
+                goldPerHour: effectiveGoldPerHour,
+                rarityRank: existingMek?.rarityRank,
+                baseGoldPerHour: baseGoldPerHour,
+                currentLevel: mekLevel.currentLevel,
+                levelBoostPercent: mekLevel.currentBoostPercent || 0,
+                levelBoostAmount: levelBoostAmount,
+              });
+              totalGoldPerHour += effectiveGoldPerHour;
+            } else if (existingMek) {
+              // Fallback to ownedMeks if no mekLevel found (shouldn't happen for upgraded Meks)
+              mekDetails.push({
+                assetId: blockchainMek.assetId,
+                assetName: blockchainMek.assetName,
+                goldPerHour: existingMek.goldPerHour,
                 rarityRank: existingMek.rarityRank,
                 baseGoldPerHour: existingMek.baseGoldPerHour,
-                currentLevel: existingMek.currentLevel,
-                levelBoostPercent: existingMek.levelBoostPercent,
-                levelBoostAmount: existingMek.levelBoostAmount,
+                currentLevel: existingMek.currentLevel || 1,
+                levelBoostPercent: existingMek.levelBoostPercent || 0,
+                levelBoostAmount: existingMek.levelBoostAmount || 0,
               });
               totalGoldPerHour += existingMek.goldPerHour;
             } else {
