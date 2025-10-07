@@ -25,6 +25,7 @@ export default function WalletManagementAdmin() {
   const updateWalletGold = useMutation(api.adminVerificationReset.updateWalletGold);
   const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
   const fixCumulativeGold = useMutation(api.adminVerificationReset.fixCumulativeGold);
+  const reconstructCumulativeFromSnapshots = useMutation(api.adminVerificationReset.reconstructCumulativeFromSnapshots);
   const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
 
@@ -103,6 +104,17 @@ export default function WalletManagementAdmin() {
       setTimeout(() => setStatusMessage(null), 5000);
     } catch (error) {
       setStatusMessage({ type: 'error', message: 'Failed to fix cumulative gold' });
+      setTimeout(() => setStatusMessage(null), 5000);
+    }
+  };
+
+  const handleReconstructFromSnapshots = async (walletAddress: string) => {
+    try {
+      const result = await reconstructCumulativeFromSnapshots({ walletAddress });
+      setStatusMessage({ type: 'success', message: result.message });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to reconstruct cumulative gold from snapshots' });
       setTimeout(() => setStatusMessage(null), 5000);
     }
   };
@@ -535,13 +547,22 @@ export default function WalletManagementAdmin() {
                         </button>
                       )}
                       {wallet.totalCumulativeGold < wallet.currentGold && (
-                        <button
-                          onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
-                          className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                          title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
-                        >
-                          🔧 Fix Cumulative
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
+                            className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                            title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                          >
+                            🔧 Fix Cumulative
+                          </button>
+                          <button
+                            onClick={() => handleReconstructFromSnapshots(wallet.walletAddress)}
+                            className="px-3 py-1 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                            title="Reconstruct cumulative gold from snapshot history + time elapsed"
+                          >
+                            📸 Reconstruct from Snapshots
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleResetMekLevels(wallet.walletAddress)}

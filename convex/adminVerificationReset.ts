@@ -594,6 +594,95 @@ export const fixCumulativeGold = mutation({
   }
 });
 
+// Admin function to reconstruct cumulative gold from snapshot history
+// Uses the most recent snapshot's cumulative gold + gold earned since then
+export const reconstructCumulativeFromSnapshots = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldMiningRecord) {
+      return {
+        success: false,
+        message: "Wallet not found in goldMining table"
+      };
+    }
+
+    // Get the most recent snapshot
+    const mostRecentSnapshot = await ctx.db
+      .query("mekOwnershipHistory")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .order("desc")
+      .first();
+
+    if (!mostRecentSnapshot) {
+      return {
+        success: false,
+        message: "No snapshot history found for this wallet - cannot reconstruct"
+      };
+    }
+
+    const now = Date.now();
+    const snapshotTime = mostRecentSnapshot.snapshotTime;
+    const snapshotCumulative = mostRecentSnapshot.totalCumulativeGold || mostRecentSnapshot.cumulativeGoldEarned || 0;
+    const snapshotRate = mostRecentSnapshot.totalGoldPerHour || 0;
+    const currentRate = goldMiningRecord.totalGoldPerHour || 0;
+
+    // Calculate time elapsed since snapshot (in hours)
+    const hoursElapsed = (now - snapshotTime) / (1000 * 60 * 60);
+
+    // Use the average of snapshot rate and current rate for calculation
+    // (rate might have changed due to level ups)
+    const averageRate = (snapshotRate + currentRate) / 2;
+
+    // Calculate gold earned since snapshot
+    const goldEarnedSinceSnapshot = averageRate * hoursElapsed;
+
+    // Reconstructed cumulative = snapshot cumulative + gold earned since
+    const reconstructedCumulative = snapshotCumulative + goldEarnedSinceSnapshot;
+
+    // Current values
+    const currentAccumulated = goldMiningRecord.accumulatedGold || 0;
+    const currentCumulative = goldMiningRecord.totalCumulativeGold || 0;
+    const totalSpent = goldMiningRecord.totalGoldSpentOnUpgrades || 0;
+
+    // Don't apply if reconstruction would be LESS than current
+    // (current might be correct and snapshot might be old)
+    const minimumValid = Math.max(currentAccumulated + totalSpent, reconstructedCumulative);
+
+    await ctx.db.patch(goldMiningRecord._id, {
+      totalCumulativeGold: minimumValid,
+      updatedAt: now
+    });
+
+    console.log(`[Admin] RECONSTRUCTED cumulative gold for wallet ${args.walletAddress.substring(0, 20)}...`, {
+      snapshotDate: new Date(snapshotTime).toLocaleString(),
+      snapshotCumulative,
+      hoursElapsed: hoursElapsed.toFixed(2),
+      goldEarnedSince: goldEarnedSinceSnapshot.toFixed(2),
+      reconstructed: reconstructedCumulative.toFixed(2),
+      finalApplied: minimumValid.toFixed(2),
+      oldCumulative: currentCumulative
+    });
+
+    return {
+      success: true,
+      message: `Reconstructed from snapshot: ${currentCumulative.toFixed(2)} → ${minimumValid.toFixed(2)}`,
+      snapshotDate: new Date(snapshotTime).toLocaleString(),
+      snapshotCumulative,
+      hoursElapsed: hoursElapsed.toFixed(2),
+      goldEarnedSince: goldEarnedSinceSnapshot.toFixed(2),
+      oldValue: currentCumulative,
+      newValue: minimumValid
+    };
+  }
+});
+
 // Admin function to completely reset all gold values to zero
 // WARNING: This bypasses the normal gold invariant protections
 export const resetAllGoldToZero = mutation({
