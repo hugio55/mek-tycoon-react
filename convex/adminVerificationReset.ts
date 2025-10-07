@@ -531,3 +531,43 @@ export const getAllWallets = query({
     });
   }
 });
+
+// Admin function to completely reset all gold values to zero
+// WARNING: This bypasses the normal gold invariant protections
+export const resetAllGoldToZero = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldMiningRecord) {
+      return {
+        success: false,
+        message: "Wallet not found in goldMining table"
+      };
+    }
+
+    const now = Date.now();
+
+    // NUCLEAR OPTION: Reset ALL gold values to zero
+    // This is an admin override that bypasses normal protections
+    await ctx.db.patch(goldMiningRecord._id, {
+      accumulatedGold: 0,                    // Spendable gold = 0
+      totalCumulativeGold: 0,                // Cumulative gold = 0
+      totalGoldSpentOnUpgrades: 0,           // Gold spent on upgrades = 0
+      lastSnapshotTime: now,
+      updatedAt: now
+    });
+
+    console.log(`[Admin] RESET ALL GOLD TO ZERO for wallet ${args.walletAddress.substring(0, 20)}...`);
+
+    return {
+      success: true,
+      message: `All gold values reset to zero for ${args.walletAddress.substring(0, 20)}...`
+    };
+  }
+});
