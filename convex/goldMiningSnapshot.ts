@@ -268,8 +268,7 @@ export const updateMinerAfterSnapshot = internalMutation({
 
     // CRITICAL: Calculate accumulated gold properly
     // BUT ONLY IF USER IS VERIFIED!
-    // If this is the first snapshot, we need to calculate from creation time
-    // If this is a subsequent snapshot, calculate from last snapshot time
+    // Show the rate (speedometer) to everyone, but only verified users accumulate gold (car running)
     let accumulatedGold: number;
 
     // CHECK VERIFICATION STATUS BEFORE GIVING GOLD
@@ -288,19 +287,19 @@ export const updateMinerAfterSnapshot = internalMutation({
         accumulatedGold = Math.min(50000, totalGoldEarned);
       }
     } else {
-      // UNVERIFIED USER - DON'T GIVE THEM ANY GOLD
-      console.log(`[Snapshot Security] Skipping gold accumulation for unverified wallet: ${args.walletAddress}`);
+      // UNVERIFIED USER - SHOW RATE but DON'T ACCUMULATE GOLD
+      console.log(`[Snapshot Security] Skipping gold accumulation for unverified wallet: ${args.walletAddress} (rate: ${args.totalGoldPerHour})`);
       accumulatedGold = miner.accumulatedGold || 0; // Keep existing gold, don't add more
     }
 
     // Update with new Mek count and rate, saving accumulated gold
-    // ONLY give gold rate to verified users
+    // ALWAYS show the rate (speedometer) - but only verified users earn gold (car running)
     const patchData: any = {
-      totalGoldPerHour: isVerified ? args.totalGoldPerHour : 0, // ✅ ZERO rate for unverified
+      totalGoldPerHour: args.totalGoldPerHour, // ✅ SHOW rate for everyone (speedometer)
       lastSnapshotTime: now,
       snapshotMekCount: args.mekCount,
       updatedAt: now,
-      accumulatedGold,
+      accumulatedGold, // ✅ Only increases if verified (car running)
     };
 
     // Reset consecutive failures counter on successful snapshot

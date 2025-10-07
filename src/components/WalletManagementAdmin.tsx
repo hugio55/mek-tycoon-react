@@ -23,6 +23,7 @@ export default function WalletManagementAdmin() {
   const triggerSnapshot = useAction(api.goldMiningSnapshot.triggerSnapshot);
   const manualSetMeks = useMutation(api.fixWalletSnapshot.manualSetMekOwnership);
   const updateWalletGold = useMutation(api.adminVerificationReset.updateWalletGold);
+  const resetAllGoldToZero = useMutation(api.adminVerificationReset.resetAllGoldToZero);
   const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
 
@@ -91,6 +92,20 @@ export default function WalletManagementAdmin() {
       setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsMerging(false);
+    }
+  };
+
+  const handleResetAllGold = async (walletAddress: string) => {
+    if (!confirm(`⚠️ RESET ALL GOLD TO ZERO for wallet ${walletAddress.substring(0, 20)}...?`)) return;
+    if (!confirm(`Are you ABSOLUTELY SURE? This will zero out:\n- Spendable Gold\n- Cumulative Gold\n- Gold Spent on Upgrades\n\nThis cannot be undone!`)) return;
+
+    try {
+      const result = await resetAllGoldToZero({ walletAddress });
+      setStatusMessage({ type: 'success', message: result.message });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to reset gold' });
+      setTimeout(() => setStatusMessage(null), 5000);
     }
   };
 
@@ -515,6 +530,13 @@ export default function WalletManagementAdmin() {
                         Reset Levels
                       </button>
                       <button
+                        onClick={() => handleResetAllGold(wallet.walletAddress)}
+                        className="px-3 py-1 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
+                        title="Reset all gold (spendable + cumulative) to zero"
+                      >
+                        Reset All Gold
+                      </button>
+                      <button
                         onClick={() => handleDeleteWallet(wallet.walletAddress)}
                         className="px-3 py-1 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors"
                         title="Delete wallet permanently"
@@ -539,6 +561,7 @@ export default function WalletManagementAdmin() {
               <li>• <strong>Merge All Duplicates</strong>: Merges exact duplicate wallet address records in the database</li>
               <li>• <strong>Reset Verify</strong>: Marks wallet as unverified (for testing the verification flow)</li>
               <li>• <strong>Reset Levels</strong>: Resets all Mek levels to Level 1 and removes all level bonuses (useful for testing the leveling system)</li>
+              <li>• <strong>Reset All Gold</strong>: Zeros out spendable gold, cumulative gold, and gold spent on upgrades (nuclear option - bypasses normal protections)</li>
               <li>• <strong>Delete</strong>: Permanently removes wallet from the system (cannot be undone)</li>
               <li>• Verification status controls whether gold accumulates for the wallet</li>
               <li>• Duplicate records are automatically hidden in this view (only best record shown per user)</li>
