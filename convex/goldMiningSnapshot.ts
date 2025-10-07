@@ -270,6 +270,7 @@ export const updateMinerAfterSnapshot = internalMutation({
     // BUT ONLY IF USER IS VERIFIED!
     // Show the rate (speedometer) to everyone, but only verified users accumulate gold (car running)
     let accumulatedGold: number;
+    let newTotalCumulativeGold: number;
 
     // CHECK VERIFICATION STATUS BEFORE GIVING GOLD
     const isVerified = miner.isBlockchainVerified === true;
@@ -280,26 +281,70 @@ export const updateMinerAfterSnapshot = internalMutation({
         const hoursSinceLastSnapshot = (now - miner.lastSnapshotTime) / (1000 * 60 * 60);
         const goldSinceLastSnapshot = miner.totalGoldPerHour * hoursSinceLastSnapshot;
         accumulatedGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
+
+        // CRITICAL FIX: Also update cumulative gold (tracks all gold earned, even when capped)
+        const baseCumulative = miner.totalCumulativeGold || 0;
+        newTotalCumulativeGold = baseCumulative + goldSinceLastSnapshot;
       } else {
         // First snapshot - calculate ALL gold from creation
         const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
         const totalGoldEarned = miner.totalGoldPerHour * hoursSinceCreation;
         accumulatedGold = Math.min(50000, totalGoldEarned);
+
+        // Initialize cumulative gold to match accumulated (first snapshot)
+        newTotalCumulativeGold = totalGoldEarned + (miner.totalGoldSpentOnUpgrades || 0);
       }
     } else {
       // UNVERIFIED USER - SHOW RATE but DON'T ACCUMULATE GOLD
       console.log(`[Snapshot Security] Skipping gold accumulation for unverified wallet: ${args.walletAddress} (rate: ${args.totalGoldPerHour})`);
       accumulatedGold = miner.accumulatedGold || 0; // Keep existing gold, don't add more
+      newTotalCumulativeGold = miner.totalCumulativeGold || 0; // Don't increase cumulative
     }
 
-    // Update with new Mek count and rate, saving accumulated gold
+    // CRITICAL FIX: Rebuild ownedMeks array with updated level boost data from snapshot
+    // This ensures the UI shows correct level boosts after snapshots run
+    const existingMeksMap = new Map(miner.ownedMeks.map(mek => [mek.assetId, mek]));
+    const updatedOwnedMeks = args.mekDetails.map(detail => {
+      const existingMek = existingMeksMap.get(detail.assetId);
+
+      if (existingMek) {
+        // Merge existing Mek data with updated level boost data from snapshot
+        return {
+          ...existingMek, // Preserve all existing fields (policyId, imageUrl, variations, etc.)
+          goldPerHour: detail.goldPerHour, // Update total rate
+          baseGoldPerHour: detail.baseGoldPerHour, // Update base rate
+          currentLevel: detail.currentLevel, // Update level
+          levelBoostPercent: detail.levelBoostPercent, // Update boost %
+          levelBoostAmount: detail.levelBoostAmount, // Update boost amount
+          effectiveGoldPerHour: (detail.baseGoldPerHour || detail.goldPerHour) + (detail.levelBoostAmount || 0),
+        };
+      } else {
+        // New Mek (not in existing ownedMeks) - use snapshot data with defaults for missing fields
+        return {
+          assetId: detail.assetId,
+          policyId: "", // Will be filled by next full sync
+          assetName: detail.assetName,
+          goldPerHour: detail.goldPerHour,
+          rarityRank: detail.rarityRank,
+          baseGoldPerHour: detail.baseGoldPerHour || detail.goldPerHour,
+          currentLevel: detail.currentLevel || 1,
+          levelBoostPercent: detail.levelBoostPercent || 0,
+          levelBoostAmount: detail.levelBoostAmount || 0,
+          effectiveGoldPerHour: (detail.baseGoldPerHour || detail.goldPerHour) + (detail.levelBoostAmount || 0),
+        };
+      }
+    });
+
+    // Update with new Mek count and rate, saving accumulated gold AND cumulative gold
     // ALWAYS show the rate (speedometer) - but only verified users earn gold (car running)
     const patchData: any = {
+      ownedMeks: updatedOwnedMeks, // ✅ CRITICAL FIX: Sync ownedMeks with snapshot data!
       totalGoldPerHour: args.totalGoldPerHour, // ✅ SHOW rate for everyone (speedometer)
       lastSnapshotTime: now,
       snapshotMekCount: args.mekCount,
       updatedAt: now,
       accumulatedGold, // ✅ Only increases if verified (car running)
+      totalCumulativeGold: newTotalCumulativeGold, // ✅ CRITICAL FIX: Update cumulative!
     };
 
     // Reset consecutive failures counter on successful snapshot
