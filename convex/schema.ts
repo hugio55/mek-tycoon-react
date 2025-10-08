@@ -2085,4 +2085,21 @@ export default defineSchema({
     .index("by_to_wallet", ["toWallet"])
     .index("by_detected", ["detectedAt"])
     .index("by_processed", ["processed"]),
+
+  // Discord Todo List (replaces file storage for persistence)
+  discordTodos: defineTable({
+    key: v.string(), // 'global' for single shared todo list
+    messageId: v.optional(v.string()), // Discord message ID
+    channelId: v.optional(v.string()), // Discord channel ID
+    tasks: v.array(v.object({
+      id: v.number(),
+      text: v.string(),
+      completed: v.boolean(),
+      createdAt: v.number(),
+    })),
+    page: v.number(), // Current page
+    mode: v.string(), // 'view', 'complete', 'uncomplete', 'delete'
+    updatedAt: v.number(), // Last update timestamp
+  })
+    .index("by_key", ["key"]),
 });
