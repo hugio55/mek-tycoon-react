@@ -210,7 +210,7 @@ function buildTodoEmbed(userData) {
   } else {
     tasks.forEach((task, idx) => {
       const taskNumber = idx + 1;
-      const status = task.completed ? '✅' : '○';
+      const status = task.completed ? '☑' : '☐';
       const strikethrough = task.completed ? '~~' : '';
 
       description += `${status} **[${taskNumber}]** ${strikethrough}${task.text}${strikethrough}\n`;
@@ -239,10 +239,24 @@ function buildTodoButtons(userData, isAdmin = false) {
 
     // Discord dropdowns support max 25 options
     const displayTasks = tasks.slice(0, 25);
+    let validOptionsCount = 0;
 
     displayTasks.forEach((task, idx) => {
       const taskNumber = idx + 1;
-      const label = `${taskNumber}. ${task.text.substring(0, 90)}`;
+
+      // Clean task text - remove newlines, tabs, and other problematic characters
+      const cleanText = task.text
+        .replace(/[\n\r\t]/g, ' ')  // Replace newlines/tabs with spaces
+        .replace(/\s+/g, ' ')        // Collapse multiple spaces
+        .trim();
+
+      // Ensure label is not empty and within Discord's limits (1-100 chars)
+      const label = `${taskNumber}. ${cleanText}`.substring(0, 100);
+
+      // Don't add option if label would be too short (just the number)
+      if (label.length <= `${taskNumber}. `.length) {
+        return; // Skip this task
+      }
 
       const option = new StringSelectMenuOptionBuilder()
         .setLabel(label)
@@ -255,10 +269,14 @@ function buildTodoButtons(userData, isAdmin = false) {
       }
 
       selectMenu.addOptions(option);
+      validOptionsCount++;
     });
 
-    const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-    rows.push(selectRow);
+    // Only add the dropdown if we have at least one valid option
+    if (validOptionsCount > 0) {
+      const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+      rows.push(selectRow);
+    }
   }
 
   // Mode buttons row
