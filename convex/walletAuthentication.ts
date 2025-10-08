@@ -1,6 +1,7 @@
 import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { generateSessionId } from "./lib/sessionUtils";
 
 // Rate Limiting Configuration
 const NONCE_RATE_LIMIT = {
@@ -326,7 +327,7 @@ export const verifySignature = action({
     signature: v.string(),
     walletName: v.string()
   },
-  handler: async (ctx, args): Promise<{success: boolean, error?: string, verified?: boolean, expiresAt?: number}> => {
+  handler: async (ctx, args): Promise<{success: boolean, error?: string, verified?: boolean, expiresAt?: number, sessionId?: string}> => {
     try {
       // Check rate limit for signature verification
       const rateLimitCheck = await ctx.runMutation(api.walletAuthentication.checkSignatureRateLimit, {
@@ -411,7 +412,7 @@ export const verifySignature = action({
         const sessionExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
         // Update the signature record with verified=true and new session expiration
-        await ctx.runMutation(api.walletAuthentication.updateSignatureRecord, {
+        const signatureRecord = await ctx.runMutation(api.walletAuthentication.updateSignatureRecord, {
           nonce: args.nonce,
           signature: args.signature,
           verified: true,
@@ -422,6 +423,20 @@ export const verifySignature = action({
         await ctx.runMutation(api.walletAuthentication.resetSignatureFailures, {
           stakeAddress: args.stakeAddress
         });
+
+        // Create a new session (separate from signature)
+        const sessionId = generateSessionId();
+        const sessionResult = await ctx.runMutation(api.sessionManagement.createSession, {
+          sessionId,
+          stakeAddress: args.stakeAddress,
+          walletName: args.walletName,
+          nonce: args.nonce,
+          deviceId: nonceRecord.deviceId,
+          platform: nonceRecord.platform,
+          origin: nonceRecord.origin,
+        });
+
+        console.log(`[Auth] Created session ${sessionId} for ${args.stakeAddress}, expires at ${new Date(sessionResult.expiresAt).toISOString()}`);
 
         // Log the successful connection with security metadata
         await ctx.runMutation(api.auditLogs.logWalletConnection, {
@@ -437,7 +452,8 @@ export const verifySignature = action({
         return {
           success: true,
           verified: true,
-          expiresAt: sessionExpiresAt
+          expiresAt: sessionExpiresAt,
+          sessionId: sessionId, // Return sessionId so frontend can store it
         };
       } else {
         // IMPORTANT: Even though verification failed, nonce is already consumed
@@ -523,24 +539,55 @@ export const checkAuthentication = query({
     stakeAddress: v.string()
   },
   handler: async (ctx, args) => {
-    // Find the most recent valid signature
+    const now = Date.now();
+
+    // NEW: Check sessions table first (robust method)
+    const activeSessions = await ctx.db
+      .query("walletSessions")
+      .withIndex("by_stake_and_active", q =>
+        q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
+      )
+      .filter(q =>
+        q.and(
+          q.gt(q.field("expiresAt"), now),
+          q.eq(q.field("revokedAt"), undefined)
+        )
+      )
+      .order("desc")
+      .take(1);
+
+    if (activeSessions.length > 0) {
+      const session = activeSessions[0];
+      return {
+        authenticated: true,
+        expiresAt: session.expiresAt,
+        walletName: session.walletName,
+        sessionId: session.sessionId,
+        platform: session.platform,
+      };
+    }
+
+    // FALLBACK: Check legacy signature-based sessions for backwards compatibility
+    // This allows existing logged-in users to stay logged in during migration
     const signatures = await ctx.db
       .query("walletSignatures")
       .withIndex("by_stake_address", q => q.eq("stakeAddress", args.stakeAddress))
       .filter(q =>
         q.and(
           q.eq(q.field("verified"), true),
-          q.gt(q.field("expiresAt"), Date.now())
+          q.gt(q.field("expiresAt"), now)
         )
       )
       .order("desc")
       .take(1);
 
     if (signatures.length > 0) {
+      console.log(`[Auth] Found legacy signature session for ${args.stakeAddress} - will migrate on next login`);
       return {
         authenticated: true,
         expiresAt: signatures[0].expiresAt,
-        walletName: signatures[0].walletName
+        walletName: signatures[0].walletName,
+        legacy: true, // Flag to indicate this is legacy auth
       };
     }
 
@@ -583,16 +630,18 @@ export const resetSignatureFailures = mutation({
 });
 
 // Clean up expired nonces - runs automatically on schedule
-// This is the NEW enhanced version that handles both expired and used nonces
+// UPDATED: Keeps signatures for 24 hours for audit trail (matches session duration)
 export const cleanupExpiredNonces = mutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    const oneHourAgo = now - (60 * 60 * 1000);
+    const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
 
     // Find all nonces that are either:
     // 1. Expired (expiresAt < now)
-    // 2. Used more than 1 hour ago (usedAt < oneHourAgo)
+    // 2. Used more than 24 hours ago (usedAt < twentyFourHoursAgo)
+    // NOTE: Signatures are now kept for 24 hours for audit purposes
+    // This matches the session duration and ensures we have records for active sessions
     const allNonces = await ctx.db.query("walletSignatures").collect();
 
     let expiredCount = 0;
@@ -604,7 +653,7 @@ export const cleanupExpiredNonces = mutation({
       if (nonce.expiresAt < now) {
         expiredCount++;
         shouldDelete = true;
-      } else if (nonce.usedAt && nonce.usedAt < oneHourAgo) {
+      } else if (nonce.usedAt && nonce.usedAt < twentyFourHoursAgo) {
         usedCount++;
         shouldDelete = true;
       }
@@ -616,7 +665,7 @@ export const cleanupExpiredNonces = mutation({
 
     const totalCleaned = expiredCount + usedCount;
 
-    console.log(`[Cleanup] Nonce cleanup completed: ${expiredCount} expired, ${usedCount} used (>1hr old), ${totalCleaned} total deleted`);
+    console.log(`[Cleanup] Nonce cleanup completed: ${expiredCount} expired, ${usedCount} used (>24hr old), ${totalCleaned} total deleted`);
 
     return {
       cleaned: totalCleaned,
