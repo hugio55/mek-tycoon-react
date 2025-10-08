@@ -23,8 +23,8 @@ export const getTodoData = query({
       // Return default structure if no todo exists yet
       return {
         key: GLOBAL_TODO_KEY,
-        messageId: null,
-        channelId: null,
+        messageId: undefined,
+        channelId: undefined,
         tasks: [],
         page: 1,
         mode: 'view',
@@ -50,8 +50,6 @@ export const ensureTodoExists = mutation({
     if (!existing) {
       await ctx.db.insert("discordTodos", {
         key: GLOBAL_TODO_KEY,
-        messageId: null,
-        channelId: null,
         tasks: [],
         page: 1,
         mode: 'view',
@@ -78,8 +76,6 @@ export const addTask = mutation({
     if (!todoDoc) {
       const newDocId = await ctx.db.insert("discordTodos", {
         key: GLOBAL_TODO_KEY,
-        messageId: null,
-        channelId: null,
         tasks: [],
         page: 1,
         mode: 'view',
@@ -259,8 +255,6 @@ export const setMessageInfo = mutation({
     if (!todoDoc) {
       const newDocId = await ctx.db.insert("discordTodos", {
         key: GLOBAL_TODO_KEY,
-        messageId: null,
-        channelId: null,
         tasks: [],
         page: 1,
         mode: 'view',

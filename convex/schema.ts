@@ -1900,9 +1900,29 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_timestamp", ["timestamp"]),
 
-  // Discord connections - links wallets to Discord accounts
+  // Wallet Groups - allows users to link multiple wallets into a single corporation
+  walletGroups: defineTable({
+    groupId: v.string(), // UUID for this wallet group
+    primaryWallet: v.string(), // First wallet added (cosmetic, for UI defaults)
+    createdAt: v.number(),
+  })
+    .index("by_groupId", ["groupId"])
+    .index("by_primaryWallet", ["primaryWallet"]),
+
+  // Wallet Group Memberships - tracks which wallets belong to which groups
+  walletGroupMemberships: defineTable({
+    groupId: v.string(), // Reference to walletGroups
+    walletAddress: v.string(), // Stake address
+    addedAt: v.number(),
+    nickname: v.optional(v.string()), // User-defined nickname (e.g., "Main Wallet", "Trading Wallet")
+  })
+    .index("by_wallet", ["walletAddress"]) // CRITICAL: Find group from ANY wallet
+    .index("by_group", ["groupId"]), // Get all wallets in a group
+
+  // Discord connections - links wallet GROUPS to Discord accounts
   discordConnections: defineTable({
-    walletAddress: v.string(),
+    groupId: v.optional(v.string()), // Reference to walletGroups (changed from walletAddress) - optional for backward compatibility
+    walletAddress: v.optional(v.string()), // Legacy field - kept for backward compatibility
     discordUserId: v.string(), // Discord snowflake ID
     discordUsername: v.string(), // For display
     guildId: v.string(), // Discord server ID
@@ -1911,8 +1931,8 @@ export default defineSchema({
     lastNicknameUpdate: v.optional(v.number()),
     currentEmoji: v.optional(v.string()),
   })
-    .index("by_wallet", ["walletAddress"])
-    .index("by_discord_user", ["discordUserId"])
+    .index("by_group", ["groupId", "guildId"])
+    .index("by_discord_user", ["discordUserId", "guildId"])
     .index("by_guild", ["guildId"])
     .index("by_active", ["active"]),
 
