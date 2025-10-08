@@ -43,12 +43,12 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
   // Get top miners data
   const topMiners = useQuery(api.goldLeaderboard.getTopGoldMiners, {
-    currentWallet: currentWallet,
+    guildId: "938648161810006119",
   });
 
   // Get all corporations data (for modal)
   const allCorporations = useQuery(api.goldLeaderboard.getAllCorporations, {
-    currentWallet: currentWallet,
+    guildId: "938648161810006119",
   });
 
   // Get selected wallet's Meks
@@ -97,7 +97,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
     <>
       {/* Top Corporations styled like Mek cards */}
       <div className="w-full sm:max-w-[600px] mb-0">
-        <div className="bg-black/90 backdrop-blur-xl relative pb-0">
+        <div className="bg-black/90 backdrop-blur-xl relative">
           {/* Subtle grid overlay */}
           <div
             className="absolute inset-0 opacity-5"
@@ -140,7 +140,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
           </div>
 
           {/* Company slots */}
-          <div className={`relative px-2 pt-2 bg-black/80 backdrop-blur-sm ${!showMoreButton ? 'pb-[10px]' : ''}`}>
+          <div className={`relative px-2 pt-2 bg-black/80 backdrop-blur-sm ${showMoreButton ? 'pb-[0px]' : 'pb-[10px]'}`}>
             {displayData.map((miner, index) => {
               const rank = index + 1;
               // Display database value directly (no animation)
@@ -231,10 +231,10 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
             {/* Show more text link - only on main page */}
             {showMoreButton && (
-              <div className="text-center bg-black/80 backdrop-blur-sm pb-1" style={{ marginTop: '7px' }}>
+              <div className="text-center bg-black/80 backdrop-blur-sm pt-1.5 pb-1" style={{ marginTop: '7px' }}>
                 <button
                   onClick={() => setShowAllCorporations(true)}
-                  className="text-yellow-400/70 hover:text-yellow-400 transition-colors text-xs font-mono"
+                  className="text-yellow-400/70 hover:text-yellow-400 transition-colors text-base font-mono"
                 >
                   Show more
                 </button>
@@ -279,7 +279,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
               ) : (
                 <div className="space-y-2">
                   {allCorporations.map((corp) => {
-                    const rankColor = corp.rank === 1 ? '#FFD700' : corp.rank === 2 ? '#C0C0C0' : corp.rank === 3 ? '#CD7F32' : '#FFFFFF';
+                    const rankColor = corp.rank === 1 ? '#FFD700' : corp.rank === 2 ? '#C0C0C0' : corp.rank === 3 ? '#CD7F32' : '#6B7280';
                     const rankGlow = corp.rank === 1 ? '0 0 20px rgba(255, 215, 0, 0.8)' :
                                       corp.rank === 2 ? '0 0 15px rgba(192, 192, 192, 0.6)' :
                                       corp.rank === 3 ? '0 0 10px rgba(205, 127, 50, 0.6)' : 'none';
@@ -354,7 +354,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
             {/* Header */}
             <div className="mb-6 sm:mb-8 text-center pr-12">
-              <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 tracking-wide font-['Orbitron'] mb-2" style={{ letterSpacing: '0.05em' }}>
                 {walletMeks.displayWallet}
               </h2>
               <p className="text-gray-400 font-mono text-base sm:text-lg">
@@ -363,7 +363,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
             </div>
 
             {/* Meks Grid - Larger thumbnails */}
-            <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="max-h-[70vh] overflow-y-auto custom-scrollbar pr-3">
               {walletMeks.meks.length === 0 ? (
                 <p className="text-center text-gray-400 py-12">No Meks found</p>
               ) : (
@@ -441,73 +441,53 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
       {/* Single Mek Detail View */}
       {isMounted && selectedMek && createPortal(
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-lg"
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+          style={{ willChange: 'backdrop-filter' }}
           onClick={() => setSelectedMek(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-4 sm:p-8"
+            className="relative w-full max-w-3xl bg-black/80 backdrop-blur-md border border-yellow-500/40 p-6 sm:p-8 flex flex-col max-h-[95vh]"
+            style={{ transform: 'translate3d(0,0,0)' }}
             onClick={(e) => e.stopPropagation()}
-            style={{ maxHeight: '95vh', display: 'flex', flexDirection: 'column' }}
           >
-            {/* Back button - Upper Left */}
-            <button
-              onClick={() => setSelectedMek(null)}
-              className="absolute top-2 sm:top-4 left-2 sm:left-4 px-4 py-3 sm:py-2 bg-black/60 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all font-bold text-sm uppercase tracking-wider z-10 min-h-[48px] sm:min-h-0 touch-manipulation"
-            >
-              ← Back
-            </button>
-
-            {/* Close button - Upper Right */}
+            {/* Close button */}
             <button
               onClick={() => {
                 setSelectedMek(null);
                 setSelectedWallet(null);
               }}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-yellow-500 hover:text-yellow-300 text-4xl sm:text-3xl font-bold transition-colors z-10 w-12 h-12 flex items-center justify-center touch-manipulation"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
             >
               ×
             </button>
 
-            <div className="flex flex-col items-center pt-12 sm:pt-0" style={{ minHeight: 0, flex: 1 }}>
-              {/* Large Mek Image */}
-              <div className="relative w-full max-w-3xl mb-4 sm:mb-6" style={{ maxHeight: '55vh', display: 'flex', alignItems: 'center' }}>
-                <div className="relative w-full bg-black overflow-hidden" style={{ maxHeight: '55vh' }}>
-                  {(() => {
-                    if (selectedMek.mekNumber) {
-                      const highResUrl = getMekImageUrl(selectedMek.mekNumber, '1000px');
-                      return (
-                        <img
-                          src={highResUrl}
-                          alt={selectedMek.assetName}
-                          className="w-full object-contain"
-                          style={{ maxHeight: '55vh' }}
-                        />
-                      );
-                    } else if (selectedMek.imageUrl) {
-                      return (
-                        <img
-                          src={selectedMek.imageUrl}
-                          alt={selectedMek.assetName}
-                          className="w-full object-contain"
-                          style={{ maxHeight: '55vh' }}
-                        />
-                      );
-                    } else {
-                      return (
-                        <div className="w-full flex items-center justify-center text-gray-600 font-mono" style={{ height: '200px' }}>
-                          NO IMAGE
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
+            <div className="flex flex-col items-center flex-1 min-h-0">
+              {/* Large Mek Image - Scales to fit */}
+              <div className="relative w-full flex items-center justify-center mb-4 flex-shrink">
+                {selectedMek.mekNumber ? (
+                  <img
+                    src={getMekImageUrl(selectedMek.mekNumber, '1000px')}
+                    alt={selectedMek.assetName}
+                    className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
+                  />
+                ) : selectedMek.imageUrl ? (
+                  <img
+                    src={selectedMek.imageUrl}
+                    alt={selectedMek.assetName}
+                    className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-32 flex items-center justify-center text-gray-600 font-mono">
+                    NO IMAGE
+                  </div>
+                )}
               </div>
 
-              {/* Mek Info Below */}
-              <div className="w-full max-w-3xl space-y-4">
+              {/* Mek Info Below - Flexible shrink */}
+              <div className="w-full space-y-2 sm:space-y-4 flex-shrink-0">
                 {/* Mek Name and Rank */}
                 <div className="text-center">
-                  <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-1 sm:mb-2">
                     {selectedMek.assetName}
                   </h2>
                   <p className="text-gray-400 font-mono text-base sm:text-lg">
@@ -516,54 +496,55 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
                 </div>
 
                 {/* Variations Table */}
-                {selectedMek.sourceKey && (
-                  <div className="bg-black/50">
-                    <table className="w-full">
-                      <tbody>
-                        {(() => {
-                          const variations = getVariationInfoFromFullKey(selectedMek.sourceKey!);
-                          return (
-                            <>
-                              <tr className="border-b border-gray-800">
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  HEAD
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
-                                  {variations.head.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-bold w-16" style={{ color: variations.head.color }}>
-                                  {variations.head.count > 0 ? `×${variations.head.count}` : ''}
-                                </td>
-                              </tr>
-                              <tr className="border-b border-gray-800">
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  BODY
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
-                                  {variations.body.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-bold" style={{ color: variations.body.color }}>
-                                  {variations.body.count > 0 ? `×${variations.body.count}` : ''}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  TRAIT
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
-                                  {variations.trait.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-bold" style={{ color: variations.trait.color }}>
-                                  {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
-                                </td>
-                              </tr>
-                            </>
-                          );
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                <div className="bg-black/50">
+                  <table className="w-4/5 mx-auto">
+                    <tbody>
+                      {(() => {
+                        if (!selectedMek.sourceKey) return null;
+                        const variations = getVariationInfoFromFullKey(selectedMek.sourceKey);
+
+                        return (
+                          <>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                HEAD
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
+                                {variations.head.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
+                                {variations.head.count > 0 ? `×${variations.head.count}` : ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                BODY
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
+                                {variations.body.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
+                                {variations.body.count > 0 ? `×${variations.body.count}` : ''}
+                              </td>
+                            </tr>
+                            {/* Trait Variation */}
+                            <tr>
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                TRAIT
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
+                                {variations.trait.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
+                                {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
+                              </td>
+                            </tr>
+                          </>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
