@@ -150,8 +150,8 @@ function buildTodoEmbed(userData) {
       const status = task.completed ? '☑' : '☐';
 
       if (task.completed) {
-        // Completed: non-bold number, italic + strikethrough text (appears more subdued)
-        description += `${status} [${taskNumber}] ~~_${task.text}_~~\n`;
+        // Completed: non-bold number, strikethrough + code formatting (gray monospace)
+        description += `${status} [${taskNumber}] ~~\`${task.text}\`~~\n`;
       } else {
         // Incomplete: bold number, normal text (stands out more)
         description += `${status} **[${taskNumber}]** ${task.text}\n`;
