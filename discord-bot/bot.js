@@ -854,6 +854,38 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.update({ embeds: [embed], components: buttons });
       return;
     }
+
+    if (interaction.customId === 'unlinkwallet_select') {
+      const selectedWallet = interaction.values[0];
+
+      await convex.mutation('discordIntegration:unlinkDiscordFromWallet', {
+        walletAddress: selectedWallet,
+        guildId: GUILD_ID,
+      });
+
+      await interaction.update({
+        content: `✅ Successfully unlinked wallet \`${selectedWallet.substring(0, 12)}...${selectedWallet.slice(-8)}\``,
+        components: [],
+      });
+
+      // Clean up nickname if no more wallets
+      const remainingWallets = await convex.query('discordIntegration:getUserWallets', {
+        discordUserId: interaction.user.id,
+        guildId: GUILD_ID,
+      });
+
+      if (!remainingWallets || remainingWallets.length === 0) {
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        const currentNickname = member.nickname || member.user.username;
+        const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
+
+        if (cleanNickname !== currentNickname) {
+          await member.setNickname(cleanNickname);
+        }
+      }
+
+      return;
+    }
   }
 
   // Handle button interactions
@@ -925,11 +957,13 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.deferReply({ ephemeral: true });
 
       let walletAddress = interaction.options.getString('wallet')?.trim();
+      const walletNickname = interaction.options.getString('nickname')?.trim();
       const discordUserId = interaction.user.id;
       const discordUsername = interaction.user.username;
 
       console.log('[LINKWALLET] Raw wallet input:', walletAddress);
       console.log('[LINKWALLET] Wallet length:', walletAddress?.length);
+      console.log('[LINKWALLET] Nickname:', walletNickname);
       console.log('[LINKWALLET] Discord user:', discordUserId, discordUsername);
 
       // Basic validation
@@ -959,17 +993,22 @@ client.on('interactionCreate', async (interaction) => {
       console.log('[LINKWALLET] About to call mutation with wallet:', walletAddress);
       console.log('[LINKWALLET] Wallet length before mutation:', walletAddress?.length);
 
-      await convex.mutation('discordIntegration:linkDiscordToWallet', {
+      const result = await convex.mutation('discordIntegration:linkDiscordToWallet', {
         walletAddress,
         discordUserId,
         discordUsername,
         guildId: GUILD_ID,
+        walletNickname,
       });
 
-      console.log('[LINKWALLET] Mutation completed');
+      console.log('[LINKWALLET] Mutation completed:', result);
+
+      const walletDisplay = walletNickname || `\`${walletAddress.substring(0, 20)}...\``;
+      const isPrimaryText = result.isPrimary ? ' (set as primary wallet)' : '';
+      const actionText = result.isNewWallet ? 'linked' : 'reactivated';
 
       await interaction.editReply({
-        content: `✅ Successfully linked wallet \`${walletAddress.substring(0, 20)}...\` to your Discord account!`,
+        content: `✅ Successfully ${actionText} wallet ${walletDisplay} to your Discord account${isPrimaryText}!`,
       });
 
       setTimeout(async () => {
@@ -978,45 +1017,77 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'unlinkwallet') {
-      const connection = await convex.query('discordIntegration:getDiscordConnectionByDiscordUser', {
+      const wallets = await convex.query('discordIntegration:getUserWallets', {
         discordUserId: interaction.user.id,
         guildId: GUILD_ID,
       });
 
-      if (!connection) {
+      if (!wallets || wallets.length === 0) {
         await interaction.reply({
-          content: '❌ No wallet linked to your Discord account.',
+          content: '❌ No wallets linked to your Discord account.',
           ephemeral: true,
         });
         return;
       }
 
-      await convex.mutation('discordIntegration:unlinkDiscordFromWallet', {
-        walletAddress: connection.walletAddress,
-        guildId: GUILD_ID,
-      });
+      if (wallets.length === 1) {
+        // If only one wallet, unlink it directly
+        await convex.mutation('discordIntegration:unlinkDiscordFromWallet', {
+          walletAddress: wallets[0].walletAddress,
+          guildId: GUILD_ID,
+        });
+
+        await interaction.reply({
+          content: '✅ Successfully unlinked your wallet from Discord.',
+          ephemeral: true,
+        });
+
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        const currentNickname = member.nickname || member.user.username;
+        const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
+
+        if (cleanNickname !== currentNickname) {
+          await member.setNickname(cleanNickname);
+        }
+        return;
+      }
+
+      // Multiple wallets - show dropdown
+      const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('unlinkwallet_select')
+        .setPlaceholder('Select a wallet to unlink')
+        .addOptions(
+          wallets.map(wallet => {
+            const isPrimaryLabel = wallet.isPrimary ? ' ⭐ (Primary)' : '';
+            const label = wallet.walletNickname
+              ? `${wallet.walletNickname}${isPrimaryLabel}`
+              : `${wallet.walletAddress.substring(0, 12)}...${wallet.walletAddress.slice(-8)}${isPrimaryLabel}`;
+
+            return new StringSelectMenuOptionBuilder()
+              .setLabel(label)
+              .setValue(wallet.walletAddress)
+              .setDescription(`Linked: ${new Date(wallet.linkedAt).toLocaleDateString()}`);
+          })
+        );
+
+      const row = new ActionRowBuilder().addComponents(selectMenu);
 
       await interaction.reply({
-        content: '✅ Successfully unlinked your wallet from Discord.',
+        content: `You have ${wallets.length} wallets linked. Select one to unlink:`,
+        components: [row],
         ephemeral: true,
       });
-
-      const member = await interaction.guild.members.fetch(interaction.user.id);
-      const currentNickname = member.nickname || member.user.username;
-      const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
-
-      if (cleanNickname !== currentNickname) {
-        await member.setNickname(cleanNickname);
-      }
     }
 
     if (commandName === 'mygold') {
-      const connection = await convex.query('discordIntegration:getDiscordConnectionByDiscordUser', {
+      const goldData = await convex.query('discordIntegration:getUserGoldAndEmoji', {
         discordUserId: interaction.user.id,
         guildId: GUILD_ID,
       });
 
-      if (!connection) {
+      if (goldData.walletCount === 0) {
         await interaction.reply({
           content: '❌ No wallet linked. Use `/linkwallet` to link your Cardano wallet.',
           ephemeral: true,
@@ -1024,15 +1095,15 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const goldData = await convex.query('discordIntegration:getUserGoldAndEmoji', {
-        walletAddress: connection.walletAddress,
-      });
-
       let highestEarnerText = 'None';
       if (goldData.highestEarner) {
         highestEarnerText = `**${goldData.highestEarner.assetName}** - ${goldData.highestEarner.goldPerHour.toFixed(2)} gold/hr` +
           (goldData.highestEarner.rarityRank ? ` (Rank #${goldData.highestEarner.rarityRank})` : '');
       }
+
+      const walletText = goldData.walletCount === 1
+        ? 'Use `/wallets` to view your linked wallet.'
+        : `Across ${goldData.walletCount} wallets. Use \`/wallets\` to view them.`;
 
       await interaction.reply({
         content: `💰 **Your Gold Stats**\n\n` +
@@ -1040,7 +1111,44 @@ client.on('interactionCreate', async (interaction) => {
           `**Gold per Hour:** ${goldData.goldPerHour.toFixed(2)}\n` +
           `**Tier:** ${goldData.tierName} ${goldData.emoji}\n` +
           `**Highest Earner:** ${highestEarnerText}\n\n` +
-          `Wallet: \`${connection.walletAddress.substring(0, 20)}...\``,
+          `${walletText}`,
+        ephemeral: true,
+      });
+    }
+
+    if (commandName === 'wallets') {
+      const wallets = await convex.query('discordIntegration:getUserWallets', {
+        discordUserId: interaction.user.id,
+        guildId: GUILD_ID,
+      });
+
+      if (!wallets || wallets.length === 0) {
+        await interaction.reply({
+          content: '❌ No wallets linked to your Discord account. Use `/linkwallet` to link a wallet.',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      let walletList = `📱 **Your Linked Wallets** (${wallets.length})\n\n`;
+
+      wallets.forEach((wallet, index) => {
+        const primaryBadge = wallet.isPrimary ? '⭐ **Primary** ' : '';
+        const nickname = wallet.walletNickname ? `**${wallet.walletNickname}**` : `Wallet ${index + 1}`;
+        const shortAddress = `\`${wallet.walletAddress.substring(0, 12)}...${wallet.walletAddress.slice(-8)}\``;
+        const linkedDate = new Date(wallet.linkedAt).toLocaleDateString();
+
+        walletList += `${index + 1}. ${primaryBadge}${nickname}\n`;
+        walletList += `   ${shortAddress}\n`;
+        walletList += `   Linked: ${linkedDate}\n\n`;
+      });
+
+      walletList += `\nTo manage your wallets:\n`;
+      walletList += `• Use \`/linkwallet\` to add more wallets\n`;
+      walletList += `• Use \`/unlinkwallet\` to remove a wallet`;
+
+      await interaction.reply({
+        content: walletList,
         ephemeral: true,
       });
     }
