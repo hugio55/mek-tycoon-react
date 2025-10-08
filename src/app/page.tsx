@@ -376,7 +376,7 @@ export default function MekRateLoggingPage() {
   const verifySignature = useAction(api.walletAuthentication.verifySignature);
   const checkAuth = useQuery(
     api.walletAuthentication.checkAuthentication,
-    walletAddress ? { stakeAddress: walletAddress } : "skip"
+    (walletAddress && !walletAddress.includes('demo') && walletType !== 'Demo') ? { stakeAddress: walletAddress } : "skip"
   );
   const calculateGoldRates = useQuery(api.goldMining.calculateGoldRates,
     ownedMeks.length > 0 ? {
@@ -496,8 +496,9 @@ export default function MekRateLoggingPage() {
 
   // Query to check backend authentication status
   // CRITICAL: Only check auth AFTER connection is complete to avoid interfering with connection process
+  // Skip for demo wallets
   const authStatus = useQuery(api.walletAuthentication.checkAuthentication,
-    (walletAddress && walletConnected && !isConnecting)
+    (walletAddress && walletConnected && !isConnecting && !walletAddress.includes('demo') && walletType !== 'Demo')
       ? { stakeAddress: walletAddress }
       : 'skip'
   );
@@ -763,6 +764,12 @@ export default function MekRateLoggingPage() {
       return;
     }
 
+    // Skip auth check for demo wallets
+    if (walletAddress?.includes('demo') || walletType === 'Demo') {
+      console.log('[Auth Check] Skipping auth check for demo wallet');
+      return;
+    }
+
     if (!walletConnected || !walletAddress || !checkAuth) {
       return;
     }
@@ -787,10 +794,15 @@ export default function MekRateLoggingPage() {
     } else if (checkAuth.authenticated === true) {
       console.log('[Auth Check] Session valid, expires at:', new Date(checkAuth.expiresAt || 0).toISOString());
     }
-  }, [checkAuth?.authenticated, checkAuth?.expiresAt, walletConnected, walletAddress, isAutoReconnecting]);
+  }, [checkAuth?.authenticated, checkAuth?.expiresAt, walletConnected, walletAddress, walletType, isAutoReconnecting]);
 
   // Original useEffect continues below
   useEffect(() => {
+    // Skip auth check for demo wallets
+    if (walletAddress?.includes('demo') || walletType === 'Demo') {
+      return;
+    }
+
     // Only check auth if we're connected, verified, NOT currently connecting, AND not auto-reconnecting
     if (authStatus && walletConnected && isSignatureVerified && !isConnecting && !isAutoReconnecting) {
       if (!authStatus.authenticated) {
@@ -806,7 +818,7 @@ export default function MekRateLoggingPage() {
         console.log('[Auth Status] Backend authentication valid - session persists');
       }
     }
-  }, [authStatus, walletConnected, isSignatureVerified, isConnecting]);
+  }, [authStatus, walletConnected, isSignatureVerified, isConnecting, walletAddress, walletType]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -854,26 +866,36 @@ export default function MekRateLoggingPage() {
   }, [ownedMeks, walletConnected]);
 
   // Sync level and boost data from goldMiningData and mekLevels into ownedMeks
+  // CRITICAL: This also syncs new Meks added to goldMining.ownedMeks (e.g., from Blockfrost verification)
   // Debounced to prevent excessive recalculations on rapid data changes
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks || ownedMeks.length === 0) {
+    if (!goldMiningData?.ownedMeks) {
+      return;
+    }
+
+    // CRITICAL FIX: If ownedMeks is empty BUT goldMiningData has Meks, populate from database
+    if (ownedMeks.length === 0 && goldMiningData.ownedMeks.length > 0) {
+      console.log('[Level Sync] INITIAL SYNC: Populating ownedMeks from goldMiningData:', goldMiningData.ownedMeks.length, 'Meks');
+      setOwnedMeks(goldMiningData.ownedMeks as MekAsset[]);
       return;
     }
 
     // Debounce the sync operation by 150ms to batch rapid updates
     const syncTimeout = setTimeout(() => {
       console.log('[Level Sync] Syncing level data from goldMiningData and mekLevels');
+      console.log('[Level Sync] Database has', goldMiningData.ownedMeks.length, 'Meks');
+      console.log('[Level Sync] UI state has', ownedMeks.length, 'Meks');
       console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
       console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData.totalGoldPerHour);
-      console.log('[Level Sync] Current ownedMeks rates:', ownedMeks.map(m => ({
-        assetId: m.assetId.slice(-8),
-        goldPerHour: m.goldPerHour,
-        level: m.currentLevel
-      })));
 
       // Create a map of goldMiningData meks for quick lookup
       const goldMiningMekMap = new Map(
         goldMiningData.ownedMeks.map(mek => [mek.assetId, mek])
+      );
+
+      // Create a map of existing ownedMeks for quick lookup
+      const existingMekMap = new Map(
+        ownedMeks.map(mek => [mek.assetId, mek])
       );
 
       // Create a map of mekLevels for quick lookup
@@ -881,53 +903,53 @@ export default function MekRateLoggingPage() {
         (mekLevels || []).map(level => [level.assetId, level])
       );
 
-      // Update ownedMeks with level and boost data
-      const updatedMeks = ownedMeks.map(mek => {
-        const goldMiningMek = goldMiningMekMap.get(mek.assetId);
-        const mekLevel = mekLevelMap.get(mek.assetId);
+      // CRITICAL FIX: Build full Mek list from goldMiningData, not just update existing ones
+      // This ensures new Meks added to the database appear in the UI
+      const updatedMeks = goldMiningData.ownedMeks.map(dbMek => {
+        const existingMek = existingMekMap.get(dbMek.assetId);
+        const mekLevel = mekLevelMap.get(dbMek.assetId);
 
         // Use level from mekLevels if available, otherwise default to 1
-        const currentLevel = mekLevel?.currentLevel || 1;
-        const levelBoostAmount = mekLevel?.currentBoostAmount || 0;
+        const currentLevel = mekLevel?.currentLevel || dbMek.currentLevel || 1;
+        const levelBoostAmount = mekLevel?.currentBoostAmount || dbMek.levelBoostAmount || 0;
 
         // Calculate the base rate (without boost)
-        const baseRate = goldMiningMek?.baseGoldPerHour ||
-                         goldMiningMek?.goldPerHour ||
-                         mek.goldPerHour - (mek.levelBoostAmount || 0);
+        const baseRate = dbMek.baseGoldPerHour || dbMek.goldPerHour - levelBoostAmount;
 
         // Calculate effective gold per hour (base + boost)
         const effectiveGoldPerHour = baseRate + levelBoostAmount;
 
-        if (goldMiningMek) {
-          return {
-            ...mek,
-            baseGoldPerHour: baseRate,
-            levelBoostAmount: levelBoostAmount,
-            currentLevel: currentLevel,
-            goldPerHour: effectiveGoldPerHour, // Update the main rate to include boost
-          };
-        }
+        // Merge existing UI state (like animations, selections) with database state
         return {
-          ...mek,
-          currentLevel: currentLevel,
+          ...(existingMek || {}), // Preserve any UI-only fields
+          ...dbMek, // Use database as source of truth
+          baseGoldPerHour: baseRate,
           levelBoostAmount: levelBoostAmount,
-          baseGoldPerHour: mek.goldPerHour - levelBoostAmount, // Calculate base from current rate
-          goldPerHour: mek.goldPerHour + levelBoostAmount, // Ensure boost is applied
-        };
+          currentLevel: currentLevel,
+          goldPerHour: effectiveGoldPerHour,
+        } as MekAsset;
       });
 
-      // Only update if there are actual changes
-      const hasChanges = updatedMeks.some((mek, idx) =>
-        mek.levelBoostAmount !== ownedMeks[idx].levelBoostAmount ||
-        mek.currentLevel !== ownedMeks[idx].currentLevel ||
-        mek.baseGoldPerHour !== ownedMeks[idx].baseGoldPerHour ||
-        mek.goldPerHour !== ownedMeks[idx].goldPerHour // Also check if effective rate changed
-      );
+      // Detect if there are changes (count changed OR any properties changed)
+      const hasCountChange = updatedMeks.length !== ownedMeks.length;
+      const hasPropertyChanges = !hasCountChange && updatedMeks.some((mek, idx) => {
+        const existingMek = ownedMeks[idx];
+        return (
+          mek.levelBoostAmount !== existingMek?.levelBoostAmount ||
+          mek.currentLevel !== existingMek?.currentLevel ||
+          mek.baseGoldPerHour !== existingMek?.baseGoldPerHour ||
+          mek.goldPerHour !== existingMek?.goldPerHour
+        );
+      });
 
-      if (hasChanges) {
-        console.log('[Level Sync] Found level changes, updating meks with levels:',
-          updatedMeks.map(m => ({
-            assetId: m.assetId,
+      if (hasCountChange || hasPropertyChanges) {
+        if (hasCountChange) {
+          console.log('[Level Sync] 🔄 MEK COUNT CHANGED:', ownedMeks.length, '→', updatedMeks.length);
+          console.log('[Level Sync] Added', updatedMeks.length - ownedMeks.length, 'new Meks from database');
+        }
+        console.log('[Level Sync] Found changes, updating meks:',
+          updatedMeks.slice(0, 3).map(m => ({
+            assetId: m.assetId.slice(-8),
             level: m.currentLevel,
             baseRate: m.baseGoldPerHour,
             boost: m.levelBoostAmount,
@@ -1048,8 +1070,16 @@ export default function MekRateLoggingPage() {
       return; // Skip wallet detection and auto-reconnect
     }
 
-    // Check for available wallets
+    // Check for available wallets immediately
     detectAvailableWallets();
+
+    // Re-check after delays to catch slow-loading wallet extensions
+    // Eternl often loads slower than other wallets
+    const walletDetectionRetries = [
+      setTimeout(() => detectAvailableWallets(), 500),   // 0.5s
+      setTimeout(() => detectAvailableWallets(), 1000),  // 1s
+      setTimeout(() => detectAvailableWallets(), 2000),  // 2s
+    ];
 
     // Failsafe: Always turn off auto-reconnecting after max 5 seconds
     const failsafeTimeout = setTimeout(() => {
@@ -1094,6 +1124,12 @@ export default function MekRateLoggingPage() {
         clearTimeout(failsafeTimeout);
       }
     }, 1500); // Wait for cardano object to be available
+
+    // Cleanup function
+    return () => {
+      clearTimeout(failsafeTimeout);
+      walletDetectionRetries.forEach(timeout => clearTimeout(timeout));
+    };
   }, [isDemoMode]);
 
   // DEMO MODE: Continuous gold accumulation
@@ -1234,9 +1270,16 @@ export default function MekRateLoggingPage() {
       timestamp: new Date().toISOString(),
       walletsFound: wallets.length,
       walletNames: wallets.map(w => w.name),
-      platform: isMobile ? 'mobile' : 'desktop'
+      platform: isMobile ? 'mobile' : 'desktop',
+      cardanoObject: typeof window !== 'undefined' && window.cardano ? Object.keys(window.cardano) : []
     });
-    setAvailableWallets(wallets);
+
+    // Only update if the wallet list actually changed to prevent unnecessary re-renders
+    setAvailableWallets(prevWallets => {
+      const hasChanged = prevWallets.length !== wallets.length ||
+                        prevWallets.some((w, i) => w.name !== wallets[i]?.name);
+      return hasChanged ? wallets : prevWallets;
+    });
   };
 
   // Cancel connection attempt
@@ -2295,14 +2338,16 @@ export default function MekRateLoggingPage() {
 
       let animationFrameId: number;
       let lastUpdateTime = Date.now();
+      let lastStateUpdateTime = Date.now();
 
       // Smooth gold accumulation using requestAnimationFrame for perfect 60 FPS
       const animateGold = () => {
         const now = Date.now();
         const timeSinceLastUpdate = now - lastUpdateTime;
+        const timeSinceLastStateUpdate = now - lastStateUpdateTime;
 
-        // Update gold calculation every frame for smoothest animation
-        if (goldMiningData) {
+        // Calculate gold every frame, but only update state every 100ms to prevent excessive re-renders
+        if (goldMiningData && timeSinceLastStateUpdate >= 100) {
           // Use shared calculation utility
           const calculatedGold = calculateCurrentGold({
             accumulatedGold: goldMiningData.accumulatedGold || 0,
@@ -2311,7 +2356,7 @@ export default function MekRateLoggingPage() {
             isVerified: true
           });
 
-          // Update state - requestAnimationFrame ensures smooth 60 FPS updates
+          // Update state - throttled to 10 times per second instead of 60
           setCurrentGold(calculatedGold);
 
           // Also update cumulative gold in real-time
@@ -2325,6 +2370,8 @@ export default function MekRateLoggingPage() {
           } else {
             setCumulativeGold(baseCumulativeGold);
           }
+
+          lastStateUpdateTime = now;
         }
 
         lastUpdateTime = now;
@@ -2617,6 +2664,26 @@ export default function MekRateLoggingPage() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Skip to blockchain verification button */}
+                    <div className="mt-6 flex justify-center">
+                      <button
+                        onClick={() => {
+                          console.log('[Skip Mode] Bypassing wallet connection...');
+                          // Set up demo wallet state
+                          setWalletConnected(true);
+                          setWalletAddress('stake1_demo_test_wallet_for_verification');
+                          setWalletType('Demo');
+                          setIsAutoReconnecting(false);
+                          setIsSignatureVerified(false); // Keep signature verification false to show verification panel
+                          setShowVerificationPanel(true);
+                        }}
+                        className="group relative bg-black/20 border border-gray-500/30 text-gray-400 px-6 py-2 transition-all hover:bg-gray-500/10 hover:border-gray-400/50 hover:text-gray-300 uppercase tracking-wider font-['Orbitron'] text-sm backdrop-blur-sm overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <span className="relative z-10">Skip (Demo Mode)</span>
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -2827,6 +2894,26 @@ export default function MekRateLoggingPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Skip to blockchain verification button */}
+                    <div className="mt-6 flex justify-center">
+                      <button
+                        onClick={() => {
+                          console.log('[Skip Mode] Bypassing wallet connection...');
+                          // Set up demo wallet state
+                          setWalletConnected(true);
+                          setWalletAddress('stake1_demo_test_wallet_for_verification');
+                          setWalletType('Demo');
+                          setIsAutoReconnecting(false);
+                          setIsSignatureVerified(false); // Keep signature verification false to show verification panel
+                          setShowVerificationPanel(true);
+                        }}
+                        className="group relative bg-black/20 border border-gray-500/30 text-gray-400 px-6 py-2 transition-all hover:bg-gray-500/10 hover:border-gray-400/50 hover:text-gray-300 uppercase tracking-wider font-['Orbitron'] text-sm backdrop-blur-sm overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <span className="relative z-10">Skip (Demo Mode)</span>
+                      </button>
+                    </div>
                   </>
                 )}
 
@@ -2972,7 +3059,7 @@ export default function MekRateLoggingPage() {
 
             {/* Leaderboard below connection card */}
             <div className="mt-8 flex justify-center w-full">
-              <GoldLeaderboard />
+              <GoldLeaderboard showMoreButton={true} />
             </div>
           </div>
         ) : (
@@ -3157,7 +3244,7 @@ export default function MekRateLoggingPage() {
                     className="text-yellow-400 hover:text-yellow-300 underline transition-colors"
                   >
                     here
-                  </a>.
+                  </a>. You must initiate your company by verifying on the blockchain. <span className="text-white font-bold" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)' }}>Click the initiate button below to begin.</span>
                 </span>
               </p>
             </div>
@@ -3169,7 +3256,7 @@ export default function MekRateLoggingPage() {
                   <div className="w-full max-w-xs mx-auto relative">
                     <div className="relative">
                       <HolographicButton
-                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Blockfrost Verify"}
+                        text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Initiate"}
                         onClick={() => {
                           if (!isProcessingSignature && !isVerifyingBlockchain) {
                             const verifyButton = document.querySelector('[data-verify-blockchain]');
@@ -3193,10 +3280,6 @@ export default function MekRateLoggingPage() {
                         </div>
                       )}
                     </div>
-
-                    <p className="text-gray-400 text-xs sm:text-sm text-center mt-[22px] font-mono">
-                      for an added layer of validation, please verify on Blockfrost to begin.
-                    </p>
                   </div>
                 </div>
               )}
@@ -3244,7 +3327,7 @@ export default function MekRateLoggingPage() {
                         ) : (
                           <>
                             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                            <span className="text-xs text-orange-400 font-mono uppercase">Paused</span>
+                            <span className="text-xs text-orange-400 font-mono uppercase">Waiting for initiation</span>
                           </>
                         )}
                       </div>
@@ -3350,7 +3433,7 @@ export default function MekRateLoggingPage() {
 
                     {/* Bottom section - Leaderboard */}
                     <div className="sm:p-4 flex justify-center">
-                      <GoldLeaderboard currentWallet={walletAddress || undefined} />
+                      <GoldLeaderboard currentWallet={walletAddress || undefined} showMoreButton={true} />
                     </div>
                 </div>
               </div>

@@ -69,14 +69,25 @@ export const addTask = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.runMutation(ctx.db.system.get("ensureTodoExists"));
-
-    const todoDoc = await ctx.db
+    // Ensure todo doc exists
+    let todoDoc = await ctx.db
       .query("discordTodos")
       .withIndex("by_key", q => q.eq("key", GLOBAL_TODO_KEY))
       .first();
 
-    if (!todoDoc) throw new Error("Todo doc not found");
+    if (!todoDoc) {
+      const newDocId = await ctx.db.insert("discordTodos", {
+        key: GLOBAL_TODO_KEY,
+        messageId: null,
+        channelId: null,
+        tasks: [],
+        page: 1,
+        mode: 'view',
+        updatedAt: Date.now(),
+      });
+      todoDoc = await ctx.db.get(newDocId);
+      if (!todoDoc) throw new Error("Failed to create todo doc");
+    }
 
     const newTask = {
       id: todoDoc.tasks.length > 0 ? Math.max(...todoDoc.tasks.map(t => t.id)) + 1 : 1,
@@ -239,14 +250,25 @@ export const setMessageInfo = mutation({
     channelId: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.runMutation(ctx.db.system.get("ensureTodoExists"));
-
-    const todoDoc = await ctx.db
+    // Ensure todo doc exists
+    let todoDoc = await ctx.db
       .query("discordTodos")
       .withIndex("by_key", q => q.eq("key", GLOBAL_TODO_KEY))
       .first();
 
-    if (!todoDoc) throw new Error("Todo doc not found");
+    if (!todoDoc) {
+      const newDocId = await ctx.db.insert("discordTodos", {
+        key: GLOBAL_TODO_KEY,
+        messageId: null,
+        channelId: null,
+        tasks: [],
+        page: 1,
+        mode: 'view',
+        updatedAt: Date.now(),
+      });
+      todoDoc = await ctx.db.get(newDocId);
+      if (!todoDoc) throw new Error("Failed to create todo doc");
+    }
 
     await ctx.db.patch(todoDoc._id, {
       messageId: args.messageId,
