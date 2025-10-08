@@ -31,16 +31,23 @@ interface WalletMek {
 
 interface GoldLeaderboardProps {
   currentWallet?: string;
+  showMoreButton?: boolean;
 }
 
-export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps) {
+export default function GoldLeaderboard({ currentWallet, showMoreButton = false }: GoldLeaderboardProps) {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [selectedMek, setSelectedMek] = useState<WalletMek | null>(null);
   const [realtimeGold, setRealtimeGold] = useState<Map<string, number>>(new Map());
   const [isMounted, setIsMounted] = useState(false);
+  const [showAllCorporations, setShowAllCorporations] = useState(false);
 
   // Get top miners data
   const topMiners = useQuery(api.goldLeaderboard.getTopGoldMiners, {
+    currentWallet: currentWallet,
+  });
+
+  // Get all corporations data (for modal)
+  const allCorporations = useQuery(api.goldLeaderboard.getAllCorporations, {
     currentWallet: currentWallet,
   });
 
@@ -90,7 +97,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
     <>
       {/* Top Corporations styled like Mek cards */}
       <div className="w-full sm:max-w-[600px] mb-0">
-        <div className="bg-black/90 backdrop-blur-xl relative overflow-hidden pb-0">
+        <div className="bg-black/90 backdrop-blur-xl relative pb-0">
           {/* Subtle grid overlay */}
           <div
             className="absolute inset-0 opacity-5"
@@ -133,7 +140,7 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
           </div>
 
           {/* Company slots */}
-          <div className="relative px-2 pt-2 pb-[10px] bg-black/80 backdrop-blur-sm">
+          <div className={`relative px-2 pt-2 bg-black/80 backdrop-blur-sm ${!showMoreButton ? 'pb-[10px]' : ''}`}>
             {displayData.map((miner, index) => {
               const rank = index + 1;
               // Display database value directly (no animation)
@@ -221,9 +228,111 @@ export default function GoldLeaderboard({ currentWallet }: GoldLeaderboardProps)
                 </div>
               );
             })}
+
+            {/* Show more text link - only on main page */}
+            {showMoreButton && (
+              <div className="text-center bg-black/80 backdrop-blur-sm pb-1" style={{ marginTop: '7px' }}>
+                <button
+                  onClick={() => setShowAllCorporations(true)}
+                  className="text-yellow-400/70 hover:text-yellow-400 transition-colors text-xs font-mono"
+                >
+                  Show more
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* All Corporations Modal */}
+      {isMounted && showAllCorporations && allCorporations && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+          onClick={() => setShowAllCorporations(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-black/80 backdrop-blur-xl border border-yellow-500/40 p-4 sm:p-8 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllCorporations(false)}
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-yellow-500 hover:text-yellow-300 text-4xl sm:text-3xl font-bold z-10 transition-colors w-12 h-12 flex items-center justify-center touch-manipulation"
+            >
+              ×
+            </button>
+
+            {/* Header */}
+            <div className="mb-6 sm:mb-8 text-center pr-12">
+              <h2 className="text-2xl sm:text-3xl font-black text-yellow-500 uppercase tracking-wider font-['Orbitron'] mb-2">
+                All Corporations
+              </h2>
+              <p className="text-gray-400 font-mono text-base sm:text-lg">
+                {allCorporations.length} Total
+              </p>
+            </div>
+
+            {/* Corporations List */}
+            <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
+              {allCorporations.length === 0 ? (
+                <p className="text-center text-gray-400 py-12">No corporations found</p>
+              ) : (
+                <div className="space-y-2">
+                  {allCorporations.map((corp) => {
+                    const rankColor = corp.rank === 1 ? '#FFD700' : corp.rank === 2 ? '#C0C0C0' : corp.rank === 3 ? '#CD7F32' : '#FFFFFF';
+                    const rankGlow = corp.rank === 1 ? '0 0 20px rgba(255, 215, 0, 0.8)' :
+                                      corp.rank === 2 ? '0 0 15px rgba(192, 192, 192, 0.6)' :
+                                      corp.rank === 3 ? '0 0 10px rgba(205, 127, 50, 0.6)' : 'none';
+
+                    return (
+                      <div key={corp.walletAddress} className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30">
+                        <button
+                          onClick={() => {
+                            setShowAllCorporations(false);
+                            setSelectedWallet(corp.walletAddress);
+                          }}
+                          className="w-full flex items-center justify-between p-3 sm:p-2 hover:bg-yellow-500/10 transition-colors text-left touch-manipulation"
+                        >
+                          <div className="flex items-center gap-3 sm:gap-3">
+                            {/* Rank */}
+                            <div className="text-2xl sm:text-xl font-black min-w-[60px]" style={{
+                              color: rankColor,
+                              textShadow: rankGlow,
+                              fontFamily: 'Orbitron, monospace',
+                            }}>
+                              #{corp.rank}
+                            </div>
+
+                            {/* Company info */}
+                            <div>
+                              <div className="text-base sm:text-sm font-bold text-white">
+                                {corp.displayWallet}
+                                {corp.isCurrentUser && (
+                                  <span className="ml-2 text-[10px] text-yellow-400 bg-yellow-400/20 px-1.5 py-0.5 rounded">YOU</span>
+                                )}
+                              </div>
+                              <div className="text-xs sm:text-[10px] text-gray-500">{corp.mekCount} Meks</div>
+                            </div>
+                          </div>
+
+                          {/* Gold stats */}
+                          <div className="text-right">
+                            <div className="text-base sm:text-lg font-bold text-yellow-400">
+                              {corp.currentGold.toLocaleString()}
+                            </div>
+                            <div className="text-xs sm:text-[10px] text-gray-500">{corp.hourlyRate.toFixed(0)}/hr</div>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Meks Lightbox - Clean Detail View */}
       {isMounted && selectedWallet && walletMeks && createPortal(
