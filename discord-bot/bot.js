@@ -242,16 +242,19 @@ function buildTodoButtons(userData, isAdmin = false) {
 
     displayTasks.forEach((task, idx) => {
       const taskNumber = idx + 1;
-      const status = task.completed ? '✅' : '○';
       const label = `${taskNumber}. ${task.text.substring(0, 90)}`;
 
-      selectMenu.addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel(label)
-          .setValue(taskNumber.toString())
-          .setDescription(task.completed ? 'Completed' : 'Incomplete')
-          .setEmoji(status)
-      );
+      const option = new StringSelectMenuOptionBuilder()
+        .setLabel(label)
+        .setValue(taskNumber.toString())
+        .setDescription(task.completed ? 'Completed' : 'Incomplete');
+
+      // Only add emoji for completed tasks (checkmark)
+      if (task.completed) {
+        option.setEmoji('✅');
+      }
+
+      selectMenu.addOptions(option);
     });
 
     const selectRow = new ActionRowBuilder().addComponents(selectMenu);
