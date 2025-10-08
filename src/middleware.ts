@@ -24,8 +24,8 @@ export function middleware(request: NextRequest) {
   }
 
   // For all other domains (including Vercel default and mek.overexposed.io)
-  // Only allow root (/) and mek-rate-logging page
-  if (pathname !== '/' && pathname !== '/mek-rate-logging' && !pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.startsWith('/mek-images')) {
+  // Only allow root (/), mek-rate-logging page, and corp pages
+  if (pathname !== '/' && pathname !== '/mek-rate-logging' && !pathname.startsWith('/corp/') && !pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.startsWith('/mek-images')) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
