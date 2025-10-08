@@ -25,32 +25,22 @@ const convex = new ConvexHttpClient(CONVEX_URL);
 
 const commands = [
   new SlashCommandBuilder()
-    .setName('linkwallet')
-    .setDescription('Link a Cardano wallet to your Discord account')
+    .setName('linkcorp')
+    .setDescription('Link your corporation to Discord (use any wallet address from your group)')
     .addStringOption(option =>
       option
         .setName('wallet')
-        .setDescription('Your Cardano wallet address (stake or payment)')
+        .setDescription('Any Cardano stake address from your corporation')
         .setRequired(true)
         .setMinLength(50)
         .setMaxLength(120)
-    )
-    .addStringOption(option =>
-      option
-        .setName('nickname')
-        .setDescription('Optional nickname for this wallet (e.g., "Main Wallet", "Trading Wallet")')
-        .setRequired(false)
-        .setMaxLength(50)
     ),
   new SlashCommandBuilder()
-    .setName('unlinkwallet')
-    .setDescription('Unlink one of your Cardano wallets from your Discord account'),
-  new SlashCommandBuilder()
-    .setName('wallets')
-    .setDescription('View all wallets linked to your Discord account'),
+    .setName('unlinkcorp')
+    .setDescription('Unlink your corporation from Discord'),
   new SlashCommandBuilder()
     .setName('mygold')
-    .setDescription('Check your total gold amount and tier across all linked wallets'),
+    .setDescription('Check your total gold amount and tier across all wallets in your corporation'),
   new SlashCommandBuilder()
     .setName('corp')
     .setDescription('Display your corporation stats and employees')
@@ -158,9 +148,14 @@ function buildTodoEmbed(userData) {
     tasks.forEach((task, idx) => {
       const taskNumber = idx + 1;
       const status = task.completed ? '☑' : '☐';
-      const strikethrough = task.completed ? '~~' : '';
 
-      description += `${status} **[${taskNumber}]** ${strikethrough}${task.text}${strikethrough}\n`;
+      if (task.completed) {
+        // Completed: non-bold number, italic + strikethrough text (appears more subdued)
+        description += `${status} [${taskNumber}] ~~_${task.text}_~~\n`;
+      } else {
+        // Incomplete: bold number, normal text (stands out more)
+        description += `${status} **[${taskNumber}]** ${task.text}\n`;
+      }
     });
   }
 
@@ -855,37 +850,6 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
-    if (interaction.customId === 'unlinkwallet_select') {
-      const selectedWallet = interaction.values[0];
-
-      await convex.mutation('discordIntegration:unlinkDiscordFromWallet', {
-        walletAddress: selectedWallet,
-        guildId: GUILD_ID,
-      });
-
-      await interaction.update({
-        content: `✅ Successfully unlinked wallet \`${selectedWallet.substring(0, 12)}...${selectedWallet.slice(-8)}\``,
-        components: [],
-      });
-
-      // Clean up nickname if no more wallets
-      const remainingWallets = await convex.query('discordIntegration:getUserWallets', {
-        discordUserId: interaction.user.id,
-        guildId: GUILD_ID,
-      });
-
-      if (!remainingWallets || remainingWallets.length === 0) {
-        const member = await interaction.guild.members.fetch(interaction.user.id);
-        const currentNickname = member.nickname || member.user.username;
-        const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
-
-        if (cleanNickname !== currentNickname) {
-          await member.setNickname(cleanNickname);
-        }
-      }
-
-      return;
-    }
   }
 
   // Handle button interactions
@@ -953,18 +917,16 @@ client.on('interactionCreate', async (interaction) => {
   const { commandName } = interaction;
 
   try {
-    if (commandName === 'linkwallet') {
+    if (commandName === 'linkcorp') {
       await interaction.deferReply({ ephemeral: true });
 
       let walletAddress = interaction.options.getString('wallet')?.trim();
-      const walletNickname = interaction.options.getString('nickname')?.trim();
       const discordUserId = interaction.user.id;
       const discordUsername = interaction.user.username;
 
-      console.log('[LINKWALLET] Raw wallet input:', walletAddress);
-      console.log('[LINKWALLET] Wallet length:', walletAddress?.length);
-      console.log('[LINKWALLET] Nickname:', walletNickname);
-      console.log('[LINKWALLET] Discord user:', discordUserId, discordUsername);
+      console.log('[LINKCORP] Raw wallet input:', walletAddress);
+      console.log('[LINKCORP] Wallet length:', walletAddress?.length);
+      console.log('[LINKCORP] Discord user:', discordUserId, discordUsername);
 
       // Basic validation
       if (!walletAddress || walletAddress.length < 50) {
@@ -981,7 +943,7 @@ client.on('interactionCreate', async (interaction) => {
       if (conversion.isPaymentAddress && conversion.stakeAddress) {
         walletAddress = conversion.stakeAddress;
         await interaction.editReply({
-          content: `🔄 Converted payment address to stake address: \`${walletAddress.substring(0, 20)}...\`\nLinking to your Discord account...`,
+          content: `🔄 Converted payment address to stake address: \`${walletAddress.substring(0, 20)}...\`\nLinking corporation to your Discord account...`,
         });
       } else if (conversion.isPaymentAddress && !conversion.stakeAddress) {
         await interaction.editReply({
@@ -990,25 +952,20 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      console.log('[LINKWALLET] About to call mutation with wallet:', walletAddress);
-      console.log('[LINKWALLET] Wallet length before mutation:', walletAddress?.length);
+      console.log('[LINKCORP] About to call mutation with wallet:', walletAddress);
+      console.log('[LINKCORP] Wallet length before mutation:', walletAddress?.length);
 
-      const result = await convex.mutation('discordIntegration:linkDiscordToWallet', {
+      const result = await convex.mutation('discordIntegrationGroups:linkDiscordToCorporation', {
         walletAddress,
         discordUserId,
         discordUsername,
         guildId: GUILD_ID,
-        walletNickname,
       });
 
-      console.log('[LINKWALLET] Mutation completed:', result);
-
-      const walletDisplay = walletNickname || `\`${walletAddress.substring(0, 20)}...\``;
-      const isPrimaryText = result.isPrimary ? ' (set as primary wallet)' : '';
-      const actionText = result.isNewWallet ? 'linked' : 'reactivated';
+      console.log('[LINKCORP] Mutation completed:', result);
 
       await interaction.editReply({
-        content: `✅ Successfully ${actionText} wallet ${walletDisplay} to your Discord account${isPrimaryText}!`,
+        content: `✅ Successfully linked your corporation to Discord!\n\nYour corporation includes all wallets linked on the website. Use \`/mygold\` to view your total gold across all wallets.`,
       });
 
       setTimeout(async () => {
@@ -1016,80 +973,48 @@ client.on('interactionCreate', async (interaction) => {
       }, 2000);
     }
 
-    if (commandName === 'unlinkwallet') {
-      const wallets = await convex.query('discordIntegration:getUserWallets', {
-        discordUserId: interaction.user.id,
+    if (commandName === 'unlinkcorp') {
+      await interaction.deferReply({ ephemeral: true });
+
+      const discordUserId = interaction.user.id;
+
+      console.log('[UNLINKCORP] Unlinking corporation for Discord user:', discordUserId);
+
+      const result = await convex.mutation('discordIntegrationGroups:unlinkDiscordFromCorporation', {
+        discordUserId,
         guildId: GUILD_ID,
       });
 
-      if (!wallets || wallets.length === 0) {
-        await interaction.reply({
-          content: '❌ No wallets linked to your Discord account.',
-          ephemeral: true,
+      if (!result.success) {
+        await interaction.editReply({
+          content: '❌ No corporation linked to your Discord account.',
         });
         return;
       }
 
-      if (wallets.length === 1) {
-        // If only one wallet, unlink it directly
-        await convex.mutation('discordIntegration:unlinkDiscordFromWallet', {
-          walletAddress: wallets[0].walletAddress,
-          guildId: GUILD_ID,
-        });
-
-        await interaction.reply({
-          content: '✅ Successfully unlinked your wallet from Discord.',
-          ephemeral: true,
-        });
-
-        const member = await interaction.guild.members.fetch(interaction.user.id);
-        const currentNickname = member.nickname || member.user.username;
-        const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
-
-        if (cleanNickname !== currentNickname) {
-          await member.setNickname(cleanNickname);
-        }
-        return;
-      }
-
-      // Multiple wallets - show dropdown
-      const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
-
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('unlinkwallet_select')
-        .setPlaceholder('Select a wallet to unlink')
-        .addOptions(
-          wallets.map(wallet => {
-            const isPrimaryLabel = wallet.isPrimary ? ' ⭐ (Primary)' : '';
-            const label = wallet.walletNickname
-              ? `${wallet.walletNickname}${isPrimaryLabel}`
-              : `${wallet.walletAddress.substring(0, 12)}...${wallet.walletAddress.slice(-8)}${isPrimaryLabel}`;
-
-            return new StringSelectMenuOptionBuilder()
-              .setLabel(label)
-              .setValue(wallet.walletAddress)
-              .setDescription(`Linked: ${new Date(wallet.linkedAt).toLocaleDateString()}`);
-          })
-        );
-
-      const row = new ActionRowBuilder().addComponents(selectMenu);
-
-      await interaction.reply({
-        content: `You have ${wallets.length} wallets linked. Select one to unlink:`,
-        components: [row],
-        ephemeral: true,
+      await interaction.editReply({
+        content: '✅ Successfully unlinked your corporation from Discord.\n\nAll wallets in your corporation have been unlinked.',
       });
+
+      // Remove tier emoji from nickname
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      const currentNickname = member.nickname || member.user.username;
+      const cleanNickname = currentNickname.replace(/[🥉🥈🥇💎💠👑⚡]/g, '').trim();
+
+      if (cleanNickname !== currentNickname) {
+        await member.setNickname(cleanNickname);
+      }
     }
 
     if (commandName === 'mygold') {
-      const goldData = await convex.query('discordIntegration:getUserGoldAndEmoji', {
+      const goldData = await convex.query('discordIntegrationGroups:getUserGoldAndEmoji', {
         discordUserId: interaction.user.id,
         guildId: GUILD_ID,
       });
 
       if (goldData.walletCount === 0) {
         await interaction.reply({
-          content: '❌ No wallet linked. Use `/linkwallet` to link your Cardano wallet.',
+          content: '❌ No corporation linked. Use `/linkcorp` to link your corporation to Discord.',
           ephemeral: true,
         });
         return;
@@ -1102,11 +1027,11 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const walletText = goldData.walletCount === 1
-        ? 'Use `/wallets` to view your linked wallet.'
-        : `Across ${goldData.walletCount} wallets. Use \`/wallets\` to view them.`;
+        ? 'Your corporation has 1 wallet.'
+        : `Your corporation has ${goldData.walletCount} wallets.`;
 
       await interaction.reply({
-        content: `💰 **Your Gold Stats**\n\n` +
+        content: `💰 **Your Corporation Gold Stats**\n\n` +
           `**Total Gold:** ${goldData.gold.toLocaleString()}\n` +
           `**Gold per Hour:** ${goldData.goldPerHour.toFixed(2)}\n` +
           `**Tier:** ${goldData.tierName} ${goldData.emoji}\n` +
@@ -1116,42 +1041,6 @@ client.on('interactionCreate', async (interaction) => {
       });
     }
 
-    if (commandName === 'wallets') {
-      const wallets = await convex.query('discordIntegration:getUserWallets', {
-        discordUserId: interaction.user.id,
-        guildId: GUILD_ID,
-      });
-
-      if (!wallets || wallets.length === 0) {
-        await interaction.reply({
-          content: '❌ No wallets linked to your Discord account. Use `/linkwallet` to link a wallet.',
-          ephemeral: true,
-        });
-        return;
-      }
-
-      let walletList = `📱 **Your Linked Wallets** (${wallets.length})\n\n`;
-
-      wallets.forEach((wallet, index) => {
-        const primaryBadge = wallet.isPrimary ? '⭐ **Primary** ' : '';
-        const nickname = wallet.walletNickname ? `**${wallet.walletNickname}**` : `Wallet ${index + 1}`;
-        const shortAddress = `\`${wallet.walletAddress.substring(0, 12)}...${wallet.walletAddress.slice(-8)}\``;
-        const linkedDate = new Date(wallet.linkedAt).toLocaleDateString();
-
-        walletList += `${index + 1}. ${primaryBadge}${nickname}\n`;
-        walletList += `   ${shortAddress}\n`;
-        walletList += `   Linked: ${linkedDate}\n\n`;
-      });
-
-      walletList += `\nTo manage your wallets:\n`;
-      walletList += `• Use \`/linkwallet\` to add more wallets\n`;
-      walletList += `• Use \`/unlinkwallet\` to remove a wallet`;
-
-      await interaction.reply({
-        content: walletList,
-        ephemeral: true,
-      });
-    }
 
     if (commandName === 'corp') {
       try {
@@ -1165,27 +1054,29 @@ client.on('interactionCreate', async (interaction) => {
 
         // Get the user's Discord connection
         console.log('[CORP] Querying for Discord connection...');
-        const connection = await convex.query('discordIntegration:getDiscordConnectionByDiscordUser', {
+        const connection = await convex.query('discordIntegrationGroups:getDiscordConnectionByDiscordUser', {
           discordUserId: interaction.user.id,
           guildId: GUILD_ID,
         });
         console.log('[CORP] Connection result:', connection ? 'Found' : 'Not found');
         if (connection) {
-          console.log('[CORP] Wallet address:', connection.walletAddress);
+          console.log('[CORP] Primary wallet:', connection.primaryWallet);
+          console.log('[CORP] Wallet count:', connection.wallets?.length);
         }
 
         if (!connection) {
-          console.log('[CORP] No wallet linked - returning error');
+          console.log('[CORP] No corporation linked - returning error');
           await interaction.editReply({
-            content: '❌ No wallet linked. Use `/linkwallet` to link your Cardano wallet first.',
+            content: '❌ No corporation linked. Use `/linkcorp` to link your corporation to Discord.',
           });
           return;
         }
 
-        // Fetch corporation data from our existing public query
-        console.log('[CORP] Fetching corporation data for:', connection.walletAddress);
+        // Fetch corporation data using primary wallet (or first wallet if no primary)
+        const walletToUse = connection.primaryWallet || connection.wallets[0].walletAddress;
+        console.log('[CORP] Fetching corporation data for:', walletToUse);
         const corpData = await convex.query('publicCorporation:getCorporationData', {
-          identifier: connection.walletAddress,
+          identifier: walletToUse,
         });
         console.log('[CORP] Corp data result:', corpData ? 'Found' : 'null');
         if (corpData) {
