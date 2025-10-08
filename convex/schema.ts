@@ -1492,6 +1492,55 @@ export default defineSchema({
     status: v.string(), // "completed", "failed", "triggered_manually", etc.
   }),
 
+  // Saga Executions - tracks atomic NFT sync operations with rollback capability
+  sagaExecutions: defineTable({
+    sagaId: v.string(), // Unique saga identifier
+    walletAddress: v.string(), // Which wallet this saga is for
+    steps: v.array(v.object({
+      name: v.string(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("running"),
+        v.literal("completed"),
+        v.literal("failed"),
+        v.literal("compensated")
+      ),
+      startTime: v.optional(v.number()),
+      endTime: v.optional(v.number()),
+      error: v.optional(v.string()),
+      data: v.optional(v.any()),
+    })),
+    status: v.union(
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("compensating")
+    ),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+    checksum: v.optional(v.string()), // Checksum for verification
+  })
+    .index("by_saga_id", ["sagaId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_status", ["status"]),
+
+  // Sync Checksums - tracks data integrity checksums for each wallet
+  syncChecksums: defineTable({
+    walletAddress: v.string(),
+    checksum: v.string(), // Current checksum
+    mekCount: v.number(), // Number of Meks
+    lastSyncTime: v.number(), // When last synced
+    lastVerifiedTime: v.number(), // When last verified
+    status: v.union(
+      v.literal("synced"), // In sync with blockchain
+      v.literal("desynced"), // Out of sync
+      v.literal("unknown") // Not yet verified
+    ),
+    discrepancies: v.optional(v.array(v.string())), // List of issues found
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_status", ["status"]),
+
   // Mek Ownership History - stores snapshots of which Meks were in which wallets over time
   mekOwnershipHistory: defineTable({
     walletAddress: v.string(), // Which wallet this snapshot is for
@@ -1689,6 +1738,44 @@ export default defineSchema({
     .index("by_stake_address", ["stakeAddress"])
     .index("by_timestamp", ["timestamp"])
     .index("by_created", ["createdAt"]),
+
+  // Wallet Sessions - active login sessions (separate from signatures)
+  walletSessions: defineTable({
+    // Session identification
+    sessionId: v.string(), // Unique session ID
+    stakeAddress: v.string(), // Wallet stake address
+    walletName: v.string(), // Wallet type (nami, eternl, etc.)
+
+    // Session lifecycle
+    createdAt: v.number(), // When session was created
+    expiresAt: v.number(), // When session expires (24 hours from creation)
+    lastActivityAt: v.number(), // Last activity timestamp (for session extension)
+    isActive: v.boolean(), // Is this session currently active?
+
+    // Device binding
+    deviceId: v.optional(v.string()), // Device identifier for multi-device tracking
+    platform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop
+    origin: v.optional(v.string()), // Origin URL for CORS validation
+
+    // Link to signature verification (optional - for audit trail)
+    signatureId: v.optional(v.id("walletSignatures")), // Reference to signature that created this session
+    nonce: v.optional(v.string()), // Nonce used during authentication
+
+    // Security metadata
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+
+    // Revocation support
+    revokedAt: v.optional(v.number()), // If manually revoked
+    revokeReason: v.optional(v.string()), // Why it was revoked
+  })
+    .index("by_session_id", ["sessionId"])
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_stake_and_active", ["stakeAddress", "isActive"])
+    .index("by_expires", ["expiresAt"])
+    .index("by_active", ["isActive"])
+    .index("by_device", ["deviceId"])
+    .index("by_last_activity", ["lastActivityAt"]),
 
   // Wallet signatures for secure connections
   walletSignatures: defineTable({
