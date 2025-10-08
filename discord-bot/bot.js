@@ -26,7 +26,7 @@ const convex = new ConvexHttpClient(CONVEX_URL);
 const commands = [
   new SlashCommandBuilder()
     .setName('linkwallet')
-    .setDescription('Link your Cardano wallet to your Discord account')
+    .setDescription('Link a Cardano wallet to your Discord account')
     .addStringOption(option =>
       option
         .setName('wallet')
@@ -34,13 +34,23 @@ const commands = [
         .setRequired(true)
         .setMinLength(50)
         .setMaxLength(120)
+    )
+    .addStringOption(option =>
+      option
+        .setName('nickname')
+        .setDescription('Optional nickname for this wallet (e.g., "Main Wallet", "Trading Wallet")')
+        .setRequired(false)
+        .setMaxLength(50)
     ),
   new SlashCommandBuilder()
     .setName('unlinkwallet')
-    .setDescription('Unlink your Cardano wallet from your Discord account'),
+    .setDescription('Unlink one of your Cardano wallets from your Discord account'),
+  new SlashCommandBuilder()
+    .setName('wallets')
+    .setDescription('View all wallets linked to your Discord account'),
   new SlashCommandBuilder()
     .setName('mygold')
-    .setDescription('Check your current gold amount and tier'),
+    .setDescription('Check your total gold amount and tier across all linked wallets'),
   new SlashCommandBuilder()
     .setName('corp')
     .setDescription('Display your corporation stats and employees')
@@ -772,33 +782,41 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const taskText = interaction.fields.getTextInputValue('task_input');
-
-      await addTask(taskText);
-
-      const userData = await getTodoData();
-      const embed = buildTodoEmbed(userData);
-      const buttons = buildTodoButtons(userData, true);
-
-      let updateSuccessful = false;
-
       try {
-        if (userData.messageId && userData.channelId) {
-          const channel = await client.channels.fetch(userData.channelId);
-          const message = await channel.messages.fetch(userData.messageId);
-          await message.edit({ embeds: [embed], components: buttons });
-          updateSuccessful = true;
+        const taskText = interaction.fields.getTextInputValue('task_input');
+
+        await addTask(taskText);
+
+        const userData = await getTodoData();
+        const embed = buildTodoEmbed(userData);
+        const buttons = buildTodoButtons(userData, true);
+
+        let updateSuccessful = false;
+
+        try {
+          if (userData.messageId && userData.channelId) {
+            const channel = await client.channels.fetch(userData.channelId);
+            const message = await channel.messages.fetch(userData.messageId);
+            await message.edit({ embeds: [embed], components: buttons });
+            updateSuccessful = true;
+          }
+        } catch (error) {
+          console.error('Error updating todo message:', error);
+        }
+
+        // Silently acknowledge the interaction without showing a message
+        if (updateSuccessful) {
+          await interaction.deferUpdate();
+        } else {
+          await interaction.reply({
+            content: '✅ Task added. Run `/todo` to refresh the list.',
+            ephemeral: true,
+          });
         }
       } catch (error) {
-        console.error('Error updating todo message:', error);
-      }
-
-      // Silently acknowledge the interaction without showing a message
-      if (updateSuccessful) {
-        await interaction.deferUpdate();
-      } else {
+        console.error('[TODO] Error adding task:', error);
         await interaction.reply({
-          content: '✅ Task added. Run `/todo` to refresh the list.',
+          content: `❌ Failed to add task: ${error.message}\n\nThe bot may need to be redeployed with the latest Convex database changes.`,
           ephemeral: true,
         });
       }
