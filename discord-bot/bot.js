@@ -75,113 +75,50 @@ async function registerCommands() {
   }
 }
 
-// === TO-DO LIST MANAGEMENT ===
-const TODO_FILE = path.join(__dirname, 'todos.json');
+// === TO-DO LIST MANAGEMENT (Convex-backed for persistence) ===
 const TASKS_PER_PAGE = 10;
-const GLOBAL_TODO_KEY = 'global'; // Single shared todo list
 
-function loadTodos() {
+// All todo operations now use Convex database instead of local file storage
+async function getTodoData() {
+  return await convex.query('discordTodos:getTodoData');
+}
+
+async function addTask(taskText) {
+  return await convex.mutation('discordTodos:addTask', { text: taskText });
+}
+
+async function toggleTask(taskNumber) {
   try {
-    if (fs.existsSync(TODO_FILE)) {
-      const data = fs.readFileSync(TODO_FILE, 'utf8');
-      return JSON.parse(data);
-    }
+    return await convex.mutation('discordTodos:toggleTask', { taskNumber });
   } catch (error) {
-    console.error('Error loading todos:', error);
-  }
-  return {};
-}
-
-function saveTodos(todos) {
-  try {
-    fs.writeFileSync(TODO_FILE, JSON.stringify(todos, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Error saving todos:', error);
-  }
-}
-
-function getGlobalData() {
-  const todos = loadTodos();
-  if (!todos[GLOBAL_TODO_KEY]) {
-    todos[GLOBAL_TODO_KEY] = {
-      messageId: null,
-      channelId: null,
-      tasks: [],
-      page: 1,
-      mode: 'view',
-    };
-  }
-  return { todos, userData: todos[GLOBAL_TODO_KEY] };
-}
-
-function addTask(taskText) {
-  const { todos, userData } = getGlobalData();
-  const newTask = {
-    id: userData.tasks.length > 0 ? Math.max(...userData.tasks.map(t => t.id)) + 1 : 1,
-    text: taskText,
-    completed: false,
-    createdAt: Date.now(),
-  };
-  userData.tasks.push(newTask);
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
-  return newTask;
-}
-
-function toggleTask(taskNumber) {
-  const { todos, userData } = getGlobalData();
-  if (taskNumber < 1 || taskNumber > userData.tasks.length) {
+    console.error('[TODO] Error toggling task:', error);
     return null;
   }
-  const task = userData.tasks[taskNumber - 1];
-  task.completed = !task.completed;
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
-  return task;
 }
 
-function deleteTask(taskNumber) {
-  const { todos, userData } = getGlobalData();
-  if (taskNumber < 1 || taskNumber > userData.tasks.length) {
+async function deleteTask(taskNumber) {
+  try {
+    return await convex.mutation('discordTodos:deleteTask', { taskNumber });
+  } catch (error) {
+    console.error('[TODO] Error deleting task:', error);
     return null;
   }
-  const task = userData.tasks[taskNumber - 1];
-  userData.tasks.splice(taskNumber - 1, 1);
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
-  return task;
 }
 
-function clearCompleted() {
-  const { todos, userData } = getGlobalData();
-  const incompleteTasks = userData.tasks.filter(task => !task.completed);
-  const clearedCount = userData.tasks.length - incompleteTasks.length;
-  userData.tasks = incompleteTasks;
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
-  return clearedCount;
+async function clearCompleted() {
+  return await convex.mutation('discordTodos:clearCompleted');
 }
 
-function setMode(mode) {
-  const { todos, userData } = getGlobalData();
-  userData.mode = mode;
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
+async function setMode(mode) {
+  await convex.mutation('discordTodos:setMode', { mode });
 }
 
-function setPage(page) {
-  const { todos, userData } = getGlobalData();
-  userData.page = page;
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
+async function setPage(page) {
+  await convex.mutation('discordTodos:setPage', { page });
 }
 
-function setMessageInfo(messageId, channelId) {
-  const { todos, userData } = getGlobalData();
-  userData.messageId = messageId;
-  userData.channelId = channelId;
-  todos[GLOBAL_TODO_KEY] = userData;
-  saveTodos(todos);
+async function setMessageInfo(messageId, channelId) {
+  await convex.mutation('discordTodos:setMessageInfo', { messageId, channelId });
 }
 
 function buildTodoEmbed(userData) {
@@ -837,9 +774,9 @@ client.on('interactionCreate', async (interaction) => {
 
       const taskText = interaction.fields.getTextInputValue('task_input');
 
-      addTask(taskText);
+      await addTask(taskText);
 
-      const { userData } = getGlobalData();
+      const userData = await getTodoData();
       const embed = buildTodoEmbed(userData);
       const buttons = buildTodoButtons(userData, true);
 
@@ -883,16 +820,16 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const { userData } = getGlobalData();
+      const userData = await getTodoData();
       const taskNumber = parseInt(interaction.values[0]);
 
       if (userData.mode === 'complete' || userData.mode === 'uncomplete') {
-        toggleTask(taskNumber);
+        await toggleTask(taskNumber);
       } else if (userData.mode === 'delete') {
-        deleteTask(taskNumber);
+        await deleteTask(taskNumber);
       }
 
-      const { userData: updatedData } = getGlobalData();
+      const updatedData = await getTodoData();
       const embed = buildTodoEmbed(updatedData);
       const buttons = buildTodoButtons(updatedData, true);
 
@@ -916,7 +853,7 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
-      const { userData } = getGlobalData();
+      const userData = await getTodoData();
 
       if (interaction.customId === 'todo_add') {
         const modal = new ModalBuilder()
@@ -939,18 +876,18 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       if (interaction.customId === 'todo_mode_complete') {
-        setMode('complete');
+        await setMode('complete');
       } else if (interaction.customId === 'todo_mode_uncomplete') {
-        setMode('uncomplete');
+        await setMode('uncomplete');
       } else if (interaction.customId === 'todo_mode_delete') {
-        setMode('delete');
+        await setMode('delete');
       } else if (interaction.customId === 'todo_mode_view') {
-        setMode('view');
+        await setMode('view');
       } else if (interaction.customId === 'todo_clear') {
-        clearCompleted();
+        await clearCompleted();
       }
 
-      const { userData: updatedData } = getGlobalData();
+      const updatedData = await getTodoData();
       const embed = buildTodoEmbed(updatedData);
       const buttons = buildTodoButtons(updatedData, true);
 
@@ -1206,7 +1143,7 @@ client.on('interactionCreate', async (interaction) => {
 
     if (commandName === 'todo') {
       const isAdmin = interaction.member.permissions.has('Administrator');
-      const { userData } = getGlobalData();
+      const userData = await getTodoData();
 
       console.log('[TODO] Current stored message ID:', userData.messageId);
       console.log('[TODO] Current stored channel ID:', userData.channelId);
@@ -1230,7 +1167,7 @@ client.on('interactionCreate', async (interaction) => {
         } catch (error) {
           console.log('[TODO] Could not find/edit existing message, creating new one:', error.message);
           // Clear the stored message info since it's invalid
-          setMessageInfo(null, null);
+          await setMessageInfo(null, null);
         }
       } else {
         console.log('[TODO] No existing message found, will create new one');
@@ -1246,7 +1183,7 @@ client.on('interactionCreate', async (interaction) => {
 
         console.log('[TODO] New message created with ID:', message.id);
         console.log('[TODO] Saving message info...');
-        setMessageInfo(message.id, message.channel.id);
+        await setMessageInfo(message.id, message.channel.id);
         console.log('[TODO] Message info saved successfully');
 
         // Silently acknowledge without showing a message
