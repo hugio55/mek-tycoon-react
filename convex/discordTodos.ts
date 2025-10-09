@@ -169,6 +169,41 @@ export const deleteTask = mutation({
 });
 
 /**
+ * Edit a task's text
+ */
+export const editTask = mutation({
+  args: {
+    taskNumber: v.number(),
+    newText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const todoDoc = await ctx.db
+      .query("discordTodos")
+      .withIndex("by_key", q => q.eq("key", GLOBAL_TODO_KEY))
+      .first();
+
+    if (!todoDoc) throw new Error("Todo doc not found");
+    if (args.taskNumber < 1 || args.taskNumber > todoDoc.tasks.length) {
+      throw new Error("Invalid task number");
+    }
+
+    const taskIndex = args.taskNumber - 1;
+    const updatedTasks = [...todoDoc.tasks];
+    updatedTasks[taskIndex] = {
+      ...updatedTasks[taskIndex],
+      text: args.newText,
+    };
+
+    await ctx.db.patch(todoDoc._id, {
+      tasks: updatedTasks,
+      updatedAt: Date.now(),
+    });
+
+    return updatedTasks[taskIndex];
+  }
+});
+
+/**
  * Clear all completed tasks
  */
 export const clearCompleted = mutation({
