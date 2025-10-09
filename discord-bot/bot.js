@@ -1246,7 +1246,12 @@ client.on('interactionCreate', async (interaction) => {
         console.error('[CORP] Error stack:', error.stack);
         try {
           await interaction.editReply({
-            content: '❌ An error occurred while fetching corporation data. Please try again later.',
+            content: '❌ An error occurred while fetching corporation data.\n\n' +
+                     '**Common causes:**\n' +
+                     '• No wallets linked to your corporation - link wallets at https://mek.overexposed.io\n' +
+                     '• Corporation not yet created on the website\n' +
+                     '• Database connection issue\n\n' +
+                     'If you\'ve linked wallets on the website, please try again in a moment.',
           });
         } catch (replyError) {
           console.error('[CORP] Could not send error reply:', replyError);
