@@ -60,8 +60,8 @@ export function getMekImageUrl(mekNumber: number, size: '150px' | '500px' | '100
     return `/mek-images/${size}/000-000-000.webp`;
   }
 
-  // Extract the variation code from source_key (remove the -B suffix if present)
-  const variationCode = mekData.sourceKey.toLowerCase().replace(/-b$/, '');
+  // Extract the variation code from source_key (remove the -B, -C, etc. suffix if present)
+  const variationCode = mekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
 
   return `/mek-images/${size}/${variationCode}.webp`;
 }

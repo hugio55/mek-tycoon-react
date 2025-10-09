@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useAction, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getMekDataByNumber, getMekImageUrl, parseMekNumber } from "@/lib/mekNumberToVariation";
-import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
+import { getVariationInfoFromFullKey, getVariationInfo } from "@/lib/variationNameLookup";
 import BlockchainVerificationPanel from "@/components/BlockchainVerificationPanel";
 import { walletRateLimiter, rateLimitedCall } from "@/lib/rateLimiter";
 import HolographicButton from "@/components/ui/SciFiButtons/HolographicButton";
@@ -330,6 +330,7 @@ export default function MekRateLoggingPage() {
   const [addWalletNonce, setAddWalletNonce] = useState<string | null>(null);
   const [addWalletMessage, setAddWalletMessage] = useState<string | null>(null);
   const [isAddingWallet, setIsAddingWallet] = useState(false); // Flag to prevent auto-disconnect during wallet addition
+  // Removed: isSyncing state (blockchain sync button removed)
 
   // Corporation name merger states
   const [currentCorpName, setCurrentCorpName] = useState<string | null>(null);
@@ -372,6 +373,7 @@ export default function MekRateLoggingPage() {
   // Gold tracking
   const [currentGold, setCurrentGold] = useState(0);
   const [cumulativeGold, setCumulativeGold] = useState(0);
+  const [realtimeCumulativeGold, setRealtimeCumulativeGold] = useState(0); // Real-time display value
   const [goldPerHour, setGoldPerHour] = useState(0);
   const goldIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const checkpointIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -400,6 +402,7 @@ export default function MekRateLoggingPage() {
   const updateGroupCompanyName = useMutation(api.walletGroups.updateGroupCompanyName);
   const generateNonce = useMutation(api.walletAuthentication.generateNonce);
   const verifySignature = useAction(api.walletAuthentication.verifySignature);
+  // Removed: syncWalletFromBlockchain (blockchain sync button removed)
   const checkAuth = useQuery(
     api.walletAuthentication.checkAuthentication,
     (walletAddress && !walletAddress.includes('demo') && walletType !== 'Demo') ? { stakeAddress: walletAddress } : "skip"
@@ -445,21 +448,21 @@ export default function MekRateLoggingPage() {
     });
   }, [ownedMeks]);
 
-  // LOG: Query data updates
-  useEffect(() => {
-    if (goldMiningData) {
-      console.log('[QUERY] goldMiningData updated:', {
-        walletAddress: goldMiningData.walletAddress?.slice(0, 12) + '...',
-        accumulatedGold: goldMiningData.accumulatedGold,
-        lastSnapshotTime: goldMiningData.lastSnapshotTime,
-        totalGoldPerHour: goldMiningData.totalGoldPerHour,
-        ownedMeksCount: goldMiningData.ownedMeks?.length,
-        firstMek: goldMiningData.ownedMeks?.[0]?.assetName,
-        updatedAt: goldMiningData.updatedAt,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [goldMiningData]);
+  // LOG: Query data updates (DISABLED - causes animation freezes)
+  // useEffect(() => {
+  //   if (goldMiningData) {
+  //     console.log('[QUERY] goldMiningData updated:', {
+  //       walletAddress: goldMiningData.walletAddress?.slice(0, 12) + '...',
+  //       accumulatedGold: goldMiningData.accumulatedGold,
+  //       lastSnapshotTime: goldMiningData.lastSnapshotTime,
+  //       totalGoldPerHour: goldMiningData.totalGoldPerHour,
+  //       ownedMeksCount: goldMiningData.ownedMeks?.length,
+  //       firstMek: goldMiningData.ownedMeks?.[0]?.assetName,
+  //       updatedAt: goldMiningData.updatedAt,
+  //       timestamp: new Date().toISOString()
+  //     });
+  //   }
+  // }, [goldMiningData]);
 
   // Get user stats including cumulative gold
   const userStats = useQuery(
@@ -519,7 +522,7 @@ export default function MekRateLoggingPage() {
     return baseCumulativeGold;
   }, [corporationStats, goldMiningData]);
 
-  // Update gold display when goldMiningData changes - optimized to prevent unnecessary re-renders
+  // Update gold display when goldMiningData or corporationStats changes - optimized to prevent unnecessary re-renders
   useEffect(() => {
     if (goldMiningData) {
       setCurrentGold(goldMiningData.currentGold);
@@ -538,10 +541,14 @@ export default function MekRateLoggingPage() {
         });
       }
 
-      setGoldPerHour(goldMiningData.totalGoldPerHour);
-      setCumulativeGold(calculatedCumulativeGold);
+      // Use corporation stats for gold rate if available (aggregates all wallets)
+      const effectiveGoldPerHour = corporationStats?.totalGoldPerHour ?? goldMiningData.totalGoldPerHour;
+      setGoldPerHour(effectiveGoldPerHour);
     }
-  }, [goldMiningData, expectedTotalWithBoosts, calculatedCumulativeGold, mekLevels]);
+
+    // Always update cumulative gold when calculated value changes (includes corporationStats)
+    setCumulativeGold(calculatedCumulativeGold);
+  }, [goldMiningData, corporationStats, expectedTotalWithBoosts, calculatedCumulativeGold, mekLevels]);
 
   // Query to check backend authentication status
   // CRITICAL: Only check auth AFTER connection is complete to avoid interfering with connection process
@@ -931,18 +938,20 @@ export default function MekRateLoggingPage() {
 
     // CRITICAL FIX: If ownedMeks is empty BUT we have Meks from group, populate from database
     if (ownedMeks.length === 0 && mekSource.length > 0) {
-      console.log('[Level Sync] INITIAL SYNC: Populating ownedMeks from group:', mekSource.length, 'Meks');
+      // DISABLED: Logging causes animation freezes
+      // console.log('[Level Sync] INITIAL SYNC: Populating ownedMeks from group:', mekSource.length, 'Meks');
       setOwnedMeks(mekSource as MekAsset[]);
       return;
     }
 
     // Debounce the sync operation by 150ms to batch rapid updates
     const syncTimeout = setTimeout(() => {
-      console.log('[Level Sync] Syncing level data from group/goldMiningData and mekLevels');
-      console.log('[Level Sync] Database has', mekSource.length, 'Meks');
-      console.log('[Level Sync] UI state has', ownedMeks.length, 'Meks');
-      console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
-      console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData?.totalGoldPerHour);
+      // DISABLED: Logging causes animation freezes
+      // console.log('[Level Sync] Syncing level data from group/goldMiningData and mekLevels');
+      // console.log('[Level Sync] Database has', mekSource.length, 'Meks');
+      // console.log('[Level Sync] UI state has', ownedMeks.length, 'Meks');
+      // console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
+      // console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData?.totalGoldPerHour);
 
       // Create a map of source meks for quick lookup
       const sourceMekMap = new Map(
@@ -965,6 +974,12 @@ export default function MekRateLoggingPage() {
         const existingMek = existingMekMap.get(dbMek.assetId);
         const mekLevel = mekLevelMap.get(dbMek.assetId);
 
+        // Parse mekNumber from assetName if not already set
+        let mekNumber = dbMek.mekNumber || existingMek?.mekNumber;
+        if (!mekNumber && dbMek.assetName) {
+          mekNumber = parseMekNumber(dbMek.assetName);
+        }
+
         // Use level from mekLevels if available, otherwise default to 1
         const currentLevel = mekLevel?.currentLevel || dbMek.currentLevel || 1;
         const levelBoostAmount = mekLevel?.currentBoostAmount || dbMek.levelBoostAmount || 0;
@@ -979,6 +994,7 @@ export default function MekRateLoggingPage() {
         return {
           ...(existingMek || {}), // Preserve any UI-only fields
           ...dbMek, // Use database as source of truth
+          mekNumber: mekNumber, // Ensure mekNumber is set
           baseGoldPerHour: baseRate,
           levelBoostAmount: levelBoostAmount,
           currentLevel: currentLevel,
@@ -999,18 +1015,19 @@ export default function MekRateLoggingPage() {
       });
 
       if (hasCountChange || hasPropertyChanges) {
-        if (hasCountChange) {
-          console.log('[Level Sync] 🔄 MEK COUNT CHANGED:', ownedMeks.length, '→', updatedMeks.length);
-          console.log('[Level Sync] Added', updatedMeks.length - ownedMeks.length, 'new Meks from database');
-        }
-        console.log('[Level Sync] Found changes, updating meks:',
-          updatedMeks.slice(0, 3).map(m => ({
-            assetId: m.assetId.slice(-8),
-            level: m.currentLevel,
-            baseRate: m.baseGoldPerHour,
-            boost: m.levelBoostAmount,
-            effectiveRate: m.goldPerHour
-          })));
+        // DISABLED: Logging causes animation freezes
+        // if (hasCountChange) {
+        //   console.log('[Level Sync] 🔄 MEK COUNT CHANGED:', ownedMeks.length, '→', updatedMeks.length);
+        //   console.log('[Level Sync] Added', updatedMeks.length - ownedMeks.length, 'new Meks from database');
+        // }
+        // console.log('[Level Sync] Found changes, updating meks:',
+        //   updatedMeks.slice(0, 3).map(m => ({
+        //     assetId: m.assetId.slice(-8),
+        //     level: m.currentLevel,
+        //     baseRate: m.baseGoldPerHour,
+        //     boost: m.levelBoostAmount,
+        //     effectiveRate: m.goldPerHour
+        //   })));
         setOwnedMeks(updatedMeks);
 
         // Also update the total gold per hour
@@ -1038,10 +1055,43 @@ export default function MekRateLoggingPage() {
     };
 
     if (walletDropdownOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      // Delay adding the listener to avoid immediate triggers
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside);
+      }, 100);
+
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('click', handleClickOutside);
+      };
     }
   }, [walletDropdownOpen]);
+
+  // Reset wallet editing state when dropdown closes
+  useEffect(() => {
+    if (!walletDropdownOpen) {
+      setEditingWalletAddress(null);
+      setEditingNickname('');
+    }
+  }, [walletDropdownOpen]);
+
+  // Real-time cumulative gold animation - smooth continuous counting
+  useEffect(() => {
+    setRealtimeCumulativeGold(cumulativeGold);
+
+    if (goldPerHour <= 0) return;
+
+    const startTime = Date.now();
+    const startValue = cumulativeGold;
+
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000; // seconds elapsed
+      const goldEarned = (goldPerHour / 3600) * elapsed; // gold earned since start
+      setRealtimeCumulativeGold(startValue + goldEarned);
+    }, 50); // Update every 50ms for smooth counting
+
+    return () => clearInterval(interval);
+  }, [cumulativeGold, goldPerHour, corporationStats]);
 
   // Show company name modal if wallet is connected but no company name is set
   useEffect(() => {
@@ -2667,6 +2717,18 @@ export default function MekRateLoggingPage() {
     goldMiningDataRef.current = goldMiningData;
   }, [goldMiningData]);
 
+  // Use ref to track latest goldPerHour (includes corporation rate)
+  const goldPerHourRef = useRef(goldPerHour);
+  useEffect(() => {
+    goldPerHourRef.current = goldPerHour;
+  }, [goldPerHour]);
+
+  // Use ref to track latest corporationStats (includes total accumulated gold)
+  const corporationStatsRef = useRef(corporationStats);
+  useEffect(() => {
+    corporationStatsRef.current = corporationStats;
+  }, [corporationStats]);
+
   // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
   // CRITICAL: Only accumulate gold if wallet is VERIFIED
   // OPTIMIZED: Animation loop doesn't restart when goldMiningData updates
@@ -2677,13 +2739,19 @@ export default function MekRateLoggingPage() {
     const isVerified = goldMiningData.isVerified === true;
 
     if (!isVerified) {
-      // Not verified - freeze gold at current accumulated amount
-      console.log('[Gold Animation] Wallet NOT VERIFIED - freezing gold at', goldMiningData.accumulatedGold);
-      setCurrentGold(goldMiningData.accumulatedGold || 0);
+      // Not verified - freeze gold at current accumulated amount (use corporation total if available)
+      const baseGold = corporationStats?.totalCurrentGold || goldMiningData.accumulatedGold || 0;
+      console.log('[Gold Animation] Wallet NOT VERIFIED - freezing gold at', baseGold);
+      setCurrentGold(baseGold);
       return; // Don't start animation loop
     }
 
-    console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation (optimized - won\'t restart on data updates)');
+    // DISABLED: Logging causes animation freezes
+    // console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation (optimized - won\'t restart on data updates)');
+    // console.log('[Gold Animation] Wallet gold per hour:', goldMiningData.totalGoldPerHour);
+    // console.log('[Gold Animation] Corporation total gold per hour:', goldPerHourRef.current);
+    // console.log('[Gold Animation] Accumulated gold:', goldMiningData.accumulatedGold);
+    // console.log('[Gold Animation] Last snapshot:', goldMiningData.lastSnapshotTime);
 
     let animationFrameId: number;
     let lastUpdateTime = Date.now();
@@ -2698,30 +2766,52 @@ export default function MekRateLoggingPage() {
       // Get latest data from ref (doesn't cause re-render)
       const latestData = goldMiningDataRef.current;
 
-      // Calculate gold every frame, but only update state every 100ms to prevent excessive re-renders
-      if (latestData && timeSinceLastStateUpdate >= 100) {
+      // Calculate gold every frame for smooth animation
+      if (latestData) {
+        // Use corporation rate (goldPerHourRef) instead of wallet's individual rate
+        const effectiveRate = goldPerHourRef.current || latestData.totalGoldPerHour;
+
+        // Get corporation stats for total accumulated gold across all wallets
+        const corpStats = corporationStatsRef.current;
+        const baseAccumulatedGold = corpStats?.totalCurrentGold || latestData.accumulatedGold || 0;
+
         // Use shared calculation utility
         const calculatedGold = calculateCurrentGold({
-          accumulatedGold: latestData.accumulatedGold || 0,
-          goldPerHour: latestData.totalGoldPerHour,
+          accumulatedGold: baseAccumulatedGold,
+          goldPerHour: effectiveRate,
           lastSnapshotTime: latestData.lastSnapshotTime || latestData.updatedAt || latestData.createdAt,
           isVerified: true
         });
 
-        // Update state - throttled to 10 times per second instead of 60
-        setCurrentGold(calculatedGold);
-
-        // Also update cumulative gold in real-time
-        const baseCumulativeGold = latestData.totalCumulativeGold || (latestData.accumulatedGold || 0);
-        const goldSinceLastUpdate = calculatedGold - (latestData.accumulatedGold || 0);
-
-        // Only add ongoing earnings to cumulative if verified
-        if (latestData.isBlockchainVerified === true) {
-          const calculatedCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
-          setCumulativeGold(calculatedCumulativeGold);
-        } else {
-          setCumulativeGold(baseCumulativeGold);
+        // Update DOM directly for butter-smooth animation at 60 FPS
+        const goldDisplayElement = document.getElementById('current-gold-display');
+        const goldDecimalsElement = document.getElementById('current-gold-decimals');
+        if (goldDisplayElement) {
+          // Format with commas for readability
+          goldDisplayElement.textContent = Math.floor(calculatedGold).toLocaleString('en-US');
         }
+        if (goldDecimalsElement) {
+          // Show 3 decimal places for smooth animation
+          const decimals = ((calculatedGold % 1) * 1000).toFixed(0).padStart(3, '0');
+          goldDecimalsElement.textContent = `.${decimals}`;
+        }
+
+        // Only update React state every 100ms to prevent excessive re-renders
+        if (timeSinceLastStateUpdate >= 100) {
+          setCurrentGold(calculatedGold);
+
+          // DISABLED: Logging causes animation freezes
+          // Debug logging (only log every 5 seconds to avoid spam)
+          // if (Math.random() < 0.02) { // ~2% chance = roughly every 5 seconds at 10 FPS
+          //   console.log('[Gold Animation] Calculated gold:', calculatedGold, 'Rate:', effectiveRate, '/hr');
+          // }
+
+          lastStateUpdateTime = now;
+        }
+
+        // NOTE: Cumulative gold is now managed at the corporation level
+        // and updated via the separate real-time animation effect
+        // Do NOT update it here as it will override corporation stats
 
         lastStateUpdateTime = now;
       }
@@ -2746,7 +2836,7 @@ export default function MekRateLoggingPage() {
       cancelAnimationFrame(animationFrameId);
       if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
     };
-  }, [walletConnected, walletAddress]); // OPTIMIZED: Removed goldMiningData dependency
+  }, [walletConnected, walletAddress, goldMiningData?.isVerified]); // OPTIMIZED: Use refs to avoid restart on rate changes
 
   // Save on page unload
   useEffect(() => {
@@ -2796,8 +2886,8 @@ export default function MekRateLoggingPage() {
               width: `${star.size}px`,
               height: `${star.size}px`,
               opacity: star.opacity,
-              animation: star.twinkle ? 'starTwinkle 3s ease-in-out infinite' : 'none',
-              animationDelay: star.twinkle ? `${Math.random() * 3}s` : '0s',
+              animation: star.twinkle ? 'starTwinkle 1.5s ease-in-out infinite' : 'none',
+              animationDelay: star.twinkle ? `${Math.random() * 1.5}s` : '0s',
               boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, ${star.opacity * 0.5})`,
               transform: 'translateZ(0)',
               willChange: star.twinkle ? 'opacity' : 'auto'
@@ -3464,7 +3554,7 @@ export default function MekRateLoggingPage() {
                     <div className="px-4 py-4 border-b border-yellow-500/20">
                       <div className="text-gray-400 text-base sm:text-base uppercase tracking-wider mb-1">Total Cumulative Gold</div>
                       <div className="text-yellow-400 font-bold text-2xl sm:text-2xl font-mono">
-                        <AnimatedNumber value={cumulativeGold} decimals={0} threshold={0.5} />
+                        {realtimeCumulativeGold.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                       </div>
                     </div>
 
@@ -3496,72 +3586,79 @@ export default function MekRateLoggingPage() {
                               wallet.isPrimary ? 'font-semibold' : 'font-normal'
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                {/* Nickname - editable */}
-                                {editingWalletAddress === wallet.walletAddress ? (
-                                  <div className="flex gap-2 items-center mb-1">
-                                    <input
-                                      type="text"
-                                      value={editingNickname}
-                                      onChange={(e) => setEditingNickname(e.target.value)}
-                                      className="flex-1 px-2 py-1 bg-black/50 border border-yellow-500/50 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-400"
-                                      placeholder="Wallet nickname"
-                                      autoFocus
-                                    />
-                                    <button
-                                      onClick={() => handleSaveNickname(wallet.walletAddress, editingNickname)}
-                                      className="text-green-400 hover:text-green-300 text-sm px-2 py-1"
-                                    >
-                                      ✓
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingWalletAddress(null);
-                                        setEditingNickname('');
-                                      }}
-                                      className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div
-                                    className="flex items-center gap-2 mb-1 cursor-pointer hover:text-yellow-300 transition-colors"
+                            {/* Nickname - editable */}
+                            {editingWalletAddress === wallet.walletAddress ? (
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  value={editingNickname}
+                                  onChange={(e) => setEditingNickname(e.target.value)}
+                                  className="w-full px-3 py-2 bg-black/50 border-2 border-yellow-500/50 text-yellow-400 text-base rounded focus:outline-none focus:border-yellow-400"
+                                  placeholder="Enter wallet nickname"
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleSaveNickname(wallet.walletAddress, editingNickname)}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-base font-semibold uppercase px-4 py-2 rounded border border-green-500 transition-colors"
+                                  >
+                                    ✓ Save
+                                  </button>
+                                  <button
                                     onClick={() => {
+                                      setEditingWalletAddress(null);
+                                      setEditingNickname('');
+                                    }}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-base font-semibold uppercase px-4 py-2 rounded border border-red-500 transition-colors"
+                                  >
+                                    ✕ Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div
+                                    className="flex-1 cursor-pointer hover:text-yellow-300 transition-colors"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      e.nativeEvent.stopImmediatePropagation();
                                       setEditingWalletAddress(wallet.walletAddress);
                                       setEditingNickname(wallet.nickname || '');
                                     }}
                                   >
-                                    <div className="text-yellow-400 text-base uppercase tracking-wider">
-                                      {wallet.nickname || 'Set Nickname'}
+                                    <div className="flex items-center gap-2">
+                                      <div className="text-yellow-400 text-base uppercase tracking-wider">
+                                        {wallet.nickname || 'Set Nickname'}
+                                      </div>
+                                      <span className="text-gray-500 text-sm">✏️</span>
                                     </div>
-                                    <span className="text-gray-500 text-xs">✏️</span>
                                   </div>
-                                )}
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {wallet.isPrimary && (
+                                      <span className="text-yellow-400 text-base" title="Primary wallet">⭐</span>
+                                    )}
+                                    {walletGroup.length > 1 && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveWallet(wallet.walletAddress);
+                                        }}
+                                        className="text-red-400 hover:text-red-300 text-sm px-2 py-1 border border-red-500/50 hover:border-red-400 rounded transition-colors"
+                                        title="Remove wallet from corporation"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                                 {/* Abbreviated stake address */}
                                 <div className="text-gray-400 font-mono text-sm">
                                   stake{wallet.walletAddress.slice(5, 9)}...{wallet.walletAddress.slice(-4)}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {wallet.isPrimary && (
-                                  <span className="text-yellow-400 text-sm">⭐</span>
-                                )}
-                                {walletGroup.length > 1 && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveWallet(wallet.walletAddress);
-                                    }}
-                                    className="text-red-400 hover:text-red-300 text-xs px-2 py-1 border border-red-500/50 hover:border-red-400 rounded transition-colors"
-                                    title="Remove wallet from corporation"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -3679,7 +3776,7 @@ export default function MekRateLoggingPage() {
             </div>
 
             {/* Information text floating in the night sky - moved up 140px total on desktop, down 80px on mobile */}
-            <div className="text-center mb-[50px] px-4 pt-[60px] sm:pt-[50px]">
+            <div className="text-center mb-[50px] px-4 pt-[85px] sm:pt-[75px]">
               <p className="max-w-xl mx-auto mb-8">
                 <span className="text-xs sm:text-sm font-mono text-gray-400">
                   <span className="font-bold">This website is for testing a core mechanic of a future Over Exposed product. It is <span className="teal-glow-pulse">not</span> an actual game and it offers no rewards.</span>
@@ -3795,18 +3892,20 @@ export default function MekRateLoggingPage() {
                       >
                         <div className="relative">
                           <span
+                            id="current-gold-display"
                             className="tabular-nums inline-block"
                             style={{
-                              transition: 'all 0.016s linear'
+                              transition: 'none'
                             }}
                           >
                             {Math.floor(currentGold).toLocaleString('en-US')}
                           </span>
                           <span
+                            id="current-gold-decimals"
                             className="text-3xl sm:text-4xl md:text-5xl opacity-70 inline-block"
                             style={{
                               fontSize: '0.525em',
-                              transition: 'all 0.016s linear'
+                              transition: 'none'
                             }}
                           >
                             .{((currentGold % 1) * 1000).toFixed(0).padStart(3, '0')}
@@ -4332,47 +4431,100 @@ export default function MekRateLoggingPage() {
                   <table className="w-4/5 mx-auto">
                     <tbody>
                       {(() => {
-                        if (!selectedMek.sourceKey) return null;
-                        const variations = getVariationInfoFromFullKey(selectedMek.sourceKey);
+                        // Try sourceKey first (for other players' Meks)
+                        if (selectedMek.sourceKey) {
+                          const variations = getVariationInfoFromFullKey(selectedMek.sourceKey);
+                          return (
+                            <>
+                              <tr className="border-b border-gray-800">
+                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                  HEAD
+                                </td>
+                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
+                                  {variations.head.name}
+                                </td>
+                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
+                                  {variations.head.count > 0 ? `×${variations.head.count}` : ''}
+                                </td>
+                              </tr>
+                              <tr className="border-b border-gray-800">
+                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                  BODY
+                                </td>
+                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
+                                  {variations.body.name}
+                                </td>
+                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
+                                  {variations.body.count > 0 ? `×${variations.body.count}` : ''}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                  TRAIT
+                                </td>
+                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
+                                  {variations.trait.name}
+                                </td>
+                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
+                                  {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
+                                </td>
+                              </tr>
+                            </>
+                          );
+                        }
 
-                        return (
-                          <>
-                            <tr className="border-b border-gray-800">
-                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                HEAD
-                              </td>
-                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
-                                {variations.head.name}
-                              </td>
-                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
-                                {variations.head.count > 0 ? `×${variations.head.count}` : ''}
-                              </td>
-                            </tr>
-                            <tr className="border-b border-gray-800">
-                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                BODY
-                              </td>
-                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
-                                {variations.body.name}
-                              </td>
-                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
-                                {variations.body.count > 0 ? `×${variations.body.count}` : ''}
-                              </td>
-                            </tr>
-                            {/* Trait Variation */}
-                            <tr>
-                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                TRAIT
-                              </td>
-                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
-                                {variations.trait.name}
-                              </td>
-                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
-                                {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
-                              </td>
-                            </tr>
-                          </>
-                        );
+                        // Fallback: Use direct variation fields (for your own Meks)
+                        if (selectedMek.headVariation || selectedMek.bodyVariation || selectedMek.itemVariation) {
+                          const headInfo = selectedMek.headVariation ? getVariationInfo(selectedMek.headVariation, 'head') : null;
+                          const bodyInfo = selectedMek.bodyVariation ? getVariationInfo(selectedMek.bodyVariation, 'body') : null;
+                          const traitInfo = selectedMek.itemVariation ? getVariationInfo(selectedMek.itemVariation, 'trait') : null;
+
+                          return (
+                            <>
+                              {headInfo && (
+                                <tr className="border-b border-gray-800">
+                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                    HEAD
+                                  </td>
+                                  <td className="py-3 text-right font-bold text-sm" style={{ color: headInfo.color }}>
+                                    {headInfo.name}
+                                  </td>
+                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: headInfo.color }}>
+                                    {headInfo.count > 0 ? `×${headInfo.count}` : ''}
+                                  </td>
+                                </tr>
+                              )}
+                              {bodyInfo && (
+                                <tr className="border-b border-gray-800">
+                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                    BODY
+                                  </td>
+                                  <td className="py-3 text-right font-bold text-sm" style={{ color: bodyInfo.color }}>
+                                    {bodyInfo.name}
+                                  </td>
+                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: bodyInfo.color }}>
+                                    {bodyInfo.count > 0 ? `×${bodyInfo.count}` : ''}
+                                  </td>
+                                </tr>
+                              )}
+                              {traitInfo && (
+                                <tr>
+                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                    TRAIT
+                                  </td>
+                                  <td className="py-3 text-right font-bold text-sm" style={{ color: traitInfo.color }}>
+                                    {traitInfo.name}
+                                  </td>
+                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: traitInfo.color }}>
+                                    {traitInfo.count > 0 ? `×${traitInfo.count}` : ''}
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          );
+                        }
+
+                        return null;
                       })()}
                     </tbody>
                   </table>

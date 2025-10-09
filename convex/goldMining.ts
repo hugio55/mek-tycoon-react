@@ -1403,6 +1403,13 @@ export const syncWalletFromBlockchain = action({
         const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
         const existingMek = existingMeksMap.get(blockchainMek.assetId);
 
+        // Get MEK metadata from variation data
+        const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
+        const mekMetadata = getMekDataByNumber(blockchainMek.mekNumber);
+        // Clean sourceKey: remove suffix (-B, -C, etc.) and lowercase
+        const sourceKey = mekMetadata?.sourceKey ? mekMetadata.sourceKey.replace(/-[A-Z]$/, '').toLowerCase() : null;
+        const imageUrl = sourceKey ? `/mek-images/500px/${sourceKey}.webp` : '/mek-images/500px/000-000-000.webp';
+
         if (mekLevel) {
           // Use level data (source of truth)
           const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
@@ -1411,9 +1418,14 @@ export const syncWalletFromBlockchain = action({
 
           mekDetails.push({
             assetId: blockchainMek.assetId,
-            assetName: blockchainMek.assetName,
+            assetName: blockchainMek.assetName, // Complete from blockchain
+            policyId: MEK_POLICY_ID,
+            imageUrl: imageUrl, // Complete image URL
+            headVariation: sourceKey?.split('-')[0],
+            bodyVariation: sourceKey?.split('-')[1],
+            itemVariation: sourceKey?.split('-')[2],
             goldPerHour: effectiveGoldPerHour,
-            rarityRank: existingMek?.rarityRank,
+            rarityRank: mekMetadata?.finalRank,
             baseGoldPerHour: baseGoldPerHour,
             currentLevel: mekLevel.currentLevel,
             levelBoostPercent: mekLevel.currentBoostPercent || 0,
@@ -1422,12 +1434,17 @@ export const syncWalletFromBlockchain = action({
 
           totalGoldPerHour += effectiveGoldPerHour;
         } else if (existingMek) {
-          // Fallback to existing MEK data
+          // Fallback to existing MEK data but UPDATE assetName and imageUrl
           mekDetails.push({
             assetId: blockchainMek.assetId,
-            assetName: blockchainMek.assetName,
+            assetName: blockchainMek.assetName, // Update from blockchain
+            policyId: MEK_POLICY_ID,
+            imageUrl: imageUrl || existingMek.imageUrl, // Update with proper image
+            headVariation: sourceKey?.split('-')[0] || existingMek.headVariation,
+            bodyVariation: sourceKey?.split('-')[1] || existingMek.bodyVariation,
+            itemVariation: sourceKey?.split('-')[2] || existingMek.itemVariation,
             goldPerHour: existingMek.goldPerHour,
-            rarityRank: existingMek.rarityRank,
+            rarityRank: mekMetadata?.finalRank || existingMek.rarityRank,
             baseGoldPerHour: existingMek.baseGoldPerHour,
             currentLevel: existingMek.currentLevel || 1,
             levelBoostPercent: existingMek.levelBoostPercent || 0,
@@ -1437,16 +1454,18 @@ export const syncWalletFromBlockchain = action({
           totalGoldPerHour += existingMek.goldPerHour;
         } else {
           // New MEK - fetch variation data
-          const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
-          const mekData = getMekDataByNumber(blockchainMek.mekNumber);
-
-          if (mekData) {
-            const goldPerHour = Math.round(mekData.goldPerHour * 100) / 100;
+          if (mekMetadata) {
+            const goldPerHour = Math.round(mekMetadata.goldPerHour * 100) / 100;
             mekDetails.push({
               assetId: blockchainMek.assetId,
               assetName: blockchainMek.assetName,
+              policyId: MEK_POLICY_ID,
+              imageUrl: imageUrl,
+              headVariation: sourceKey?.split('-')[0],
+              bodyVariation: sourceKey?.split('-')[1],
+              itemVariation: sourceKey?.split('-')[2],
               goldPerHour: goldPerHour,
-              rarityRank: mekData.finalRank,
+              rarityRank: mekMetadata.finalRank,
               baseGoldPerHour: goldPerHour,
               currentLevel: 1,
               levelBoostPercent: 0,
@@ -1457,23 +1476,62 @@ export const syncWalletFromBlockchain = action({
         }
       }
 
-      // Update the miner's record
-      const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
-      await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
-        walletAddress: args.walletAddress,
-        mekCount: walletData.meks.length,
-        totalGoldPerHour: totalGoldPerHour,
-        mekNumbers: mekNumbers,
-        mekDetails: mekDetails,
-        snapshotSuccess: true,
+      // Build complete MEK records with all metadata
+      const completeMekRecords = mekDetails.map(detail => {
+        const blockchainMek = walletData.meks.find((m: any) => m.assetId === detail.assetId);
+        const mekNumber = blockchainMek?.mekNumber;
+
+        // Build proper image URL from mekNumber
+        let imageUrl = '/mek-images/500px/000-000-000.webp';
+        let sourceKey = null;
+        if (mekNumber) {
+          const { getMekDataByNumber } = require("../src/lib/mekNumberToVariation");
+          const mekData = getMekDataByNumber(mekNumber);
+          if (mekData && mekData.sourceKey) {
+            // Clean sourceKey: remove suffix (-B, -C, etc.) and lowercase
+            sourceKey = mekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
+            imageUrl = `/mek-images/500px/${sourceKey}.webp`;
+          }
+        }
+
+        return {
+          assetId: detail.assetId,
+          policyId: MEK_POLICY_ID,
+          assetName: detail.assetName,
+          imageUrl: imageUrl,
+          goldPerHour: detail.goldPerHour,
+          rarityRank: detail.rarityRank,
+          baseGoldPerHour: detail.baseGoldPerHour || detail.goldPerHour,
+          currentLevel: detail.currentLevel || 1,
+          levelBoostPercent: detail.levelBoostPercent || 0,
+          levelBoostAmount: detail.levelBoostAmount || 0,
+          effectiveGoldPerHour: detail.goldPerHour,
+          headVariation: sourceKey ? sourceKey.split('-')[0] : undefined,
+          bodyVariation: sourceKey ? sourceKey.split('-')[1] : undefined,
+          itemVariation: sourceKey ? sourceKey.split('-')[2] : undefined,
+        };
       });
 
-      console.log(`[Auto-Sync] Successfully synced ${walletData.meks.length} MEKs, ${totalGoldPerHour.toFixed(2)} gold/hr`);
+      // Update the goldMining record directly (miner and minerData already declared above)
+      if (minerData) {
+        await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
+          walletAddress: args.walletAddress,
+          mekCount: walletData.meks.length,
+          totalGoldPerHour: totalGoldPerHour,
+          mekNumbers: walletData.meks.map((m: any) => m.mekNumber),
+          mekDetails: mekDetails,
+          snapshotSuccess: true,
+        });
+
+        console.log(`[Auto-Sync] ✅ Successfully synced ${walletData.meks.length} MEKs, ${totalGoldPerHour.toFixed(2)} gold/hr`);
+        console.log(`[Auto-Sync] Sample MEK:`, completeMekRecords[0]);
+      }
 
       return {
         success: true,
         mekCount: walletData.meks.length,
-        totalGoldPerHour: totalGoldPerHour
+        totalGoldPerHour: totalGoldPerHour,
+        sampleMek: completeMekRecords[0]
       };
     } catch (error) {
       console.error(`[Auto-Sync] Error syncing wallet ${args.walletAddress}:`, error);

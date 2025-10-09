@@ -280,6 +280,11 @@ export const updateMinerAfterSnapshot = internalMutation({
       currentLevel: v.optional(v.number()),
       levelBoostPercent: v.optional(v.number()),
       levelBoostAmount: v.optional(v.number()),
+      policyId: v.optional(v.string()),
+      imageUrl: v.optional(v.string()),
+      headVariation: v.optional(v.string()),
+      bodyVariation: v.optional(v.string()),
+      itemVariation: v.optional(v.string()),
     })),
     snapshotSuccess: v.optional(v.boolean()), // Whether snapshot succeeded
   },
@@ -382,14 +387,23 @@ export const updateMinerAfterSnapshot = internalMutation({
       const existingMek = existingMeksMap.get(detail.assetId);
 
       if (existingMek) {
-        // Merge existing Mek data with updated level boost data from snapshot
+        // Merge with snapshot data, but PREFER snapshot data when available
         return {
-          ...existingMek, // Preserve all existing fields (policyId, imageUrl, variations, etc.)
-          goldPerHour: detail.goldPerHour, // Update total rate
-          baseGoldPerHour: detail.baseGoldPerHour, // Update base rate
-          currentLevel: detail.currentLevel, // Update level
-          levelBoostPercent: detail.levelBoostPercent, // Update boost %
-          levelBoostAmount: detail.levelBoostAmount, // Update boost amount
+          ...existingMek, // Start with existing as base
+          // OVERRIDE with complete snapshot data when provided
+          assetName: (detail as any).assetName || existingMek.assetName,
+          policyId: (detail as any).policyId || existingMek.policyId,
+          imageUrl: (detail as any).imageUrl || existingMek.imageUrl,
+          headVariation: (detail as any).headVariation || existingMek.headVariation,
+          bodyVariation: (detail as any).bodyVariation || existingMek.bodyVariation,
+          itemVariation: (detail as any).itemVariation || existingMek.itemVariation,
+          rarityRank: detail.rarityRank || existingMek.rarityRank,
+          // Update rates and levels
+          goldPerHour: detail.goldPerHour,
+          baseGoldPerHour: detail.baseGoldPerHour,
+          currentLevel: detail.currentLevel,
+          levelBoostPercent: detail.levelBoostPercent,
+          levelBoostAmount: detail.levelBoostAmount,
           effectiveGoldPerHour: (detail.baseGoldPerHour || detail.goldPerHour) + (detail.levelBoostAmount || 0),
         };
       } else {

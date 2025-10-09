@@ -169,6 +169,30 @@ export default function CorporationPage() {
               🔄 Syncing MEK data from blockchain...
             </div>
           )}
+          {/* Manual sync button for debugging */}
+          <button
+            onClick={() => {
+              setIsSyncing(true);
+              setHasSynced(false);
+              syncWallet({ walletAddress: corpData.walletAddress })
+                .then((result) => {
+                  console.log('[Manual Sync] Result:', result);
+                  alert(`Sync complete! ${result.mekCount} MEKs synced. Refresh page to see changes.`);
+                  setHasSynced(true);
+                })
+                .catch((err) => {
+                  console.error('[Manual Sync] Error:', err);
+                  alert(`Sync failed: ${err.message || err}`);
+                })
+                .finally(() => {
+                  setIsSyncing(false);
+                });
+            }}
+            disabled={isSyncing}
+            className="mt-3 px-4 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors font-mono text-sm disabled:opacity-50"
+          >
+            {isSyncing ? 'Syncing...' : '🔄 Sync Blockchain Data'}
+          </button>
         </div>
 
         {/* All Meks Grid */}

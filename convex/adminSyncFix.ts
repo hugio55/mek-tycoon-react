@@ -14,7 +14,7 @@ export const adminForceResync = action({
   args: {
     stakeAddress: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; message: string; mekCount?: number; error?: string }> => {
     devLog.log(`[Admin] Force re-syncing wallet: ${args.stakeAddress}`);
 
     try {
