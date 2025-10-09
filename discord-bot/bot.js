@@ -1286,7 +1286,8 @@ client.on('interactionCreate', async (interaction) => {
           await message.edit({ embeds: [embed], components: buttons });
           console.log('[TODO] Successfully updated existing message');
 
-          await interaction.deferReply({ ephemeral: true });
+          // Silently acknowledge the interaction
+          await interaction.reply({ content: '\u200b', ephemeral: true });
           await interaction.deleteReply();
           return;
         } catch (error) {
@@ -1310,8 +1311,8 @@ client.on('interactionCreate', async (interaction) => {
         await setMessageInfo(message.id, message.channel.id);
         console.log('[TODO] Message info saved successfully');
 
-        // Silently acknowledge without showing a message
-        await interaction.deferReply({ ephemeral: true });
+        // Silently acknowledge the interaction
+        await interaction.reply({ content: '\u200b', ephemeral: true });
         await interaction.deleteReply();
       } catch (error) {
         console.error('[TODO] Failed to create message:', error.message);
