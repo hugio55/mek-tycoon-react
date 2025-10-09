@@ -1180,6 +1180,15 @@ client.on('interactionCreate', async (interaction) => {
           return;
         }
 
+        // Check if there are any wallets in the corporation
+        if (!connection.wallets || connection.wallets.length === 0) {
+          console.log('[CORP] No wallets in corporation - returning error');
+          await interaction.editReply({
+            content: '❌ Your corporation has no wallets. Please link wallets on the website first at https://mek.overexposed.io',
+          });
+          return;
+        }
+
         // Fetch corporation data using primary wallet (or first wallet if no primary)
         const walletToUse = connection.primaryWallet || connection.wallets[0].walletAddress;
         console.log('[CORP] Fetching corporation data for:', walletToUse);
