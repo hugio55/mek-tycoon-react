@@ -1267,39 +1267,41 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'todo') {
-      const isAdmin = interaction.member.permissions.has('Administrator');
-      const userData = await getTodoData();
+      // CRITICAL: Acknowledge interaction immediately (must be within 3 seconds)
+      await interaction.deferReply({ ephemeral: true });
 
-      console.log('[TODO] Current stored message ID:', userData.messageId);
-      console.log('[TODO] Current stored channel ID:', userData.channelId);
-
-      const embed = buildTodoEmbed(userData);
-      const buttons = buildTodoButtons(userData, isAdmin);
-
-      // Try to update existing message first
-      if (userData.messageId && userData.channelId) {
-        try {
-          console.log('[TODO] Attempting to update existing message...');
-          const channel = await client.channels.fetch(userData.channelId);
-          const message = await channel.messages.fetch(userData.messageId);
-
-          await message.edit({ embeds: [embed], components: buttons });
-          console.log('[TODO] Successfully updated existing message');
-
-          // Silently acknowledge the interaction
-          await interaction.reply({ content: '\u200b', ephemeral: true });
-          await interaction.deleteReply();
-          return;
-        } catch (error) {
-          console.log('[TODO] Could not find/edit existing message, creating new one:', error.message);
-          // Old message info is invalid, but we'll overwrite it with new message below
-        }
-      } else {
-        console.log('[TODO] No existing message found, will create new one');
-      }
-
-      // Create new regular message (not interaction reply)
       try {
+        const isAdmin = interaction.member.permissions.has('Administrator');
+        const userData = await getTodoData();
+
+        console.log('[TODO] Current stored message ID:', userData.messageId);
+        console.log('[TODO] Current stored channel ID:', userData.channelId);
+
+        const embed = buildTodoEmbed(userData);
+        const buttons = buildTodoButtons(userData, isAdmin);
+
+        // Try to update existing message first
+        if (userData.messageId && userData.channelId) {
+          try {
+            console.log('[TODO] Attempting to update existing message...');
+            const channel = await client.channels.fetch(userData.channelId);
+            const message = await channel.messages.fetch(userData.messageId);
+
+            await message.edit({ embeds: [embed], components: buttons });
+            console.log('[TODO] Successfully updated existing message');
+
+            // Clean up the deferred reply
+            await interaction.deleteReply();
+            return;
+          } catch (error) {
+            console.log('[TODO] Could not find/edit existing message, creating new one:', error.message);
+            // Old message info is invalid, but we'll overwrite it with new message below
+          }
+        } else {
+          console.log('[TODO] No existing message found, will create new one');
+        }
+
+        // Create new regular message (not interaction reply)
         console.log('[TODO] Creating new message...');
         const message = await interaction.channel.send({
           embeds: [embed],
@@ -1311,18 +1313,16 @@ client.on('interactionCreate', async (interaction) => {
         await setMessageInfo(message.id, message.channel.id);
         console.log('[TODO] Message info saved successfully');
 
-        // Silently acknowledge the interaction
-        await interaction.reply({ content: '\u200b', ephemeral: true });
+        // Clean up the deferred reply
         await interaction.deleteReply();
       } catch (error) {
         console.error('[TODO] Failed to create message:', error.message);
-        await interaction.reply({
+        await interaction.editReply({
           content: '❌ I don\'t have permission to send messages in this channel. Please check my bot permissions:\n' +
                    '• View Channel\n' +
                    '• Send Messages\n' +
                    '• Embed Links\n' +
                    '• Read Message History',
-          ephemeral: true,
         });
       }
     }
