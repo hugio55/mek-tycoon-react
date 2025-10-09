@@ -427,7 +427,19 @@ export const upgradeMekLevel = mutation({
         throw new Error("Concurrent modification detected. Please refresh and try again.");
       }
 
-      // Update goldMining with new rates AND DEDUCT GOLD - Using centralized calculation!
+      // CRITICAL: Determine MEK owner for spending attribution
+      // The MEK owner's wallet gets the spending credited, not the person upgrading
+      const mekOwnerWallet = mekLevel.walletAddress;
+      const isUpgradingOwnMek = mekOwnerWallet === args.walletAddress;
+
+      devLog.log('[UPGRADE MUTATION] Spending attribution:', {
+        upgrader: args.walletAddress,
+        mekOwner: mekOwnerWallet,
+        isOwn: isUpgradingOwnMek,
+        upgradeCost
+      });
+
+      // Update the CURRENT wallet's goldMining (deduct pooled gold, update rates)
       await ctx.db.patch(goldMiningData._id, {
         accumulatedGold: goldDecrease.newAccumulatedGold,  // CRITICAL: Actually deduct the gold spent!
         totalCumulativeGold: newTotalCumulativeGold, // CRITICAL: Preserve cumulative total
@@ -436,12 +448,50 @@ export const upgradeMekLevel = mutation({
         baseGoldPerHour,
         boostGoldPerHour,
         totalGoldPerHour,
-        totalGoldSpentOnUpgrades: goldDecrease.newTotalGoldSpentOnUpgrades,
-        totalUpgradesPurchased: (goldMiningData.totalUpgradesPurchased || 0) + 1,
-        lastUpgradeSpend: now,
+        // Only update spending if upgrading own MEK
+        ...(isUpgradingOwnMek ? {
+          totalGoldSpentOnUpgrades: goldDecrease.newTotalGoldSpentOnUpgrades,
+          totalUpgradesPurchased: (goldMiningData.totalUpgradesPurchased || 0) + 1,
+          lastUpgradeSpend: now,
+        } : {}),
         updatedAt: now,
         version: currentVersion + 1, // Increment version to detect concurrent modifications
       });
+
+      // If upgrading someone else's MEK, update THEIR spending stats
+      if (!isUpgradingOwnMek) {
+        const mekOwnerData = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", mekOwnerWallet))
+          .first();
+
+        if (mekOwnerData) {
+          // Calculate MEK owner's new cumulative gold (they receive investment value)
+          let ownerCumulativeGold = mekOwnerData.totalCumulativeGold || 0;
+          if (!ownerCumulativeGold || ownerCumulativeGold === 0) {
+            // Initialize if not set
+            ownerCumulativeGold = (mekOwnerData.accumulatedGold || 0) + (mekOwnerData.totalGoldSpentOnUpgrades || 0);
+          }
+          // Investment in their MEK increases their total economic value
+          const newOwnerCumulativeGold = ownerCumulativeGold + upgradeCost;
+
+          devLog.log('[UPGRADE MUTATION] Updating MEK owner spending:', {
+            owner: mekOwnerWallet,
+            oldSpent: mekOwnerData.totalGoldSpentOnUpgrades || 0,
+            newSpent: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
+            oldCumulative: ownerCumulativeGold,
+            newCumulative: newOwnerCumulativeGold
+          });
+
+          await ctx.db.patch(mekOwnerData._id, {
+            totalGoldSpentOnUpgrades: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
+            totalCumulativeGold: newOwnerCumulativeGold,
+            totalUpgradesPurchased: (mekOwnerData.totalUpgradesPurchased || 0) + 1,
+            lastUpgradeSpend: now,
+            updatedAt: now,
+          });
+        }
+      }
 
       // LOG: After database update
       devLog.log('[UPGRADE MUTATION] After DB update - gold deducted:', {

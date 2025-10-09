@@ -1,65 +1,82 @@
-// Quick script to check console errors
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 
 (async () => {
-  let browser;
-  try {
-    console.log('Launching browser...');
-    browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-    // Collect console messages
-    const messages = [];
-    page.on('console', msg => {
-      const type = msg.type();
-      const text = msg.text();
-      messages.push({ type, text });
-      console.log(`[${type.toUpperCase()}] ${text}`);
-    });
+  // Capture console messages
+  const consoleMessages = [];
+  const pageErrors = [];
 
-    // Collect page errors
-    page.on('pageerror', error => {
-      console.log('[PAGE ERROR]', error.message);
-      messages.push({ type: 'error', text: error.message });
-    });
+  page.on('console', msg => {
+    const type = msg.type();
+    const text = msg.text();
+    consoleMessages.push({ type, text });
+    console.log(`[CONSOLE ${type.toUpperCase()}] ${text}`);
+  });
 
-    // Navigate to the page
-    console.log('Navigating to http://localhost:3100/mek-rate-logging...');
-    await page.goto('http://localhost:3100/mek-rate-logging', {
-      waitUntil: 'networkidle0',
-      timeout: 30000
-    });
+  page.on('pageerror', exception => {
+    pageErrors.push(exception.message);
+    console.log(`[PAGE ERROR] ${exception.message}`);
+  });
 
-    // Wait a bit for React to render
-    await page.waitForTimeout(3000);
+  // Navigate to the page
+  console.log('\n=== Navigating to http://localhost:3100/ ===\n');
+  await page.goto('http://localhost:3100/', { waitUntil: 'networkidle' });
 
-    // Take a screenshot
-    await page.screenshot({ path: 'mek-rate-logging-screenshot.png' });
-    console.log('Screenshot saved to mek-rate-logging-screenshot.png');
+  // Wait a bit to capture any async errors
+  await page.waitForTimeout(3000);
 
-    // Get the page content
-    const content = await page.content();
-    console.log('\n=== PAGE CONTENT (first 500 chars) ===');
-    console.log(content.substring(0, 500));
+  // Check for gold accumulation
+  console.log('\n=== Checking Gold State ===');
+  const goldState = await page.evaluate(() => {
+    // Try to find gold value on page
+    const goldElements = document.querySelectorAll('[data-testid*="gold"], .gold, [class*="gold"]');
+    const goldText = Array.from(goldElements).map(el => el.textContent).join(', ');
 
-    // Print summary
-    console.log('\n=== CONSOLE SUMMARY ===');
-    const errors = messages.filter(m => m.type === 'error');
-    const warnings = messages.filter(m => m.type === 'warning');
-    console.log(`Total messages: ${messages.length}`);
-    console.log(`Errors: ${errors.length}`);
-    console.log(`Warnings: ${warnings.length}`);
+    // Check if animations are running
+    const hasAnimations = getComputedStyle(document.body).animationName !== 'none';
 
-    if (errors.length > 0) {
-      console.log('\n=== ERRORS ===');
-      errors.forEach(e => console.log(e.text));
-    }
+    return {
+      goldElements: goldText,
+      hasAnimations,
+      url: window.location.href,
+      title: document.title
+    };
+  });
 
-  } catch (error) {
-    console.error('Script error:', error);
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
+  console.log('Gold elements found:', goldState.goldElements);
+  console.log('Has animations:', goldState.hasAnimations);
+  console.log('Page URL:', goldState.url);
+  console.log('Page title:', goldState.title);
+
+  // Summary
+  console.log('\n=== SUMMARY ===');
+  console.log(`Total console messages: ${consoleMessages.length}`);
+  console.log(`Console errors: ${consoleMessages.filter(m => m.type === 'error').length}`);
+  console.log(`Console warnings: ${consoleMessages.filter(m => m.type === 'warning').length}`);
+  console.log(`Page errors: ${pageErrors.length}`);
+
+  if (pageErrors.length > 0) {
+    console.log('\n=== PAGE ERRORS ===');
+    pageErrors.forEach((err, i) => console.log(`${i + 1}. ${err}`));
   }
+
+  const errors = consoleMessages.filter(m => m.type === 'error');
+  if (errors.length > 0) {
+    console.log('\n=== CONSOLE ERRORS ===');
+    errors.forEach((err, i) => console.log(`${i + 1}. ${err.text}`));
+  }
+
+  const warnings = consoleMessages.filter(m => m.type === 'warning');
+  if (warnings.length > 0) {
+    console.log('\n=== CONSOLE WARNINGS ===');
+    warnings.forEach((warn, i) => console.log(`${i + 1}. ${warn.text}`));
+  }
+
+  console.log('\n=== Keeping browser open for 30 seconds for manual inspection ===');
+  await page.waitForTimeout(30000);
+
+  await browser.close();
 })();

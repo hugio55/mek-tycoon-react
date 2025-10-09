@@ -60,6 +60,24 @@ function getRarityColor(count: number): string {
 }
 
 /**
+ * Get variation info from just the variation name and type
+ * @param name - The variation name (e.g., "Turret", "Robot", "Broadcast")
+ * @param type - The variation type ('head', 'body', or 'trait')
+ * @returns VariationInfo with name, count, tier, and color
+ */
+export function getVariationInfo(name: string, type: 'head' | 'body' | 'trait'): VariationInfo {
+  const rarityKey = `${type}-${name.toLowerCase()}`;
+  const rarity = rarityLookup.get(rarityKey);
+
+  return {
+    name,
+    count: rarity?.count || 0,
+    tier: rarity?.tier || 'common',
+    color: rarity ? getRarityColor(rarity.count) : '#9ca3af'
+  };
+}
+
+/**
  * Get variation info from the FULL Mek sourceKey
  * @param fullSourceKey - The complete sourceKey (e.g., "AA1-DM1-AP1-B")
  * @returns Object with head, body, and trait variation info
@@ -80,21 +98,9 @@ export function getVariationInfoFromFullKey(fullSourceKey: string): {
     };
   }
 
-  const getInfoForVariation = (name: string, type: 'head' | 'body' | 'trait'): VariationInfo => {
-    const rarityKey = `${type}-${name.toLowerCase()}`;
-    const rarity = rarityLookup.get(rarityKey);
-
-    return {
-      name,
-      count: rarity?.count || 0,
-      tier: rarity?.tier || 'common',
-      color: rarity ? getRarityColor(rarity.count) : '#9ca3af'
-    };
-  };
-
   return {
-    head: getInfoForVariation(mekData.head, 'head'),
-    body: getInfoForVariation(mekData.body, 'body'),
-    trait: getInfoForVariation(mekData.trait, 'trait')
+    head: getVariationInfo(mekData.head, 'head'),
+    body: getVariationInfo(mekData.body, 'body'),
+    trait: getVariationInfo(mekData.trait, 'trait')
   };
 }

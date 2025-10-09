@@ -1542,18 +1542,26 @@ export default defineSchema({
     .index("by_status", ["status"]),
 
   // Mek Ownership History - stores snapshots of which Meks were in which wallets over time
+  // Updated: Added display fields (bodyVariation, headVariation, imageUrl, itemVariation, policyId)
   mekOwnershipHistory: defineTable({
     walletAddress: v.string(), // Which wallet this snapshot is for
+    groupId: v.optional(v.string()), // Which corporation/group this wallet was in at snapshot time
+    companyName: v.optional(v.string()), // Corporation name at snapshot time
     snapshotTime: v.number(), // When this snapshot was taken
     meks: v.array(v.object({
       assetId: v.string(), // Unique asset ID
       assetName: v.string(), // Mek name
+      policyId: v.optional(v.string()), // Policy ID for the NFT
       goldPerHour: v.number(), // Gold rate for this Mek at this time
       rarityRank: v.optional(v.number()),
       baseGoldPerHour: v.optional(v.number()), // Base rate before level boosts
       currentLevel: v.optional(v.number()), // Mek level at time of snapshot
       levelBoostPercent: v.optional(v.number()), // Level boost percentage
       levelBoostAmount: v.optional(v.number()), // Level boost gold amount
+      bodyVariation: v.optional(v.string()), // Body variation name
+      headVariation: v.optional(v.string()), // Head variation name
+      imageUrl: v.optional(v.string()), // Image path
+      itemVariation: v.optional(v.string()), // Item/trait variation name
     })),
     totalGoldPerHour: v.number(), // Total rate at time of snapshot
     totalMekCount: v.number(), // How many Meks were present

@@ -347,7 +347,7 @@ export default function HubPage() {
       animationFrameId = requestAnimationFrame(animate);
       return () => cancelAnimationFrame(animationFrameId);
     }
-  }, [goldPerSecond, cachedGoldData, verificationStatus, walletAddress]);
+  }, [goldPerSecond, cachedGoldData, verificationStatus?.isVerified, walletAddress, isDemoMode]);
   
   const collectAllGold = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!userId || isCollecting) return;

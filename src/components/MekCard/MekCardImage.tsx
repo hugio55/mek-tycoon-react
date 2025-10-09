@@ -15,10 +15,11 @@ export const MekCardImage = React.memo(({ mek, getMekImageUrl }: MekCardImagePro
             <div className="w-12 h-12 border-2 border-yellow-500/30 border-t-yellow-500/60 rounded-full animate-spin" />
           </div>
           <img
-            src={getMekImageUrl(mek.mekNumber, '1000px')}
+            src={getMekImageUrl(mek.mekNumber, '500px')}
             alt={mek.assetName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
             loading="lazy"
+            style={{ imageRendering: 'crisp-edges' }}
             onLoad={(e) => {
               const parent = e.currentTarget.parentElement;
               const loader = parent?.querySelector('div');

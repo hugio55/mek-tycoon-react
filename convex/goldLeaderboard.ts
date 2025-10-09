@@ -58,13 +58,18 @@ export const getTopGoldMiners = query({
 
     const calculateGold = (miner: typeof allMiners[0]) => {
       let currentGold = miner.accumulatedGold || 0;
+      let goldEarnedSinceLastUpdate = 0;
       if (miner.isBlockchainVerified === true) {
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+        // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+        goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+        // Apply cap to spendable gold only
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
-      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
       if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
         baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
@@ -255,13 +260,18 @@ export const getAllCorporations = query({
 
     const calculateGold = (miner: typeof allMiners[0]) => {
       let currentGold = miner.accumulatedGold || 0;
+      let goldEarnedSinceLastUpdate = 0;
       if (miner.isBlockchainVerified === true) {
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+        // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+        goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+        // Apply cap to spendable gold only
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
-      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
       if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
         baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
@@ -357,13 +367,18 @@ export const getCorporationWalletDetails = query({
 
       const calculateGold = (miner: typeof miner) => {
         let currentGold = miner.accumulatedGold || 0;
+        let goldEarnedSinceLastUpdate = 0;
         if (miner.isBlockchainVerified === true) {
           const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
           const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
           const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+          // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+          goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+          // Apply cap to spendable gold only
           currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
         }
-        const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
         if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
           baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
@@ -399,13 +414,18 @@ export const getCorporationWalletDetails = query({
 
       const calculateGold = (miner: typeof miner) => {
         let currentGold = miner.accumulatedGold || 0;
+        let goldEarnedSinceLastUpdate = 0;
         if (miner.isBlockchainVerified === true) {
           const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
           const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
           const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+          // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+          goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+          // Apply cap to spendable gold only
           currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
         }
-        const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
         if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
           baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);

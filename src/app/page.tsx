@@ -332,6 +332,11 @@ export default function MekRateLoggingPage() {
   const [isAddingWallet, setIsAddingWallet] = useState(false); // Flag to prevent auto-disconnect during wallet addition
   // Removed: isSyncing state (blockchain sync button removed)
 
+  // Nickname management modal states
+  const [nicknameManagementModalOpen, setNicknameManagementModalOpen] = useState(false);
+  const [existingWalletNicknames, setExistingWalletNicknames] = useState<Record<string, string>>({});
+  const [editingNicknameFor, setEditingNicknameFor] = useState<string | null>(null);
+
   // Corporation name merger states
   const [currentCorpName, setCurrentCorpName] = useState<string | null>(null);
   const [incomingCorpName, setIncomingCorpName] = useState<string | null>(null);
@@ -2646,7 +2651,19 @@ export default function MekRateLoggingPage() {
       setAddWalletStep('input');
       setAddWalletModalOpen(false);
       setIsAddingWallet(false); // Clear flag - wallet addition complete
-      alert('Wallet added successfully and verified!');
+
+      // Show nickname management modal after wallet addition
+      // Give Convex time to refetch the updated wallet group
+      setTimeout(() => {
+        if (walletGroup) {
+          const nicknames: Record<string, string> = {};
+          walletGroup.forEach(wallet => {
+            nicknames[wallet.walletAddress] = wallet.nickname || '';
+          });
+          setExistingWalletNicknames(nicknames);
+        }
+        setNicknameManagementModalOpen(true);
+      }, 1000);
 
     } catch (error: any) {
       console.error('[AddWallet] Failed to sign or add wallet:', error);
@@ -2666,6 +2683,44 @@ export default function MekRateLoggingPage() {
     setAddWalletModalOpen(false);
     setIsAddingWallet(false); // Clear flag when canceling
   };
+
+  // Handler for saving wallet nicknames
+  const handleSaveWalletNicknames = async () => {
+    try {
+      if (walletGroup) {
+        for (const wallet of walletGroup) {
+          const newNickname = existingWalletNicknames[wallet.walletAddress]?.trim();
+          const currentNickname = wallet.nickname || '';
+
+          // Only update if nickname changed
+          if (newNickname !== currentNickname) {
+            await setWalletNickname({
+              walletAddress: wallet.walletAddress,
+              nickname: newNickname || undefined,
+            });
+          }
+        }
+      }
+
+      // Close modal and reset
+      setNicknameManagementModalOpen(false);
+      setExistingWalletNicknames({});
+      alert('Wallet nicknames updated successfully!');
+    } catch (error: any) {
+      alert(`Error updating nicknames: ${error.message}`);
+    }
+  };
+
+  // Memoize wallet group splitting to avoid recalculation on every render
+  const { nicknameWallets, noNicknameWallets } = useMemo(() => {
+    if (!walletGroup) {
+      return { nicknameWallets: [], noNicknameWallets: [] };
+    }
+    return {
+      nicknameWallets: walletGroup.filter(w => w.nickname),
+      noNicknameWallets: walletGroup.filter(w => !w.nickname)
+    };
+  }, [walletGroup]);
 
   // Handler for removing a wallet from the corporation
   const handleRemoveWallet = async (walletToRemove: string) => {
@@ -2725,8 +2780,10 @@ export default function MekRateLoggingPage() {
 
   // Use ref to track latest corporationStats (includes total accumulated gold)
   const corporationStatsRef = useRef(corporationStats);
+  const corpStatsUpdateTimeRef = useRef(Date.now());
   useEffect(() => {
     corporationStatsRef.current = corporationStats;
+    corpStatsUpdateTimeRef.current = Date.now(); // Track when we got the update
   }, [corporationStats]);
 
   // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
@@ -2773,15 +2830,23 @@ export default function MekRateLoggingPage() {
 
         // Get corporation stats for total accumulated gold across all wallets
         const corpStats = corporationStatsRef.current;
-        const baseAccumulatedGold = corpStats?.totalCurrentGold || latestData.accumulatedGold || 0;
 
-        // Use shared calculation utility
-        const calculatedGold = calculateCurrentGold({
-          accumulatedGold: baseAccumulatedGold,
-          goldPerHour: effectiveRate,
-          lastSnapshotTime: latestData.lastSnapshotTime || latestData.updatedAt || latestData.createdAt,
-          isVerified: true
-        });
+        let calculatedGold;
+        if (corpStats && corpStats.totalCurrentGold !== undefined) {
+          // Use corporation total - already calculated with time in backend
+          // Only add gold accumulated since last corporationStats update
+          const timeSinceCorpUpdate = (now - corpStatsUpdateTimeRef.current) / 1000 / 3600; // hours
+          const goldSinceUpdate = effectiveRate * timeSinceCorpUpdate;
+          calculatedGold = corpStats.totalCurrentGold + goldSinceUpdate;
+        } else {
+          // Fallback to individual wallet calculation
+          calculatedGold = calculateCurrentGold({
+            accumulatedGold: latestData.accumulatedGold || 0,
+            goldPerHour: effectiveRate,
+            lastSnapshotTime: latestData.lastSnapshotTime || latestData.updatedAt || latestData.createdAt,
+            isVerified: true
+          });
+        }
 
         // Update DOM directly for butter-smooth animation at 60 FPS
         const goldDisplayElement = document.getElementById('current-gold-display');
@@ -2836,7 +2901,7 @@ export default function MekRateLoggingPage() {
       cancelAnimationFrame(animationFrameId);
       if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
     };
-  }, [walletConnected, walletAddress, goldMiningData?.isVerified]); // OPTIMIZED: Use refs to avoid restart on rate changes
+  }, [walletConnected, walletAddress, goldMiningData?.isVerified, corporationStats]); // Restart when corporation stats change
 
   // Save on page unload
   useEffect(() => {
@@ -5044,6 +5109,148 @@ export default function MekRateLoggingPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Nickname Management Modal */}
+      {nicknameManagementModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-black border-2 border-yellow-400 rounded shadow-[0_0_50px_rgba(250,182,23,0.4)] p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-yellow-400 text-xl font-bold uppercase tracking-wider mb-2">Wallet Added Successfully!</h2>
+            <p className="text-gray-400 text-sm mb-4">Would you like to add nicknames to your other wallets?</p>
+
+            {walletGroup && (
+              <>
+                {/* Wallets WITH nicknames */}
+                {nicknameWallets.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      {nicknameWallets.map((wallet) => (
+                        <div key={wallet.walletAddress} className="bg-gray-900/30 border border-gray-700 rounded p-3">
+                          <div className="flex items-center gap-2">
+                            {wallet.isPrimary && (
+                              <span className="text-yellow-400 text-xs">⭐</span>
+                            )}
+                            <div className="text-gray-300 font-mono text-xs truncate flex-1">
+                              {wallet.walletAddress}
+                            </div>
+                          </div>
+
+                          {editingNicknameFor === wallet.walletAddress ? (
+                            // Edit mode
+                            <div className="mt-2">
+                              <label className="block text-gray-400 text-xs uppercase tracking-wider mb-1">
+                                Nickname
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={existingWalletNicknames[wallet.walletAddress] || ''}
+                                  onChange={(e) => setExistingWalletNicknames(prev => ({
+                                    ...prev,
+                                    [wallet.walletAddress]: e.target.value
+                                  }))}
+                                  maxLength={30}
+                                  placeholder="e.g., Main Wallet"
+                                  className="flex-1 px-3 py-2 bg-black/50 border border-yellow-400 rounded text-white text-sm focus:outline-none"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => setEditingNicknameFor(null)}
+                                  className="px-3 py-2 bg-gray-700 border border-gray-600 text-gray-300 text-xs rounded hover:bg-gray-600 transition-all"
+                                >
+                                  ✓
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View mode - show nickname with pencil icon
+                            <div className="mt-2 flex items-center justify-between">
+                              <div>
+                                <span className="text-gray-500 text-xs uppercase tracking-wider">Nickname: </span>
+                                <span className="text-yellow-400 text-sm font-semibold">{wallet.nickname}</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingNicknameFor(wallet.walletAddress);
+                                  setExistingWalletNicknames(prev => ({
+                                    ...prev,
+                                    [wallet.walletAddress]: wallet.nickname || ''
+                                  }));
+                                }}
+                                className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
+                                title="Edit nickname"
+                              >
+                                ✏️
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  {nicknameWallets.length > 0 && noNicknameWallets.length > 0 && (
+                    <div className="border-t border-yellow-400/20 my-4"></div>
+                  )}
+
+                  {/* Wallets WITHOUT nicknames */}
+                  {noNicknameWallets.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Wallets without nicknames:</p>
+                      {noNicknameWallets.map((wallet) => (
+                        <div key={wallet.walletAddress} className="bg-gray-900/30 border border-gray-700 rounded p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            {wallet.isPrimary && (
+                              <span className="text-yellow-400 text-xs">⭐</span>
+                            )}
+                            <div className="text-gray-300 font-mono text-xs truncate flex-1">
+                              {wallet.walletAddress}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-gray-400 text-xs uppercase tracking-wider mb-1">
+                              Nickname
+                            </label>
+                            <input
+                              type="text"
+                              value={existingWalletNicknames[wallet.walletAddress] || ''}
+                              onChange={(e) => setExistingWalletNicknames(prev => ({
+                                ...prev,
+                                [wallet.walletAddress]: e.target.value
+                              }))}
+                              maxLength={30}
+                              placeholder="e.g., Main Wallet, Cold Storage..."
+                              className="w-full px-3 py-2 bg-black/50 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-yellow-400"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setNicknameManagementModalOpen(false);
+                  setExistingWalletNicknames({});
+                  setEditingNicknameFor(null);
+                }}
+                className="flex-1 bg-black/50 border border-gray-600 text-gray-300 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-black/70 hover:border-gray-500 transition-all"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleSaveWalletNicknames}
+                className="flex-1 bg-yellow-500/20 border border-yellow-400 text-yellow-400 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(250,182,23,0.3)] transition-all"
+              >
+                Save Nicknames
+              </button>
+            </div>
           </div>
         </div>
       )}

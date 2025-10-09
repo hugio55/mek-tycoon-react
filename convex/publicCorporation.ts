@@ -80,16 +80,20 @@ export const getCorporationData = query({
       for (const data of validGoldMiningData) {
         // Calculate current gold for this wallet
         let currentGold = data.accumulatedGold || 0;
+        let goldEarnedSinceLastUpdate = 0;
 
         if (data.isBlockchainVerified === true) {
           isAnyBlockchainVerified = true;
           const lastUpdateTime = data.lastSnapshotTime || data._creationTime;
           const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
           const goldSinceLastUpdate = (data.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+          // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+          goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+          // Apply cap to spendable gold only
           currentGold = Math.min(50000, (data.accumulatedGold || 0) + goldSinceLastUpdate);
         }
-
-        const goldEarnedSinceLastUpdate = currentGold - (data.accumulatedGold || 0);
         let baseCumulativeGold = data.totalCumulativeGold || 0;
 
         if (!data.totalCumulativeGold || baseCumulativeGold === 0) {
@@ -117,15 +121,19 @@ export const getCorporationData = query({
 
     // Calculate current cumulative gold
     let currentGold = goldMiningData.accumulatedGold || 0;
+    let goldEarnedSinceLastUpdate = 0;
 
     if (goldMiningData.isBlockchainVerified === true) {
       const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData._creationTime;
       const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
       const goldSinceLastUpdate = (goldMiningData.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+
+      // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+      goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+      // Apply cap to spendable gold only
       currentGold = Math.min(50000, (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate);
     }
-
-    const goldEarnedSinceLastUpdate = currentGold - (goldMiningData.accumulatedGold || 0);
     let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
 
     if (!goldMiningData.totalCumulativeGold || baseCumulativeGold === 0) {

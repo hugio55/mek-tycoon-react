@@ -357,10 +357,18 @@ export const updateMinerAfterSnapshot = internalMutation({
       spendableGold = accumulatedGold;
     }
 
+    // Look up group membership for historical tracking
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
     // Store ownership snapshot in history table with COMPLETE game state
     // CRITICAL FIX: Use the NEWLY CALCULATED values (not old database values)
     await ctx.db.insert("mekOwnershipHistory", {
       walletAddress: args.walletAddress,
+      groupId: membership?.groupId, // Which corporation this wallet was in
+      companyName: miner.companyName, // Corporation name at snapshot time
       snapshotTime: now,
       meks: args.mekDetails,
       totalGoldPerHour: args.totalGoldPerHour,

@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { GOLD_CAP } from "./lib/goldCalculations";
 
 // Debug function to check actual gold values
 export const checkGoldDebug = query({
@@ -25,7 +26,7 @@ export const checkGoldDebug = query({
 
     // Calculate what gold SHOULD be based on creation time
     const theoreticalGold = data.totalGoldPerHour * hoursSinceCreated;
-    const currentTotal = Math.min(50000, theoreticalGold);
+    const currentTotal = Math.min(GOLD_CAP, theoreticalGold);
 
     return {
       walletAddress: args.walletAddress,
@@ -46,7 +47,7 @@ export const checkGoldDebug = query({
         theoreticalGoldIfNoStops: theoreticalGold.toFixed(2),
         pendingAccumulation: "0.00", // No longer relevant - always calculated from creation
         currentTotalWithPending: currentTotal.toFixed(2),
-        hitCap: currentTotal >= 50000,
+        hitCap: currentTotal >= GOLD_CAP,
       },
 
       debug: {

@@ -2,6 +2,7 @@
 
 import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { GOLD_CAP } from "./lib/goldCalculations";
 
 /**
  * Smart Contract Architecture for On-Chain Rate Calculations
@@ -284,7 +285,7 @@ export const getContractState = query({
       validatorHash: "abc123def456",
       currentParams: {
         baseRate: 10,
-        maxAccumulation: 50000,
+        maxAccumulation: GOLD_CAP,
         checkpointInterval: 3600, // 1 hour
         lastUpdate: Date.now(),
       },

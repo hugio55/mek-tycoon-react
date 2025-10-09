@@ -110,8 +110,10 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
+  const [nicknameManagementModalOpen, setNicknameManagementModalOpen] = useState(false);
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletNickname, setNewWalletNickname] = useState('');
+  const [existingWalletNicknames, setExistingWalletNicknames] = useState<Record<string, string>>({});
   const navRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -163,6 +165,14 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
 
   // Mutations
   const addWalletToGroup = useMutation(api.walletGroups.addWalletToGroup);
+  const setWalletNickname = useMutation(api.walletGroups.setWalletNickname);
+
+  // Handler for opening the add wallet modal
+  const handleOpenAddWalletModal = () => {
+    playClickSound();
+    setWalletDropdownOpen(false);
+    setAddWalletModalOpen(true);
+  };
 
   // Handler for adding a new wallet
   const handleAddWallet = async () => {
@@ -172,19 +182,61 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     }
 
     try {
+      // Add the new wallet
       await addWalletToGroup({
         existingWalletInGroup: walletAddress,
         newWalletAddress: newWalletAddress.trim(),
         nickname: newWalletNickname.trim() || undefined,
       });
 
-      // Close modal and reset form
+      // Close add wallet modal and reset form
       setAddWalletModalOpen(false);
       setNewWalletAddress('');
       setNewWalletNickname('');
-      alert('Wallet added successfully!');
+
+      // After successful wallet addition, show nickname management modal
+      // Give it a moment for the wallet group to update
+      setTimeout(() => {
+        // Initialize nickname fields with current values
+        if (walletGroup) {
+          const nicknames: Record<string, string> = {};
+          walletGroup.forEach(wallet => {
+            nicknames[wallet.walletAddress] = wallet.nickname || '';
+          });
+          setExistingWalletNicknames(nicknames);
+        }
+        setNicknameManagementModalOpen(true);
+      }, 500);
+
     } catch (error: any) {
       alert(`Error adding wallet: ${error.message}`);
+    }
+  };
+
+  // Handler for saving nickname updates
+  const handleSaveNicknames = async () => {
+    try {
+      if (walletGroup) {
+        for (const wallet of walletGroup) {
+          const newNickname = existingWalletNicknames[wallet.walletAddress]?.trim();
+          const currentNickname = wallet.nickname || '';
+
+          // Only update if nickname changed
+          if (newNickname !== currentNickname) {
+            await setWalletNickname({
+              walletAddress: wallet.walletAddress,
+              nickname: newNickname || undefined,
+            });
+          }
+        }
+      }
+
+      // Close modal and reset
+      setNicknameManagementModalOpen(false);
+      setExistingWalletNicknames({});
+      alert('Wallet nicknames updated successfully!');
+    } catch (error: any) {
+      alert(`Error updating nicknames: ${error.message}`);
     }
   };
 
@@ -439,11 +491,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
               <div className="absolute top-full left-0 right-0 mt-1 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-400 rounded-lg shadow-[0_8px_25px_rgba(255,204,0,0.3)] p-2 space-y-2 min-w-[300px]">
                 {/* Add Wallet Button */}
                 <button
-                  onClick={() => {
-                    playClickSound();
-                    setWalletDropdownOpen(false);
-                    setAddWalletModalOpen(true);
-                  }}
+                  onClick={handleOpenAddWalletModal}
                   className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-sm font-semibold uppercase tracking-wider rounded px-3 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
                 >
                   + Add Wallet
@@ -700,9 +748,80 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
                 }}
                 className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
               >
-                Add Wallet
+                Next: Verify →
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderNicknameManagementModal = () => {
+    if (!nicknameManagementModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-yellow-400 rounded-lg shadow-[0_0_50px_rgba(250,182,23,0.4)] p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <h2 className="text-yellow-400 text-xl font-bold uppercase tracking-wider mb-2">Wallet Added Successfully!</h2>
+          <p className="text-gray-400 text-sm mb-4">Would you like to add nicknames to your wallets?</p>
+
+          <div className="space-y-3 mb-4">
+            {walletGroup && walletGroup.map((wallet) => (
+              <div key={wallet.walletAddress} className="bg-gray-900/30 border border-gray-700 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  {wallet.isPrimary && (
+                    <span className="text-yellow-400 text-xs">⭐</span>
+                  )}
+                  <div className="text-gray-300 font-mono text-xs truncate flex-1">
+                    {wallet.walletAddress}
+                  </div>
+                  {wallet.nickname && (
+                    <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-1 rounded">
+                      {wallet.nickname}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-gray-400 text-xs uppercase tracking-wider mb-1">
+                    Nickname
+                  </label>
+                  <input
+                    type="text"
+                    value={existingWalletNicknames[wallet.walletAddress] || ''}
+                    onChange={(e) => setExistingWalletNicknames(prev => ({
+                      ...prev,
+                      [wallet.walletAddress]: e.target.value
+                    }))}
+                    placeholder="e.g., Main Wallet, Cold Storage..."
+                    className="w-full bg-gray-900/50 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:border-yellow-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                playClickSound();
+                setNicknameManagementModalOpen(false);
+                setExistingWalletNicknames({});
+              }}
+              className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-xs font-medium uppercase tracking-wider rounded px-4 py-2 hover:from-gray-700 hover:to-gray-800 transition-all"
+            >
+              Skip
+            </button>
+            <button
+              onClick={() => {
+                playClickSound();
+                handleSaveNicknames();
+              }}
+              className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
+            >
+              Save Nicknames
+            </button>
           </div>
         </div>
       </div>
@@ -732,6 +851,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         {renderControls()}
         {renderUserStats()}
         {renderAddWalletModal()}
+        {renderNicknameManagementModal()}
       </div>
     );
   }
@@ -759,6 +879,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         {renderControls()}
         {renderUserStats()}
         {renderAddWalletModal()}
+        {renderNicknameManagementModal()}
       </div>
     );
   }
@@ -788,6 +909,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       {renderControls()}
       {renderUserStats()}
       {renderAddWalletModal()}
+      {renderNicknameManagementModal()}
     </div>
   );
 }

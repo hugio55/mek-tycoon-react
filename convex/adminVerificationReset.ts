@@ -483,17 +483,22 @@ export const getAllWallets = query({
     return dedupedMiners.map(miner => {
       // Calculate current gold (respecting verification status)
       let currentGold = miner.accumulatedGold || 0;
+      let goldEarnedSinceLastUpdate = 0;
 
       if (miner.isBlockchainVerified === true) {
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
+
+        // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+        goldEarnedSinceLastUpdate = goldSinceLastUpdate;
+
+        // Apply cap to spendable gold only
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
       // Calculate real-time cumulative gold for display (base + ongoing earnings)
       // Note: Database value may be out of date between checkpoints
-      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
 
       // If totalCumulativeGold not initialized, estimate from current state

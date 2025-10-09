@@ -2,9 +2,10 @@ import { v } from "convex/values";
 import { mutation, query, action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
+import { GOLD_CAP } from "./lib/goldCalculations";
 
-// Maximum gold cap
-const MAX_GOLD = 50000;
+// Maximum gold cap (imported from goldCalculations)
+const MAX_GOLD = GOLD_CAP;
 
 // Update all users' gold accumulation (runs via cron)
 export const updateAllUsersGold = action({

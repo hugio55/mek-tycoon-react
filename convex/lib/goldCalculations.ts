@@ -14,7 +14,7 @@ export interface GoldCalculationParams {
 /**
  * Calculates current gold based on accumulated gold and time elapsed
  * @param params - Gold calculation parameters
- * @returns Current gold amount (capped at 50,000)
+ * @returns Current gold amount (capped at GOLD_CAP: 10,000,000)
  */
 export function calculateCurrentGold(params: GoldCalculationParams): number {
   // If not verified, return accumulated gold (frozen)
@@ -35,7 +35,7 @@ export function calculateCurrentGold(params: GoldCalculationParams): number {
   const now = Date.now();
   const hoursSinceLastUpdate = (now - params.lastSnapshotTime) / (1000 * 60 * 60);
   const goldSinceLastUpdate = params.goldPerHour * hoursSinceLastUpdate;
-  const calculatedGold = Math.min(50000, params.accumulatedGold + goldSinceLastUpdate);
+  const calculatedGold = Math.min(GOLD_CAP, params.accumulatedGold + goldSinceLastUpdate);
 
   return calculatedGold;
 }
@@ -58,7 +58,7 @@ export function calculateGoldSinceLastUpdate(
 /**
  * Gold cap constant
  */
-export const GOLD_CAP = 50000;
+export const GOLD_CAP = 10000000;
 
 /**
  * Helper interface for gold mining record updates
@@ -124,7 +124,7 @@ export function calculateGoldIncrease(
 
   // Defensive logging for edge cases
   if (goldLostToCap > 0) {
-    console.log("[GOLD CAP] Gold capped at 50k:", {
+    console.log(`[GOLD CAP] Gold capped at ${GOLD_CAP.toLocaleString()}:`, {
       goldToAdd,
       currentAccumulated,
       uncappedValue: uncappedAccumulated,
