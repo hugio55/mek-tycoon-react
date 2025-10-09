@@ -449,6 +449,13 @@ export const getAllWallets = query({
     const now = Date.now();
     const allMiners = await ctx.db.query("goldMining").collect();
 
+    // Get all wallet group memberships for adding group info
+    const allMemberships = await ctx.db.query("walletGroupMemberships").collect();
+    const walletToGroupMap = new Map<string, string>();
+    for (const membership of allMemberships) {
+      walletToGroupMap.set(membership.walletAddress, membership.groupId);
+    }
+
     // Group by user fingerprint to deduplicate display
     const userGroups = new Map<string, typeof allMiners>();
     allMiners.forEach(miner => {
@@ -516,6 +523,7 @@ export const getAllWallets = query({
         walletAddress: miner.walletAddress,
         walletType: miner.walletType || "Unknown",
         companyName: miner.companyName || null,
+        groupId: walletToGroupMap.get(miner.walletAddress) || null,
         mekCount: miner.ownedMeks.length,
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.floor(currentGold * 100) / 100,

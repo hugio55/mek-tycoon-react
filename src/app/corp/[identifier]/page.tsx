@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useParams } from 'next/navigation';
 import { getMekImageUrl } from '@/lib/mekNumberToVariation';
@@ -24,6 +24,8 @@ export default function CorporationPage() {
   const params = useParams();
   const identifier = params?.identifier as string;
   const [selectedMek, setSelectedMek] = useState<WalletMek | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [hasSynced, setHasSynced] = useState(false);
 
   // Decode the identifier (in case it has URL encoding)
   const decodedIdentifier = decodeURIComponent(identifier);
@@ -35,6 +37,39 @@ export default function CorporationPage() {
 
   // Get level colors
   const levelColors = useQuery(api.levelColors.getLevelColors);
+
+  // Sync action
+  const syncWallet = useAction(api.goldMining.syncWalletFromBlockchain);
+
+  // Auto-detect incomplete data and trigger sync
+  useEffect(() => {
+    if (!corpData || hasSynced || isSyncing) return;
+
+    // Check if any MEKs have incomplete data
+    const hasIncompleteData = corpData.meks.some(mek =>
+      !mek.assetName ||
+      mek.assetName.includes('???') ||
+      !mek.mekNumber ||
+      !mek.imageUrl
+    );
+
+    if (hasIncompleteData) {
+      console.log('[Corp Page] Detected incomplete MEK data - triggering sync...');
+      setIsSyncing(true);
+
+      syncWallet({ walletAddress: corpData.walletAddress })
+        .then(() => {
+          console.log('[Corp Page] Sync completed successfully');
+          setHasSynced(true);
+        })
+        .catch((err) => {
+          console.error('[Corp Page] Sync failed:', err);
+        })
+        .finally(() => {
+          setIsSyncing(false);
+        });
+    }
+  }, [corpData, hasSynced, isSyncing, syncWallet]);
 
   // Get top 3 Meks
   const topThreeMeks = corpData?.meks.slice(0, 3) || [];
@@ -129,6 +164,11 @@ export default function CorporationPage() {
           <div className="text-gray-400 font-mono text-lg">
             {corpData.mekCount} Meks • {corpData.goldPerHour.toFixed(1)} Gold/hr
           </div>
+          {isSyncing && (
+            <div className="mt-3 text-yellow-400 text-sm font-mono animate-pulse">
+              🔄 Syncing MEK data from blockchain...
+            </div>
+          )}
         </div>
 
         {/* All Meks Grid */}
