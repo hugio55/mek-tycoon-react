@@ -105,6 +105,15 @@ async function deleteTask(taskNumber) {
   }
 }
 
+async function editTask(taskNumber, newText) {
+  try {
+    return await convex.mutation('discordTodos:editTask', { taskNumber, newText });
+  } catch (error) {
+    console.error('[TODO] Error editing task:', error);
+    return null;
+  }
+}
+
 async function clearCompleted() {
   return await convex.mutation('discordTodos:clearCompleted');
 }
@@ -137,6 +146,7 @@ function buildTodoEmbed(userData) {
     view: '👁️ VIEW MODE',
     complete: '✅ COMPLETE MODE',
     uncomplete: '↩️ UNCOMPLETE MODE',
+    edit: '✏️ EDIT MODE',
     delete: '🗑️ DELETE MODE',
   };
 
@@ -175,9 +185,13 @@ function buildTodoButtons(userData, isAdmin = false) {
 
   // Add task dropdown if in edit mode and tasks exist
   if (mode !== 'view' && tasks.length > 0) {
+    const placeholderText = mode === 'complete' ? 'complete' :
+                           mode === 'uncomplete' ? 'uncomplete' :
+                           mode === 'edit' ? 'edit' :
+                           'delete';
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId('todo_select_task')
-      .setPlaceholder('Select a task to ' + (mode === 'complete' ? 'complete' : mode === 'uncomplete' ? 'uncomplete' : 'delete'));
+      .setPlaceholder('Select a task to ' + placeholderText);
 
     // Discord dropdowns support max 25 options
     const displayTasks = tasks.slice(0, 25);
@@ -235,6 +249,11 @@ function buildTodoButtons(userData, isAdmin = false) {
         .setCustomId('todo_mode_uncomplete')
         .setLabel('Uncomplete')
         .setEmoji('↩️')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId('todo_mode_edit')
+        .setLabel('Edit')
+        .setEmoji('✏️')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('todo_mode_delete')
@@ -817,6 +836,60 @@ client.on('interactionCreate', async (interaction) => {
       }
       return;
     }
+
+    // Handle edit modal submission
+    if (interaction.customId.startsWith('todo_edit_modal_')) {
+      // Check admin permissions
+      if (!interaction.member.permissions.has('Administrator')) {
+        await interaction.reply({
+          content: '❌ Only administrators can modify the todo list.',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      try {
+        // Extract task number from customId (e.g., "todo_edit_modal_3" -> 3)
+        const taskNumber = parseInt(interaction.customId.replace('todo_edit_modal_', ''));
+        const newText = interaction.fields.getTextInputValue('task_input');
+
+        await editTask(taskNumber, newText);
+
+        const userData = await getTodoData();
+        const embed = buildTodoEmbed(userData);
+        const buttons = buildTodoButtons(userData, true);
+
+        let updateSuccessful = false;
+
+        try {
+          if (userData.messageId && userData.channelId) {
+            const channel = await client.channels.fetch(userData.channelId);
+            const message = await channel.messages.fetch(userData.messageId);
+            await message.edit({ embeds: [embed], components: buttons });
+            updateSuccessful = true;
+          }
+        } catch (error) {
+          console.error('Error updating todo message:', error);
+        }
+
+        // Silently acknowledge the interaction without showing a message
+        if (updateSuccessful) {
+          await interaction.deferUpdate();
+        } else {
+          await interaction.reply({
+            content: '✅ Task updated. Run `/todo` to refresh the list.',
+            ephemeral: true,
+          });
+        }
+      } catch (error) {
+        console.error('[TODO] Error editing task:', error);
+        await interaction.reply({
+          content: `❌ Failed to edit task: ${error.message}`,
+          ephemeral: true,
+        });
+      }
+      return;
+    }
   }
 
   // Handle select menu interactions (dropdown)
@@ -838,6 +911,34 @@ client.on('interactionCreate', async (interaction) => {
 
       if (userData.mode === 'complete' || userData.mode === 'uncomplete') {
         await toggleTask(taskNumber);
+      } else if (userData.mode === 'edit') {
+        // Show modal for editing
+        const task = userData.tasks[taskNumber - 1];
+        if (!task) {
+          await interaction.reply({
+            content: '❌ Task not found.',
+            ephemeral: true,
+          });
+          return;
+        }
+
+        const modal = new ModalBuilder()
+          .setCustomId(`todo_edit_modal_${taskNumber}`)
+          .setTitle('Edit Task');
+
+        const taskInput = new TextInputBuilder()
+          .setCustomId('task_input')
+          .setLabel('Task Description')
+          .setStyle(TextInputStyle.Paragraph)
+          .setValue(task.text)
+          .setRequired(true)
+          .setMaxLength(500);
+
+        const actionRow = new ActionRowBuilder().addComponents(taskInput);
+        modal.addComponents(actionRow);
+
+        await interaction.showModal(modal);
+        return;
       } else if (userData.mode === 'delete') {
         await deleteTask(taskNumber);
       }
@@ -893,6 +994,8 @@ client.on('interactionCreate', async (interaction) => {
         await setMode('complete');
       } else if (interaction.customId === 'todo_mode_uncomplete') {
         await setMode('uncomplete');
+      } else if (interaction.customId === 'todo_mode_edit') {
+        await setMode('edit');
       } else if (interaction.customId === 'todo_mode_delete') {
         await setMode('delete');
       } else if (interaction.customId === 'todo_mode_view') {
