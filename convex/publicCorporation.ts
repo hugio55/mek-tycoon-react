@@ -38,6 +38,83 @@ export const getCorporationData = query({
       return null;
     }
 
+    // Check if this wallet is part of a multi-wallet group
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", q => q.eq("walletAddress", goldMiningData.walletAddress))
+      .first();
+
+    // If wallet is in a group, aggregate data from all wallets in the group
+    if (membership) {
+      const allWalletsInGroup = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", q => q.eq("groupId", membership.groupId))
+        .collect();
+
+      const walletAddresses = allWalletsInGroup.map(w => w.walletAddress);
+
+      // Get goldMining data for all wallets in the group
+      const allGoldMiningData = await Promise.all(
+        walletAddresses.map(addr =>
+          ctx.db.query("goldMining")
+            .filter(q => q.eq(q.field("walletAddress"), addr))
+            .first()
+        )
+      );
+
+      // Filter out nulls and aggregate the data
+      const validGoldMiningData = allGoldMiningData.filter(data => data !== null);
+
+      if (validGoldMiningData.length === 0) {
+        return null;
+      }
+
+      // Aggregate totals across all wallets
+      let totalGoldPerHour = 0;
+      let totalAccumulatedGold = 0;
+      let totalGoldSpentOnUpgrades = 0;
+      let totalCumulativeGold = 0;
+      let allMeks: any[] = [];
+      let isAnyBlockchainVerified = false;
+
+      for (const data of validGoldMiningData) {
+        // Calculate current gold for this wallet
+        let currentGold = data.accumulatedGold || 0;
+
+        if (data.isBlockchainVerified === true) {
+          isAnyBlockchainVerified = true;
+          const lastUpdateTime = data.lastSnapshotTime || data._creationTime;
+          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+          const goldSinceLastUpdate = (data.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+          currentGold = Math.min(50000, (data.accumulatedGold || 0) + goldSinceLastUpdate);
+        }
+
+        const goldEarnedSinceLastUpdate = currentGold - (data.accumulatedGold || 0);
+        let baseCumulativeGold = data.totalCumulativeGold || 0;
+
+        if (!data.totalCumulativeGold || baseCumulativeGold === 0) {
+          baseCumulativeGold = (data.accumulatedGold || 0) + (data.totalGoldSpentOnUpgrades || 0);
+        }
+
+        totalGoldPerHour += data.totalGoldPerHour || 0;
+        totalAccumulatedGold += currentGold;
+        totalGoldSpentOnUpgrades += data.totalGoldSpentOnUpgrades || 0;
+        totalCumulativeGold += baseCumulativeGold + goldEarnedSinceLastUpdate;
+        allMeks.push(...(data.ownedMeks || []));
+      }
+
+      // Use the first wallet's data as the base for corporation info
+      goldMiningData = {
+        ...goldMiningData,
+        totalGoldPerHour,
+        accumulatedGold: totalAccumulatedGold,
+        totalGoldSpentOnUpgrades,
+        totalCumulativeGold,
+        ownedMeks: allMeks,
+        isBlockchainVerified: isAnyBlockchainVerified,
+      };
+    }
+
     // Calculate current cumulative gold
     let currentGold = goldMiningData.accumulatedGold || 0;
 
