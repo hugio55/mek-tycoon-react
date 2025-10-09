@@ -122,7 +122,7 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   }, [expiresAt]);
 
   return (
-    <div className={`font-mono text-sm sm:text-base ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
+    <div className={`font-mono text-base sm:text-lg ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
       {timeRemaining}
     </div>
   );
@@ -305,6 +305,8 @@ export default function MekRateLoggingPage() {
   const [selectedMek, setSelectedMek] = useState<MekAsset | null>(null);
   const [sortType, setSortType] = useState<'rate' | 'level'>('rate'); // Sort by rate or level
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [walletFilter, setWalletFilter] = useState<string | null>(null); // Filter by wallet address
+  const [walletFilterDropdownOpen, setWalletFilterDropdownOpen] = useState(false);
   const [goldTextStyle, setGoldTextStyle] = useState<number>(1); // Default to spaced style
   const [mekNumberStyle, setMekNumberStyle] = useState<number>(0); // Mek number display style
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
@@ -315,6 +317,25 @@ export default function MekRateLoggingPage() {
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [searchTerm, setSearchTerm] = useState(''); // Search functionality
+
+  // Add Wallet modal states
+  const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
+  const [newWalletAddress, setNewWalletAddress] = useState('');
+  const [newWalletNickname, setNewWalletNickname] = useState('');
+  const [addWalletStep, setAddWalletStep] = useState<'input' | 'name-merger' | 'verify' | 'signing'>('input');
+
+  // Edit wallet nickname states
+  const [editingWalletAddress, setEditingWalletAddress] = useState<string | null>(null);
+  const [editingNickname, setEditingNickname] = useState('');
+  const [addWalletNonce, setAddWalletNonce] = useState<string | null>(null);
+  const [addWalletMessage, setAddWalletMessage] = useState<string | null>(null);
+  const [isAddingWallet, setIsAddingWallet] = useState(false); // Flag to prevent auto-disconnect during wallet addition
+
+  // Corporation name merger states
+  const [currentCorpName, setCurrentCorpName] = useState<string | null>(null);
+  const [incomingCorpName, setIncomingCorpName] = useState<string | null>(null);
+  const [selectedCorpNameOption, setSelectedCorpNameOption] = useState<'current' | 'incoming' | 'new'>('current');
+  const [newCorpName, setNewCorpName] = useState('');
 
   // Blockchain verification state
   const [showVerificationPanel, setShowVerificationPanel] = useState(true);
@@ -372,6 +393,11 @@ export default function MekRateLoggingPage() {
   const updateGoldCheckpoint = useMutation(api.goldMining.updateGoldCheckpoint);
   const updateLastActive = useMutation(api.goldMining.updateLastActive);
   const upgradeMek = useMutation(api.mekLeveling.upgradeMekLevel);
+  const addWalletToGroup = useAction(api.walletGroups.addWalletToGroup); // Changed to action for signature verification
+  const removeWalletFromGroup = useMutation(api.walletGroups.removeWalletFromGroup);
+  const setWalletNickname = useMutation(api.walletGroups.setWalletNickname);
+  const getWalletCompanyName = useQuery(api.walletGroups.getWalletCompanyName, newWalletAddress.trim() ? { walletAddress: newWalletAddress.trim() } : "skip");
+  const updateGroupCompanyName = useMutation(api.walletGroups.updateGroupCompanyName);
   const generateNonce = useMutation(api.walletAuthentication.generateNonce);
   const verifySignature = useAction(api.walletAuthentication.verifySignature);
   const checkAuth = useQuery(
@@ -388,6 +414,23 @@ export default function MekRateLoggingPage() {
 
   // Get gold mining data
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Get all Meks from all wallets in the corporation
+  const groupMeks = useQuery(api.goldMining.getGroupMeks,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Get wallet group for displaying in dropdown
+  const walletGroup = useQuery(
+    api.walletGroups.getMyGroupWallets,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Get aggregated corporation stats (cumulative gold from ALL wallets)
+  const corporationStats = useQuery(
+    api.goldMining.getCorporationStats,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -424,8 +467,8 @@ export default function MekRateLoggingPage() {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Query Mek levels for the wallet
-  const mekLevels = useQuery(api.mekLeveling.getMekLevels,
+  // Query Mek levels for the wallet (includes all wallets in corporation)
+  const mekLevels = useQuery(api.mekLeveling.getGroupMekLevels,
     walletAddress ? { walletAddress } : "skip"
   );
 
@@ -449,8 +492,14 @@ export default function MekRateLoggingPage() {
     }, 0);
   }, [goldMiningData?.ownedMeks, mekLevels]);
 
-  // Memoize cumulative gold calculation
+  // Memoize cumulative gold calculation - USES CORPORATION STATS to aggregate ALL wallets
   const calculatedCumulativeGold = useMemo(() => {
+    // Use corporation stats if available (aggregates all wallets in the corporation)
+    if (corporationStats) {
+      return corporationStats.totalCumulativeGold;
+    }
+
+    // Fallback to single wallet calculation if corporation stats not loaded yet
     if (!goldMiningData) return 0;
 
     const now = Date.now();
@@ -468,7 +517,7 @@ export default function MekRateLoggingPage() {
     }
 
     return baseCumulativeGold;
-  }, [goldMiningData]);
+  }, [corporationStats, goldMiningData]);
 
   // Update gold display when goldMiningData changes - optimized to prevent unnecessary re-renders
   useEffect(() => {
@@ -832,13 +881,16 @@ export default function MekRateLoggingPage() {
       if (!target.closest('.sort-dropdown-container')) {
         setSortDropdownOpen(false);
       }
+      if (!target.closest('.wallet-filter-dropdown-container')) {
+        setWalletFilterDropdownOpen(false);
+      }
     };
 
-    if (sortDropdownOpen) {
+    if (sortDropdownOpen || walletFilterDropdownOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [sortDropdownOpen]);
+  }, [sortDropdownOpen, walletFilterDropdownOpen]);
 
   // Restore and sync verification status from goldMiningData
   useEffect(() => {
@@ -867,30 +919,34 @@ export default function MekRateLoggingPage() {
 
   // Sync level and boost data from goldMiningData and mekLevels into ownedMeks
   // CRITICAL: This also syncs new Meks added to goldMining.ownedMeks (e.g., from Blockfrost verification)
+  // UPDATED: Now uses groupMeks to show ALL Meks from ALL wallets in the corporation
   // Debounced to prevent excessive recalculations on rapid data changes
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks) {
+    // Use groupMeks if available (includes all wallets in corporation)
+    const mekSource = groupMeks?.meks || goldMiningData?.ownedMeks;
+
+    if (!mekSource) {
       return;
     }
 
-    // CRITICAL FIX: If ownedMeks is empty BUT goldMiningData has Meks, populate from database
-    if (ownedMeks.length === 0 && goldMiningData.ownedMeks.length > 0) {
-      console.log('[Level Sync] INITIAL SYNC: Populating ownedMeks from goldMiningData:', goldMiningData.ownedMeks.length, 'Meks');
-      setOwnedMeks(goldMiningData.ownedMeks as MekAsset[]);
+    // CRITICAL FIX: If ownedMeks is empty BUT we have Meks from group, populate from database
+    if (ownedMeks.length === 0 && mekSource.length > 0) {
+      console.log('[Level Sync] INITIAL SYNC: Populating ownedMeks from group:', mekSource.length, 'Meks');
+      setOwnedMeks(mekSource as MekAsset[]);
       return;
     }
 
     // Debounce the sync operation by 150ms to batch rapid updates
     const syncTimeout = setTimeout(() => {
-      console.log('[Level Sync] Syncing level data from goldMiningData and mekLevels');
-      console.log('[Level Sync] Database has', goldMiningData.ownedMeks.length, 'Meks');
+      console.log('[Level Sync] Syncing level data from group/goldMiningData and mekLevels');
+      console.log('[Level Sync] Database has', mekSource.length, 'Meks');
       console.log('[Level Sync] UI state has', ownedMeks.length, 'Meks');
       console.log('[Level Sync] mekLevels data:', mekLevels?.length || 0, 'levels loaded');
-      console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData.totalGoldPerHour);
+      console.log('[Level Sync] goldMiningData.totalGoldPerHour:', goldMiningData?.totalGoldPerHour);
 
-      // Create a map of goldMiningData meks for quick lookup
-      const goldMiningMekMap = new Map(
-        goldMiningData.ownedMeks.map(mek => [mek.assetId, mek])
+      // Create a map of source meks for quick lookup
+      const sourceMekMap = new Map(
+        mekSource.map(mek => [mek.assetId, mek])
       );
 
       // Create a map of existing ownedMeks for quick lookup
@@ -903,9 +959,9 @@ export default function MekRateLoggingPage() {
         (mekLevels || []).map(level => [level.assetId, level])
       );
 
-      // CRITICAL FIX: Build full Mek list from goldMiningData, not just update existing ones
+      // CRITICAL FIX: Build full Mek list from source (group or goldMiningData), not just update existing ones
       // This ensures new Meks added to the database appear in the UI
-      const updatedMeks = goldMiningData.ownedMeks.map(dbMek => {
+      const updatedMeks = mekSource.map(dbMek => {
         const existingMek = existingMekMap.get(dbMek.assetId);
         const mekLevel = mekLevelMap.get(dbMek.assetId);
 
@@ -965,7 +1021,7 @@ export default function MekRateLoggingPage() {
 
     // Cleanup: cancel pending sync if dependencies change again
     return () => clearTimeout(syncTimeout);
-  }, [goldMiningData?.ownedMeks, mekLevels]); // Include mekLevels in dependencies
+  }, [groupMeks?.meks, goldMiningData?.ownedMeks, mekLevels]); // Include groupMeks, goldMiningData, and mekLevels in dependencies
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1132,7 +1188,7 @@ export default function MekRateLoggingPage() {
     };
   }, [isDemoMode]);
 
-  // DEMO MODE: Continuous gold accumulation
+  // DEMO MODE: Continuous gold accumulation (optimized with throttling)
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -1141,13 +1197,23 @@ export default function MekRateLoggingPage() {
     const goldPerSecond = totalGoldPerHour / 3600;
 
     let lastTimestamp = performance.now();
+    let lastStateUpdate = performance.now();
+    let accumulatedGold = 0;
     let animationFrameId: number;
 
     const accumulateGold = (timestamp: number) => {
       const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
       lastTimestamp = timestamp;
 
-      setCurrentGold(prev => prev + (goldPerSecond * deltaTime));
+      // Accumulate gold every frame for accuracy
+      accumulatedGold += goldPerSecond * deltaTime;
+
+      // But only update state every 100ms to prevent excessive re-renders (10 FPS instead of 60 FPS)
+      if (timestamp - lastStateUpdate >= 100) {
+        setCurrentGold(prev => prev + accumulatedGold);
+        accumulatedGold = 0; // Reset accumulator after state update
+        lastStateUpdate = timestamp;
+      }
 
       animationFrameId = requestAnimationFrame(accumulateGold);
     };
@@ -1173,7 +1239,18 @@ export default function MekRateLoggingPage() {
     const handleAccountChange = () => {
       console.log('[Wallet Account Change] Detected account switch in wallet extension');
 
-      // Show notification to user
+      // SECURITY: If user is adding a wallet, allow the switch without disconnecting
+      // They need to switch to the new wallet to sign the ownership proof
+      if (isAddingWallet) {
+        console.log('[Wallet Account Change] User is adding wallet - allowing switch without disconnect');
+        setToast({
+          message: 'ℹ️ Wallet switched - sign with the new wallet to verify ownership',
+          type: 'info'
+        });
+        return; // Don't disconnect
+      }
+
+      // Normal case: unexpected wallet change, disconnect for security
       setToast({
         message: '⚠️ Wallet account changed - disconnecting for security',
         type: 'info'
@@ -1217,7 +1294,7 @@ export default function MekRateLoggingPage() {
         console.warn('[Wallet Account Change] Failed to remove listener:', error);
       }
     };
-  }, [walletConnected, walletAddress]);
+  }, [walletConnected, walletAddress, isAddingWallet]); // Added isAddingWallet to ensure handleAccountChange has latest flag value
 
   // Detect available Cardano wallets
   const detectAvailableWallets = () => {
@@ -2320,82 +2397,356 @@ export default function MekRateLoggingPage() {
     console.log('[Wallet Disconnect] === DISCONNECT COMPLETE ===');
   };
 
-  // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
-  // CRITICAL: Only accumulate gold if wallet is VERIFIED
-  useEffect(() => {
-    if (walletConnected && goldMiningData) {
-      // VERIFICATION CHECK: Only animate gold if verified
-      const isVerified = goldMiningData.isVerified === true;
+  // STEP 1: Check for corporation name conflict before proceeding
+  const handleRequestWalletVerification = async () => {
+    if (!walletAddress || !newWalletAddress.trim()) {
+      alert('Please enter a valid wallet address');
+      return;
+    }
 
-      if (!isVerified) {
-        // Not verified - freeze gold at current accumulated amount
-        console.log('[Gold Animation] Wallet NOT VERIFIED - freezing gold at', goldMiningData.accumulatedGold);
-        setCurrentGold(goldMiningData.accumulatedGold || 0);
-        return; // Don't start animation loop
+    // Validate wallet address format
+    if (!newWalletAddress.startsWith('stake1') && !newWalletAddress.startsWith('stake_test1')) {
+      alert('Please enter a valid Cardano stake address (starts with stake1 or stake_test1)');
+      return;
+    }
+
+    // FAIL-SAFE: Check if trying to add the currently connected wallet
+    if (newWalletAddress.trim() === walletAddress) {
+      alert('⚠️ Cannot add wallet: This is the wallet you are currently connected with.\n\nYou cannot add a wallet to itself.');
+      return;
+    }
+
+    // FAIL-SAFE: Check if wallet is already in the current group
+    if (walletGroup && walletGroup.length > 0) {
+      const alreadyInGroup = walletGroup.some(w => w.walletAddress === newWalletAddress.trim());
+      if (alreadyInGroup) {
+        alert('⚠️ Cannot add wallet: This wallet is already part of your corporation.');
+        return;
+      }
+    }
+
+    try {
+      // CRITICAL: Set flag to prevent auto-disconnect when user switches wallets
+      setIsAddingWallet(true);
+
+      // Check if incoming wallet has a company name
+      const incomingName = getWalletCompanyName || null;
+
+      // Get current wallet's company name
+      const currentName = goldMiningData?.companyName || null;
+
+      // If both wallets have names, show merger modal
+      if (currentName && incomingName) {
+        console.log('[AddWallet] Both wallets have company names, showing merger modal');
+        setCurrentCorpName(currentName);
+        setIncomingCorpName(incomingName);
+        setSelectedCorpNameOption('current');
+        setNewCorpName('');
+        setAddWalletStep('name-merger');
+        return; // Don't generate nonce yet, wait for name selection
       }
 
-      console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation');
+      // If no conflict, proceed directly to verification
+      await proceedToVerification();
 
-      let animationFrameId: number;
-      let lastUpdateTime = Date.now();
-      let lastStateUpdateTime = Date.now();
-
-      // Smooth gold accumulation using requestAnimationFrame for perfect 60 FPS
-      const animateGold = () => {
-        const now = Date.now();
-        const timeSinceLastUpdate = now - lastUpdateTime;
-        const timeSinceLastStateUpdate = now - lastStateUpdateTime;
-
-        // Calculate gold every frame, but only update state every 100ms to prevent excessive re-renders
-        if (goldMiningData && timeSinceLastStateUpdate >= 100) {
-          // Use shared calculation utility
-          const calculatedGold = calculateCurrentGold({
-            accumulatedGold: goldMiningData.accumulatedGold || 0,
-            goldPerHour: goldMiningData.totalGoldPerHour,
-            lastSnapshotTime: goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt,
-            isVerified: true
-          });
-
-          // Update state - throttled to 10 times per second instead of 60
-          setCurrentGold(calculatedGold);
-
-          // Also update cumulative gold in real-time
-          const baseCumulativeGold = goldMiningData.totalCumulativeGold || (goldMiningData.accumulatedGold || 0);
-          const goldSinceLastUpdate = calculatedGold - (goldMiningData.accumulatedGold || 0);
-
-          // Only add ongoing earnings to cumulative if verified
-          if (goldMiningData.isBlockchainVerified === true) {
-            const calculatedCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
-            setCumulativeGold(calculatedCumulativeGold);
-          } else {
-            setCumulativeGold(baseCumulativeGold);
-          }
-
-          lastStateUpdateTime = now;
-        }
-
-        lastUpdateTime = now;
-        animationFrameId = requestAnimationFrame(animateGold);
-      };
-
-      // Start animation loop
-      animationFrameId = requestAnimationFrame(animateGold);
-
-      // Update last active time every 5 minutes (only if verified)
-      checkpointIntervalRef.current = setInterval(async () => {
-        if (walletAddress && isVerified) {
-          await updateGoldCheckpoint({
-            walletAddress
-          });
-        }
-      }, 5 * 60 * 1000);
-
-      return () => {
-        cancelAnimationFrame(animationFrameId);
-        if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
-      };
+    } catch (error: any) {
+      console.error('[AddWallet] Failed to check company names:', error);
+      alert(`Failed to process request: ${error.message}`);
+      setAddWalletStep('input');
+      setIsAddingWallet(false); // Clear flag on error
     }
-  }, [walletConnected, goldMiningData, walletAddress]);
+  };
+
+  // Helper function to generate nonce and proceed to verification step
+  const proceedToVerification = async () => {
+    try {
+      setAddWalletStep('verify');
+      console.log('[AddWallet] Generating nonce for new wallet:', newWalletAddress);
+
+      const result = await generateNonce({
+        stakeAddress: newWalletAddress.trim(),
+        walletName: 'Additional Wallet',
+        deviceId: `add-wallet-${Date.now()}`,
+        origin: window.location.origin,
+      });
+
+      setAddWalletNonce(result.nonce);
+      setAddWalletMessage(result.message);
+
+      console.log('[AddWallet] Nonce generated:', result.nonce);
+    } catch (error: any) {
+      console.error('[AddWallet] Failed to generate nonce:', error);
+      alert(`Failed to generate verification nonce: ${error.message}`);
+      setAddWalletStep('input');
+      setIsAddingWallet(false); // Clear flag on error
+    }
+  };
+
+  // STEP 2: Request signature from NEW wallet
+  const handleSignWithNewWallet = async () => {
+    if (!addWalletNonce || !addWalletMessage || !newWalletAddress) {
+      alert('Missing verification data. Please try again.');
+      setAddWalletStep('input');
+      return;
+    }
+
+    try {
+      setAddWalletStep('signing');
+      console.log('[AddWallet] Requesting signature from new wallet...');
+
+      // Request wallet connection and signature from the NEW wallet
+      // The user needs to switch to or connect the wallet they want to add
+      const cardano = (window as any).cardano;
+      if (!cardano) {
+        throw new Error('No Cardano wallet detected. Please install a wallet extension.');
+      }
+
+      // Show available wallets
+      const wallets = [];
+      if (cardano.nami) wallets.push('nami');
+      if (cardano.eternl) wallets.push('eternl');
+      if (cardano.flint) wallets.push('flint');
+
+      if (wallets.length === 0) {
+        throw new Error('No supported wallet found. Please install Nami, Eternl, or Flint.');
+      }
+
+      // SIMPLIFIED APPROACH: Use whatever wallet the user has active
+      // The backend signature verification will ensure it matches the claimed address
+      let walletApi;
+      let connectedWalletName = null;
+
+      // Try to connect to any available wallet
+      for (const walletName of wallets) {
+        try {
+          console.log(`[AddWallet] Attempting to connect to ${walletName}...`);
+          walletApi = await cardano[walletName].enable();
+
+          if (walletApi) {
+            connectedWalletName = walletName;
+            console.log(`[AddWallet] ✓ Connected to ${walletName}`);
+
+            // Get the stake address from this wallet to show user
+            const rewardAddressesHex = await walletApi.getRewardAddresses();
+            console.log(`[AddWallet] Wallet reward addresses (hex):`, rewardAddressesHex);
+
+            // Note: We don't verify the address matches here because:
+            // 1. getRewardAddresses() returns hex format, not bech32
+            // 2. Backend signature verification will catch any mismatch
+            // 3. This is more user-friendly (no confusing hex/bech32 conversion errors)
+
+            break;
+          }
+        } catch (err) {
+          console.warn(`[AddWallet] Could not connect to ${walletName}:`, err);
+        }
+      }
+
+      if (!walletApi) {
+        throw new Error(`Could not connect to any wallet. Please make sure:\n1. You have a Cardano wallet installed (Nami, Eternl, or Flint)\n2. You've switched to the wallet containing address: ${newWalletAddress.substring(0, 20)}...`);
+      }
+
+      console.log(`[AddWallet] Using ${connectedWalletName} for signature. If this is the wrong wallet, the signature will fail and you can try again.`);
+
+      // Request signature
+      const messageHex = Buffer.from(addWalletMessage).toString('hex');
+      const signature = await walletApi.signData(newWalletAddress.trim(), messageHex);
+
+      console.log('[AddWallet] Signature received, verifying...');
+
+      // STEP 3: Submit to backend with signature
+      const result = await addWalletToGroup({
+        existingWalletInGroup: walletAddress,
+        newWalletAddress: newWalletAddress.trim(),
+        signature: signature.signature,
+        nonce: addWalletNonce,
+        nickname: newWalletNickname.trim() || undefined,
+      });
+
+      // STEP 4: Update corporation name if a selection was made
+      if (result.success && result.groupId && (currentCorpName || incomingCorpName)) {
+        let finalCorpName = '';
+
+        if (selectedCorpNameOption === 'current') {
+          finalCorpName = currentCorpName || '';
+        } else if (selectedCorpNameOption === 'incoming') {
+          finalCorpName = incomingCorpName || '';
+        } else if (selectedCorpNameOption === 'new') {
+          finalCorpName = newCorpName.trim();
+        }
+
+        if (finalCorpName) {
+          console.log('[AddWallet] Updating group corporation name to:', finalCorpName);
+          await updateGroupCompanyName({
+            groupId: result.groupId,
+            companyName: finalCorpName,
+          });
+        }
+      }
+
+      // Success!
+      setNewWalletAddress('');
+      setNewWalletNickname('');
+      setAddWalletNonce(null);
+      setAddWalletMessage(null);
+      setCurrentCorpName(null);
+      setIncomingCorpName(null);
+      setSelectedCorpNameOption('current');
+      setNewCorpName('');
+      setAddWalletStep('input');
+      setAddWalletModalOpen(false);
+      setIsAddingWallet(false); // Clear flag - wallet addition complete
+      alert('Wallet added successfully and verified!');
+
+    } catch (error: any) {
+      console.error('[AddWallet] Failed to sign or add wallet:', error);
+      alert(`Failed to add wallet: ${error.message}`);
+      setAddWalletStep('verify');
+      setIsAddingWallet(false); // Clear flag on error
+    }
+  };
+
+  // Reset add wallet flow
+  const handleCancelAddWallet = () => {
+    setNewWalletAddress('');
+    setNewWalletNickname('');
+    setAddWalletNonce(null);
+    setAddWalletMessage(null);
+    setAddWalletStep('input');
+    setAddWalletModalOpen(false);
+    setIsAddingWallet(false); // Clear flag when canceling
+  };
+
+  // Handler for removing a wallet from the corporation
+  const handleRemoveWallet = async (walletToRemove: string) => {
+    if (!walletGroup || walletGroup.length < 2) {
+      alert('Cannot remove the only wallet in the corporation');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Remove wallet ${walletToRemove.slice(0, 12)}...${walletToRemove.slice(-8)} from corporation?\n\n` +
+      'This wallet will revert to standalone mode with its own independent stats.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await removeWalletFromGroup({
+        walletAddress: walletToRemove,
+      });
+
+      alert('Wallet removed successfully!');
+
+      // Reset filter if it was set to the removed wallet
+      if (walletFilter === walletToRemove) {
+        setWalletFilter(null);
+      }
+    } catch (error: any) {
+      alert(`Error removing wallet: ${error.message}`);
+    }
+  };
+
+  // Handler for editing wallet nickname
+  const handleSaveNickname = async (walletAddress: string, newNickname: string) => {
+    try {
+      await setWalletNickname({
+        walletAddress,
+        nickname: newNickname.trim() || undefined,
+      });
+      setEditingWalletAddress(null);
+      setEditingNickname('');
+    } catch (error: any) {
+      alert(`Error updating nickname: ${error.message}`);
+    }
+  };
+
+  // Use ref to track latest goldMiningData without restarting animation loop
+  const goldMiningDataRef = useRef(goldMiningData);
+  useEffect(() => {
+    goldMiningDataRef.current = goldMiningData;
+  }, [goldMiningData]);
+
+  // Start gold counter - 60 FPS update rate for smooth animation using requestAnimationFrame
+  // CRITICAL: Only accumulate gold if wallet is VERIFIED
+  // OPTIMIZED: Animation loop doesn't restart when goldMiningData updates
+  useEffect(() => {
+    if (!walletConnected || !goldMiningData) return;
+
+    // VERIFICATION CHECK: Only animate gold if verified
+    const isVerified = goldMiningData.isVerified === true;
+
+    if (!isVerified) {
+      // Not verified - freeze gold at current accumulated amount
+      console.log('[Gold Animation] Wallet NOT VERIFIED - freezing gold at', goldMiningData.accumulatedGold);
+      setCurrentGold(goldMiningData.accumulatedGold || 0);
+      return; // Don't start animation loop
+    }
+
+    console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation (optimized - won\'t restart on data updates)');
+
+    let animationFrameId: number;
+    let lastUpdateTime = Date.now();
+    let lastStateUpdateTime = Date.now();
+
+    // Smooth gold accumulation using requestAnimationFrame for perfect 60 FPS
+    const animateGold = () => {
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateTime;
+      const timeSinceLastStateUpdate = now - lastStateUpdateTime;
+
+      // Get latest data from ref (doesn't cause re-render)
+      const latestData = goldMiningDataRef.current;
+
+      // Calculate gold every frame, but only update state every 100ms to prevent excessive re-renders
+      if (latestData && timeSinceLastStateUpdate >= 100) {
+        // Use shared calculation utility
+        const calculatedGold = calculateCurrentGold({
+          accumulatedGold: latestData.accumulatedGold || 0,
+          goldPerHour: latestData.totalGoldPerHour,
+          lastSnapshotTime: latestData.lastSnapshotTime || latestData.updatedAt || latestData.createdAt,
+          isVerified: true
+        });
+
+        // Update state - throttled to 10 times per second instead of 60
+        setCurrentGold(calculatedGold);
+
+        // Also update cumulative gold in real-time
+        const baseCumulativeGold = latestData.totalCumulativeGold || (latestData.accumulatedGold || 0);
+        const goldSinceLastUpdate = calculatedGold - (latestData.accumulatedGold || 0);
+
+        // Only add ongoing earnings to cumulative if verified
+        if (latestData.isBlockchainVerified === true) {
+          const calculatedCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
+          setCumulativeGold(calculatedCumulativeGold);
+        } else {
+          setCumulativeGold(baseCumulativeGold);
+        }
+
+        lastStateUpdateTime = now;
+      }
+
+      lastUpdateTime = now;
+      animationFrameId = requestAnimationFrame(animateGold);
+    };
+
+    // Start animation loop (only restarts when wallet connection changes, not on every data update)
+    animationFrameId = requestAnimationFrame(animateGold);
+
+    // Update last active time every 5 minutes (only if verified)
+    checkpointIntervalRef.current = setInterval(async () => {
+      if (walletAddress && isVerified) {
+        await updateGoldCheckpoint({
+          walletAddress
+        });
+      }
+    }, 5 * 60 * 1000);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
+    };
+  }, [walletConnected, walletAddress]); // OPTIMIZED: Removed goldMiningData dependency
 
   // Save on page unload
   useEffect(() => {
@@ -3072,20 +3423,19 @@ export default function MekRateLoggingPage() {
                   onClick={() => setWalletDropdownOpen(!walletDropdownOpen)}
                   className="flex items-center gap-2 bg-black/60 border border-yellow-500/30 px-3 sm:px-4 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all min-h-[44px] sm:min-h-0 touch-manipulation"
                 >
-                  <span className="text-yellow-400 font-bold text-xs sm:text-sm font-sans uppercase">
+                  <span className="text-yellow-400 font-bold text-base sm:text-lg font-sans uppercase">
                     {ownedMeks.length} MEKS
                   </span>
-                  <span className="text-yellow-400 text-xs">▼</span>
+                  <span className="text-yellow-400 text-sm">▼</span>
                 </button>
 
                 {walletDropdownOpen && (
                   <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-sm rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left" style={{ willChange: 'opacity, transform' }}>
-                    {/* Corporation name and wallet address */}
-                    <div className="px-4 py-4 border-b border-yellow-500/20 space-y-3 touch-manipulation">
-                      {/* Corporation name */}
+                    {/* 1. Corporation name */}
+                    <div className="px-4 py-4 border-b border-yellow-500/20 touch-manipulation">
                       {companyNameData?.companyName ? (
                         <div
-                          className="text-yellow-400 font-bold text-base sm:text-base cursor-pointer hover:text-yellow-300 transition-colors min-h-[44px] flex items-center touch-manipulation"
+                          className="text-yellow-400 font-bold text-xl sm:text-xl cursor-pointer hover:text-yellow-300 transition-colors min-h-[44px] flex items-center touch-manipulation"
                           onClick={() => {
                             setCompanyNameModalMode('edit');
                             setShowCompanyNameModal(true);
@@ -3094,7 +3444,7 @@ export default function MekRateLoggingPage() {
                           title="Click to edit corporation name"
                         >
                           {companyNameData.companyName}
-                          <span className="ml-1 text-xs opacity-60">✏️</span>
+                          <span className="ml-1 text-base opacity-60">✏️</span>
                         </div>
                       ) : (
                         <button
@@ -3103,37 +3453,134 @@ export default function MekRateLoggingPage() {
                             setShowCompanyNameModal(true);
                             setWalletDropdownOpen(false);
                           }}
-                          className="text-yellow-400/60 text-base sm:text-base italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
+                          className="text-yellow-400/60 text-xl sm:text-xl italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
                         >
                           + Set corporation name
                         </button>
                       )}
-
-                      {/* Wallet address */}
-                      <div className="text-gray-400 font-mono text-base sm:text-base break-all">
-                        {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-8)}
-                      </div>
-
-                      {/* Session expiration timer */}
-                      {checkAuth?.expiresAt && (
-                        <div className="mt-2 pt-2 border-t border-yellow-500/10">
-                          <div className="text-gray-500 text-sm sm:text-base uppercase tracking-wider mb-1">
-                            Session Expires
-                          </div>
-                          <SessionTimer expiresAt={checkAuth.expiresAt} />
-                        </div>
-                      )}
                     </div>
 
-                    {/* Cumulative Gold Display */}
+                    {/* 2. Total Cumulative Gold */}
                     <div className="px-4 py-4 border-b border-yellow-500/20">
-                      <div className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Cumulative Gold</div>
-                      <div className="text-yellow-400 font-bold text-xl sm:text-xl font-mono">
+                      <div className="text-gray-400 text-base sm:text-base uppercase tracking-wider mb-1">Total Cumulative Gold</div>
+                      <div className="text-yellow-400 font-bold text-2xl sm:text-2xl font-mono">
                         <AnimatedNumber value={cumulativeGold} decimals={0} threshold={0.5} />
                       </div>
                     </div>
 
-                    {/* Buttons */}
+                    {/* 3. Session expiration timer */}
+                    {checkAuth?.expiresAt && (
+                      <div className="px-4 py-4 border-b border-yellow-500/20">
+                        <div className="text-gray-500 text-base sm:text-lg uppercase tracking-wider mb-1">
+                          Session Expires
+                        </div>
+                        <SessionTimer expiresAt={checkAuth.expiresAt} />
+                      </div>
+                    )}
+
+                    {/* 4. & 5. Wallets in Corporation */}
+                    {walletGroup && walletGroup.length > 0 && (
+                      <div className="px-4 py-4 border-b border-yellow-500/20 space-y-3">
+                        <div className="text-gray-400 text-base uppercase tracking-wider mb-2">
+                          Wallets in Corporation ({walletGroup.length})
+                        </div>
+
+                        {walletGroup.map((wallet, index) => (
+                          <div
+                            key={wallet.walletAddress}
+                            className={`px-4 py-3 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border ${
+                              wallet.walletAddress === walletAddress
+                                ? 'border-yellow-400'
+                                : 'border-gray-600'
+                            } rounded ${
+                              wallet.isPrimary ? 'font-semibold' : 'font-normal'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                {/* Nickname - editable */}
+                                {editingWalletAddress === wallet.walletAddress ? (
+                                  <div className="flex gap-2 items-center mb-1">
+                                    <input
+                                      type="text"
+                                      value={editingNickname}
+                                      onChange={(e) => setEditingNickname(e.target.value)}
+                                      className="flex-1 px-2 py-1 bg-black/50 border border-yellow-500/50 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-400"
+                                      placeholder="Wallet nickname"
+                                      autoFocus
+                                    />
+                                    <button
+                                      onClick={() => handleSaveNickname(wallet.walletAddress, editingNickname)}
+                                      className="text-green-400 hover:text-green-300 text-sm px-2 py-1"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingWalletAddress(null);
+                                        setEditingNickname('');
+                                      }}
+                                      className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="flex items-center gap-2 mb-1 cursor-pointer hover:text-yellow-300 transition-colors"
+                                    onClick={() => {
+                                      setEditingWalletAddress(wallet.walletAddress);
+                                      setEditingNickname(wallet.nickname || '');
+                                    }}
+                                  >
+                                    <div className="text-yellow-400 text-base uppercase tracking-wider">
+                                      {wallet.nickname || 'Set Nickname'}
+                                    </div>
+                                    <span className="text-gray-500 text-xs">✏️</span>
+                                  </div>
+                                )}
+                                {/* Abbreviated stake address */}
+                                <div className="text-gray-400 font-mono text-sm">
+                                  stake{wallet.walletAddress.slice(5, 9)}...{wallet.walletAddress.slice(-4)}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {wallet.isPrimary && (
+                                  <span className="text-yellow-400 text-sm">⭐</span>
+                                )}
+                                {walletGroup.length > 1 && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveWallet(wallet.walletAddress);
+                                    }}
+                                    className="text-red-400 hover:text-red-300 text-xs px-2 py-1 border border-red-500/50 hover:border-red-400 rounded transition-colors"
+                                    title="Remove wallet from corporation"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 6. Add Wallet Button */}
+                    <div className="px-4 py-3 border-b border-yellow-500/20">
+                      <button
+                        onClick={() => {
+                          setWalletDropdownOpen(false);
+                          setAddWalletModalOpen(true);
+                        }}
+                        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 border-2 border-yellow-500 text-white text-base font-bold uppercase tracking-wider rounded px-4 py-3 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all min-h-[48px] touch-manipulation"
+                      >
+                        + ADD WALLET
+                      </button>
+                    </div>
+
+                    {/* 7. Rescan Wallet(s) Button */}
                     <button
                       onClick={async () => {
                         setWalletDropdownOpen(false);
@@ -3157,17 +3604,18 @@ export default function MekRateLoggingPage() {
                           console.error('Rescan error:', error);
                         }
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-sm sm:text-sm font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
-                      RESCAN WALLET
+                      RESCAN WALLET{walletGroup && walletGroup.length > 1 ? 'S' : ''}
                     </button>
 
+                    {/* 8. Disconnect Button */}
                     <button
                       onClick={() => {
                         setWalletDropdownOpen(false);
                         disconnectWallet();
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-sm sm:text-sm font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
                     >
                       DISCONNECT
                     </button>
@@ -3244,7 +3692,7 @@ export default function MekRateLoggingPage() {
                     className="text-yellow-400 hover:text-yellow-300 underline transition-colors"
                   >
                     here
-                  </a>. You must initiate your company by verifying on the blockchain. <span className="text-white font-bold" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)' }}>Click the initiate button below to begin.</span>
+                  </a>.{!verificationStatus?.verified && <> You must initiate your company by verifying on the blockchain. <span className="text-white font-bold" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)' }}>Click the initiate button below to begin.</span></>}
                 </span>
               </p>
             </div>
@@ -3439,7 +3887,7 @@ export default function MekRateLoggingPage() {
               </div>
             </div>
 
-            {/* Controls Row - Search bar and Sort button - Hidden when no meks */}
+            {/* Controls Row - Search bar, Wallet Filter, and Sort button - Hidden when no meks */}
             {ownedMeks.length > 0 && (
               <div className={`mt-6 flex gap-3 items-end justify-between mb-3 sm:mb-4 sm:items-center ${
                 ownedMeks.length === 1 ? 'max-w-md mx-auto' :
@@ -3483,59 +3931,125 @@ export default function MekRateLoggingPage() {
                 </div>
               )}
 
-              {/* Sort Dropdown - Minimalist Tech Style - Hidden when 2 or fewer meks */}
-              {ownedMeks.length > 2 && (
-                <div className="relative sort-dropdown-container">
-                  <button
-                    onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                    className="relative px-3 sm:px-5 py-2 sm:py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] sm:min-h-0 transition-all duration-500 ease-out group text-sm sm:text-base"
-                    style={{
-                      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-                      fontWeight: '300',
-                      letterSpacing: '0.02em'
-                    }}
-                  >
-                    <span>Sort</span>
-                    <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out" />
-                  </button>
-
-                  {sortDropdownOpen && (
-                    <div
-                      className="absolute right-0 mt-1 z-50 min-w-[140px] bg-black/90 backdrop-blur-md border border-white/20 overflow-hidden"
-                      style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
-                    >
-                      <button
-                        onClick={() => {
-                          setSortType('rate');
-                          setSortDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
-                        style={{
-                          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-                          fontWeight: sortType === 'rate' ? '400' : '300',
-                          color: sortType === 'rate' ? 'white' : 'rgba(255,255,255,0.6)'
-                        }}
-                      >
-                        Rate
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSortType('level');
-                          setSortDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
-                        style={{
-                          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-                          fontWeight: sortType === 'level' ? '400' : '300',
-                          color: sortType === 'level' ? 'white' : 'rgba(255,255,255,0.6)'
-                        }}
-                      >
-                        Level
-                      </button>
+              <div className="flex gap-3 items-end">
+                {/* Wallet Filter Dropdown - Only shown when more than one wallet in corporation */}
+                {groupMeks && groupMeks.wallets && groupMeks.wallets.length > 1 && walletGroup && (
+                  <div className="relative wallet-filter-dropdown-container">
+                    <div className="text-gray-500 mb-1 px-1 whitespace-nowrap text-xs">
+                      Wallet Selection
                     </div>
-                  )}
-                </div>
-              )}
+                    <button
+                      onClick={() => setWalletFilterDropdownOpen(!walletFilterDropdownOpen)}
+                      className="relative px-3 sm:px-5 py-2 sm:py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] sm:min-h-0 transition-all duration-500 ease-out group text-sm sm:text-base"
+                      style={{
+                        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                        fontWeight: '300',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      <span>
+                        {walletFilter
+                          ? (walletGroup.find(w => w.walletAddress === walletFilter)?.nickname || `${walletFilter.slice(0, 10)}...`)
+                          : 'All Wallets'}
+                      </span>
+                      <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                    </button>
+
+                    {walletFilterDropdownOpen && (
+                      <div
+                        className="absolute right-0 mt-1 z-50 min-w-[180px] bg-black/90 backdrop-blur-md border border-white/20 overflow-hidden"
+                        style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
+                      >
+                        <button
+                          onClick={() => {
+                            setWalletFilter(null);
+                            setWalletFilterDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
+                          style={{
+                            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                            fontWeight: !walletFilter ? '400' : '300',
+                            color: !walletFilter ? 'white' : 'rgba(255,255,255,0.6)'
+                          }}
+                        >
+                          All Wallets
+                        </button>
+                        {walletGroup.map(wallet => (
+                          <button
+                            key={wallet.walletAddress}
+                            onClick={() => {
+                              setWalletFilter(wallet.walletAddress);
+                              setWalletFilterDropdownOpen(false);
+                            }}
+                            className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
+                            style={{
+                              fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                              fontWeight: walletFilter === wallet.walletAddress ? '400' : '300',
+                              color: walletFilter === wallet.walletAddress ? 'white' : 'rgba(255,255,255,0.6)'
+                            }}
+                          >
+                            {wallet.nickname || `${wallet.walletAddress.slice(0, 12)}...${wallet.walletAddress.slice(-8)}`}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sort Dropdown - Minimalist Tech Style - Hidden when 2 or fewer meks */}
+                {ownedMeks.length > 2 && (
+                  <div className="relative sort-dropdown-container">
+                    <button
+                      onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                      className="relative px-3 sm:px-5 py-2 sm:py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm min-h-[48px] sm:min-h-0 transition-all duration-500 ease-out group text-sm sm:text-base"
+                      style={{
+                        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                        fontWeight: '300',
+                        letterSpacing: '0.02em'
+                      }}
+                    >
+                      <span>Sort</span>
+                      <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                    </button>
+
+                    {sortDropdownOpen && (
+                      <div
+                        className="absolute right-0 mt-1 z-50 min-w-[140px] bg-black/90 backdrop-blur-md border border-white/20 overflow-hidden"
+                        style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
+                      >
+                        <button
+                          onClick={() => {
+                            setSortType('rate');
+                            setSortDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
+                          style={{
+                            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                            fontWeight: sortType === 'rate' ? '400' : '300',
+                            color: sortType === 'rate' ? 'white' : 'rgba(255,255,255,0.6)'
+                          }}
+                        >
+                          Rate
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortType('level');
+                            setSortDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 sm:py-2.5 text-left text-xs uppercase tracking-wider hover:bg-white/10 transition-colors duration-200 min-h-[48px] sm:min-h-0 touch-manipulation"
+                          style={{
+                            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                            fontWeight: sortType === 'level' ? '400' : '300',
+                            color: sortType === 'level' ? 'white' : 'rgba(255,255,255,0.6)'
+                          }}
+                        >
+                          Level
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               </div>
             )}
 
@@ -3589,6 +4103,10 @@ export default function MekRateLoggingPage() {
             }`}>
               {[...ownedMeks]
                 .filter(mek => {
+                  // Filter by wallet if walletFilter is set
+                  if (walletFilter && (mek as any).sourceWallet !== walletFilter) return false;
+
+                  // Filter by search term
                   if (!searchTerm) return true;
                   const term = searchTerm.toLowerCase();
 
@@ -4151,6 +4669,231 @@ export default function MekRateLoggingPage() {
             // The query will automatically refetch and update the UI
           }}
         />
+      )}
+
+      {/* Add Wallet Modal - Multi-Step with Signature Verification */}
+      {addWalletModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-black border-2 border-yellow-400 rounded shadow-[0_0_50px_rgba(250,182,23,0.4)] p-6 max-w-md w-full mx-4">
+            <h2 className="text-yellow-400 text-xl font-bold uppercase tracking-wider mb-4 whitespace-nowrap">
+              Add Wallet to Corporation
+              {addWalletStep !== 'input' && (
+                <span className="text-xs text-yellow-400/50 ml-2">
+                  (Step {addWalletStep === 'name-merger' ? '2' : addWalletStep === 'verify' ? '3' : '4'}/{currentCorpName && incomingCorpName ? '4' : '3'})
+                </span>
+              )}
+            </h2>
+
+            {/* STEP 1: Input wallet details */}
+            {addWalletStep === 'input' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-yellow-400/70 text-xs uppercase tracking-wider mb-2">
+                    Wallet Address (Stake Address)
+                  </label>
+                  <input
+                    type="text"
+                    value={newWalletAddress}
+                    onChange={(e) => setNewWalletAddress(e.target.value)}
+                    placeholder="stake1u..."
+                    className="w-full px-3 py-2 bg-black/50 border border-yellow-400/30 rounded text-white text-sm font-mono focus:outline-none focus:border-yellow-400"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Enter the stake address of the wallet you want to add</p>
+                </div>
+
+                <div>
+                  <label className="block text-yellow-400/70 text-xs uppercase tracking-wider mb-2">
+                    Nickname (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newWalletNickname}
+                    onChange={(e) => setNewWalletNickname(e.target.value)}
+                    placeholder="e.g., Mining Wallet, Trading Wallet"
+                    className="w-full px-3 py-2 bg-black/50 border border-yellow-400/30 rounded text-white text-sm focus:outline-none focus:border-yellow-400"
+                  />
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCancelAddWallet}
+                    className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-gray-700 hover:to-gray-800 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRequestWalletVerification}
+                    className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
+                  >
+                    Next: Verify →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Corporation Name Merger (only shown if both wallets have names) */}
+            {addWalletStep === 'name-merger' && (
+              <div className="space-y-4">
+                <div className="bg-black/40 border border-yellow-400/30 rounded p-4">
+                  <p className="text-yellow-400 text-sm font-bold uppercase tracking-wider mb-2">🏢 Choose Merged Corporation Name</p>
+                  <p className="text-gray-400 text-xs">
+                    Both wallets have corporation names. Select which name to use:
+                  </p>
+                </div>
+
+                {/* Option 1: Keep current corporation name */}
+                <div
+                  onClick={() => setSelectedCorpNameOption('current')}
+                  className={`border rounded p-3 cursor-pointer transition-all ${
+                    selectedCorpNameOption === 'current'
+                      ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_10px_rgba(250,182,23,0.2)]'
+                      : 'border-gray-700 bg-black/30 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-4 h-4 border flex items-center justify-center ${
+                      selectedCorpNameOption === 'current' ? 'border-yellow-400 bg-yellow-400/20' : 'border-gray-600 bg-black/50'
+                    }`}>
+                      {selectedCorpNameOption === 'current' && <div className="w-2 h-2 bg-yellow-400" />}
+                    </div>
+                    <p className="text-white/90 font-semibold text-xs uppercase tracking-wider">Keep Current Name</p>
+                  </div>
+                  <p className="text-yellow-400 font-mono text-sm ml-6">{currentCorpName}</p>
+                </div>
+
+                {/* Option 2: Use incoming wallet's corporation name */}
+                <div
+                  onClick={() => setSelectedCorpNameOption('incoming')}
+                  className={`border rounded p-3 cursor-pointer transition-all ${
+                    selectedCorpNameOption === 'incoming'
+                      ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_10px_rgba(250,182,23,0.2)]'
+                      : 'border-gray-700 bg-black/30 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-4 h-4 border flex items-center justify-center ${
+                      selectedCorpNameOption === 'incoming' ? 'border-yellow-400 bg-yellow-400/20' : 'border-gray-600 bg-black/50'
+                    }`}>
+                      {selectedCorpNameOption === 'incoming' && <div className="w-2 h-2 bg-yellow-400" />}
+                    </div>
+                    <p className="text-white/90 font-semibold text-xs uppercase tracking-wider">Use Incoming Name</p>
+                  </div>
+                  <p className="text-yellow-400 font-mono text-sm ml-6">{incomingCorpName}</p>
+                </div>
+
+                {/* Option 3: Create new name */}
+                <div
+                  onClick={() => setSelectedCorpNameOption('new')}
+                  className={`border rounded p-3 cursor-pointer transition-all ${
+                    selectedCorpNameOption === 'new'
+                      ? 'border-yellow-400 bg-yellow-400/5 shadow-[0_0_10px_rgba(250,182,23,0.2)]'
+                      : 'border-gray-700 bg-black/30 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-4 h-4 border flex items-center justify-center ${
+                      selectedCorpNameOption === 'new' ? 'border-yellow-400 bg-yellow-400/20' : 'border-gray-600 bg-black/50'
+                    }`}>
+                      {selectedCorpNameOption === 'new' && <div className="w-2 h-2 bg-yellow-400" />}
+                    </div>
+                    <p className="text-white/90 font-semibold text-xs uppercase tracking-wider">Create New Name</p>
+                  </div>
+                  {selectedCorpNameOption === 'new' && (
+                    <input
+                      type="text"
+                      value={newCorpName}
+                      onChange={(e) => setNewCorpName(e.target.value)}
+                      placeholder="Enter new corporation name..."
+                      className="w-full px-3 py-2 bg-black/70 border border-yellow-400/30 text-white text-sm focus:outline-none focus:border-yellow-400 mt-2"
+                      autoFocus
+                    />
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCancelAddWallet}
+                    className="flex-1 bg-black/50 border border-gray-600 text-gray-300 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-black/70 hover:border-gray-500 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      // Validate if "new" is selected
+                      if (selectedCorpNameOption === 'new' && !newCorpName.trim()) {
+                        alert('Please enter a new corporation name');
+                        return;
+                      }
+                      // Proceed to verification
+                      await proceedToVerification();
+                    }}
+                    className="flex-1 bg-yellow-500/20 border border-yellow-400 text-yellow-400 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(250,182,23,0.3)] transition-all"
+                  >
+                    Continue to Verify →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Verification instructions */}
+            {addWalletStep === 'verify' && (
+              <div className="space-y-4">
+                <div className="bg-black/40 border border-yellow-400/30 rounded p-4">
+                  <p className="text-yellow-400 text-sm font-bold uppercase tracking-wider mb-2">🔐 Ownership Verification Required</p>
+                  <p className="text-gray-400 text-xs mb-3">
+                    Prove wallet ownership by signing a message to prevent unauthorized claims.
+                  </p>
+                  <div className="bg-black/60 border border-gray-700 rounded p-2 mb-3">
+                    <p className="text-xs text-gray-400 font-mono break-all">{newWalletAddress}</p>
+                  </div>
+                  <div className="bg-black/30 border border-gray-700 rounded p-3 mb-2">
+                    <p className="text-yellow-400 text-xs font-bold uppercase tracking-wider mb-2">📝 Instructions:</p>
+                    <ol className="text-xs text-gray-400 space-y-1 list-decimal list-inside">
+                      <li><strong className="text-white">IMPORTANT:</strong> Switch your wallet extension to the address shown above</li>
+                      <li>Ensure you're on the correct wallet before proceeding</li>
+                      <li>Click "Sign & Verify" to receive a signature prompt</li>
+                      <li>Approve the signature request in your wallet popup</li>
+                    </ol>
+                  </div>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-2 mb-2">
+                    <p className="text-yellow-400 text-xs">
+                      ⚠️ <strong>Wrong wallet signature will fail verification.</strong> Confirm address match above.
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    ✓ Switching wallets during this process won't disconnect you
+                  </p>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCancelAddWallet}
+                    className="flex-1 bg-black/50 border border-gray-600 text-gray-300 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-black/70 hover:border-gray-500 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSignWithNewWallet}
+                    className="flex-1 bg-yellow-500/20 border border-yellow-400 text-yellow-400 text-xs font-bold uppercase tracking-wider px-4 py-2 hover:bg-yellow-500/30 hover:shadow-[0_0_15px_rgba(250,182,23,0.3)] transition-all"
+                  >
+                    Sign & Verify ✓
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 (or 3 if no name merger): Signing in progress */}
+            {addWalletStep === 'signing' && (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4"></div>
+                  <p className="text-yellow-400 text-sm font-semibold">Verifying Signature...</p>
+                  <p className="text-gray-400 text-xs mt-2">Please wait while we verify your wallet ownership</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -51,8 +51,10 @@ export const runNightlySnapshot = internalAction({
         console.log(`Fetching blockchain data for: ${stakeAddress}`);
 
         // Query blockchain for current wallet contents (stake address only)
-        const walletData = await ctx.runAction(api.getWalletAssetsFlexible.getWalletAssetsFlexible, {
-          walletIdentifier: stakeAddress,
+        // Use fetchNFTsByStakeAddress with useCache: false to ensure fresh data and proper pagination
+        const walletData = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+          stakeAddress: stakeAddress,
+          useCache: false, // Always fetch fresh data to avoid stale cache
         });
 
         if (walletData.success && walletData.meks) {
@@ -61,14 +63,19 @@ export const runNightlySnapshot = internalAction({
 
           // CRITICAL FIX: Query mekLevels table for ACTUAL level data (source of truth)
           // Don't trust ownedMeks which might be stale from previous snapshot corruption
-          const allMekLevels = await ctx.db
-            .query("mekLevels")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", miner.walletAddress))
-            .collect();
+          const allMekLevels = await ctx.runQuery(internal.goldMiningSnapshot.getMekLevelsForWallet, {
+            walletAddress: miner.walletAddress
+          });
 
           const mekLevelsMap = new Map(
             allMekLevels.map(level => [level.assetId, level])
           );
+
+          console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
+            totalMeksInBlockchain: walletData.meks.length,
+            mekLevelsFound: allMekLevels.length,
+            mekLevelsAssetIds: allMekLevels.map(l => l.assetId.substring(0, 20)),
+          });
 
           // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
@@ -83,13 +90,29 @@ export const runNightlySnapshot = internalAction({
             const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
             const existingMek = existingMeksMap.get(blockchainMek.assetId);
 
+            console.log(`[Snapshot Debug] Mek ${blockchainMek.assetName}:`, {
+              assetId: blockchainMek.assetId.substring(0, 20),
+              hasMekLevel: !!mekLevel,
+              hasExistingMek: !!existingMek,
+              levelData: mekLevel ? {
+                level: mekLevel.currentLevel,
+                base: mekLevel.baseGoldPerHour,
+                boost: mekLevel.currentBoostAmount,
+              } : null,
+              existingMekData: existingMek ? {
+                goldPerHour: existingMek.goldPerHour,
+                baseGoldPerHour: existingMek.baseGoldPerHour,
+                levelBoostAmount: existingMek.levelBoostAmount,
+              } : null,
+            });
+
             if (mekLevel) {
               // Mek has level data - use it! (source of truth)
               const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
               const levelBoostAmount = mekLevel.currentBoostAmount || 0;
               const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
 
-              mekDetails.push({
+              const mekData = {
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
                 goldPerHour: effectiveGoldPerHour,
@@ -98,11 +121,20 @@ export const runNightlySnapshot = internalAction({
                 currentLevel: mekLevel.currentLevel,
                 levelBoostPercent: mekLevel.currentBoostPercent || 0,
                 levelBoostAmount: levelBoostAmount,
+              };
+
+              console.log(`[Snapshot Debug] Adding Mek via PATH 1 (mekLevel):`, {
+                assetName: blockchainMek.assetName,
+                goldPerHour: mekData.goldPerHour,
+                baseGoldPerHour: mekData.baseGoldPerHour,
+                levelBoostAmount: mekData.levelBoostAmount,
               });
+
+              mekDetails.push(mekData);
               totalGoldPerHour += effectiveGoldPerHour;
             } else if (existingMek) {
               // Fallback to ownedMeks if no mekLevel found (shouldn't happen for upgraded Meks)
-              mekDetails.push({
+              const mekData = {
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
                 goldPerHour: existingMek.goldPerHour,
@@ -111,7 +143,17 @@ export const runNightlySnapshot = internalAction({
                 currentLevel: existingMek.currentLevel || 1,
                 levelBoostPercent: existingMek.levelBoostPercent || 0,
                 levelBoostAmount: existingMek.levelBoostAmount || 0,
+              };
+
+              console.log(`[Snapshot Debug] Adding Mek via PATH 2 (existingMek fallback):`, {
+                assetName: blockchainMek.assetName,
+                goldPerHour: mekData.goldPerHour,
+                baseGoldPerHour: mekData.baseGoldPerHour,
+                levelBoostAmount: mekData.levelBoostAmount,
+                WARNING: "This Mek has no mekLevel record but exists in ownedMeks!"
               });
+
+              mekDetails.push(mekData);
               totalGoldPerHour += existingMek.goldPerHour;
             } else {
               // New Mek not in database - need to fetch proper variation data
@@ -211,6 +253,17 @@ export const getAllMinersForSnapshot = internalQuery({
   },
 });
 
+// Internal query to get mekLevels for a wallet
+export const getMekLevelsForWallet = internalQuery({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("mekLevels")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+  },
+});
+
 // Internal mutation to update miner after snapshot
 export const updateMinerAfterSnapshot = internalMutation({
   args: {
@@ -260,45 +313,12 @@ export const updateMinerAfterSnapshot = internalMutation({
       };
     }
 
-    // Calculate current spendable gold for this snapshot
-    const spendableGold = calculateCurrentGold({
-      accumulatedGold: miner.accumulatedGold || 0,
-      goldPerHour: miner.totalGoldPerHour,
-      lastSnapshotTime: miner.lastSnapshotTime || miner.createdAt,
-      isVerified: true,
-      consecutiveSnapshotFailures: miner.consecutiveSnapshotFailures || 0
-    });
-
-    // Calculate cumulative gold earned (total earned over all time)
-    const cumulativeGoldEarned = (miner.totalCumulativeGold || 0);
-
-    // Store ownership snapshot in history table with COMPLETE game state
-    await ctx.db.insert("mekOwnershipHistory", {
-      walletAddress: args.walletAddress,
-      snapshotTime: now,
-      meks: args.mekDetails,
-      totalGoldPerHour: args.totalGoldPerHour,
-      totalMekCount: args.mekCount,
-
-      // Complete game state for full restoration
-      accumulatedGold: miner.accumulatedGold || 0,
-      totalCumulativeGold: miner.totalCumulativeGold || 0,
-      totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
-      lastActiveTime: miner.lastActiveTime,
-      lastSnapshotTime: miner.lastSnapshotTime,
-
-      // New gold tracking fields for blockchain snapshot system
-      spendableGold: spendableGold,
-      cumulativeGoldEarned: cumulativeGoldEarned,
-
-      verificationStatus: "verified", // This snapshot passed validation
-    });
-
-    // CRITICAL: Calculate accumulated gold properly
+    // CRITICAL: Calculate accumulated gold properly FIRST
     // BUT ONLY IF USER IS VERIFIED!
     // Show the rate (speedometer) to everyone, but only verified users accumulate gold (car running)
     let accumulatedGold: number;
     let newTotalCumulativeGold: number;
+    let spendableGold: number;
 
     // CHECK VERIFICATION STATUS BEFORE GIVING GOLD
     const isVerified = miner.isBlockchainVerified === true;
@@ -322,12 +342,38 @@ export const updateMinerAfterSnapshot = internalMutation({
         // Initialize cumulative gold to match accumulated (first snapshot)
         newTotalCumulativeGold = totalGoldEarned + (miner.totalGoldSpentOnUpgrades || 0);
       }
+      // Spendable gold is accumulated gold for verified users
+      spendableGold = accumulatedGold;
     } else {
       // UNVERIFIED USER - SHOW RATE but DON'T ACCUMULATE GOLD
       console.log(`[Snapshot Security] Skipping gold accumulation for unverified wallet: ${args.walletAddress} (rate: ${args.totalGoldPerHour})`);
       accumulatedGold = miner.accumulatedGold || 0; // Keep existing gold, don't add more
       newTotalCumulativeGold = miner.totalCumulativeGold || 0; // Don't increase cumulative
+      spendableGold = accumulatedGold;
     }
+
+    // Store ownership snapshot in history table with COMPLETE game state
+    // CRITICAL FIX: Use the NEWLY CALCULATED values (not old database values)
+    await ctx.db.insert("mekOwnershipHistory", {
+      walletAddress: args.walletAddress,
+      snapshotTime: now,
+      meks: args.mekDetails,
+      totalGoldPerHour: args.totalGoldPerHour,
+      totalMekCount: args.mekCount,
+
+      // Complete game state for full restoration
+      accumulatedGold: accumulatedGold, // NEW calculated value
+      totalCumulativeGold: newTotalCumulativeGold, // NEW calculated value
+      totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
+      lastActiveTime: miner.lastActiveTime,
+      lastSnapshotTime: miner.lastSnapshotTime,
+
+      // New gold tracking fields for blockchain snapshot system
+      spendableGold: spendableGold, // NEW calculated value
+      cumulativeGoldEarned: newTotalCumulativeGold, // NEW calculated value (matches totalCumulativeGold)
+
+      verificationStatus: "verified", // This snapshot passed validation
+    });
 
     // CRITICAL FIX: Rebuild ownedMeks array with updated level boost data from snapshot
     // This ensures the UI shows correct level boosts after snapshots run
@@ -446,13 +492,23 @@ export const logSnapshotResult = internalMutation({
     status: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.insert("goldMiningSnapshotLogs", {
+    console.log('[logSnapshotResult] 💾 Inserting snapshot log into database:', {
+      timestamp: new Date(args.timestamp).toISOString(),
+      totalMiners: args.totalMiners,
+      updatedCount: args.updatedCount,
+      errorCount: args.errorCount,
+      status: args.status
+    });
+
+    const logId = await ctx.db.insert("goldMiningSnapshotLogs", {
       timestamp: args.timestamp,
       totalMiners: args.totalMiners,
       updatedCount: args.updatedCount,
       errorCount: args.errorCount,
       status: args.status,
     });
+
+    console.log('[logSnapshotResult] ✅ Snapshot log saved with ID:', logId);
   },
 });
 
@@ -498,13 +554,15 @@ export const logSnapshotTrigger = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    await ctx.db.insert("goldMiningSnapshotLogs", {
+    console.log('[logSnapshotTrigger] 📝 Creating snapshot trigger log at:', new Date(now).toISOString());
+    const logId = await ctx.db.insert("goldMiningSnapshotLogs", {
       timestamp: now,
       totalMiners: 0,
       updatedCount: 0,
       errorCount: 0,
       status: "triggered_manually",
     });
+    console.log('[logSnapshotTrigger] ✅ Log created with ID:', logId);
   },
 });
 
@@ -534,13 +592,8 @@ export const runManualSnapshot = internalAction({
     for (const miner of allMiners) {
       console.log(`Processing wallet: ${miner.walletAddress}`);
       try {
-        // Skip if wallet hasn't been active in last 7 days
-        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-        if (miner.lastActiveTime < sevenDaysAgo) {
-          console.log(`Skipping inactive wallet: ${miner.walletAddress}`);
-          skippedCount++;
-          continue;
-        }
+        // MANUAL SNAPSHOTS: Don't skip inactive wallets - admin wants to force update
+        // (The automated nightly snapshot DOES skip inactive wallets to save API calls)
 
         // Handle both hex and bech32 stake address formats
         let stakeAddress = miner.walletAddress;
@@ -556,8 +609,10 @@ export const runManualSnapshot = internalAction({
         console.log(`Fetching blockchain data for: ${stakeAddress}`);
 
         // Query blockchain for current wallet contents (stake address only)
-        const walletData = await ctx.runAction(api.getWalletAssetsFlexible.getWalletAssetsFlexible, {
-          walletIdentifier: stakeAddress,
+        // Use fetchNFTsByStakeAddress with useCache: false to ensure fresh data and proper pagination
+        const walletData = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+          stakeAddress: stakeAddress,
+          useCache: false, // Always fetch fresh data to avoid stale cache
         });
 
         if (walletData.success && walletData.meks) {
@@ -566,14 +621,19 @@ export const runManualSnapshot = internalAction({
 
           // CRITICAL FIX: Query mekLevels table for ACTUAL level data (source of truth)
           // Don't trust ownedMeks which might be stale from previous snapshot corruption
-          const allMekLevels = await ctx.db
-            .query("mekLevels")
-            .withIndex("by_wallet", (q) => q.eq("walletAddress", miner.walletAddress))
-            .collect();
+          const allMekLevels = await ctx.runQuery(internal.goldMiningSnapshot.getMekLevelsForWallet, {
+            walletAddress: miner.walletAddress
+          });
 
           const mekLevelsMap = new Map(
             allMekLevels.map(level => [level.assetId, level])
           );
+
+          console.log(`[Snapshot Debug] Wallet ${stakeAddress}:`, {
+            totalMeksInBlockchain: walletData.meks.length,
+            mekLevelsFound: allMekLevels.length,
+            mekLevelsAssetIds: allMekLevels.map(l => l.assetId.substring(0, 20)),
+          });
 
           // Also get existing ownedMeks for metadata (policyId, imageUrl, variations, etc.)
           const existingMeksMap = new Map(
@@ -588,13 +648,29 @@ export const runManualSnapshot = internalAction({
             const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
             const existingMek = existingMeksMap.get(blockchainMek.assetId);
 
+            console.log(`[Snapshot Debug] Mek ${blockchainMek.assetName}:`, {
+              assetId: blockchainMek.assetId.substring(0, 20),
+              hasMekLevel: !!mekLevel,
+              hasExistingMek: !!existingMek,
+              levelData: mekLevel ? {
+                level: mekLevel.currentLevel,
+                base: mekLevel.baseGoldPerHour,
+                boost: mekLevel.currentBoostAmount,
+              } : null,
+              existingMekData: existingMek ? {
+                goldPerHour: existingMek.goldPerHour,
+                baseGoldPerHour: existingMek.baseGoldPerHour,
+                levelBoostAmount: existingMek.levelBoostAmount,
+              } : null,
+            });
+
             if (mekLevel) {
               // Mek has level data - use it! (source of truth)
               const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
               const levelBoostAmount = mekLevel.currentBoostAmount || 0;
               const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
 
-              mekDetails.push({
+              const mekData = {
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
                 goldPerHour: effectiveGoldPerHour,
@@ -603,11 +679,20 @@ export const runManualSnapshot = internalAction({
                 currentLevel: mekLevel.currentLevel,
                 levelBoostPercent: mekLevel.currentBoostPercent || 0,
                 levelBoostAmount: levelBoostAmount,
+              };
+
+              console.log(`[Snapshot Debug] Adding Mek via PATH 1 (mekLevel):`, {
+                assetName: blockchainMek.assetName,
+                goldPerHour: mekData.goldPerHour,
+                baseGoldPerHour: mekData.baseGoldPerHour,
+                levelBoostAmount: mekData.levelBoostAmount,
               });
+
+              mekDetails.push(mekData);
               totalGoldPerHour += effectiveGoldPerHour;
             } else if (existingMek) {
               // Fallback to ownedMeks if no mekLevel found (shouldn't happen for upgraded Meks)
-              mekDetails.push({
+              const mekData = {
                 assetId: blockchainMek.assetId,
                 assetName: blockchainMek.assetName,
                 goldPerHour: existingMek.goldPerHour,
@@ -616,7 +701,17 @@ export const runManualSnapshot = internalAction({
                 currentLevel: existingMek.currentLevel || 1,
                 levelBoostPercent: existingMek.levelBoostPercent || 0,
                 levelBoostAmount: existingMek.levelBoostAmount || 0,
+              };
+
+              console.log(`[Snapshot Debug] Adding Mek via PATH 2 (existingMek fallback):`, {
+                assetName: blockchainMek.assetName,
+                goldPerHour: mekData.goldPerHour,
+                baseGoldPerHour: mekData.baseGoldPerHour,
+                levelBoostAmount: mekData.levelBoostAmount,
+                WARNING: "This Mek has no mekLevel record but exists in ownedMeks!"
               });
+
+              mekDetails.push(mekData);
               totalGoldPerHour += existingMek.goldPerHour;
             } else {
               // New Mek not in database - need to fetch proper variation data
@@ -689,6 +784,14 @@ export const runManualSnapshot = internalAction({
     }
 
     // Log snapshot results
+    console.log('[runManualSnapshot] 📝 Creating completion log:', {
+      timestamp: new Date(now).toISOString(),
+      totalMiners: allMiners.length,
+      updatedCount,
+      errorCount,
+      skippedCount
+    });
+
     await ctx.runMutation(internal.goldMiningSnapshot.logSnapshotResult, {
       timestamp: now,
       totalMiners: allMiners.length,
@@ -697,6 +800,8 @@ export const runManualSnapshot = internalAction({
       skippedCount,
       status: "completed",
     });
+
+    console.log('[runManualSnapshot] ✅ Snapshot completed successfully');
 
     return {
       success: true,

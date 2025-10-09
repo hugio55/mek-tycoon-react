@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query, action } from "./_generated/server";
+import { mutation, query, action, internalMutation, internalAction } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { calculateCurrentGold, GOLD_CAP, calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
 import { devLog } from "./lib/devLog";
 
@@ -180,6 +180,11 @@ export const initializeGoldMining = mutation({
       devLog.log('[INIT MUTATION] Record updated successfully');
       devLog.log('[INIT MUTATION] ================================');
 
+      // Schedule automatic blockchain sync to fetch complete NFT data
+      await ctx.scheduler.runAfter(0, internal.goldMining.syncWalletFromBlockchain, {
+        walletAddress: args.walletAddress
+      });
+
       return {
         currentGold,
         totalGoldPerHour // Return the new calculated rate
@@ -202,6 +207,11 @@ export const initializeGoldMining = mutation({
         createdAt: now,
         updatedAt: now,
         version: 0, // Initialize version for concurrency control
+      });
+
+      // Schedule automatic blockchain sync to fetch complete NFT data
+      await ctx.scheduler.runAfter(0, internal.goldMining.syncWalletFromBlockchain, {
+        walletAddress: args.walletAddress
       });
 
       return {
@@ -799,6 +809,134 @@ function calculateGoldRateForMek(mekNumber: number): number {
   return Math.round(rate * 100) / 100; // Round to 2 decimals
 }
 
+// Get all Meks from all wallets in the corporation (wallet group)
+export const getGroupMeks = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find the wallet group for this wallet
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    let walletsToQuery = [args.walletAddress]; // Default to just this wallet
+
+    if (membership) {
+      // Get all wallets in the group
+      const allMemberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+        .collect();
+
+      walletsToQuery = allMemberships.map(m => m.walletAddress);
+    }
+
+    // Get gold mining data for all wallets
+    const allMeks = [];
+    for (const wallet of walletsToQuery) {
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .first();
+
+      if (goldMining && goldMining.ownedMeks) {
+        // Add wallet source to each Mek
+        const meksWithSource = goldMining.ownedMeks.map(mek => ({
+          ...mek,
+          sourceWallet: wallet
+        }));
+        allMeks.push(...meksWithSource);
+      }
+    }
+
+    return {
+      meks: allMeks,
+      wallets: walletsToQuery
+    };
+  }
+});
+
+// Get aggregated corporation stats (cumulative gold, total gold per hour, etc.)
+export const getCorporationStats = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Find the wallet group for this wallet
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    let walletsToQuery = [args.walletAddress]; // Default to just this wallet
+
+    if (membership) {
+      // Get all wallets in the group
+      const allMemberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+        .collect();
+
+      walletsToQuery = allMemberships.map(m => m.walletAddress);
+    }
+
+    // Aggregate stats from all wallets
+    let totalCumulativeGold = 0;
+    let totalCurrentGold = 0;
+    let totalGoldPerHour = 0;
+    let totalMeks = 0;
+    let allVerified = true;
+
+    for (const wallet of walletsToQuery) {
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .first();
+
+      if (goldMining) {
+        // Calculate current gold for this wallet
+        const currentGold = calculateCurrentGold({
+          accumulatedGold: goldMining.accumulatedGold || 0,
+          goldPerHour: goldMining.totalGoldPerHour,
+          lastSnapshotTime: goldMining.lastSnapshotTime || goldMining.updatedAt || goldMining.createdAt,
+          isVerified: goldMining.isBlockchainVerified === true,
+          consecutiveSnapshotFailures: goldMining.consecutiveSnapshotFailures || 0
+        });
+
+        // Calculate cumulative gold for this wallet
+        const goldSinceLastUpdate = currentGold - (goldMining.accumulatedGold || 0);
+        let baseCumulativeGold = goldMining.totalCumulativeGold || 0;
+        if (!goldMining.totalCumulativeGold || baseCumulativeGold === 0) {
+          baseCumulativeGold = (goldMining.accumulatedGold || 0) + (goldMining.totalGoldSpentOnUpgrades || 0);
+        }
+        const walletCumulativeGold = baseCumulativeGold + goldSinceLastUpdate;
+
+        totalCumulativeGold += walletCumulativeGold;
+        totalCurrentGold += currentGold;
+        totalGoldPerHour += goldMining.totalGoldPerHour || 0;
+        totalMeks += goldMining.ownedMeks?.length || 0;
+
+        if (goldMining.isBlockchainVerified !== true) {
+          allVerified = false;
+        }
+      }
+    }
+
+    return {
+      totalCumulativeGold,
+      totalCurrentGold,
+      totalGoldPerHour,
+      totalMeks,
+      walletCount: walletsToQuery.length,
+      allVerified,
+    };
+  }
+});
+
 // Check if wallet is verified (for UI prompts)
 export const isWalletVerified = query({
   args: {
@@ -1182,5 +1320,164 @@ export const checkCompanyNameAvailability = query({
       available: !existingCompany,
       error: existingCompany ? "Company name is already taken" : undefined
     };
+  },
+});
+
+// Update walletType field (admin utility)
+export const updateWalletType = mutation({
+  args: {
+    walletAddress: v.string(),
+    newWalletType: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!existing) {
+      throw new Error(`Wallet not found: ${args.walletAddress}`);
+    }
+
+    await ctx.db.patch(existing._id, {
+      walletType: args.newWalletType,
+    });
+
+    return {
+      success: true,
+      message: `Updated walletType to ${args.newWalletType}`,
+    };
+  },
+});
+
+// Internal action to sync a single wallet's NFT data from blockchain
+// Called automatically after wallet initialization
+export const syncWalletFromBlockchain = internalAction({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log(`[Auto-Sync] Starting blockchain sync for wallet: ${args.walletAddress}`);
+
+    try {
+      // Skip obviously fake test addresses
+      if (args.walletAddress.startsWith('stake1u') && args.walletAddress.length < 50) {
+        console.log(`[Auto-Sync] Skipping fake test address: ${args.walletAddress}`);
+        return { success: false, error: "Test address" };
+      }
+
+      // Fetch NFTs from blockchain using Blockfrost
+      const walletData = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+        stakeAddress: args.walletAddress,
+        useCache: false, // Always fetch fresh data
+      });
+
+      if (!walletData.success || !walletData.meks) {
+        console.error(`[Auto-Sync] Failed to fetch wallet data: ${walletData.error}`);
+        return { success: false, error: walletData.error };
+      }
+
+      console.log(`[Auto-Sync] Found ${walletData.meks.length} MEKs for ${args.walletAddress}`);
+
+      // Get MEK levels from database
+      const allMekLevels = await ctx.runQuery(internal.goldMiningSnapshot.getMekLevelsForWallet, {
+        walletAddress: args.walletAddress
+      });
+
+      const mekLevelsMap = new Map(
+        allMekLevels.map(level => [level.assetId, level])
+      );
+
+      // Get existing MEKs for metadata
+      const miner = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
+      const minerData = miner.find(m => m.walletAddress === args.walletAddress);
+      const existingMeksMap = new Map(
+        minerData?.ownedMeks?.map(mek => [mek.assetId, mek]) || []
+      );
+
+      // Build complete MEK details
+      const mekDetails = [];
+      let totalGoldPerHour = 0;
+
+      for (const blockchainMek of walletData.meks) {
+        const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
+        const existingMek = existingMeksMap.get(blockchainMek.assetId);
+
+        if (mekLevel) {
+          // Use level data (source of truth)
+          const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
+          const levelBoostAmount = mekLevel.currentBoostAmount || 0;
+          const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
+
+          mekDetails.push({
+            assetId: blockchainMek.assetId,
+            assetName: blockchainMek.assetName,
+            goldPerHour: effectiveGoldPerHour,
+            rarityRank: existingMek?.rarityRank,
+            baseGoldPerHour: baseGoldPerHour,
+            currentLevel: mekLevel.currentLevel,
+            levelBoostPercent: mekLevel.currentBoostPercent || 0,
+            levelBoostAmount: levelBoostAmount,
+          });
+
+          totalGoldPerHour += effectiveGoldPerHour;
+        } else if (existingMek) {
+          // Fallback to existing MEK data
+          mekDetails.push({
+            assetId: blockchainMek.assetId,
+            assetName: blockchainMek.assetName,
+            goldPerHour: existingMek.goldPerHour,
+            rarityRank: existingMek.rarityRank,
+            baseGoldPerHour: existingMek.baseGoldPerHour,
+            currentLevel: existingMek.currentLevel || 1,
+            levelBoostPercent: existingMek.levelBoostPercent || 0,
+            levelBoostAmount: existingMek.levelBoostAmount || 0,
+          });
+
+          totalGoldPerHour += existingMek.goldPerHour;
+        } else {
+          // New MEK - fetch variation data
+          const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
+          const mekData = getMekDataByNumber(blockchainMek.mekNumber);
+
+          if (mekData) {
+            const goldPerHour = Math.round(mekData.goldPerHour * 100) / 100;
+            mekDetails.push({
+              assetId: blockchainMek.assetId,
+              assetName: blockchainMek.assetName,
+              goldPerHour: goldPerHour,
+              rarityRank: mekData.finalRank,
+              baseGoldPerHour: goldPerHour,
+              currentLevel: 1,
+              levelBoostPercent: 0,
+              levelBoostAmount: 0,
+            });
+            totalGoldPerHour += goldPerHour;
+          }
+        }
+      }
+
+      // Update the miner's record
+      const mekNumbers = walletData.meks.map((m: any) => m.mekNumber);
+      await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
+        walletAddress: args.walletAddress,
+        mekCount: walletData.meks.length,
+        totalGoldPerHour: totalGoldPerHour,
+        mekNumbers: mekNumbers,
+        mekDetails: mekDetails,
+        snapshotSuccess: true,
+      });
+
+      console.log(`[Auto-Sync] Successfully synced ${walletData.meks.length} MEKs, ${totalGoldPerHour.toFixed(2)} gold/hr`);
+
+      return {
+        success: true,
+        mekCount: walletData.meks.length,
+        totalGoldPerHour: totalGoldPerHour
+      };
+    } catch (error) {
+      console.error(`[Auto-Sync] Error syncing wallet ${args.walletAddress}:`, error);
+      return { success: false, error: String(error) };
+    }
   },
 });

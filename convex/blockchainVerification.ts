@@ -20,6 +20,29 @@ const rateLimiter = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 10; // requests per minute
 const RATE_WINDOW = 60 * 1000; // 1 minute
 
+// Verification timeout for large collections
+const VERIFICATION_TIMEOUT = 180000; // 3 minutes max - handles large collections and slow networks
+
+// Timeout wrapper
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(errorMessage));
+    }, timeoutMs);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId!);
+    throw error;
+  }
+}
+
 // Check rate limit
 function checkRateLimit(identifier: string): boolean {
   const now = Date.now();
@@ -136,10 +159,17 @@ export const verifyNFTOwnership = action({
 
       try {
         console.log('[Verification] Fetching assets from Blockfrost for:', args.stakeAddress);
-        const result = await ctx.runAction(api.blockfrostService.getWalletAssets, {
-          stakeAddress: args.stakeAddress,
-          paymentAddress: args.paymentAddress
-        });
+        console.log('[Verification] Large collection detected, using extended timeout (3min)');
+
+        // Wrap in timeout protection
+        const result = await withTimeout(
+          ctx.runAction(api.blockfrostService.getWalletAssets, {
+            stakeAddress: args.stakeAddress,
+            paymentAddress: args.paymentAddress
+          }),
+          VERIFICATION_TIMEOUT,
+          `Verification timed out after ${VERIFICATION_TIMEOUT / 1000}s. This may happen with very large collections (200+ NFTs). Please try again.`
+        );
 
         console.log('[Verification] Blockfrost result:', result);
 
@@ -248,14 +278,40 @@ export const verifyNFTOwnership = action({
 
       // If verification succeeded, update the goldMining record
       if (verificationResult.verified) {
-        await ctx.runMutation(api.blockchainVerification.markWalletAsVerified, {
-          walletAddress: args.stakeAddress
-        });
+        console.log('[Verification] Marking wallet as verified...');
+        try {
+          await ctx.runMutation(api.blockchainVerification.markWalletAsVerified, {
+            walletAddress: args.stakeAddress
+          });
+          console.log('[Verification] Successfully marked wallet as verified');
+        } catch (mutationError: any) {
+          console.error('[Verification] Failed to mark wallet as verified:', mutationError);
+          console.error('[Verification] Error details:', {
+            message: mutationError.message,
+            stack: mutationError.stack,
+            name: mutationError.name
+          });
+          // Return error to user instead of silently failing
+          return {
+            success: false,
+            verified: false,
+            error: `Verification succeeded but database update failed: ${mutationError.message}`,
+            timestamp: Date.now()
+          };
+        }
       }
 
       return verificationResult;
 
     } catch (error: any) {
+      console.error('[Verification] Top-level error:', error);
+      console.error('[Verification] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        stakeAddress: args.stakeAddress.substring(0, 20) + '...'
+      });
+
       const errorResult = {
         success: false,
         verified: false,
@@ -319,21 +375,62 @@ export const markWalletAsVerified = mutation({
     walletAddress: v.string()
   },
   handler: async (ctx, args) => {
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    try {
+      console.log('[markWalletAsVerified] Starting mutation for wallet:', args.walletAddress.substring(0, 20) + '...');
 
-    if (goldMiningRecord) {
-      const now = Date.now();
-      await ctx.db.patch(goldMiningRecord._id, {
-        isBlockchainVerified: true,
-        lastVerificationTime: now,
-        lastSnapshotTime: now, // Start accumulating from this moment
+      if (!ctx || !ctx.db) {
+        console.error('[markWalletAsVerified] CRITICAL: ctx or ctx.db is undefined!', {
+          hasCtx: !!ctx,
+          hasDb: ctx ? !!ctx.db : false
+        });
+        throw new Error('Database context is not available');
+      }
+
+      console.log('[markWalletAsVerified] Querying goldMining table...');
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .first();
+
+      if (goldMiningRecord) {
+        console.log('[markWalletAsVerified] Found goldMining record:', {
+          id: goldMiningRecord._id,
+          wallet: args.walletAddress.substring(0, 20) + '...',
+          currentVerificationStatus: goldMiningRecord.isBlockchainVerified,
+          accumulatedGold: goldMiningRecord.accumulatedGold
+        });
+
+        const now = Date.now();
+        console.log('[markWalletAsVerified] Patching record to mark as verified...');
+        await ctx.db.patch(goldMiningRecord._id, {
+          isBlockchainVerified: true,
+          lastVerificationTime: now,
+        });
+
+        console.log(`[markWalletAsVerified] SUCCESS: Marked wallet ${args.walletAddress.substring(0, 20)}... as verified - gold will continue from ${(goldMiningRecord.accumulatedGold || 0).toFixed(2)}`);
+
+        return {
+          success: true,
+          wasAlreadyVerified: goldMiningRecord.isBlockchainVerified === true
+        };
+      } else {
+        console.warn(`[markWalletAsVerified] WARNING: No goldMining record found for wallet ${args.walletAddress.substring(0, 20)}...`);
+        console.warn('[markWalletAsVerified] This means the wallet has not been initialized yet. This is expected for new wallets.');
+
+        return {
+          success: false,
+          error: 'No goldMining record found - wallet needs initialization first'
+        };
+      }
+    } catch (error: any) {
+      console.error('[markWalletAsVerified] ERROR during mutation:', error);
+      console.error('[markWalletAsVerified] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        wallet: args.walletAddress.substring(0, 20) + '...'
       });
-      console.log(`[Verification] Marked wallet ${args.walletAddress.substring(0, 20)}... as verified - gold will continue from ${(goldMiningRecord.accumulatedGold || 0).toFixed(2)}`);
-    } else {
-      console.warn(`[Verification] No goldMining record found for wallet ${args.walletAddress.substring(0, 20)}...`);
+      throw error; // Re-throw to let the action handler catch it
     }
   }
 });

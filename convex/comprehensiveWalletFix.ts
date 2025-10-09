@@ -72,6 +72,7 @@ export const fixAllWalletIssues = action({
     console.log(`Calculated gold rate: ${correctGoldRate} gold/hr`);
 
     // Step 4: Delete ALL existing wallets and create ONE clean entry
+    // FIXED: Actions CAN call mutations directly via ctx.runMutation
     await ctx.runMutation(api.comprehensiveWalletFix.recreateWallet, {
       stakeAddress: args.stakeAddress,
       walletIds: allWallets.map(w => w._id),
@@ -81,6 +82,7 @@ export const fixAllWalletIssues = action({
     });
 
     // Step 5: Clean up snapshot history
+    // FIXED: Actions CAN call mutations directly via ctx.runMutation
     await ctx.runMutation(api.comprehensiveWalletFix.cleanSnapshotHistory, {
       stakeAddress: args.stakeAddress
     });

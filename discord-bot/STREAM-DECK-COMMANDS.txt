@@ -1,0 +1,39 @@
+# Stream Deck Commands for Mek Tycoon
+
+## GENERAL TERMINAL LOGGER (Use This For Everything!)
+**What it does:** Logs ALL commands and output from current terminal to a file Claude can read
+
+### Option 1: PowerShell (Recommended - One Command)
+**Command to paste:**
+Start-Transcript -Path "C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react\terminal-logs.txt" -Append
+
+**To stop logging:** Type `Stop-Transcript`
+
+### Option 2: Command Prompt (Batch File Launcher)
+**Command to paste:**
+cd /d "C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react" && start-logging.bat
+
+**This will:** Open PowerShell with logging enabled automatically
+**To stop logging:** Type `Stop-Transcript`
+
+### How it works:
+1. Click Stream Deck button → pastes command
+2. Hit Enter → "Transcript started"
+3. Now EVERYTHING you type and all output goes to terminal-logs.txt
+4. Tell Claude "check terminal logs" → I read the file
+5. No more copy-pasting needed!
+
+**To check logs in Claude Code:** Say "check terminal logs"
+
+---
+
+## Fly.io Logs Monitor (Specific to fly.io)
+**What it does:** Streams fly.io logs to both your terminal AND a file Claude can read
+**Prerequisites:** Open PowerShell (not CMD), navigate to discord-bot folder
+**Command to paste:**
+flyctl logs -a discord-bot-white-log-611 2>&1 | Tee-Object -FilePath fly-logs.txt
+
+**To check logs in Claude Code:** Just say "check fly logs"
+
+**Alternative (redirect to file only, no terminal display):**
+flyctl logs -a discord-bot-white-log-611 2>&1 > fly-logs.txt

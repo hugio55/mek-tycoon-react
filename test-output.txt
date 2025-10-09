@@ -1,0 +1,75 @@
+
+Running 2 tests using 2 workers
+
+[1A[2K[1/2] [chromium] › tests\blockchain-snapshot-verification.spec.ts:148:7 › Blockchain Snapshot Creation Flow › should display verification button and monitor interaction
+[1A[2K[2/2] [chromium] › tests\blockchain-snapshot-verification.spec.ts:327:7 › Blockchain Snapshot Creation Flow › should detect Convex mutation calls during verification
+[1A[2K[chromium] › tests\blockchain-snapshot-verification.spec.ts:148:7 › Blockchain Snapshot Creation Flow › should display verification button and monitor interaction
+
+=== TEST: Verification Button Interaction ===
+
+
+[1A[2K[1] Navigating to page with demo mode...
+
+[1A[2K[chromium] › tests\blockchain-snapshot-verification.spec.ts:327:7 › Blockchain Snapshot Creation Flow › should detect Convex mutation calls during verification
+
+=== TEST: Convex Mutation Detection ===
+
+
+[1A[2K[VERIFICATION 1271ms] [Auth Status] Backend authentication expired - clearing signature verification
+
+[1A[2K[chromium] › tests\blockchain-snapshot-verification.spec.ts:148:7 › Blockchain Snapshot Creation Flow › should display verification button and monitor interaction
+[VERIFICATION 1350ms] [Auth Status] Backend authentication expired - clearing signature verification
+
+[1A[2K[1806ms] Page loaded
+
+[1A[2K[chromium] › tests\blockchain-snapshot-verification.spec.ts:327:7 › Blockchain Snapshot Creation Flow › should detect Convex mutation calls during verification
+Verification button not visible - skipping mutation test
+
+[1A[2K  1) [chromium] › tests\blockchain-snapshot-verification.spec.ts:148:7 › Blockchain Snapshot Creation Flow › should display verification button and monitor interaction 
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      57783 pixels (ratio 0.07 of all image pixels) are different.
+
+      Snapshot: 01-initial-page-state.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(01-initial-page-state.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 57783 pixels (ratio 0.07 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 57783 pixels (ratio 0.07 of all image pixels) are different.[22m
+
+
+      155 |
+      156 |     // Take initial screenshot
+    > 157 |     await expect(page).toHaveScreenshot('01-initial-page-state.png', {
+          |                        ^
+      158 |       fullPage: false,
+      159 |       animations: 'disabled'
+      160 |     });
+        at C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react\tests\blockchain-snapshot-verification.spec.ts:157:24
+
+    attachment #1: 01-initial-page-state (image/png) ───────────────────────────────────────────────
+    Expected: tests\blockchain-snapshot-verification.spec.ts-snapshots\01-initial-page-state-chromium-win32.png
+    Received: test-results\blockchain-snapshot-verifi-e4f71-ton-and-monitor-interaction-chromium\01-initial-page-state-actual.png
+    Diff:     test-results\blockchain-snapshot-verifi-e4f71-ton-and-monitor-interaction-chromium\01-initial-page-state-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\blockchain-snapshot-verifi-e4f71-ton-and-monitor-interaction-chromium\error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › tests\blockchain-snapshot-verification.spec.ts:148:7 › Blockchain Snapshot Creation Flow › should display verification button and monitor interaction 
+  1 passed (5.4s)
+
+[36m  Serving HTML report at http://localhost:54638. Press Ctrl+C to quit.[39m

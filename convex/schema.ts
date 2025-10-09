@@ -1915,6 +1915,7 @@ export default defineSchema({
     walletAddress: v.string(), // Stake address
     addedAt: v.number(),
     nickname: v.optional(v.string()), // User-defined nickname (e.g., "Main Wallet", "Trading Wallet")
+    originalCompanyName: v.optional(v.string()), // Original corporation name before joining group (for restoration on removal)
   })
     .index("by_wallet", ["walletAddress"]) // CRITICAL: Find group from ANY wallet
     .index("by_group", ["groupId"]), // Get all wallets in a group
@@ -2122,4 +2123,22 @@ export default defineSchema({
     updatedAt: v.number(), // Last update timestamp
   })
     .index("by_key", ["key"]),
+
+  // Wallet Group Audit Trail - security and fraud detection
+  walletGroupAudit: defineTable({
+    groupId: v.string(), // Reference to walletGroups
+    action: v.string(), // "add_wallet", "remove_wallet", "transfer_primary", "create_group"
+    performedBy: v.string(), // Wallet address that initiated the action
+    targetWallet: v.optional(v.string()), // Wallet being added/removed (if applicable)
+    signature: v.optional(v.string()), // Cryptographic proof (for add_wallet actions)
+    nonce: v.optional(v.string()), // Nonce used for signature verification
+    timestamp: v.number(),
+    ipAddress: v.optional(v.string()), // For advanced security tracking
+    success: v.boolean(), // Did the action succeed?
+    errorMessage: v.optional(v.string()), // If failed, why?
+  })
+    .index("by_group", ["groupId"])
+    .index("by_performer", ["performedBy"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_action", ["action"]),
 });

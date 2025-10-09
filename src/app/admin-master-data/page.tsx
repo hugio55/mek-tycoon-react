@@ -15,6 +15,7 @@ import MekRateExperiment from '@/components/MekRateExperiment';
 import MekRateAdmin from '@/components/MekRateAdmin';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
+import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -28,6 +29,7 @@ const STORY_CLIMB_SUBSECTIONS = [
   { id: 'mek-slots', name: 'Mek Slots Configuration', icon: '📋' },
   { id: 'node-fee', name: 'Node Fee Configuration', icon: '💰' },
   { id: 'event-node', name: 'Event Node Configuration', icon: '✨' },
+  { id: 'nft-planning', name: 'NFT Purchase Planning', icon: '💎' },
   { id: 'boss-rewards', name: 'Mini Boss & Final Boss Rewards', icon: '🏆' },
   { id: 'normal-rewards', name: 'Normal Mek Node Rewards', icon: '🎁' }
 ];
@@ -66,6 +68,11 @@ export default function AdminMasterDataPage() {
   const [menuHeaderCollapsed, setMenuHeaderCollapsed] = useState(true); // Default to collapsed
   const [systemStatusCollapsed, setSystemStatusCollapsed] = useState(false);
   const [masterRangeCollapsed, setMasterRangeCollapsed] = useState(true); // Default to collapsed
+
+  // Save system state
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
   const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>(() => {
     // Always use defaults during initial render to avoid hydration mismatch
     const initial: Record<string, 'incomplete' | 'in-progress' | 'complete'> = {};
@@ -180,6 +187,74 @@ export default function AdminMasterDataPage() {
     window.dispatchEvent(new CustomEvent('menuHeaderStyleChanged', { detail: style }));
     console.log('Admin: Saved to localStorage and dispatched event');
   };
+
+  // Handle creating a new save
+  const handleSave = async () => {
+    setIsSaving(true);
+    setMessage({ type: 'info', text: 'Creating save backup...' });
+
+    try {
+      const now = new Date();
+      const saveName = `Save_${now.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}_${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '')}`.replace(/[,\s]/g, '_');
+
+      const response = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: saveName,
+          description: `Automatic save on ${now.toLocaleString()}`,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMessage({ type: 'success', text: `Save created successfully! ${result.filesCount} files backed up.` });
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to create save' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error creating save: ' + (error instanceof Error ? error.message : 'Unknown error') });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle git commit
+  const handleCommit = async () => {
+    setIsCommitting(true);
+    setMessage({ type: 'info', text: 'Creating git commit...' });
+
+    try {
+      const response = await fetch('/api/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Save state: ${new Date().toLocaleString()}`,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMessage({ type: 'success', text: `Git commit created successfully! ${result.message}` });
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to create git commit' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error creating commit: ' + (error instanceof Error ? error.message : 'Unknown error') });
+    } finally {
+      setIsCommitting(false);
+    }
+  };
+
+  // Auto-hide messages after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   // Master Range Controls
   const [globalMultiplier, setGlobalMultiplier] = useState(1);
@@ -339,7 +414,72 @@ export default function AdminMasterDataPage() {
         <h1 className="text-4xl font-bold text-yellow-500 mb-2 font-orbitron tracking-wider">
           MASTER DATA SYSTEMS
         </h1>
-        <p className="text-gray-400 mb-8">Centralized procedural generation and game balance control</p>
+        <p className="text-gray-400 mb-4">Centralized procedural generation and game balance control</p>
+
+        {/* Message Display */}
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg border ${
+            message.type === 'success' ? 'bg-green-900/20 border-green-500 text-green-400' :
+            message.type === 'error' ? 'bg-red-900/20 border-red-500 text-red-400' :
+            'bg-blue-900/20 border-blue-500 text-blue-400'
+          }`}>
+            {message.text}
+          </div>
+        )}
+
+        {/* Quick Save & Commit Buttons */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-yellow-400 mb-1">Quick Save & Commit</h2>
+              <p className="text-xs text-gray-400">Create backups and git commits of your code</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  isSaving
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-yellow-500/30 hover:scale-105'
+                }`}
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Saving...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    💾 <span>SAVE NOW</span>
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleCommit}
+                disabled={isCommitting}
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  isCommitting
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/30 hover:scale-105'
+                }`}
+              >
+                {isCommitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Committing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    📝 <span>GIT COMMIT</span>
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Simple Systems Checklist */}
         <div className="bg-black/50 backdrop-blur border border-gray-700/50 rounded-lg p-4 mb-8">
@@ -1317,6 +1457,13 @@ export default function AdminMasterDataPage() {
                         </div>
                       </div>
                 </div>
+                )}
+
+                {/* NFT Purchase Planning */}
+                {storyClimbSubTab === 'nft-planning' && (
+                  <div className="bg-black/70 border border-gray-500/20 rounded p-4">
+                    <NftPurchasePlanner />
+                  </div>
                 )}
 
                 {/* Other Story Climb Subsections from StoryClimbConfig */}

@@ -34,12 +34,120 @@ interface GoldLeaderboardProps {
   showMoreButton?: boolean;
 }
 
+// Helper component for expandable corporation rows
+function CorporationRow({
+  corp,
+  rankColor,
+  rankGlow,
+  isExpanded,
+  onToggleExpand,
+  onClickMeks,
+}: {
+  corp: LeaderboardEntry & { rank: number };
+  rankColor: string;
+  rankGlow: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onClickMeks: () => void;
+}) {
+  const walletDetails = useQuery(
+    api.goldLeaderboard.getCorporationWalletDetails,
+    isExpanded ? { primaryWallet: corp.walletAddress } : 'skip'
+  );
+
+  const isMultiWallet = walletDetails && walletDetails.length > 1;
+
+  return (
+    <div className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30">
+      {/* Main corporation row */}
+      <div className="w-full flex items-center justify-between p-3 sm:p-2 hover:bg-yellow-500/10 transition-colors">
+        <div className="flex items-center gap-3 sm:gap-3 flex-1">
+          {/* Expand/collapse button - only show if multi-wallet */}
+          {isMultiWallet && (
+            <button
+              onClick={onToggleExpand}
+              className="text-yellow-500 hover:text-yellow-300 transition-colors text-lg font-bold min-w-[24px]"
+            >
+              {isExpanded ? '▼' : '▶'}
+            </button>
+          )}
+          {!isMultiWallet && <div className="min-w-[24px]"></div>}
+
+          {/* Rank */}
+          <div className="text-2xl sm:text-xl font-black min-w-[60px]" style={{
+            color: rankColor,
+            textShadow: rankGlow,
+            fontFamily: 'Orbitron, monospace',
+          }}>
+            #{corp.rank}
+          </div>
+
+          {/* Company info - clickable to view Meks */}
+          <button
+            onClick={onClickMeks}
+            className="text-left hover:text-yellow-400 transition-colors"
+          >
+            <div className="text-base sm:text-sm font-bold text-white">
+              {corp.displayWallet}
+              {corp.isCurrentUser && (
+                <span className="ml-2 text-[10px] text-yellow-400 bg-yellow-400/20 px-1.5 py-0.5 rounded">YOU</span>
+              )}
+            </div>
+            <div className="text-xs sm:text-[10px] text-gray-500">{corp.mekCount} Meks</div>
+          </button>
+        </div>
+
+        {/* Gold stats */}
+        <div className="text-right">
+          <div className="text-base sm:text-lg font-bold text-yellow-400">
+            {corp.currentGold.toLocaleString()}
+          </div>
+          <div className="text-xs sm:text-[10px] text-gray-500">{corp.hourlyRate.toFixed(0)}/hr</div>
+        </div>
+      </div>
+
+      {/* Expanded individual wallets */}
+      {isExpanded && walletDetails && walletDetails.length > 1 && (
+        <div className="border-t border-yellow-500/20 bg-black/40">
+          {walletDetails.map((wallet, index) => (
+            <div
+              key={wallet.walletAddress}
+              className={`flex items-center justify-between px-3 sm:px-2 py-2 hover:bg-yellow-500/5 transition-colors ${
+                index < walletDetails.length - 1 ? 'border-b border-yellow-500/10' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3 sm:gap-3 pl-12">
+                {/* Wallet info */}
+                <div>
+                  <div className="text-sm font-bold text-gray-300">
+                    {wallet.displayWallet}
+                  </div>
+                  <div className="text-xs text-gray-500">{wallet.mekCount} Meks</div>
+                </div>
+              </div>
+
+              {/* Wallet gold stats */}
+              <div className="text-right">
+                <div className="text-sm font-bold text-yellow-400/80">
+                  {wallet.currentGold.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-500">{wallet.hourlyRate.toFixed(0)}/hr</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GoldLeaderboard({ currentWallet, showMoreButton = false }: GoldLeaderboardProps) {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [selectedMek, setSelectedMek] = useState<WalletMek | null>(null);
   const [realtimeGold, setRealtimeGold] = useState<Map<string, number>>(new Map());
   const [isMounted, setIsMounted] = useState(false);
   const [showAllCorporations, setShowAllCorporations] = useState(false);
+  const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
 
   // Get top miners data
   const topMiners = useQuery(api.goldLeaderboard.getTopGoldMiners, {
@@ -284,46 +392,29 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
                                       corp.rank === 2 ? '0 0 15px rgba(192, 192, 192, 0.6)' :
                                       corp.rank === 3 ? '0 0 10px rgba(205, 127, 50, 0.6)' : 'none';
 
+                    const isExpanded = expandedCorporations.has(corp.walletAddress);
+
                     return (
-                      <div key={corp.walletAddress} className="relative bg-gradient-to-r from-black/60 via-gray-900/60 to-black/60 backdrop-blur-md border border-yellow-500/30">
-                        <button
-                          onClick={() => {
-                            setShowAllCorporations(false);
-                            setSelectedWallet(corp.walletAddress);
-                          }}
-                          className="w-full flex items-center justify-between p-3 sm:p-2 hover:bg-yellow-500/10 transition-colors text-left touch-manipulation"
-                        >
-                          <div className="flex items-center gap-3 sm:gap-3">
-                            {/* Rank */}
-                            <div className="text-2xl sm:text-xl font-black min-w-[60px]" style={{
-                              color: rankColor,
-                              textShadow: rankGlow,
-                              fontFamily: 'Orbitron, monospace',
-                            }}>
-                              #{corp.rank}
-                            </div>
-
-                            {/* Company info */}
-                            <div>
-                              <div className="text-base sm:text-sm font-bold text-white">
-                                {corp.displayWallet}
-                                {corp.isCurrentUser && (
-                                  <span className="ml-2 text-[10px] text-yellow-400 bg-yellow-400/20 px-1.5 py-0.5 rounded">YOU</span>
-                                )}
-                              </div>
-                              <div className="text-xs sm:text-[10px] text-gray-500">{corp.mekCount} Meks</div>
-                            </div>
-                          </div>
-
-                          {/* Gold stats */}
-                          <div className="text-right">
-                            <div className="text-base sm:text-lg font-bold text-yellow-400">
-                              {corp.currentGold.toLocaleString()}
-                            </div>
-                            <div className="text-xs sm:text-[10px] text-gray-500">{corp.hourlyRate.toFixed(0)}/hr</div>
-                          </div>
-                        </button>
-                      </div>
+                      <CorporationRow
+                        key={corp.walletAddress}
+                        corp={corp}
+                        rankColor={rankColor}
+                        rankGlow={rankGlow}
+                        isExpanded={isExpanded}
+                        onToggleExpand={() => {
+                          const newExpanded = new Set(expandedCorporations);
+                          if (isExpanded) {
+                            newExpanded.delete(corp.walletAddress);
+                          } else {
+                            newExpanded.add(corp.walletAddress);
+                          }
+                          setExpandedCorporations(newExpanded);
+                        }}
+                        onClickMeks={() => {
+                          setShowAllCorporations(false);
+                          setSelectedWallet(corp.walletAddress);
+                        }}
+                      />
                     );
                   })}
                 </div>

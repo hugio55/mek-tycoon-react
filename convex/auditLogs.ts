@@ -171,3 +171,18 @@ export const getRecentRateChanges = query({
     return await query.take(50);
   }
 });
+
+// Get last verification for a wallet
+export const getLastVerification = query({
+  args: {
+    stakeAddress: v.string()
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("auditLogs")
+      .withIndex("by_stake_address", (q) => q.eq("stakeAddress", args.stakeAddress))
+      .filter(q => q.eq(q.field("type"), "verification"))
+      .order("desc")
+      .first();
+  }
+});

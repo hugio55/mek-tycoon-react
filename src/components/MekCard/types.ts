@@ -36,7 +36,8 @@ export const DEFAULT_LEVEL_COLORS = [
 ];
 
 // NOTE: Level colors are now stored in Convex database
-// MekCard components should use useQuery(api.levelColors.getLevelColors)
+// ONLY the parent MekCard component queries colors once via useQuery(api.levelColors.getLevelColors)
+// Child components (MekIdentityLayer, MekLevelBar) receive colors as props to avoid duplicate queries
 // This function is kept for SSR/fallback compatibility only
 export const getLevelColors = (): string[] => {
   // This function now only returns defaults - components should use Convex query

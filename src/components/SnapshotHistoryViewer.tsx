@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, memo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -9,6 +10,7 @@ function SnapshotHistoryViewer() {
   const [companyFilter, setCompanyFilter] = useState('');
   const [expandedSnapshot, setExpandedSnapshot] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'snapshots' | 'logs'>('snapshots');
+  const [viewingFullData, setViewingFullData] = useState<string | null>(null);
 
   const snapshots = useQuery(
     api.snapshotHistory.getSnapshotHistory,
@@ -18,6 +20,27 @@ function SnapshotHistoryViewer() {
   );
 
   const logs = useQuery(api.snapshotHistory.getSnapshotLogs, { limit: 20 });
+
+  // DEBUG: Log when query data changes
+  useEffect(() => {
+    if (logs) {
+      console.log('[SnapshotHistoryViewer] Logs query updated:', {
+        count: logs.length,
+        latestTimestamp: logs[0]?.timestamp ? new Date(logs[0].timestamp).toISOString() : 'none',
+        allTimestamps: logs.map(l => new Date(l.timestamp).toISOString())
+      });
+    }
+  }, [logs]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (viewingFullData) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [viewingFullData]);
   const deleteSnapshot = useMutation(api.snapshotHistory.deleteSnapshot);
   const deleteAllSnapshots = useMutation(api.snapshotHistory.deleteAllSnapshots);
   const restoreFromSnapshot = useMutation(api.snapshotHistory.restoreFromSnapshot);
@@ -236,6 +259,16 @@ function SnapshotHistoryViewer() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            setViewingFullData(snapshot._id);
+                          }}
+                          className="px-3 py-1 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors"
+                          title="View all snapshot data"
+                        >
+                          View All Data
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleRestoreSnapshot(snapshot._id, snapshot.walletAddress, snapshot.snapshotTime);
                           }}
                           className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors"
@@ -357,6 +390,104 @@ function SnapshotHistoryViewer() {
           <li>• If a user claims they owned more MEKs, check their snapshot at that timestamp</li>
         </ul>
       </div>
+
+      {/* Full Data Modal - Rendered as portal to avoid parent positioning issues */}
+      {viewingFullData && snapshots && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999] p-4" onClick={() => setViewingFullData(null)}>
+          <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-yellow-400">Complete Snapshot Data</h3>
+              <button
+                onClick={() => setViewingFullData(null)}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600 rounded transition-colors"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4">
+              {(() => {
+                const snapshot = snapshots.find(s => s._id === viewingFullData);
+                if (!snapshot) return <div className="text-gray-400">Snapshot not found</div>;
+
+                return (
+                  <div className="space-y-4 font-mono text-sm">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Snapshot ID</div>
+                        <div className="text-gray-300">{snapshot._id}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Creation Time</div>
+                        <div className="text-gray-300">{new Date(snapshot._creationTime).toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Wallet Address</div>
+                        <div className="text-gray-300 break-all">{snapshot.walletAddress}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Company Name</div>
+                        <div className="text-gray-300">{snapshot.companyName || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Snapshot Time</div>
+                        <div className="text-gray-300">{new Date(snapshot.snapshotTime).toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Verification Status</div>
+                        <div className="text-gray-300">{snapshot.verificationStatus || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Total MEK Count</div>
+                        <div className="text-yellow-400 font-bold">{snapshot.totalMekCount}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Total Gold Per Hour</div>
+                        <div className="text-green-400 font-bold">{snapshot.totalGoldPerHour.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Spendable Gold</div>
+                        <div className="text-yellow-300 font-bold">{snapshot.spendableGold?.toFixed(2) ?? 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Cumulative Gold Earned</div>
+                        <div className="text-orange-400 font-bold">{snapshot.cumulativeGoldEarned?.toFixed(2) ?? 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Accumulated Gold</div>
+                        <div className="text-yellow-300">{(snapshot as any).accumulatedGold?.toFixed(2) ?? 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Total Cumulative Gold</div>
+                        <div className="text-orange-400">{(snapshot as any).totalCumulativeGold?.toFixed(2) ?? 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Total Gold Spent on Upgrades</div>
+                        <div className="text-red-400 font-bold">{(snapshot as any).totalGoldSpentOnUpgrades?.toFixed(2) ?? 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Last Active Time</div>
+                        <div className="text-gray-300">{(snapshot as any).lastActiveTime ? new Date((snapshot as any).lastActiveTime).toLocaleString() : 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Last Snapshot Time</div>
+                        <div className="text-gray-300">{(snapshot as any).lastSnapshotTime ? new Date((snapshot as any).lastSnapshotTime).toLocaleString() : 'N/A'}</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-700 pt-4">
+                      <div className="text-gray-400 text-xs mb-2">MEKs ({snapshot.meks.length})</div>
+                      <div className="bg-gray-950 p-3 rounded border border-gray-700 max-h-96 overflow-auto">
+                        <pre className="text-xs text-gray-300 whitespace-pre-wrap">{JSON.stringify(snapshot.meks, null, 2)}</pre>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

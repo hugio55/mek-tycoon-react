@@ -1,0 +1,2 @@
+@echo off
+flyctl secrets set DISCORD_BOT_TOKEN="MTQyMTIwNzE0NTMyNzc1OTUyNQ.Gtdrlz.Lbegv1L340GTuE_D_VtHpsdgGQ7leCZ81UVDqY" DISCORD_CLIENT_ID="1421207145327759525" DISCORD_GUILD_ID="938648161810006119" NEXT_PUBLIC_CONVEX_URL="https://rare-dinosaur-331.convex.cloud" WEBSITE_URL="https://mek.overexposed.io"

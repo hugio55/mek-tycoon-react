@@ -126,7 +126,7 @@ export const fetchOnChainRates = action({
     mekAssets: v.array(
       v.object({
         assetId: v.string(),
-        mekNumber: v.number(),
+        mekNumber: v.optional(v.number()), // Optional because some old data might not have it
         headVariation: v.optional(v.string()),
         bodyVariation: v.optional(v.string()),
         itemVariation: v.optional(v.string()),
@@ -138,7 +138,14 @@ export const fetchOnChainRates = action({
     // In production, this would query the blockchain for current rates
     // For now, calculate rates based on our architecture
 
-    const rates = args.mekAssets.map((mek) => {
+    // Filter out meks without mekNumber
+    const validMeks = args.mekAssets.filter(m => m.mekNumber !== undefined);
+
+    if (validMeks.length < args.mekAssets.length) {
+      console.warn(`[fetchOnChainRates] Filtered out ${args.mekAssets.length - validMeks.length} meks without mekNumber`);
+    }
+
+    const rates = validMeks.map((mek) => {
       // Base rate calculation (would be on-chain)
       let baseRate = 10; // Base gold per hour
 

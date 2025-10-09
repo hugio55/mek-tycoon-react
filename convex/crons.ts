@@ -10,7 +10,7 @@ crons.interval(
   {
     hours: 6
   },
-  api.goldMiningSnapshot.runNightlySnapshot as any
+  api.goldMiningSnapshot.triggerSnapshot
 );
 
 // Create automatic gold backups every 6 hours

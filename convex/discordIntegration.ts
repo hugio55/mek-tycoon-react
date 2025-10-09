@@ -52,26 +52,70 @@ export const linkDiscordToWallet = mutation({
     discordUserId: v.string(),
     discordUsername: v.string(),
     guildId: v.string(),
+    walletNickname: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    console.log('[MUTATION] linkDiscordToWallet called with:', {
+      walletAddress: args.walletAddress,
+      walletLength: args.walletAddress.length,
+      discordUserId: args.discordUserId,
+      discordUsername: args.discordUsername,
+      guildId: args.guildId,
+      walletNickname: args.walletNickname,
+    });
+
+    // Validate wallet address format
+    const isValidFormat =
+      args.walletAddress.startsWith('stake1') ||
+      args.walletAddress.startsWith('addr1') ||
+      args.walletAddress.startsWith('addr_test') ||
+      args.walletAddress.startsWith('stake_test') ||
+      /^[0-9a-fA-F]{56,60}$/.test(args.walletAddress);
+
+    if (!isValidFormat) {
+      console.error('[MUTATION] Invalid wallet address format:', args.walletAddress);
+      throw new Error(`Invalid Cardano wallet address format. Address must start with 'stake1', 'addr1', or be a valid hex stake address. Received: ${args.walletAddress.substring(0, 20)}...`);
+    }
+
     const now = Date.now();
 
+    // Check if this wallet already exists for this user
     const existingConnection = await ctx.db
       .query("discordConnections")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
-    if (existingConnection) {
+    // Check how many active wallets this user has
+    const userActiveWallets = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .collect();
+
+    // Determine if this should be the primary wallet
+    const shouldBePrimary = userActiveWallets.length === 0;
+
+    // Check if wallet is already linked to a different user
+    if (existingConnection && existingConnection.discordUserId !== args.discordUserId) {
+      throw new Error('This wallet is already linked to a different Discord user.');
+    }
+
+    // Check if this user already has this wallet linked
+    if (existingConnection && existingConnection.discordUserId === args.discordUserId) {
+      // Reactivate and update the existing connection
       await ctx.db.patch(existingConnection._id, {
-        discordUserId: args.discordUserId,
         discordUsername: args.discordUsername,
         active: true,
         linkedAt: now,
+        walletNickname: args.walletNickname,
       });
-      return { success: true, connectionId: existingConnection._id };
+      console.log('[MUTATION] Reactivated existing connection:', existingConnection.walletAddress);
+      return { success: true, connectionId: existingConnection._id, isNewWallet: false };
     }
 
+    // Create new connection
     const connectionId = await ctx.db.insert("discordConnections", {
       walletAddress: args.walletAddress,
       discordUserId: args.discordUserId,
@@ -79,6 +123,13 @@ export const linkDiscordToWallet = mutation({
       guildId: args.guildId,
       linkedAt: now,
       active: true,
+      isPrimary: shouldBePrimary,
+      walletNickname: args.walletNickname,
+    });
+
+    console.log('[MUTATION] Created new connection:', {
+      walletAddress: args.walletAddress,
+      isPrimary: shouldBePrimary,
     });
 
     const user = await ctx.db
@@ -94,7 +145,7 @@ export const linkDiscordToWallet = mutation({
       });
     }
 
-    return { success: true, connectionId };
+    return { success: true, connectionId, isNewWallet: true, isPrimary: shouldBePrimary };
   },
 });
 
@@ -110,11 +161,49 @@ export const unlinkDiscordFromWallet = mutation({
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .first();
 
-    if (connection) {
-      await ctx.db.patch(connection._id, {
-        active: false,
-      });
+    if (!connection) {
+      return { success: false, message: "Connection not found" };
     }
+
+    const wasPrimary = connection.isPrimary;
+    const discordUserId = connection.discordUserId;
+
+    // Deactivate the connection
+    await ctx.db.patch(connection._id, {
+      active: false,
+    });
+
+    // If this was the primary wallet, promote another wallet to primary
+    if (wasPrimary) {
+      const remainingWallets = await ctx.db
+        .query("discordConnections")
+        .withIndex("by_discord_user", (q) => q.eq("discordUserId", discordUserId))
+        .filter((q) => q.eq(q.field("guildId"), args.guildId))
+        .filter((q) => q.eq(q.field("active"), true))
+        .collect();
+
+      if (remainingWallets.length > 0) {
+        // Promote the most recently linked wallet
+        const sorted = remainingWallets.sort((a, b) => b.linkedAt - a.linkedAt);
+        await ctx.db.patch(sorted[0]._id, {
+          isPrimary: true,
+        });
+        console.log('[MUTATION] Promoted wallet to primary:', sorted[0].walletAddress);
+      }
+    }
+
+    return { success: true };
+  },
+});
+
+export const deactivateConnectionById = mutation({
+  args: {
+    connectionId: v.id("discordConnections"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.connectionId, {
+      active: false,
+    });
 
     return { success: true };
   },
@@ -143,14 +232,20 @@ export const getDiscordConnectionByDiscordUser = query({
     guildId: v.string(),
   },
   handler: async (ctx, args) => {
-    const connection = await ctx.db
+    const connections = await ctx.db
       .query("discordConnections")
       .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
       .filter((q) => q.eq(q.field("guildId"), args.guildId))
       .filter((q) => q.eq(q.field("active"), true))
-      .first();
+      .collect();
 
-    return connection;
+    if (connections.length === 0) {
+      return null;
+    }
+
+    // Return the most recently linked connection
+    const sorted = connections.sort((a, b) => b.linkedAt - a.linkedAt);
+    return sorted[0];
   },
 });
 
@@ -289,35 +384,51 @@ export const getEmojiForGoldAmount = query({
 
 export const getUserGoldAndEmoji = query({
   args: {
-    walletAddress: v.string(),
+    discordUserId: v.string(),
+    guildId: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    const wallets = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .collect();
 
-    if (!user) {
+    if (wallets.length === 0) {
       return {
         gold: 0,
         goldPerHour: 0,
         emoji: "",
         tierName: "None",
-        highestEarner: null
+        highestEarner: null,
+        walletCount: 0,
       };
     }
 
-    const goldMining = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    let totalGold = 0;
+    let totalGoldPerHour = 0;
+    let allMeks: Array<{assetName: string, goldPerHour: number, rarityRank: number}> = [];
 
-    const totalGold = goldMining?.accumulatedGold || user.gold || 0;
-    const goldPerHour = goldMining?.totalGoldPerHour || 0;
+    for (const wallet of wallets) {
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+        .first();
+
+      if (goldMining) {
+        totalGold += goldMining.accumulatedGold || 0;
+        totalGoldPerHour += goldMining.totalGoldPerHour || 0;
+
+        if (goldMining.ownedMeks && goldMining.ownedMeks.length > 0) {
+          allMeks.push(...goldMining.ownedMeks);
+        }
+      }
+    }
 
     let highestEarner = null;
-    if (goldMining && goldMining.ownedMeks && goldMining.ownedMeks.length > 0) {
-      const topMek = goldMining.ownedMeks.reduce((prev, current) =>
+    if (allMeks.length > 0) {
+      const topMek = allMeks.reduce((prev, current) =>
         (prev.goldPerHour > current.goldPerHour) ? prev : current
       );
 
@@ -340,11 +451,11 @@ export const getUserGoldAndEmoji = query({
         if (tier.maxGold === undefined || totalGold < tier.maxGold) {
           return {
             gold: totalGold,
-            goldPerHour,
+            goldPerHour: totalGoldPerHour,
             emoji: tier.emoji,
             tierName: tier.tierName,
-            walletAddress: args.walletAddress,
-            highestEarner
+            highestEarner,
+            walletCount: wallets.length,
           };
         }
       }
@@ -352,11 +463,11 @@ export const getUserGoldAndEmoji = query({
 
     return {
       gold: totalGold,
-      goldPerHour,
+      goldPerHour: totalGoldPerHour,
       emoji: "",
       tierName: "None",
-      walletAddress: args.walletAddress,
-      highestEarner
+      highestEarner,
+      walletCount: wallets.length,
     };
   },
 });
@@ -380,6 +491,87 @@ export const updateNicknameTimestamp = mutation({
         currentEmoji: args.emoji,
       });
     }
+
+    return { success: true };
+  },
+});
+
+export const getUserWallets = query({
+  args: {
+    discordUserId: v.string(),
+    guildId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const wallets = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .collect();
+
+    return wallets.sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return b.linkedAt - a.linkedAt;
+    });
+  },
+});
+
+export const setPrimaryWallet = mutation({
+  args: {
+    discordUserId: v.string(),
+    guildId: v.string(),
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allWallets = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .collect();
+
+    const targetWallet = allWallets.find(w => w.walletAddress === args.walletAddress);
+
+    if (!targetWallet) {
+      throw new Error('Wallet not found or not linked to this user');
+    }
+
+    for (const wallet of allWallets) {
+      await ctx.db.patch(wallet._id, {
+        isPrimary: wallet.walletAddress === args.walletAddress,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+export const setWalletNickname = mutation({
+  args: {
+    discordUserId: v.string(),
+    guildId: v.string(),
+    walletAddress: v.string(),
+    nickname: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const connection = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .first();
+
+    if (!connection) {
+      throw new Error('Wallet connection not found');
+    }
+
+    if (connection.discordUserId !== args.discordUserId) {
+      throw new Error('This wallet is not linked to your Discord account');
+    }
+
+    await ctx.db.patch(connection._id, {
+      walletNickname: args.nickname,
+    });
 
     return { success: true };
   },

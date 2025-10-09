@@ -2,7 +2,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { bech32 } from "bech32";
-import { BLOCKFROST_CONFIG, MEK_POLICY_ID } from "./blockfrostConfig";
+import { BLOCKFROST_CONFIG, MEK_POLICY_ID, rateLimiter } from "./blockfrostConfig";
 
 // Blockfrost API configuration from shared config
 const BLOCKFROST_API_URL = BLOCKFROST_CONFIG.baseUrl;
@@ -117,10 +117,26 @@ export const getWalletAssets = action({
         console.log('Also have payment address:', args.paymentAddress.substring(0, 20) + '...');
       }
 
-      // Try to get addresses associated with stake address first
+      // Try to get addresses associated with stake address first (WITH PAGINATION!)
       let addresses = [];
       try {
-        addresses = await blockfrostRequest(`/accounts/${stakeAddress}/addresses`);
+        let addressPage = 1;
+        let hasMoreAddresses = true;
+
+        while (hasMoreAddresses) {
+          await rateLimiter.waitForSlot();
+          const addressBatch = await blockfrostRequest(`/accounts/${stakeAddress}/addresses?page=${addressPage}&count=100`);
+
+          addresses.push(...addressBatch);
+
+          // Check if there are more pages
+          hasMoreAddresses = addressBatch.length === 100;
+          addressPage++;
+
+          if (hasMoreAddresses) {
+            console.log(`Fetched ${addresses.length} addresses so far, fetching more...`);
+          }
+        }
       } catch (addressError) {
         console.error('Error fetching addresses:', addressError);
         addresses = [];
@@ -136,56 +152,84 @@ export const getWalletAssets = action({
       const allMeks: any[] = [];
       const seenAssetIds = new Set<string>();
 
-      // For each address, get the assets
+      // For each address, get the assets with pagination support
       for (const addressInfo of addresses) {
         const address = addressInfo.address;
 
         try {
-          // Get all assets at this address
-          const assets = await blockfrostRequest(`/addresses/${address}/utxos`);
+          let page = 1;
+          let hasMorePages = true;
+          const maxPages = 50; // Safety limit: 50 pages * 100 items = 5000 UTXOs max
 
-          // Check each UTXO for MEK NFTs
-          for (const utxo of assets) {
-            if (utxo.amount) {
-              for (const amount of utxo.amount) {
-                const unit = amount.unit;
+          // Fetch all pages of UTXOs
+          while (hasMorePages && page <= maxPages) {
+            console.log(`Fetching UTXOs for ${address.substring(0, 20)}... (page ${page})`);
 
-                // Check if this is a MEK NFT
-                if (unit && unit.startsWith(MEK_POLICY_ID)) {
-                  const assetId = unit;
+            // Wait for rate limit slot before making request
+            await rateLimiter.waitForSlot();
 
-                  // Skip if we've already seen this asset
-                  if (seenAssetIds.has(assetId)) continue;
-                  seenAssetIds.add(assetId);
+            // Get assets with pagination
+            const assets = await blockfrostRequest(`/addresses/${address}/utxos?page=${page}&count=100`);
 
-                  // Extract asset name from hex
-                  const assetNameHex = assetId.substring(MEK_POLICY_ID.length);
-                  let assetName = '';
+            // If we got less than 100 items, this is the last page
+            if (!assets || assets.length === 0) {
+              hasMorePages = false;
+              break;
+            }
 
-                  // Convert hex to string
-                  for (let i = 0; i < assetNameHex.length; i += 2) {
-                    const byte = parseInt(assetNameHex.substr(i, 2), 16);
-                    if (byte >= 32 && byte <= 126) {
-                      assetName += String.fromCharCode(byte);
+            if (assets.length < 100) {
+              hasMorePages = false;
+            }
+
+            // Check each UTXO for MEK NFTs
+            for (const utxo of assets) {
+              if (utxo.amount) {
+                for (const amount of utxo.amount) {
+                  const unit = amount.unit;
+
+                  // Check if this is a MEK NFT
+                  if (unit && unit.startsWith(MEK_POLICY_ID)) {
+                    const assetId = unit;
+
+                    // Skip if we've already seen this asset
+                    if (seenAssetIds.has(assetId)) continue;
+                    seenAssetIds.add(assetId);
+
+                    // Extract asset name from hex
+                    const assetNameHex = assetId.substring(MEK_POLICY_ID.length);
+                    let assetName = '';
+
+                    // Convert hex to string
+                    for (let i = 0; i < assetNameHex.length; i += 2) {
+                      const byte = parseInt(assetNameHex.substr(i, 2), 16);
+                      if (byte >= 32 && byte <= 126) {
+                        assetName += String.fromCharCode(byte);
+                      }
                     }
-                  }
 
-                  // Extract Mek number from name (e.g., "Mekanism1234" -> 1234)
-                  const mekNumber = parseInt(assetName.replace(/[^0-9]/g, ''));
+                    // Extract Mek number from name (e.g., "Mekanism1234" -> 1234)
+                    const mekNumber = parseInt(assetName.replace(/[^0-9]/g, ''));
 
-                  if (mekNumber && !isNaN(mekNumber)) {
-                    allMeks.push({
-                      assetId,
-                      assetName,
-                      mekNumber,
-                      quantity: parseInt(amount.quantity)
-                    });
+                    if (mekNumber && !isNaN(mekNumber)) {
+                      allMeks.push({
+                        assetId,
+                        assetName,
+                        mekNumber,
+                        quantity: parseInt(amount.quantity)
+                      });
 
-                    console.log(`Found MEK #${mekNumber}: ${assetName}`);
+                      console.log(`Found MEK #${mekNumber}: ${assetName} (total so far: ${allMeks.length})`);
+                    }
                   }
                 }
               }
             }
+
+            page++;
+          }
+
+          if (page > maxPages) {
+            console.warn(`Reached max page limit (${maxPages}) for address ${address.substring(0, 20)}...`);
           }
         } catch (utxoError) {
           console.error(`Error fetching assets for address ${address}:`, utxoError);
@@ -247,6 +291,7 @@ export const testBlockfrostConnection = action({
 
     try {
       // Test the API by fetching network info
+      await rateLimiter.waitForSlot();
       const network = await blockfrostRequest('/network');
 
       return {

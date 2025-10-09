@@ -1,18 +1,13 @@
 import React from 'react';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import { MekAsset, DEFAULT_LEVEL_COLORS } from './types';
 
 interface MekIdentityLayerProps {
   mek: MekAsset;
+  levelColors: string[]; // Receive colors from parent instead of querying
 }
 
-export const MekIdentityLayer = ({ mek }: MekIdentityLayerProps) => {
+export const MekIdentityLayer = ({ mek, levelColors }: MekIdentityLayerProps) => {
   const level = mek.currentLevel || 1;
-
-  // Load level colors from Convex database
-  const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
-  const levelColors = levelColorsFromDb || DEFAULT_LEVEL_COLORS;
 
   const borderColor = `${levelColors[level - 1] || '#FFFFFF'}4D`;
   const textColor = levelColors[level - 1] || '#FFFFFF';

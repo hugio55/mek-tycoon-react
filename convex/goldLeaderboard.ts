@@ -15,58 +15,120 @@ mekRarityMaster.forEach((mek: any) => {
 });
 
 // Get top 3 miners with real-time cumulative gold calculations
+// BACKWARDS COMPATIBLE: Aggregates by wallet groups, shows ungrouped wallets individually
 export const getTopGoldMiners = query({
   args: {
     currentWallet: v.optional(v.string()),
+    currentDiscordUserId: v.optional(v.string()),
+    guildId: v.optional(v.string()),
   },
-  handler: async (ctx, { currentWallet }) => {
+  handler: async (ctx, { currentWallet, currentDiscordUserId, guildId }) => {
     const now = Date.now();
 
-    // Get all miners and calculate real-time cumulative gold
-    const miners = await ctx.db.query("goldMining").collect();
+    // Get all miners
+    const allMiners = await ctx.db.query("goldMining").collect();
 
-    const minersWithCurrentGold = miners.map(miner => {
-      // Calculate current gold (respecting verification status)
+    // Get all wallet group memberships
+    const allMemberships = await ctx.db.query("walletGroupMemberships").collect();
+
+    // Create map of wallet -> groupId
+    const walletToGroupMap = new Map<string, string>();
+    for (const membership of allMemberships) {
+      walletToGroupMap.set(membership.walletAddress, membership.groupId);
+    }
+
+    // Get wallet groups
+    const groups = await ctx.db.query("walletGroups").collect();
+    const groupMap = new Map(groups.map(g => [g.groupId, g]));
+
+    // Group miners by groupId OR keep separate if no group
+    const groupedMiners = new Map<string, typeof allMiners>();
+    const ungroupedMiners: typeof allMiners = [];
+
+    for (const miner of allMiners) {
+      const groupId = walletToGroupMap.get(miner.walletAddress);
+      if (groupId) {
+        const existing = groupedMiners.get(groupId) || [];
+        existing.push(miner);
+        groupedMiners.set(groupId, existing);
+      } else {
+        ungroupedMiners.push(miner);
+      }
+    }
+
+    const calculateGold = (miner: typeof allMiners[0]) => {
       let currentGold = miner.accumulatedGold || 0;
-
       if (miner.isBlockchainVerified === true) {
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
         currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
-
-      // Calculate real-time cumulative gold (base + ongoing earnings)
       const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
-
-      // If totalCumulativeGold not initialized, estimate from current state
       if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
         baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
       }
+      return baseCumulativeGold + goldEarnedSinceLastUpdate;
+    };
 
-      // Add real-time earnings to cumulative for accurate display
-      const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
+    const allEntries = [];
 
-      return {
+    // Add grouped wallets (corporations with multiple wallets)
+    for (const [groupId, miners] of groupedMiners.entries()) {
+      let totalGold = 0;
+      let totalGoldPerHour = 0;
+      let totalMeks = 0;
+      let lastActive = 0;
+      let companyName = '';
+
+      for (const miner of miners) {
+        totalGold += calculateGold(miner);
+        totalGoldPerHour += miner.totalGoldPerHour || 0;
+        totalMeks += miner.ownedMeks?.length || 0;
+        if (miner.companyName) companyName = miner.companyName;
+        const miningLastActive = miner.lastActiveTime || miner.lastLogin || 0;
+        if (miningLastActive > lastActive) lastActive = miningLastActive;
+      }
+
+      const group = groupMap.get(groupId);
+      const isCurrentUserGroup = miners.some(m => m.walletAddress === currentWallet);
+
+      allEntries.push({
+        walletAddress: group?.primaryWallet || miners[0].walletAddress,
+        displayWallet: companyName || (group?.primaryWallet ?
+          `${group.primaryWallet.slice(0, 8)}...${group.primaryWallet.slice(-6)}` :
+          'Corporation'),
+        currentGold: Math.floor(totalGold),
+        hourlyRate: totalGoldPerHour,
+        mekCount: totalMeks,
+        isCurrentUser: isCurrentUserGroup,
+        lastActive,
+      });
+    }
+
+    // Add ungrouped wallets (backwards compatible - single wallets)
+    for (const miner of ungroupedMiners) {
+      const totalGold = calculateGold(miner);
+      allEntries.push({
         walletAddress: miner.walletAddress,
         displayWallet: miner.companyName || (miner.walletAddress ?
           `${miner.walletAddress.slice(0, 8)}...${miner.walletAddress.slice(-6)}` :
           'Unknown'),
-        currentGold: Math.floor(totalCumulativeGold),
+        currentGold: Math.floor(totalGold),
         hourlyRate: miner.totalGoldPerHour || 0,
         mekCount: miner.ownedMeks?.length || 0,
         isCurrentUser: currentWallet === miner.walletAddress,
         lastActive: miner.lastActiveTime || miner.lastLogin,
-      };
-    });
+      });
+    }
 
     // Sort by current gold (highest first) and take top 3
-    const topMiners = minersWithCurrentGold
+    const topMiners = allEntries
       .sort((a, b) => b.currentGold - a.currentGold)
       .slice(0, 3)
-      .map((miner, index) => ({
-        ...miner,
+      .map((entry, index) => ({
+        ...entry,
         rank: index + 1,
       }));
 
@@ -146,6 +208,223 @@ export const getWalletMeksForDisplay = query({
       totalMeks: meksWithLevels.length,
       totalGoldPerHour: goldMiningData.totalGoldPerHour || 0,
     };
+  },
+});
+
+// Get ALL corporations with real-time cumulative gold calculations
+// BACKWARDS COMPATIBLE: Aggregates by wallet groups, shows ungrouped wallets individually
+export const getAllCorporations = query({
+  args: {
+    currentWallet: v.optional(v.string()),
+    currentDiscordUserId: v.optional(v.string()),
+    guildId: v.optional(v.string()),
+  },
+  handler: async (ctx, { currentWallet, currentDiscordUserId, guildId }) => {
+    const now = Date.now();
+
+    // Get all miners
+    const allMiners = await ctx.db.query("goldMining").collect();
+
+    // Get all wallet group memberships
+    const allMemberships = await ctx.db.query("walletGroupMemberships").collect();
+
+    // Create map of wallet -> groupId
+    const walletToGroupMap = new Map<string, string>();
+    for (const membership of allMemberships) {
+      walletToGroupMap.set(membership.walletAddress, membership.groupId);
+    }
+
+    // Get wallet groups
+    const groups = await ctx.db.query("walletGroups").collect();
+    const groupMap = new Map(groups.map(g => [g.groupId, g]));
+
+    // Group miners by groupId OR keep separate if no group
+    const groupedMiners = new Map<string, typeof allMiners>();
+    const ungroupedMiners: typeof allMiners = [];
+
+    for (const miner of allMiners) {
+      const groupId = walletToGroupMap.get(miner.walletAddress);
+      if (groupId) {
+        const existing = groupedMiners.get(groupId) || [];
+        existing.push(miner);
+        groupedMiners.set(groupId, existing);
+      } else {
+        ungroupedMiners.push(miner);
+      }
+    }
+
+    const calculateGold = (miner: typeof allMiners[0]) => {
+      let currentGold = miner.accumulatedGold || 0;
+      if (miner.isBlockchainVerified === true) {
+        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+        const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+      }
+      const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
+      let baseCumulativeGold = miner.totalCumulativeGold || 0;
+      if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
+        baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
+      }
+      return baseCumulativeGold + goldEarnedSinceLastUpdate;
+    };
+
+    const allEntries = [];
+
+    // Add grouped wallets (corporations with multiple wallets)
+    for (const [groupId, miners] of groupedMiners.entries()) {
+      let totalGold = 0;
+      let totalGoldPerHour = 0;
+      let totalMeks = 0;
+      let lastActive = 0;
+      let companyName = '';
+
+      for (const miner of miners) {
+        totalGold += calculateGold(miner);
+        totalGoldPerHour += miner.totalGoldPerHour || 0;
+        totalMeks += miner.ownedMeks?.length || 0;
+        if (miner.companyName) companyName = miner.companyName;
+        const miningLastActive = miner.lastActiveTime || miner.lastLogin || 0;
+        if (miningLastActive > lastActive) lastActive = miningLastActive;
+      }
+
+      const group = groupMap.get(groupId);
+      const isCurrentUserGroup = miners.some(m => m.walletAddress === currentWallet);
+
+      allEntries.push({
+        walletAddress: group?.primaryWallet || miners[0].walletAddress,
+        displayWallet: companyName || (group?.primaryWallet ?
+          `${group.primaryWallet.slice(0, 8)}...${group.primaryWallet.slice(-6)}` :
+          'Corporation'),
+        currentGold: Math.floor(totalGold),
+        hourlyRate: totalGoldPerHour,
+        mekCount: totalMeks,
+        isCurrentUser: isCurrentUserGroup,
+        lastActive,
+      });
+    }
+
+    // Add ungrouped wallets (backwards compatible - single wallets)
+    for (const miner of ungroupedMiners) {
+      const totalGold = calculateGold(miner);
+      allEntries.push({
+        walletAddress: miner.walletAddress,
+        displayWallet: miner.companyName || (miner.walletAddress ?
+          `${miner.walletAddress.slice(0, 8)}...${miner.walletAddress.slice(-6)}` :
+          'Unknown'),
+        currentGold: Math.floor(totalGold),
+        hourlyRate: miner.totalGoldPerHour || 0,
+        mekCount: miner.ownedMeks?.length || 0,
+        isCurrentUser: currentWallet === miner.walletAddress,
+        lastActive: miner.lastActiveTime || miner.lastLogin,
+      });
+    }
+
+    // Sort by current gold (highest first) and add rank
+    const allCorporations = allEntries
+      .sort((a, b) => b.currentGold - a.currentGold)
+      .map((entry, index) => ({
+        ...entry,
+        rank: index + 1,
+      }));
+
+    return allCorporations;
+  },
+});
+
+// Get individual wallet details for a corporation (by primary wallet address)
+export const getCorporationWalletDetails = query({
+  args: {
+    primaryWallet: v.string(),
+  },
+  handler: async (ctx, { primaryWallet }) => {
+    const now = Date.now();
+
+    // Find the group by primary wallet
+    const group = await ctx.db
+      .query("walletGroups")
+      .filter(q => q.eq(q.field("primaryWallet"), primaryWallet))
+      .first();
+
+    if (!group) {
+      // Not a corporation, return single wallet
+      const miner = await ctx.db
+        .query("goldMining")
+        .filter(q => q.eq(q.field("walletAddress"), primaryWallet))
+        .first();
+
+      if (!miner) return [];
+
+      const calculateGold = (miner: typeof miner) => {
+        let currentGold = miner.accumulatedGold || 0;
+        if (miner.isBlockchainVerified === true) {
+          const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+          const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        }
+        const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
+        let baseCumulativeGold = miner.totalCumulativeGold || 0;
+        if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
+          baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
+        }
+        return baseCumulativeGold + goldEarnedSinceLastUpdate;
+      };
+
+      return [{
+        walletAddress: miner.walletAddress,
+        displayWallet: miner.companyName || `${miner.walletAddress.slice(0, 8)}...${miner.walletAddress.slice(-6)}`,
+        currentGold: Math.floor(calculateGold(miner)),
+        hourlyRate: miner.totalGoldPerHour || 0,
+        mekCount: miner.ownedMeks?.length || 0,
+        nickname: null,
+      }];
+    }
+
+    // Get all wallets in the group
+    const memberships = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_group", q => q.eq("groupId", group.groupId))
+      .collect();
+
+    const walletDetails = [];
+
+    for (const membership of memberships) {
+      const miner = await ctx.db
+        .query("goldMining")
+        .filter(q => q.eq(q.field("walletAddress"), membership.walletAddress))
+        .first();
+
+      if (!miner) continue;
+
+      const calculateGold = (miner: typeof miner) => {
+        let currentGold = miner.accumulatedGold || 0;
+        if (miner.isBlockchainVerified === true) {
+          const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+          const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+          const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
+          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        }
+        const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
+        let baseCumulativeGold = miner.totalCumulativeGold || 0;
+        if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
+          baseCumulativeGold = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
+        }
+        return baseCumulativeGold + goldEarnedSinceLastUpdate;
+      };
+
+      walletDetails.push({
+        walletAddress: membership.walletAddress,
+        displayWallet: membership.nickname || `stake${membership.walletAddress.slice(5, 9)}...${membership.walletAddress.slice(-4)}`,
+        currentGold: Math.floor(calculateGold(miner)),
+        hourlyRate: miner.totalGoldPerHour || 0,
+        mekCount: miner.ownedMeks?.length || 0,
+        nickname: membership.nickname || null,
+      });
+    }
+
+    // Sort by current gold (highest first)
+    return walletDetails.sort((a, b) => b.currentGold - a.currentGold);
   },
 });
 

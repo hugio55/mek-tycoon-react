@@ -67,6 +67,16 @@
       "name": "Convex Database Architect",
       "description": "Expert in Convex database design, queries, mutations, and optimization",
       "enabled": true
+    },
+    "discord-game-bot-builder": {
+      "name": "Discord Game Bot Builder",
+      "description": "Implements Discord bots with game systems, blockchain wallets, and Convex databases",
+      "enabled": true
+    },
+    "project-lead": {
+      "name": "Project Lead",
+      "description": "Coordinates multiple agents and manages complex multi-domain projects",
+      "enabled": true
     }
   },
   "commands": {

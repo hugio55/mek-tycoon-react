@@ -1,0 +1,4 @@
+# Terminal Logs - Auto-generated
+# This file is populated when you run Start-Transcript in PowerShell
+# Claude Code can read this file to see all your terminal activity
+

@@ -21,6 +21,9 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
   const [dryRunMode, setDryRunMode] = useState(true);
   const [previewData, setPreviewData] = useState<any>(null);
 
+  // Sticky notification state
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
   // Queries and mutations
   const allBackups = useQuery(api.goldBackups.getAllGoldBackups, { limit: 100 });
   const systemStats = useQuery(api.goldBackups.getBackupSystemStats);
@@ -42,6 +45,31 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isFixingGold, setIsFixingGold] = useState(false);
 
+  // Load notification from localStorage on mount
+  useEffect(() => {
+    const savedNotification = localStorage.getItem('goldBackupNotification');
+    if (savedNotification) {
+      try {
+        setNotification(JSON.parse(savedNotification));
+      } catch (e) {
+        console.error('Failed to parse saved notification:', e);
+      }
+    }
+  }, []);
+
+  // Helper to show a sticky notification
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    const notif = { message, type };
+    setNotification(notif);
+    localStorage.setItem('goldBackupNotification', JSON.stringify(notif));
+  };
+
+  // Helper to clear notification
+  const clearNotification = () => {
+    setNotification(null);
+    localStorage.removeItem('goldBackupNotification');
+  };
+
   // Handle manual backup creation
   const handleCreateBackup = async () => {
     if (isCreatingBackup) return;
@@ -58,12 +86,12 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
       if (result.success) {
         setManualBackupName('');
         setBackupNotes('');
-        alert(`Backup created successfully! ${result.successfulBackups} users backed up.`);
+        showNotification(`Backup created successfully! ${result.successfulBackups} users backed up.`, 'success');
       } else {
-        alert(`Backup failed: ${result.error}`);
+        showNotification(`Backup failed: ${result.error}`, 'error');
       }
     } catch (error) {
-      alert(`Backup failed: ${error}`);
+      showNotification(`Backup failed: ${error}`, 'error');
     } finally {
       setIsCreatingBackup(false);
     }
@@ -97,16 +125,16 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
         setPreviewData(result);
         console.log('Preview data:', result);
       } else if (result.success) {
-        alert(`Restoration completed!\n- Users restored: ${result.restoredUsers}\n- Gold mining restored: ${result.restoredGoldMining}\n- Errors: ${result.errors}`);
+        showNotification(`Restoration completed! Users restored: ${result.restoredUsers} | Gold mining restored: ${result.restoredGoldMining} | Errors: ${result.errors}`, 'success');
         setRestoreConfirmation('');
         setRestoreTargetWallets('');
         setShowRestoreModal(false);
         setPreviewData(null);
       } else {
-        alert(`Restoration failed: ${result.error || 'Unknown error'}`);
+        showNotification(`Restoration failed: ${result.error || 'Unknown error'}`, 'error');
       }
     } catch (error) {
-      alert(`Restoration failed: ${error}`);
+      showNotification(`Restoration failed: ${error}`, 'error');
     } finally {
       setIsRestoring(false);
     }
@@ -126,11 +154,11 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
       if (result.dryRun) {
         alert(`DRY RUN COMPLETE:\n- Backups to delete: ${result.backupsToDelete}\n- Cutoff date: ${result.cutoffDate}\n\nDisable dry run mode to perform actual cleanup.`);
       } else if (result.success) {
-        alert(`Cleanup completed!\n- Deleted backups: ${result.deletedBackups}\n- Deleted user records: ${result.deletedUserData}`);
+        showNotification(`Cleanup completed! Deleted backups: ${result.deletedBackups} | Deleted user records: ${result.deletedUserData}`, 'success');
         setShowCleanupModal(false);
       }
     } catch (error) {
-      alert(`Cleanup failed: ${error}`);
+      showNotification(`Cleanup failed: ${error}`, 'error');
     } finally {
       setIsCleaningUp(false);
     }
@@ -151,10 +179,10 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
       if (dryRun) {
         alert(`DRY RUN COMPLETE:\n- Records to fix: ${result.fixed.length}\n- Skipped: ${result.skipped.length}\n\n${result.summary}\n\nClick "Fix Cumulative Gold" to apply changes.`);
       } else {
-        alert(`Fix completed!\n${result.summary}\n- Fixed: ${result.fixed.length}\n- Skipped: ${result.skipped.length}`);
+        showNotification(`Fix completed! ${result.summary} | Fixed: ${result.fixed.length} | Skipped: ${result.skipped.length}`, 'success');
       }
     } catch (error) {
-      alert(`Fix failed: ${error}`);
+      showNotification(`Fix failed: ${error}`, 'error');
     } finally {
       setIsFixingGold(false);
     }
@@ -166,6 +194,31 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
 
   return (
     <div className="p-6 space-y-8">
+      {/* Sticky Notification Banner */}
+      {notification && (
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-2xl w-full mx-4 p-4 rounded-lg border-2 shadow-lg ${
+          notification.type === 'success'
+            ? 'bg-green-900/90 border-green-500 text-green-100'
+            : 'bg-red-900/90 border-red-500 text-red-100'
+        } backdrop-blur-sm`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="font-bold mb-1">
+                {notification.type === 'success' ? '✓ Success' : '✗ Error'}
+              </div>
+              <div className="text-sm">{notification.message}</div>
+            </div>
+            <button
+              onClick={clearNotification}
+              className="text-2xl leading-none hover:opacity-70 transition-opacity"
+              aria-label="Close notification"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* System Status */}
       <div className="mek-card-industrial">
         <h2 className="text-2xl font-bold text-yellow-400 mb-4 mek-text-industrial">Gold Backup System Status</h2>
@@ -303,14 +356,14 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
               try {
                 const result = await triggerDailyBackup({});
                 if (result.success) {
-                  alert(`Daily backup test completed! ${result.successfulBackups} users backed up.`);
+                  showNotification(`Daily backup test completed! ${result.successfulBackups} users backed up.`, 'success');
                 } else if (result.skipped) {
-                  alert(`Daily backup skipped: ${result.reason}`);
+                  showNotification(`Daily backup skipped: ${result.reason}`, 'error');
                 } else {
-                  alert(`Daily backup failed: ${result.error}`);
+                  showNotification(`Daily backup failed: ${result.error}`, 'error');
                 }
               } catch (error) {
-                alert(`Daily backup test failed: ${error}`);
+                showNotification(`Daily backup test failed: ${error}`, 'error');
               } finally {
                 setIsCreatingBackup(false);
               }
@@ -327,12 +380,12 @@ export default function GoldBackupAdmin({}: GoldBackupAdminProps) {
               try {
                 const result = await triggerCleanup({});
                 if (result.success) {
-                  alert(`Cleanup test completed! Deleted ${result.deletedBackups} backups, ${result.deletedUserData} user records.`);
+                  showNotification(`Cleanup test completed! Deleted ${result.deletedBackups} backups, ${result.deletedUserData} user records.`, 'success');
                 } else {
-                  alert(`Cleanup test failed: ${result.error}`);
+                  showNotification(`Cleanup test failed: ${result.error}`, 'error');
                 }
               } catch (error) {
-                alert(`Cleanup test failed: ${error}`);
+                showNotification(`Cleanup test failed: ${error}`, 'error');
               } finally {
                 setIsCleaningUp(false);
               }

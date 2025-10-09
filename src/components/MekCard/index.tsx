@@ -30,21 +30,9 @@ export const MekCard = React.memo(({
   onGoldSpentAnimation,
   onClick
 }: MekCardProps) => {
-  // Load level colors from Convex database
+  // Load level colors from Convex database (only once per component tree)
   const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
   const levelColors = levelColorsFromDb || DEFAULT_LEVEL_COLORS;
-
-  // Debug logging for color sync issues across domains
-  useEffect(() => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [MekCard Colors] Level colors state:`, {
-      fromDatabase: levelColorsFromDb,
-      usingDefaults: !levelColorsFromDb,
-      level10Color: levelColors[9],
-      mekLevel: mek.currentLevel,
-      mekAssetId: mek.assetId
-    });
-  }, [levelColorsFromDb, levelColors, mek.currentLevel, mek.assetId]);
 
   const level = animatedValues?.level || mek.currentLevel || 1;
   const levelColor = levelColors[level - 1] || '#FFFFFF';
@@ -216,9 +204,9 @@ export const MekCard = React.memo(({
           <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-purple-500/5 to-yellow-500/5 blur-xl" />
 
           <div className="relative space-y-2 p-2 sm:p-3 bg-black/80">
-            <MekIdentityLayer mek={mek} />
+            <MekIdentityLayer mek={mek} levelColors={levelColors} />
 
-            <MekLevelBar mek={mek} animatedLevel={animatedValues?.level} />
+            <MekLevelBar mek={mek} animatedLevel={animatedValues?.level} levelColors={levelColors} />
 
             <div className="relative group">
               <div className="relative bg-gradient-to-r from-black/60 via-yellow-950/30 to-black/60 border border-yellow-500/30 rounded-lg p-2 @sm:p-3">

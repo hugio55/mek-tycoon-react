@@ -16,19 +16,22 @@ export const getAllUsersWithDiscordEmojis = query({
     const usersWithEmojis = [];
 
     for (const connection of connections) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", connection.walletAddress))
-        .first();
+      // Get all wallets in this group
+      const wallets = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", connection.groupId))
+        .collect();
 
-      if (!user) continue;
+      // Aggregate gold across all wallets
+      let totalGold = 0;
+      for (const wallet of wallets) {
+        const goldMining = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
+          .first();
 
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", connection.walletAddress))
-        .first();
-
-      const totalGold = goldMining?.accumulatedGold || user.gold || 0;
+        totalGold += goldMining?.accumulatedGold || 0;
+      }
 
       const tiers = await ctx.db
         .query("discordGoldTiers")
@@ -53,7 +56,7 @@ export const getAllUsersWithDiscordEmojis = query({
       usersWithEmojis.push({
         discordUserId: connection.discordUserId,
         discordUsername: connection.discordUsername,
-        walletAddress: connection.walletAddress,
+        groupId: connection.groupId,
         gold: totalGold,
         emoji,
         tierName,
@@ -128,7 +131,7 @@ export const syncDiscordNicknames = action({
         });
 
         if (updateResponse.ok) {
-          await ctx.runMutation(api.discordIntegration.updateNicknameTimestamp, {
+          await ctx.runMutation(api.discordIntegrationGroups.updateNicknameTimestamp, {
             discordUserId: user.discordUserId,
             guildId: args.guildId,
             emoji: user.emoji,
