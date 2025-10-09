@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Problematic Windows files
 nul
+
+# Discord bot secrets
+discord-bot/set-secrets.bat

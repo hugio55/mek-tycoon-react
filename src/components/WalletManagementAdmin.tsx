@@ -46,6 +46,7 @@ export default function WalletManagementAdmin() {
   const [isRunningGoldRepair, setIsRunningGoldRepair] = useState(false);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
 
   // Diagnostic query to check boost sync
   const boostDiagnostic = useQuery(
@@ -339,75 +340,128 @@ Check console for full timeline.
     }
   };
 
-  const filteredWallets = useMemo(() => {
+  // Group wallets by groupId and create display structure
+  const walletDisplay = useMemo(() => {
     if (!wallets) return [];
+
+    // First, filter by search term
     let filtered = wallets.filter(wallet =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
+    // Group by groupId
+    const grouped = new Map<string | null, typeof filtered>();
+    const ungrouped: typeof filtered = [];
+
+    filtered.forEach(wallet => {
+      if (wallet.groupId) {
+        const existing = grouped.get(wallet.groupId) || [];
+        existing.push(wallet);
+        grouped.set(wallet.groupId, existing);
+      } else {
+        ungrouped.push(wallet);
+      }
+    });
+
+    // Create display items: { type: 'group' | 'wallet', wallet(s), aggregateStats? }
+    const displayItems: Array<{
+      type: 'group' | 'wallet';
+      groupId?: string;
+      wallets: typeof filtered;
+      aggregateStats?: any;
+    }> = [];
+
+    // Add grouped corporations
+    for (const [groupId, walletsInGroup] of grouped.entries()) {
+      if (walletsInGroup.length > 1) {
+        // Multi-wallet corporation - aggregate stats
+        const aggregateStats = {
+          companyName: walletsInGroup[0].companyName,
+          totalMeks: walletsInGroup.reduce((sum, w) => sum + w.mekCount, 0),
+          totalGoldPerHour: walletsInGroup.reduce((sum, w) => sum + w.totalGoldPerHour, 0),
+          totalCurrentGold: walletsInGroup.reduce((sum, w) => sum + w.currentGold, 0),
+          totalCumulativeGold: walletsInGroup.reduce((sum, w) => sum + (w.totalCumulativeGold || 0), 0),
+          totalGoldSpent: walletsInGroup.reduce((sum, w) => sum + (w.totalGoldSpentOnUpgrades || 0), 0),
+          allVerified: walletsInGroup.every(w => w.isVerified),
+          oldestCreatedAt: Math.min(...walletsInGroup.map(w => w.createdAt || Date.now())),
+          latestUpdate: Math.max(...walletsInGroup.map(w =>
+            w.lastSnapshotTime || w.updatedAt || 0
+          )),
+        };
+
+        displayItems.push({
+          type: 'group',
+          groupId: groupId!,
+          wallets: walletsInGroup.sort((a, b) => b.totalGoldPerHour - a.totalGoldPerHour),
+          aggregateStats,
+        });
+      } else {
+        // Single wallet in group (shouldn't happen often)
+        displayItems.push({
+          type: 'wallet',
+          wallets: [walletsInGroup[0]],
+        });
+      }
+    }
+
+    // Add ungrouped wallets
+    ungrouped.forEach(wallet => {
+      displayItems.push({
+        type: 'wallet',
+        wallets: [wallet],
+      });
+    });
+
+    // Sort display items
     if (sortColumn) {
-      filtered = [...filtered].sort((a, b) => {
+      displayItems.sort((a, b) => {
         let aVal: any;
         let bVal: any;
 
+        // Get values (use aggregate for groups, wallet for singles)
+        const aData = a.type === 'group' ? a.aggregateStats : a.wallets[0];
+        const bData = b.type === 'group' ? b.aggregateStats : b.wallets[0];
+
         switch (sortColumn) {
           case 'wallet':
-            aVal = a.walletAddress;
-            bVal = b.walletAddress;
+            aVal = a.wallets[0].walletAddress;
+            bVal = b.wallets[0].walletAddress;
             break;
           case 'companyName':
-            aVal = a.companyName || '';
-            bVal = b.companyName || '';
-            break;
-          case 'type':
-            aVal = a.walletType;
-            bVal = b.walletType;
-            break;
-          case 'verified':
-            aVal = a.isVerified ? 1 : 0;
-            bVal = b.isVerified ? 1 : 0;
+            aVal = (a.type === 'group' ? aData.companyName : aData.companyName) || '';
+            bVal = (b.type === 'group' ? bData.companyName : bData.companyName) || '';
             break;
           case 'meks':
-            aVal = a.mekCount;
-            bVal = b.mekCount;
+            aVal = a.type === 'group' ? aData.totalMeks : aData.mekCount;
+            bVal = b.type === 'group' ? bData.totalMeks : bData.mekCount;
             break;
           case 'goldPerHour':
-            aVal = a.totalGoldPerHour;
-            bVal = b.totalGoldPerHour;
+            aVal = a.type === 'group' ? aData.totalGoldPerHour : aData.totalGoldPerHour;
+            bVal = b.type === 'group' ? bData.totalGoldPerHour : bData.totalGoldPerHour;
             break;
           case 'currentGold':
-            aVal = a.currentGold;
-            bVal = b.currentGold;
+            aVal = a.type === 'group' ? aData.totalCurrentGold : aData.currentGold;
+            bVal = b.type === 'group' ? bData.totalCurrentGold : bData.currentGold;
             break;
           case 'cumulativeGold':
-            aVal = a.totalCumulativeGold || 0;
-            bVal = b.totalCumulativeGold || 0;
+            aVal = a.type === 'group' ? aData.totalCumulativeGold : (aData.totalCumulativeGold || 0);
+            bVal = b.type === 'group' ? bData.totalCumulativeGold : (bData.totalCumulativeGold || 0);
             break;
           case 'goldSpent':
-            aVal = a.totalGoldSpentOnUpgrades || 0;
-            bVal = b.totalGoldSpentOnUpgrades || 0;
+            aVal = a.type === 'group' ? aData.totalGoldSpent : (aData.totalGoldSpentOnUpgrades || 0);
+            bVal = b.type === 'group' ? bData.totalGoldSpent : (bData.totalGoldSpentOnUpgrades || 0);
             break;
           case 'firstConnected':
-            aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-            bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            aVal = a.type === 'group' ? aData.oldestCreatedAt : (aData.createdAt || 0);
+            bVal = b.type === 'group' ? bData.oldestCreatedAt : (bData.createdAt || 0);
             break;
           case 'lastUpdate':
-            aVal = a.lastSnapshotTime
-              ? new Date(a.lastSnapshotTime).getTime()
-              : a.updatedAt
-              ? new Date(a.updatedAt).getTime()
-              : 0;
-            bVal = b.lastSnapshotTime
-              ? new Date(b.lastSnapshotTime).getTime()
-              : b.updatedAt
-              ? new Date(b.updatedAt).getTime()
-              : 0;
-            break;
-          case 'lastActive':
-            aVal = a.lastActiveDisplay || '';
-            bVal = b.lastActiveDisplay || '';
+            aVal = a.type === 'group' ? aData.latestUpdate :
+              (aData.lastSnapshotTime || aData.updatedAt || 0);
+            bVal = b.type === 'group' ? bData.latestUpdate :
+              (bData.lastSnapshotTime || bData.updatedAt || 0);
             break;
           default:
             return 0;
@@ -423,8 +477,18 @@ Check console for full timeline.
       });
     }
 
-    return filtered;
+    return displayItems;
   }, [wallets, searchTerm, sortColumn, sortDirection]);
+
+  // For backwards compatibility, keep filteredWallets for count
+  const filteredWallets = useMemo(() => {
+    if (!wallets) return [];
+    return wallets.filter(wallet =>
+      wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [wallets, searchTerm]);
 
   const verifiedCount = useMemo(() => {
     if (!wallets) return 0;
@@ -812,15 +876,99 @@ Check console for full timeline.
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {filteredWallets.length === 0 ? (
+            {walletDisplay.length === 0 ? (
               <tr>
                 <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
                 </td>
               </tr>
             ) : (
-              filteredWallets.map((wallet) => (
-                <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors">
+              walletDisplay.flatMap((item) => {
+                if (item.type === 'group') {
+                  // Multi-wallet corporation
+                  const isExpanded = expandedCorporations.has(item.groupId!);
+                  const rows = [];
+
+                  // Aggregate header row
+                  rows.push(
+                    <tr key={`group-${item.groupId}`} className="hover:bg-gray-800/30 transition-colors bg-yellow-900/5">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const newExpanded = new Set(expandedCorporations);
+                              if (isExpanded) {
+                                newExpanded.delete(item.groupId!);
+                              } else {
+                                newExpanded.add(item.groupId!);
+                              }
+                              setExpandedCorporations(newExpanded);
+                            }}
+                            className="text-yellow-500 hover:text-yellow-300 text-lg font-bold min-w-[24px]"
+                          >
+                            {isExpanded ? '▼' : '▶'}
+                          </button>
+                          <div className="font-mono text-sm text-gray-300">
+                            <div className="font-bold text-yellow-400">{item.wallets.length} Wallets</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm font-bold text-yellow-400">{item.aggregateStats.companyName}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-400">Multi-Wallet</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {item.aggregateStats.allVerified ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
+                            ✓ All Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-900/30 text-orange-400 border border-orange-700">
+                            ⚠ Partial
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-bold text-yellow-400">{item.aggregateStats.totalMeks}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-bold text-gray-300">{item.aggregateStats.totalGoldPerHour.toFixed(2)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-bold text-yellow-400">{Math.floor(item.aggregateStats.totalCurrentGold).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-bold text-yellow-400">{Math.floor(item.aggregateStats.totalCumulativeGold).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-bold text-red-400">{Math.floor(item.aggregateStats.totalGoldSpent).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">
+                          {new Date(item.aggregateStats.oldestCreatedAt).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">
+                          {new Date(item.aggregateStats.latestUpdate).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">-</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-xs text-gray-500 italic">Expand to manage individual wallets</div>
+                      </td>
+                    </tr>
+                  );
+
+                  // Individual wallet rows (if expanded)
+                  if (isExpanded) {
+                    item.wallets.forEach((wallet) => {
+                      rows.push(
+                        <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors bg-gray-900/40">
                   <td className="px-4 py-3">
                     <div className="font-mono text-sm text-gray-300">
                       <div className="mb-1">
@@ -1031,7 +1179,229 @@ Check console for full timeline.
                     </div>
                   </td>
                 </tr>
-              ))
+                      );
+                    });
+                  }
+
+                  return rows;
+                } else {
+                  // Single wallet (not part of a group)
+                  const wallet = item.wallets[0];
+                  return (
+                    <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="font-mono text-sm text-gray-300">
+                          <div className="mb-1">
+                            {wallet.walletAddress.substring(0, 12)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(wallet.walletAddress);
+                              setStatusMessage({ type: 'success', message: 'Wallet address copied!' });
+                              setTimeout(() => setStatusMessage(null), 2000);
+                            }}
+                            className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors inline-block"
+                            title="Copy wallet address"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {wallet.companyName ? (
+                          <span className="text-sm font-semibold text-yellow-400">{wallet.companyName}</span>
+                        ) : (
+                          <span className="text-sm text-gray-600 italic">No name</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {wallet.isVerified ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700">
+                            ✗ Not Verified
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {editingGold?.walletAddress === wallet.walletAddress ? (
+                          <input
+                            type="number"
+                            value={editingGold.value}
+                            onChange={(e) => setEditingGold({ ...editingGold, value: e.target.value })}
+                            onBlur={async () => {
+                              const newGold = parseInt(editingGold.value);
+                              if (!isNaN(newGold) && newGold >= 0) {
+                                try {
+                                  const result = await updateWalletGold({
+                                    walletAddress: wallet.walletAddress,
+                                    newGoldAmount: newGold,
+                                  });
+                                  setStatusMessage({ type: 'success', message: result.message });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                } catch (error) {
+                                  setStatusMessage({ type: 'error', message: 'Failed to update gold' });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                }
+                              }
+                              setEditingGold(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              } else if (e.key === 'Escape') {
+                                setEditingGold(null);
+                              }
+                            }}
+                            className="px-2 py-1 text-sm bg-gray-800 border border-yellow-500 rounded text-yellow-400 font-semibold w-24 text-right"
+                            autoFocus
+                          />
+                        ) : (
+                          <span
+                            className="text-sm font-semibold text-yellow-400 cursor-pointer hover:bg-yellow-900/20 px-2 py-1 rounded transition-colors"
+                            onClick={() => setEditingGold({ walletAddress: wallet.walletAddress, value: wallet.currentGold.toString() })}
+                            title="Click to edit gold amount"
+                          >
+                            {wallet.currentGold.toLocaleString()}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-semibold text-yellow-400">
+                          {(wallet.totalCumulativeGold || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-semibold text-red-400">
+                          {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">
+                          {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">
+                          {wallet.lastSnapshotTime
+                            ? new Date(wallet.lastSnapshotTime).toLocaleString()
+                            : wallet.updatedAt
+                            ? new Date(wallet.updatedAt).toLocaleString()
+                            : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="grid grid-cols-5 gap-2 min-w-max">
+                          <button
+                            onClick={() => setViewingMekLevels(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
+                            title="View all Mek levels for this wallet"
+                          >
+                            View Levels
+                          </button>
+                          <button
+                            onClick={() => setDiagnosticWallet(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
+                            title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
+                          >
+                            🔍 Boost Sync
+                          </button>
+                          <button
+                            onClick={() => handleSingleWalletSnapshot(wallet.walletAddress)}
+                            disabled={isRunningSnapshot}
+                            className="px-3 py-1.5 text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-700 rounded transition-colors whitespace-nowrap disabled:opacity-50"
+                            title="Run blockchain snapshot for this wallet (with debug logging)"
+                          >
+                            📸 Snapshot
+                          </button>
+                          {wallet.isVerified && (
+                            <button
+                              onClick={() => handleResetVerification(wallet.walletAddress)}
+                              className="px-3 py-1.5 text-xs bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded transition-colors whitespace-nowrap"
+                              title="Reset verification (for testing)"
+                            >
+                              Reset Verify
+                            </button>
+                          )}
+                          {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
+                            <button
+                              onClick={() => manualSetMeks({
+                                walletAddress: wallet.walletAddress,
+                                mekCount: 45,
+                                totalGoldPerHour: 176.56
+                              })}
+                              className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
+                              title="Manually fix MEK ownership"
+                            >
+                              Fix MEKs
+                            </button>
+                          )}
+                          {wallet.totalCumulativeGold < wallet.currentGold && (
+                            <>
+                              <button
+                                onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
+                                className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                                title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                              >
+                                🔧 Fix Cumul.
+                              </button>
+                              <button
+                                onClick={() => handleReconstructFromSnapshots(wallet.walletAddress)}
+                                className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                                title="Reconstruct from Snapshots"
+                              >
+                                📸 Reconstruct
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => handleReconstructExact(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
+                            title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                          >
+                            🎯 Exact Recon.
+                          </button>
+                          <button
+                            onClick={() => handleResetMekLevels(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
+                            title="Reset all Mek levels to Level 1"
+                          >
+                            Reset Levels
+                          </button>
+                          <button
+                            onClick={() => handleResetAllGold(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
+                            title="Reset all gold (spendable + cumulative) to zero"
+                          >
+                            Reset All Gold
+                          </button>
+                          <button
+                            onClick={() => handleDeleteWallet(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors whitespace-nowrap"
+                            title="Delete wallet permanently"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+              })
             )}
           </tbody>
         </table>

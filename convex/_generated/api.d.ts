@@ -50,6 +50,7 @@ import type * as debugLeaderboard from "../debugLeaderboard.js";
 import type * as debugLeaderboardCache from "../debugLeaderboardCache.js";
 import type * as debugMekLevels from "../debugMekLevels.js";
 import type * as debugSnapshotData from "../debugSnapshotData.js";
+import type * as debugWalletData from "../debugWalletData.js";
 import type * as debugWalletGroups from "../debugWalletGroups.js";
 import type * as debugWalletSnapshot from "../debugWalletSnapshot.js";
 import type * as definitiveWalletFix from "../definitiveWalletFix.js";
@@ -211,6 +212,7 @@ declare const fullApi: ApiFromModules<{
   debugLeaderboardCache: typeof debugLeaderboardCache;
   debugMekLevels: typeof debugMekLevels;
   debugSnapshotData: typeof debugSnapshotData;
+  debugWalletData: typeof debugWalletData;
   debugWalletGroups: typeof debugWalletGroups;
   debugWalletSnapshot: typeof debugWalletSnapshot;
   definitiveWalletFix: typeof definitiveWalletFix;

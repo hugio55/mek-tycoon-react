@@ -181,7 +181,7 @@ export const initializeGoldMining = mutation({
       devLog.log('[INIT MUTATION] ================================');
 
       // Schedule automatic blockchain sync to fetch complete NFT data
-      await ctx.scheduler.runAfter(0, internal.goldMining.syncWalletFromBlockchain, {
+      await ctx.scheduler.runAfter(0, api.goldMining.syncWalletFromBlockchain, {
         walletAddress: args.walletAddress
       });
 
@@ -210,7 +210,7 @@ export const initializeGoldMining = mutation({
       });
 
       // Schedule automatic blockchain sync to fetch complete NFT data
-      await ctx.scheduler.runAfter(0, internal.goldMining.syncWalletFromBlockchain, {
+      await ctx.scheduler.runAfter(0, api.goldMining.syncWalletFromBlockchain, {
         walletAddress: args.walletAddress
       });
 
@@ -1350,9 +1350,9 @@ export const updateWalletType = mutation({
   },
 });
 
-// Internal action to sync a single wallet's NFT data from blockchain
-// Called automatically after wallet initialization
-export const syncWalletFromBlockchain = internalAction({
+// Public action to sync a single wallet's NFT data from blockchain
+// Can be called manually or automatically when incomplete data is detected
+export const syncWalletFromBlockchain = action({
   args: {
     walletAddress: v.string(),
   },
