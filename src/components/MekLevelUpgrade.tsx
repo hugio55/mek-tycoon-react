@@ -232,13 +232,14 @@ export default function MekLevelUpgrade({
             </div>
           )}
 
-          {/* Upgrade Button */}
+          {/* Upgrade Button - Mobile Optimized (44px minimum height) */}
           <button
             onClick={handleUpgrade}
             disabled={!canAfford || isUpgrading}
             className={`
-              w-full py-2.5 px-4 rounded-sm font-bold uppercase tracking-wider
+              w-full py-3 sm:py-2.5 px-4 rounded-sm font-bold uppercase tracking-wider
               transition-all duration-200 relative overflow-hidden
+              min-h-[48px] sm:min-h-0 touch-manipulation
               ${canAfford && !isUpgrading
                 ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg hover:shadow-yellow-500/50 active:scale-95'
                 : 'bg-gray-800 text-gray-500 cursor-not-allowed'
@@ -248,18 +249,18 @@ export default function MekLevelUpgrade({
             {isUpgrading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                Upgrading...
+                <span className="text-sm sm:text-base">Upgrading...</span>
               </span>
             ) : (
-              <span className="flex flex-col items-center justify-center gap-1">
-                <span>Upgrade to Level {currentLevel + 1}</span>
+              <span className="flex flex-col items-center justify-center gap-0.5">
+                <span className="text-sm sm:text-base">Upgrade to Level {currentLevel + 1}</span>
                 {baseRate > 0 && (
-                  <span className="text-[10px] opacity-90">
+                  <span className="text-xs sm:text-[10px] opacity-90">
                     {baseRate.toFixed(1)} → {(baseRate + nextBoostAmount).toFixed(1)} g/hr
                   </span>
                 )}
                 {!canAfford && (
-                  <span className="text-xs opacity-70">(Insufficient Gold)</span>
+                  <span className="text-xs sm:text-xs opacity-80 font-semibold">(Insufficient Gold)</span>
                 )}
               </span>
             )}
@@ -272,10 +273,12 @@ export default function MekLevelUpgrade({
             )}
           </button>
 
-          {/* Error Message */}
+          {/* Error Message - Mobile Optimized */}
           {upgradeError && (
-            <div className="bg-red-900/20 border border-red-500/50 p-2 rounded-sm">
-              <p className="text-red-400 text-xs text-center">{upgradeError}</p>
+            <div className="bg-red-900/30 border-2 border-red-500/70 p-3 sm:p-2 rounded-sm shadow-lg shadow-red-500/20">
+              <p className="text-red-400 text-sm sm:text-xs text-center font-semibold leading-relaxed">
+                {upgradeError}
+              </p>
             </div>
           )}
         </div>

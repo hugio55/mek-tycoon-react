@@ -260,9 +260,31 @@ export default function EventNodeEditor() {
     const lastConfigId = localStorage.getItem('lastEventNodeConfigId');
     const lastConfigName = localStorage.getItem('lastEventNodeConfigName');
 
-    if (lastConfigId && lastConfigName && !currentConfigId) {
-      setCurrentConfigId(lastConfigId as Id<"eventNodeConfigs">);
-      setCurrentConfigName(lastConfigName);
+    if (lastConfigId && lastConfigName && !currentConfigId && savedConfigs) {
+      // Validate that the stored config ID still exists in the database
+      const configExists = savedConfigs.some(config => config._id === lastConfigId);
+
+      if (configExists) {
+        setCurrentConfigId(lastConfigId as Id<"eventNodeConfigs">);
+        setCurrentConfigName(lastConfigName);
+      } else {
+        // Config was deleted, clear localStorage and load most recent
+        localStorage.removeItem('lastEventNodeConfigId');
+        localStorage.removeItem('lastEventNodeConfigName');
+
+        if (savedConfigs.length > 0) {
+          const mostRecent = savedConfigs.reduce((latest, current) => {
+            return !latest || current._creationTime > latest._creationTime ? current : latest;
+          }, savedConfigs[0]);
+
+          if (mostRecent) {
+            setCurrentConfigId(mostRecent._id);
+            setCurrentConfigName(mostRecent.name);
+            localStorage.setItem('lastEventNodeConfigId', mostRecent._id);
+            localStorage.setItem('lastEventNodeConfigName', mostRecent.name);
+          }
+        }
+      }
     } else if (!currentConfigId && savedConfigs && savedConfigs.length > 0) {
       // If no last config but there are saved configs, load the most recent one
       const mostRecent = savedConfigs.reduce((latest, current) => {

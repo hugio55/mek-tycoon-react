@@ -171,19 +171,32 @@ export const fetchNFTsByStakeAddress = action({
         await handleBlockfrostError(accountResponse);
       }
 
-      // Fetch all addresses associated with this stake account
-      await rateLimiter.waitForSlot();
-      const addressesUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses`;
-      const addressesResponse = await fetch(addressesUrl, {
-        headers: getBlockfrostHeaders(),
-        signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
-      });
+      // Fetch all addresses associated with this stake account (WITH PAGINATION!)
+      const addresses = [];
+      let addressPage = 1;
+      let hasMoreAddresses = true;
 
-      if (!addressesResponse.ok) {
-        await handleBlockfrostError(addressesResponse);
+      while (hasMoreAddresses) {
+        await rateLimiter.waitForSlot();
+        const addressesUrl = `${BLOCKFROST_CONFIG.baseUrl}/accounts/${stakeAddress}/addresses?page=${addressPage}&count=100`;
+        const addressesResponse = await fetch(addressesUrl, {
+          headers: getBlockfrostHeaders(),
+          signal: AbortSignal.timeout(BLOCKFROST_CONFIG.timeout),
+        });
+
+        if (!addressesResponse.ok) {
+          await handleBlockfrostError(addressesResponse);
+        }
+
+        const addressBatch = await addressesResponse.json();
+        addresses.push(...addressBatch);
+
+        // Check if there are more pages
+        hasMoreAddresses = addressBatch.length === 100;
+        addressPage++;
       }
 
-      const addresses = await addressesResponse.json();
+      console.log(`[Blockfrost] Found ${addresses.length} addresses for stake key ${stakeAddress}`);
 
       // Collect all assets from all addresses
       const allAssets: BlockfrostAsset[] = [];

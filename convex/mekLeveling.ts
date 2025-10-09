@@ -94,6 +94,46 @@ export const getMekLevels = query({
   },
 });
 
+// Get Mek levels from ALL wallets in the corporation
+export const getGroupMekLevels = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find the wallet group for this wallet
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    let walletsToQuery = [args.walletAddress]; // Default to just this wallet
+
+    if (membership) {
+      // Get all wallets in the group
+      const allMemberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+        .collect();
+
+      walletsToQuery = allMemberships.map(m => m.walletAddress);
+    }
+
+    // Get Mek levels from all wallets
+    const allLevels = [];
+    for (const wallet of walletsToQuery) {
+      const levels = await ctx.db
+        .query("mekLevels")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
+        .collect();
+
+      allLevels.push(...levels);
+    }
+
+    return allLevels;
+  },
+});
+
 // Get level for a specific Mek
 export const getMekLevel = query({
   args: {

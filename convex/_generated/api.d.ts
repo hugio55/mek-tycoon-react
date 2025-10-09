@@ -50,6 +50,7 @@ import type * as debugLeaderboard from "../debugLeaderboard.js";
 import type * as debugLeaderboardCache from "../debugLeaderboardCache.js";
 import type * as debugMekLevels from "../debugMekLevels.js";
 import type * as debugSnapshotData from "../debugSnapshotData.js";
+import type * as debugWalletGroups from "../debugWalletGroups.js";
 import type * as debugWalletSnapshot from "../debugWalletSnapshot.js";
 import type * as definitiveWalletFix from "../definitiveWalletFix.js";
 import type * as deleteMockAccounts from "../deleteMockAccounts.js";
@@ -61,6 +62,7 @@ import type * as diagnosticMekBoosts from "../diagnosticMekBoosts.js";
 import type * as diagnosticWalletHistory from "../diagnosticWalletHistory.js";
 import type * as difficultyConfigs from "../difficultyConfigs.js";
 import type * as discordIntegration from "../discordIntegration.js";
+import type * as discordIntegrationGroups from "../discordIntegrationGroups.js";
 import type * as discordSync from "../discordSync.js";
 import type * as discordTodos from "../discordTodos.js";
 import type * as durationConfigs from "../durationConfigs.js";
@@ -116,6 +118,8 @@ import type * as mekTreeTemplates from "../mekTreeTemplates.js";
 import type * as meks from "../meks.js";
 import type * as metadataResolution from "../metadataResolution.js";
 import type * as migrateBuffCategories from "../migrateBuffCategories.js";
+import type * as migrateMultiWallet from "../migrateMultiWallet.js";
+import type * as migrateToWalletGroups from "../migrateToWalletGroups.js";
 import type * as migrationUtils from "../migrationUtils.js";
 import type * as migrations from "../migrations.js";
 import type * as multiWalletAggregation from "../multiWalletAggregation.js";
@@ -158,6 +162,7 @@ import type * as variationBuffs from "../variationBuffs.js";
 import type * as variationsReference from "../variationsReference.js";
 import type * as walletAuth from "../walletAuth.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
+import type * as walletGroups from "../walletGroups.js";
 import type * as walletSession from "../walletSession.js";
 
 /**
@@ -206,6 +211,7 @@ declare const fullApi: ApiFromModules<{
   debugLeaderboardCache: typeof debugLeaderboardCache;
   debugMekLevels: typeof debugMekLevels;
   debugSnapshotData: typeof debugSnapshotData;
+  debugWalletGroups: typeof debugWalletGroups;
   debugWalletSnapshot: typeof debugWalletSnapshot;
   definitiveWalletFix: typeof definitiveWalletFix;
   deleteMockAccounts: typeof deleteMockAccounts;
@@ -217,6 +223,7 @@ declare const fullApi: ApiFromModules<{
   diagnosticWalletHistory: typeof diagnosticWalletHistory;
   difficultyConfigs: typeof difficultyConfigs;
   discordIntegration: typeof discordIntegration;
+  discordIntegrationGroups: typeof discordIntegrationGroups;
   discordSync: typeof discordSync;
   discordTodos: typeof discordTodos;
   durationConfigs: typeof durationConfigs;
@@ -272,6 +279,8 @@ declare const fullApi: ApiFromModules<{
   meks: typeof meks;
   metadataResolution: typeof metadataResolution;
   migrateBuffCategories: typeof migrateBuffCategories;
+  migrateMultiWallet: typeof migrateMultiWallet;
+  migrateToWalletGroups: typeof migrateToWalletGroups;
   migrationUtils: typeof migrationUtils;
   migrations: typeof migrations;
   multiWalletAggregation: typeof multiWalletAggregation;
@@ -314,6 +323,7 @@ declare const fullApi: ApiFromModules<{
   variationsReference: typeof variationsReference;
   walletAuth: typeof walletAuth;
   walletAuthentication: typeof walletAuthentication;
+  walletGroups: typeof walletGroups;
   walletSession: typeof walletSession;
 }>;
 export declare const api: FilterApi<

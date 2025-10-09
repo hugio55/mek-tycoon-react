@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSound } from "@/contexts/SoundContext";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 interface NavCategory {
@@ -108,7 +108,12 @@ interface NavigationProps {
 
 export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
+  const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
+  const [newWalletAddress, setNewWalletAddress] = useState('');
+  const [newWalletNickname, setNewWalletNickname] = useState('');
   const navRef = useRef<HTMLDivElement>(null);
+  const walletDropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [menuHeaderStyle, setMenuHeaderStyle] = useState('standard-balanced');
   const { soundEnabled, toggleSound, playClickSound } = useSound();
@@ -149,6 +154,39 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     api.goldMining.getCompanyName,
     walletAddress ? { walletAddress } : "skip"
   );
+
+  // Get wallet group (all wallets linked together)
+  const walletGroup = useQuery(
+    api.walletGroups.getMyGroupWallets,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Mutations
+  const addWalletToGroup = useMutation(api.walletGroups.addWalletToGroup);
+
+  // Handler for adding a new wallet
+  const handleAddWallet = async () => {
+    if (!walletAddress || !newWalletAddress.trim()) {
+      alert('Please enter a valid wallet address');
+      return;
+    }
+
+    try {
+      await addWalletToGroup({
+        existingWalletInGroup: walletAddress,
+        newWalletAddress: newWalletAddress.trim(),
+        nickname: newWalletNickname.trim() || undefined,
+      });
+
+      // Close modal and reset form
+      setAddWalletModalOpen(false);
+      setNewWalletAddress('');
+      setNewWalletNickname('');
+      alert('Wallet added successfully!');
+    } catch (error: any) {
+      alert(`Error adding wallet: ${error.message}`);
+    }
+  };
 
   // State for real-time cumulative gold
   const [realtimeCumulativeGold, setRealtimeCumulativeGold] = useState(0);
@@ -226,6 +264,9 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     const handleClickOutside = (event: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
         setExpandedCategory(null);
+      }
+      if (walletDropdownRef.current && !walletDropdownRef.current.contains(event.target as Node)) {
+        setWalletDropdownOpen(false);
       }
     };
 
@@ -370,22 +411,98 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     }
 
     return (
-      <div className="fixed top-4 left-4 z-[65] bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-400/50 rounded-lg p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-        <div className="space-y-2">
-          {companyNameData?.hasCompanyName && (
-            <div className="flex items-center gap-2 border-b border-yellow-400/20 pb-2 mb-2">
-              <span className="text-yellow-400 font-bold text-base uppercase tracking-widest">
-                {companyNameData.companyName}
+      <div ref={walletDropdownRef} className="fixed top-4 left-4 z-[65]">
+        <div className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-400/50 rounded-lg p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+          <div className="space-y-2">
+            {/* Wallet Dropdown Header */}
+            <button
+              onClick={() => {
+                playClickSound();
+                setWalletDropdownOpen(!walletDropdownOpen);
+              }}
+              className="w-full flex items-center justify-between gap-2 border-b border-yellow-400/20 pb-2 mb-2 hover:bg-yellow-400/5 rounded px-2 py-1 transition-colors"
+            >
+              <span className="text-yellow-400 font-bold text-lg uppercase tracking-widest">
+                {companyNameData?.hasCompanyName ? companyNameData.companyName : 'Corporation'}
               </span>
+              <div
+                className={`w-4 h-4 rounded-full bg-yellow-400/10 flex items-center justify-center text-yellow-400 text-[0.5rem] transition-transform ${
+                  walletDropdownOpen ? "rotate-180" : ""
+                }`}
+              >
+                ▼
+              </div>
+            </button>
+
+            {/* Wallet Dropdown Content */}
+            {walletDropdownOpen && walletGroup && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-400 rounded-lg shadow-[0_8px_25px_rgba(255,204,0,0.3)] p-2 space-y-2 min-w-[300px]">
+                {/* Add Wallet Button */}
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    setWalletDropdownOpen(false);
+                    setAddWalletModalOpen(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-sm font-semibold uppercase tracking-wider rounded px-3 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
+                >
+                  + Add Wallet
+                </button>
+
+                {/* Wallet Addresses */}
+                <div className="space-y-1">
+                  {walletGroup.map((wallet, index) => (
+                    <div
+                      key={wallet.walletAddress}
+                      className={`px-3 py-2 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border ${
+                        wallet.walletAddress === walletAddress
+                          ? 'border-yellow-400'
+                          : 'border-gray-600'
+                      } rounded text-xs ${
+                        wallet.isPrimary ? 'font-semibold' : 'font-normal'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          {wallet.nickname && (
+                            <div className="text-yellow-400 text-sm uppercase tracking-wider mb-1">
+                              {wallet.nickname}
+                            </div>
+                          )}
+                          <div className="text-gray-300 font-mono text-xs truncate">
+                            {wallet.walletAddress}
+                          </div>
+                        </div>
+                        {wallet.isPrimary && (
+                          <span className="text-yellow-400 text-[0.5rem]">⭐</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Re-scan Wallet Button */}
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    // TODO: Implement re-scan wallet functionality
+                    alert('Re-scan Wallet functionality coming soon!');
+                  }}
+                  className="w-full bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-sm font-medium uppercase tracking-wider rounded px-3 py-2 hover:from-gray-700 hover:to-gray-800 hover:shadow-[0_4px_15px_rgba(0,0,0,0.4)] transition-all"
+                >
+                  🔄 Re-scan Wallet
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <span className="text-yellow-400/70 text-sm uppercase tracking-wider">Meks:</span>
+              <span className="text-yellow-400 font-bold text-base">{userStats.mekCount}</span>
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <span className="text-yellow-400/70 text-xs uppercase tracking-wider">Meks:</span>
-            <span className="text-yellow-400 font-bold text-sm">{userStats.mekCount}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-yellow-400/70 text-xs uppercase tracking-wider whitespace-nowrap">Total Cumulative Gold:</span>
-            <span className="text-yellow-400 font-bold text-sm">{Math.floor(realtimeCumulativeGold).toLocaleString()}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-yellow-400/70 text-sm uppercase tracking-wider whitespace-nowrap">Total Cumulative Gold:</span>
+              <span className="text-yellow-400 font-bold text-base">{Math.floor(realtimeCumulativeGold).toLocaleString()}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -529,6 +646,69 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     </div>
   );
 
+  const renderAddWalletModal = () => {
+    if (!addWalletModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-yellow-400 rounded-lg shadow-[0_0_50px_rgba(250,182,23,0.4)] p-6 max-w-md w-full mx-4">
+          <h2 className="text-yellow-400 text-xl font-bold uppercase tracking-wider mb-4">Add Wallet to Corporation</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-yellow-400/70 text-xs uppercase tracking-wider mb-2">
+                Wallet Address (Stake Address)
+              </label>
+              <input
+                type="text"
+                value={newWalletAddress}
+                onChange={(e) => setNewWalletAddress(e.target.value)}
+                placeholder="stake1..."
+                className="w-full bg-gray-900/50 border border-yellow-400/30 rounded px-3 py-2 text-white text-sm font-mono focus:border-yellow-400 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-yellow-400/70 text-xs uppercase tracking-wider mb-2">
+                Nickname (Optional)
+              </label>
+              <input
+                type="text"
+                value={newWalletNickname}
+                onChange={(e) => setNewWalletNickname(e.target.value)}
+                placeholder="e.g., Trading Wallet"
+                className="w-full bg-gray-900/50 border border-yellow-400/30 rounded px-3 py-2 text-white text-sm focus:border-yellow-400 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setAddWalletModalOpen(false);
+                  setNewWalletAddress('');
+                  setNewWalletNickname('');
+                }}
+                className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-xs font-medium uppercase tracking-wider rounded px-4 py-2 hover:from-gray-700 hover:to-gray-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  handleAddWallet();
+                }}
+                className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 border border-yellow-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all"
+              >
+                Add Wallet
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (currentStyles.layout === 'centered') {
     return (
       <div className="w-full">
@@ -551,6 +731,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         </nav>
         {renderControls()}
         {renderUserStats()}
+        {renderAddWalletModal()}
       </div>
     );
   }
@@ -577,6 +758,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         </nav>
         {renderControls()}
         {renderUserStats()}
+        {renderAddWalletModal()}
       </div>
     );
   }
@@ -605,6 +787,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       </div>
       {renderControls()}
       {renderUserStats()}
+      {renderAddWalletModal()}
     </div>
   );
 }

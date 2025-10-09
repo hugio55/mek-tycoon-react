@@ -520,6 +520,7 @@ export const getAllWallets = query({
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.floor(currentGold * 100) / 100,
         totalCumulativeGold: Math.floor(totalCumulativeGold * 100) / 100,
+        totalGoldSpentOnUpgrades: miner.totalGoldSpentOnUpgrades || 0,
         isVerified: miner.isBlockchainVerified === true,
         lastVerificationTime: miner.lastVerificationTime || null,
         lastActiveTime: miner.lastActiveTime,

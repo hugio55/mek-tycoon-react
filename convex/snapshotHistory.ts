@@ -42,6 +42,12 @@ export const getSnapshotHistory = query({
           cumulativeGoldEarned: snapshot.cumulativeGoldEarned,
           verificationStatus: snapshot.verificationStatus,
           _creationTime: snapshot._creationTime,
+          // Additional fields stored in snapshot
+          accumulatedGold: snapshot.accumulatedGold,
+          totalCumulativeGold: snapshot.totalCumulativeGold,
+          totalGoldSpentOnUpgrades: snapshot.totalGoldSpentOnUpgrades,
+          lastActiveTime: snapshot.lastActiveTime,
+          lastSnapshotTime: snapshot.lastSnapshotTime,
         };
       })
     );
@@ -65,10 +71,14 @@ export const getSnapshotLogs = query({
   handler: async (ctx, args) => {
     const limit = args.limit || 20;
 
+    console.log('[getSnapshotLogs] 🔍 Query executing, fetching up to', limit, 'logs');
+
     const logs = await ctx.db
       .query("goldMiningSnapshotLogs")
       .order("desc")
       .take(limit);
+
+    console.log('[getSnapshotLogs] 📊 Found', logs.length, 'logs, latest:', logs[0]?.timestamp ? new Date(logs[0].timestamp).toISOString() : 'none');
 
     return logs;
   },

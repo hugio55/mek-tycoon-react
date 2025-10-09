@@ -1,31 +1,14 @@
 import React from 'react';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import { MekAsset, DEFAULT_LEVEL_COLORS, AnimatedMekValues } from './types';
 
 interface MekLevelBarProps {
   mek: MekAsset;
   animatedLevel?: number;
+  levelColors: string[]; // Receive colors from parent instead of querying
 }
 
-export const MekLevelBar = ({ mek, animatedLevel }: MekLevelBarProps) => {
+export const MekLevelBar = ({ mek, animatedLevel, levelColors }: MekLevelBarProps) => {
   const currentLevel = animatedLevel || mek.currentLevel || 1;
-
-  // Load level colors from Convex database
-  const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
-  const levelColors = levelColorsFromDb || DEFAULT_LEVEL_COLORS;
-
-  // Diagnostic logging
-  React.useEffect(() => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [MekLevelBar] Query result:`, {
-      fromDb: levelColorsFromDb ? 'YES' : 'NO',
-      level10Color: levelColors[9],
-      usingDefaults: !levelColorsFromDb,
-      mekNumber: mek.mekNumber
-    });
-  }, [levelColorsFromDb, levelColors, mek.mekNumber]);
-
   const currentLevelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
   return (

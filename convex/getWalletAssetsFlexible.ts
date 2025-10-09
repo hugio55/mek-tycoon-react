@@ -2,6 +2,7 @@
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { rateLimiter } from "./blockfrostConfig";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";
@@ -61,9 +62,26 @@ export const getWalletAssetsFlexible = action({
 
       console.log('Querying stake address:', args.walletIdentifier);
 
-      // Try to get addresses from stake account
+      // Try to get addresses from stake account (WITH PAGINATION!)
       try {
-        const addresses = await blockfrostRequest(apiKey, `/accounts/${args.walletIdentifier}/addresses`);
+        const addresses = [];
+        let addressPage = 1;
+        let hasMoreAddresses = true;
+
+        while (hasMoreAddresses) {
+          await rateLimiter.waitForSlot();
+          const addressBatch = await blockfrostRequest(apiKey, `/accounts/${args.walletIdentifier}/addresses?page=${addressPage}&count=100`);
+          addresses.push(...addressBatch);
+
+          // Check if there are more pages
+          hasMoreAddresses = addressBatch.length === 100;
+          addressPage++;
+
+          if (hasMoreAddresses) {
+            console.log(`Fetched ${addresses.length} addresses so far, fetching more...`);
+          }
+        }
+
         console.log(`Found ${addresses.length} addresses for stake account`);
         addressesToCheck = addresses.map((a: any) => a.address);
       } catch (stakeError: any) {
@@ -89,11 +107,23 @@ export const getWalletAssetsFlexible = action({
         try {
           console.log(`Checking address: ${address.substring(0, 20)}...`);
 
-          // Get all UTXOs at this address
-          const utxos = await blockfrostRequest(apiKey, `/addresses/${address}/utxos`);
+          // Get all UTXOs at this address (WITH PAGINATION!)
+          let page = 1;
+          let hasMore = true;
+          const allUtxos = [];
+
+          while (hasMore) {
+            await rateLimiter.waitForSlot();
+            const utxos = await blockfrostRequest(apiKey, `/addresses/${address}/utxos?page=${page}&count=100`);
+            allUtxos.push(...utxos);
+
+            // Check if there are more pages
+            hasMore = utxos.length === 100;
+            page++;
+          }
 
           // Check each UTXO for MEK NFTs
-          for (const utxo of utxos) {
+          for (const utxo of allUtxos) {
             if (utxo.amount) {
               for (const amount of utxo.amount) {
                 const unit = amount.unit;

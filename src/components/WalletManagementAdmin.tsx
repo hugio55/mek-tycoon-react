@@ -11,7 +11,7 @@ import MekLevelsViewer from '@/components/MekLevelsViewer';
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'production-launch-cleaner' | 'wallet-debug';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'production-launch-cleaner' | 'wallet-debug' | 'gold-repair';
 
 export default function WalletManagementAdmin() {
   const wallets = useQuery(api.adminVerificationReset.getAllWallets);
@@ -29,6 +29,8 @@ export default function WalletManagementAdmin() {
   const reconstructCumulativeGoldExact = useMutation(api.adminVerificationReset.reconstructCumulativeGoldExact);
   const cleanupDuplicates = useMutation(api.finalDuplicateCleanup.removeAllNonStakeWallets);
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
+  const findCorruptedGoldRecords = useMutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords);
+  const fixCorruptedCumulativeGold = useMutation(api.fixCorruptedGold.fixCorruptedCumulativeGold);
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +40,18 @@ export default function WalletManagementAdmin() {
   const [isRunningSnapshot, setIsRunningSnapshot] = useState(false);
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
+  const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
+  const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
+  const [goldFixResults, setGoldFixResults] = useState<any>(null);
+  const [isRunningGoldRepair, setIsRunningGoldRepair] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Diagnostic query to check boost sync
+  const boostDiagnostic = useQuery(
+    api.diagnosticMekBoosts.compareMekDataSources,
+    diagnosticWallet ? { walletAddress: diagnosticWallet } : 'skip'
+  );
 
   const handleResetVerification = async (walletAddress: string) => {
     if (!confirm(`Reset verification for wallet ${walletAddress.substring(0, 20)}...?`)) return;
@@ -219,11 +233,50 @@ Check console for full timeline.
       message: 'Snapshot starting... This may take a minute.'
     });
 
+    console.log('[WalletManagementAdmin] 🚀 Starting snapshot at:', new Date().toISOString());
+
     try {
+      console.log('[WalletManagementAdmin] ⏳ Calling triggerSnapshot action...');
       const result = await triggerSnapshot({});
+      console.log('[WalletManagementAdmin] ✅ Snapshot action completed:', {
+        totalMiners: result.totalMiners,
+        updatedCount: result.updatedCount,
+        skippedCount: result.skippedCount,
+        errorCount: result.errorCount,
+        timestamp: new Date().toISOString()
+      });
+
       setStatusMessage({
         type: 'success',
         message: `Snapshot complete! Updated ${result.updatedCount}/${result.totalMiners} wallets (${result.skippedCount} skipped, ${result.errorCount} errors)`
+      });
+      setTimeout(() => setStatusMessage(null), 10000);
+    } catch (error) {
+      console.error('[WalletManagementAdmin] ❌ Snapshot failed:', error);
+      setStatusMessage({ type: 'error', message: 'Snapshot failed - check console' });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } finally {
+      setIsRunningSnapshot(false);
+      console.log('[WalletManagementAdmin] 🏁 Snapshot process finished');
+    }
+  };
+
+  const handleSingleWalletSnapshot = async (walletAddress: string) => {
+    if (!confirm(`Run blockchain snapshot for wallet ${walletAddress.substring(0, 20)}...?\n\nThis will query Blockfrost and update Mek ownership data.`)) return;
+
+    setIsRunningSnapshot(true);
+    setStatusMessage({
+      type: 'success',
+      message: `Snapshot starting for ${walletAddress.substring(0, 20)}... Check console for debug logs.`
+    });
+
+    try {
+      // The triggerSnapshot action will process all wallets, but we can filter the logs by watching console
+      console.log(`[Admin] Triggering snapshot - watch for wallet: ${walletAddress}`);
+      const result = await triggerSnapshot({});
+      setStatusMessage({
+        type: 'success',
+        message: `Snapshot complete! Check console for detailed logs. Updated ${result.updatedCount} wallets total.`
       });
       setTimeout(() => setStatusMessage(null), 10000);
     } catch (error) {
@@ -234,14 +287,144 @@ Check console for full timeline.
     }
   };
 
+  const handleGoldDiagnostic = async () => {
+    setIsRunningGoldRepair(true);
+    try {
+      const results = await findCorruptedGoldRecords({});
+      setGoldDiagnosticResults(results);
+      setStatusMessage({
+        type: results.corruptedCount > 0 ? 'error' : 'success',
+        message: `Scan complete: ${results.corruptedCount} corrupted records found out of ${results.totalRecords} total`
+      });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (error: any) {
+      setStatusMessage({ type: 'error', message: 'Diagnostic failed: ' + error.message });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } finally {
+      setIsRunningGoldRepair(false);
+    }
+  };
+
+  const handleGoldFix = async () => {
+    if (!confirm('Are you sure you want to fix all corrupted gold records? This will update the database.')) {
+      return;
+    }
+
+    setIsRunningGoldRepair(true);
+    try {
+      const results = await fixCorruptedCumulativeGold({});
+      setGoldFixResults(results);
+      setStatusMessage({
+        type: 'success',
+        message: `Fixed ${results.fixedCount} records out of ${results.totalRecords} total`
+      });
+      setTimeout(() => setStatusMessage(null), 5000);
+      // Re-run diagnostic to confirm fix
+      const newDiagnostic = await findCorruptedGoldRecords({});
+      setGoldDiagnosticResults(newDiagnostic);
+    } catch (error: any) {
+      setStatusMessage({ type: 'error', message: 'Fix failed: ' + error.message });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } finally {
+      setIsRunningGoldRepair(false);
+    }
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
   const filteredWallets = useMemo(() => {
     if (!wallets) return [];
-    return wallets.filter(wallet =>
+    let filtered = wallets.filter(wallet =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [wallets, searchTerm]);
+
+    if (sortColumn) {
+      filtered = [...filtered].sort((a, b) => {
+        let aVal: any;
+        let bVal: any;
+
+        switch (sortColumn) {
+          case 'wallet':
+            aVal = a.walletAddress;
+            bVal = b.walletAddress;
+            break;
+          case 'companyName':
+            aVal = a.companyName || '';
+            bVal = b.companyName || '';
+            break;
+          case 'type':
+            aVal = a.walletType;
+            bVal = b.walletType;
+            break;
+          case 'verified':
+            aVal = a.isVerified ? 1 : 0;
+            bVal = b.isVerified ? 1 : 0;
+            break;
+          case 'meks':
+            aVal = a.mekCount;
+            bVal = b.mekCount;
+            break;
+          case 'goldPerHour':
+            aVal = a.totalGoldPerHour;
+            bVal = b.totalGoldPerHour;
+            break;
+          case 'currentGold':
+            aVal = a.currentGold;
+            bVal = b.currentGold;
+            break;
+          case 'cumulativeGold':
+            aVal = a.totalCumulativeGold || 0;
+            bVal = b.totalCumulativeGold || 0;
+            break;
+          case 'goldSpent':
+            aVal = a.totalGoldSpentOnUpgrades || 0;
+            bVal = b.totalGoldSpentOnUpgrades || 0;
+            break;
+          case 'firstConnected':
+            aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            break;
+          case 'lastUpdate':
+            aVal = a.lastSnapshotTime
+              ? new Date(a.lastSnapshotTime).getTime()
+              : a.updatedAt
+              ? new Date(a.updatedAt).getTime()
+              : 0;
+            bVal = b.lastSnapshotTime
+              ? new Date(b.lastSnapshotTime).getTime()
+              : b.updatedAt
+              ? new Date(b.updatedAt).getTime()
+              : 0;
+            break;
+          case 'lastActive':
+            aVal = a.lastActiveDisplay || '';
+            bVal = b.lastActiveDisplay || '';
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aVal === 'string') {
+          return sortDirection === 'asc'
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        } else {
+          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+      });
+    }
+
+    return filtered;
+  }, [wallets, searchTerm, sortColumn, sortDirection]);
 
   const verifiedCount = useMemo(() => {
     if (!wallets) return 0;
@@ -310,6 +493,17 @@ Check console for full timeline.
         >
           🔍 Wallet Debug
         </button>
+
+        <button
+          onClick={() => setActiveSubmenu('gold-repair')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'gold-repair'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🔧 Gold Repair
+        </button>
       </div>
 
       {activeSubmenu === 'storage-monitoring' ? (
@@ -322,6 +516,130 @@ Check console for full timeline.
         <ProductionLaunchCleaner />
       ) : activeSubmenu === 'wallet-debug' ? (
         <WalletSnapshotDebug />
+      ) : activeSubmenu === 'gold-repair' ? (
+        <div className="space-y-6">
+          {/* Gold Repair Tool */}
+          <div className="bg-gray-900/50 rounded-lg border border-yellow-500/30 p-6">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">Gold Repair Tool</h2>
+            <p className="text-gray-300 mb-6">
+              Scan and repair corrupted cumulative gold values. The gold invariant requires:
+              <span className="text-yellow-400 font-mono block mt-2">totalCumulativeGold ≥ accumulatedGold + totalSpent</span>
+            </p>
+
+            {/* Diagnostic Section */}
+            <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-6 mb-6">
+              <h3 className="text-xl font-bold mb-4">1. Diagnostic Scan</h3>
+              <p className="text-gray-300 mb-4">
+                Scan all gold mining records to find any with corrupted cumulative gold values.
+              </p>
+              <button
+                onClick={handleGoldDiagnostic}
+                disabled={isRunningGoldRepair}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRunningGoldRepair ? 'Scanning...' : 'Run Diagnostic'}
+              </button>
+
+              {goldDiagnosticResults && (
+                <div className="mt-6 p-4 bg-gray-900 rounded border border-yellow-500/20">
+                  <h4 className="text-lg font-bold mb-2">Diagnostic Results:</h4>
+                  <div className="space-y-2 text-sm">
+                    <p>Total Records: <span className="text-yellow-500">{goldDiagnosticResults.totalRecords}</span></p>
+                    <p>Corrupted Records: <span className={goldDiagnosticResults.corruptedCount > 0 ? "text-red-500" : "text-green-500"}>
+                      {goldDiagnosticResults.corruptedCount}
+                    </span></p>
+
+                    {goldDiagnosticResults.corruptedCount > 0 && (
+                      <div className="mt-4">
+                        <h5 className="font-bold mb-2">Corrupted Wallets:</h5>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {goldDiagnosticResults.corruptedRecords.map((record: any, idx: number) => (
+                            <div key={idx} className="bg-gray-800 p-2 rounded text-xs">
+                              <p><span className="text-gray-400">Wallet:</span> {record.wallet}</p>
+                              <p><span className="text-gray-400">Accumulated:</span> {record.accumulated.toFixed(2)}</p>
+                              <p><span className="text-gray-400">Cumulative:</span> {record.cumulative.toFixed(2)}</p>
+                              <p><span className="text-gray-400">Spent:</span> {record.spent.toFixed(2)}</p>
+                              <p><span className="text-red-400">Deficit:</span> {record.deficit.toFixed(2)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Fix Section */}
+            <div className="bg-gray-800/50 border border-yellow-500/30 rounded-lg p-6 mb-6">
+              <h3 className="text-xl font-bold mb-4">2. Repair Corrupted Records</h3>
+              <p className="text-gray-300 mb-4">
+                Fix all corrupted records by setting totalCumulativeGold = accumulatedGold + totalSpent.
+                This ensures the gold invariant is maintained.
+              </p>
+              <button
+                onClick={handleGoldFix}
+                disabled={isRunningGoldRepair || (goldDiagnosticResults && goldDiagnosticResults.corruptedCount === 0)}
+                className="bg-yellow-600 hover:bg-yellow-700 text-black px-6 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRunningGoldRepair ? 'Fixing...' : 'Fix Corrupted Records'}
+              </button>
+
+              {goldFixResults && (
+                <div className="mt-6 p-4 bg-gray-900 rounded border border-green-500/20">
+                  <h4 className="text-lg font-bold mb-2 text-green-500">Fix Results:</h4>
+                  <div className="space-y-2 text-sm">
+                    <p>Total Records: <span className="text-yellow-500">{goldFixResults.totalRecords}</span></p>
+                    <p>Fixed Records: <span className="text-green-500">{goldFixResults.fixedCount}</span></p>
+
+                    {goldFixResults.fixedCount > 0 && (
+                      <div className="mt-4">
+                        <h5 className="font-bold mb-2">Fixed Wallets:</h5>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {goldFixResults.fixedWallets.map((record: any, idx: number) => (
+                            <div key={idx} className="bg-gray-800 p-2 rounded text-xs">
+                              <p><span className="text-gray-400">Wallet:</span> {record.wallet}</p>
+                              <p><span className="text-gray-400">Old Cumulative:</span> {record.oldCumulative.toFixed(2)}</p>
+                              <p><span className="text-green-400">New Cumulative:</span> {record.newCumulative.toFixed(2)}</p>
+                              <p><span className="text-yellow-400">Deficit Fixed:</span> +{record.deficit.toFixed(2)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Info Section */}
+            <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4">What This Does</h3>
+              <div className="text-gray-300 space-y-2 text-sm">
+                <p>
+                  <strong>The Gold Invariant:</strong> totalCumulativeGold ≥ accumulatedGold + totalSpent
+                </p>
+                <p>
+                  This invariant ensures that the total gold ever earned is always greater than or equal to
+                  the sum of current gold plus gold spent on upgrades.
+                </p>
+                <p className="mt-4">
+                  <strong>Why it breaks:</strong> Database initialization bugs, incomplete migrations, or
+                  manual database edits can cause cumulative gold to be less than it should be.
+                </p>
+                <p className="mt-4">
+                  <strong>How the fix works:</strong> Sets totalCumulativeGold to the minimum valid value
+                  (accumulatedGold + totalSpent) for any corrupted records. This prevents errors while
+                  preserving the integrity of gold tracking.
+                </p>
+                <p className="mt-4 text-yellow-500">
+                  <strong>Note:</strong> The auto-fix in calculateGoldIncrease() will now prevent new
+                  corruption, but existing corrupted records need to be repaired using this tool.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <div className="flex items-center justify-between gap-4">
@@ -418,24 +736,85 @@ Check console for full timeline.
         <table className="w-full bg-gray-900/50 rounded-lg border border-gray-700">
           <thead>
             <tr className="border-b border-gray-700 bg-gray-800/50">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Wallet</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Company Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Verified</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">MEKs</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Gold/hr</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Current Gold</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Cumulative Gold</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">First Connected</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Update</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Active</th>
+              <th
+                onClick={() => handleSort('wallet')}
+                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Wallet {sortColumn === 'wallet' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('companyName')}
+                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Company Name {sortColumn === 'companyName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('type')}
+                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Type {sortColumn === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('verified')}
+                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Verified {sortColumn === 'verified' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('meks')}
+                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                MEKs {sortColumn === 'meks' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('goldPerHour')}
+                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Gold/hr {sortColumn === 'goldPerHour' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('currentGold')}
+                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Current Gold {sortColumn === 'currentGold' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('cumulativeGold')}
+                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Cumulative Gold {sortColumn === 'cumulativeGold' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('goldSpent')}
+                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Gold Spent {sortColumn === 'goldSpent' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('firstConnected')}
+                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                First Connected {sortColumn === 'firstConnected' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('lastUpdate')}
+                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Last Update {sortColumn === 'lastUpdate' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th
+                onClick={() => handleSort('lastActive')}
+                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Last Active {sortColumn === 'lastActive' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
             {filteredWallets.length === 0 ? (
               <tr>
-                <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
                 </td>
               </tr>
@@ -535,6 +914,11 @@ Check console for full timeline.
                       {(wallet.totalCumulativeGold || 0).toLocaleString()}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="text-sm font-semibold text-red-400">
+                      {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-xs text-gray-400">
                       {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
@@ -553,18 +937,33 @@ Check console for full timeline.
                     <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <div className="grid grid-cols-5 gap-2 min-w-max">
                       <button
                         onClick={() => setViewingMekLevels(wallet.walletAddress)}
-                        className="px-3 py-1 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
                         title="View all Mek levels for this wallet"
                       >
                         View Levels
                       </button>
+                      <button
+                        onClick={() => setDiagnosticWallet(wallet.walletAddress)}
+                        className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
+                        title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
+                      >
+                        🔍 Boost Sync
+                      </button>
+                      <button
+                        onClick={() => handleSingleWalletSnapshot(wallet.walletAddress)}
+                        disabled={isRunningSnapshot}
+                        className="px-3 py-1.5 text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-700 rounded transition-colors whitespace-nowrap disabled:opacity-50"
+                        title="Run blockchain snapshot for this wallet (with debug logging)"
+                      >
+                        📸 Snapshot
+                      </button>
                       {wallet.isVerified && (
                         <button
                           onClick={() => handleResetVerification(wallet.walletAddress)}
-                          className="px-3 py-1 text-xs bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded transition-colors"
+                          className="px-3 py-1.5 text-xs bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded transition-colors whitespace-nowrap"
                           title="Reset verification (for testing)"
                         >
                           Reset Verify
@@ -577,7 +976,7 @@ Check console for full timeline.
                             mekCount: 45,
                             totalGoldPerHour: 176.56
                           })}
-                          className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors"
+                          className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
                           title="Manually fix MEK ownership"
                         >
                           Fix MEKs
@@ -587,44 +986,44 @@ Check console for full timeline.
                         <>
                           <button
                             onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
-                            className="px-3 py-1 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                            className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
                             title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
                           >
-                            🔧 Fix Cumulative
+                            🔧 Fix Cumul.
                           </button>
                           <button
                             onClick={() => handleReconstructFromSnapshots(wallet.walletAddress)}
-                            className="px-3 py-1 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                            title="Reconstruct cumulative gold from snapshot history + time elapsed"
+                            className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
+                            title="Reconstruct from Snapshots"
                           >
-                            📸 Reconstruct from Snapshots
+                            📸 Reconstruct
                           </button>
                         </>
                       )}
                       <button
                         onClick={() => handleReconstructExact(wallet.walletAddress)}
-                        className="px-3 py-1 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
                         title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
                       >
-                        🎯 Exact Reconstruction
+                        🎯 Exact Recon.
                       </button>
                       <button
                         onClick={() => handleResetMekLevels(wallet.walletAddress)}
-                        className="px-3 py-1 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
                         title="Reset all Mek levels to Level 1"
                       >
                         Reset Levels
                       </button>
                       <button
                         onClick={() => handleResetAllGold(wallet.walletAddress)}
-                        className="px-3 py-1 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
                         title="Reset all gold (spendable + cumulative) to zero"
                       >
                         Reset All Gold
                       </button>
                       <button
                         onClick={() => handleDeleteWallet(wallet.walletAddress)}
-                        className="px-3 py-1 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors"
+                        className="px-3 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors whitespace-nowrap"
                         title="Delete wallet permanently"
                       >
                         Delete
@@ -662,6 +1061,187 @@ Check console for full timeline.
           walletAddress={viewingMekLevels}
           onClose={() => setViewingMekLevels(null)}
         />
+      )}
+
+      {/* Boost Sync Diagnostic Modal */}
+      {diagnosticWallet && boostDiagnostic && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-purple-500/50 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-purple-500/30 bg-purple-900/20">
+              <div>
+                <h2 className="text-xl font-bold text-purple-400">Boost Sync Diagnostic</h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Comparing ownedMeks (UI data) vs mekLevels (source of truth)
+                </p>
+              </div>
+              <button
+                onClick={() => setDiagnosticWallet(null)}
+                className="text-gray-400 hover:text-white text-2xl font-bold px-3"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            {!('error' in boostDiagnostic) && (
+              <div className="p-4 bg-gray-800/50 border-b border-purple-500/20">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase">Total Meks</div>
+                    <div className="text-2xl font-bold text-white">{boostDiagnostic.totalMeks}</div>
+                  </div>
+                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase">Upgraded Meks</div>
+                    <div className="text-2xl font-bold text-yellow-400">{boostDiagnostic.upgradedMeks}</div>
+                  </div>
+                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase">Boosts in UI</div>
+                    <div className={`text-2xl font-bold ${
+                      boostDiagnostic.boostsShowingInUI === boostDiagnostic.upgradedMeks
+                        ? 'text-green-400'
+                        : 'text-red-400 animate-pulse'
+                    }`}>
+                      {boostDiagnostic.boostsShowingInUI}
+                    </div>
+                  </div>
+                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase">Out of Sync</div>
+                    <div className={`text-2xl font-bold ${
+                      boostDiagnostic.outOfSync === 0 ? 'text-green-400' : 'text-red-400 animate-pulse'
+                    }`}>
+                      {boostDiagnostic.outOfSync}
+                    </div>
+                  </div>
+                  <div className="bg-gray-900/50 p-3 rounded border border-gray-700">
+                    <div className="text-xs text-gray-500 uppercase">mekLevels Records</div>
+                    <div className="text-2xl font-bold text-blue-400">{boostDiagnostic.mekLevelsRecords}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {'error' in boostDiagnostic && (
+              <div className="p-4 bg-red-900/20 border border-red-500/30 m-4 rounded">
+                <p className="text-red-400">{boostDiagnostic.error}</p>
+              </div>
+            )}
+
+            {/* Mek Comparison Table */}
+            {!('error' in boostDiagnostic) && (
+              <div className="flex-1 overflow-auto p-4">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-gray-800 border-b border-purple-500/30">
+                    <tr>
+                      <th className="text-left p-2 text-purple-400">Mek</th>
+                      <th className="text-center p-2 text-blue-400">Level</th>
+                      <th className="text-center p-2 text-green-400">goldPerHour<br/>(should be total)</th>
+                      <th className="text-center p-2 text-green-400">Base g/hr</th>
+                      <th className="text-center p-2 text-yellow-400">Boost g/hr</th>
+                      <th className="text-center p-2 text-purple-400">Calculated Boost</th>
+                      <th className="text-center p-2 text-red-400">UI Shows Boost?</th>
+                      <th className="text-center p-2 text-gray-400">In Sync?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {boostDiagnostic.comparison.map((mek, index) => (
+                      <tr
+                        key={index}
+                        className={`border-b border-gray-800 ${
+                          !mek.inSync ? 'bg-red-900/20' : mek.hasBoost ? 'bg-yellow-900/10' : ''
+                        }`}
+                      >
+                        <td className="p-2 font-mono text-xs">
+                          <div className="font-bold text-white">{mek.assetName}</div>
+                          <div className="text-gray-500 text-[10px]">{mek.assetId}</div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-400">Owned: {mek.ownedMeks_currentLevel || 1}</span>
+                            <span className={`text-xs font-bold ${
+                              mek.mekLevels_currentLevel && mek.mekLevels_currentLevel > 1 ? 'text-yellow-400' : 'text-gray-500'
+                            }`}>
+                              Actual: {mek.mekLevels_currentLevel || 1}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="text-sm font-bold text-white">
+                            {mek.ownedMeks_goldPerHour?.toFixed(1) || 'N/A'}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            (effective: {mek.ownedMeks_effectiveGoldPerHour?.toFixed(1) || 'N/A'})
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-400">
+                              {mek.ownedMeks_baseGoldPerHour?.toFixed(1) || 'N/A'}
+                            </span>
+                            <span className="text-xs font-bold text-blue-400">
+                              {mek.mekLevels_baseGoldPerHour?.toFixed(1) || 'N/A'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-400">
+                              {mek.ownedMeks_levelBoostAmount?.toFixed(1) || '0.0'}
+                            </span>
+                            <span className="text-xs font-bold text-yellow-400">
+                              {mek.mekLevels_currentBoostAmount?.toFixed(1) || '0.0'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <span className={`text-sm font-bold ${
+                            mek.calculatedBoost > 0 ? 'text-green-400' : 'text-gray-500'
+                          }`}>
+                            {mek.calculatedBoost > 0 ? '+' : ''}{mek.calculatedBoost.toFixed(1)}
+                          </span>
+                        </td>
+                        <td className="p-2 text-center">
+                          {mek.boostShowsInUI ? (
+                            <span className="text-green-400 font-bold">✓ YES</span>
+                          ) : mek.hasBoost ? (
+                            <span className="text-red-400 font-bold animate-pulse">✗ NO</span>
+                          ) : (
+                            <span className="text-gray-500">N/A</span>
+                          )}
+                        </td>
+                        <td className="p-2 text-center">
+                          {mek.inSync ? (
+                            <span className="text-green-400">✓</span>
+                          ) : (
+                            <span className="text-red-400 font-bold">✗</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-purple-500/30 bg-gray-800/50 flex justify-between items-center">
+              <div className="text-xs text-gray-400">
+                {!('error' in boostDiagnostic) && (
+                  <span>
+                    Wallet: <span className="font-mono text-purple-400">{boostDiagnostic.walletAddress.substring(0, 20)}...</span>
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setDiagnosticWallet(null)}
+                className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

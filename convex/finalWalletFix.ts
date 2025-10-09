@@ -65,6 +65,7 @@ export const consolidateToStakeAddress = action({
     console.log(`Final gold rate will be: ${finalGoldRate} gold/hr`);
 
     // Delete ALL existing entries and create ONE final entry
+    // FIXED: Actions CAN call mutations directly via ctx.runMutation
     const result = await ctx.runMutation(api.finalWalletFix.replaceAllWithOne, {
       stakeAddress: args.stakeAddress,
       walletIds: allWallets.map(w => w._id),

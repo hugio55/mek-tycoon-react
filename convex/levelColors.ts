@@ -19,9 +19,6 @@ const DEFAULT_LEVEL_COLORS = [
 export const getLevelColors = query({
   args: {},
   handler: async (ctx): Promise<string[]> => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [Level Colors Query] Starting query...`);
-
     // Try to get from gameConstants table
     const colorsSetting = await ctx.db
       .query("gameConstants")
@@ -31,25 +28,17 @@ export const getLevelColors = query({
       ))
       .first();
 
-    console.log(`[${timestamp}] [Level Colors Query] Database result:`, {
-      found: !!colorsSetting,
-      hasValue: colorsSetting ? typeof colorsSetting.value : 'N/A',
-      valuePreview: colorsSetting ? colorsSetting.value.substring(0, 100) : 'N/A'
-    });
-
     if (colorsSetting && typeof colorsSetting.value === 'string') {
       try {
         const parsed = JSON.parse(colorsSetting.value);
         if (Array.isArray(parsed) && parsed.length === 10) {
-          console.log(`[${timestamp}] [Level Colors Query] Returning DB colors. Level 10 color:`, parsed[9]);
           return parsed;
         }
       } catch (e) {
-        console.error(`[${timestamp}] [Level Colors Query] Failed to parse:`, e);
+        console.error('[Level Colors] Failed to parse DB colors:', e);
       }
     }
 
-    console.log(`[${timestamp}] [Level Colors Query] Returning DEFAULT colors. Level 10 color:`, DEFAULT_LEVEL_COLORS[9]);
     return DEFAULT_LEVEL_COLORS;
   },
 });

@@ -97,10 +97,21 @@ export function calculateGoldIncrease(
   const currentCumulative = currentRecord.totalCumulativeGold || 0;
   const totalSpent = currentRecord.totalGoldSpentOnUpgrades || 0;
 
-  // If totalCumulativeGold is not initialized, calculate it from current state
-  const baseCumulative = currentCumulative > 0
-    ? currentCumulative
-    : currentAccumulated + totalSpent;
+  // DEFENSIVE: Ensure cumulative is at least accumulated + spent
+  // This auto-fixes any corrupted data where cumulative < accumulated + spent
+  const requiredMinimum = currentAccumulated + totalSpent;
+  const baseCumulative = Math.max(currentCumulative, requiredMinimum);
+
+  // Log if we're auto-fixing corruption
+  if (currentCumulative > 0 && currentCumulative < requiredMinimum) {
+    console.warn("[GOLD AUTO-FIX] Repairing corrupted cumulative gold:", {
+      currentCumulative,
+      requiredMinimum,
+      deficit: requiredMinimum - currentCumulative,
+      currentAccumulated,
+      totalSpent
+    });
+  }
 
   // Add gold to both accumulated and cumulative
   // CRITICAL: Track uncapped value to detect gold lost to cap
@@ -126,7 +137,10 @@ export function calculateGoldIncrease(
   // Verify invariant - MUST account for gold lost to cap
   // The invariant allows for: cumulative >= accumulated + spent
   // When accumulated hits cap, cumulative can be higher (tracking all-time gold)
-  if (newTotalCumulativeGold < newAccumulatedGold + totalSpent) {
+  // Use epsilon to handle floating-point precision errors
+  const EPSILON = 1e-10;
+  const difference = newTotalCumulativeGold - (newAccumulatedGold + totalSpent);
+  if (difference < -EPSILON) {
     console.error("[GOLD ERROR] Invariant violation detected!", {
       newAccumulatedGold,
       newTotalCumulativeGold,
@@ -140,7 +154,7 @@ export function calculateGoldIncrease(
       calculation: {
         expected: `${newTotalCumulativeGold} >= ${newAccumulatedGold} + ${totalSpent}`,
         actual: `${newTotalCumulativeGold} >= ${newAccumulatedGold + totalSpent}`,
-        difference: newTotalCumulativeGold - (newAccumulatedGold + totalSpent)
+        difference: difference
       }
     });
     throw new Error("Gold invariant violation: totalCumulativeGold < accumulatedGold + totalSpent");
@@ -207,13 +221,16 @@ export function validateGoldInvariant(record: GoldMiningRecord): boolean {
   }
 
   // If cumulative is initialized, it must be >= accumulated + spent
-  if (cumulative > 0 && cumulative < accumulated + spent) {
+  // Use epsilon to handle floating-point precision errors
+  const EPSILON = 1e-10;
+  const difference = cumulative - (accumulated + spent);
+  if (cumulative > 0 && difference < -EPSILON) {
     console.error("[GOLD VALIDATION ERROR] Invariant violation!", {
       accumulated,
       cumulative,
       spent,
       expected: accumulated + spent,
-      difference: cumulative - (accumulated + spent)
+      difference: difference
     });
     throw new Error(
       `Gold invariant violation: totalCumulativeGold (${cumulative}) < accumulatedGold (${accumulated}) + totalSpent (${spent})`

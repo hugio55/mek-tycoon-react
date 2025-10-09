@@ -128,6 +128,7 @@ export const fixWalletAndSnapshot = action({
   },
   handler: async (ctx, args) => {
     // Step 1: Merge any duplicates
+    // FIXED: Actions CAN call mutations directly via ctx.runMutation
     const mergeResult = await ctx.runMutation(api.fixWalletDuplicates.mergeDuplicatesAndFix, {
       primaryWalletAddress: args.stakeAddress
     });
@@ -138,6 +139,7 @@ export const fixWalletAndSnapshot = action({
 
     // Step 2: Add payment address if provided
     if (args.paymentAddress) {
+      // FIXED: Actions CAN call mutations directly via ctx.runMutation
       await ctx.runMutation(api.debugWalletSnapshot.addPaymentAddresses, {
         walletAddress: args.stakeAddress,
         paymentAddresses: [args.paymentAddress]
@@ -165,6 +167,7 @@ export const fixWalletAndSnapshot = action({
       );
 
       // Update the wallet with the correct MEK count and gold rate
+      // FIXED: Actions CAN call mutations directly via ctx.runMutation
       await ctx.runMutation(api.goldMining.initializeGoldMining, {
         walletAddress: args.stakeAddress,
         walletType: 'Cardano',
