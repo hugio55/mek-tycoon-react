@@ -271,7 +271,12 @@ function buildTodoButtons(userData, isAdmin = false) {
     );
   }
 
-  modeRow.addComponents(
+  rows.push(modeRow);
+
+  // Action buttons row (Add Task, Clear Done) - separate row to avoid exceeding 5 button limit
+  const actionRow = new ActionRowBuilder();
+
+  actionRow.addComponents(
     new ButtonBuilder()
       .setCustomId('todo_add')
       .setLabel('Add Task')
@@ -280,7 +285,7 @@ function buildTodoButtons(userData, isAdmin = false) {
   );
 
   if (tasks.filter(t => t.completed).length > 0) {
-    modeRow.addComponents(
+    actionRow.addComponents(
       new ButtonBuilder()
         .setCustomId('todo_clear')
         .setLabel('Clear Done')
@@ -289,7 +294,7 @@ function buildTodoButtons(userData, isAdmin = false) {
     );
   }
 
-  rows.push(modeRow);
+  rows.push(actionRow);
 
   return rows;
 }
@@ -1286,8 +1291,7 @@ client.on('interactionCreate', async (interaction) => {
           return;
         } catch (error) {
           console.log('[TODO] Could not find/edit existing message, creating new one:', error.message);
-          // Clear the stored message info since it's invalid
-          await setMessageInfo(null, null);
+          // Old message info is invalid, but we'll overwrite it with new message below
         }
       } else {
         console.log('[TODO] No existing message found, will create new one');
