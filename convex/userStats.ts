@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { calculateCurrentGold } from "./lib/goldCalculations";
+import { calculateCurrentGold, calculateGoldSinceLastUpdate } from "./lib/goldCalculations";
 
 export const getUserStats = query({
   args: {
@@ -41,7 +41,13 @@ export const getUserStats = query({
       consecutiveSnapshotFailures: goldMiner.consecutiveSnapshotFailures || 0
     });
 
-    const goldEarnedSinceLastUpdate = currentGold - (goldMiner.accumulatedGold || 0);
+    // CRITICAL: Calculate earnings BEFORE capping for accurate cumulative tracking
+    const goldEarnedSinceLastUpdate = goldMiner.isBlockchainVerified === true && (goldMiner.consecutiveSnapshotFailures || 0) < 3
+      ? calculateGoldSinceLastUpdate(
+          goldMiner.totalGoldPerHour,
+          goldMiner.lastSnapshotTime || goldMiner.updatedAt || goldMiner.createdAt
+        )
+      : 0;
 
     // Calculate cumulative gold in real-time
     // Start with the stored cumulative gold

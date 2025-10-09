@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation, internalAction, internalQuery, action } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { internal, api } from "./_generated/api";
-import { calculateCurrentGold } from "./lib/goldCalculations";
+import { calculateCurrentGold, GOLD_CAP } from "./lib/goldCalculations";
 
 // MEK NFT Policy ID
 const MEK_POLICY_ID = "ffa56051fda3d106a96f09c3d209d4bf24a117406fb813fb8b4548e3";
@@ -333,7 +333,7 @@ export const updateMinerAfterSnapshot = internalMutation({
         // Subsequent snapshot - calculate gold since last snapshot
         const hoursSinceLastSnapshot = (now - miner.lastSnapshotTime) / (1000 * 60 * 60);
         const goldSinceLastSnapshot = miner.totalGoldPerHour * hoursSinceLastSnapshot;
-        accumulatedGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
+        accumulatedGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
 
         // CRITICAL FIX: Also update cumulative gold (tracks all gold earned, even when capped)
         const baseCumulative = miner.totalCumulativeGold || 0;
@@ -342,7 +342,7 @@ export const updateMinerAfterSnapshot = internalMutation({
         // First snapshot - calculate ALL gold from creation
         const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
         const totalGoldEarned = miner.totalGoldPerHour * hoursSinceCreation;
-        accumulatedGold = Math.min(50000, totalGoldEarned);
+        accumulatedGold = Math.min(GOLD_CAP, totalGoldEarned);
 
         // Initialize cumulative gold to match accumulated (first snapshot)
         newTotalCumulativeGold = totalGoldEarned + (miner.totalGoldSpentOnUpgrades || 0);
@@ -559,13 +559,17 @@ export const getLastSnapshotTime = query({
 
 // Manual trigger for snapshot (admin only) - creates a public action
 export const triggerSnapshot = action({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    walletAddress: v.optional(v.string()), // Optional: if provided, only snapshot this wallet
+  },
+  handler: async (ctx, args) => {
     // Log the trigger
     await ctx.runMutation(internal.goldMiningSnapshot.logSnapshotTrigger);
 
     // Run the actual snapshot
-    const result = await ctx.runAction(internal.goldMiningSnapshot.runManualSnapshot);
+    const result = await ctx.runAction(internal.goldMiningSnapshot.runManualSnapshot, {
+      walletAddress: args.walletAddress,
+    });
 
     return result;
   },
@@ -590,8 +594,10 @@ export const logSnapshotTrigger = internalMutation({
 
 // Public action for manual snapshot execution
 export const runManualSnapshot = internalAction({
-  args: {},
-  handler: async (ctx): Promise<{
+  args: {
+    walletAddress: v.optional(v.string()), // Optional: if provided, only snapshot this wallet
+  },
+  handler: async (ctx, args): Promise<{
     success: boolean;
     totalMiners: number;
     updatedCount: number;
@@ -603,7 +609,13 @@ export const runManualSnapshot = internalAction({
     console.log('Starting manual snapshot at:', new Date(now).toISOString());
 
     // Get all gold mining records directly
-    const allMiners: any[] = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
+    let allMiners: any[] = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
+
+    // If walletAddress is provided, filter to just that wallet
+    if (args.walletAddress) {
+      allMiners = allMiners.filter(miner => miner.walletAddress === args.walletAddress);
+      console.log(`Filtering to single wallet: ${args.walletAddress}`);
+    }
 
     console.log(`Starting manual snapshot with ${allMiners.length} wallets to check`);
 
@@ -891,7 +903,7 @@ export const calculateGoldFromHistory = query({
     // If no snapshots yet, use simple calculation from creation
     if (sortedSnapshots.length === 0) {
       const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
-      totalGold = Math.min(50000, miner.totalGoldPerHour * hoursSinceCreation);
+      totalGold = Math.min(GOLD_CAP, miner.totalGoldPerHour * hoursSinceCreation);
       return { totalGold, snapshotCount: 0, method: "creation_time" };
     }
 
@@ -924,8 +936,8 @@ export const calculateGoldFromHistory = query({
     const hoursSinceLastSnapshot = (now - lastSnapshot.snapshotTime) / (1000 * 60 * 60);
     totalGold += lastSnapshot.totalGoldPerHour * hoursSinceLastSnapshot;
 
-    // Cap at 50,000
-    totalGold = Math.min(50000, totalGold);
+    // Cap at GOLD_CAP
+    totalGold = Math.min(GOLD_CAP, totalGold);
 
     return {
       totalGold,

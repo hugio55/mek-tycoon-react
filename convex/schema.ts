@@ -1708,7 +1708,7 @@ export default defineSchema({
 
   // Audit logs for blockchain verification and security
   auditLogs: defineTable({
-    type: v.string(), // "verification", "walletConnection", "rateChange", "goldCheckpoint", "walletLink"
+    type: v.string(), // "verification", "walletConnection", "rateChange", "goldCheckpoint", "walletLink", "mekUpgrade"
 
     // Common fields
     timestamp: v.number(),
@@ -1741,6 +1741,17 @@ export default defineSchema({
     // Wallet link logs
     primaryWallet: v.optional(v.string()),
     linkedWallet: v.optional(v.string()),
+
+    // Mek upgrade logs
+    assetId: v.optional(v.string()),
+    assetName: v.optional(v.string()),
+    oldLevel: v.optional(v.number()),
+    newLevel: v.optional(v.number()),
+    upgradeCost: v.optional(v.number()),
+    newGoldPerHour: v.optional(v.number()),
+    boostAmount: v.optional(v.number()),
+    upgradedBy: v.optional(v.string()), // Who performed the upgrade
+    mekOwner: v.optional(v.string()), // Who owns the mek
   })
     .index("by_type", ["type"])
     .index("by_stake_address", ["stakeAddress"])

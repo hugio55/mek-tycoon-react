@@ -3,6 +3,7 @@ import { mutation, query, action } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { calculateGoldDecrease, validateGoldInvariant } from "./lib/goldCalculations";
 import { devLog } from "./lib/devLog";
+import { internal } from "./_generated/api";
 
 // Gold cost structure for each level upgrade
 const UPGRADE_COSTS = [
@@ -499,6 +500,21 @@ export const upgradeMekLevel = mutation({
         totalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
         cumulativeGold: newTotalCumulativeGold,
         timestamp: new Date(now).toISOString()
+      });
+
+      // Log upgrade to audit log
+      await ctx.scheduler.runAfter(0, internal.auditLogs.logMekUpgrade, {
+        stakeAddress: mekOwnerWallet,
+        assetId: args.assetId,
+        assetName: ownedMek.assetName,
+        oldLevel: mekLevel.currentLevel,
+        newLevel: newLevel,
+        upgradeCost: upgradeCost,
+        newGoldPerHour: baseRate + newBoostAmount,
+        boostAmount: newBoostAmount,
+        upgradedBy: args.walletAddress,
+        mekOwner: mekOwnerWallet,
+        timestamp: now
       });
 
       // Mark upgrade as completed

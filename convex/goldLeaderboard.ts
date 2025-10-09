@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { GOLD_CAP } from "./lib/goldCalculations";
 import mekRarityMaster from './mekRarityMaster.json';
 
 // Build lookup: Mek assetId -> sourceKey code
@@ -68,7 +69,7 @@ export const getTopGoldMiners = query({
         goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
         // Apply cap to spendable gold only
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        currentGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
       if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
@@ -270,7 +271,7 @@ export const getAllCorporations = query({
         goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
         // Apply cap to spendable gold only
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        currentGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
       if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
@@ -377,7 +378,7 @@ export const getCorporationWalletDetails = query({
           goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
           // Apply cap to spendable gold only
-          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+          currentGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
         }
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
         if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {
@@ -424,7 +425,7 @@ export const getCorporationWalletDetails = query({
           goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
           // Apply cap to spendable gold only
-          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+          currentGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
         }
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
         if (!miner.totalCumulativeGold || baseCumulativeGold === 0) {

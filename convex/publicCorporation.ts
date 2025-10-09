@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { GOLD_CAP } from "./lib/goldCalculations";
 import mekRarityMaster from './mekRarityMaster.json';
 
 // Build lookup: Mek assetId -> sourceKey code
@@ -92,7 +93,7 @@ export const getCorporationData = query({
           goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
           // Apply cap to spendable gold only
-          currentGold = Math.min(50000, (data.accumulatedGold || 0) + goldSinceLastUpdate);
+          currentGold = Math.min(GOLD_CAP, (data.accumulatedGold || 0) + goldSinceLastUpdate);
         }
         let baseCumulativeGold = data.totalCumulativeGold || 0;
 
@@ -132,7 +133,7 @@ export const getCorporationData = query({
       goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
       // Apply cap to spendable gold only
-      currentGold = Math.min(50000, (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate);
+      currentGold = Math.min(GOLD_CAP, (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate);
     }
     let baseCumulativeGold = goldMiningData.totalCumulativeGold || 0;
 
@@ -150,7 +151,7 @@ export const getCorporationData = query({
         const lastUpdateTime = miner.lastSnapshotTime || miner._creationTime;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-        gold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        gold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
       const earnedSinceUpdate = gold - (miner.accumulatedGold || 0);
       let baseCumulative = miner.totalCumulativeGold || 0;

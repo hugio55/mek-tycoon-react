@@ -47,12 +47,27 @@ export default function WalletManagementAdmin() {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
+  const [snapshotNotifications, setSnapshotNotifications] = useState<Array<{
+    id: string;
+    type: 'success' | 'error';
+    message: string;
+  }>>([]);
 
   // Diagnostic query to check boost sync
   const boostDiagnostic = useQuery(
     api.diagnosticMekBoosts.compareMekDataSources,
     diagnosticWallet ? { walletAddress: diagnosticWallet } : 'skip'
   );
+
+  // Helper to add persistent snapshot notifications
+  const addSnapshotNotification = (type: 'success' | 'error', message: string) => {
+    const id = `snapshot-${Date.now()}-${Math.random()}`;
+    setSnapshotNotifications(prev => [...prev, { id, type, message }]);
+  };
+
+  const removeSnapshotNotification = (id: string) => {
+    setSnapshotNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   const handleResetVerification = async (walletAddress: string) => {
     if (!confirm(`Reset verification for wallet ${walletAddress.substring(0, 20)}...?`)) return;
@@ -229,10 +244,7 @@ Check console for full timeline.
     if (!confirm('Run 6-hour blockchain snapshot NOW? This will query Blockfrost for all active wallets.')) return;
 
     setIsRunningSnapshot(true);
-    setStatusMessage({
-      type: 'success',
-      message: 'Snapshot starting... This may take a minute.'
-    });
+    addSnapshotNotification('success', 'Snapshot starting... This may take a minute.');
 
     console.log('[WalletManagementAdmin] 🚀 Starting snapshot at:', new Date().toISOString());
 
@@ -247,15 +259,12 @@ Check console for full timeline.
         timestamp: new Date().toISOString()
       });
 
-      setStatusMessage({
-        type: 'success',
-        message: `Snapshot complete! Updated ${result.updatedCount}/${result.totalMiners} wallets (${result.skippedCount} skipped, ${result.errorCount} errors)`
-      });
-      setTimeout(() => setStatusMessage(null), 10000);
+      addSnapshotNotification('success',
+        `Snapshot complete! Updated ${result.updatedCount}/${result.totalMiners} wallets (${result.skippedCount} skipped, ${result.errorCount} errors)`
+      );
     } catch (error) {
       console.error('[WalletManagementAdmin] ❌ Snapshot failed:', error);
-      setStatusMessage({ type: 'error', message: 'Snapshot failed - check console' });
-      setTimeout(() => setStatusMessage(null), 5000);
+      addSnapshotNotification('error', 'Snapshot failed - check console');
     } finally {
       setIsRunningSnapshot(false);
       console.log('[WalletManagementAdmin] 🏁 Snapshot process finished');
@@ -266,23 +275,18 @@ Check console for full timeline.
     if (!confirm(`Run blockchain snapshot for wallet ${walletAddress.substring(0, 20)}...?\n\nThis will query Blockfrost and update Mek ownership data.`)) return;
 
     setIsRunningSnapshot(true);
-    setStatusMessage({
-      type: 'success',
-      message: `Snapshot starting for ${walletAddress.substring(0, 20)}... Check console for debug logs.`
-    });
+    addSnapshotNotification('success',
+      `Snapshot starting for ${walletAddress.substring(0, 20)}... Check console for debug logs.`
+    );
 
     try {
-      // The triggerSnapshot action will process all wallets, but we can filter the logs by watching console
-      console.log(`[Admin] Triggering snapshot - watch for wallet: ${walletAddress}`);
-      const result = await triggerSnapshot({});
-      setStatusMessage({
-        type: 'success',
-        message: `Snapshot complete! Check console for detailed logs. Updated ${result.updatedCount} wallets total.`
-      });
-      setTimeout(() => setStatusMessage(null), 10000);
+      console.log(`[Admin] Triggering snapshot for single wallet: ${walletAddress}`);
+      const result = await triggerSnapshot({ walletAddress });
+      addSnapshotNotification('success',
+        `Snapshot complete! Updated ${result.updatedCount} wallet(s). Check console for detailed logs.`
+      );
     } catch (error) {
-      setStatusMessage({ type: 'error', message: 'Snapshot failed - check console' });
-      setTimeout(() => setStatusMessage(null), 5000);
+      addSnapshotNotification('error', 'Snapshot failed - check console');
     } finally {
       setIsRunningSnapshot(false);
     }
@@ -784,6 +788,28 @@ Check console for full timeline.
         </div>
       </div>
 
+      {/* Persistent Snapshot Notifications */}
+      {snapshotNotifications.map((notification) => (
+        <div
+          key={notification.id}
+          className={`p-4 rounded-lg border-2 flex items-start justify-between ${
+            notification.type === 'success'
+              ? 'bg-green-900/20 border-green-500 text-green-200'
+              : 'bg-red-900/20 border-red-500 text-red-200'
+          }`}
+        >
+          <div className="flex-1">{notification.message}</div>
+          <button
+            onClick={() => removeSnapshotNotification(notification.id)}
+            className="ml-4 text-xl font-bold hover:opacity-70 transition-opacity flex-shrink-0"
+            title="Dismiss notification"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+
+      {/* Standard Status Message (for non-snapshot actions) */}
       {statusMessage && (
         <div
           className={`p-4 rounded-lg border-2 ${

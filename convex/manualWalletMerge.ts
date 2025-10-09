@@ -1,6 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { calculateCurrentGold } from "./lib/goldCalculations";
+import { calculateCurrentGold, GOLD_CAP } from "./lib/goldCalculations";
 
 export const manualMergeWalletsBySuffix = mutation({
   args: {
@@ -45,7 +45,7 @@ export const manualMergeWalletsBySuffix = mutation({
     await ctx.db.patch(primary._id, {
       ownedMeks: mostMeks.ownedMeks || primary.ownedMeks,
       totalGoldPerHour: highestGoldRate,
-      accumulatedGold: Math.min(50000, totalAccumulatedGold),
+      accumulatedGold: Math.min(GOLD_CAP, totalAccumulatedGold),
       isBlockchainVerified: matchingRecords.some(r => r.isBlockchainVerified),
       lastSnapshotTime: now,
       updatedAt: now,
@@ -60,7 +60,7 @@ export const manualMergeWalletsBySuffix = mutation({
       message: `Merged ${duplicates.length} duplicate(s) into wallet ${primary.walletAddress}`,
       primaryWallet: primary.walletAddress,
       deletedWallets: duplicates.map(d => d.walletAddress),
-      totalGold: Math.min(50000, totalAccumulatedGold),
+      totalGold: Math.min(GOLD_CAP, totalAccumulatedGold),
       goldPerHour: highestGoldRate
     };
   }

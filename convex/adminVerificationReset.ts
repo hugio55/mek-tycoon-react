@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
+import { calculateGoldIncrease, validateGoldInvariant, GOLD_CAP } from "./lib/goldCalculations";
 
 // Admin function to reset verification status (for testing)
 export const resetVerificationStatus = mutation({
@@ -22,7 +22,7 @@ export const resetVerificationStatus = mutation({
         const lastUpdateTime = goldMiningRecord.lastSnapshotTime || goldMiningRecord.updatedAt || goldMiningRecord.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = goldMiningRecord.totalGoldPerHour * hoursSinceLastUpdate;
-        pausedGold = Math.min(50000, (goldMiningRecord.accumulatedGold || 0) + goldSinceLastUpdate);
+        pausedGold = Math.min(GOLD_CAP, (goldMiningRecord.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
       // Save the current gold and unverify
@@ -494,7 +494,7 @@ export const getAllWallets = query({
         goldEarnedSinceLastUpdate = goldSinceLastUpdate;
 
         // Apply cap to spendable gold only
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        currentGold = Math.min(GOLD_CAP, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
       }
 
       // Calculate real-time cumulative gold for display (base + ongoing earnings)

@@ -186,3 +186,37 @@ export const getLastVerification = query({
       .first();
   }
 });
+
+// Log Mek upgrade
+export const logMekUpgrade = mutation({
+  args: {
+    stakeAddress: v.string(),
+    assetId: v.string(),
+    assetName: v.string(),
+    oldLevel: v.number(),
+    newLevel: v.number(),
+    upgradeCost: v.number(),
+    newGoldPerHour: v.number(),
+    boostAmount: v.number(),
+    upgradedBy: v.string(),
+    mekOwner: v.string(),
+    timestamp: v.number()
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("auditLogs", {
+      type: "mekUpgrade",
+      stakeAddress: args.stakeAddress,
+      assetId: args.assetId,
+      assetName: args.assetName,
+      oldLevel: args.oldLevel,
+      newLevel: args.newLevel,
+      upgradeCost: args.upgradeCost,
+      newGoldPerHour: args.newGoldPerHour,
+      boostAmount: args.boostAmount,
+      upgradedBy: args.upgradedBy,
+      mekOwner: args.mekOwner,
+      timestamp: args.timestamp,
+      createdAt: Date.now()
+    });
+  }
+});

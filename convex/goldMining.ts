@@ -127,7 +127,7 @@ export const initializeGoldMining = mutation({
         baseGoldPerHour,
         boostGoldPerHour,
         totalGoldPerHour,
-        accumulatedGold: Math.min(50000, totalAccumulatedGold),
+        accumulatedGold: Math.min(GOLD_CAP, totalAccumulatedGold),
         lastSnapshotTime: now,
         lastActiveTime: now,
         updatedAt: now,
@@ -141,7 +141,7 @@ export const initializeGoldMining = mutation({
       devLog.log(`[GoldMining] Merged ${duplicates.length} duplicates, total gold: ${totalAccumulatedGold.toFixed(2)}`);
 
       return {
-        currentGold: Math.min(50000, totalAccumulatedGold),
+        currentGold: Math.min(GOLD_CAP, totalAccumulatedGold),
         totalGoldPerHour
       };
     }

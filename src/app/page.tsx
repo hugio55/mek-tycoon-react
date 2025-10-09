@@ -498,7 +498,7 @@ export default function MekRateLoggingPage() {
       const effectiveRate = Math.max(mek.goldPerHour, baseRate + boost);
       return sum + effectiveRate;
     }, 0);
-  }, [goldMiningData?.ownedMeks, mekLevels]);
+  }, [goldMiningData, mekLevels]); // Fixed: removed optional chaining from dependencies
 
   // Memoize cumulative gold calculation - USES CORPORATION STATS to aggregate ALL wallets
   const calculatedCumulativeGold = useMemo(() => {
@@ -730,15 +730,40 @@ export default function MekRateLoggingPage() {
           console.log('[Session Restore] No cached Meks found or mismatched wallet');
         }
 
-        // Validate session with Convex authentication
-        // Set wallet address temporarily to trigger checkAuth query
+        // CRITICAL: Validate session with backend BEFORE proceeding
+        // Check if the session is still valid on the backend
+        console.log('[Session Restore] Validating session with backend...');
+        let backendAuth = null;
+        try {
+          if (convex) {
+            backendAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
+              stakeAddress: session.stakeAddress
+            });
+            console.log('[Session Restore] Backend auth status:', backendAuth);
+          }
+        } catch (authError) {
+          console.error('[Session Restore] Error checking backend auth:', authError);
+        }
+
+        // If backend says session is expired/invalid, clear everything and stop
+        if (!backendAuth || !backendAuth.authenticated) {
+          console.warn('[Session Restore] Backend session invalid or expired - clearing local session');
+          clearWalletSession();
+          setIsAutoReconnecting(false);
+
+          // Show a toast to inform user
+          setToast({
+            message: 'Your session has expired. Please reconnect your wallet.',
+            type: 'info',
+          });
+
+          return; // STOP - don't proceed with connection
+        }
+
+        console.log('[Session Restore] ✓ Backend session valid, proceeding with reconnection');
+
+        // Now set wallet address after validation
         setWalletAddress(session.stakeAddress);
-
-        // Wait a moment for checkAuth to execute
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Note: checkAuth query will be checked in the next render cycle
-        // For now, we proceed with wallet reconnection optimistically
 
         // Check if wallet extension is still available
         // On hard refresh, wallet might not be loaded yet - wait up to 3 seconds
@@ -855,7 +880,7 @@ export default function MekRateLoggingPage() {
     } else if (checkAuth.authenticated === true) {
       console.log('[Auth Check] Session valid, expires at:', new Date(checkAuth.expiresAt || 0).toISOString());
     }
-  }, [checkAuth?.authenticated, checkAuth?.expiresAt, walletConnected, walletAddress, walletType, isAutoReconnecting]);
+  }, [checkAuth, walletConnected, walletAddress, walletType, isAutoReconnecting]); // Fixed: removed optional chaining from dependencies
 
   // Original useEffect continues below
   useEffect(() => {
@@ -920,7 +945,7 @@ export default function MekRateLoggingPage() {
         setVerificationStatus(null);
       }
     }
-  }, [goldMiningData?.isVerified, walletConnected]);
+  }, [goldMiningData, walletConnected]); // Fixed: removed optional chaining from dependencies
 
   // Update cached Meks in localStorage whenever they change
   useEffect(() => {
@@ -1043,7 +1068,7 @@ export default function MekRateLoggingPage() {
 
     // Cleanup: cancel pending sync if dependencies change again
     return () => clearTimeout(syncTimeout);
-  }, [groupMeks?.meks, goldMiningData?.ownedMeks, mekLevels]); // Include groupMeks, goldMiningData, and mekLevels in dependencies
+  }, [groupMeks, goldMiningData, mekLevels]); // Fixed: removed optional chaining from dependencies for stability
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1096,7 +1121,7 @@ export default function MekRateLoggingPage() {
     }, 50); // Update every 50ms for smooth counting
 
     return () => clearInterval(interval);
-  }, [cumulativeGold, goldPerHour, corporationStats]);
+  }, [cumulativeGold, goldPerHour]); // Removed corporationStats - only restart when gold values change
 
   // Show company name modal if wallet is connected but no company name is set
   useEffect(() => {
@@ -1785,6 +1810,11 @@ export default function MekRateLoggingPage() {
             } else {
               existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
                 stakeAddress
+              });
+              console.log('[Wallet Connect] Auth check result:', {
+                authenticated: existingAuth?.authenticated,
+                expiresAt: existingAuth?.expiresAt ? new Date(existingAuth.expiresAt).toISOString() : null,
+                hasSession: !!existingAuth
               });
             }
           } catch (authCheckError) {
@@ -2711,16 +2741,17 @@ export default function MekRateLoggingPage() {
     }
   };
 
-  // Memoize wallet group splitting to avoid recalculation on every render
-  const { nicknameWallets, noNicknameWallets } = useMemo(() => {
-    if (!walletGroup) {
-      return { nicknameWallets: [], noNicknameWallets: [] };
+  // Memoize filtered wallet lists to prevent infinite re-renders
+  // Only calculate when nickname modal is open to avoid unnecessary computations
+  const { walletsWithNicknames, walletsWithoutNicknames } = useMemo(() => {
+    if (!walletGroup || !nicknameManagementModalOpen) {
+      return { walletsWithNicknames: [], walletsWithoutNicknames: [] };
     }
     return {
-      nicknameWallets: walletGroup.filter(w => w.nickname),
-      noNicknameWallets: walletGroup.filter(w => !w.nickname)
+      walletsWithNicknames: walletGroup.filter(w => w.nickname),
+      walletsWithoutNicknames: walletGroup.filter(w => !w.nickname)
     };
-  }, [walletGroup]);
+  }, [walletGroup, nicknameManagementModalOpen]);
 
   // Handler for removing a wallet from the corporation
   const handleRemoveWallet = async (walletToRemove: string) => {
@@ -2899,9 +2930,12 @@ export default function MekRateLoggingPage() {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
+      if (checkpointIntervalRef.current) {
+        clearInterval(checkpointIntervalRef.current);
+        checkpointIntervalRef.current = null;
+      }
     };
-  }, [walletConnected, walletAddress, goldMiningData?.isVerified, corporationStats]); // Restart when corporation stats change
+  }, [walletConnected, walletAddress, goldMiningData]); // Fixed: removed optional chaining from dependencies
 
   // Save on page unload
   useEffect(() => {
@@ -5123,9 +5157,9 @@ export default function MekRateLoggingPage() {
             {walletGroup && (
               <>
                 {/* Wallets WITH nicknames */}
-                {nicknameWallets.length > 0 && (
+                {walletsWithNicknames.length > 0 && (
                     <div className="space-y-2 mb-4">
-                      {nicknameWallets.map((wallet) => (
+                      {walletsWithNicknames.map((wallet) => (
                         <div key={wallet.walletAddress} className="bg-gray-900/30 border border-gray-700 rounded p-3">
                           <div className="flex items-center gap-2">
                             {wallet.isPrimary && (
@@ -5191,15 +5225,15 @@ export default function MekRateLoggingPage() {
                   )}
 
                   {/* Divider */}
-                  {nicknameWallets.length > 0 && noNicknameWallets.length > 0 && (
+                  {walletsWithNicknames.length > 0 && walletsWithoutNicknames.length > 0 && (
                     <div className="border-t border-yellow-400/20 my-4"></div>
                   )}
 
                   {/* Wallets WITHOUT nicknames */}
-                  {noNicknameWallets.length > 0 && (
+                  {walletsWithoutNicknames.length > 0 && (
                     <div className="space-y-2 mb-4">
                       <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Wallets without nicknames:</p>
-                      {noNicknameWallets.map((wallet) => (
+                      {walletsWithoutNicknames.map((wallet) => (
                         <div key={wallet.walletAddress} className="bg-gray-900/30 border border-gray-700 rounded p-3">
                           <div className="flex items-center gap-2 mb-2">
                             {wallet.isPrimary && (
