@@ -32,7 +32,7 @@ export const linkDiscordToCorporation = mutation({
         .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
         .first();
 
-      const originalCompanyName = goldMining?.companyName || null;
+      const originalCompanyName = goldMining?.companyName || undefined;
 
       await ctx.db.insert("walletGroups", {
         groupId,

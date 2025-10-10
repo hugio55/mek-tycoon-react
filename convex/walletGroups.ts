@@ -67,7 +67,7 @@ export const createWalletGroup = mutation({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    const originalCompanyName = goldMining?.companyName || null;
+    const originalCompanyName = goldMining?.companyName || undefined;
 
     // Create the wallet group
     await ctx.db.insert("walletGroups", {
@@ -205,7 +205,7 @@ export const addWalletToGroupVerified = mutation({
         .withIndex("by_wallet", (q) => q.eq("walletAddress", args.existingWalletInGroup))
         .first();
 
-      const existingOriginalCompanyName = existingWalletGoldMining?.companyName || null;
+      const existingOriginalCompanyName = existingWalletGoldMining?.companyName || undefined;
 
       // Create the wallet group
       await ctx.db.insert("walletGroups", {
@@ -338,7 +338,7 @@ export const addWalletToGroupVerified = mutation({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.newWalletAddress))
       .first();
 
-    const originalCompanyName = newWalletGoldMining?.companyName || null;
+    const originalCompanyName = newWalletGoldMining?.companyName || undefined;
 
     // Add the new wallet to the same group
     await ctx.db.insert("walletGroupMemberships", {
