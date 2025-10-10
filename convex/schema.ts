@@ -1401,6 +1401,7 @@ export default defineSchema({
       imageUrl: v.optional(v.string()), // Thumbnail URL
       goldPerHour: v.number(), // Base gold generation rate (LEGACY - use baseGoldPerHour)
       rarityRank: v.optional(v.number()), // Rarity ranking
+      sourceKey: v.optional(v.string()), // Full source key for variation lookup (e.g., "HH1-DH1-JI2-B")
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),

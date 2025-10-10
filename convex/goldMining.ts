@@ -1421,6 +1421,7 @@ export const syncWalletFromBlockchain = action({
             assetName: blockchainMek.assetName, // Complete from blockchain
             policyId: MEK_POLICY_ID,
             imageUrl: imageUrl, // Complete image URL
+            sourceKey: mekMetadata?.sourceKey, // Full sourceKey for variation lookup
             headVariation: sourceKey?.split('-')[0],
             bodyVariation: sourceKey?.split('-')[1],
             itemVariation: sourceKey?.split('-')[2],
@@ -1440,6 +1441,7 @@ export const syncWalletFromBlockchain = action({
             assetName: blockchainMek.assetName, // Update from blockchain
             policyId: MEK_POLICY_ID,
             imageUrl: imageUrl || existingMek.imageUrl, // Update with proper image
+            sourceKey: mekMetadata?.sourceKey || existingMek.sourceKey, // Update or preserve sourceKey
             headVariation: sourceKey?.split('-')[0] || existingMek.headVariation,
             bodyVariation: sourceKey?.split('-')[1] || existingMek.bodyVariation,
             itemVariation: sourceKey?.split('-')[2] || existingMek.itemVariation,
@@ -1461,6 +1463,7 @@ export const syncWalletFromBlockchain = action({
               assetName: blockchainMek.assetName,
               policyId: MEK_POLICY_ID,
               imageUrl: imageUrl,
+              sourceKey: mekMetadata.sourceKey, // Full sourceKey for variation lookup
               headVariation: sourceKey?.split('-')[0],
               bodyVariation: sourceKey?.split('-')[1],
               itemVariation: sourceKey?.split('-')[2],
