@@ -533,3 +533,69 @@ function calculateChecksum(meks: any[]): string {
 
   return `v1_${hash.toString(16)}_n${meks.length}`;
 }
+
+/**
+ * Manual wallet re-scan - syncs all wallets in the group
+ */
+export const manualRescanWalletGroup = action({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    devLog.log(`[ManualRescan] Starting manual rescan for wallet group: ${args.walletAddress}`);
+
+    // Get all wallets in this group
+    const walletGroup = await ctx.runQuery(api.walletGroups.getMyGroupWallets, {
+      walletAddress: args.walletAddress,
+    });
+
+    if (!walletGroup || walletGroup.length === 0) {
+      throw new Error("No wallets found in group");
+    }
+
+    const results = [];
+
+    // Re-sync each wallet in the group
+    for (const wallet of walletGroup) {
+      devLog.log(`[ManualRescan] Syncing wallet: ${wallet.walletAddress}`);
+
+      try {
+        const syncResult = await ctx.runAction(api.nftSyncSaga.syncWalletNFTsWithSaga, {
+          stakeAddress: wallet.walletAddress,
+          walletType: 'Manual-Rescan',
+          forceResync: true,
+        });
+
+        results.push({
+          walletAddress: wallet.walletAddress,
+          success: syncResult.success,
+          mekCount: syncResult.mekCount,
+          error: syncResult.error,
+        });
+
+        devLog.log(`[ManualRescan] ✓ Synced ${wallet.walletAddress}: ${syncResult.mekCount} Meks`);
+      } catch (error: any) {
+        devLog.errorAlways(`[ManualRescan] Failed to sync ${wallet.walletAddress}: ${error.message}`);
+        results.push({
+          walletAddress: wallet.walletAddress,
+          success: false,
+          mekCount: 0,
+          error: error.message,
+        });
+      }
+    }
+
+    const totalSuccess = results.filter(r => r.success).length;
+    const totalMeks = results.reduce((sum, r) => sum + (r.mekCount || 0), 0);
+
+    devLog.log(`[ManualRescan] Completed: ${totalSuccess}/${walletGroup.length} wallets synced, ${totalMeks} total Meks`);
+
+    return {
+      success: totalSuccess > 0,
+      walletsScanned: walletGroup.length,
+      walletsSucceeded: totalSuccess,
+      totalMeks,
+      results,
+    };
+  },
+});

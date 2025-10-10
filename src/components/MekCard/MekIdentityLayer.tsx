@@ -52,7 +52,7 @@ export const MekIdentityLayer = ({ mek, levelColors }: MekIdentityLayerProps) =>
               </div>
             )}
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-center">
             <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-0.5">
               Level
             </div>
