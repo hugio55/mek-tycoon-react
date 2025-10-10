@@ -4511,6 +4511,14 @@ export default function MekRateLoggingPage() {
                           sourceKey = `${selectedMek.headGroup}-${selectedMek.bodyGroup}-${selectedMek.itemGroup}`;
                         }
 
+                        // If still no sourceKey, try to get it from Mek number
+                        if (!sourceKey && selectedMek.mekNumber) {
+                          const mekData = getMekDataByNumber(selectedMek.mekNumber);
+                          if (mekData && mekData.sourceKey) {
+                            sourceKey = mekData.sourceKey;
+                          }
+                        }
+
                         if (!sourceKey) return null;
 
                         const variations = getVariationInfoFromFullKey(sourceKey);
