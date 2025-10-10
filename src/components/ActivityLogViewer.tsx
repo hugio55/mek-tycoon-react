@@ -37,6 +37,18 @@ export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLo
   const formatLogEntry = (log: any) => {
     switch (log.type) {
       case 'mekUpgrade':
+        // Debug: Log the actual values
+        if (log.totalGoldPerHourBefore !== undefined || log.totalGoldPerHour !== undefined) {
+          console.log('[ACTIVITY LOG DEBUG]', {
+            before: log.totalGoldPerHourBefore,
+            after: log.totalGoldPerHour,
+            beforeType: typeof log.totalGoldPerHourBefore,
+            afterType: typeof log.totalGoldPerHour,
+            beforeUndefined: log.totalGoldPerHourBefore === undefined,
+            afterUndefined: log.totalGoldPerHour === undefined
+          });
+        }
+
         return {
           icon: '⬆️',
           title: `${log.assetName || 'Mek'} upgraded to Level ${log.newLevel}`,
