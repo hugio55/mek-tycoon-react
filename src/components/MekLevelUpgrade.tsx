@@ -204,7 +204,7 @@ export default function MekLevelUpgrade({
           <div className="bg-black/40 border border-yellow-500/30 p-2 rounded-sm">
             <div className="flex justify-between items-center">
               <span className="text-gray-400 text-xs font-mono uppercase">Upgrade Cost</span>
-              <div className={`font-bold ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+              <div className={`font-bold ${canAfford ? 'text-yellow-400' : 'text-gray-600'}`}>
                 {upgradeCost.toLocaleString()} Gold
               </div>
             </div>

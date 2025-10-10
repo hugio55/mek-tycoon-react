@@ -267,7 +267,7 @@ export const MekCard = React.memo(({
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[9px] @sm:text-[10px] text-green-400 uppercase tracking-wider">Upgrade Cost</div>
-                      <div className={`text-base @xs:text-lg @sm:text-xl font-bold ${canAfford ? 'text-yellow-400' : 'text-red-500'}`}>
+                      <div className={`text-base @xs:text-lg @sm:text-xl font-bold ${canAfford ? 'text-yellow-400' : 'text-gray-600'}`}>
                         {upgradeCost.toLocaleString()} gold
                       </div>
                       <div className="text-[10px] @xs:text-xs @sm:text-xs text-green-400 mt-1 transition-all duration-500">
