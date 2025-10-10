@@ -277,27 +277,78 @@ export const upgradeMekLevel = mutation({
     // 6. Calculate upgrade cost
     const upgradeCost = calculateUpgradeCost(mekLevel.currentLevel);
 
-    // 7. Calculate UPGRADER's current gold balance (with time-based accumulation)
-    const hoursSinceLastSnapshot = upgraderGoldMining.lastSnapshotTime
-      ? (now - upgraderGoldMining.lastSnapshotTime) / (1000 * 60 * 60)
-      : 0;
+    // 7. CRITICAL: Calculate CORPORATION's pooled gold (not just individual wallet)
+    // Get all wallets in the corporation
+    const upgraderMembership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
 
-    const goldSinceSnapshot = upgraderGoldMining.totalGoldPerHour * hoursSinceLastSnapshot;
+    let corporationWallets = [upgraderGoldMining]; // Default to just upgrader
+    let totalCorporationGold = 0;
 
-    // CRITICAL: Calculate UNCAPPED gold for spending (cap only applies to earning limits)
-    const uncappedCurrentGold = (upgraderGoldMining.accumulatedGold || 0) + goldSinceSnapshot;
+    if (upgraderMembership) {
+      // Get all members of this corporation
+      const allMemberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", upgraderMembership.groupId))
+        .collect();
 
-    // Display capped gold for UI/error messages (10M earning limit)
-    const currentGold = Math.min(GOLD_CAP, uncappedCurrentGold);
+      // Get gold mining data for all wallets
+      corporationWallets = [];
+      for (const membership of allMemberships) {
+        const walletData = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", membership.walletAddress))
+          .first();
 
-    // 8. Check if player has enough gold
-    if (uncappedCurrentGold < upgradeCost) {
+        if (walletData) {
+          const hoursSince = walletData.lastSnapshotTime
+            ? (now - walletData.lastSnapshotTime) / (1000 * 60 * 60)
+            : 0;
+          const goldSince = walletData.totalGoldPerHour * hoursSince;
+          const walletGold = (walletData.accumulatedGold || 0) + goldSince;
+
+          corporationWallets.push({
+            ...walletData,
+            currentGold: walletGold,
+          });
+          totalCorporationGold += walletGold;
+        }
+      }
+    } else {
+      // Solo wallet - calculate their gold
+      const hoursSince = upgraderGoldMining.lastSnapshotTime
+        ? (now - upgraderGoldMining.lastSnapshotTime) / (1000 * 60 * 60)
+        : 0;
+      const goldSince = upgraderGoldMining.totalGoldPerHour * hoursSince;
+      totalCorporationGold = (upgraderGoldMining.accumulatedGold || 0) + goldSince;
+      corporationWallets[0].currentGold = totalCorporationGold;
+    }
+
+    devLog.log('[UPGRADE] Corporation gold pool:', {
+      totalGold: totalCorporationGold,
+      walletCount: corporationWallets.length,
+      upgradeCost,
+      canAfford: totalCorporationGold >= upgradeCost
+    });
+
+    // 8. Check if CORPORATION has enough gold
+    if (totalCorporationGold < upgradeCost) {
       throw new Error(
-        `Insufficient gold. You have ${Math.floor(
-          uncappedCurrentGold
+        `Insufficient gold. Your corporation has ${Math.floor(
+          totalCorporationGold
         )} gold but need ${upgradeCost} gold`
       );
     }
+
+    // For backwards compatibility, keep these variables for the upgrader
+    const hoursSinceLastSnapshot = upgraderGoldMining.lastSnapshotTime
+      ? (now - upgraderGoldMining.lastSnapshotTime) / (1000 * 60 * 60)
+      : 0;
+    const goldSinceSnapshot = upgraderGoldMining.totalGoldPerHour * hoursSinceLastSnapshot;
+    const uncappedCurrentGold = (upgraderGoldMining.accumulatedGold || 0) + goldSinceSnapshot;
+    const currentGold = Math.min(GOLD_CAP, uncappedCurrentGold);
 
     // 9. Create upgrade transaction ID
     const upgradeId = `${args.walletAddress}-${args.assetId}-${now}`;
@@ -467,7 +518,9 @@ export const upgradeMekLevel = mutation({
       let baseGoldPerHour = goldMiningData.baseGoldPerHour || 0;
       let boostGoldPerHour = goldMiningData.boostGoldPerHour || 0;
       let totalGoldPerHour = goldMiningData.totalGoldPerHour || 0;
-      const totalGoldPerHourBefore = totalGoldPerHour; // Capture BEFORE value for audit log
+
+      // Capture MEK OWNER's rate BEFORE upgrade (for audit log)
+      const mekOwnerTotalGoldPerHourBefore = mekOwnerGoldMining.totalGoldPerHour || 0;
 
       // If upgrading own Mek, update the upgrader's rates
       if (isUpgradingOwnMek) {
@@ -497,35 +550,81 @@ export const upgradeMekLevel = mutation({
         totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
       }
 
-      // Update the UPGRADER's goldMining (deduct gold, update rates if own Mek)
-      await ctx.db.patch(goldMiningData._id, {
-        accumulatedGold: goldDecrease.newAccumulatedGold,  // CRITICAL: Actually deduct the gold spent!
-        totalCumulativeGold: newTotalCumulativeGold, // CRITICAL: Preserve cumulative total
-        lastSnapshotTime: now,  // Reset snapshot time since we're updating accumulated gold
-        ownedMeks: updatedMeks,
-        baseGoldPerHour,
-        boostGoldPerHour,
-        totalGoldPerHour,
-        // Only update spending if upgrading own MEK
-        ...(isUpgradingOwnMek ? {
-          totalGoldSpentOnUpgrades: goldDecrease.newTotalGoldSpentOnUpgrades,
-          totalUpgradesPurchased: (goldMiningData.totalUpgradesPurchased || 0) + 1,
-          lastUpgradeSpend: now,
-        } : {}),
-        updatedAt: now,
-        version: currentVersion + 1, // Increment version to detect concurrent modifications
+      // CRITICAL: Deduct gold from corporation pool (multi-wallet support)
+      // Sort wallets by gold amount (descending) - deduct from richest first
+      const sortedWallets = corporationWallets.sort((a, b) =>
+        (b.currentGold || 0) - (a.currentGold || 0)
+      );
+
+      let remainingCost = upgradeCost;
+      const walletsToUpdate: Array<{
+        wallet: any;
+        amountDeducted: number;
+        newAccumulated: number;
+        newTotalSpent: number;
+      }> = [];
+
+      // Deduct from each wallet until cost is covered
+      for (const wallet of sortedWallets) {
+        if (remainingCost <= 0) break;
+
+        const walletGold = wallet.currentGold || 0;
+        const deductAmount = Math.min(walletGold, remainingCost);
+
+        if (deductAmount > 0) {
+          // Calculate new values for this wallet
+          const walletSnapshot = {
+            ...wallet,
+            accumulatedGold: walletGold
+          };
+          const walletDecrease = calculateGoldDecrease(walletSnapshot, deductAmount);
+
+          // Track cumulative for this wallet
+          let walletCumulative = wallet.totalCumulativeGold || 0;
+          if (!walletCumulative || walletCumulative === 0) {
+            walletCumulative = walletGold + (wallet.totalGoldSpentOnUpgrades || 0);
+          }
+
+          walletsToUpdate.push({
+            wallet,
+            amountDeducted: deductAmount,
+            newAccumulated: walletDecrease.newAccumulatedGold,
+            newTotalSpent: walletDecrease.newTotalGoldSpentOnUpgrades,
+          });
+
+          remainingCost -= deductAmount;
+        }
+      }
+
+      devLog.log('[UPGRADE] Multi-wallet deduction:', {
+        upgradeCost,
+        walletsUsed: walletsToUpdate.length,
+        deductions: walletsToUpdate.map(w => ({
+          wallet: w.wallet.walletAddress.substring(0, 20),
+          deducted: w.amountDeducted,
+          remaining: w.newAccumulated
+        }))
       });
 
-      // If upgrading someone else's MEK, update the OWNER's rates and spending stats
-      if (!isUpgradingOwnMek) {
-        const mekOwnerData = await ctx.db
-          .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", mekOwnerWallet))
-          .first();
+      // Apply gold deductions to all affected wallets
+      // Track Mek owner's rate for audit log
+      let mekOwnerTotalGoldPerHourAfter = mekOwnerTotalGoldPerHourBefore; // Default to before value (no change)
 
-        if (mekOwnerData) {
-          // Update owner's Meks with new rates
-          const updatedOwnerMeks = mekOwnerData.ownedMeks.map((mek) => {
+      for (const update of walletsToUpdate) {
+        const walletData = update.wallet;
+        const isThisUpgrader = walletData.walletAddress === args.walletAddress;
+
+        // Determine which wallet owns the Mek being upgraded
+        const isThisMekOwner = walletData.walletAddress === mekOwnerWallet;
+
+        // Update rates if this wallet owns the Mek
+        let walletUpdatedMeks = walletData.ownedMeks;
+        let walletBaseRate = walletData.baseGoldPerHour || 0;
+        let walletBoostRate = walletData.boostGoldPerHour || 0;
+        let walletTotalRate = walletData.totalGoldPerHour || 0;
+
+        if (isThisMekOwner) {
+          walletUpdatedMeks = walletData.ownedMeks.map((mek: any) => {
             if (mek.assetId === args.assetId) {
               return {
                 ...mek,
@@ -539,59 +638,54 @@ export const upgradeMekLevel = mutation({
             return mek;
           });
 
-          // Recalculate owner's total rates
-          const ownerBaseGoldPerHour = updatedOwnerMeks.reduce(
-            (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+          walletBaseRate = walletUpdatedMeks.reduce(
+            (sum: number, mek: any) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
             0
           );
-          const ownerBoostGoldPerHour = updatedOwnerMeks.reduce(
-            (sum, mek) => sum + (mek.levelBoostAmount || 0),
+          walletBoostRate = walletUpdatedMeks.reduce(
+            (sum: number, mek: any) => sum + (mek.levelBoostAmount || 0),
             0
           );
-          const ownerTotalGoldPerHour = ownerBaseGoldPerHour + ownerBoostGoldPerHour;
+          walletTotalRate = walletBaseRate + walletBoostRate;
 
-          // Calculate MEK owner's new cumulative gold (they receive investment value)
-          let ownerCumulativeGold = mekOwnerData.totalCumulativeGold || 0;
-          if (!ownerCumulativeGold || ownerCumulativeGold === 0) {
-            // Initialize if not set
-            ownerCumulativeGold = (mekOwnerData.accumulatedGold || 0) + (mekOwnerData.totalGoldSpentOnUpgrades || 0);
-          }
-          // Investment in their MEK increases their total economic value
-          const newOwnerCumulativeGold = ownerCumulativeGold + upgradeCost;
-
-          devLog.log('[UPGRADE MUTATION] Updating MEK owner rates and spending:', {
-            owner: mekOwnerWallet,
-            oldTotalRate: mekOwnerData.totalGoldPerHour,
-            newTotalRate: ownerTotalGoldPerHour,
-            oldSpent: mekOwnerData.totalGoldSpentOnUpgrades || 0,
-            newSpent: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
-            oldCumulative: ownerCumulativeGold,
-            newCumulative: newOwnerCumulativeGold
-          });
-
-          await ctx.db.patch(mekOwnerData._id, {
-            ownedMeks: updatedOwnerMeks,
-            baseGoldPerHour: ownerBaseGoldPerHour,
-            boostGoldPerHour: ownerBoostGoldPerHour,
-            totalGoldPerHour: ownerTotalGoldPerHour,
-            totalGoldSpentOnUpgrades: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
-            totalCumulativeGold: newOwnerCumulativeGold,
-            totalUpgradesPurchased: (mekOwnerData.totalUpgradesPurchased || 0) + 1,
-            lastUpgradeSpend: now,
-            updatedAt: now,
-          });
+          // Capture the Mek owner's updated rate for audit log
+          mekOwnerTotalGoldPerHourAfter = walletTotalRate;
         }
+
+        // Update this wallet's database record
+        await ctx.db.patch(walletData._id, {
+          accumulatedGold: update.newAccumulated,
+          totalCumulativeGold: walletData.totalCumulativeGold || (update.newAccumulated + update.newTotalSpent),
+          lastSnapshotTime: now,
+          ownedMeks: walletUpdatedMeks,
+          baseGoldPerHour: walletBaseRate,
+          boostGoldPerHour: walletBoostRate,
+          totalGoldPerHour: walletTotalRate,
+          // Only track spending on the Mek owner's wallet
+          ...(isThisMekOwner ? {
+            totalGoldSpentOnUpgrades: update.newTotalSpent,
+            totalUpgradesPurchased: (walletData.totalUpgradesPurchased || 0) + 1,
+            lastUpgradeSpend: now,
+          } : {}),
+          updatedAt: now,
+          version: (walletData.version || 0) + 1,
+        });
       }
 
       // LOG: After database update
-      devLog.log('[UPGRADE MUTATION] After DB update - gold deducted:', {
-        remainingGold: goldDecrease.newAccumulatedGold,
-        totalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
-        cumulativeGold: newTotalCumulativeGold,
+      devLog.log('[UPGRADE MUTATION] After DB update - multi-wallet gold deducted:', {
+        totalCost: upgradeCost,
+        walletsCharged: walletsToUpdate.length,
         timestamp: new Date(now).toISOString()
       });
 
-      // Log upgrade to audit log with gold tracking
+      // Calculate total remaining corporation gold after deduction
+      const totalRemainingGold = walletsToUpdate.reduce(
+        (sum, w) => sum + w.newAccumulated,
+        0
+      );
+
+      // Log upgrade to audit log with gold tracking (corporation-level)
       await ctx.scheduler.runAfter(0, internal.auditLogs.logMekUpgrade, {
         stakeAddress: mekOwnerWallet,
         assetId: args.assetId,
@@ -603,12 +697,12 @@ export const upgradeMekLevel = mutation({
         boostAmount: newBoostAmount,
         upgradedBy: args.walletAddress,
         mekOwner: mekOwnerWallet,
-        goldBefore: uncappedCurrentGold,
-        goldAfter: goldDecrease.newAccumulatedGold,
+        goldBefore: totalCorporationGold, // Corporation total before
+        goldAfter: totalRemainingGold,    // Corporation total after
         cumulativeGoldBefore: goldMiningData.totalCumulativeGold || 0,
         cumulativeGoldAfter: newTotalCumulativeGold,
-        totalGoldPerHourBefore: totalGoldPerHourBefore,
-        totalGoldPerHour: totalGoldPerHour,
+        totalGoldPerHourBefore: mekOwnerTotalGoldPerHourBefore, // Mek owner's rate before
+        totalGoldPerHour: mekOwnerTotalGoldPerHourAfter,         // Mek owner's rate after
         timestamp: now
       });
 
@@ -630,14 +724,15 @@ export const upgradeMekLevel = mutation({
         success: true,
         newLevel: mekLevel.currentLevel + 1,
         goldSpent: upgradeCost,
-        remainingGold: goldDecrease.newAccumulatedGold,
+        remainingGold: totalRemainingGold, // Corporation total
+        walletsCharged: walletsToUpdate.length,
       });
 
       return {
         success: true,
         newLevel: mekLevel.currentLevel + 1,
         goldSpent: upgradeCost,
-        remainingGold: goldDecrease.newAccumulatedGold,
+        remainingGold: totalRemainingGold, // Return corporation total
       };
     } catch (error) {
       // Mark upgrade as failed
