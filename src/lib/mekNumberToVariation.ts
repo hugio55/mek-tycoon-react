@@ -1,7 +1,7 @@
 // Mapping of Mek numbers to their actual variations from the NFT collection
 // This data is from the official mekGoldRates.json which contains all 4000 Meks
 
-import mekGoldRatesData from '@/convex/mekGoldRates.json';
+import mekGoldRatesData from '../../convex/mekGoldRates.json';
 
 // Create the mapping structure
 interface MekData {

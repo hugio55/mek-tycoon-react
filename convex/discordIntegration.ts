@@ -46,6 +46,50 @@ export const convertPaymentToStakeAddress = action({
   },
 });
 
+// Convert stake address to payment addresses (returns all payment addresses for the stake)
+export const convertStakeToPaymentAddresses = action({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args): Promise<{paymentAddresses: string[], error: string | null}> => {
+    try {
+      if (!args.stakeAddress.startsWith('stake1')) {
+        return { paymentAddresses: [], error: 'Not a valid stake address' };
+      }
+
+      const apiKey = process.env.BLOCKFROST_API_KEY;
+
+      if (!apiKey || apiKey === 'your_blockfrost_mainnet_api_key_here') {
+        console.error('[Discord] Blockfrost API key not configured');
+        return { paymentAddresses: [], error: 'Blockfrost not configured' };
+      }
+
+      const response = await fetch(
+        `https://cardano-mainnet.blockfrost.io/api/v0/accounts/${args.stakeAddress}/addresses`,
+        {
+          headers: {
+            'project_id': apiKey
+          }
+        }
+      );
+
+      if (!response.ok) {
+        console.error('[Discord] Blockfrost error:', response.status);
+        return { paymentAddresses: [], error: `Blockfrost error: ${response.status}` };
+      }
+
+      const data = await response.json();
+      // data is an array of objects with 'address' field
+      const addresses = data.map((item: any) => item.address);
+      console.log('[Discord] Stake address', args.stakeAddress, 'has', addresses.length, 'payment addresses');
+      return { paymentAddresses: addresses, error: null };
+    } catch (error) {
+      console.error('[Discord] Error converting stake to payment:', error);
+      return { paymentAddresses: [], error: String(error) };
+    }
+  },
+});
+
 export const linkDiscordToWallet = mutation({
   args: {
     walletAddress: v.string(),

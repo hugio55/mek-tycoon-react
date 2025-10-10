@@ -1529,6 +1529,18 @@ export const syncWalletFromBlockchain = action({
 
         console.log(`[Auto-Sync] ✅ Successfully synced ${walletData.meks.length} MEKs, ${totalGoldPerHour.toFixed(2)} gold/hr`);
         console.log(`[Auto-Sync] Sample MEK:`, completeMekRecords[0]);
+
+        // CRITICAL FIX: Initialize mekLevel records for any MEKs that don't have them yet
+        // This ensures all MEKs can be upgraded, even for newly-synced wallets
+        await ctx.runMutation(api.mekLeveling.initializeMekLevels, {
+          walletAddress: args.walletAddress,
+          meks: walletData.meks.map((m: any) => ({
+            assetId: m.assetId,
+            mekNumber: m.mekNumber,
+          })),
+        });
+
+        console.log(`[Auto-Sync] ✅ Initialized mekLevel records for ${walletData.meks.length} MEKs`);
       }
 
       return {

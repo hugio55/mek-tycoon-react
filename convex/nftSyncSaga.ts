@@ -164,9 +164,13 @@ export const syncWalletNFTsWithSaga = action({
         status: "running",
       });
 
-      // BYPASS AUTHENTICATION for Multi-Wallet additions (already verified via signature)
-      if (args.walletType === 'Multi-Wallet') {
-        devLog.log(`[Saga] Skipping authentication check for Multi-Wallet (already verified)`);
+      // BYPASS AUTHENTICATION for Multi-Wallet additions and Manual Rescans
+      // - Multi-Wallet: Already verified via cryptographic signature during wallet addition
+      // - Manual-Rescan: User-initiated rescan of corporation wallets
+      const bypassAuth = args.walletType === 'Multi-Wallet' || args.walletType === 'Manual-Rescan';
+
+      if (bypassAuth) {
+        devLog.log(`[Saga] Skipping authentication check for ${args.walletType} (already verified or user-initiated)`);
       } else {
         const authCheck = await ctx.runQuery(api.walletAuthentication.checkAuthentication, {
           stakeAddress: args.stakeAddress,

@@ -1760,6 +1760,7 @@ export default defineSchema({
     cumulativeGoldBefore: v.optional(v.number()), // Cumulative gold before upgrade
     cumulativeGoldAfter: v.optional(v.number()), // Cumulative gold after upgrade
     totalGoldPerHour: v.optional(v.number()), // Gold per hour at time of upgrade
+    totalGoldPerHourBefore: v.optional(v.number()), // Gold per hour before upgrade
   })
     .index("by_type", ["type"])
     .index("by_stake_address", ["stakeAddress"])

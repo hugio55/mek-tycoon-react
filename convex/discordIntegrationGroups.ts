@@ -12,45 +12,97 @@ export const linkDiscordToCorporation = mutation({
     guildId: v.string(),
   },
   handler: async (ctx, args) => {
-    console.log('[LINK CORP] Linking Discord user to corporation via wallet:', args.walletAddress);
+    console.log('[LINK CORP] ========================================');
+    console.log('[LINK CORP] Starting link process');
+    console.log('[LINK CORP] Wallet:', args.walletAddress);
+    console.log('[LINK CORP] Discord User:', args.discordUsername);
 
-    // Find the wallet group for this wallet
-    let membership = await ctx.db
-      .query("walletGroupMemberships")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    let walletAddress = args.walletAddress;
+    let paymentAddressesToCheck: string[] = [walletAddress];
 
-    // If wallet doesn't have a group yet, create one
-    if (!membership) {
-      console.log('[LINK CORP] Wallet has no group, creating new group');
-      const groupId = `grp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const now = Date.now();
+    // If this is a stake address, convert it to payment addresses
+    if (walletAddress.startsWith('stake1')) {
+      console.log('[LINK CORP] Detected stake address, converting to payment addresses...');
 
-      // PRESERVE ORIGINAL NAME: Get the wallet's current company name before creating group
-      const goldMining = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      const conversion = await ctx.runAction(api.discordIntegration.convertStakeToPaymentAddresses, {
+        stakeAddress: walletAddress,
+      });
+
+      if (conversion.error || conversion.paymentAddresses.length === 0) {
+        console.log('[LINK CORP] ERROR: Could not convert stake address:', conversion.error);
+        return {
+          success: false,
+          message: `❌ Could not find payment addresses for this stake address. Error: ${conversion.error || 'No addresses found'}`,
+        };
+      }
+
+      console.log('[LINK CORP] Stake address has', conversion.paymentAddresses.length, 'payment addresses');
+      paymentAddressesToCheck = conversion.paymentAddresses;
+    }
+
+    // Try to find the wallet group for any of the payment addresses
+    let membership = null;
+    let foundWalletAddress = null;
+
+    for (const addr of paymentAddressesToCheck) {
+      const result = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", addr))
         .first();
 
-      const originalCompanyName = goldMining?.companyName || undefined;
+      if (result) {
+        membership = result;
+        foundWalletAddress = addr;
+        console.log('[LINK CORP] Found membership for payment address:', addr);
+        break;
+      }
+    }
 
-      await ctx.db.insert("walletGroups", {
-        groupId,
-        primaryWallet: args.walletAddress,
-        createdAt: now,
-      });
+    console.log('[LINK CORP] Membership lookup result:', membership ? `FOUND (groupId: ${membership.groupId})` : 'NOT FOUND');
 
-      await ctx.db.insert("walletGroupMemberships", {
-        groupId,
-        walletAddress: args.walletAddress,
-        addedAt: now,
-        originalCompanyName, // Store for restoration when wallet is removed
-      });
+    // If wallet doesn't have a group yet, check if it exists at all
+    if (!membership) {
+      console.log('[LINK CORP] Wallet has no group membership');
 
-      membership = { groupId, walletAddress: args.walletAddress };
+      // Check if any of the payment addresses exist in goldMining database
+      let goldMining = null;
+      for (const addr of paymentAddressesToCheck) {
+        const result = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", addr))
+          .first();
+
+        if (result) {
+          goldMining = result;
+          foundWalletAddress = addr;
+          console.log('[LINK CORP] Found goldMining for payment address:', addr);
+          break;
+        }
+      }
+
+      console.log('[LINK CORP] GoldMining lookup:', goldMining ? 'FOUND' : 'NOT FOUND');
+
+      if (!goldMining) {
+        console.log('[LINK CORP] ERROR: Wallet not in database');
+        return {
+          success: false,
+          message: "❌ Wallet not found in database. Please verify your wallet on the Mek Tycoon website first at https://mektycoon.com",
+        };
+      }
+
+      // Wallet exists but is not in a group
+      // This should not happen for multi-wallet corporations
+      console.log('[LINK CORP] ERROR: Wallet exists but not in any group');
+      console.log('[LINK CORP] This wallet may need to be added to a corporation on the website');
+
+      return {
+        success: false,
+        message: "⚠️ Your wallet is not part of a corporation group. If you have multiple wallets, please link them on the website first.",
+      };
     }
 
     const groupId = membership.groupId;
+    console.log('[LINK CORP] Using groupId:', groupId);
 
     // Check if this Discord user is already linked to ANY group
     const existingConnection = await ctx.db
@@ -60,21 +112,31 @@ export const linkDiscordToCorporation = mutation({
       .filter((q) => q.eq(q.field("active"), true))
       .first();
 
+    console.log('[LINK CORP] Existing connection:', existingConnection ? `FOUND (currently linked to group ${existingConnection.groupId})` : 'NOT FOUND');
+
     if (existingConnection) {
-      // Update existing connection to new group
+      console.log('[LINK CORP] Updating existing connection');
+      console.log('[LINK CORP] Old groupId:', existingConnection.groupId);
+      console.log('[LINK CORP] New groupId:', groupId);
+
+      // Update existing connection to this group
       await ctx.db.patch(existingConnection._id, {
         groupId,
         discordUsername: args.discordUsername,
         linkedAt: Date.now(),
       });
 
+      console.log('[LINK CORP] ✅ Successfully updated Discord connection');
+      console.log('[LINK CORP] ========================================');
+
       return {
         success: true,
-        message: "Updated Discord link to new corporation",
+        message: `✅ Updated Discord link to corporation (group: ${groupId})`,
       };
     }
 
     // Create new Discord connection
+    console.log('[LINK CORP] Creating new Discord connection');
     await ctx.db.insert("discordConnections", {
       groupId,
       discordUserId: args.discordUserId,
@@ -84,9 +146,12 @@ export const linkDiscordToCorporation = mutation({
       active: true,
     });
 
+    console.log('[LINK CORP] ✅ Successfully created Discord connection');
+    console.log('[LINK CORP] ========================================');
+
     return {
       success: true,
-      message: "Linked Discord to corporation",
+      message: `✅ Linked Discord to corporation (group: ${groupId})`,
     };
   },
 });

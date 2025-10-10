@@ -1008,3 +1008,66 @@ export const resetAllMekLevels = mutation({
     };
   },
 });
+
+// ADMIN: Initialize missing mekLevel records for all wallets
+// This fixes the issue where MEKs exist in goldMining but don't have mekLevel records
+export const initializeAllMissingMekLevels = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Get all goldMining records
+    const allMiners = await ctx.db.query("goldMining").collect();
+
+    let walletsProcessed = 0;
+    let meksInitialized = 0;
+    let meksSkipped = 0;
+
+    for (const miner of allMiners) {
+      walletsProcessed++;
+
+      for (const mek of miner.ownedMeks) {
+        // Check if this Mek already has a level record
+        const existing = await ctx.db
+          .query("mekLevels")
+          .withIndex("by_wallet_asset", (q) =>
+            q.eq("walletAddress", miner.walletAddress).eq("assetId", mek.assetId)
+          )
+          .first();
+
+        if (!existing) {
+          // Create new level record
+          const mekBaseRate = mek.baseGoldPerHour || mek.goldPerHour || 0;
+
+          await ctx.db.insert("mekLevels", {
+            walletAddress: miner.walletAddress,
+            assetId: mek.assetId,
+            mekNumber: undefined, // We don't have mekNumber in goldMining MEKs
+            currentLevel: 1,
+            totalGoldSpent: 0,
+            baseGoldPerHour: mekBaseRate,
+            currentBoostPercent: 0,
+            currentBoostAmount: 0,
+            levelAcquiredAt: now,
+            lastVerifiedAt: now,
+            ownershipStatus: "verified",
+            createdAt: now,
+            updatedAt: now,
+          });
+
+          meksInitialized++;
+        } else {
+          meksSkipped++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      walletsProcessed,
+      meksInitialized,
+      meksSkipped,
+      message: `Initialized ${meksInitialized} missing mekLevel records across ${walletsProcessed} wallets`,
+    };
+  },
+});
