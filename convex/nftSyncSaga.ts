@@ -164,12 +164,17 @@ export const syncWalletNFTsWithSaga = action({
         status: "running",
       });
 
-      const authCheck = await ctx.runQuery(api.walletAuthentication.checkAuthentication, {
-        stakeAddress: args.stakeAddress,
-      });
+      // BYPASS AUTHENTICATION for Multi-Wallet additions (already verified via signature)
+      if (args.walletType === 'Multi-Wallet') {
+        devLog.log(`[Saga] Skipping authentication check for Multi-Wallet (already verified)`);
+      } else {
+        const authCheck = await ctx.runQuery(api.walletAuthentication.checkAuthentication, {
+          stakeAddress: args.stakeAddress,
+        });
 
-      if (!authCheck.authenticated) {
-        throw new Error("Wallet not authenticated");
+        if (!authCheck.authenticated) {
+          throw new Error("Wallet not authenticated");
+        }
       }
 
       await ctx.runMutation(api.nftSyncSaga.updateSagaStep, {

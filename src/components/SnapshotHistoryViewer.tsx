@@ -11,6 +11,8 @@ function SnapshotHistoryViewer() {
   const [expandedSnapshot, setExpandedSnapshot] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'snapshots' | 'logs'>('snapshots');
   const [viewingFullData, setViewingFullData] = useState<string | null>(null);
+  const [selectedNuclearTime, setSelectedNuclearTime] = useState<number | null>(null);
+  const [isNuclearReverting, setIsNuclearReverting] = useState(false);
 
   const snapshots = useQuery(
     api.snapshotHistory.getSnapshotHistory,
@@ -20,6 +22,8 @@ function SnapshotHistoryViewer() {
   );
 
   const logs = useQuery(api.snapshotHistory.getSnapshotLogs, { limit: 20 });
+  const allSnapshotTimes = useQuery(api.goldMiningSnapshot.getAllSnapshotTimes);
+  const revertAllWallets = useMutation(api.goldMiningSnapshot.revertAllWalletsToSnapshot);
 
   // DEBUG: Log when query data changes
   useEffect(() => {
@@ -96,6 +100,39 @@ function SnapshotHistoryViewer() {
     setExpandedSnapshot(prev => prev === snapshotId ? null : snapshotId);
   }, []);
 
+  const handleNuclearRevert = useCallback(async () => {
+    if (!selectedNuclearTime) {
+      alert('Please select a snapshot time first');
+      return;
+    }
+
+    const selectedSnapshot = allSnapshotTimes?.find(s => s.timestamp === selectedNuclearTime);
+    if (!selectedSnapshot) {
+      alert('Selected snapshot not found');
+      return;
+    }
+
+    const confirmMsg = `☢️☢️☢️ NUCLEAR REVERT - FINAL WARNING ☢️☢️☢️\n\nYou are about to revert ALL ${selectedSnapshot.walletCount} WALLETS in the ENTIRE GAME to:\n\n${selectedSnapshot.date}\n\nThis will:\n• Restore ALL wallets to their exact state at that time\n• Replace current Mek ownership for EVERYONE\n• Restore gold balances for ALL players\n• Restore gold rates for EVERYONE\n• Cannot be undone\n\nThis affects EVERY PLAYER in the game!\n\nAre you ABSOLUTELY SURE?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    if (!confirm(`FINAL CONFIRMATION: Revert ALL ${selectedSnapshot.walletCount} wallets to ${selectedSnapshot.date}?\n\nType the wallet count (${selectedSnapshot.walletCount}) in your mind and click OK if you're certain.`)) return;
+
+    setIsNuclearReverting(true);
+    try {
+      const result = await revertAllWallets({ snapshotTime: selectedNuclearTime });
+
+      alert(`✅ NUCLEAR REVERT COMPLETE!\n\nReverted: ${result.revertedCount} wallets\nErrors: ${result.errorCount}\n\nSnapshot Time: ${result.snapshotDate}\n\n${result.errors && result.errors.length > 0 ? `\nFirst ${result.errors.length} errors:\n${result.errors.join('\n')}` : ''}`);
+
+      setSelectedNuclearTime(null);
+    } catch (error: any) {
+      console.error('Nuclear revert failed:', error);
+      alert(`❌ Nuclear revert failed:\n${error.message || error}`);
+    } finally {
+      setIsNuclearReverting(false);
+    }
+  }, [selectedNuclearTime, allSnapshotTimes, revertAllWallets]);
+
   if (!snapshots && viewMode === 'snapshots') {
     return (
       <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
@@ -145,6 +182,54 @@ function SnapshotHistoryViewer() {
           >
             Execution Logs ({logs?.length || 0})
           </button>
+        </div>
+      </div>
+
+      {/* ☢️ NUCLEAR REVERT SECTION */}
+      <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="text-4xl">☢️</div>
+          <div className="flex-1">
+            <h4 className="text-xl font-bold text-red-400 mb-2">NUCLEAR OPTION: Revert ALL Wallets</h4>
+            <p className="text-sm text-gray-300 mb-4">
+              Revert EVERY wallet in the entire game to a specific snapshot time. This affects all players simultaneously.
+            </p>
+
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <label className="block text-xs text-gray-400 mb-2 uppercase font-semibold">
+                  Select Snapshot Time (6-hour intervals)
+                </label>
+                <select
+                  value={selectedNuclearTime || ''}
+                  onChange={(e) => setSelectedNuclearTime(e.target.value ? Number(e.target.value) : null)}
+                  disabled={isNuclearReverting}
+                  className="w-full px-4 py-2 bg-gray-800 border border-red-500 rounded-lg text-white focus:outline-none focus:border-red-400 disabled:opacity-50"
+                >
+                  <option value="">-- Select a snapshot time --</option>
+                  {allSnapshotTimes?.map((snapshot) => (
+                    <option key={snapshot.timestamp} value={snapshot.timestamp}>
+                      {snapshot.date} ({snapshot.walletCount} wallets)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={handleNuclearRevert}
+                disabled={!selectedNuclearTime || isNuclearReverting}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-red-500"
+              >
+                {isNuclearReverting ? 'REVERTING...' : '☢️ REVERT ALL WALLETS'}
+              </button>
+            </div>
+
+            <div className="mt-4 text-xs text-red-300 space-y-1">
+              <p>⚠️ This will restore ALL wallets to their exact state at the selected time</p>
+              <p>⚠️ Affects Mek ownership, gold balances, and gold rates for EVERY player</p>
+              <p>⚠️ Cannot be undone - make sure you know what you're doing!</p>
+            </div>
+          </div>
         </div>
       </div>
 

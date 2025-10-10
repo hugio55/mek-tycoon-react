@@ -456,10 +456,10 @@ export const getAllWallets = query({
       walletToGroupMap.set(membership.walletAddress, membership.groupId);
     }
 
-    // Group by user fingerprint to deduplicate display
+    // Group by wallet address to deduplicate only actual database duplicates
     const userGroups = new Map<string, typeof allMiners>();
     allMiners.forEach(miner => {
-      const fingerprint = `${miner.ownedMeks.length}_${miner.totalGoldPerHour}`;
+      const fingerprint = miner.walletAddress; // Only dedupe same address, not same stats
       const existing = userGroups.get(fingerprint) || [];
       existing.push(miner);
       userGroups.set(fingerprint, existing);

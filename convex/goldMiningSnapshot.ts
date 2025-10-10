@@ -187,6 +187,7 @@ export const runNightlySnapshot = internalAction({
           // Update the miner's record with new rate (success - reset failure counter)
           await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
             walletAddress: miner.walletAddress,
+            snapshotTime: now, // ⏰ All wallets get same timestamp
             mekCount: walletData.meks.length,
             totalGoldPerHour: totalGoldPerHour,
             mekNumbers: mekNumbers,
@@ -204,6 +205,7 @@ export const runNightlySnapshot = internalAction({
             // Only if we successfully queried and found 0 MEKs
             await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
               walletAddress: miner.walletAddress,
+              snapshotTime: now, // ⏰ All wallets get same timestamp
               mekCount: 0,
               totalGoldPerHour: 0,
               mekNumbers: [],
@@ -268,6 +270,7 @@ export const getMekLevelsForWallet = internalQuery({
 export const updateMinerAfterSnapshot = internalMutation({
   args: {
     walletAddress: v.string(),
+    snapshotTime: v.number(), // ⏰ CRITICAL: Single timestamp for entire cron run
     mekCount: v.number(),
     totalGoldPerHour: v.number(),
     mekNumbers: v.array(v.number()),
@@ -298,7 +301,7 @@ export const updateMinerAfterSnapshot = internalMutation({
       return { success: false, error: "Wallet not found" };
     }
 
-    const now = Date.now();
+    const now = args.snapshotTime; // ⏰ Use passed timestamp, not Date.now()
 
     // VALIDATION: Don't store snapshots with suspicious 0s
     // If the wallet currently has ownedMeks but we're trying to snapshot 0, something is wrong
@@ -779,6 +782,7 @@ export const runManualSnapshot = internalAction({
           // Update the miner's record with new rate (success - reset failure counter)
           await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
             walletAddress: miner.walletAddress,
+            snapshotTime: now, // ⏰ All wallets get same timestamp
             mekCount: walletData.meks.length,
             totalGoldPerHour: totalGoldPerHour,
             mekNumbers: mekNumbers,
@@ -796,6 +800,7 @@ export const runManualSnapshot = internalAction({
             // Only if we successfully queried and found 0 MEKs
             await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
               walletAddress: miner.walletAddress,
+              snapshotTime: now, // ⏰ All wallets get same timestamp
               mekCount: 0,
               totalGoldPerHour: 0,
               mekNumbers: [],
@@ -944,6 +949,113 @@ export const calculateGoldFromHistory = query({
       snapshotCount: sortedSnapshots.length,
       method: "history_based",
       lastSnapshotTime: lastSnapshot.snapshotTime
+    };
+  },
+});
+
+// ☢️ NUCLEAR REVERT: Get all unique snapshot times for mass rollback
+export const getAllSnapshotTimes = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all snapshots and extract unique timestamps
+    const allSnapshots = await ctx.db
+      .query("mekOwnershipHistory")
+      .collect();
+
+    // Group by snapshotTime and count wallets per snapshot
+    const snapshotTimesMap = new Map<number, number>();
+
+    for (const snapshot of allSnapshots) {
+      const count = snapshotTimesMap.get(snapshot.snapshotTime) || 0;
+      snapshotTimesMap.set(snapshot.snapshotTime, count + 1);
+    }
+
+    // Convert to array and sort by time (newest first)
+    const uniqueSnapshots = Array.from(snapshotTimesMap.entries())
+      .map(([timestamp, walletCount]) => ({
+        timestamp,
+        date: new Date(timestamp).toISOString(),
+        walletCount,
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    return uniqueSnapshots;
+  },
+});
+
+// ☢️ NUCLEAR REVERT: Revert ALL wallets to a specific snapshot time
+export const revertAllWalletsToSnapshot = mutation({
+  args: {
+    snapshotTime: v.number(),
+  },
+  handler: async (ctx, args) => {
+    console.log(`☢️ NUCLEAR REVERT initiated for snapshot time: ${new Date(args.snapshotTime).toISOString()}`);
+
+    // Get all snapshots at this exact time
+    const snapshots = await ctx.db
+      .query("mekOwnershipHistory")
+      .filter((q) => q.eq(q.field("snapshotTime"), args.snapshotTime))
+      .collect();
+
+    if (snapshots.length === 0) {
+      return {
+        success: false,
+        error: "No snapshots found at this time",
+        revertedCount: 0,
+      };
+    }
+
+    console.log(`Found ${snapshots.length} wallet snapshots to revert`);
+
+    let revertedCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    for (const snapshot of snapshots) {
+      try {
+        // Find the wallet's goldMining record
+        const miner = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", snapshot.walletAddress))
+          .first();
+
+        if (!miner) {
+          console.warn(`Wallet not found: ${snapshot.walletAddress}`);
+          errors.push(`Wallet not found: ${snapshot.walletAddress}`);
+          errorCount++;
+          continue;
+        }
+
+        // Restore wallet state from snapshot
+        await ctx.db.patch(miner._id, {
+          ownedMeks: snapshot.meks || [],
+          totalGoldPerHour: snapshot.totalGoldPerHour,
+          accumulatedGold: snapshot.accumulatedGold || 0,
+          totalCumulativeGold: snapshot.totalCumulativeGold || 0,
+          totalGoldSpentOnUpgrades: snapshot.totalGoldSpentOnUpgrades || 0,
+          lastSnapshotTime: snapshot.snapshotTime,
+          snapshotMekCount: snapshot.totalMekCount,
+          updatedAt: Date.now(),
+        });
+
+        console.log(`✅ Reverted ${snapshot.walletAddress} to ${new Date(snapshot.snapshotTime).toISOString()}`);
+        revertedCount++;
+      } catch (error) {
+        console.error(`Error reverting wallet ${snapshot.walletAddress}:`, error);
+        errors.push(`${snapshot.walletAddress}: ${error}`);
+        errorCount++;
+      }
+    }
+
+    console.log(`☢️ NUCLEAR REVERT complete: ${revertedCount} wallets reverted, ${errorCount} errors`);
+
+    return {
+      success: true,
+      revertedCount,
+      errorCount,
+      errors: errors.slice(0, 10), // Only return first 10 errors
+      snapshotTime: args.snapshotTime,
+      snapshotDate: new Date(args.snapshotTime).toISOString(),
     };
   },
 });
