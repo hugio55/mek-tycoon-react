@@ -4503,100 +4503,54 @@ export default function MekRateLoggingPage() {
                   <table className="w-4/5 mx-auto">
                     <tbody>
                       {(() => {
-                        // Try sourceKey first (for other players' Meks)
-                        if (selectedMek.sourceKey) {
-                          const variations = getVariationInfoFromFullKey(selectedMek.sourceKey);
-                          return (
-                            <>
-                              <tr className="border-b border-gray-800">
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  HEAD
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
-                                  {variations.head.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
-                                  {variations.head.count > 0 ? `×${variations.head.count}` : ''}
-                                </td>
-                              </tr>
-                              <tr className="border-b border-gray-800">
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  BODY
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
-                                  {variations.body.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
-                                  {variations.body.count > 0 ? `×${variations.body.count}` : ''}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                  TRAIT
-                                </td>
-                                <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
-                                  {variations.trait.name}
-                                </td>
-                                <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
-                                  {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
-                                </td>
-                              </tr>
-                            </>
-                          );
+                        // Get sourceKey from the Mek (either direct or construct from parts)
+                        let sourceKey = selectedMek.sourceKey;
+
+                        // If no sourceKey, construct it from headGroup-bodyGroup-itemGroup
+                        if (!sourceKey && selectedMek.headGroup && selectedMek.bodyGroup && selectedMek.itemGroup) {
+                          sourceKey = `${selectedMek.headGroup}-${selectedMek.bodyGroup}-${selectedMek.itemGroup}`;
                         }
 
-                        // Fallback: Use direct variation fields (for your own Meks)
-                        if (selectedMek.headVariation || selectedMek.bodyVariation || selectedMek.itemVariation) {
-                          const headInfo = selectedMek.headVariation ? getVariationInfo(selectedMek.headVariation, 'head') : null;
-                          const bodyInfo = selectedMek.bodyVariation ? getVariationInfo(selectedMek.bodyVariation, 'body') : null;
-                          const traitInfo = selectedMek.itemVariation ? getVariationInfo(selectedMek.itemVariation, 'trait') : null;
+                        if (!sourceKey) return null;
 
-                          return (
-                            <>
-                              {headInfo && (
-                                <tr className="border-b border-gray-800">
-                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                    HEAD
-                                  </td>
-                                  <td className="py-3 text-right font-bold text-sm" style={{ color: headInfo.color }}>
-                                    {headInfo.name}
-                                  </td>
-                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: headInfo.color }}>
-                                    {headInfo.count > 0 ? `×${headInfo.count}` : ''}
-                                  </td>
-                                </tr>
-                              )}
-                              {bodyInfo && (
-                                <tr className="border-b border-gray-800">
-                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                    BODY
-                                  </td>
-                                  <td className="py-3 text-right font-bold text-sm" style={{ color: bodyInfo.color }}>
-                                    {bodyInfo.name}
-                                  </td>
-                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: bodyInfo.color }}>
-                                    {bodyInfo.count > 0 ? `×${bodyInfo.count}` : ''}
-                                  </td>
-                                </tr>
-                              )}
-                              {traitInfo && (
-                                <tr>
-                                  <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
-                                    TRAIT
-                                  </td>
-                                  <td className="py-3 text-right font-bold text-sm" style={{ color: traitInfo.color }}>
-                                    {traitInfo.name}
-                                  </td>
-                                  <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: traitInfo.color }}>
-                                    {traitInfo.count > 0 ? `×${traitInfo.count}` : ''}
-                                  </td>
-                                </tr>
-                              )}
-                            </>
-                          );
-                        }
-
-                        return null;
+                        const variations = getVariationInfoFromFullKey(sourceKey);
+                        return (
+                          <>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                HEAD
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.head.color }}>
+                                {variations.head.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal w-16" style={{ color: variations.head.color }}>
+                                {variations.head.count > 0 ? `×${variations.head.count}` : ''}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-800">
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                BODY
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.body.color }}>
+                                {variations.body.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.body.color }}>
+                                {variations.body.count > 0 ? `×${variations.body.count}` : ''}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 pr-4 text-gray-500 font-mono uppercase text-xs tracking-wider">
+                                TRAIT
+                              </td>
+                              <td className="py-3 text-right font-bold text-sm" style={{ color: variations.trait.color }}>
+                                {variations.trait.name}
+                              </td>
+                              <td className="py-3 pl-3 text-right font-mono text-lg font-normal" style={{ color: variations.trait.color }}>
+                                {variations.trait.count > 0 ? `×${variations.trait.count}` : ''}
+                              </td>
+                            </tr>
+                          </>
+                        );
                       })()}
                     </tbody>
                   </table>
