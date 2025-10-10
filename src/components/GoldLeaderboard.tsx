@@ -376,17 +376,17 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
                 All Corporations
               </h2>
               <p className="text-gray-400 font-mono text-base sm:text-lg">
-                {allCorporations.length} Total
+                {allCorporations.filter(c => c.hourlyRate > 0).length} Total
               </p>
             </div>
 
             {/* Corporations List */}
             <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
-              {allCorporations.length === 0 ? (
+              {allCorporations.filter(c => c.hourlyRate > 0).length === 0 ? (
                 <p className="text-center text-gray-400 py-12">No corporations found</p>
               ) : (
                 <div className="space-y-2">
-                  {allCorporations.map((corp) => {
+                  {allCorporations.filter(c => c.hourlyRate > 0).map((corp) => {
                     const rankColor = corp.rank === 1 ? '#FFD700' : corp.rank === 2 ? '#C0C0C0' : corp.rank === 3 ? '#CD7F32' : '#6B7280';
                     const rankGlow = corp.rank === 1 ? '0 0 20px rgba(255, 215, 0, 0.8)' :
                                       corp.rank === 2 ? '0 0 15px rgba(192, 192, 192, 0.6)' :

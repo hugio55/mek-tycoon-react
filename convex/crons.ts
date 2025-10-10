@@ -22,11 +22,11 @@ crons.interval(
   api.goldBackups.triggerManualDailyBackup
 );
 
-// Update pre-computed leaderboard rankings every 5 minutes
+// Update pre-computed leaderboard rankings every 15 minutes
 crons.interval(
   "update leaderboard rankings",
   {
-    minutes: 5
+    minutes: 15
   },
   internal.leaderboardUpdater.updateGoldLeaderboard
 );

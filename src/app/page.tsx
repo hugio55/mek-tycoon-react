@@ -27,6 +27,8 @@ import { VirtualMekGrid } from "@/components/VirtualMekGrid";
 import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/AnimatedNumber";
 import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
+import { WalletInfo, useAvailableWallets } from "@/hooks/useAvailableWallets";
+import WalletSelector from "@/components/WalletSelector";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
@@ -142,13 +144,6 @@ declare global {
   interface Window {
     cardano?: any;
   }
-}
-
-interface WalletInfo {
-  name: string;
-  icon: string;
-  version: string;
-  api: any;
 }
 
 interface MekAsset {
@@ -287,7 +282,7 @@ export default function MekRateLoggingPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [paymentAddress, setPaymentAddress] = useState<string | null>(null);
   const [walletType, setWalletType] = useState<string | null>(null);
-  const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
+  const { availableWallets, refreshWallets, detectWallets } = useAvailableWallets();
   const [walletError, setWalletError] = useState<string | null>(null);
   const [walletInstructions, setWalletInstructions] = useState<string | null>(null); // Separate state for instructions modal
   const [urlCopied, setUrlCopied] = useState(false); // Track clipboard copy status
@@ -322,7 +317,10 @@ export default function MekRateLoggingPage() {
   const [addWalletModalOpen, setAddWalletModalOpen] = useState(false);
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletNickname, setNewWalletNickname] = useState('');
-  const [addWalletStep, setAddWalletStep] = useState<'input' | 'name-merger' | 'verify' | 'signing'>('input');
+  const [addWalletStep, setAddWalletStep] = useState<'choose-method' | 'select-wallet' | 'input' | 'name-merger' | 'verify' | 'signing'>('choose-method');
+  const [addWalletMethod, setAddWalletMethod] = useState<'wallet' | 'manual' | null>(null);
+  const [selectedSecondaryWallet, setSelectedSecondaryWallet] = useState<WalletInfo | null>(null);
+  const [isConnectingSecondary, setIsConnectingSecondary] = useState(false);
 
   // Edit wallet nickname states
   const [editingWalletAddress, setEditingWalletAddress] = useState<string | null>(null);
@@ -730,37 +728,30 @@ export default function MekRateLoggingPage() {
           console.log('[Session Restore] No cached Meks found or mismatched wallet');
         }
 
-        // CRITICAL: Validate session with backend BEFORE proceeding
-        // Check if the session is still valid on the backend
-        console.log('[Session Restore] Validating session with backend...');
-        let backendAuth = null;
+        // CRITICAL: Restore/refresh backend session from localStorage
+        // This is the FIX for the 24-hour session persistence issue
+        // Instead of just checking if backend session is valid, we RESTORE it
+        console.log('[Session Restore] Restoring/refreshing backend session...');
         try {
           if (convex) {
-            backendAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
-              stakeAddress: session.stakeAddress
+            const restoreResult = await convex.mutation(api.sessionManagement.restoreOrCreateSession, {
+              sessionId: session.sessionId,
+              stakeAddress: session.stakeAddress,
+              walletName: session.walletName,
+              deviceId: session.deviceId,
+              platform: session.platform,
             });
-            console.log('[Session Restore] Backend auth status:', backendAuth);
+
+            console.log('[Session Restore] ✓ Backend session restored/refreshed:', {
+              restored: restoreResult.restored,
+              created: restoreResult.created,
+              expiresAt: new Date(restoreResult.expiresAt).toISOString(),
+            });
           }
-        } catch (authError) {
-          console.error('[Session Restore] Error checking backend auth:', authError);
+        } catch (restoreError) {
+          console.error('[Session Restore] Failed to restore backend session:', restoreError);
+          // Even if restore fails, we'll continue and let the auth check below handle it
         }
-
-        // If backend says session is expired/invalid, clear everything and stop
-        if (!backendAuth || !backendAuth.authenticated) {
-          console.warn('[Session Restore] Backend session invalid or expired - clearing local session');
-          clearWalletSession();
-          setIsAutoReconnecting(false);
-
-          // Show a toast to inform user
-          setToast({
-            message: 'Your session has expired. Please reconnect your wallet.',
-            type: 'info',
-          });
-
-          return; // STOP - don't proceed with connection
-        }
-
-        console.log('[Session Restore] ✓ Backend session valid, proceeding with reconnection');
 
         // Now set wallet address after validation
         setWalletAddress(session.stakeAddress);
@@ -795,7 +786,7 @@ export default function MekRateLoggingPage() {
         console.log('[Session Restore] Reconnecting wallet silently...');
 
         // Enable wallet silently
-        const api = await window.cardano[walletKey].enable();
+        const walletApi = await window.cardano[walletKey].enable();
 
         setWalletConnected(true);
         // Use paymentAddress if available, otherwise fallback to stake address
@@ -1207,14 +1198,14 @@ export default function MekRateLoggingPage() {
     }
 
     // Check for available wallets immediately
-    detectAvailableWallets();
+    refreshWallets();
 
     // Re-check after delays to catch slow-loading wallet extensions
     // Eternl often loads slower than other wallets
     const walletDetectionRetries = [
-      setTimeout(() => detectAvailableWallets(), 500),   // 0.5s
-      setTimeout(() => detectAvailableWallets(), 1000),  // 1s
-      setTimeout(() => detectAvailableWallets(), 2000),  // 2s
+      setTimeout(() => refreshWallets(), 500),   // 0.5s
+      setTimeout(() => refreshWallets(), 1000),  // 1s
+      setTimeout(() => refreshWallets(), 2000),  // 2s
     ];
 
     // Failsafe: Always turn off auto-reconnecting after max 5 seconds
@@ -1375,69 +1366,6 @@ export default function MekRateLoggingPage() {
       }
     };
   }, [walletConnected, walletAddress, isAddingWallet]); // Added isAddingWallet to ensure handleAccountChange has latest flag value
-
-  // Detect available Cardano wallets
-  const detectAvailableWallets = () => {
-    const wallets: WalletInfo[] = [];
-
-    // Check if on mobile
-    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-      navigator.userAgent.toLowerCase()
-    );
-
-    if (isMobile) {
-      // On mobile, show all major wallets as they use deep links
-      const mobileWallets = [
-        { name: 'Eternl', icon: '/wallet-icons/eternl.png' },
-        { name: 'Flint', icon: '/wallet-icons/flint.png' },
-        { name: 'Yoroi', icon: '/wallet-icons/yoroi.png' },
-        { name: 'Vespr', icon: '/wallet-icons/vespr.png' },
-        { name: 'Typhon', icon: '/wallet-icons/typhon.png' },
-        { name: 'NuFi', icon: '/wallet-icons/nufi.png' },
-        { name: 'Lace', icon: '/wallet-icons/lace.png' },
-      ];
-
-      mobileWallets.forEach(wallet => {
-        wallets.push({
-          name: wallet.name,
-          icon: wallet.icon,
-          version: 'mobile',
-          api: null // Mobile wallets use deep links, not direct API
-        });
-      });
-
-      console.log('[WALLET DETECTION] Mobile device detected, showing all wallet options');
-    } else if (typeof window !== 'undefined' && window.cardano) {
-      // Desktop: Check for browser extensions
-      const walletNames = ['lace', 'nami', 'eternl', 'flint', 'yoroi', 'typhon', 'gerowallet', 'nufi', 'vespr'];
-
-      walletNames.forEach(name => {
-        if (window.cardano[name]) {
-          wallets.push({
-            name: name.charAt(0).toUpperCase() + name.slice(1),
-            icon: `/wallet-icons/${name}.png`,
-            version: window.cardano[name].apiVersion || '0.1.0',
-            api: window.cardano[name]
-          });
-        }
-      });
-    }
-
-    console.log('[WALLET DETECTION]', {
-      timestamp: new Date().toISOString(),
-      walletsFound: wallets.length,
-      walletNames: wallets.map(w => w.name),
-      platform: isMobile ? 'mobile' : 'desktop',
-      cardanoObject: typeof window !== 'undefined' && window.cardano ? Object.keys(window.cardano) : []
-    });
-
-    // Only update if the wallet list actually changed to prevent unnecessary re-renders
-    setAvailableWallets(prevWallets => {
-      const hasChanged = prevWallets.length !== wallets.length ||
-                        prevWallets.some((w, i) => w.name !== wallets[i]?.name);
-      return hasChanged ? wallets : prevWallets;
-    });
-  };
 
   // Cancel connection attempt
   const cancelConnection = () => {
@@ -2482,6 +2410,64 @@ export default function MekRateLoggingPage() {
     console.log('[Wallet Disconnect] === DISCONNECT COMPLETE ===');
   };
 
+  // Handler for secondary wallet connection via wallet selector
+  const handleSecondaryWalletConnect = async (wallet: WalletInfo) => {
+    setIsConnectingSecondary(true);
+
+    try {
+      console.log('[Secondary Wallet] Connecting to:', wallet.name);
+
+      // Enable wallet API
+      const walletApi = await wallet.api.enable();
+
+      // Extract stake address
+      const stakeAddresses = await walletApi.getRewardAddresses();
+
+      if (!stakeAddresses || stakeAddresses.length === 0) {
+        throw new Error('No stake addresses found in wallet');
+      }
+
+      const stakeAddressRaw = stakeAddresses[0];
+      const stakeAddress = ensureBech32StakeAddress(stakeAddressRaw);
+
+      console.log('[Secondary Wallet] Extracted stake address:', stakeAddress.substring(0, 20) + '...');
+
+      // Validate it's different from primary wallet
+      if (stakeAddress === walletAddress) {
+        throw new Error('This is your primary wallet. Please select a different wallet.');
+      }
+
+      // Check if already in corporation
+      if (walletGroup && walletGroup.length > 0) {
+        const alreadyInGroup = walletGroup.some(w => w.walletAddress === stakeAddress);
+        if (alreadyInGroup) {
+          throw new Error('This wallet is already in your corporation.');
+        }
+      }
+
+      // Auto-populate address field and store selected wallet
+      setNewWalletAddress(stakeAddress);
+      setSelectedSecondaryWallet(wallet);
+
+      // Proceed to verification step
+      setAddWalletStep('input');
+
+      console.log('[Secondary Wallet] Connection successful, proceeding to verification');
+
+    } catch (error: any) {
+      console.error('[Secondary Wallet] Connection failed:', error);
+      setToast({
+        message: error.message || 'Failed to connect wallet',
+        type: 'error'
+      });
+
+      // Go back to wallet selection
+      setAddWalletStep('select-wallet');
+    } finally {
+      setIsConnectingSecondary(false);
+    }
+  };
+
   // STEP 1: Check for corporation name conflict before proceeding
   const handleRequestWalletVerification = async () => {
     if (!walletAddress || !newWalletAddress.trim()) {
@@ -2491,7 +2477,17 @@ export default function MekRateLoggingPage() {
 
     // Validate wallet address format
     if (!newWalletAddress.startsWith('stake1') && !newWalletAddress.startsWith('stake_test1')) {
-      alert('Please enter a valid Cardano stake address (starts with stake1 or stake_test1)');
+      alert(`❌ Invalid address format. Please enter a stake address (starts with "stake1...")
+
+📖 How to find your stake address:
+
+• Eternl: Account → Summary tab → Stake Key (below Rewards History)
+• Lace: Staking → Your pools → Stake keys (at bottom)
+• Yoroi: Receive → Base → Reward section (desktop only)
+• Nami: Copy payment address → Search on cardanoscan.io → View stake key
+• Other wallets: Check staking or rewards section
+
+💡 Easier method: Use the "Select Wallet" button above - it finds your stake address automatically!`);
       return;
     }
 
@@ -2579,63 +2575,70 @@ export default function MekRateLoggingPage() {
       setAddWalletStep('signing');
       console.log('[AddWallet] Requesting signature from new wallet...');
 
-      // Request wallet connection and signature from the NEW wallet
-      // The user needs to switch to or connect the wallet they want to add
-      const cardano = (window as any).cardano;
-      if (!cardano) {
-        throw new Error('No Cardano wallet detected. Please install a wallet extension.');
-      }
-
-      // Show available wallets
-      const wallets = [];
-      if (cardano.nami) wallets.push('nami');
-      if (cardano.eternl) wallets.push('eternl');
-      if (cardano.flint) wallets.push('flint');
-
-      if (wallets.length === 0) {
-        throw new Error('No supported wallet found. Please install Nami, Eternl, or Flint.');
-      }
-
-      // SIMPLIFIED APPROACH: Use whatever wallet the user has active
-      // The backend signature verification will ensure it matches the claimed address
       let walletApi;
       let connectedWalletName = null;
 
-      // Try to connect to any available wallet
-      for (const walletName of wallets) {
-        try {
-          console.log(`[AddWallet] Attempting to connect to ${walletName}...`);
-          walletApi = await cardano[walletName].enable();
+      // If we have a selected secondary wallet (from wallet selector), use it directly
+      if (selectedSecondaryWallet) {
+        console.log('[AddWallet] Using pre-selected wallet:', selectedSecondaryWallet.name);
+        walletApi = await selectedSecondaryWallet.api.enable();
+        connectedWalletName = selectedSecondaryWallet.name;
+        console.log('[AddWallet] ✓ Connected to pre-selected wallet:', connectedWalletName);
+      } else {
+        // Fallback: Manual entry mode - detect and connect to any available wallet
+        console.log('[AddWallet] Manual entry mode - detecting available wallets...');
 
-          if (walletApi) {
-            connectedWalletName = walletName;
-            console.log(`[AddWallet] ✓ Connected to ${walletName}`);
-
-            // Get the stake address from this wallet to show user
-            const rewardAddressesHex = await walletApi.getRewardAddresses();
-            console.log(`[AddWallet] Wallet reward addresses (hex):`, rewardAddressesHex);
-
-            // Note: We don't verify the address matches here because:
-            // 1. getRewardAddresses() returns hex format, not bech32
-            // 2. Backend signature verification will catch any mismatch
-            // 3. This is more user-friendly (no confusing hex/bech32 conversion errors)
-
-            break;
-          }
-        } catch (err) {
-          console.warn(`[AddWallet] Could not connect to ${walletName}:`, err);
+        const cardano = (window as any).cardano;
+        if (!cardano) {
+          throw new Error('No Cardano wallet detected. Please install a wallet extension.');
         }
+
+        // Show available wallets
+        const wallets = [];
+        if (cardano.nami) wallets.push('nami');
+        if (cardano.eternl) wallets.push('eternl');
+        if (cardano.flint) wallets.push('flint');
+        if (cardano.lace) wallets.push('lace');
+        if (cardano.yoroi) wallets.push('yoroi');
+
+        if (wallets.length === 0) {
+          throw new Error('No supported wallet found. Please install a Cardano wallet extension.');
+        }
+
+        // Try to connect to any available wallet
+        for (const walletName of wallets) {
+          try {
+            console.log(`[AddWallet] Attempting to connect to ${walletName}...`);
+            walletApi = await cardano[walletName].enable();
+
+            if (walletApi) {
+              connectedWalletName = walletName;
+              console.log(`[AddWallet] ✓ Connected to ${walletName}`);
+              break;
+            }
+          } catch (err) {
+            console.warn(`[AddWallet] Could not connect to ${walletName}:`, err);
+          }
+        }
+
+        if (!walletApi) {
+          throw new Error(`Could not connect to any wallet. Please make sure:\n1. You have a Cardano wallet installed\n2. You've switched to the wallet containing address: ${newWalletAddress.substring(0, 20)}...`);
+        }
+
+        console.log(`[AddWallet] Using ${connectedWalletName} for signature.`);
       }
 
-      if (!walletApi) {
-        throw new Error(`Could not connect to any wallet. Please make sure:\n1. You have a Cardano wallet installed (Nami, Eternl, or Flint)\n2. You've switched to the wallet containing address: ${newWalletAddress.substring(0, 20)}...`);
+      // Request signature - MUST use payment address, not stake address
+      // CIP-30 signData requires a payment address from getUsedAddresses()
+      const paymentAddresses = await walletApi.getUsedAddresses();
+      if (!paymentAddresses || paymentAddresses.length === 0) {
+        throw new Error('No payment addresses found in wallet');
       }
+      const paymentAddress = paymentAddresses[0];
 
-      console.log(`[AddWallet] Using ${connectedWalletName} for signature. If this is the wrong wallet, the signature will fail and you can try again.`);
-
-      // Request signature
+      console.log('[AddWallet] Using payment address for signing:', paymentAddress.substring(0, 20) + '...');
       const messageHex = Buffer.from(addWalletMessage).toString('hex');
-      const signature = await walletApi.signData(newWalletAddress.trim(), messageHex);
+      const signature = await walletApi.signData(paymentAddress, messageHex);
 
       console.log('[AddWallet] Signature received, verifying...');
 
@@ -2709,7 +2712,10 @@ export default function MekRateLoggingPage() {
     setNewWalletNickname('');
     setAddWalletNonce(null);
     setAddWalletMessage(null);
-    setAddWalletStep('input');
+    setAddWalletStep('choose-method');
+    setAddWalletMethod(null);
+    setSelectedSecondaryWallet(null);
+    setIsConnectingSecondary(false);
     setAddWalletModalOpen(false);
     setIsAddingWallet(false); // Clear flag when canceling
   };
@@ -3204,26 +3210,6 @@ export default function MekRateLoggingPage() {
                         </button>
                       ))}
                     </div>
-
-                    {/* Skip to blockchain verification button */}
-                    <div className="mt-6 flex justify-center">
-                      <button
-                        onClick={() => {
-                          console.log('[Skip Mode] Bypassing wallet connection...');
-                          // Set up demo wallet state
-                          setWalletConnected(true);
-                          setWalletAddress('stake1_demo_test_wallet_for_verification');
-                          setWalletType('Demo');
-                          setIsAutoReconnecting(false);
-                          setIsSignatureVerified(false); // Keep signature verification false to show verification panel
-                          setShowVerificationPanel(true);
-                        }}
-                        className="group relative bg-black/20 border border-gray-500/30 text-gray-400 px-6 py-2 transition-all hover:bg-gray-500/10 hover:border-gray-400/50 hover:text-gray-300 uppercase tracking-wider font-['Orbitron'] text-sm backdrop-blur-sm overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <span className="relative z-10">Skip (Demo Mode)</span>
-                      </button>
-                    </div>
                   </>
                 ) : (
                   <>
@@ -3434,26 +3420,6 @@ export default function MekRateLoggingPage() {
                         </div>
                       </div>
                     )}
-
-                    {/* Skip to blockchain verification button */}
-                    <div className="mt-6 flex justify-center">
-                      <button
-                        onClick={() => {
-                          console.log('[Skip Mode] Bypassing wallet connection...');
-                          // Set up demo wallet state
-                          setWalletConnected(true);
-                          setWalletAddress('stake1_demo_test_wallet_for_verification');
-                          setWalletType('Demo');
-                          setIsAutoReconnecting(false);
-                          setIsSignatureVerified(false); // Keep signature verification false to show verification panel
-                          setShowVerificationPanel(true);
-                        }}
-                        className="group relative bg-black/20 border border-gray-500/30 text-gray-400 px-6 py-2 transition-all hover:bg-gray-500/10 hover:border-gray-400/50 hover:text-gray-300 uppercase tracking-wider font-['Orbitron'] text-sm backdrop-blur-sm overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <span className="relative z-10">Skip (Demo Mode)</span>
-                      </button>
-                    </div>
                   </>
                 )}
 
@@ -4338,22 +4304,28 @@ export default function MekRateLoggingPage() {
                   }
                 })
                 .map(mek => (
-                  <MekCard
+                  <div
                     key={mek.assetId}
-                    mek={mek}
-                    getMekImageUrl={getMekImageUrl}
-                    currentGold={currentGold}
-                    walletAddress={walletAddress}
-                    animatedValues={animatedMekValues[mek.assetId]}
-                    upgradingMeks={upgradingMeks}
-                    onClick={() => setSelectedMek(mek)}
-                    onGoldSpentAnimation={(animationId, amount) => {
-                      setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
-                      setTimeout(() => {
-                        setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
-                      }, 2000);
+                    style={{
+                      contentVisibility: 'auto',
+                      containIntrinsicSize: '1px 600px'
                     }}
-                    onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
+                  >
+                    <MekCard
+                      mek={mek}
+                      getMekImageUrl={getMekImageUrl}
+                      currentGold={currentGold}
+                      walletAddress={walletAddress}
+                      animatedValues={animatedMekValues[mek.assetId]}
+                      upgradingMeks={upgradingMeks}
+                      onClick={() => setSelectedMek(mek)}
+                      onGoldSpentAnimation={(animationId, amount) => {
+                        setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
+                        setTimeout(() => {
+                          setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+                        }, 2000);
+                      }}
+                      onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
                       setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
 
                       setAnimatedMekValues(prev => ({
@@ -4420,6 +4392,7 @@ export default function MekRateLoggingPage() {
                       }
                     }}
                   />
+                  </div>
                 ))}
             </div>
 
@@ -4928,16 +4901,93 @@ export default function MekRateLoggingPage() {
           <div className="bg-black border-2 border-yellow-400 rounded shadow-[0_0_50px_rgba(250,182,23,0.4)] p-6 max-w-md w-full mx-4">
             <h2 className="text-yellow-400 text-xl font-bold uppercase tracking-wider mb-4 whitespace-nowrap">
               Add Wallet to Corporation
-              {addWalletStep !== 'input' && (
+              {addWalletStep !== 'choose-method' && (
                 <span className="text-xs text-yellow-400/50 ml-2">
-                  (Step {addWalletStep === 'name-merger' ? '2' : addWalletStep === 'verify' ? '3' : '4'}/{currentCorpName && incomingCorpName ? '4' : '3'})
+                  (Step {addWalletStep === 'select-wallet' ? '2' : addWalletStep === 'input' ? '3' : addWalletStep === 'name-merger' ? '4' : addWalletStep === 'verify' ? '5' : '6'}/{currentCorpName && incomingCorpName ? '6' : '5'})
                 </span>
               )}
             </h2>
 
-            {/* STEP 1: Input wallet details */}
+            {/* STEP 1: Choose Connection Method */}
+            {addWalletStep === 'choose-method' && (
+              <div className="space-y-4">
+                <div className="bg-black/40 border border-yellow-400/30 rounded p-4 mb-4">
+                  <p className="text-yellow-400 text-sm font-bold uppercase tracking-wider mb-2">Choose Connection Method</p>
+                  <p className="text-gray-400 text-xs">
+                    How would you like to add your secondary wallet?
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setAddWalletMethod('wallet');
+                    setAddWalletStep('select-wallet');
+                  }}
+                  className="w-full bg-gradient-to-r from-yellow-600/20 to-yellow-700/20 border-2 border-yellow-500/50 text-yellow-400 px-6 py-4 rounded hover:from-yellow-600/30 hover:to-yellow-700/30 hover:border-yellow-500/70 hover:shadow-[0_4px_15px_rgba(250,182,23,0.3)] transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔗</div>
+                    <div>
+                      <p className="font-bold uppercase tracking-wider text-sm mb-1">Connect via Wallet Extension</p>
+                      <p className="text-xs text-gray-400">Automatically detect and connect your wallet (Recommended)</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setAddWalletMethod('manual');
+                    setAddWalletStep('input');
+                  }}
+                  className="w-full bg-gradient-to-r from-gray-600/20 to-gray-700/20 border border-gray-500/50 text-gray-300 px-6 py-4 rounded hover:from-gray-600/30 hover:to-gray-700/30 hover:border-gray-500/70 transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">⌨️</div>
+                    <div>
+                      <p className="font-bold uppercase tracking-wider text-sm mb-1">Manual Entry (Advanced)</p>
+                      <p className="text-xs text-gray-400">Enter stake address manually if you know it</p>
+                    </div>
+                  </div>
+                </button>
+
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={handleCancelAddWallet}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-6 py-2 hover:from-gray-700 hover:to-gray-800 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Select Wallet */}
+            {addWalletStep === 'select-wallet' && (
+              <WalletSelector
+                availableWallets={availableWallets}
+                onWalletSelect={handleSecondaryWalletConnect}
+                isConnecting={isConnectingSecondary}
+                onCancel={() => setAddWalletStep('choose-method')}
+                title="Select Your Secondary Wallet"
+                description="Choose the wallet extension you want to add to your corporation"
+              />
+            )}
+
+            {/* STEP 3: Confirm wallet details */}
             {addWalletStep === 'input' && (
               <div className="space-y-4">
+                {/* Show selected wallet info if coming from wallet selection */}
+                {selectedSecondaryWallet && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 p-3 rounded mb-4">
+                    <p className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-1">
+                      🔗 Connected Wallet: {selectedSecondaryWallet.name}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Address extracted automatically
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-yellow-400/70 text-xs uppercase tracking-wider mb-2">
                     Wallet Address (Stake Address)
@@ -4947,9 +4997,12 @@ export default function MekRateLoggingPage() {
                     value={newWalletAddress}
                     onChange={(e) => setNewWalletAddress(e.target.value)}
                     placeholder="stake1u..."
-                    className="w-full px-3 py-2 bg-black/50 border border-yellow-400/30 rounded text-white text-sm font-mono focus:outline-none focus:border-yellow-400"
+                    disabled={!!selectedSecondaryWallet}
+                    className={`w-full px-3 py-2 bg-black/50 border border-yellow-400/30 rounded text-white text-sm font-mono focus:outline-none focus:border-yellow-400 ${selectedSecondaryWallet ? 'opacity-60 cursor-not-allowed' : ''}`}
                   />
-                  <p className="text-xs text-gray-400 mt-1">Enter the stake address of the wallet you want to add</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {selectedSecondaryWallet ? 'Address from connected wallet' : 'Enter the stake address of the wallet you want to add'}
+                  </p>
                 </div>
 
                 <div>
@@ -4967,10 +5020,21 @@ export default function MekRateLoggingPage() {
 
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={handleCancelAddWallet}
+                    onClick={() => {
+                      if (addWalletMethod === 'wallet') {
+                        // Go back to wallet selection
+                        setNewWalletAddress('');
+                        setSelectedSecondaryWallet(null);
+                        setAddWalletStep('select-wallet');
+                      } else {
+                        // Go back to method selection
+                        setNewWalletAddress('');
+                        setAddWalletStep('choose-method');
+                      }
+                    }}
                     className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-500 text-white text-xs font-semibold uppercase tracking-wider rounded px-4 py-2 hover:from-gray-700 hover:to-gray-800 transition-all"
                   >
-                    Cancel
+                    ← Back
                   </button>
                   <button
                     onClick={handleRequestWalletVerification}

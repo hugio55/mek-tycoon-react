@@ -780,6 +780,16 @@ client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`Connected to guild: ${GUILD_ID}`);
 
+  // Set bot presence to show as online with custom status
+  client.user.setPresence({
+    status: 'online',
+    activities: [{
+      name: 'the Mek Tycoon',
+      type: 3 // WATCHING
+    }]
+  });
+  console.log('Bot status set to online');
+
   await registerCommands();
 
   setInterval(async () => {

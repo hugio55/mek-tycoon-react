@@ -7,6 +7,7 @@ import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard'
 import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
+import ActivityLogViewer from '@/components/ActivityLogViewer';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -40,6 +41,7 @@ export default function WalletManagementAdmin() {
   const [isRunningSnapshot, setIsRunningSnapshot] = useState(false);
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
+  const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
   const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
   const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
   const [goldFixResults, setGoldFixResults] = useState<any>(null);
@@ -1111,13 +1113,20 @@ Check console for full timeline.
                     <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="grid grid-cols-5 gap-2 min-w-max">
+                    <div className="grid grid-cols-6 gap-2 min-w-max">
                       <button
                         onClick={() => setViewingMekLevels(wallet.walletAddress)}
                         className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
                         title="View all Mek levels for this wallet"
                       >
                         View Levels
+                      </button>
+                      <button
+                        onClick={() => setViewingActivityLog(wallet.walletAddress)}
+                        className="px-3 py-1.5 text-xs bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-700 rounded transition-colors whitespace-nowrap"
+                        title="View activity log - upgrades, verifications, and more"
+                      >
+                        📋 Activity Log
                       </button>
                       <button
                         onClick={() => setDiagnosticWallet(wallet.walletAddress)}
@@ -1331,13 +1340,20 @@ Check console for full timeline.
                         <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="grid grid-cols-5 gap-2 min-w-max">
+                        <div className="grid grid-cols-6 gap-2 min-w-max">
                           <button
                             onClick={() => setViewingMekLevels(wallet.walletAddress)}
                             className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
                             title="View all Mek levels for this wallet"
                           >
                             View Levels
+                          </button>
+                          <button
+                            onClick={() => setViewingActivityLog(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-700 rounded transition-colors whitespace-nowrap"
+                            title="View activity log - upgrades, verifications, and more"
+                          >
+                            📋 Activity Log
                           </button>
                           <button
                             onClick={() => setDiagnosticWallet(wallet.walletAddress)}
@@ -1456,6 +1472,13 @@ Check console for full timeline.
         <MekLevelsViewer
           walletAddress={viewingMekLevels}
           onClose={() => setViewingMekLevels(null)}
+        />
+      )}
+
+      {viewingActivityLog && (
+        <ActivityLogViewer
+          walletAddress={viewingActivityLog}
+          onClose={() => setViewingActivityLog(null)}
         />
       )}
 

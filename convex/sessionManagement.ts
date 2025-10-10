@@ -184,6 +184,72 @@ export const validateSessionByAddress = query({
 });
 
 /**
+ * Restore/refresh session from localStorage during auto-reconnect
+ * This is more lenient than extendSession - it can revive expired backend sessions
+ * if the localStorage session is still valid (within 24 hours)
+ */
+export const restoreOrCreateSession = mutation({
+  args: {
+    sessionId: v.string(),
+    stakeAddress: v.string(),
+    walletName: v.string(),
+    deviceId: v.optional(v.string()),
+    platform: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const newExpiresAt = now + SESSION_DURATION;
+
+    // Look for existing session by sessionId
+    const existingSession = await ctx.db
+      .query("walletSessions")
+      .withIndex("by_session_id", q => q.eq("sessionId", args.sessionId))
+      .first();
+
+    if (existingSession) {
+      // Found existing session - refresh it (even if expired/inactive)
+      // This allows localStorage to "revive" backend sessions
+      await ctx.db.patch(existingSession._id, {
+        lastActivityAt: now,
+        expiresAt: newExpiresAt,
+        isActive: true, // Reactivate if it was marked inactive
+        revokedAt: undefined, // Clear revocation (localStorage takes precedence)
+      });
+
+      console.log(`[Sessions] Restored existing session ${args.sessionId} for ${args.stakeAddress}, new expiry: ${new Date(newExpiresAt).toISOString()}`);
+
+      return {
+        success: true,
+        expiresAt: newExpiresAt,
+        restored: true,
+      };
+    }
+
+    // No existing session - create a new one
+    // This handles the case where backend session was deleted but localStorage is still valid
+    await ctx.db.insert("walletSessions", {
+      sessionId: args.sessionId,
+      stakeAddress: args.stakeAddress,
+      walletName: args.walletName,
+      createdAt: now,
+      expiresAt: newExpiresAt,
+      lastActivityAt: now,
+      isActive: true,
+      deviceId: args.deviceId,
+      platform: args.platform,
+    });
+
+    console.log(`[Sessions] Created new session from localStorage ${args.sessionId} for ${args.stakeAddress}, expires: ${new Date(newExpiresAt).toISOString()}`);
+
+    return {
+      success: true,
+      expiresAt: newExpiresAt,
+      created: true,
+    };
+  }
+});
+
+/**
  * Extend session expiration by updating last activity
  */
 export const extendSession = mutation({
