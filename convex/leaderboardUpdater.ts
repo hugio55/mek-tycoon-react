@@ -9,20 +9,10 @@ export const updateGoldLeaderboard = internalMutation({
     try {
       const now = Date.now();
 
-      // Use paginated query to reduce lock contention during deployments
-      // Process in batches to avoid OCC failures
-      const miners = [];
-      let cursor = null;
-      const batchSize = 100;
-
-      do {
-        const batch = await ctx.db
-          .query("goldMining")
-          .paginate({ numItems: batchSize, cursor });
-
-        miners.push(...batch.page);
-        cursor = batch.continueCursor;
-      } while (cursor !== null);
+      // Get all miners (Convex only allows one query type per function)
+      const miners = await ctx.db
+        .query("goldMining")
+        .collect();
 
       if (miners.length === 0) {
         console.log("No miners found for leaderboard update");

@@ -178,23 +178,45 @@ export const upgradeMekLevel = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // 1. Get the current gold mining data for the wallet
-    const goldMiningData = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .first();
+    // STEP 1: Find which wallet ACTUALLY owns this Mek (might be different in corporation)
+    const mekLevelRecords = await ctx.db
+      .query("mekLevels")
+      .withIndex("by_asset", (q) => q.eq("assetId", args.assetId))
+      .filter((q) => q.eq(q.field("ownershipStatus"), "verified"))
+      .collect();
 
-    if (!goldMiningData) {
-      throw new Error("Wallet not found in gold mining system");
+    if (mekLevelRecords.length === 0) {
+      throw new Error("Mek level record not found. The Mek may need to be initialized.");
     }
 
-    // 2. Verify the wallet owns this Mek and get its base rate
-    const ownedMek = goldMiningData.ownedMeks.find(
+    // Get the mekLevel record (there should only be one verified owner)
+    const mekLevel = mekLevelRecords[0];
+    const mekOwnerWallet = mekLevel.walletAddress;
+
+    devLog.log(`[UPGRADE START] Mek ownership:`, {
+      assetId: args.assetId,
+      owner: mekOwnerWallet,
+      upgrader: args.walletAddress,
+      isOwnMek: mekOwnerWallet === args.walletAddress
+    });
+
+    // STEP 2: Get the MEK OWNER's goldMining data (to verify and get base rate)
+    const mekOwnerGoldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", mekOwnerWallet))
+      .first();
+
+    if (!mekOwnerGoldMining) {
+      throw new Error("Mek owner wallet not found in gold mining system");
+    }
+
+    // Verify the Mek exists in the owner's wallet
+    const ownedMek = mekOwnerGoldMining.ownedMeks.find(
       (m) => m.assetId === args.assetId
     );
 
     if (!ownedMek) {
-      throw new Error("You do not own this Mek");
+      throw new Error("Mek not found in owner's wallet");
     }
 
     // CRITICAL: Use baseGoldPerHour if available, NOT goldPerHour (which includes previous boosts)
@@ -207,74 +229,68 @@ export const upgradeMekLevel = mutation({
       effectiveGoldPerHour: ownedMek.effectiveGoldPerHour,
       currentLevel: ownedMek.currentLevel,
       levelBoostAmount: ownedMek.levelBoostAmount,
-      totalRate: goldMiningData.totalGoldPerHour
+      totalRate: mekOwnerGoldMining.totalGoldPerHour
     });
 
-    // Check if wallet is verified
-    if (!goldMiningData.isBlockchainVerified) {
-      throw new Error("Wallet must be blockchain verified to upgrade Meks");
-    }
-
-    // 3. Get or create the level record for this wallet+mek
-    let mekLevel = await ctx.db
-      .query("mekLevels")
-      .withIndex("by_wallet_asset", (q) =>
-        q.eq("walletAddress", args.walletAddress).eq("assetId", args.assetId)
-      )
+    // STEP 3: Get the UPGRADER's goldMining data (for spending gold)
+    const upgraderGoldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
-    if (!mekLevel) {
-      // Create new level record with base rate tracking
-      await ctx.db.insert("mekLevels", {
-        walletAddress: args.walletAddress,
-        assetId: args.assetId,
-        mekNumber: args.mekNumber,
-        currentLevel: 1,
-        totalGoldSpent: 0,
-        baseGoldPerHour: mekBaseRate, // Store base rate
-        currentBoostPercent: 0, // No boost at level 1
-        currentBoostAmount: 0, // No boost at level 1
-        levelAcquiredAt: now,
-        lastVerifiedAt: now,
-        ownershipStatus: "verified",
-        createdAt: now,
-        updatedAt: now,
-      });
+    if (!upgraderGoldMining) {
+      throw new Error("Your wallet not found in gold mining system");
+    }
 
-      mekLevel = await ctx.db
-        .query("mekLevels")
-        .withIndex("by_wallet_asset", (q) =>
-          q.eq("walletAddress", args.walletAddress).eq("assetId", args.assetId)
-        )
+    // Check if upgrader's wallet is verified
+    if (!upgraderGoldMining.isBlockchainVerified) {
+      throw new Error("Your wallet must be blockchain verified to upgrade Meks");
+    }
+
+    // STEP 4: Verify upgrader is in same corporation as owner (or is the owner)
+    const isOwnMek = mekOwnerWallet === args.walletAddress;
+    if (!isOwnMek) {
+      // Check if they're in the same corporation
+      const upgraderMembership = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
         .first();
+
+      const ownerMembership = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", mekOwnerWallet))
+        .first();
+
+      const sameGroup = upgraderMembership && ownerMembership &&
+                       upgraderMembership.groupId === ownerMembership.groupId;
+
+      if (!sameGroup) {
+        throw new Error("You can only upgrade Meks in your corporation");
+      }
     }
 
-    if (!mekLevel) {
-      throw new Error("Failed to create level record");
-    }
-
-    // 4. Check if the Mek can be upgraded
+    // 5. Check if the Mek can be upgraded
     if (mekLevel.currentLevel >= 10) {
       throw new Error("Mek is already at maximum level");
     }
 
-    // 5. Calculate upgrade cost
+    // 6. Calculate upgrade cost
     const upgradeCost = calculateUpgradeCost(mekLevel.currentLevel);
 
-    // 6. Calculate current gold balance (with time-based accumulation)
-    const hoursSinceLastSnapshot = goldMiningData.lastSnapshotTime
-      ? (now - goldMiningData.lastSnapshotTime) / (1000 * 60 * 60)
+    // 7. Calculate UPGRADER's current gold balance (with time-based accumulation)
+    const hoursSinceLastSnapshot = upgraderGoldMining.lastSnapshotTime
+      ? (now - upgraderGoldMining.lastSnapshotTime) / (1000 * 60 * 60)
       : 0;
 
-    const goldSinceSnapshot = goldMiningData.totalGoldPerHour * hoursSinceLastSnapshot;
+    const goldSinceSnapshot = upgraderGoldMining.totalGoldPerHour * hoursSinceLastSnapshot;
 
     // CRITICAL: Calculate UNCAPPED gold for spending (cap only applies to earning limits)
-    const uncappedCurrentGold = (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot;
+    const uncappedCurrentGold = (upgraderGoldMining.accumulatedGold || 0) + goldSinceSnapshot;
 
     // Display capped gold for UI/error messages (10M earning limit)
     const currentGold = Math.min(GOLD_CAP, uncappedCurrentGold);
 
-    // 7. Check if player has enough gold
+    // 8. Check if player has enough gold
     if (uncappedCurrentGold < upgradeCost) {
       throw new Error(
         `Insufficient gold. You have ${Math.floor(
@@ -283,7 +299,7 @@ export const upgradeMekLevel = mutation({
       );
     }
 
-    // 8. Create upgrade transaction ID
+    // 9. Create upgrade transaction ID
     const upgradeId = `${args.walletAddress}-${args.assetId}-${now}`;
 
     // 9. Log the upgrade attempt
@@ -337,8 +353,8 @@ export const upgradeMekLevel = mutation({
         updatedAt: now,
       });
 
-      // Update the goldMining record with new effective rates
-      const updatedMeks = goldMiningData.ownedMeks.map((mek) => {
+      // Update the MEK OWNER's goldMining record with new effective rates
+      const updatedOwnerMeks = mekOwnerGoldMining.ownedMeks.map((mek) => {
         if (mek.assetId === args.assetId) {
           return {
             ...mek,
@@ -352,23 +368,23 @@ export const upgradeMekLevel = mutation({
         return mek;
       });
 
-      // Recalculate total rates
-      const baseGoldPerHour = updatedMeks.reduce(
+      // Recalculate owner's total rates
+      const ownerBaseGoldPerHour = updatedOwnerMeks.reduce(
         (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
         0
       );
-      const boostGoldPerHour = updatedMeks.reduce(
+      const ownerBoostGoldPerHour = updatedOwnerMeks.reduce(
         (sum, mek) => sum + (mek.levelBoostAmount || 0),
         0
       );
-      const totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
+      const ownerTotalGoldPerHour = ownerBaseGoldPerHour + ownerBoostGoldPerHour;
 
-      devLog.log(`[UPGRADE MUTATION] Total rate calculation:`, {
-        oldTotalRate: goldMiningData.totalGoldPerHour,
-        newBaseRate: baseGoldPerHour,
-        newBoostRate: boostGoldPerHour,
-        newTotalRate: totalGoldPerHour,
-        rateDifference: totalGoldPerHour - goldMiningData.totalGoldPerHour,
+      devLog.log(`[UPGRADE MUTATION] Owner total rate calculation:`, {
+        oldTotalRate: mekOwnerGoldMining.totalGoldPerHour,
+        newBaseRate: ownerBaseGoldPerHour,
+        newBoostRate: ownerBoostGoldPerHour,
+        newTotalRate: ownerTotalGoldPerHour,
+        rateDifference: ownerTotalGoldPerHour - mekOwnerGoldMining.totalGoldPerHour,
         expectedBoostAdded: newBoostAmount
       });
 
