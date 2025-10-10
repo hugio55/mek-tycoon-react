@@ -25,7 +25,7 @@ import { useSecureWalletConnection } from '@/hooks/useSecureWalletConnection';
 import { generateSecureNonce, verifySignatureWithRetry, saveSessionSecurely } from '@/lib/secureWalletConnection';
 import { VirtualMekGrid } from "@/components/VirtualMekGrid";
 import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/AnimatedNumber";
-import { MekCard } from "@/components/MekCard";
+import { MekCard, MekCardSkeleton } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import { WalletInfo, useAvailableWallets } from "@/hooks/useAvailableWallets";
 import WalletSelector from "@/components/WalletSelector";
@@ -4265,7 +4265,15 @@ export default function MekRateLoggingPage() {
               ownedMeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto' :
               'grid-cols-1 sm:grid-cols-2 breakpoint-3col:grid-cols-3 breakpoint-4col:grid-cols-4 max-w-7xl mx-auto'
             }`}>
-              {[...ownedMeks]
+              {!goldMiningData && ownedMeks.length > 0 ? (
+                // Show skeleton cards while gold data loads
+                Array.from({ length: Math.min(ownedMeks.length, 8) }).map((_, index) => (
+                  <div key={`skeleton-${index}`}>
+                    <MekCardSkeleton />
+                  </div>
+                ))
+              ) : (
+                [...ownedMeks]
                 .filter(mek => {
                   // Filter by wallet if walletFilter is set
                   if (walletFilter && (mek as any).sourceWallet !== walletFilter) return false;
@@ -4393,7 +4401,8 @@ export default function MekRateLoggingPage() {
                     }}
                   />
                   </div>
-                ))}
+                ))
+              )}
             </div>
 
             {ownedMeks.length === 0 && loadingMeks && (

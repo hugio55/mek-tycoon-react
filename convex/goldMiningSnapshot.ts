@@ -288,6 +288,7 @@ export const updateMinerAfterSnapshot = internalMutation({
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),
+      sourceKey: v.optional(v.string()),
     })),
     snapshotSuccess: v.optional(v.boolean()), // Whether snapshot succeeded
   },

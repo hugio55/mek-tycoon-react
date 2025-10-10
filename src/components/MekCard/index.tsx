@@ -7,6 +7,8 @@ import { MekIdentityLayer } from './MekIdentityLayer';
 import { MekLevelBar } from './MekLevelBar';
 import { AnimatedNumber } from './AnimatedNumber';
 
+export { MekCardSkeleton } from './MekCardSkeleton';
+
 export interface MekCardProps {
   mek: MekAsset;
   getMekImageUrl: (mekNumber: number, size: string) => string;

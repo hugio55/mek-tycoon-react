@@ -151,12 +151,12 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
 
   // Get top miners data
   const topMiners = useQuery(api.goldLeaderboard.getTopGoldMiners, {
-    guildId: "938648161810006119",
+    currentWallet: currentWallet,
   });
 
   // Get all corporations data (for modal)
   const allCorporations = useQuery(api.goldLeaderboard.getAllCorporations, {
-    guildId: "938648161810006119",
+    currentWallet: currentWallet,
   });
 
   // Get selected wallet's Meks

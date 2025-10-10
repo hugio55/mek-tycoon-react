@@ -53,7 +53,21 @@ export default function WalletManagementAdmin() {
     id: string;
     type: 'success' | 'error';
     message: string;
-  }>>([]);
+    timestamp: number;
+  }>>(() => {
+    // Load persisted notifications from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('snapshotNotifications');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
 
   // Diagnostic query to check boost sync
   const boostDiagnostic = useQuery(
@@ -64,11 +78,27 @@ export default function WalletManagementAdmin() {
   // Helper to add persistent snapshot notifications
   const addSnapshotNotification = (type: 'success' | 'error', message: string) => {
     const id = `snapshot-${Date.now()}-${Math.random()}`;
-    setSnapshotNotifications(prev => [...prev, { id, type, message }]);
+    const notification = { id, type, message, timestamp: Date.now() };
+    setSnapshotNotifications(prev => {
+      const updated = [...prev, notification];
+      // Persist to localStorage
+      localStorage.setItem('snapshotNotifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const removeSnapshotNotification = (id: string) => {
-    setSnapshotNotifications(prev => prev.filter(n => n.id !== id));
+    setSnapshotNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      // Persist to localStorage
+      localStorage.setItem('snapshotNotifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearAllNotifications = () => {
+    setSnapshotNotifications([]);
+    localStorage.removeItem('snapshotNotifications');
   };
 
   const handleResetVerification = async (walletAddress: string) => {
@@ -791,25 +821,45 @@ Check console for full timeline.
       </div>
 
       {/* Persistent Snapshot Notifications */}
-      {snapshotNotifications.map((notification) => (
-        <div
-          key={notification.id}
-          className={`p-4 rounded-lg border-2 flex items-start justify-between ${
-            notification.type === 'success'
-              ? 'bg-green-900/20 border-green-500 text-green-200'
-              : 'bg-red-900/20 border-red-500 text-red-200'
-          }`}
-        >
-          <div className="flex-1">{notification.message}</div>
-          <button
-            onClick={() => removeSnapshotNotification(notification.id)}
-            className="ml-4 text-xl font-bold hover:opacity-70 transition-opacity flex-shrink-0"
-            title="Dismiss notification"
-          >
-            ×
-          </button>
+      {snapshotNotifications.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold text-yellow-400">Snapshot History</h4>
+            <button
+              onClick={clearAllNotifications}
+              className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+          {snapshotNotifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`p-4 rounded-lg border-2 flex items-start justify-between ${
+                notification.type === 'success'
+                  ? 'bg-green-900/20 border-green-500 text-green-200'
+                  : 'bg-red-900/20 border-red-500 text-red-200'
+              }`}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-gray-400">
+                    {new Date(notification.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <div>{notification.message}</div>
+              </div>
+              <button
+                onClick={() => removeSnapshotNotification(notification.id)}
+                className="ml-4 text-xl font-bold hover:opacity-70 transition-opacity flex-shrink-0"
+                title="Dismiss notification"
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {/* Standard Status Message (for non-snapshot actions) */}
       {statusMessage && (

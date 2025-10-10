@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSound } from "@/contexts/SoundContext";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import CustomNotification from "@/components/CustomNotification";
 
@@ -117,6 +117,7 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [existingWalletNicknames, setExistingWalletNicknames] = useState<Record<string, string>>({});
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [shouldOpenNicknameModal, setShouldOpenNicknameModal] = useState(false);
+  const [isRescanningWallet, setIsRescanningWallet] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -166,9 +167,10 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     walletAddress ? { walletAddress } : "skip"
   );
 
-  // Mutations
+  // Mutations and Actions
   const addWalletToGroup = useMutation(api.walletGroups.addWalletToGroup);
   const setWalletNickname = useMutation(api.walletGroups.setWalletNickname);
+  const manualRescanWalletGroup = useAction(api.nftSyncSaga.manualRescanWalletGroup);
 
   // Handler for opening the add wallet modal
   const handleOpenAddWalletModal = () => {
@@ -545,14 +547,42 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
 
                 {/* Re-scan Wallet Button */}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     playClickSound();
-                    // TODO: Implement re-scan wallet functionality
-                    alert('Re-scan Wallet functionality coming soon!');
+                    if (!walletAddress) return;
+
+                    setIsRescanningWallet(true);
+                    setWalletDropdownOpen(false);
+
+                    try {
+                      const result = await manualRescanWalletGroup({ walletAddress });
+
+                      if (result.success) {
+                        setNotification({
+                          message: `Successfully re-scanned ${result.walletsSucceeded}/${result.walletsScanned} wallet(s). Found ${result.totalMeks} total Meks.`,
+                          type: 'success'
+                        });
+                      } else {
+                        setNotification({
+                          message: `Re-scan completed with errors. ${result.walletsSucceeded}/${result.walletsScanned} wallets succeeded.`,
+                          type: 'error'
+                        });
+                      }
+                    } catch (error: any) {
+                      setNotification({
+                        message: `Re-scan failed: ${error.message}`,
+                        type: 'error'
+                      });
+                    } finally {
+                      setIsRescanningWallet(false);
+                    }
                   }}
-                  className="w-full bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-sm font-medium uppercase tracking-wider rounded px-3 py-2 hover:from-gray-700 hover:to-gray-800 hover:shadow-[0_4px_15px_rgba(0,0,0,0.4)] transition-all"
+                  disabled={isRescanningWallet}
+                  className={`w-full bg-gradient-to-r from-gray-600 to-gray-700 border border-gray-600 text-white text-sm font-medium uppercase tracking-wider rounded px-3 py-2 hover:from-gray-700 hover:to-gray-800 hover:shadow-[0_4px_15px_rgba(0,0,0,0.4)] transition-all ${
+                    isRescanningWallet ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  🔄 Re-scan Wallet
+                  {isRescanningWallet ? '🔄 Scanning...' : '🔄 Re-scan Wallet'}
                 </button>
               </div>
             )}
