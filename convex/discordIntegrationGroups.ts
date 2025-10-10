@@ -321,3 +321,203 @@ export const updateNicknameTimestamp = mutation({
     return { success: true };
   },
 });
+
+// DEBUG: Fix a Discord connection to point to the correct group
+export const fixDiscordConnectionGroup = mutation({
+  args: {
+    discordUserId: v.string(),
+    guildId: v.string(),
+    correctGroupId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find the Discord connection
+    const connection = await ctx.db
+      .query("discordConnections")
+      .withIndex("by_discord_user", (q) => q.eq("discordUserId", args.discordUserId))
+      .filter((q) => q.eq(q.field("guildId"), args.guildId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .first();
+
+    if (!connection) {
+      return { success: false, error: "No active connection found" };
+    }
+
+    // Verify the target group exists
+    const group = await ctx.db
+      .query("walletGroups")
+      .withIndex("by_groupId", (q) => q.eq("groupId", args.correctGroupId))
+      .first();
+
+    if (!group) {
+      return { success: false, error: "Target group does not exist" };
+    }
+
+    // Update the connection to point to the correct group
+    await ctx.db.patch(connection._id, {
+      groupId: args.correctGroupId,
+    });
+
+    return {
+      success: true,
+      message: `Updated Discord connection to group ${args.correctGroupId}`,
+      oldGroupId: connection.groupId,
+      newGroupId: args.correctGroupId,
+    };
+  },
+});
+
+// DEBUG: Check what Discord connections exist for a Discord user
+export const debugDiscordConnections = query({
+  args: {
+    discordUserId: v.optional(v.string()),
+    guildId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Get ALL Discord connections (filtered by user or guild if provided)
+    let connections = await ctx.db.query("discordConnections").collect();
+
+    if (args.discordUserId) {
+      connections = connections.filter(c => c.discordUserId === args.discordUserId);
+    }
+
+    if (args.guildId) {
+      connections = connections.filter(c => c.guildId === args.guildId);
+    }
+
+    // For each connection, get the group info
+    const connectionDetails = [];
+    for (const conn of connections) {
+      const group = await ctx.db
+        .query("walletGroups")
+        .withIndex("by_groupId", (q) => q.eq("groupId", conn.groupId))
+        .first();
+
+      const memberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", conn.groupId))
+        .collect();
+
+      connectionDetails.push({
+        discordUserId: conn.discordUserId,
+        discordUsername: conn.discordUsername,
+        groupId: conn.groupId,
+        guildId: conn.guildId,
+        active: conn.active,
+        linkedAt: conn.linkedAt,
+        groupExists: !!group,
+        primaryWallet: group?.primaryWallet,
+        walletsInGroup: memberships.map(m => m.walletAddress),
+      });
+    }
+
+    return {
+      totalConnections: connections.length,
+      connections: connectionDetails,
+    };
+  },
+});
+
+// DEBUG: Diagnostic query for troubleshooting wallet/gold issues
+export const debugWalletGoldStatus = query({
+  args: {
+    walletAddress: v.string(),
+    guildId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Check if wallet is in wallet group
+    const membership = await ctx.db
+      .query("walletGroupMemberships")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    let groupInfo = null;
+    let allWalletsInGroup: any[] = [];
+    if (membership) {
+      const group = await ctx.db
+        .query("walletGroups")
+        .withIndex("by_groupId", (q) => q.eq("groupId", membership.groupId))
+        .first();
+
+      const memberships = await ctx.db
+        .query("walletGroupMemberships")
+        .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+        .collect();
+
+      allWalletsInGroup = memberships.map(m => m.walletAddress);
+
+      groupInfo = {
+        groupId: membership.groupId,
+        primaryWallet: group?.primaryWallet,
+        walletCount: memberships.length,
+        allWallets: allWalletsInGroup,
+      };
+    }
+
+    // 2. Check goldMining data for this wallet
+    const goldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    // 3. Check goldMining for all wallets in group
+    const groupGoldData = [];
+    for (const wallet of allWalletsInGroup) {
+      const walletGold = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet))
+        .first();
+
+      groupGoldData.push({
+        wallet,
+        exists: !!walletGold,
+        gold: walletGold?.accumulatedGold || 0,
+        goldPerHour: walletGold?.totalGoldPerHour || 0,
+        mekCount: walletGold?.ownedMeks?.length || 0,
+        isVerified: walletGold?.isBlockchainVerified || false,
+      });
+    }
+
+    // 4. Check Discord connection (if guildId provided)
+    let discordConnection = null;
+    if (args.guildId) {
+      // Try to find by wallet
+      if (membership) {
+        discordConnection = await ctx.db
+          .query("discordConnections")
+          .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
+          .filter((q) => q.eq(q.field("guildId"), args.guildId))
+          .first();
+      }
+    }
+
+    // 5. Calculate total gold from group
+    const totalGold = groupGoldData.reduce((sum, w) => sum + w.gold, 0);
+    const totalGoldPerHour = groupGoldData.reduce((sum, w) => sum + w.goldPerHour, 0);
+
+    return {
+      walletAddress: args.walletAddress,
+      inGroup: !!membership,
+      groupInfo,
+      goldMiningExists: !!goldMining,
+      goldMiningData: goldMining ? {
+        gold: goldMining.accumulatedGold || 0,
+        goldPerHour: goldMining.totalGoldPerHour || 0,
+        mekCount: goldMining.ownedMeks?.length || 0,
+        isVerified: goldMining.isBlockchainVerified || false,
+        companyName: goldMining.companyName || null,
+      } : null,
+      groupGoldData,
+      discordConnection: discordConnection ? {
+        discordUserId: discordConnection.discordUserId,
+        discordUsername: discordConnection.discordUsername,
+        linkedAt: discordConnection.linkedAt,
+      } : null,
+      summary: {
+        totalWalletsInGroup: allWalletsInGroup.length,
+        totalGold,
+        totalGoldPerHour,
+        walletsWithGoldData: groupGoldData.filter(w => w.exists).length,
+      },
+    };
+  },
+});

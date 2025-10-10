@@ -1563,6 +1563,7 @@ export default defineSchema({
       headVariation: v.optional(v.string()), // Head variation name
       imageUrl: v.optional(v.string()), // Image path
       itemVariation: v.optional(v.string()), // Item/trait variation name
+      sourceKey: v.optional(v.string()), // Source key from database
     })),
     totalGoldPerHour: v.number(), // Total rate at time of snapshot
     totalMekCount: v.number(), // How many Meks were present
