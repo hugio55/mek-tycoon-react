@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSound } from "@/contexts/SoundContext";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import CustomNotification from "@/components/CustomNotification";
 
 interface NavCategory {
   id: string;
@@ -114,6 +115,8 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
   const [newWalletAddress, setNewWalletAddress] = useState('');
   const [newWalletNickname, setNewWalletNickname] = useState('');
   const [existingWalletNicknames, setExistingWalletNicknames] = useState<Record<string, string>>({});
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [shouldOpenNicknameModal, setShouldOpenNicknameModal] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -194,24 +197,27 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       setNewWalletAddress('');
       setNewWalletNickname('');
 
-      // After successful wallet addition, show nickname management modal
-      // Give it a moment for the wallet group to update
-      setTimeout(() => {
-        // Initialize nickname fields with current values
-        if (walletGroup) {
-          const nicknames: Record<string, string> = {};
-          walletGroup.forEach(wallet => {
-            nicknames[wallet.walletAddress] = wallet.nickname || '';
-          });
-          setExistingWalletNicknames(nicknames);
-        }
-        setNicknameManagementModalOpen(true);
-      }, 500);
+      // Set flag to open nickname modal when wallet group updates
+      setShouldOpenNicknameModal(true);
 
     } catch (error: any) {
       alert(`Error adding wallet: ${error.message}`);
     }
   };
+
+  // Open nickname management modal when wallet group updates after adding a new wallet
+  useEffect(() => {
+    if (shouldOpenNicknameModal && walletGroup && walletGroup.length > 0) {
+      // Initialize nickname fields with current values from updated wallet group
+      const nicknames: Record<string, string> = {};
+      walletGroup.forEach(wallet => {
+        nicknames[wallet.walletAddress] = wallet.nickname || '';
+      });
+      setExistingWalletNicknames(nicknames);
+      setNicknameManagementModalOpen(true);
+      setShouldOpenNicknameModal(false);
+    }
+  }, [walletGroup, shouldOpenNicknameModal]);
 
   // Handler for saving nickname updates
   const handleSaveNicknames = async () => {
@@ -234,9 +240,17 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       // Close modal and reset
       setNicknameManagementModalOpen(false);
       setExistingWalletNicknames({});
-      alert('Wallet nicknames updated successfully!');
+
+      // Show custom notification instead of browser alert
+      setNotification({
+        message: 'Wallet nicknames updated successfully!',
+        type: 'success'
+      });
     } catch (error: any) {
-      alert(`Error updating nicknames: ${error.message}`);
+      setNotification({
+        message: `Error updating nicknames: ${error.message}`,
+        type: 'error'
+      });
     }
   };
 
@@ -852,6 +866,13 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         {renderUserStats()}
         {renderAddWalletModal()}
         {renderNicknameManagementModal()}
+        {notification && (
+          <CustomNotification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
       </div>
     );
   }
@@ -880,6 +901,13 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
         {renderUserStats()}
         {renderAddWalletModal()}
         {renderNicknameManagementModal()}
+        {notification && (
+          <CustomNotification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
       </div>
     );
   }
@@ -910,6 +938,13 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       {renderUserStats()}
       {renderAddWalletModal()}
       {renderNicknameManagementModal()}
+      {notification && (
+        <CustomNotification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

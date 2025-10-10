@@ -200,7 +200,12 @@ export const logMekUpgrade = mutation({
     boostAmount: v.number(),
     upgradedBy: v.string(),
     mekOwner: v.string(),
-    timestamp: v.number()
+    timestamp: v.number(),
+    goldBefore: v.number(),
+    goldAfter: v.number(),
+    cumulativeGoldBefore: v.number(),
+    cumulativeGoldAfter: v.number(),
+    totalGoldPerHour: v.number()
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("auditLogs", {
@@ -215,6 +220,11 @@ export const logMekUpgrade = mutation({
       boostAmount: args.boostAmount,
       upgradedBy: args.upgradedBy,
       mekOwner: args.mekOwner,
+      goldBefore: args.goldBefore,
+      goldAfter: args.goldAfter,
+      cumulativeGoldBefore: args.cumulativeGoldBefore,
+      cumulativeGoldAfter: args.cumulativeGoldAfter,
+      totalGoldPerHour: args.totalGoldPerHour,
       timestamp: args.timestamp,
       createdAt: Date.now()
     });

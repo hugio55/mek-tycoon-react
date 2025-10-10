@@ -1412,7 +1412,7 @@ export default defineSchema({
       effectiveGoldPerHour: v.optional(v.number()), // baseGoldPerHour + levelBoostAmount
     })),
 
-    // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
+    // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 10,000,000)
     totalGoldPerHour: v.number(), // Sum of all Mek rates (including boosts)
     baseGoldPerHour: v.optional(v.number()), // Sum of all base Mek rates (without boosts)
     boostGoldPerHour: v.optional(v.number()), // Sum of all level boosts
@@ -1752,6 +1752,12 @@ export default defineSchema({
     boostAmount: v.optional(v.number()),
     upgradedBy: v.optional(v.string()), // Who performed the upgrade
     mekOwner: v.optional(v.string()), // Who owns the mek
+    // Gold tracking (total, cumulative, and rate)
+    goldBefore: v.optional(v.number()), // Total gold before upgrade
+    goldAfter: v.optional(v.number()), // Total gold after upgrade
+    cumulativeGoldBefore: v.optional(v.number()), // Cumulative gold before upgrade
+    cumulativeGoldAfter: v.optional(v.number()), // Cumulative gold after upgrade
+    totalGoldPerHour: v.optional(v.number()), // Gold per hour at time of upgrade
   })
     .index("by_type", ["type"])
     .index("by_stake_address", ["stakeAddress"])

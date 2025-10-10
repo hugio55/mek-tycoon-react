@@ -42,6 +42,15 @@ export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLo
           title: `${log.assetName || 'Mek'} upgraded to Level ${log.newLevel}`,
           details: [
             `Gold Spent: ${log.upgradeCost?.toLocaleString() || 0}`,
+            log.goldBefore !== undefined && log.goldAfter !== undefined
+              ? `Total Gold: ${log.goldBefore.toLocaleString()} → ${log.goldAfter.toLocaleString()}`
+              : null,
+            log.cumulativeGoldBefore !== undefined && log.cumulativeGoldAfter !== undefined
+              ? `Cumulative Gold: ${log.cumulativeGoldBefore.toLocaleString()} → ${log.cumulativeGoldAfter.toLocaleString()}`
+              : null,
+            log.totalGoldPerHour !== undefined
+              ? `Gold/hr: ${log.totalGoldPerHour.toFixed(2)}`
+              : null,
             `New Gold/hr: ${log.newGoldPerHour?.toFixed(2) || 0}`,
             `Boost: +${log.boostAmount?.toFixed(2) || 0}/hr`,
             log.upgradedBy !== log.mekOwner ? `Upgraded by: ${log.upgradedBy?.substring(0, 12)}...` : null

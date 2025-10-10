@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, action } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { calculateGoldDecrease, validateGoldInvariant } from "./lib/goldCalculations";
+import { calculateGoldDecrease, validateGoldInvariant, GOLD_CAP } from "./lib/goldCalculations";
 import { devLog } from "./lib/devLog";
 import { internal } from "./_generated/api";
 
@@ -267,16 +267,18 @@ export const upgradeMekLevel = mutation({
       : 0;
 
     const goldSinceSnapshot = goldMiningData.totalGoldPerHour * hoursSinceLastSnapshot;
-    const currentGold = Math.min(
-      50000, // Cap at 50,000 gold
-      (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot
-    );
+
+    // CRITICAL: Calculate UNCAPPED gold for spending (cap only applies to earning limits)
+    const uncappedCurrentGold = (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot;
+
+    // Display capped gold for UI/error messages (10M earning limit)
+    const currentGold = Math.min(GOLD_CAP, uncappedCurrentGold);
 
     // 7. Check if player has enough gold
-    if (currentGold < upgradeCost) {
+    if (uncappedCurrentGold < upgradeCost) {
       throw new Error(
         `Insufficient gold. You have ${Math.floor(
-          currentGold
+          uncappedCurrentGold
         )} gold but need ${upgradeCost} gold`
       );
     }
@@ -297,14 +299,14 @@ export const upgradeMekLevel = mutation({
       ownershipVerified: true,
       status: "pending",
       timestamp: now,
-      goldBalanceBefore: currentGold,
-      goldBalanceAfter: currentGold - upgradeCost,
+      goldBalanceBefore: uncappedCurrentGold,
+      goldBalanceAfter: uncappedCurrentGold - upgradeCost,
     });
 
     // 10. ATOMIC TRANSACTION: Deduct gold and update level
     try {
-      // Deduct gold from accumulated balance
-      const newAccumulatedGold = currentGold - upgradeCost;
+      // Deduct gold from accumulated balance (using uncapped value)
+      const newAccumulatedGold = uncappedCurrentGold - upgradeCost;
 
       // Calculate new boost for the upgraded level
       const newLevel = mekLevel.currentLevel + 1;
@@ -372,28 +374,29 @@ export const upgradeMekLevel = mutation({
 
       // LOG: Before database update
       devLog.log('[UPGRADE MUTATION] Before DB update:', {
-        goldBefore: currentGold,
+        goldBefore: uncappedCurrentGold,
+        cappedGold: currentGold,
         upgradeCost,
         newAccumulatedGold,
         timestamp: new Date(now).toISOString()
       });
 
       // CRITICAL FIX: Snapshot the time-based gold accumulation BEFORE spending
-      // The bug was: calculateGoldDecrease uses goldMiningData.accumulatedGold (old value),
-      // but currentGold includes time-based earnings that aren't in accumulatedGold yet.
-      // Solution: Create a snapshot record with currentGold as the new accumulatedGold
+      // IMPORTANT: Use UNCAPPED gold to prevent gold loss when spending above 10M limit
+      // The 10M cap only applies to EARNING, not SPENDING
       const snapshotRecord = {
         ...goldMiningData,
-        accumulatedGold: currentGold, // Use calculated current gold (includes time-based earnings)
+        accumulatedGold: uncappedCurrentGold, // Use UNCAPPED gold (includes time-based earnings)
         lastSnapshotTime: now
       };
 
       devLog.log('[UPGRADE MUTATION] Gold snapshot for spending:', {
         oldAccumulatedGold: goldMiningData.accumulatedGold,
         goldSinceSnapshot: goldSinceSnapshot,
-        snapshotAccumulatedGold: currentGold,
+        snapshotAccumulatedGold: uncappedCurrentGold,
+        cappedValue: currentGold,
         upgradeCost,
-        willRemain: currentGold - upgradeCost
+        willRemain: uncappedCurrentGold - upgradeCost
       });
 
       // CRITICAL: Use centralized gold decrease function to maintain invariants
@@ -404,16 +407,17 @@ export const upgradeMekLevel = mutation({
       let newTotalCumulativeGold = goldMiningData.totalCumulativeGold;
       if (!newTotalCumulativeGold || newTotalCumulativeGold === 0) {
         // Initialize from current state (use snapshotRecord which has correct accumulated gold)
-        newTotalCumulativeGold = currentGold + (goldMiningData.totalGoldSpentOnUpgrades || 0);
+        newTotalCumulativeGold = uncappedCurrentGold + (goldMiningData.totalGoldSpentOnUpgrades || 0);
       }
 
       devLog.log('[UPGRADE MUTATION] Gold decrease calculation:', {
-        oldAccumulated: currentGold,
+        oldAccumulated: uncappedCurrentGold,
         newAccumulated: goldDecrease.newAccumulatedGold,
         oldTotalSpent: goldMiningData.totalGoldSpentOnUpgrades || 0,
         newTotalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
         cumulativeGold: newTotalCumulativeGold,
-        upgradeCost
+        upgradeCost,
+        goldLost: uncappedCurrentGold - goldDecrease.newAccumulatedGold
       });
 
       // CRITICAL: Check version for race condition protection (optimistic concurrency control)
@@ -502,7 +506,7 @@ export const upgradeMekLevel = mutation({
         timestamp: new Date(now).toISOString()
       });
 
-      // Log upgrade to audit log
+      // Log upgrade to audit log with gold tracking
       await ctx.scheduler.runAfter(0, internal.auditLogs.logMekUpgrade, {
         stakeAddress: mekOwnerWallet,
         assetId: args.assetId,
@@ -514,6 +518,11 @@ export const upgradeMekLevel = mutation({
         boostAmount: newBoostAmount,
         upgradedBy: args.walletAddress,
         mekOwner: mekOwnerWallet,
+        goldBefore: uncappedCurrentGold,
+        goldAfter: goldDecrease.newAccumulatedGold,
+        cumulativeGoldBefore: goldMiningData.totalCumulativeGold || 0,
+        cumulativeGoldAfter: newTotalCumulativeGold,
+        totalGoldPerHour: totalGoldPerHour,
         timestamp: now
       });
 

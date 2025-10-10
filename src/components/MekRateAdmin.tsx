@@ -22,7 +22,7 @@ export default function MekRateAdmin() {
   // Admin controls state
   const [showAnomalies, setShowAnomalies] = useState(true);
   const [autoSnapshot, setAutoSnapshot] = useState(true);
-  const [maxGoldCap, setMaxGoldCap] = useState(50000);
+  const [maxGoldCap, setMaxGoldCap] = useState(10000000); // 10M gold cap
   const [snapshotInterval, setSnapshotInterval] = useState(60); // minutes
 
   // Security state
