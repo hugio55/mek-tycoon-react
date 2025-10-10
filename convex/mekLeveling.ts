@@ -397,6 +397,9 @@ export const upgradeMekLevel = mutation({
         timestamp: new Date(now).toISOString()
       });
 
+      // Define goldMiningData as the UPGRADER's data (they're spending the gold)
+      const goldMiningData = upgraderGoldMining;
+
       // CRITICAL FIX: Snapshot the time-based gold accumulation BEFORE spending
       // IMPORTANT: Use UNCAPPED gold to prevent gold loss when spending above 10M limit
       // The 10M cap only applies to EARNING, not SPENDING
@@ -450,7 +453,6 @@ export const upgradeMekLevel = mutation({
 
       // CRITICAL: Determine MEK owner for spending attribution
       // The MEK owner's wallet gets the spending credited, not the person upgrading
-      const mekOwnerWallet = mekLevel.walletAddress;
       const isUpgradingOwnMek = mekOwnerWallet === args.walletAddress;
 
       devLog.log('[UPGRADE MUTATION] Spending attribution:', {
@@ -460,7 +462,41 @@ export const upgradeMekLevel = mutation({
         upgradeCost
       });
 
-      // Update the CURRENT wallet's goldMining (deduct pooled gold, update rates)
+      // Calculate updated meks and rates for the UPGRADER
+      let updatedMeks = goldMiningData.ownedMeks;
+      let baseGoldPerHour = goldMiningData.baseGoldPerHour || 0;
+      let boostGoldPerHour = goldMiningData.boostGoldPerHour || 0;
+      let totalGoldPerHour = goldMiningData.totalGoldPerHour || 0;
+
+      // If upgrading own Mek, update the upgrader's rates
+      if (isUpgradingOwnMek) {
+        updatedMeks = goldMiningData.ownedMeks.map((mek) => {
+          if (mek.assetId === args.assetId) {
+            return {
+              ...mek,
+              baseGoldPerHour: baseRate,
+              currentLevel: newLevel,
+              levelBoostPercent: newBoostPercent,
+              levelBoostAmount: newBoostAmount,
+              effectiveGoldPerHour: baseRate + newBoostAmount,
+            };
+          }
+          return mek;
+        });
+
+        // Recalculate upgrader's total rates
+        baseGoldPerHour = updatedMeks.reduce(
+          (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+          0
+        );
+        boostGoldPerHour = updatedMeks.reduce(
+          (sum, mek) => sum + (mek.levelBoostAmount || 0),
+          0
+        );
+        totalGoldPerHour = baseGoldPerHour + boostGoldPerHour;
+      }
+
+      // Update the UPGRADER's goldMining (deduct gold, update rates if own Mek)
       await ctx.db.patch(goldMiningData._id, {
         accumulatedGold: goldDecrease.newAccumulatedGold,  // CRITICAL: Actually deduct the gold spent!
         totalCumulativeGold: newTotalCumulativeGold, // CRITICAL: Preserve cumulative total
@@ -479,7 +515,7 @@ export const upgradeMekLevel = mutation({
         version: currentVersion + 1, // Increment version to detect concurrent modifications
       });
 
-      // If upgrading someone else's MEK, update THEIR spending stats
+      // If upgrading someone else's MEK, update the OWNER's rates and spending stats
       if (!isUpgradingOwnMek) {
         const mekOwnerData = await ctx.db
           .query("goldMining")
@@ -487,6 +523,32 @@ export const upgradeMekLevel = mutation({
           .first();
 
         if (mekOwnerData) {
+          // Update owner's Meks with new rates
+          const updatedOwnerMeks = mekOwnerData.ownedMeks.map((mek) => {
+            if (mek.assetId === args.assetId) {
+              return {
+                ...mek,
+                baseGoldPerHour: baseRate,
+                currentLevel: newLevel,
+                levelBoostPercent: newBoostPercent,
+                levelBoostAmount: newBoostAmount,
+                effectiveGoldPerHour: baseRate + newBoostAmount,
+              };
+            }
+            return mek;
+          });
+
+          // Recalculate owner's total rates
+          const ownerBaseGoldPerHour = updatedOwnerMeks.reduce(
+            (sum, mek) => sum + (mek.baseGoldPerHour || mek.goldPerHour || 0),
+            0
+          );
+          const ownerBoostGoldPerHour = updatedOwnerMeks.reduce(
+            (sum, mek) => sum + (mek.levelBoostAmount || 0),
+            0
+          );
+          const ownerTotalGoldPerHour = ownerBaseGoldPerHour + ownerBoostGoldPerHour;
+
           // Calculate MEK owner's new cumulative gold (they receive investment value)
           let ownerCumulativeGold = mekOwnerData.totalCumulativeGold || 0;
           if (!ownerCumulativeGold || ownerCumulativeGold === 0) {
@@ -496,8 +558,10 @@ export const upgradeMekLevel = mutation({
           // Investment in their MEK increases their total economic value
           const newOwnerCumulativeGold = ownerCumulativeGold + upgradeCost;
 
-          devLog.log('[UPGRADE MUTATION] Updating MEK owner spending:', {
+          devLog.log('[UPGRADE MUTATION] Updating MEK owner rates and spending:', {
             owner: mekOwnerWallet,
+            oldTotalRate: mekOwnerData.totalGoldPerHour,
+            newTotalRate: ownerTotalGoldPerHour,
             oldSpent: mekOwnerData.totalGoldSpentOnUpgrades || 0,
             newSpent: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
             oldCumulative: ownerCumulativeGold,
@@ -505,6 +569,10 @@ export const upgradeMekLevel = mutation({
           });
 
           await ctx.db.patch(mekOwnerData._id, {
+            ownedMeks: updatedOwnerMeks,
+            baseGoldPerHour: ownerBaseGoldPerHour,
+            boostGoldPerHour: ownerBoostGoldPerHour,
+            totalGoldPerHour: ownerTotalGoldPerHour,
             totalGoldSpentOnUpgrades: (mekOwnerData.totalGoldSpentOnUpgrades || 0) + upgradeCost,
             totalCumulativeGold: newOwnerCumulativeGold,
             totalUpgradesPurchased: (mekOwnerData.totalUpgradesPurchased || 0) + 1,
