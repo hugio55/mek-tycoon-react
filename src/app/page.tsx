@@ -297,6 +297,8 @@ export default function MekRateLoggingPage() {
   // Mek assets
   const [ownedMeks, setOwnedMeks] = useState<MekAsset[]>([]);
   const [loadingMeks, setLoadingMeks] = useState(false);
+  const [isRescanning, setIsRescanning] = useState(false);
+  const [rescanMessage, setRescanMessage] = useState<string | null>(null);
   const [selectedMek, setSelectedMek] = useState<MekAsset | null>(null);
   const [sortType, setSortType] = useState<'rate' | 'level'>('rate'); // Sort by rate or level
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -405,6 +407,7 @@ export default function MekRateLoggingPage() {
   const updateGroupCompanyName = useMutation(api.walletGroups.updateGroupCompanyName);
   const generateNonce = useMutation(api.walletAuthentication.generateNonce);
   const verifySignature = useAction(api.walletAuthentication.verifySignature);
+  const manualRescanWalletGroup = useAction(api.nftSyncSaga.manualRescanWalletGroup);
   // Removed: syncWalletFromBlockchain (blockchain sync button removed)
   const checkAuth = useQuery(
     api.walletAuthentication.checkAuthentication,
@@ -3746,29 +3749,36 @@ export default function MekRateLoggingPage() {
                     <button
                       onClick={async () => {
                         setWalletDropdownOpen(false);
+                        setIsRescanning(true);
+                        setRescanMessage('Rescanning wallets from blockchain...');
                         console.log('=== MANUAL WALLET RESCAN ===');
                         try {
-                          const walletName = localStorage.getItem('goldMiningWalletType');
-                          const walletApi = window.cardano?.[walletName];
-
-                          if (walletApi) {
-                            const api = await walletApi.enable();
-                            const utxos = await api.getUtxos();
-                            const meks = await parseMeksFromUtxos(utxos, walletAddress || '', []);
-
-                            if (meks.length > 0) {
-                              setOwnedMeks(meks);
-                              const totalGoldPerHour = meks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
-                              setGoldPerHour(totalGoldPerHour);
-                            }
+                          if (!walletAddress) {
+                            throw new Error('No wallet connected');
                           }
-                        } catch (error) {
+
+                          const result = await manualRescanWalletGroup({ walletAddress });
+
+                          if (result.success) {
+                            setRescanMessage(`✓ Successfully rescanned ${result.walletsSucceeded}/${result.walletsScanned} wallet(s). Found ${result.totalMeks} Meks.`);
+                            // Clear message after 5 seconds
+                            setTimeout(() => setRescanMessage(null), 5000);
+                          } else {
+                            setRescanMessage(`✗ Rescan failed. Please try again.`);
+                            setTimeout(() => setRescanMessage(null), 5000);
+                          }
+                        } catch (error: any) {
                           console.error('Rescan error:', error);
+                          setRescanMessage(`✗ Error: ${error.message || 'Unknown error'}`);
+                          setTimeout(() => setRescanMessage(null), 5000);
+                        } finally {
+                          setIsRescanning(false);
                         }
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      disabled={isRescanning}
+                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      RESCAN WALLET{walletGroup && walletGroup.length > 1 ? 'S' : ''}
+                      {isRescanning ? 'RESCANNING...' : `RESCAN WALLET${walletGroup && walletGroup.length > 1 ? 'S' : ''}`}
                     </button>
 
                     {/* 8. Disconnect Button */}
@@ -3784,6 +3794,19 @@ export default function MekRateLoggingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Rescan feedback message */}
+              {rescanMessage && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] w-auto max-w-md">
+                  <div className={`px-6 py-3 rounded-lg border-2 font-['Orbitron'] font-bold text-sm uppercase tracking-wider shadow-lg backdrop-blur-sm ${
+                    rescanMessage.startsWith('✓')
+                      ? 'bg-green-900/90 border-green-500 text-green-200'
+                      : 'bg-red-900/90 border-red-500 text-red-200'
+                  }`}>
+                    {rescanMessage}
+                  </div>
+                </div>
+              )}
 
               {/* Corporation name display - hidden on mobile (already in dropdown) */}
               {companyNameData?.companyName && (
