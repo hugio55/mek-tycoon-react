@@ -1516,6 +1516,7 @@ export const syncWalletFromBlockchain = action({
       if (minerData) {
         await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
           walletAddress: args.walletAddress,
+          snapshotTime: Date.now(),
           mekCount: walletData.meks.length,
           totalGoldPerHour: totalGoldPerHour,
           mekNumbers: walletData.meks.map((m: any) => m.mekNumber),
