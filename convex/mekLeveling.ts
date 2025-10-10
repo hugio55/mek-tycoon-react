@@ -467,6 +467,7 @@ export const upgradeMekLevel = mutation({
       let baseGoldPerHour = goldMiningData.baseGoldPerHour || 0;
       let boostGoldPerHour = goldMiningData.boostGoldPerHour || 0;
       let totalGoldPerHour = goldMiningData.totalGoldPerHour || 0;
+      const totalGoldPerHourBefore = totalGoldPerHour; // Capture BEFORE value for audit log
 
       // If upgrading own Mek, update the upgrader's rates
       if (isUpgradingOwnMek) {
@@ -606,6 +607,7 @@ export const upgradeMekLevel = mutation({
         goldAfter: goldDecrease.newAccumulatedGold,
         cumulativeGoldBefore: goldMiningData.totalCumulativeGold || 0,
         cumulativeGoldAfter: newTotalCumulativeGold,
+        totalGoldPerHourBefore: totalGoldPerHourBefore,
         totalGoldPerHour: totalGoldPerHour,
         timestamp: now
       });

@@ -205,6 +205,7 @@ export const logMekUpgrade = mutation({
     goldAfter: v.number(),
     cumulativeGoldBefore: v.number(),
     cumulativeGoldAfter: v.number(),
+    totalGoldPerHourBefore: v.number(),
     totalGoldPerHour: v.number()
   },
   handler: async (ctx, args) => {
@@ -224,6 +225,7 @@ export const logMekUpgrade = mutation({
       goldAfter: args.goldAfter,
       cumulativeGoldBefore: args.cumulativeGoldBefore,
       cumulativeGoldAfter: args.cumulativeGoldAfter,
+      totalGoldPerHourBefore: args.totalGoldPerHourBefore,
       totalGoldPerHour: args.totalGoldPerHour,
       timestamp: args.timestamp,
       createdAt: Date.now()

@@ -48,11 +48,12 @@ export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLo
             log.cumulativeGoldBefore !== undefined && log.cumulativeGoldAfter !== undefined
               ? `Cumulative Gold: ${log.cumulativeGoldBefore.toLocaleString()} → ${log.cumulativeGoldAfter.toLocaleString()}`
               : null,
-            log.totalGoldPerHour !== undefined
-              ? `Gold/hr: ${log.totalGoldPerHour.toFixed(2)}`
+            log.totalGoldPerHourBefore !== undefined && log.totalGoldPerHour !== undefined
+              ? `Gold/hr: ${log.totalGoldPerHourBefore.toFixed(2)} → ${log.totalGoldPerHour.toFixed(2)}`
               : null,
-            `New Gold/hr: ${log.newGoldPerHour?.toFixed(2) || 0}`,
-            `Boost: +${log.boostAmount?.toFixed(2) || 0}/hr`,
+            log.totalGoldPerHourBefore !== undefined && log.totalGoldPerHour !== undefined
+              ? `New Gold/hr: ${(log.totalGoldPerHour - log.totalGoldPerHourBefore).toFixed(2)}`
+              : null,
             log.upgradedBy !== log.mekOwner ? `Upgraded by: ${log.upgradedBy?.substring(0, 12)}...` : null
           ].filter(Boolean),
           color: 'text-green-400'
