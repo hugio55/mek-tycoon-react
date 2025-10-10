@@ -82,7 +82,7 @@ export const createWalletGroup = mutation({
       walletAddress: args.walletAddress,
       addedAt: now,
       nickname: args.nickname,
-      originalCompanyName, // Store for restoration when wallet is removed
+      ...(originalCompanyName && { originalCompanyName }), // Only include if value exists
     });
 
     // Log audit event
@@ -219,7 +219,7 @@ export const addWalletToGroupVerified = mutation({
         groupId,
         walletAddress: args.existingWalletInGroup,
         addedAt: now,
-        originalCompanyName: existingOriginalCompanyName, // Store for restoration when wallet is removed
+        ...(existingOriginalCompanyName && { originalCompanyName: existingOriginalCompanyName }), // Only include if value exists
       });
 
       // Log the auto-creation
@@ -346,7 +346,7 @@ export const addWalletToGroupVerified = mutation({
       walletAddress: args.newWalletAddress,
       addedAt: Date.now(),
       nickname: args.nickname,
-      originalCompanyName, // Store for restoration when wallet is removed
+      ...(originalCompanyName && { originalCompanyName }), // Only include if value exists
     });
 
     // Log successful audit event
