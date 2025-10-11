@@ -4028,7 +4028,13 @@ export default function MekRateLoggingPage() {
                       // Sort by current upgrade level (highest level first)
                       const aLevel = a.currentLevel || 1;
                       const bLevel = b.currentLevel || 1;
-                      return bLevel - aLevel;  // Highest level first
+
+                      if (bLevel !== aLevel) {
+                        return bLevel - aLevel;  // Highest level first
+                      }
+
+                      // Secondary sort: when levels are equal, sort by gold/hr (highest first)
+                      return b.goldPerHour - a.goldPerHour;
                     }
                   });
 

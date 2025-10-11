@@ -1134,17 +1134,11 @@ client.on('interactionCreate', async (interaction) => {
           (goldData.highestEarner.rarityRank ? ` (Rank #${goldData.highestEarner.rarityRank})` : '');
       }
 
-      const walletText = goldData.walletCount === 1
-        ? 'Your corporation has 1 wallet.'
-        : `Your corporation has ${goldData.walletCount} wallets.`;
-
       await interaction.reply({
         content: `💰 **Your Corporation Gold Stats**\n\n` +
           `**Total Gold:** ${goldData.gold.toLocaleString()}\n` +
           `**Gold per Hour:** ${goldData.goldPerHour.toFixed(2)}\n` +
-          `**Tier:** ${goldData.tierName} ${goldData.emoji}\n` +
-          `**Highest Earner:** ${highestEarnerText}\n\n` +
-          `${walletText}`,
+          `**Highest Earner:** ${highestEarnerText}`,
         ephemeral: true,
       });
     }
@@ -1206,8 +1200,16 @@ client.on('interactionCreate', async (interaction) => {
 
         if (!corpData) {
           console.log('[CORP] No corp data - returning error');
+          const websiteUrl = process.env.WEBSITE_URL || 'http://localhost:3100';
           await interaction.editReply({
-            content: '❌ Could not load corporation data. Please try again later.',
+            content: `❌ No corporation data found for your wallet.\n\n` +
+                     `**This means you haven't connected this wallet on the website yet.**\n\n` +
+                     `**To fix this:**\n` +
+                     `1. Go to ${websiteUrl}\n` +
+                     `2. Connect your wallet (\`${walletToUse.substring(0, 20)}...\`)\n` +
+                     `3. Complete blockchain verification\n` +
+                     `4. Then try \`/corp\` again\n\n` +
+                     `The Discord bot can only display data from wallets that are already connected and verified on the website.`,
           });
           return;
         }
