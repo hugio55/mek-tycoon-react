@@ -464,6 +464,29 @@ export const upgradeMekLevel = mutation({
         });
       }
 
+      // LOG: Activity log for upgrade purchase
+      await ctx.db.insert("auditLogs", {
+        type: "mekUpgrade",
+        timestamp: now,
+        createdAt: now,
+        stakeAddress: args.walletAddress,
+        assetId: args.assetId,
+        assetName: ownedMek.assetName || args.assetId,
+        oldLevel: mekLevel.currentLevel,
+        newLevel: newLevel,
+        upgradeCost: upgradeCost,
+        goldBefore: currentGold,
+        goldAfter: goldDecrease.newAccumulatedGold,
+        cumulativeGoldBefore: goldMiningData.totalCumulativeGold,
+        cumulativeGoldAfter: newTotalCumulativeGold,
+        totalGoldPerHourBefore: goldMiningData.totalGoldPerHour,
+        totalGoldPerHour: totalGoldPerHour,
+        newGoldPerHour: newBoostAmount,
+        boostAmount: newBoostAmount,
+        upgradedBy: args.walletAddress,
+        mekOwner: args.walletAddress,
+      });
+
       // LOG: Returning result to frontend
       devLog.log('[UPGRADE MUTATION] Returning result:', {
         success: true,

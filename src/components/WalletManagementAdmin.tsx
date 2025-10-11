@@ -7,6 +7,7 @@ import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard'
 import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
+import ActivityLogViewer from '@/components/ActivityLogViewer';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -31,6 +32,7 @@ export default function WalletManagementAdmin() {
   const resetAllMekLevels = useMutation(api.mekLeveling.resetAllMekLevels);
   const findCorruptedGoldRecords = useMutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords);
   const fixCorruptedCumulativeGold = useMutation(api.fixCorruptedGold.fixCorruptedCumulativeGold);
+  const ungroupAllWallets = useMutation(api.ungroupWallets.ungroupWallet);
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +42,7 @@ export default function WalletManagementAdmin() {
   const [isRunningSnapshot, setIsRunningSnapshot] = useState(false);
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
+  const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
   const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
   const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
   const [goldFixResults, setGoldFixResults] = useState<any>(null);
@@ -766,6 +769,27 @@ Check console for full timeline.
           </button>
 
           <button
+            onClick={async () => {
+              if (!confirm('This will ungroup ALL wallet groups (remove corporation groupings). Are you sure?')) return;
+              try {
+                const result = await ungroupAllWallets({});
+                setStatusMessage({
+                  type: 'success',
+                  message: result.message
+                });
+                setTimeout(() => setStatusMessage(null), 5000);
+              } catch (error) {
+                setStatusMessage({ type: 'error', message: 'Failed to ungroup wallets' });
+                setTimeout(() => setStatusMessage(null), 5000);
+              }
+            }}
+            className="px-4 py-2 bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded-lg transition-colors font-bold"
+            title="Remove all wallet groups (ungroup corporations)"
+          >
+            🔓 Ungroup All Wallets
+          </button>
+
+          <button
             onClick={handleRunSnapshot}
             disabled={isRunningSnapshot}
             className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1094,6 +1118,13 @@ Check console for full timeline.
                         View Levels
                       </button>
                       <button
+                        onClick={() => setViewingActivityLog(wallet.walletAddress)}
+                        className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
+                        title="View activity log (upgrades, connections, etc.)"
+                      >
+                        📋 Activity
+                      </button>
+                      <button
                         onClick={() => setDiagnosticWallet(wallet.walletAddress)}
                         className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
                         title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
@@ -1314,6 +1345,13 @@ Check console for full timeline.
                             View Levels
                           </button>
                           <button
+                            onClick={() => setViewingActivityLog(wallet.walletAddress)}
+                            className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
+                            title="View activity log (upgrades, connections, etc.)"
+                          >
+                            📋 Activity
+                          </button>
+                          <button
                             onClick={() => setDiagnosticWallet(wallet.walletAddress)}
                             className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
                             title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
@@ -1430,6 +1468,13 @@ Check console for full timeline.
         <MekLevelsViewer
           walletAddress={viewingMekLevels}
           onClose={() => setViewingMekLevels(null)}
+        />
+      )}
+
+      {viewingActivityLog && (
+        <ActivityLogViewer
+          walletAddress={viewingActivityLog}
+          onClose={() => setViewingActivityLog(null)}
         />
       )}
 
