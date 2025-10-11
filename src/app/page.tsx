@@ -387,6 +387,14 @@ export default function MekRateLoggingPage() {
     bonusRate: number
   }}>({});
 
+  // Track recently upgraded Meks to prevent instant re-sorting
+  const [recentlyUpgradedMeks, setRecentlyUpgradedMeks] = useState<{[assetId: string]: {
+    originalIndex: number,
+    upgradeTime: number,
+    mouseLeft: boolean,
+    moveTimerId?: NodeJS.Timeout
+  }}>({});
+
   // Convex mutations and queries
   const initializeGoldMining = useMutation(api.goldMining.initializeGoldMining);
   const initializeWithBlockfrost = useAction(api.goldMining.initializeWithBlockfrost);
@@ -2671,7 +2679,17 @@ export default function MekRateLoggingPage() {
   // CRITICAL: Only accumulate gold if wallet is VERIFIED
   // OPTIMIZED: Animation loop doesn't restart when goldMiningData updates
   useEffect(() => {
-    if (!walletConnected || !goldMiningData) return;
+    console.log('[Gold Animation] Effect triggered:', {
+      walletConnected,
+      hasGoldMiningData: !!goldMiningData,
+      isVerified: goldMiningData?.isVerified,
+      totalGoldPerHour: goldMiningData?.totalGoldPerHour
+    });
+
+    if (!walletConnected || !goldMiningData) {
+      console.log('[Gold Animation] Early return - walletConnected:', walletConnected, 'goldMiningData:', !!goldMiningData);
+      return;
+    }
 
     // VERIFICATION CHECK: Only animate gold if verified
     const isVerified = goldMiningData.isVerified === true;
@@ -2683,7 +2701,10 @@ export default function MekRateLoggingPage() {
       return; // Don't start animation loop
     }
 
-    console.log('[Gold Animation] Wallet VERIFIED - starting gold accumulation (optimized - won\'t restart on data updates)');
+    console.log('[Gold Animation] ✅ STARTING ANIMATION LOOP - Wallet VERIFIED', {
+      totalGoldPerHour: goldMiningData.totalGoldPerHour,
+      accumulatedGold: goldMiningData.accumulatedGold
+    });
 
     let animationFrameId: number;
     let lastUpdateTime = Date.now();
@@ -2698,8 +2719,8 @@ export default function MekRateLoggingPage() {
       // Get latest data from ref (doesn't cause re-render)
       const latestData = goldMiningDataRef.current;
 
-      // Calculate gold every frame, but only update state every 100ms to prevent excessive re-renders
-      if (latestData && timeSinceLastStateUpdate >= 100) {
+      // Calculate gold every frame, but only update state every 33ms for smooth 30 FPS
+      if (latestData && timeSinceLastStateUpdate >= 33) {
         // Use shared calculation utility
         const calculatedGold = calculateCurrentGold({
           accumulatedGold: latestData.accumulatedGold || 0,
@@ -2708,7 +2729,7 @@ export default function MekRateLoggingPage() {
           isVerified: true
         });
 
-        // Update state - throttled to 10 times per second instead of 60
+        // Update state - throttled to 30 FPS for smooth animation
         setCurrentGold(calculatedGold);
 
         // Also update cumulative gold in real-time
@@ -2746,7 +2767,7 @@ export default function MekRateLoggingPage() {
       cancelAnimationFrame(animationFrameId);
       if (checkpointIntervalRef.current) clearInterval(checkpointIntervalRef.current);
     };
-  }, [walletConnected, walletAddress]); // OPTIMIZED: Removed goldMiningData dependency
+  }, [walletConnected, walletAddress, goldMiningData?.isVerified]); // Added isVerified to restart when verification status changes
 
   // Save on page unload
   useEffect(() => {
@@ -3431,7 +3452,7 @@ export default function MekRateLoggingPage() {
 
                 {walletDropdownOpen && (
                   <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-sm rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left" style={{ willChange: 'opacity, transform' }}>
-                    {/* 1. Corporation name */}
+                    {/* 1. Company name */}
                     <div className="px-4 py-4 border-b border-yellow-500/20 touch-manipulation">
                       {companyNameData?.companyName ? (
                         <div
@@ -3441,7 +3462,7 @@ export default function MekRateLoggingPage() {
                             setShowCompanyNameModal(true);
                             setWalletDropdownOpen(false);
                           }}
-                          title="Click to edit corporation name"
+                          title="Click to edit company name"
                         >
                           {companyNameData.companyName}
                           <span className="ml-1 text-base opacity-60">✏️</span>
@@ -3455,7 +3476,7 @@ export default function MekRateLoggingPage() {
                           }}
                           className="text-yellow-400/60 text-xl sm:text-xl italic hover:text-yellow-400 transition-colors min-h-[44px] touch-manipulation"
                         >
-                          + Set corporation name
+                          + Set company name
                         </button>
                       )}
                     </div>
@@ -3478,138 +3499,7 @@ export default function MekRateLoggingPage() {
                       </div>
                     )}
 
-                    {/* 4. & 5. Wallets in Corporation */}
-                    {walletGroup && walletGroup.length > 0 && (
-                      <div className="px-4 py-4 border-b border-yellow-500/20 space-y-3">
-                        <div className="text-gray-400 text-base uppercase tracking-wider mb-2">
-                          Wallets in Corporation ({walletGroup.length})
-                        </div>
-
-                        {walletGroup.map((wallet, index) => (
-                          <div
-                            key={wallet.walletAddress}
-                            className={`px-4 py-3 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border ${
-                              wallet.walletAddress === walletAddress
-                                ? 'border-yellow-400'
-                                : 'border-gray-600'
-                            } rounded ${
-                              wallet.isPrimary ? 'font-semibold' : 'font-normal'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                {/* Nickname - editable */}
-                                {editingWalletAddress === wallet.walletAddress ? (
-                                  <div className="flex gap-2 items-center mb-1">
-                                    <input
-                                      type="text"
-                                      value={editingNickname}
-                                      onChange={(e) => setEditingNickname(e.target.value)}
-                                      className="flex-1 px-2 py-1 bg-black/50 border border-yellow-500/50 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-400"
-                                      placeholder="Wallet nickname"
-                                      autoFocus
-                                    />
-                                    <button
-                                      onClick={() => handleSaveNickname(wallet.walletAddress, editingNickname)}
-                                      className="text-green-400 hover:text-green-300 text-sm px-2 py-1"
-                                    >
-                                      ✓
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingWalletAddress(null);
-                                        setEditingNickname('');
-                                      }}
-                                      className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div
-                                    className="flex items-center gap-2 mb-1 cursor-pointer hover:text-yellow-300 transition-colors"
-                                    onClick={() => {
-                                      setEditingWalletAddress(wallet.walletAddress);
-                                      setEditingNickname(wallet.nickname || '');
-                                    }}
-                                  >
-                                    <div className="text-yellow-400 text-base uppercase tracking-wider">
-                                      {wallet.nickname || 'Set Nickname'}
-                                    </div>
-                                    <span className="text-gray-500 text-xs">✏️</span>
-                                  </div>
-                                )}
-                                {/* Abbreviated stake address */}
-                                <div className="text-gray-400 font-mono text-sm">
-                                  stake{wallet.walletAddress.slice(5, 9)}...{wallet.walletAddress.slice(-4)}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {wallet.isPrimary && (
-                                  <span className="text-yellow-400 text-sm">⭐</span>
-                                )}
-                                {walletGroup.length > 1 && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveWallet(wallet.walletAddress);
-                                    }}
-                                    className="text-red-400 hover:text-red-300 text-xs px-2 py-1 border border-red-500/50 hover:border-red-400 rounded transition-colors"
-                                    title="Remove wallet from corporation"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 6. Add Wallet Button */}
-                    <div className="px-4 py-3 border-b border-yellow-500/20">
-                      <button
-                        onClick={() => {
-                          setWalletDropdownOpen(false);
-                          setAddWalletModalOpen(true);
-                        }}
-                        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 border-2 border-yellow-500 text-white text-base font-bold uppercase tracking-wider rounded px-4 py-3 hover:from-yellow-700 hover:to-yellow-800 hover:shadow-[0_4px_15px_rgba(250,182,23,0.4)] transition-all min-h-[48px] touch-manipulation"
-                      >
-                        + ADD WALLET
-                      </button>
-                    </div>
-
-                    {/* 7. Rescan Wallet(s) Button */}
-                    <button
-                      onClick={async () => {
-                        setWalletDropdownOpen(false);
-                        console.log('=== MANUAL WALLET RESCAN ===');
-                        try {
-                          const walletName = localStorage.getItem('goldMiningWalletType');
-                          const walletApi = window.cardano?.[walletName];
-
-                          if (walletApi) {
-                            const api = await walletApi.enable();
-                            const utxos = await api.getUtxos();
-                            const meks = await parseMeksFromUtxos(utxos, walletAddress || '', []);
-
-                            if (meks.length > 0) {
-                              setOwnedMeks(meks);
-                              const totalGoldPerHour = meks.reduce((sum, mek) => sum + mek.goldPerHour, 0);
-                              setGoldPerHour(totalGoldPerHour);
-                            }
-                          }
-                        } catch (error) {
-                          console.error('Rescan error:', error);
-                        }
-                      }}
-                      className="w-full px-4 py-4 text-left bg-transparent border-b border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 active:bg-yellow-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
-                    >
-                      RESCAN WALLET{walletGroup && walletGroup.length > 1 ? 'S' : ''}
-                    </button>
-
-                    {/* 8. Disconnect Button */}
+                    {/* 4. Disconnect Button */}
                     <button
                       onClick={() => {
                         setWalletDropdownOpen(false);
@@ -3838,7 +3728,7 @@ export default function MekRateLoggingPage() {
                         {goldTextStyle === 1 && (
                           <div className="text-base sm:text-lg flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
                             <span className="text-white font-bold font-mono tracking-wider">{goldPerHour.toFixed(2)}</span>
-                            <span className="text-yellow-500/60 font-light uppercase tracking-[0.2em] sm:tracking-[0.3em]">GOLD/HR</span>
+                            <span className="text-yellow-500/60 font-light uppercase tracking-wide">GOLD/HR</span>
                           </div>
                         )}
                         {goldTextStyle === 2 && (
@@ -4029,7 +3919,7 @@ export default function MekRateLoggingPage() {
                             color: sortType === 'rate' ? 'white' : 'rgba(255,255,255,0.6)'
                           }}
                         >
-                          Rate
+                          Gold/hr
                         </button>
                         <button
                           onClick={() => {
@@ -4101,61 +3991,126 @@ export default function MekRateLoggingPage() {
               ownedMeks.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto' :
               'grid-cols-1 sm:grid-cols-2 breakpoint-3col:grid-cols-3 breakpoint-4col:grid-cols-4 max-w-7xl mx-auto'
             }`}>
-              {[...ownedMeks]
-                .filter(mek => {
-                  // Filter by wallet if walletFilter is set
-                  if (walletFilter && (mek as any).sourceWallet !== walletFilter) return false;
+              {(() => {
+                // Filter and sort meks
+                const filteredAndSorted = [...ownedMeks]
+                  .filter(mek => {
+                    // Filter by wallet if walletFilter is set
+                    if (walletFilter && (mek as any).sourceWallet !== walletFilter) return false;
 
-                  // Filter by search term
-                  if (!searchTerm) return true;
-                  const term = searchTerm.toLowerCase();
+                    // Filter by search term
+                    if (!searchTerm) return true;
+                    const term = searchTerm.toLowerCase();
 
-                  // Check Mek number
-                  if (mek.mekNumber && mek.mekNumber.toString().includes(term)) return true;
-                  if (mek.assetName.toLowerCase().includes(term)) return true;
+                    // Check Mek number
+                    if (mek.mekNumber && mek.mekNumber.toString().includes(term)) return true;
+                    if (mek.assetName.toLowerCase().includes(term)) return true;
 
-                  // Check variation names if sourceKey exists
-                  if (mek.sourceKey) {
-                    const variations = getVariationInfoFromFullKey(mek.sourceKey);
-                    if (variations.head.name.toLowerCase().includes(term)) return true;
-                    if (variations.body.name.toLowerCase().includes(term)) return true;
-                    if (variations.trait.name.toLowerCase().includes(term)) return true;
+                    // Check variation names if sourceKey exists
+                    if (mek.sourceKey) {
+                      const variations = getVariationInfoFromFullKey(mek.sourceKey);
+                      if (variations.head.name.toLowerCase().includes(term)) return true;
+                      if (variations.body.name.toLowerCase().includes(term)) return true;
+                      if (variations.trait.name.toLowerCase().includes(term)) return true;
+                    }
+
+                    // Check head, body, item groups directly
+                    if (mek.headGroup?.toLowerCase().includes(term)) return true;
+                    if (mek.bodyGroup?.toLowerCase().includes(term)) return true;
+                    if (mek.itemGroup?.toLowerCase().includes(term)) return true;
+
+                    return false;
+                  })
+                  .sort((a, b) => {
+                    if (sortType === 'rate') {
+                      return b.goldPerHour - a.goldPerHour;  // Highest rate first
+                    } else {
+                      // Sort by current upgrade level (highest level first)
+                      const aLevel = a.currentLevel || 1;
+                      const bLevel = b.currentLevel || 1;
+                      return bLevel - aLevel;  // Highest level first
+                    }
+                  });
+
+                // Apply position locking for recently upgraded meks (until mouse leaves + 2 seconds)
+                const finalOrder = [...filteredAndSorted];
+
+                Object.entries(recentlyUpgradedMeks).forEach(([assetId, { originalIndex, mouseLeft }]) => {
+                  // Keep in original position until mouse has left AND 2-second delay has passed
+                  if (!mouseLeft) {
+                    // Find where this mek is currently in the sorted list
+                    const currentIndex = finalOrder.findIndex(m => m.assetId === assetId);
+
+                    if (currentIndex !== -1 && currentIndex !== originalIndex && originalIndex < finalOrder.length) {
+                      // Move it back to its original position
+                      const [mek] = finalOrder.splice(currentIndex, 1);
+                      finalOrder.splice(originalIndex, 0, mek);
+                    }
                   }
+                });
 
-                  // Check head, body, item groups directly
-                  if (mek.headGroup?.toLowerCase().includes(term)) return true;
-                  if (mek.bodyGroup?.toLowerCase().includes(term)) return true;
-                  if (mek.itemGroup?.toLowerCase().includes(term)) return true;
+                return finalOrder.map((mek, currentIndex) => {
+                  const isRecentlyUpgraded = mek.assetId in recentlyUpgradedMeks;
+                  const isMoving = isRecentlyUpgraded && recentlyUpgradedMeks[mek.assetId].mouseLeft;
 
-                  return false;
-                })
-                .sort((a, b) => {
-                  if (sortType === 'rate') {
-                    return b.goldPerHour - a.goldPerHour;  // Highest rate first
-                  } else {
-                    // Sort by level (rarityRank - lower rank = higher level)
-                    const aRank = a.rarityRank || 9999;
-                    const bRank = b.rarityRank || 9999;
-                    return aRank - bRank;  // Best rank (lowest number) first
-                  }
-                })
-                .map(mek => (
-                  <MekCard
-                    key={mek.assetId}
-                    mek={mek}
-                    getMekImageUrl={getMekImageUrl}
-                    currentGold={currentGold}
-                    walletAddress={walletAddress}
-                    animatedValues={animatedMekValues[mek.assetId]}
-                    upgradingMeks={upgradingMeks}
-                    onClick={() => setSelectedMek(mek)}
-                    onGoldSpentAnimation={(animationId, amount) => {
-                      setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
-                      setTimeout(() => {
-                        setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+                  const handleMouseLeave = () => {
+                    if (isRecentlyUpgraded && !recentlyUpgradedMeks[mek.assetId].mouseLeft) {
+                      // Start 2-second countdown when mouse leaves
+                      const timerId = setTimeout(() => {
+                        setRecentlyUpgradedMeks(prev => {
+                          const newState = { ...prev };
+                          delete newState[mek.assetId];
+                          return newState;
+                        });
                       }, 2000);
-                    }}
-                    onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
+
+                      setRecentlyUpgradedMeks(prev => ({
+                        ...prev,
+                        [mek.assetId]: {
+                          ...prev[mek.assetId],
+                          mouseLeft: true,
+                          moveTimerId: timerId
+                        }
+                      }));
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={mek.assetId}
+                      className="mek-card-wrapper"
+                      onMouseLeave={handleMouseLeave}
+                      style={{
+                        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                        opacity: isMoving ? 0.9 : 1,
+                        transform: isMoving ? 'scale(0.97)' : 'scale(1)'
+                      }}
+                    >
+                      <MekCard
+                        mek={mek}
+                        getMekImageUrl={getMekImageUrl}
+                        currentGold={currentGold}
+                        walletAddress={walletAddress}
+                        animatedValues={animatedMekValues[mek.assetId]}
+                        upgradingMeks={upgradingMeks}
+                        onClick={() => setSelectedMek(mek)}
+                        onGoldSpentAnimation={(animationId, amount) => {
+                          setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
+                          setTimeout(() => {
+                            setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+                          }, 2000);
+                        }}
+                        onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
+                      // Record current position to prevent instant re-sorting
+                      setRecentlyUpgradedMeks(prev => ({
+                        ...prev,
+                        [mek.assetId]: {
+                          originalIndex: currentIndex,
+                          upgradeTime: Date.now(),
+                          mouseLeft: false
+                        }
+                      }));
+
                       setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
 
                       setAnimatedMekValues(prev => ({
@@ -4222,7 +4177,10 @@ export default function MekRateLoggingPage() {
                       }
                     }}
                   />
-                ))}
+                    </div>
+                  );
+                });
+              })()}
             </div>
 
             {ownedMeks.length === 0 && loadingMeks && (

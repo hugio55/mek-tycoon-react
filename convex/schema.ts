@@ -1545,6 +1545,11 @@ export default defineSchema({
   mekOwnershipHistory: defineTable({
     walletAddress: v.string(), // Which wallet this snapshot is for
     snapshotTime: v.number(), // When this snapshot was taken
+
+    // Multi-wallet fields (for backward compatibility with old snapshots)
+    companyName: v.optional(v.string()),
+    groupId: v.optional(v.string()),
+
     meks: v.array(v.object({
       assetId: v.string(), // Unique asset ID
       assetName: v.string(), // Mek name
@@ -1554,6 +1559,12 @@ export default defineSchema({
       currentLevel: v.optional(v.number()), // Mek level at time of snapshot
       levelBoostPercent: v.optional(v.number()), // Level boost percentage
       levelBoostAmount: v.optional(v.number()), // Level boost gold amount
+      policyId: v.optional(v.string()), // NFT policy ID
+      imageUrl: v.optional(v.string()), // Image URL for this Mek
+      headVariation: v.optional(v.string()), // Head variation code
+      bodyVariation: v.optional(v.string()), // Body variation code
+      itemVariation: v.optional(v.string()), // Item variation code
+      sourceKey: v.optional(v.string()), // Full variation code (e.g., "AE1-BJ2-JI1-B")
     })),
     totalGoldPerHour: v.number(), // Total rate at time of snapshot
     totalMekCount: v.number(), // How many Meks were present
@@ -1733,6 +1744,23 @@ export default defineSchema({
     // Wallet link logs
     primaryWallet: v.optional(v.string()),
     linkedWallet: v.optional(v.string()),
+
+    // Mek upgrade logs
+    assetId: v.optional(v.string()),
+    assetName: v.optional(v.string()),
+    boostAmount: v.optional(v.number()),
+    newGoldPerHour: v.optional(v.number()),
+    newLevel: v.optional(v.number()),
+    oldLevel: v.optional(v.number()),
+    upgradeCost: v.optional(v.number()),
+    upgradedBy: v.optional(v.string()),
+    mekOwner: v.optional(v.string()),
+    cumulativeGoldBefore: v.optional(v.number()),
+    cumulativeGoldAfter: v.optional(v.number()),
+    goldBefore: v.optional(v.number()),
+    goldAfter: v.optional(v.number()),
+    totalGoldPerHour: v.optional(v.number()),
+    totalGoldPerHourBefore: v.optional(v.number()),
   })
     .index("by_type", ["type"])
     .index("by_stake_address", ["stakeAddress"])
@@ -2141,4 +2169,40 @@ export default defineSchema({
     .index("by_performer", ["performedBy"])
     .index("by_timestamp", ["timestamp"])
     .index("by_action", ["action"]),
+
+  // Activity Logs - comprehensive user action tracking
+  activityLogs: defineTable({
+    walletAddress: v.string(), // Wallet that performed the action
+    actionType: v.string(), // "wallet_connect", "upgrade_purchase", "mek_level_up", "gold_spent", etc.
+    timestamp: v.number(),
+
+    // Action details
+    description: v.string(), // Human-readable description
+
+    // Financial data (for upgrades/purchases)
+    goldBefore: v.optional(v.number()),
+    goldAfter: v.optional(v.number()),
+    goldSpent: v.optional(v.number()),
+
+    // Gold per hour tracking
+    goldPerHourBefore: v.optional(v.number()),
+    goldPerHourAfter: v.optional(v.number()),
+
+    // Mek-specific data
+    mekAssetId: v.optional(v.string()),
+    mekAssetName: v.optional(v.string()),
+
+    // Upgrade details
+    upgradeType: v.optional(v.string()), // "body", "head", "trait"
+    upgradeName: v.optional(v.string()),
+    levelBefore: v.optional(v.number()),
+    levelAfter: v.optional(v.number()),
+
+    // Additional metadata
+    metadata: v.optional(v.any()), // Flexible field for additional context
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_action_type", ["actionType"])
+    .index("by_wallet_and_timestamp", ["walletAddress", "timestamp"]),
 });
