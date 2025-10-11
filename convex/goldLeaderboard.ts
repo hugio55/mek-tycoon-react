@@ -436,6 +436,65 @@ export const getCorporationWalletDetails = query({
   },
 });
 
+// OPTIMIZED: Get top 3 from cache (uses ~0.001 GB instead of 1.03 GB)
+export const getTopGoldMinersCached = query({
+  args: {
+    currentWallet: v.optional(v.string()),
+  },
+  handler: async (ctx, { currentWallet }) => {
+    const cachedLeaderboard = await ctx.db
+      .query("leaderboardCache")
+      .withIndex("by_category_rank", q => q.eq("category", "gold"))
+      .collect();
+
+    // Return top 3 sorted by rank with full display info
+    return cachedLeaderboard
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, 3)
+      .map(entry => ({
+        walletAddress: entry.walletAddress,
+        displayWallet: entry.username || (entry.walletAddress ?
+          `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
+          'Unknown'),
+        currentGold: Math.floor(entry.value),
+        hourlyRate: entry.metadata?.goldPerHour || 0,
+        mekCount: entry.metadata?.mekDetails?.total || 0,
+        isCurrentUser: currentWallet === entry.walletAddress,
+        lastActive: entry.lastUpdated,
+        rank: entry.rank,
+      }));
+  },
+});
+
+// OPTIMIZED: Get ALL from cache (uses ~0.001 GB instead of 1.33 GB)
+export const getAllCorporationsCached = query({
+  args: {
+    currentWallet: v.optional(v.string()),
+  },
+  handler: async (ctx, { currentWallet }) => {
+    const cachedLeaderboard = await ctx.db
+      .query("leaderboardCache")
+      .withIndex("by_category_rank", q => q.eq("category", "gold"))
+      .collect();
+
+    // Return all cached entries with full display info
+    return cachedLeaderboard
+      .sort((a, b) => a.rank - b.rank)
+      .map(entry => ({
+        walletAddress: entry.walletAddress,
+        displayWallet: entry.username || (entry.walletAddress ?
+          `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
+          'Unknown'),
+        currentGold: Math.floor(entry.value),
+        hourlyRate: entry.metadata?.goldPerHour || 0,
+        mekCount: entry.metadata?.mekDetails?.total || 0,
+        isCurrentUser: currentWallet === entry.walletAddress,
+        lastActive: entry.lastUpdated,
+        rank: entry.rank,
+      }));
+  },
+});
+
 // Subscribe to real-time updates for the top 3 (from cache)
 export const subscribeToTopMiners = query({
   args: {},

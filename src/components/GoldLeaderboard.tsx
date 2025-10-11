@@ -149,13 +149,13 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
   const [showAllCorporations, setShowAllCorporations] = useState(false);
   const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
 
-  // Get top miners data
-  const topMiners = useQuery(api.goldLeaderboard.getTopGoldMiners, {
+  // Get top miners data (OPTIMIZED: uses cache instead of calculating real-time)
+  const topMiners = useQuery(api.goldLeaderboard.getTopGoldMinersCached, {
     currentWallet: currentWallet,
   });
 
-  // Get all corporations data (for modal)
-  const allCorporations = useQuery(api.goldLeaderboard.getAllCorporations, {
+  // Get all corporations data (for modal) (OPTIMIZED: uses cache)
+  const allCorporations = useQuery(api.goldLeaderboard.getAllCorporationsCached, {
     currentWallet: currentWallet,
   });
 

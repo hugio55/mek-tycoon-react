@@ -63,6 +63,7 @@ import type * as diagnosticBlockfrostUsage from "../diagnosticBlockfrostUsage.js
 import type * as diagnosticCorruptedGold from "../diagnosticCorruptedGold.js";
 import type * as diagnosticMekBoosts from "../diagnosticMekBoosts.js";
 import type * as diagnosticRequestAnalysis from "../diagnosticRequestAnalysis.js";
+import type * as diagnosticWalletCheck from "../diagnosticWalletCheck.js";
 import type * as diagnosticWalletHistory from "../diagnosticWalletHistory.js";
 import type * as difficultyConfigs from "../difficultyConfigs.js";
 import type * as discordIntegration from "../discordIntegration.js";
@@ -229,6 +230,7 @@ declare const fullApi: ApiFromModules<{
   diagnosticCorruptedGold: typeof diagnosticCorruptedGold;
   diagnosticMekBoosts: typeof diagnosticMekBoosts;
   diagnosticRequestAnalysis: typeof diagnosticRequestAnalysis;
+  diagnosticWalletCheck: typeof diagnosticWalletCheck;
   diagnosticWalletHistory: typeof diagnosticWalletHistory;
   difficultyConfigs: typeof difficultyConfigs;
   discordIntegration: typeof discordIntegration;
