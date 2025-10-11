@@ -543,10 +543,7 @@ export default function GoldLeaderboard({ currentWallet, showMoreButton = false 
           >
             {/* Close button */}
             <button
-              onClick={() => {
-                setSelectedMek(null);
-                setSelectedWallet(null);
-              }}
+              onClick={() => setSelectedMek(null)}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 text-yellow-500 hover:text-yellow-300 text-3xl font-bold z-10 transition-colors"
             >
               ×

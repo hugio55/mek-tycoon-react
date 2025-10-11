@@ -33,6 +33,7 @@ export default function WalletManagementAdmin() {
   const findCorruptedGoldRecords = useMutation(api.diagnosticCorruptedGold.findCorruptedGoldRecords);
   const fixCorruptedCumulativeGold = useMutation(api.fixCorruptedGold.fixCorruptedCumulativeGold);
   const ungroupAllWallets = useMutation(api.ungroupWallets.ungroupWallet);
+  const resetAllProgress = useMutation(api.adminResetAllProgress.resetAllProgress);
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -796,6 +797,31 @@ Check console for full timeline.
             title="Manually trigger 6-hour blockchain snapshot"
           >
             {isRunningSnapshot ? 'Running...' : '▶ Run Snapshot'}
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!confirm('⚠️ RESET ALL PROGRESS ⚠️\n\nThis will reset EVERYONE\'S progress:\n• All mechanisms → Level 1\n• All gold → 0\n• All cumulative gold → 0\n\nWallets stay verified and continue earning.\n\nAre you SURE?')) return;
+              if (!confirm('FINAL WARNING: This will reset ALL players in the entire game. Type "RESET" in your mind to confirm.')) return;
+              if (!confirm('Last chance to back out. This affects EVERYONE. Continue?')) return;
+
+              try {
+                setStatusMessage({ type: 'success', message: 'Resetting all progress...' });
+                const result = await resetAllProgress({});
+                setStatusMessage({
+                  type: 'success',
+                  message: result.message
+                });
+                setTimeout(() => setStatusMessage(null), 10000);
+              } catch (error) {
+                setStatusMessage({ type: 'error', message: 'Failed to reset progress: ' + String(error) });
+                setTimeout(() => setStatusMessage(null), 5000);
+              }
+            }}
+            className="px-4 py-2 bg-red-900/50 hover:bg-red-900/70 text-red-200 border-2 border-red-500 rounded-lg transition-colors font-bold animate-pulse"
+            title="RESET ALL PROGRESS - Resets everyone back to level 1 and 0 gold"
+          >
+            🔴 RESET ALL PROGRESS
           </button>
 
           <input

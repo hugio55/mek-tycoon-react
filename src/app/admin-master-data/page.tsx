@@ -2343,7 +2343,7 @@ export default function AdminMasterDataPage() {
                               }
 
                               return (
-                                <div key={variation.name} className={`flex items-center justify-between px-2 py-1 rounded ${bgClass}`}>
+                                <div key={`${variation.category}-${variation.name}`} className={`flex items-center justify-between px-2 py-1 rounded ${bgClass}`}>
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] text-gray-500 font-mono">#{Math.round(variation.rank)}</span>
                                     <span className="text-xs text-gray-300">{variation.name}</span>

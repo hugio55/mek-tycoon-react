@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import AnimatedSuccessBar from "../../contracts/components/AnimatedSuccessBar";
+import { DifficultyLevel } from "@/lib/difficultyModifiers";
 
 interface IndustrialMissionCardProps {
   nodeData: {
@@ -15,6 +16,8 @@ interface IndustrialMissionCardProps {
   } | null;
   onStartMission: () => void;
   simulateProgress?: () => void;
+  currentDifficulty?: DifficultyLevel;
+  successPercentage?: number;
 }
 
 // Helper function to format gold amounts
@@ -40,7 +43,17 @@ const missionAilments = {
   psychic: { icon: "🧠", name: "Psychic", counters: ["Mental Shield", "Focus"] }
 };
 
-export default function IndustrialMissionCard({ nodeData, onStartMission, simulateProgress }: IndustrialMissionCardProps) {
+// Helper function to calculate NFT price with overshoot discount
+// More overshoot = cheaper NFT price
+const calculateNftPrice = (basePrice: number, overshootPercentage: number): number => {
+  // Cap overshoot at 100% for discount calculation
+  const cappedOvershoot = Math.min(overshootPercentage, 100);
+  // Each 1% overshoot gives 0.5% discount (50% max discount at 100% overshoot)
+  const discountMultiplier = 1 - (cappedOvershoot * 0.005);
+  return Math.round(basePrice * discountMultiplier);
+};
+
+export default function IndustrialMissionCard({ nodeData, onStartMission, simulateProgress, currentDifficulty = 'medium', successPercentage = 0 }: IndustrialMissionCardProps) {
   if (!nodeData) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500 p-8">
@@ -70,7 +83,23 @@ export default function IndustrialMissionCard({ nodeData, onStartMission, simula
   // Calculate success rate (simulated for now)
   const baseSuccessRate = nodeData.completed ? 100 : nodeData.current ? 75 : nodeData.available ? 50 : 0;
   
-  // Sample rewards with drop rates
+  // NFT pricing based on difficulty (TODO: Pull from Admin Master Data calculator)
+  // These are placeholder values - will be replaced with actual calculator data
+  const nftBasePrices = {
+    easy: 100,
+    medium: 200,
+    hard: 300
+  };
+
+  // Calculate discounted NFT price based on overshoot
+  const baseNftPrice = nftBasePrices[currentDifficulty];
+  const discountedNftPrice = calculateNftPrice(baseNftPrice, successPercentage);
+  const discountPercentage = Math.round((1 - (discountedNftPrice / baseNftPrice)) * 100);
+
+  // NFT display name based on node label and difficulty
+  const nftName = `${nodeData.label || 'Event'}: ${currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1)} Difficulty`;
+
+  // Sample rewards with drop rates (for non-event nodes)
   const missionRewards = nodeData.storyNodeType === 'boss' || nodeData.storyNodeType === 'final_boss' ? [
     { name: "Boss Essence", dropChance: 100, type: "essence" },
     { name: "Rare Power Chip", dropChance: 75, type: "chip" },
@@ -78,10 +107,6 @@ export default function IndustrialMissionCard({ nodeData, onStartMission, simula
     { name: "Mystery Box", dropChance: 30, type: "item" },
     { name: "Legendary Core", dropChance: 8, type: "core" },
     { name: "Ultimate Token", dropChance: 1, type: "token" },
-  ] : nodeData.storyNodeType === 'event' ? [
-    { name: "Mystery Reward", dropChance: 100, type: "mystery" },
-    { name: "Event Token", dropChance: 60, type: "token" },
-    { name: "Choice Box", dropChance: 30, type: "item" },
   ] : [
     { name: "Chrome Essence", dropChance: 100, type: "essence" },
     { name: "Scrap Metal", dropChance: 95, type: "material" },
@@ -204,22 +229,72 @@ export default function IndustrialMissionCard({ nodeData, onStartMission, simula
               </div>
             </div>
 
-            {/* Rewards Grid */}
-            <div className="bg-black/20 rounded-lg p-3 mb-4">
-              <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Rewards</div>
-              <div className="space-y-1.5">
-                {missionRewards.map((reward, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-300">{reward.name}</span>
-                    </div>
-                    <span className={`text-sm font-bold ${getRewardColor(reward.dropChance)}`}>
-                      {reward.dropChance}%
-                    </span>
+            {/* NFT Purchase Section (Event Nodes Only) OR Rewards Grid (Other Nodes) */}
+            {nodeData.storyNodeType === 'event' ? (
+              <div className="bg-black/20 rounded-lg p-4 mb-4 border border-yellow-500/30">
+                {/* NFT Name */}
+                <div className="mb-3">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">NFT Reward</div>
+                  <div className="text-sm font-bold text-yellow-400">{nftName}</div>
+                </div>
+
+                {/* ADA Price with Discount */}
+                <div className="bg-yellow-900/20 rounded-lg p-3 mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">Price</span>
+                    {discountPercentage > 0 && (
+                      <span className="text-xs text-green-400 font-bold">{discountPercentage}% OFF</span>
+                    )}
                   </div>
-                ))}
+                  <div className="flex items-baseline gap-2">
+                    {discountPercentage > 0 && (
+                      <span className="text-sm text-gray-500 line-through">{baseNftPrice} ADA</span>
+                    )}
+                    <span className="text-2xl font-bold text-yellow-400">{discountedNftPrice} ADA</span>
+                  </div>
+                  {successPercentage > 0 && (
+                    <div className="text-xs text-gray-400 mt-1">
+                      Overshoot discount: {successPercentage.toFixed(1)}%
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional Notice */}
+                <div className="text-xs text-gray-400 text-center italic mb-3">
+                  NFT purchase is completely optional
+                </div>
+
+                {/* Mint Button */}
+                <button
+                  disabled={!nodeData.completed}
+                  className={`
+                    w-full py-2.5 rounded-lg font-bold text-sm uppercase tracking-wider transition-all
+                    ${nodeData.completed
+                      ? 'bg-yellow-500 hover:bg-yellow-400 text-black cursor-pointer'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }
+                  `}
+                >
+                  {nodeData.completed ? 'Mint NFT' : 'Complete Mission to Unlock'}
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="bg-black/20 rounded-lg p-3 mb-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Rewards</div>
+                <div className="space-y-1.5">
+                  {missionRewards.map((reward, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-300">{reward.name}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${getRewardColor(reward.dropChance)}`}>
+                        {reward.dropChance}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Mission Ailments */}
             <div className="flex gap-2 justify-center mb-4">
