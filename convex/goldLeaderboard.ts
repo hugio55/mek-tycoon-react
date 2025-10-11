@@ -42,10 +42,14 @@ export const getTopGoldMiners = query({
     const groupMap = new Map(groups.map(g => [g.groupId, g]));
 
     // Group miners by groupId OR keep separate if no group
+    // ONLY include verified wallets
     const groupedMiners = new Map<string, typeof allMiners>();
     const ungroupedMiners: typeof allMiners = [];
 
     for (const miner of allMiners) {
+      // Skip non-verified wallets
+      if (miner.isBlockchainVerified !== true) continue;
+
       const groupId = walletToGroupMap.get(miner.walletAddress);
       if (groupId) {
         const existing = groupedMiners.get(groupId) || [];
@@ -239,10 +243,14 @@ export const getAllCorporations = query({
     const groupMap = new Map(groups.map(g => [g.groupId, g]));
 
     // Group miners by groupId OR keep separate if no group
+    // ONLY include verified wallets
     const groupedMiners = new Map<string, typeof allMiners>();
     const ungroupedMiners: typeof allMiners = [];
 
     for (const miner of allMiners) {
+      // Skip non-verified wallets
+      if (miner.isBlockchainVerified !== true) continue;
+
       const groupId = walletToGroupMap.get(miner.walletAddress);
       if (groupId) {
         const existing = groupedMiners.get(groupId) || [];
