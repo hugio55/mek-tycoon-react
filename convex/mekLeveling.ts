@@ -337,13 +337,15 @@ export const upgradeMekLevel = mutation({
       // Update the goldMining record with new effective rates
       const updatedMeks = goldMiningData.ownedMeks.map((mek) => {
         if (mek.assetId === args.assetId) {
+          const effectiveRate = baseRate + newBoostAmount;
           return {
             ...mek,
             baseGoldPerHour: baseRate,
             currentLevel: newLevel,
             levelBoostPercent: newBoostPercent,
             levelBoostAmount: newBoostAmount,
-            effectiveGoldPerHour: baseRate + newBoostAmount,
+            effectiveGoldPerHour: effectiveRate,
+            goldPerHour: effectiveRate, // Also update goldPerHour for compatibility
           };
         }
         return mek;
