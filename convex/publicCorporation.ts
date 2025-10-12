@@ -102,7 +102,7 @@ export const getCorporationData = query({
         assetId: mek.assetId,
         assetName: mek.assetName,
         level: levelMap.get(mek.assetId) || 1,
-        goldPerHour: mek.goldPerHour,
+        goldPerHour: mek.effectiveGoldPerHour || mek.goldPerHour,
         baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour,
         rarityRank: mek.rarityRank,
         imageUrl: sourceKeyCode ?
