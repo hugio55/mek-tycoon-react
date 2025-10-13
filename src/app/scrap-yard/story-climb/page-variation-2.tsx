@@ -1,3 +1,30 @@
+/*
+ * VARIATION 2: HOLOGRAPHIC HUD INTERFACE
+ * ======================================
+ *
+ * DESIGN PHILOSOPHY:
+ * - Inspired by sci-fi holographic displays and advanced HUD systems
+ * - Translucent cyan/blue elements with glowing edges
+ * - Floating information panels with depth and parallax
+ * - Scan lines and holographic shimmer effects throughout
+ * - Smooth animations and transitions for futuristic feel
+ * - Mix of sharp geometry with soft glows
+ *
+ * KEY VISUAL ELEMENTS:
+ * - Canvas: Dark with cyan grid lines and scan line animations
+ * - Node connections: Glowing cyan paths with particle effects
+ * - Mission cards: Translucent with holographic borders
+ * - UI panels: Floating glass panels with depth shadows
+ * - Typography: Clean sans-serif with cyan accent glows
+ * - Interactive states: Holographic shimmer on hover
+ *
+ * COLOR PALETTE:
+ * - Primary: #22d3ee (Cyan)
+ * - Secondary: #8b5cf6 (Purple)
+ * - Accent: #3b82f6 (Blue)
+ * - Background: Deep black with cyan grid overlay
+ */
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -4637,7 +4664,69 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* VARIATION 2: Holographic Background with Cyan Grid */}
+      <div className="fixed inset-0 bg-black -z-10">
+        {/* Animated holographic grid */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} />
+        {/* Radial glow from center */}
+        <div className="absolute inset-0 bg-gradient-radial from-cyan-500/10 via-transparent to-transparent" />
+        {/* Scan line effect */}
+        <div className="absolute inset-0 animate-scan pointer-events-none" style={{
+          background: 'linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.1) 50%, transparent 100%)',
+          height: '100px'
+        }} />
+        {/* Purple accent gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5" />
+      </div>
+
+      {/* CSS for flashing animations + Holographic effects */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes flash-red {
+          0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+        }
+        @keyframes flash-yellow {
+          0%, 100% { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+          50% { border-color: rgba(245, 158, 11, 1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
+        }
+        .flash-red {
+          animation: flash-red 0.5s ease-in-out 3;
+        }
+        .flash-yellow {
+          animation: flash-yellow 0.5s ease-in-out 3;
+        }
+
+        /* VARIATION 2: Holographic glow for interactive elements */
+        .holographic-glow:hover {
+          box-shadow: 0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.1);
+          border-color: #22d3ee !important;
+        }
+
+        /* Holographic shimmer animation */
+        .holographic-shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+        .holographic-shimmer::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(45deg, transparent 30%, rgba(34, 211, 238, 0.3) 50%, transparent 70%);
+          transform: translateX(-100%);
+          animation: holographic-shimmer-anim 3s ease-in-out infinite;
+        }
+        @keyframes holographic-shimmer-anim {
+          0%, 100% { transform: translateX(-100%); }
+          50% { transform: translateX(100%); }
+        }
+      `}} />
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
@@ -4654,8 +4743,9 @@ export default function StoryClimbPage() {
       </div>
 
       {/* Debug: Cancel Contracts Panel - Left side */}
-      <div className="fixed left-4 top-64 z-50 bg-black/90 border border-red-500/50 rounded-lg p-3 shadow-xl">
-        <div className="text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
+      <div className="fixed left-4 top-64 z-50 bg-black/80 backdrop-blur-md border border-cyan-400/40 rounded-xl p-3 shadow-2xl holographic-shimmer">
+        <div className="text-cyan-400 font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           Debug: Cancel Contracts
         </div>
 
@@ -4672,7 +4762,7 @@ export default function StoryClimbPage() {
                       console.error('Failed to cancel mission:', error);
                     }
                   }}
-                  className="bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded hover:bg-red-600/30 hover:border-red-400 transition-colors"
+                  className="bg-red-600/20 backdrop-blur-sm border border-cyan-400/40 text-cyan-300 px-2 py-1 rounded-lg hover:bg-cyan-400/20 hover:border-cyan-400 transition-all duration-300 holographic-glow"
                 >
                   Cancel
                 </button>
@@ -4906,18 +4996,18 @@ export default function StoryClimbPage() {
         <div className="flex gap-2">
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
-            {/* Canvas Container with Style Q background */}
-            <div 
-              className="relative rounded-lg" 
-              style={{ 
+            {/* Canvas Container - VARIATION 2: Holographic Glass Panel */}
+            <div
+              className="relative rounded-2xl holographic-shimmer"
+              style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
-                background: 'rgba(255, 255, 255, 0.005)',
-                backdropFilter: 'blur(1px)',
-                border: '1px solid rgba(255, 255, 255, 0.015)',
-                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none',  // Prevent touch scrolling
-                overscrollBehavior: 'none'  // Prevent scroll chaining
+                background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                backdropFilter: 'blur(8px) saturate(150%)',
+                border: '2px solid rgba(34, 211, 238, 0.3)',
+                boxShadow: '0 0 40px rgba(34, 211, 238, 0.2) inset, 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 60px rgba(34, 211, 238, 0.15)',
+                touchAction: 'none',
+                overscrollBehavior: 'none'
               }}
               onWheel={handleWheel}
             >

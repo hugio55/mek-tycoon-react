@@ -495,13 +495,28 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
     </>
   );
 
+  // Get revoke mutation
+  const revokeAuthentication = useMutation(api.walletAuthentication.revokeAuthentication);
+
   const renderControls = () => (
     <div className="absolute top-2 right-2 z-50 flex items-center gap-4">
       <button
-        onClick={() => {
+        onClick={async () => {
           playClickSound();
 
-          // Clear ALL wallet session data (encrypted + localStorage)
+          // STEP 1: Revoke authentication in Convex database FIRST
+          if (walletAddress) {
+            try {
+              console.log('[Disconnect] Revoking database sessions...');
+              await revokeAuthentication({ stakeAddress: walletAddress });
+              console.log('[Disconnect] Database sessions revoked');
+            } catch (error) {
+              console.error('[Disconnect] Error revoking database sessions:', error);
+              // Continue anyway to clear local storage
+            }
+          }
+
+          // STEP 2: Clear ALL local wallet session data
           try {
             // Use proper session clearing from walletSessionManager
             const { clearWalletSession } = require('@/lib/walletSessionManager');
@@ -521,8 +536,9 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
             sessionStorage.clear();
           }
 
-          // CRITICAL: Force full page reload to clear wallet connections from memory
-          // This ensures wallet providers (Eternl, Nami, etc.) will prompt for signature again
+          // STEP 3: Force full page reload to clear wallet API connections from memory
+          // This ensures wallet providers (Eternl, Nami, Lace, Ledger, etc.) will prompt for NEW signature
+          console.log('[Disconnect] Reloading page to clear wallet connections...');
           window.location.reload();
         }}
         className="text-red-400 hover:text-red-300 text-sm transition-colors"

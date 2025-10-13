@@ -1,3 +1,30 @@
+/*
+ * VARIATION 1: HEAVY INDUSTRIAL WITH HAZARD STRIPES
+ * ================================================
+ *
+ * DESIGN PHILOSOPHY:
+ * - Inspired by industrial safety equipment and military installations
+ * - Heavy use of yellow/black hazard stripes for danger zones
+ * - Metal textures with scratches, rust, and wear
+ * - Sharp angular frames with bold yellow borders
+ * - Grunge overlays throughout for weathered appearance
+ * - Strong contrast between black backgrounds and yellow accents
+ *
+ * KEY VISUAL ELEMENTS:
+ * - Canvas: Black background with diagonal hazard stripe patterns
+ * - Node connections: Yellow glowing lines with industrial texture
+ * - Mission cards: Metal frames with corner brackets and warning stripes
+ * - UI panels: Dark with heavy borders and grunge overlays
+ * - Typography: Bold, uppercase with Orbitron font
+ * - Interactive states: Bright yellow glow effects on hover
+ *
+ * COLOR PALETTE:
+ * - Primary: #fab617 (Safety Yellow)
+ * - Secondary: #000000 (Deep Black)
+ * - Accent: Orange (#ff8c00) for danger states
+ * - Background: Black with 10% yellow tint overlay
+ */
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -4637,7 +4664,64 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* VARIATION 1: Heavy Industrial Background with Hazard Stripes */}
+      <div className="fixed inset-0 bg-black -z-10">
+        {/* Diagonal hazard stripe pattern overlay */}
+        <div className="absolute inset-0 mek-overlay-hazard-stripes opacity-15" />
+        {/* Metal texture grid */}
+        <div className="absolute inset-0 mek-overlay-metal-texture opacity-20" />
+        {/* Grunge and scratches */}
+        <div className="absolute inset-0 mek-overlay-scratches opacity-40" />
+        {/* Yellow tint overlay for industrial feel */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5" />
+      </div>
+
+      {/* CSS for flashing animations + Industrial effects */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes flash-red {
+          0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+        }
+        @keyframes flash-yellow {
+          0%, 100% { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+          50% { border-color: rgba(245, 158, 11, 1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
+        }
+        .flash-red {
+          animation: flash-red 0.5s ease-in-out 3;
+        }
+        .flash-yellow {
+          animation: flash-yellow 0.5s ease-in-out 3;
+        }
+
+        /* VARIATION 1: Industrial yellow glow for interactive elements */
+        .industrial-glow-hover:hover {
+          box-shadow: 0 0 25px rgba(250, 182, 23, 0.6), inset 0 0 15px rgba(250, 182, 23, 0.2);
+          border-color: #fab617 !important;
+        }
+
+        /* Corner brackets for industrial frames */
+        .corner-brackets::before,
+        .corner-brackets::after {
+          content: '';
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #fab617;
+        }
+        .corner-brackets::before {
+          top: -2px;
+          left: -2px;
+          border-right: none;
+          border-bottom: none;
+        }
+        .corner-brackets::after {
+          bottom: -2px;
+          right: -2px;
+          border-left: none;
+          border-top: none;
+        }
+      `}} />
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
@@ -4654,9 +4738,12 @@ export default function StoryClimbPage() {
       </div>
 
       {/* Debug: Cancel Contracts Panel - Left side */}
-      <div className="fixed left-4 top-64 z-50 bg-black/90 border border-red-500/50 rounded-lg p-3 shadow-xl">
-        <div className="text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
-          Debug: Cancel Contracts
+      <div className="fixed left-4 top-64 z-50 mek-card-industrial border-2 border-red-500/50 p-3 shadow-xl corner-brackets">
+        {/* Hazard stripe header */}
+        <div className="mek-header-industrial mb-2 -mx-3 -mt-3 px-3 py-2">
+          <div className="text-red-500 font-bold text-xs uppercase tracking-wider font-orbitron">
+            Debug: Cancel Contracts
+          </div>
         </div>
 
         {activeMissions && activeMissions.length > 0 ? (
@@ -4672,7 +4759,7 @@ export default function StoryClimbPage() {
                       console.error('Failed to cancel mission:', error);
                     }
                   }}
-                  className="bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded hover:bg-red-600/30 hover:border-red-400 transition-colors"
+                  className="bg-red-600/20 border-2 border-red-500/50 text-red-400 px-2 py-1 hover:bg-red-600/30 hover:border-red-400 transition-colors uppercase text-xs font-bold tracking-wider industrial-glow-hover"
                 >
                   Cancel
                 </button>
@@ -4694,7 +4781,7 @@ export default function StoryClimbPage() {
                   console.error('Failed to cancel all missions:', error);
                 }
               }}
-              className="w-full mt-2 bg-red-600/30 border border-red-500 text-red-300 px-2 py-1 rounded hover:bg-red-600/40 hover:border-red-300 transition-colors font-bold text-xs"
+              className="w-full mt-2 bg-red-600/30 border-2 border-red-500 text-red-300 px-2 py-1 hover:bg-red-600/40 hover:border-red-300 transition-colors font-bold text-xs uppercase tracking-wider industrial-glow-hover"
             >
               CANCEL ALL
             </button>
@@ -4716,7 +4803,7 @@ export default function StoryClimbPage() {
                 alert('Failed to cleanup stuck missions');
               }
             }}
-            className="w-full bg-orange-600/30 border border-orange-500 text-orange-300 px-2 py-1 rounded hover:bg-orange-600/40 hover:border-orange-300 transition-colors font-bold text-xs"
+            className="w-full bg-orange-600/30 border-2 border-orange-500 text-orange-300 px-2 py-1 hover:bg-orange-600/40 hover:border-orange-300 transition-colors font-bold text-xs uppercase tracking-wider industrial-glow-hover"
           >
             🔧 FORCE CLEANUP STUCK
           </button>
@@ -4906,18 +4993,18 @@ export default function StoryClimbPage() {
         <div className="flex gap-2">
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
-            {/* Canvas Container with Style Q background */}
-            <div 
-              className="relative rounded-lg" 
-              style={{ 
+            {/* Canvas Container - VARIATION 1: Heavy Industrial Frame */}
+            <div
+              className="relative corner-brackets mek-card-industrial"
+              style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
-                background: 'rgba(255, 255, 255, 0.005)',
-                backdropFilter: 'blur(1px)',
-                border: '1px solid rgba(255, 255, 255, 0.015)',
-                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none',  // Prevent touch scrolling
-                overscrollBehavior: 'none'  // Prevent scroll chaining
+                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 50%, rgba(0, 0, 0, 0.95) 100%)',
+                backdropFilter: 'blur(3px)',
+                border: '3px solid rgba(250, 182, 23, 0.5)',
+                boxShadow: '0 0 30px rgba(250, 182, 23, 0.3) inset, 0 0 40px rgba(0, 0, 0, 0.8)',
+                touchAction: 'none',
+                overscrollBehavior: 'none'
               }}
               onWheel={handleWheel}
             >
