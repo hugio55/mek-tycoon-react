@@ -57,35 +57,20 @@ export const getCorporationData = query({
 
     const totalCumulativeGold = baseCumulativeGold + goldEarnedSinceLastUpdate;
 
-    // Calculate corporation rank
-    const allMiners = await ctx.db.query("goldMining").collect();
-    const minersWithGold = allMiners.map(miner => {
-      let gold = miner.accumulatedGold || 0;
-      if (miner.isBlockchainVerified === true) {
-        const lastUpdateTime = miner.lastSnapshotTime || miner._creationTime;
-        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-        const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-        gold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
-      }
-      const earnedSinceUpdate = gold - (miner.accumulatedGold || 0);
-      let baseCumulative = miner.totalCumulativeGold || 0;
-      if (!miner.totalCumulativeGold || baseCumulative === 0) {
-        baseCumulative = (miner.accumulatedGold || 0) + (miner.totalGoldSpentOnUpgrades || 0);
-      }
-      return {
-        walletAddress: miner.walletAddress,
-        totalCumulativeGold: baseCumulative + earnedSinceUpdate,
-      };
-    });
+    // Calculate corporation rank using cached leaderboard (much faster)
+    const cachedLeaderboard = await ctx.db
+      .query("leaderboardCache")
+      .withIndex("by_category_rank", q => q.eq("category", "gold"))
+      .collect();
 
-    const sortedMiners = minersWithGold.sort((a, b) => b.totalCumulativeGold - a.totalCumulativeGold);
-    const rank = sortedMiners.findIndex(m => m.walletAddress === goldMiningData!.walletAddress) + 1;
-    const totalCorporations = sortedMiners.length;
+    const rank = cachedLeaderboard.find(entry => entry.walletAddress === goldMiningData.walletAddress)?.rank ||
+                 cachedLeaderboard.length + 1; // If not in cache, they're below all cached entries
+    const totalCorporations = cachedLeaderboard.length;
 
-    // Get level data for the Meks
+    // Get level data for the Meks (using index for better performance)
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .filter(q => q.eq(q.field("walletAddress"), goldMiningData!.walletAddress))
+      .withIndex("by_wallet", q => q.eq("walletAddress", goldMiningData!.walletAddress))
       .collect();
 
     const levelMap = new Map(
