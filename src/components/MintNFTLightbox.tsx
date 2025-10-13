@@ -11,6 +11,11 @@ interface MintNFTLightboxProps {
   difficulty: 'easy' | 'medium' | 'hard';
   eventName?: string;
   nftPrice?: number;
+  nftTitle?: string; // e.g., "Rust Protocol: Goose Neck"
+  remainingSupply?: number;
+  totalSupply?: number;
+  chapterNumber?: number;
+  eventNumber?: number;
 }
 
 export default function MintNFTLightbox({
@@ -20,7 +25,12 @@ export default function MintNFTLightbox({
   eventId,
   difficulty,
   eventName = "Story Event",
-  nftPrice = 50
+  nftPrice = 50,
+  nftTitle = "Event NFT",
+  remainingSupply = 100,
+  totalSupply = 100,
+  chapterNumber = 1,
+  eventNumber = 1
 }: MintNFTLightboxProps) {
   useEffect(() => {
     if (isOpen) {
@@ -53,10 +63,11 @@ export default function MintNFTLightbox({
 
       {/* Lightbox */}
       <div
-        className="relative bg-black/95 border-2 border-yellow-500/50 rounded-lg p-8 max-w-2xl mx-4 shadow-2xl"
+        className="relative bg-black/30 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg p-8 max-w-2xl mx-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{
           boxShadow: '0 0 50px rgba(250, 182, 23, 0.3)',
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(20, 20, 20, 0.3) 100%)',
         }}
       >
         {/* Success Icon */}
@@ -81,7 +92,7 @@ export default function MintNFTLightbox({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Left: NFT Preview */}
           <div className="flex flex-col items-center">
-            <div className="relative w-full aspect-square max-w-[250px] border-2 border-yellow-500/30 rounded-lg overflow-hidden bg-black/50">
+            <div className="relative w-full aspect-square max-w-[300px] border-2 border-yellow-500/30 rounded-lg overflow-hidden bg-black/50">
               <Image
                 src={`/event-nfts/${imageFilename}`}
                 alt={`Event ${eventId} NFT - ${difficultyInfo.label}`}
@@ -91,25 +102,35 @@ export default function MintNFTLightbox({
             </div>
             <div className="mt-3 text-center">
               <p className="text-xs text-gray-500 uppercase tracking-wider">NFT Preview</p>
-              <p className="text-sm text-yellow-400 font-semibold">{imageFilename.replace('.png', '')}</p>
+              <p className="text-base text-yellow-400 font-bold">{nftTitle}</p>
             </div>
           </div>
 
           {/* Right: Information */}
-          <div className="flex flex-col justify-center space-y-4">
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4">
+          <div className="flex flex-col justify-center space-y-3">
+            <div className="bg-yellow-900/20 backdrop-blur-sm border border-yellow-500/30 rounded p-4">
               <p className="text-xs text-yellow-500/70 uppercase tracking-wider mb-1">Event</p>
-              <p className="text-white font-semibold">{eventName}</p>
+              <p className="text-white font-semibold">Chapter {chapterNumber} Event {eventNumber}</p>
+              <p className="text-white font-semibold text-sm mt-1">"{eventName}"</p>
             </div>
 
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4">
+            <div className="bg-yellow-900/20 backdrop-blur-sm border border-yellow-500/30 rounded p-4">
               <p className="text-xs text-yellow-500/70 uppercase tracking-wider mb-1">Difficulty</p>
               <p className="text-white font-semibold uppercase">{difficultyInfo.label}</p>
             </div>
 
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4">
+            <div className="bg-yellow-900/20 backdrop-blur-sm border border-yellow-500/30 rounded p-4">
               <p className="text-xs text-yellow-500/70 uppercase tracking-wider mb-1">Mint Price</p>
               <p className="text-2xl text-yellow-400 font-bold">{nftPrice} ADA</p>
+            </div>
+
+            <div className="bg-yellow-900/20 backdrop-blur-sm border border-yellow-500/30 rounded p-4">
+              <p className="text-xs text-yellow-500/70 uppercase tracking-wider mb-1">Remaining</p>
+              <p className="text-white font-semibold">
+                <span className="text-2xl text-white font-black">{remainingSupply}</span>
+                <span className="text-gray-500 mx-1">/</span>
+                <span className="text-lg text-gray-400">{totalSupply}</span>
+              </p>
             </div>
           </div>
         </div>
@@ -124,22 +145,22 @@ export default function MintNFTLightbox({
         </div>
 
         {/* Important Notes */}
-        <div className="bg-blue-900/20 border border-blue-500/30 rounded p-4 mb-6">
+        <div className="bg-blue-900/20 backdrop-blur-sm border border-blue-500/30 rounded p-4 mb-6">
           <p className="text-blue-400 text-xs font-semibold mb-2 uppercase tracking-wider">
-            ℹ️ Important Information
+            Important Information
           </p>
-          <ul className="text-gray-300 text-sm space-y-1">
+          <ul className="text-gray-300 text-sm space-y-2">
             <li className="flex items-start gap-2">
               <span className="text-blue-400 mt-1">•</span>
-              <span>This NFT is optional - you can mint it now or come back later</span>
+              <span>Each NFT can be minted once per player, per difficulty. You can mint one Easy, one Medium, and one Hard NFT for this event.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-400 mt-1">•</span>
+              <span>You can mint this NFT now or return later, as long as the remaining supply lasts. If the supply runs out before you mint, you will not be able to mint this NFT.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-400 mt-1">•</span>
               <span>Minting requires a connected Cardano wallet</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400 mt-1">•</span>
-              <span>One-time purchase - each NFT can only be minted once per player</span>
             </li>
           </ul>
         </div>
