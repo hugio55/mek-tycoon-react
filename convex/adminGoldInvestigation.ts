@@ -197,7 +197,7 @@ export const restoreLostGold = mutation({
       stakeAddress: args.walletAddress,
       goldBefore: currentGold,
       goldAfter: goldIncrease.newAccumulatedGold,
-      goldRestored: goldToRestore,
+      goldAmount: goldToRestore, // Amount restored (difference between before and after)
       reason: "Bug fix: Restored gold lost to 50k cap during spending",
       cumulativeGoldBefore: goldData.totalCumulativeGold,
       cumulativeGoldAfter: goldIncrease.newTotalCumulativeGold,

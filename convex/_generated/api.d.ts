@@ -20,6 +20,7 @@ import type * as activeMissions from "../activeMissions.js";
 import type * as activityLogs from "../activityLogs.js";
 import type * as addTotalActiveContracts from "../addTotalActiveContracts.js";
 import type * as addressConversion from "../addressConversion.js";
+import type * as adminGoldInvestigation from "../adminGoldInvestigation.js";
 import type * as adminResetAllProgress from "../adminResetAllProgress.js";
 import type * as adminSyncFix from "../adminSyncFix.js";
 import type * as adminUsers from "../adminUsers.js";
@@ -191,6 +192,7 @@ declare const fullApi: ApiFromModules<{
   activityLogs: typeof activityLogs;
   addTotalActiveContracts: typeof addTotalActiveContracts;
   addressConversion: typeof addressConversion;
+  adminGoldInvestigation: typeof adminGoldInvestigation;
   adminResetAllProgress: typeof adminResetAllProgress;
   adminSyncFix: typeof adminSyncFix;
   adminUsers: typeof adminUsers;

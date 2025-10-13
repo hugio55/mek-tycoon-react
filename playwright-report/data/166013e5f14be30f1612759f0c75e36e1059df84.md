@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - link "Mek Tycoon Logo" [ref=e9] [cursor=pointer]:
+        - /url: /hub
+        - img "Mek Tycoon Logo" [ref=e10] [cursor=pointer]
+      - navigation [ref=e11]:
+        - generic [ref=e12]:
+          - link "HUB" [ref=e14] [cursor=pointer]:
+            - /url: /hub
+            - generic [ref=e15] [cursor=pointer]: HUB
+          - generic [ref=e16]:
+            - button "🏭 Operations ▼" [ref=e18] [cursor=pointer]:
+              - generic [ref=e19] [cursor=pointer]:
+                - generic [ref=e20] [cursor=pointer]: 🏭
+                - generic [ref=e21] [cursor=pointer]: Operations
+              - generic [ref=e22] [cursor=pointer]: ▼
+            - button "⚙️ Production ▼" [ref=e24] [cursor=pointer]:
+              - generic [ref=e25] [cursor=pointer]:
+                - generic [ref=e26] [cursor=pointer]: ⚙️
+                - generic [ref=e27] [cursor=pointer]: Production
+              - generic [ref=e28] [cursor=pointer]: ▼
+            - button "🌟 Meks ▼" [ref=e30] [cursor=pointer]:
+              - generic [ref=e31] [cursor=pointer]:
+                - generic [ref=e32] [cursor=pointer]: 🌟
+                - generic [ref=e33] [cursor=pointer]: Meks
+              - generic [ref=e34] [cursor=pointer]: ▼
+            - button "🤖 Management ▼" [ref=e36] [cursor=pointer]:
+              - generic [ref=e37] [cursor=pointer]:
+                - generic [ref=e38] [cursor=pointer]: 🤖
+                - generic [ref=e39] [cursor=pointer]: Management
+              - generic [ref=e40] [cursor=pointer]: ▼
+            - button "🎮 Scrap Yard ▼" [ref=e42] [cursor=pointer]:
+              - generic [ref=e43] [cursor=pointer]:
+                - generic [ref=e44] [cursor=pointer]: 🎮
+                - generic [ref=e45] [cursor=pointer]: Scrap Yard
+              - generic [ref=e46] [cursor=pointer]: ▼
+            - button "⚡ Admin ▼" [ref=e48] [cursor=pointer]:
+              - generic [ref=e49] [cursor=pointer]:
+                - generic [ref=e50] [cursor=pointer]: ⚡
+                - generic [ref=e51] [cursor=pointer]: Admin
+              - generic [ref=e52] [cursor=pointer]: ▼
+    - generic [ref=e53]:
+      - button "Disconnect Wallet" [ref=e54] [cursor=pointer]
+      - button "Mute Sounds" [ref=e55] [cursor=pointer]:
+        - img [ref=e56] [cursor=pointer]
+      - link "← Welcome" [ref=e59] [cursor=pointer]:
+        - /url: /
+  - generic [ref=e62]:
+    - heading "404" [level=1] [ref=e63]
+    - heading "This page could not be found." [level=2] [ref=e65]
+```

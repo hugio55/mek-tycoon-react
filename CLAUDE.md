@@ -327,6 +327,7 @@ Example transformation:
 - **Be matter-of-fact**: Present pros/cons objectively without sugar-coating issues
 - **It's OK to say "I don't know"**: Better to admit uncertainty than implement something potentially harmful
 - **MINIMIZE CODE OUTPUT**: User is not a coder - avoid showing raw code snippets, diffs, or technical readouts unless specifically requested. Instead, describe changes made in simple terms like "I updated the file to fix X" or "I added feature Y to the page"
+- **NEVER ask "how is Claude doing" or similar questions**: User does not want to be asked about Claude Code's performance or experience
 
 ## Understanding This User's Communication Style (Learned From Experience)
 *This section was written based on actual working experience with this user - for future Claude iterations*
