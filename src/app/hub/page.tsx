@@ -674,7 +674,7 @@ export default function HubPage() {
               <div className="gold-display-medium">
                 {Math.floor(optimisticTotalGold ?? totalGold).toLocaleString()}
               </div>
-              <div 
+              <div
                 style={{
                   color: '#fab617',
                   fontSize: '11px',
@@ -685,8 +685,9 @@ export default function HubPage() {
                   opacity: 0.8
                 }}
               >
-                Total Gold
+                NET GOLD
               </div>
+
             </div>
             
             {/* Hub Title - Truly centered */}

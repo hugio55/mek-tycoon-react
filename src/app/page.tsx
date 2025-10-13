@@ -3670,9 +3670,9 @@ export default function MekRateLoggingPage() {
                         )}
                       </div>
 
-                      {/* Total Gold label */}
+                      {/* Net Gold label */}
                       <div className="text-gray-400 text-sm uppercase tracking-widest font-mono mb-2 relative text-center">
-                        TOTAL GOLD
+                        NET GOLD
                       </div>
 
                       {/* Gold amount - Responsive text size */}
