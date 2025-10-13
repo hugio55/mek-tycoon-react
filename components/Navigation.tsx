@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { getSession } from "@/lib/walletSession";
+import { clearWalletSession } from "@/lib/walletSessionManager";
 // import WalletConnect from "./WalletConnect";
 
 interface NavCategory {
@@ -82,9 +86,47 @@ export default function Navigation() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  // Convex mutation to revoke session on backend
+  const revokeSession = useMutation(api.sessionManagement.revokeSession);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
+  };
+
+  // Handle wallet disconnection - revokes session on backend then clears local storage
+  const handleDisconnect = async () => {
+    if (isDisconnecting) return; // Prevent multiple clicks
+
+    setIsDisconnecting(true);
+
+    try {
+      // Get current session to retrieve sessionId
+      const session = await getSession();
+
+      if (session?.sessionId) {
+        console.log('[Navigation] Revoking session on backend:', session.sessionId);
+
+        // Revoke session on backend - this ensures signature is required on next login
+        await revokeSession({
+          sessionId: session.sessionId,
+          reason: 'Manual disconnect from dropdown'
+        });
+
+        console.log('[Navigation] Session successfully revoked on backend');
+      }
+    } catch (error) {
+      console.error('[Navigation] Error revoking session:', error);
+      // Continue with local cleanup even if backend revocation fails
+    }
+
+    // Clear all wallet data from localStorage using session manager
+    clearWalletSession();
+    console.log('[Navigation] Local session data cleared');
+
+    // Redirect to welcome page
+    window.location.href = '/';
   };
 
   // Handle mounting
@@ -130,17 +172,11 @@ export default function Navigation() {
       {/* Welcome/Logout Link */}
       <div className="absolute top-2 right-2 z-50 flex items-center gap-4">
         <button
-          onClick={() => {
-            // Clear wallet data from localStorage
-            localStorage.removeItem('connectedWallet');
-            localStorage.removeItem('walletAddress');
-            localStorage.removeItem('stakeAddress');
-            // Redirect to welcome page
-            window.location.href = '/';
-          }}
-          className="text-red-400 hover:text-red-300 text-sm transition-colors"
+          onClick={handleDisconnect}
+          disabled={isDisconnecting}
+          className="text-red-400 hover:text-red-300 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Disconnect Wallet
+          {isDisconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}
         </button>
         <Link
           href="/"
