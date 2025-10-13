@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, lazy, Suspense, useMemo, useCallback } from 'react';
+import { useState, lazy, Suspense, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard';
@@ -52,11 +52,61 @@ export default function WalletManagementAdmin() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
 
+  // Drag-to-scroll state
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
+
   // Diagnostic query to check boost sync
   const boostDiagnostic = useQuery(
     api.diagnosticMekBoosts.compareMekDataSources,
     diagnosticWallet ? { walletAddress: diagnosticWallet } : 'skip'
   );
+
+  // Drag-to-scroll handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start dragging if clicking on non-interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === 'BUTTON' ||
+      target.tagName === 'INPUT' ||
+      target.tagName === 'A' ||
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    setIsDragging(true);
+    setStartPos({ x: e.pageX, y: e.pageY });
+    if (scrollContainerRef.current) {
+      setScrollPos({
+        left: scrollContainerRef.current.scrollLeft,
+        top: scrollContainerRef.current.scrollTop,
+      });
+    }
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+
+    const dx = e.pageX - startPos.x;
+    const dy = e.pageY - startPos.y;
+
+    scrollContainerRef.current.scrollLeft = scrollPos.left - dx;
+    scrollContainerRef.current.scrollTop = scrollPos.top - dy;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
 
   const handleResetVerification = async (walletAddress: string) => {
     if (!confirm(`Reset verification for wallet ${walletAddress.substring(0, 20)}...?`)) return;
@@ -846,7 +896,18 @@ Check console for full timeline.
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div
+        ref={scrollContainerRef}
+        className="overflow-x-auto overflow-y-auto"
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: isDragging ? 'none' : 'auto',
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+      >
         <table className="w-full bg-gray-900/50 rounded-lg border border-gray-700">
           <thead>
             <tr className="border-b border-gray-700 bg-gray-800/50">

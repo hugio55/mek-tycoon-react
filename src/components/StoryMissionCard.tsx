@@ -20,6 +20,8 @@ interface VariationBuff {
   id: string;
   name: string;
   bonus: string;
+  color?: string; // Hex color for Genesis tokens
+  rarity?: string; // Rarity tier for Genesis tokens
 }
 
 interface StoryMissionCardProps {
@@ -74,6 +76,20 @@ interface StoryMissionCardProps {
     rank: number;
     contribution: number;
   }>;
+
+  // Event node specific
+  isEventNode?: boolean;
+  successPercentage?: number;
+  eventNodeId?: number;
+  eventImages?: {
+    easy: string;
+    medium: string;
+    hard: string;
+  };
+
+  // NFT supply tracking
+  remainingNfts?: number;
+  totalNfts?: number;
 }
 
 export default function StoryMissionCard({
@@ -92,11 +108,9 @@ export default function StoryMissionCard({
     { name: "Legendary Frame", quantity: 1, chance: 1 },
   ],
   variationBuffs = [
-    { id: "taser", name: "TASER", bonus: "+10%" },
-    { id: "log", name: "LOG", bonus: "+10%" },
-    { id: "kevlar", name: "KEVLAR", bonus: "+10%" },
-    { id: "nuke", name: "NUKE", bonus: "+10%" },
-    { id: "exposed", name: "EXPOSED", bonus: "+10%" },
+    { id: "genesis-blue", name: "Blue Genesis", bonus: "+5%", color: "#3B82F6", rarity: "common" },
+    { id: "genesis-green", name: "Green Genesis", bonus: "+10%", color: "#10B981", rarity: "uncommon" },
+    { id: "genesis-yellow", name: "Yellow Genesis", bonus: "+15%", color: "#FBBF24", rarity: "rare" },
   ],
   buffCategoryId = 0,
   successChance = 65,
@@ -120,7 +134,13 @@ export default function StoryMissionCard({
   completedDifficulties = new Set(),
   onDifficultyComplete,
   variationBuffLayoutStyle = 1,
-  flashingMekSlots = false
+  flashingMekSlots = false,
+  isEventNode = false,
+  successPercentage = 0,
+  eventNodeId,
+  eventImages,
+  remainingNfts = 100,
+  totalNfts = 100
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -129,6 +149,23 @@ export default function StoryMissionCard({
   const [showDeployTooltip, setShowDeployTooltip] = useState(false);
   const [selectedChip, setSelectedChip] = useState<{ tier: number; modifier: string } | null>(null);
   const [clickedChip, setClickedChip] = useState<{ tier: number; modifier: string } | null>(null);
+
+  // Determine which image to display - use event images if this is an event node
+  const displayImage = React.useMemo(() => {
+    if (isEventNode && eventImages) {
+      // Use the image corresponding to the current difficulty
+      return eventImages[currentDifficulty];
+    }
+    // Otherwise use the regular mek image
+    return mekImage;
+  }, [isEventNode, eventImages, currentDifficulty, mekImage]);
+
+  // NFT price calculation helper
+  const calculateNftPrice = (basePrice: number, overshootPercentage: number): number => {
+    const cappedOvershoot = Math.min(overshootPercentage, 100);
+    const discountMultiplier = 1 - (cappedOvershoot * 0.005); // 0.5% discount per 1% overshoot
+    return Math.round(basePrice * discountMultiplier);
+  };
 
   // Check if all difficulties are completed
   const allDifficultiesCompleted =
@@ -348,10 +385,10 @@ export default function StoryMissionCard({
           >
             {/* Inner container with padding to prevent border overlap */}
             <div className="absolute inset-0 p-1 overflow-hidden">
-              {mekImage && (
+              {displayImage && (
                 <>
                   <Image
-                    src={mekImage}
+                    src={displayImage}
                     alt={mekName}
                     fill
                     className="object-contain transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
@@ -377,59 +414,91 @@ export default function StoryMissionCard({
             // Define the 5 spectacular variations
             const variations = {
               // VARIATION 1: HAZARD WARNING INDUSTRIAL
-              1: () => (
-                <div className="relative h-14 overflow-hidden border-t-2 border-b-2 border-yellow-500">
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black" />
+              1: () => {
+                // Get variant name for event nodes
+                const nftVariantNames: Record<string, Record<'easy' | 'medium' | 'hard', string>> = {
+                  'Rust Protocol': {
+                    easy: 'Charm',
+                    medium: 'Goose Neck',
+                    hard: "Gov't"
+                  },
+                };
+                const variantName = nftVariantNames[title]?.[currentDifficulty];
 
-                  {/* Large-scale hazard stripes background */}
-                  <div
-                    className="absolute inset-0 opacity-20"
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(
-                        45deg,
-                        #fab617,
-                        #fab617 20px,
-                        transparent 20px,
-                        transparent 40px
-                      )`,
-                    }}
-                  />
+                return (
+                  <div className="relative h-20 overflow-hidden border-t-2 border-b-2 border-yellow-500">
+                    {/* Background gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black" />
 
-                  {/* Grid texture overlay - made more visible */}
-                  <div
-                    className="absolute inset-0 opacity-30"
-                    style={{
-                      backgroundImage: `
-                        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px),
-                        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px)
-                      `,
-                      backgroundSize: '4px 4px',
-                    }}
-                  />
+                    {/* Large-scale hazard stripes background */}
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage: `repeating-linear-gradient(
+                          45deg,
+                          #fab617,
+                          #fab617 20px,
+                          transparent 20px,
+                          transparent 40px
+                        )`,
+                      }}
+                    />
 
-                  {/* Warning tape borders */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+                    {/* Grid texture overlay - made more visible */}
+                    <div
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage: `
+                          repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px),
+                          repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px)
+                        `,
+                        backgroundSize: '4px 4px',
+                      }}
+                    />
 
-                  {/* Content */}
-                  <div className="relative h-full flex items-center justify-between px-4">
-                    <h2 className="text-xl font-black tracking-wider uppercase">
-                      {mekName && (
-                        <>
-                          <span className="text-yellow-500" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>MEK </span>
-                          <span className="text-white" style={{ textShadow: '0 0 20px rgba(250, 182, 23, 0.8)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
-                        </>
+                    {/* Warning tape borders */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+
+                    {/* Content */}
+                    <div className="relative h-full flex items-center justify-between px-4">
+                      {isEventNode && variantName ? (
+                        // Event nodes: show title on line 1, variant name (larger) on line 2
+                        <div className="flex flex-col justify-center">
+                          <div className="text-sm font-bold tracking-wide uppercase text-white/60" style={{ textShadow: '0 0 6px rgba(255, 255, 255, 0.3)' }}>
+                            {title}:
+                          </div>
+                          <div className="text-2xl font-black tracking-wider uppercase text-white leading-tight" style={{ textShadow: '0 0 12px rgba(255, 255, 255, 0.6)' }}>
+                            {variantName}
+                          </div>
+                        </div>
+                      ) : (
+                        <h2 className="text-xl font-black tracking-wider uppercase">
+                          {mekName && (
+                            <>
+                              {isEventNode ? (
+                                // Event nodes fallback: show name without MEK prefix in white
+                                <span className="text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}>{mekName}</span>
+                              ) : (
+                                // Regular nodes: show MEK # format
+                                <>
+                                  <span className="text-yellow-500" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>MEK </span>
+                                  <span className="text-white" style={{ textShadow: '0 0 20px rgba(250, 182, 23, 0.8)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </h2>
                       )}
-                    </h2>
-                    {mekRank !== undefined && mekRank !== null && (
-                      <div className="text-sm text-gray-300">
-                        Rank <span className="text-yellow-400 font-bold text-lg" style={{ textShadow: '0 0 15px rgba(250, 182, 23, 0.6)' }}>{mekRank}</span>
-                      </div>
-                    )}
+                      {mekRank !== undefined && mekRank !== null && (
+                        <div className="text-sm text-gray-300">
+                          Rank <span className="text-yellow-400 font-bold text-lg" style={{ textShadow: '0 0 15px rgba(250, 182, 23, 0.6)' }}>{mekRank}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ),
+                );
+              },
 
               // VARIATION 2: CARBON FIBER TACTICAL
               2: () => (
@@ -470,8 +539,14 @@ export default function StoryMissionCard({
                     <h2 className="text-xl font-black tracking-wider uppercase">
                       {mekName && (
                         <>
-                          <span className="text-black bg-yellow-500 px-1" style={{ clipPath: 'polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%)' }}>MEK</span>
-                          <span className="text-yellow-500 ml-2">#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                          {isEventNode ? (
+                            <span className="text-white">{mekName}</span>
+                          ) : (
+                            <>
+                              <span className="text-black bg-yellow-500 px-1" style={{ clipPath: 'polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%)' }}>MEK</span>
+                              <span className="text-yellow-500 ml-2">#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                            </>
+                          )}
                         </>
                       )}
                     </h2>
@@ -540,11 +615,19 @@ export default function StoryMissionCard({
                     <h2 className="text-xl font-black tracking-wider uppercase">
                       {mekName && (
                         <>
-                          <span className="text-yellow-400" style={{
-                            textShadow: '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.5)',
-                            filter: 'brightness(1.2)'
-                          }}>MEK </span>
-                          <span className="text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                          {isEventNode ? (
+                            <span className="text-white" style={{
+                              textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+                            }}>{mekName}</span>
+                          ) : (
+                            <>
+                              <span className="text-yellow-400" style={{
+                                textShadow: '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.5)',
+                                filter: 'brightness(1.2)'
+                              }}>MEK </span>
+                              <span className="text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                            </>
+                          )}
                         </>
                       )}
                     </h2>
@@ -603,15 +686,25 @@ export default function StoryMissionCard({
                     <h2 className="text-xl font-black tracking-wider uppercase">
                       {mekName && (
                         <>
-                          <span className="text-yellow-500" style={{
-                            fontFamily: 'monospace',
-                            letterSpacing: '0.2em',
-                            textShadow: '2px 2px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black'
-                          }}>MEK</span>
-                          <span className="text-white ml-2" style={{
-                            fontFamily: 'monospace',
-                            letterSpacing: '0.1em'
-                          }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                          {isEventNode ? (
+                            <span className="text-white" style={{
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.2em',
+                              textShadow: '2px 2px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black'
+                            }}>{mekName}</span>
+                          ) : (
+                            <>
+                              <span className="text-yellow-500" style={{
+                                fontFamily: 'monospace',
+                                letterSpacing: '0.2em',
+                                textShadow: '2px 2px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black'
+                              }}>MEK</span>
+                              <span className="text-white ml-2" style={{
+                                fontFamily: 'monospace',
+                                letterSpacing: '0.1em'
+                              }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                            </>
+                          )}
                         </>
                       )}
                     </h2>
@@ -696,16 +789,25 @@ export default function StoryMissionCard({
                     <h2 className="text-2xl font-black tracking-wider uppercase">
                       {mekName && (
                         <>
-                          <span className="relative">
-                            <span className="text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text" style={{
-                              filter: 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.8))',
+                          {isEventNode ? (
+                            <span className="text-white" style={{
                               fontFamily: 'Orbitron, monospace',
-                            }}>MEK</span>
-                          </span>
-                          <span className="text-white ml-3" style={{
-                            fontFamily: 'Orbitron, monospace',
-                            textShadow: '0 0 30px rgba(250, 182, 23, 0.5)',
-                          }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                              textShadow: '0 0 30px rgba(255, 255, 255, 0.5)',
+                            }}>{mekName}</span>
+                          ) : (
+                            <>
+                              <span className="relative">
+                                <span className="text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text" style={{
+                                  filter: 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.8))',
+                                  fontFamily: 'Orbitron, monospace',
+                                }}>MEK</span>
+                              </span>
+                              <span className="text-white ml-3" style={{
+                                fontFamily: 'Orbitron, monospace',
+                                textShadow: '0 0 30px rgba(250, 182, 23, 0.5)',
+                              }}>#{mekName.replace(/^MEK\s*#?/i, '')}</span>
+                            </>
+                          )}
                         </>
                       )}
                     </h2>
@@ -736,8 +838,8 @@ export default function StoryMissionCard({
               100% { transform: translateX(200%); }
             }
             @keyframes scan {
-              0% { transform: translateY(0); }
-              100% { transform: translateY(100px); }
+              0% { transform: translateY(-100px); }
+              100% { transform: translateY(0); }
             }
           `}</style>
         </div>
@@ -824,11 +926,215 @@ export default function StoryMissionCard({
 
         <div className="p-3 relative">
 
-          {/* Potential Rewards */}
-          <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
-            <div className="mek-label-uppercase mb-2 text-[10px]">Potential Rewards</div>
-            <div className="space-y-1">
-              {potentialRewards.slice(0, 6).map((reward, i) => {
+          {/* Conditional: NFT Purchase (for events) or Potential Rewards (for regular nodes) */}
+          {isEventNode ? (
+            // NFT Purchase UI for Event Nodes
+            <>
+              {(() => {
+                // NFT pricing based on difficulty (placeholder - should come from Admin Master Data)
+                const nftBasePrices = { easy: 100, medium: 200, hard: 300 };
+                const baseNftPrice = nftBasePrices[currentDifficulty];
+
+                // Calculate discount based on overshoot
+                const greenLine = difficultyConfig?.successGreenLine || 50;
+                const overshootPercentage = Math.max(0, successPercentage - greenLine);
+                const discountedNftPrice = calculateNftPrice(baseNftPrice, overshootPercentage);
+                const discountPercentage = Math.round(((baseNftPrice - discountedNftPrice) / baseNftPrice) * 100);
+
+                // NFT name format: "Event Name: Specific Name"
+                // TODO: These names should come from Admin Master Data / database
+                // For now, using placeholder logic for Rust Protocol
+                const nftVariantNames: Record<string, Record<'easy' | 'medium' | 'hard', string>> = {
+                  'Rust Protocol': {
+                    easy: 'Charm',
+                    medium: 'Goose Neck',
+                    hard: "Gov't"
+                  },
+                  // Add more events here as they're defined
+                };
+
+                // Get the variant name, or fall back to difficulty label if not found
+                const variantName = nftVariantNames[title]?.[currentDifficulty] ||
+                                   (currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1));
+                const nftName = `${title}: ${variantName}`;
+
+                // V2-3 (Card Header) variation
+                const variation2 = () => (
+                  <div className="relative bg-black/80 rounded-2xl p-5 mb-4 border border-teal-400/40 overflow-hidden" style={{
+                    boxShadow: '0 10px 40px rgba(250, 182, 23, 0.3), 0 0 60px rgba(34, 211, 238, 0.2)'
+                  }}>
+                    {/* Teal holographic grid pattern background */}
+                    <div
+                      className="absolute inset-0 opacity-15"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(90deg, rgba(20, 184, 166, 0.4) 1px, transparent 1px),
+                          linear-gradient(180deg, rgba(20, 184, 166, 0.4) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '25px 25px',
+                        animation: 'scan 12s linear infinite'
+                      }}
+                    />
+
+                    {/* Yellow glow underneath effect */}
+                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-12 bg-yellow-400/40 rounded-full blur-3xl" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-teal-400/20 rounded-full blur-3xl" />
+
+                    {/* Animated shimmer effect */}
+                    <div
+                      className="absolute inset-0 opacity-30 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(110deg, transparent 40%, rgba(250, 182, 23, 0.3) 50%, transparent 60%)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 4s infinite'
+                      }}
+                    />
+
+                    <div className="relative">
+                      {/* Header with NFT/UNLOCK on left, Remaining on right */}
+                      <div className="mb-4 relative">
+                        <div className="flex items-center justify-between gap-4 mb-3">
+                          <div>
+                            <div className="text-5xl font-black text-yellow-400 uppercase tracking-tighter leading-none" style={{
+                              textShadow: '0 0 40px rgba(250, 182, 23, 1), 0 0 80px rgba(250, 182, 23, 0.5)'
+                            }}>
+                              NFT
+                            </div>
+                            <div className="text-lg font-bold text-teal-400 uppercase tracking-wider" style={{
+                              textShadow: '0 0 20px rgba(34, 211, 238, 0.8)'
+                            }}>
+                              UNLOCK
+                            </div>
+                          </div>
+                          <div className="border-2 border-teal-500/50 rounded-lg px-3 py-2 bg-teal-950/20">
+                            <div className="text-[10px] text-teal-400 uppercase tracking-wider mb-0.5">Remaining</div>
+                            <div className="flex items-baseline leading-none">
+                              <span className="text-3xl font-black text-white">{remainingNfts}</span>
+                              <span className="text-sm text-gray-600">/</span>
+                              <span className="text-lg font-bold text-teal-400">{totalNfts}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex-1 h-[2px] bg-gradient-to-r from-teal-400 via-teal-400/50 to-transparent" />
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{
+                            boxShadow: '0 0 10px rgba(250, 182, 23, 1)'
+                          }} />
+                        </div>
+
+                        <div className="text-base font-bold text-teal-300 uppercase leading-tight tracking-tight" style={{
+                          textShadow: '0 0 15px rgba(34, 211, 238, 0.6)',
+                          letterSpacing: '-0.03em'
+                        }}>
+                          {nftName}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="bg-gradient-to-r from-teal-950/40 to-black/40 backdrop-blur-sm border border-teal-400/20 rounded-xl p-3 mb-4">
+                        <div className="text-sm text-gray-300 leading-relaxed">
+                          Completing this contract unlocks the ability to mint this NFT. This purchase is{' '}
+                          <span className="text-yellow-400 font-bold" style={{
+                            textShadow: '0 0 20px rgba(250, 182, 23, 1)',
+                            animation: 'pulse 2s ease-in-out infinite'
+                          }}>
+                            completely optional
+                          </span>.
+                        </div>
+                      </div>
+
+                      {/* Card Header Style - Remaining Count and Price */}
+                      <div className="relative bg-gradient-to-br from-black/60 to-teal-950/30 backdrop-blur-md rounded-xl overflow-hidden mb-4 border border-teal-400/30" style={{
+                        boxShadow: 'inset 0 1px 0 rgba(34, 211, 238, 0.2)'
+                      }}>
+                        {/* Simple Header - "NFT Purchasing" */}
+                        <div className="bg-gradient-to-r from-teal-500/10 to-black/40 border-b border-teal-400/30 px-3 py-2 text-center">
+                          <span className="text-xs text-teal-400 uppercase tracking-wider font-bold">NFT Purchasing</span>
+                        </div>
+
+                        {/* Body Content */}
+                        <div className={`p-4 ${discountPercentage > 0 ? 'space-y-3' : 'flex items-center justify-center min-h-[120px]'}`}>
+                          {/* INTEGRATED HEADER BAR */}
+                          <>
+                            {/* Discount as subtle bar above price */}
+                            {discountPercentage > 0 && (
+                              <div className="flex items-center justify-between px-2 pb-2 border-b border-yellow-400/20">
+                                <span className="text-xs text-cyan-400 uppercase tracking-wider font-semibold" style={{
+                                  animation: 'flash 0.5s infinite',
+                                  textShadow: '0 0 20px rgba(34, 211, 238, 1), 0 0 40px rgba(34, 211, 238, 0.8)'
+                                }}>Overshoot Bonus</span>
+                                <span className="text-lg text-green-400 font-black" style={{
+                                  textShadow: '0 0 15px rgba(74, 222, 128, 0.8), 0 0 30px rgba(74, 222, 128, 0.5)'
+                                }}>-{discountPercentage}%</span>
+                              </div>
+                            )}
+
+                            {/* Stacked price display */}
+                            <div className="flex flex-col items-center pt-2">
+                              {discountPercentage > 0 && (
+                                <div className="text-center mb-1">
+                                  <span className="text-lg text-gray-400 font-bold line-through" style={{
+                                    fontFamily: 'Roboto Mono, monospace'
+                                  }}>{baseNftPrice} ADA</span>
+                                </div>
+                              )}
+                              <div className="flex flex-col items-center">
+                                <span className="text-5xl font-black text-yellow-400 font-mono leading-none" style={{
+                                  textShadow: '0 0 25px rgba(250, 182, 23, 0.9)'
+                                }}>
+                                  {discountedNftPrice}
+                                </span>
+                                <span className="text-sm text-yellow-400/80 font-mono font-bold">ADA</span>
+                              </div>
+                            </div>
+                          </>
+                        </div>
+                      </div>
+
+                      {/* Elevated holographic button */}
+                      <button
+                        disabled={!completedDifficulties.has(currentDifficulty)}
+                        className={`
+                          w-full py-4 px-6 rounded-xl font-bold uppercase tracking-wider text-sm relative overflow-hidden
+                          transition-all duration-300
+                          ${completedDifficulties.has(currentDifficulty)
+                            ? 'bg-gradient-to-r from-yellow-500 via-teal-400 to-yellow-500 text-black hover:from-yellow-400 hover:via-teal-300 hover:to-yellow-400 cursor-pointer'
+                            : 'bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/50'
+                          }
+                        `}
+                        style={{
+                          boxShadow: completedDifficulties.has(currentDifficulty) ? '0 0 40px rgba(250, 182, 23, 0.7), 0 5px 20px rgba(0, 0, 0, 0.5)' : 'none'
+                        }}
+                      >
+                        {completedDifficulties.has(currentDifficulty) && (
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" style={{
+                              animation: 'shimmer 3s infinite'
+                            }} />
+                            <div className="absolute inset-0 rounded-xl" style={{
+                              boxShadow: 'inset 0 0 30px rgba(255, 255, 255, 0.3)'
+                            }} />
+                          </>
+                        )}
+                        <span className="relative">
+                          {completedDifficulties.has(currentDifficulty) ? 'MINT NFT' : 'COMPLETE MISSION TO UNLOCK'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                );
+
+                // Render V2-3 (Card Header) variation
+                return variation2();
+              })()}
+            </>
+          ) : (
+            // Regular Potential Rewards for Non-Event Nodes
+            <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
+              <div className="mek-label-uppercase mb-2 text-[10px]">Potential Rewards</div>
+              <div className="space-y-1">
+                {potentialRewards.slice(0, 6).map((reward, i) => {
                 // Check if this is a chip reward (format: "T[tier] [modifier] Power Chip")
                 const chipMatch = reward.name.match(/T(\d+)\s+(\w+)\s+Power Chip/);
                 const isChipReward = !!chipMatch;
@@ -913,25 +1219,30 @@ export default function StoryMissionCard({
               })}
             </div>
           </div>
+          )}
 
           {/* Variation Buffs Card - Dynamic Layout Based on Style */}
           <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700">
             {variationBuffLayoutStyle === 1 && (
-              // Layout 1: Horizontal with Text (current)
+              // Layout 1: Horizontal with Text (Genesis Tokens)
               <>
-                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Genesis Buffs</div>
                 <div className="flex items-center justify-center gap-3">
                   <div className="text-[11px] text-gray-400 max-w-[90px] text-center leading-tight">
-                    Match traits for success bonuses
+                    Hold tokens for success bonuses
                   </div>
                   <div className="w-px h-10 bg-gray-600/50" />
                   <div className="flex items-center gap-2">
                     {variationBuffs.map((buff, index) => {
-                      const imagePath = getVariationImage(buff.name);
                       return (
                         <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                           <div
-                            className="relative w-[48px] h-[48px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                            className="relative w-[48px] h-[48px] rounded-full cursor-pointer transition-all hover:scale-110"
+                            style={{
+                              backgroundColor: buff.color || '#6B7280',
+                              border: `2px solid ${buff.color || '#6B7280'}`,
+                              boxShadow: `0 0 15px ${buff.color || '#6B7280'}80`
+                            }}
                             onMouseEnter={(e) => {
                               setHoveredBuff(buff.name);
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -942,9 +1253,7 @@ export default function StoryMissionCard({
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                             }}
-                          >
-                            <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                          </div>
+                          />
                           <span className="text-[10px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
                         </div>
                       );
@@ -955,20 +1264,25 @@ export default function StoryMissionCard({
             )}
 
             {variationBuffLayoutStyle === 2 && (
-              // Layout 2: Classic Grid (original 2x3 or 2x2 grid)
+              // Layout 2: Olympic Rings Pattern (2 on top, 3 on bottom)
               <>
                 <div className="text-center mb-2">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-                  <div className="text-[11px] text-gray-400 mt-1">Match traits for success bonuses</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-[11px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
                 </div>
-                <div className="flex justify-center">
-                  <div className={`grid ${variationBuffs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'} gap-2.5 max-w-[350px]`}>
-                    {variationBuffs.map((buff, index) => {
-                      const imagePath = getVariationImage(buff.name);
-                      return (
+                <div className="flex flex-col items-center gap-3">
+                  {/* Top row - first 2 tokens */}
+                  {variationBuffs.length >= 2 && (
+                    <div className="flex gap-4 justify-center">
+                      {variationBuffs.slice(0, 2).map((buff, index) => (
                         <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                           <div
-                            className="relative w-[68px] h-[68px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50"
+                            className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                            style={{
+                              backgroundColor: buff.color || '#6B7280',
+                              border: `3px solid ${buff.color || '#6B7280'}`,
+                              boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
+                            }}
                             onMouseEnter={(e) => {
                               setHoveredBuff(buff.name);
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -979,33 +1293,62 @@ export default function StoryMissionCard({
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                             }}
-                          >
-                            <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                          </div>
-                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">{buff.name}</span>
-                          <span className="text-[11px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
+                          />
+                          <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Bottom row - remaining tokens (up to 3) */}
+                  {variationBuffs.length > 2 && (
+                    <div className="flex gap-4 justify-center">
+                      {variationBuffs.slice(2, 5).map((buff, index) => (
+                        <div key={`${buff.id}-${index + 2}`} className="flex flex-col items-center">
+                          <div
+                            className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                            style={{
+                              backgroundColor: buff.color || '#6B7280',
+                              border: `3px solid ${buff.color || '#6B7280'}`,
+                              boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
+                            }}
+                            onMouseEnter={(e) => {
+                              setHoveredBuff(buff.name);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                            onMouseLeave={() => setHoveredBuff(null)}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                            }}
+                          />
+                          <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
             {variationBuffLayoutStyle === 3 && (
-              // Layout 3: Vertical Stack (text on top, buffs below)
+              // Layout 3: Vertical Stack (text on top, Genesis tokens below)
               <>
                 <div className="text-center mb-3">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-                  <div className="text-[10px] text-gray-400 mt-1">Match traits for success bonuses</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-[10px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex justify-center gap-2">
                   {variationBuffs.map((buff, index) => {
-                    const imagePath = getVariationImage(buff.name);
                     return (
                       <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                         <div
-                          className="relative w-[50px] h-[50px] rounded-full bg-black/80 border-2 border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                          className="relative w-[50px] h-[50px] rounded-full cursor-pointer transition-all hover:scale-110"
+                          style={{
+                            backgroundColor: buff.color || '#6B7280',
+                            border: `2px solid ${buff.color || '#6B7280'}`,
+                            boxShadow: `0 0 15px ${buff.color || '#6B7280'}80`
+                          }}
                           onMouseEnter={(e) => {
                             setHoveredBuff(buff.name);
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -1016,9 +1359,7 @@ export default function StoryMissionCard({
                             const rect = e.currentTarget.getBoundingClientRect();
                             setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                           }}
-                        >
-                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                        </div>
+                        />
                         <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
                       </div>
                     );
@@ -1028,16 +1369,18 @@ export default function StoryMissionCard({
             )}
 
             {variationBuffLayoutStyle === 4 && (
-              // Layout 4: Compact Pills (small pill-shaped badges)
+              // Layout 4: Compact Pills (Genesis token badges)
               <>
-                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Genesis Buffs</div>
                 <div className="flex flex-wrap justify-center gap-1.5">
                   {variationBuffs.map((buff, index) => {
-                    const imagePath = getVariationImage(buff.name);
                     return (
                       <div
                         key={`${buff.id}-${index}`}
-                        className="flex items-center gap-1.5 bg-black/80 border border-gray-700/50 rounded-full px-2 py-1 cursor-pointer transition-all hover:scale-105 hover:border-yellow-400/50"
+                        className="flex items-center gap-1.5 bg-black/80 rounded-full px-2 py-1 cursor-pointer transition-all hover:scale-105"
+                        style={{
+                          border: `1px solid ${buff.color || '#6B7280'}40`
+                        }}
                         onMouseEnter={(e) => {
                           setHoveredBuff(buff.name);
                           const rect = e.currentTarget.getBoundingClientRect();
@@ -1049,33 +1392,41 @@ export default function StoryMissionCard({
                           setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                         }}
                       >
-                        <div className="relative w-[24px] h-[24px] rounded-full overflow-hidden">
-                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                        </div>
+                        <div
+                          className="relative w-[24px] h-[24px] rounded-full"
+                          style={{
+                            backgroundColor: buff.color || '#6B7280',
+                            boxShadow: `0 0 10px ${buff.color || '#6B7280'}60`
+                          }}
+                        />
                         <span className="text-[10px] text-gray-400 uppercase">{buff.name}</span>
                         <span className="text-[10px] text-yellow-400 font-bold">{buff.bonus}</span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="text-[9px] text-gray-400 text-center mt-2">Match traits for success bonuses</div>
+                <div className="text-[9px] text-gray-400 text-center mt-2">Hold tokens for success bonuses</div>
               </>
             )}
 
             {variationBuffLayoutStyle === 5 && (
-              // Layout 5: Side by Side (text left, buffs right)
+              // Layout 5: Side by Side (text left, Genesis tokens right)
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-shrink-0">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Variation Buffs</div>
-                  <div className="text-[10px] text-gray-400 mt-1 max-w-[100px]">Match traits for success bonuses</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-[10px] text-gray-400 mt-1 max-w-[100px]">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex gap-1.5">
                   {variationBuffs.map((buff, index) => {
-                    const imagePath = getVariationImage(buff.name);
                     return (
                       <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                         <div
-                          className="relative w-[44px] h-[44px] rounded-full bg-black/80 border border-gray-700/50 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400/50"
+                          className="relative w-[44px] h-[44px] rounded-full cursor-pointer transition-all hover:scale-110"
+                          style={{
+                            backgroundColor: buff.color || '#6B7280',
+                            border: `2px solid ${buff.color || '#6B7280'}`,
+                            boxShadow: `0 0 15px ${buff.color || '#6B7280'}80`
+                          }}
                           onMouseEnter={(e) => {
                             setHoveredBuff(buff.name);
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -1086,9 +1437,7 @@ export default function StoryMissionCard({
                             const rect = e.currentTarget.getBoundingClientRect();
                             setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                           }}
-                        >
-                          <Image src={imagePath} alt={buff.name} fill className="object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                        </div>
+                        />
                         <span className="text-[9px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
                       </div>
                     );
@@ -1458,7 +1807,7 @@ export default function StoryMissionCard({
       )}
 
       {/* Lightbox for mek image */}
-      {showLightbox && mekImage && typeof window !== 'undefined' && createPortal(
+      {showLightbox && displayImage && typeof window !== 'undefined' && createPortal(
         <div
           className="fixed inset-0 z-[99999] flex items-center justify-center"
           onClick={() => setShowLightbox(false)}
@@ -1472,7 +1821,7 @@ export default function StoryMissionCard({
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={mekImage.replace(/\/mek-images\/\d+px\//, '/mek-images/1000px/')}
+              src={displayImage.replace(/\/mek-images\/\d+px\//, '/mek-images/1000px/').replace(/\/event-images\/[^/]+\//, '/event-images/1000px/')}
               alt={mekName}
               width={2000}
               height={2000}
@@ -1515,6 +1864,7 @@ export default function StoryMissionCard({
         </div>,
         document.body
       )}
+
     </div>
   );
 }

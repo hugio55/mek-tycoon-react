@@ -19,6 +19,7 @@ import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
 import { createPortal } from 'react-dom';
 import MissionCountdown from '@/components/MissionCountdown';
 import CancelMissionLightbox from '@/components/CancelMissionLightbox';
+import MintNFTLightbox from '@/components/MintNFTLightbox';
 import ContractSlots, { ContractSlot } from '@/components/ContractSlots';
 
 
@@ -103,6 +104,7 @@ export default function StoryClimbPage() {
   const [zoom, setZoom] = useState(1);
   const [showCancelLightbox, setShowCancelLightbox] = useState(false);
   const [pendingCancelNodeId, setPendingCancelNodeId] = useState<string | null>(null);
+  const [showMintLightbox, setShowMintLightbox] = useState(false);
   const [deployingNodes, setDeployingNodes] = useState<Set<string>>(new Set());
 
   // Active missions and duration config queries (moved up to avoid hoisting issues)
@@ -482,13 +484,15 @@ export default function StoryClimbPage() {
               nodeMap.set(localEventNumber, eventData);
             }
 
-            // Log what we're storing (only first few per chapter to avoid spam)
-            if (localEventNumber <= 2 || localEventNumber === 20) {
-              console.log(`📦 Storing Ch${chapter} Event ${localEventNumber} (Global #${eventNumber}):`, {
-                name: eventData.name,
-                image: eventData.image ? '✓ Has image' : '✗ No image',
-                goldReward: eventData.goldReward,
-                xpReward: eventData.xpReward
+            // Log what we're storing (first event only to check Genesis buffs)
+            if (localEventNumber === 1) {
+              console.log(`📦 Storing Ch${chapter} Event ${localEventNumber}:`, {
+                hasGenesisBuffs: !!eventData.genesisBuffs,
+                genesisBuffsPreview: eventData.genesisBuffs ? {
+                  easy: eventData.genesisBuffs.easy?.length || 0,
+                  medium: eventData.genesisBuffs.medium?.length || 0,
+                  hard: eventData.genesisBuffs.hard?.length || 0
+                } : 'none'
               });
             }
           }
@@ -556,7 +560,6 @@ export default function StoryClimbPage() {
     // If no deployment data, return early
     if (!deployedNormalNodes.length && !deployedChallengerNodes.length &&
         !deployedMiniBossNodes.length && !deployedFinalBossNodes.length) {
-      console.log('No deployed data available');
       return null;
     }
 
@@ -665,11 +668,9 @@ export default function StoryClimbPage() {
         break;
       case 'boss':
         const miniBossMeksForChapter = deployedMiniBossNodes.filter(m => m.chapter === chapter);
-        console.log(`Found ${miniBossMeksForChapter.length} mini-boss meks for chapter ${chapter}`);
 
         // Adjust index for mini-boss nodes (0-8, 9 per chapter) with better distribution
         const bossIndex = Math.abs((nodeHash * 7 + xFactor * 3 + yFactor) % 9);
-        console.log('Looking for mini-boss at calculated index:', bossIndex);
 
         // Sort by nodeIndex to ensure consistent ordering
         const sortedMiniBossMeks = miniBossMeksForChapter.sort((a, b) => a.nodeIndex - b.nodeIndex);
@@ -678,17 +679,13 @@ export default function StoryClimbPage() {
         if (sortedMiniBossMeks.length > 0) {
           const selectedIndex = bossIndex % sortedMiniBossMeks.length;
           const selectedMek = sortedMiniBossMeks[selectedIndex];
-          console.log('Selected mini-boss mek at position:', selectedIndex, selectedMek);
           return selectedMek;
         }
         break;
       case 'final_boss':
-        console.log(`Looking for final boss for chapter ${chapter}`);
-        console.log('Available final bosses:', deployedFinalBossNodes.map(m => ({ chapter: m.chapter, rank: m.rank, assetId: m.assetId })));
 
         const finalBossMekForChapter = deployedFinalBossNodes.find(m => m.chapter === chapter);
         if (finalBossMekForChapter) {
-          console.log('Found final boss match:', finalBossMekForChapter);
           return finalBossMekForChapter;
         }
         break;
@@ -915,23 +912,12 @@ export default function StoryClimbPage() {
 
   // Helper function to generate rewards based on node type and level
   const getNodeRewards = useCallback((node: ExtendedStoryNode) => {
-    // Only log for event nodes to reduce spam
-    if (node.storyNodeType === 'event') {
-      console.log('Getting rewards for EVENT node:', {
-        id: node.id,
-        label: node.label,
-        storyNodeType: node.storyNodeType
-      });
-    }
-
     // For event nodes, calculate chip rewards
     if (node.storyNodeType === 'event') {
       const eventData = getEventDataForNode(node);
-      console.log('Event node detected, eventData:', eventData);
 
       if (eventData?.chipRewards && Array.isArray(eventData.chipRewards)) {
         // Use deployed chip rewards if available
-        console.log('Using deployed chip rewards:', eventData.chipRewards);
         return eventData.chipRewards.map((chip: any) => ({
           name: `T${chip.tier} ${chip.modifier} Power Chip`,
           quantity: 1,
@@ -1074,40 +1060,42 @@ export default function StoryClimbPage() {
     return Math.floor(rewards.gold * 0.1); // 10% of gold reward as fee
   }, [getNodeRewards]);
 
-  // Helper function to get variation buffs (traits) from deployed mek
+  // Genesis Token definitions (matching EventNodeEditor)
+  const GENESIS_TOKENS = {
+    blue: { name: 'Blue Genesis', rarity: 'common', quantity: 1000, buffPercent: 5, color: '#3B82F6' },
+    green: { name: 'Green Genesis', rarity: 'uncommon', quantity: 500, buffPercent: 10, color: '#10B981' },
+    yellow: { name: 'Yellow Genesis', rarity: 'rare', quantity: 250, buffPercent: 15, color: '#FBBF24' },
+    red: { name: 'Red Genesis', rarity: 'epic', quantity: 100, buffPercent: 20, color: '#EF4444' },
+    purple: { name: 'Purple Genesis', rarity: 'legendary', quantity: 50, buffPercent: 25, color: '#A855F7' }
+  } as const;
+
+  // Helper function to get Genesis buffs from deployed event
   const getNodeVariationBuffs = useCallback((node: ExtendedStoryNode) => {
-    // For event nodes, calculate and return chip rewards as buffs
+    // For event nodes, check for Genesis buffs
     if (node.storyNodeType === 'event') {
       const eventData = getEventDataForNode(node);
-      if (eventData?.chipRewards && Array.isArray(eventData.chipRewards)) {
-        return eventData.chipRewards.map((chip: any) => ({
-          id: `chip-${chip.tier}-${chip.modifier}`,
-          name: `T${chip.tier} ${chip.modifier}`,
-          bonus: `${chip.probability}%`
-        }));
-      }
 
-      // Calculate chip rewards if no deployed data
-      const chapterMatch = node.id?.match(/ch(\d+)/);
-      const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+      // Check for admin-assigned Genesis buffs
+      if (eventData?.genesisBuffs) {
+        const difficultyLevel = selectedDifficulty || 'medium';
+        const genesisColors = eventData.genesisBuffs[difficultyLevel];
 
-      let eventNumber = 1;
-      if (node.label) {
-        const labelMatch = node.label.match(/E(\d+)/);
-        if (labelMatch) {
-          eventNumber = parseInt(labelMatch[1]);
+        if (genesisColors && Array.isArray(genesisColors) && genesisColors.length > 0) {
+          return genesisColors.map((color: string) => {
+            const token = GENESIS_TOKENS[color as keyof typeof GENESIS_TOKENS];
+            return {
+              id: `genesis-${color}`,
+              name: token.name,
+              bonus: `+${token.buffPercent}%`,
+              color: token.color,
+              rarity: token.rarity
+            };
+          });
         }
       }
 
-      const globalEventNumber = (chapter - 1) * 20 + eventNumber;
-      const { calculateChipRewardsForEvent } = require('@/lib/chipRewardCalculator');
-      const chipData = calculateChipRewardsForEvent(globalEventNumber);
-
-      return chipData.rewards.map((chip: any) => ({
-        id: `chip-${chip.tier}-${chip.modifier}`,
-        name: `T${chip.tier} ${chip.modifier}`,
-        bonus: `${chip.probability}%`
-      }));
+      // Fallback: Return empty array if no Genesis buffs configured
+      return [];
     }
 
     // For mek nodes, get the deployed mek's traits
@@ -1146,7 +1134,7 @@ export default function StoryClimbPage() {
     }
 
     return selectedBuffs;
-  }, [getDeployedMekForNode, getEventDataForNode, calculateEssenceProbabilities]);
+  }, [getDeployedMekForNode, getEventDataForNode, calculateEssenceProbabilities, selectedDifficulty]);
   
   // Helper function to get available slots for a node (for testing)
   const getNodeAvailableSlots = useCallback((node: ExtendedStoryNode) => {
@@ -1394,12 +1382,6 @@ export default function StoryClimbPage() {
           processedKey = processedKey.slice(0, -2);
         }
         const filename = `${processedKey}.webp`;
-        console.log('Using image for node:', node.id, {
-          assetId: deployedMek.assetId,
-          sourceKey: deployedMek.sourceKey,
-          processedKey: processedKey,
-          filename: filename,
-        });
 
         // Return appropriate size based on usage
         if (isForDetails) {
@@ -1407,15 +1389,12 @@ export default function StoryClimbPage() {
         } else {
           return `/mek-images/150px/${filename}`;
         }
-      } else {
-        console.warn('No sourceKey found for deployed mek:', deployedMek);
       }
     }
 
     // Fallback for nodes without deployed mek data (e.g., boss nodes without specific mek assignment)
     // Use a simple deterministic fallback based on node ID
     const nodeId = typeof nodeOrId === 'string' ? nodeOrId : nodeOrId.id;
-    console.warn('Using fallback image for node without sourceKey:', nodeId);
     const fallbackIndex = Math.abs(hashCode(nodeId)) % leastRareMechanisms.length;
     const fallbackFilename = leastRareMechanisms[fallbackIndex];
 
@@ -1525,16 +1504,12 @@ export default function StoryClimbPage() {
       hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
-    // There are 154 event images (blank resize.webp and blank resize_2.webp through blank resize_154.webp)
-    const totalEventImages = 154;
+    // There are 200 event images numbered 1.webp through 200.webp
+    const totalEventImages = 200;
     const index = Math.abs(hash) % totalEventImages;
 
-    // Return the correct filename with URL-encoded spaces
-    if (index === 0) {
-      return 'blank%20resize.webp';
-    } else {
-      return `blank%20resize_${index + 1}.webp`;
-    }
+    // Return the correct filename (1-indexed)
+    return `${index + 1}.webp`;
   }, []);
 
   // Load images for nodes and wait for them to load
@@ -1571,30 +1546,12 @@ export default function StoryClimbPage() {
           promises.push(promise);
         } else if (node.storyNodeType === 'event') {
           // Load event images for event nodes
-          console.log('📸 Loading image for event node:', {
-            nodeId: node.id,
-            nodeLabel: node.label,
-            storyNodeType: node.storyNodeType
-          });
-
           const eventData = getEventDataForNode(node);
-          console.log('📸 Event data found:', {
-            hasData: !!eventData,
-            hasImage: !!eventData?.image,
-            imagePath: eventData?.image,
-            eventName: eventData?.name
-          });
 
           const img = new Image();
           const promise = new Promise<void>((resolve) => {
-            img.onload = () => {
-              console.log('✅ Image loaded successfully for:', node.id);
-              resolve();
-            };
-            img.onerror = () => {
-              console.log('❌ Image failed to load for:', node.id);
-              resolve(); // Still resolve on error to not block
-            };
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Still resolve on error to not block
           });
 
           // Use deployed event image if available, otherwise use random
@@ -1608,12 +1565,10 @@ export default function StoryClimbPage() {
               imagePath = imagePath.replace(/ /g, '%20');
             }
 
-            console.log('📸 Using deployed image:', imagePath);
             img.src = imagePath;
           } else {
             const eventImageName = getEventImage(node.id);
             const fallbackPath = `/event-images/450px%20webp/${eventImageName.replace(/ /g, '%20')}`;
-            console.log('📸 Using fallback image:', fallbackPath);
             img.src = fallbackPath;
           }
 
@@ -4359,36 +4314,8 @@ export default function StoryClimbPage() {
   }, []);
   
   const handleMouseWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    // Scale mouse coordinates to match canvas internal resolution
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
-    
-    // Calculate world position before zoom
-    const worldX = (mouseX - panOffset.x) / zoom;
-    const worldY = (mouseY - panOffset.y) / zoom;
-    
-    // Apply zoom
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(0.3, Math.min(3, zoom * delta));
-    
-    // Calculate new pan to keep mouse position fixed
-    const newPanX = mouseX - worldX * newZoom;
-    const newPanY = mouseY - worldY * newZoom;
-    
-    setZoom(newZoom);
-    setPanOffset({ 
-      x: newPanX, 
-      y: newPanY
-    });
-  }, [zoom, panOffset]);
+    // Do nothing - CSS handles scroll prevention, user wants click-and-drag only
+  }, []);
   
   // Helper function to check if a node is available to play
   const isNodeAvailable = useCallback((node: StoryNode | null) => {
@@ -4678,59 +4605,10 @@ export default function StoryClimbPage() {
     }
   }, [treeData, viewportOffset, completedNodes, canvasSize, hasDragged, panOffset, zoom, previewMode, debugMode]);
 
-  // Handle mouse wheel scrolling with proper isolation
+  // Handle mouse wheel - do nothing, let CSS handle scroll prevention
   const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    if (!treeData || !treeData.nodes || !canvasRef.current) return;
-
-    // Prevent page scroll when over canvas
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Calculate max scroll based on tree size
-    const nodes = treeData.nodes;
-    
-    // Calculate bounds INCLUDING node sizes
-    let actualMinX = Infinity, actualMaxX = -Infinity;
-    let actualMinY = Infinity, actualMaxY = -Infinity;
-    
-    nodes.forEach(node => {
-      let nodeSize = 31.5; // normal nodes (5% larger) - must match render exactly
-      if (node.id === 'start') nodeSize = 75; // MUST match actual render size (line 571)
-      else if (node.storyNodeType === 'event') nodeSize = 67; // 12% bigger
-      else if (node.storyNodeType === 'boss') nodeSize = 90; // MUST match actual render size (line 581)
-      else if (node.storyNodeType === 'final_boss') nodeSize = 130; // MUST match actual render size (line 586)
-      
-      actualMinX = Math.min(actualMinX, node.x - nodeSize);
-      actualMaxX = Math.max(actualMaxX, node.x + nodeSize);
-      actualMinY = Math.min(actualMinY, node.y - nodeSize);
-      actualMaxY = Math.max(actualMaxY, node.y + nodeSize);
-    });
-    
-    const minX = Math.min(...nodes.map(n => n.x));
-    const maxX = Math.max(...nodes.map(n => n.x));
-    const minY = Math.min(...nodes.map(n => n.y));
-    const maxY = Math.max(...nodes.map(n => n.y));
-    const treeWidth = maxX - minX;
-    const treeHeight = maxY - minY;
-    const actualTreeWidth = actualMaxX - actualMinX;
-    
-    const padding = 30;
-    const scaleX = (canvasSize.width - padding * 2) / treeWidth;
-    const scale = scaleX * 0.77; // Match the drawing scale!
-    const scaledTreeHeight = treeHeight * scale;
-    
-    // Allow scrolling the full tree height plus extra room for final boss
-    const maxPossibleOffset = scaledTreeHeight + 10000; // Increased to match pan handler limit - ensures final boss is accessible
-    
-    // Minimum offset to allow scrolling closer to the actual bottom
-    // Less restrictive to reduce the gap below the start node
-    const minOffset = -500; // Allow more room to scroll below start node
-    
-    // Scroll with mouse wheel (inverted so scrolling down moves tree up)
-    const scrollSpeed = 50;
-    const newOffset = Math.max(minOffset, Math.min(maxPossibleOffset, viewportOffset - event.deltaY * scrollSpeed / 100));
-    setViewportOffset(newOffset);
-  }, [treeData, viewportOffset, canvasSize]);
+    // Do nothing - CSS properties handle scroll prevention, user wants click-and-drag only
+  }, []);
 
   // Show loading only briefly on initial mount
   if (!mounted && !previewMode) {
@@ -5054,13 +4932,10 @@ export default function StoryClimbPage() {
                 backdropFilter: 'blur(1px)',
                 border: '1px solid rgba(255, 255, 255, 0.015)',
                 boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none'  // Prevent touch scrolling
+                touchAction: 'none',  // Prevent touch scrolling
+                overscrollBehavior: 'none'  // Prevent scroll chaining
               }}
               onWheel={handleWheel}
-              onWheelCapture={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
             >
               {/* Canvas */}
               <canvas
@@ -6065,6 +5940,15 @@ export default function StoryClimbPage() {
             {/* Show card for selected node */}
             {selectedNode ? (
               <StoryMissionCard
+                isEventNode={selectedNode.storyNodeType === 'event'}
+                successPercentage={showTestPanel ? testSuccessRate :
+                              completedNodes.has(selectedNode.id) ? 100 :
+                              isNodeAvailable(selectedNode) ?
+                                calculateSuccessChance(
+                                  selectedNode.id,
+                                  65,
+                                  getNodeVariationBuffs(selectedNode as ExtendedStoryNode)
+                                ) : 0}
                 title={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
@@ -6087,15 +5971,22 @@ export default function StoryClimbPage() {
                 mekImage={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    // Use the actual event image from deployed data if available
-                    if (eventData?.image) {
-                      return eventData.image;
-                    }
-                    // Fallback to random event image if no deployed data
+                    // For events, we now pass images through eventImages prop instead
+                    // Return a fallback for backward compatibility
                     const eventImageName = getEventImage(selectedNode.id);
                     return `/event-images/450px webp/${eventImageName.replace(/ /g, '%20')}`;
                   }
                   return getMekImage(selectedNode.id, true);
+                })()}
+                eventImages={(() => {
+                  if (selectedNode.storyNodeType === 'event') {
+                    const eventData = getEventDataForNode(selectedNode);
+                    // Return the 3-image object if available
+                    if (eventData?.images) {
+                      return eventData.images;
+                    }
+                  }
+                  return undefined;
                 })()}
                 mekName={(() => {
                   if (selectedNode.storyNodeType === 'event') {
@@ -6424,6 +6315,31 @@ export default function StoryClimbPage() {
           return 0;
         })()}
       />
+
+      {/* Mint NFT Lightbox */}
+      <MintNFTLightbox
+        isOpen={showMintLightbox}
+        onClose={() => setShowMintLightbox(false)}
+        onConfirm={() => {
+          console.log('Proceeding to mint NFT...');
+          setShowMintLightbox(false);
+          // TODO: Add actual minting logic here
+        }}
+        eventId="1"
+        difficulty="easy"
+        eventName="Chapter 1 - Event 1"
+        nftPrice={50}
+      />
+
+      {/* Debug Button - Fixed position on right side */}
+      <button
+        onClick={() => setShowMintLightbox(true)}
+        className="fixed right-4 top-[200px] z-[9998] bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 font-bold py-2 px-4 rounded hover:bg-yellow-500/30 transition-all uppercase tracking-wider"
+        style={{ fontFamily: 'Orbitron, monospace' }}
+        title="Debug: Open Mint NFT Lightbox"
+      >
+        🎨 Mint
+      </button>
 
       {/* Deploy Validation Popup */}
       {showDeployValidationPopup && (

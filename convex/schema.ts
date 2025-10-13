@@ -1492,6 +1492,20 @@ export default defineSchema({
     status: v.string(), // "completed", "failed", "triggered_manually", etc.
   }),
 
+  // Snapshot Sessions - tracks ongoing batched snapshot processing
+  snapshotSessions: defineTable({
+    sessionId: v.string(), // Unique session identifier
+    startTime: v.number(), // When session started
+    endTime: v.optional(v.number()), // When session completed
+    totalWallets: v.number(), // Total wallets to process
+    batchSize: v.number(), // Wallets per batch
+    processedCount: v.number(), // Wallets successfully processed
+    errorCount: v.number(), // Wallets with errors
+    skippedCount: v.number(), // Wallets skipped
+    status: v.string(), // "in_progress", "completed", "failed"
+  })
+    .index("by_session", ["sessionId"]),
+
   // Saga Executions - tracks atomic NFT sync operations with rollback capability
   sagaExecutions: defineTable({
     sagaId: v.string(), // Unique saga identifier
@@ -1761,6 +1775,9 @@ export default defineSchema({
     goldAfter: v.optional(v.number()),
     totalGoldPerHour: v.optional(v.number()),
     totalGoldPerHourBefore: v.optional(v.number()),
+
+    // Gold restoration logs
+    goldRestored: v.optional(v.number()),
   })
     .index("by_type", ["type"])
     .index("by_stake_address", ["stakeAddress"])

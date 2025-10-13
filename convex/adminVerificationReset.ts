@@ -22,7 +22,8 @@ export const resetVerificationStatus = mutation({
         const lastUpdateTime = goldMiningRecord.lastSnapshotTime || goldMiningRecord.updatedAt || goldMiningRecord.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = goldMiningRecord.totalGoldPerHour * hoursSinceLastUpdate;
-        pausedGold = Math.min(50000, (goldMiningRecord.accumulatedGold || 0) + goldSinceLastUpdate);
+        // CRITICAL FIX: NO CAP - freeze at true gold amount
+        pausedGold = (goldMiningRecord.accumulatedGold || 0) + goldSinceLastUpdate;
       }
 
       // Save the current gold and unverify
@@ -488,7 +489,8 @@ export const getAllWallets = query({
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        // CRITICAL FIX: NO CAP - show true uncapped gold balance
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
       }
 
       // Calculate real-time cumulative gold for display (base + ongoing earnings)
