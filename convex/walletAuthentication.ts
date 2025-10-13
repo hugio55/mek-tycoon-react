@@ -739,3 +739,39 @@ export const resetWalletRateLimit = mutation({
     };
   }
 });
+
+// Revoke all active sessions for a wallet (used during disconnect)
+export const revokeAuthentication = mutation({
+  args: {
+    stakeAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Revoke all active sessions
+    const activeSessions = await ctx.db
+      .query("walletSessions")
+      .withIndex("by_stake_and_active", q =>
+        q.eq("stakeAddress", args.stakeAddress).eq("isActive", true)
+      )
+      .filter(q => q.eq(q.field("revokedAt"), undefined))
+      .collect();
+
+    let revokedCount = 0;
+    for (const session of activeSessions) {
+      await ctx.db.patch(session._id, {
+        revokedAt: now,
+        isActive: false,
+      });
+      revokedCount++;
+    }
+
+    console.log(`[Auth] Revoked ${revokedCount} active sessions for wallet ${args.stakeAddress}`);
+
+    return {
+      success: true,
+      revokedCount,
+      stakeAddress: args.stakeAddress,
+    };
+  }
+});

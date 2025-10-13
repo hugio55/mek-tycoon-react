@@ -31,6 +31,7 @@ export default function UIShowcase() {
   const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [mounted, setMounted] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(true);
+  const [activeTab, setActiveTab] = useState<'cards' | 'fonts' | 'buttons' | 'effects' | 'colors'>('cards');
   
   useEffect(() => {
     setMounted(true);
@@ -135,222 +136,170 @@ export default function UIShowcase() {
             UI Component Showcase
           </GlowText>
           <p className="text-gray-400 mt-2">All available UI components for Mek Tycoon</p>
+
+          {/* Tab Navigation */}
+          <div className="flex justify-center gap-3 mt-8">
+            {[
+              { id: 'cards' as const, label: 'Cards', icon: '🎴' },
+              { id: 'fonts' as const, label: 'Fonts', icon: '🔤' },
+              { id: 'buttons' as const, label: 'Buttons', icon: '🔘' },
+              { id: 'effects' as const, label: 'Effects', icon: '✨' },
+              { id: 'colors' as const, label: 'Colors', icon: '🎨' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  px-6 py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-all duration-300
+                  ${activeTab === tab.id
+                    ? 'bg-yellow-500 text-black border-2 border-yellow-400 shadow-lg shadow-yellow-500/50'
+                    : 'bg-black/40 text-gray-400 border-2 border-gray-700 hover:border-yellow-500/50 hover:text-yellow-400'
+                  }
+                `}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Buttons Section */}
+        {/* CARDS TAB */}
+        {activeTab === 'cards' && (
+          <>
+        {/* Diagonal Stripe Cards Section - NEW */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Buttons</h2>
-          
-          <Card padding="lg">
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style A</p>
-                  <Button variant="primary">Primary Button</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style B</p>
-                  <Button variant="secondary">Secondary</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style C</p>
-                  <Button variant="danger">Danger</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style D</p>
-                  <Button variant="success">Success</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style E</p>
-                  <Button variant="ghost">Ghost</Button>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-4 items-end">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style F</p>
-                  <Button size="sm">Small</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style G</p>
-                  <Button size="md">Medium</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style H</p>
-                  <Button size="lg">Large</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style I</p>
-                  <Button size="xl">Extra Large</Button>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style J</p>
-                  <Button variant="primary" glow>Glow Effect</Button>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style K</p>
-                  <Button disabled>Disabled</Button>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500 mb-1">Style L</p>
-                  <Button fullWidth>Full Width Button</Button>
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style M</p>
-                  <IconButton icon="🏠" title="Home" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style N</p>
-                  <IconButton icon="⚙️" variant="primary" title="Settings" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Style O</p>
-                  <IconButton icon="❌" variant="danger" size="lg" title="Close" />
-                </div>
-              </div>
-              
-              {/* Particle Button */}
-              <div className="pt-6 border-t border-gray-800/50 mt-6">
-                <p className="text-gray-400 mb-4">Style P - Special Effects Button (from Crafting):</p>
-                <div className="particle-button-wrapper">
-                  <button 
-                    className="btn-particles relative"
-                    onClick={(e) => {
-                      e.currentTarget.classList.add('clicked');
-                      setTimeout(() => e.currentTarget.classList.remove('clicked'), 600);
-                    }}
-                  >
-                    <div className="particles-bg"></div>
-                    <span className="particles-text">CRAFT WITH PARTICLES</span>
-                    {mounted && (
-                      <div className="particle-container">
-                        {[...Array(30)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="particle"
-                            style={{
-                              left: `${Math.random() * 100}%`,
-                              top: `${Math.random() * 100}%`,
-                              '--x': `${(Math.random() - 0.5) * 200}px`,
-                              '--y': `${(Math.random() - 0.5) * 200}px`,
-                              '--duration': `${3 + Math.random() * 3}s`,
-                              animationDelay: `${Math.random() * 6}s`
-                            } as React.CSSProperties}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                </div>
+          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Diagonal Stripe Cards (from Story Climb)</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Large Hazard Stripes */}
+            <div className="relative h-32 overflow-hidden border-t-2 border-b-2 border-yellow-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black" />
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    45deg,
+                    #fab617,
+                    #fab617 20px,
+                    #000 20px,
+                    #000 40px
+                  )`
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style W - Large Hazard Stripes
+                </h3>
               </div>
             </div>
-          </Card>
-        </section>
 
-        {/* Sci-Fi Action Buttons Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Sci-Fi Action Buttons</h2>
-          
-          <Card padding="lg">
-            <div className="space-y-8">
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={() => setScifiButtonVariant('plasma')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'plasma' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Plasma Pulse
-                </button>
-                <button
-                  onClick={() => setScifiButtonVariant('holographic')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic' ? 'bg-cyan-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Holographic Matrix (Blue)
-                </button>
-                <button
-                  onClick={() => setScifiButtonVariant('quantum')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum' ? 'bg-purple-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Quantum Flux (Purple)
-                </button>
-              </div>
-              
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={() => setScifiButtonVariant('holographic-yellow')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic-yellow' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Holographic Matrix (Yellow)
-                </button>
-                <button
-                  onClick={() => setScifiButtonVariant('quantum-yellow')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum-yellow' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Quantum Flux (Yellow)
-                </button>
-              </div>
-              
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={() => setScifiButtonVariant('holographic-yellow-active')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'holographic-yellow-active' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Holographic Matrix (Yellow - Always Active)
-                </button>
-                <button
-                  onClick={() => setScifiButtonVariant('quantum-yellow-active')}
-                  className={`px-4 py-2 rounded ${scifiButtonVariant === 'quantum-yellow-active' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
-                >
-                  Quantum Flux (Yellow - Always Active)
-                </button>
-              </div>
-
-              {/* Active/Inactive Toggle for Always-Active variants */}
-              {(scifiButtonVariant === 'holographic-yellow-active' || scifiButtonVariant === 'quantum-yellow-active') && (
-                <div className="flex justify-center mb-4">
-                  <button
-                    onClick={() => setIsButtonActive(!isButtonActive)}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                      isButtonActive
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
-                    }`}
-                  >
-                    {isButtonActive ? '✓ Active' : '✗ Inactive'}
-                  </button>
-                </div>
-              )}
-
-              <div className="flex justify-center">
-                <ViewActiveContractsButtonEnhanced
-                  activeContracts={6}
-                  maxContracts={14}
-                  variant={scifiButtonVariant}
-                  isActive={isButtonActive}
-                  buttonText={
-                    scifiButtonVariant === 'holographic-yellow' || scifiButtonVariant === 'holographic-yellow-active' ? 'SUBMIT' :
-                    scifiButtonVariant === 'quantum-yellow' || scifiButtonVariant === 'quantum-yellow-active' ? 'DEPLOY' :
-                    undefined
-                  }
-                />
-              </div>
-              
-              <div className="text-center text-sm text-gray-400">
-                {scifiButtonVariant === 'plasma' && 'Pulsing energy field with electric particles'}
-                {scifiButtonVariant === 'holographic' && 'Holographic shimmer with data streams (blue)'}
-                {scifiButtonVariant === 'quantum' && 'Reality-warping effect with quantum particles (purple)'}
-                {scifiButtonVariant === 'holographic-yellow' && 'Holographic shimmer with golden data streams'}
-                {scifiButtonVariant === 'quantum-yellow' && 'Reality-warping effect with golden quantum particles'}
-                {scifiButtonVariant === 'holographic-yellow-active' && 'Always-active holographic effects with golden shimmer (25% slower, brightens on hover)'}
-                {scifiButtonVariant === 'quantum-yellow-active' && 'Always-active quantum distortion with golden particles (25% slower, brightens on hover)'}
+            {/* Dense Diagonal Grid */}
+            <div className="relative h-32 overflow-hidden border-t-2 border-b-2 border-yellow-500">
+              <div className="absolute inset-0 bg-black" />
+              <div
+                className="absolute inset-0 opacity-40"
+                style={{
+                  backgroundImage: `
+                    repeating-linear-gradient(45deg, transparent, transparent 2px, #fab617 2px, #fab617 3px),
+                    repeating-linear-gradient(-45deg, transparent, transparent 2px, #000 2px, #000 3px)
+                  `,
+                  backgroundSize: '8px 8px'
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style X - Dense Diagonal Grid
+                </h3>
               </div>
             </div>
-          </Card>
+
+            {/* Military Stencil Border */}
+            <div
+              className="relative h-32 overflow-hidden border-t-4 border-b-4 border-yellow-500"
+              style={{ borderImage: 'repeating-linear-gradient(90deg, #fab617 0px, #fab617 10px, black 10px, black 20px) 4' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-black" />
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: `
+                    repeating-linear-gradient(60deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 12px),
+                    repeating-linear-gradient(-60deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 12px)
+                  `,
+                  backgroundSize: '20px 20px'
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style Y - Military Stencil
+                </h3>
+              </div>
+            </div>
+
+            {/* Thin Diagonal Stripes */}
+            <div className="relative h-32 overflow-hidden border-2 border-yellow-500/60">
+              <div className="absolute inset-0 bg-black" />
+              <div
+                className="absolute inset-0 opacity-25"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 8px,
+                    #fab617 8px,
+                    #fab617 10px
+                  )`
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style Z - Thin Diagonal
+                </h3>
+              </div>
+            </div>
+
+            {/* Carbon Fiber Style */}
+            <div className="relative h-32 overflow-hidden border-y-4 border-yellow-600" style={{ borderStyle: 'double' }}>
+              <div className="absolute inset-0 bg-black" />
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  backgroundImage: `
+                    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px),
+                    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.3) 3px, rgba(250, 182, 23, 0.3) 4px)
+                  `,
+                  backgroundSize: '4px 4px'
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style AA - Carbon Fiber
+                </h3>
+              </div>
+            </div>
+
+            {/* Glowing Border with Scan Lines */}
+            <div
+              className="relative h-32 overflow-hidden border-2 border-yellow-500"
+              style={{ boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.3), 0 0 20px rgba(250, 182, 23, 0.3)' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-black" />
+              <div
+                className="absolute inset-0 opacity-15"
+                style={{
+                  backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(250, 182, 23, 0.5) 50%)',
+                  backgroundSize: '100% 4px',
+                  animation: 'scan 8s linear infinite'
+                }}
+              />
+              <div className="relative h-full flex items-center justify-center">
+                <h3 className="text-xl font-black text-yellow-400 uppercase tracking-wider">
+                  Style AB - Glowing Scan Lines
+                </h3>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Cards Section */}
@@ -1005,6 +954,43 @@ export default function UIShowcase() {
             </div>
           </div>
         </section>
+          </>
+        )}
+
+        {/* BUTTONS TAB */}
+        {activeTab === 'buttons' && (
+          <>
+        {/* Buttons Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-yellow-400 mb-6">Buttons</h2>
+
+          <Card padding="lg">
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Style A</p>
+                  <Button variant="primary">Primary Button</Button>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Style B</p>
+                  <Button variant="secondary">Secondary</Button>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Style C</p>
+                  <Button variant="danger">Danger</Button>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Style D</p>
+                  <Button variant="success">Success</Button>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Style E</p>
+                  <Button variant="ghost">Ghost</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
 
         {/* Progress Bars Section */}
         <section className="mb-12">
@@ -1156,7 +1142,7 @@ export default function UIShowcase() {
         {/* Modals Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-yellow-400 mb-6">Modals</h2>
-          
+
           <Card padding="lg">
             <div className="flex gap-4">
               <Button onClick={() => setShowModal(true)}>
@@ -1168,7 +1154,12 @@ export default function UIShowcase() {
             </div>
           </Card>
         </section>
+          </>
+        )}
 
+        {/* FONTS TAB */}
+        {activeTab === 'fonts' && (
+          <>
         {/* Typography Section - Complete Font Library */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-yellow-400 mb-6">Typography & Fonts - Complete Library (14 Fonts)</h2>
@@ -1354,10 +1345,104 @@ export default function UIShowcase() {
                   <p>• <span className="text-yellow-400">Military/Combat:</span> Black Ops One, Russo One</p>
                 </div>
               </div>
+
+              {/* Story Climb Font Patterns */}
+              <div className="border-t border-gray-800 pt-6 mt-8">
+                <h3 className="text-lg font-semibold text-yellow-300 mb-4">STORY CLIMB PAGE PATTERNS</h3>
+                <p className="text-xs text-gray-500 mb-4">Common font combinations used in the Story Climb interface</p>
+
+                <div className="space-y-6">
+                  {/* Pattern 1: Small Label Buttons */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 1 - Small Uppercase Labels (Debug Buttons)</p>
+                    <button className="px-3 py-1 rounded-md text-xs font-orbitron uppercase tracking-wider bg-purple-500/20 border border-purple-500/60 text-purple-400 hover:bg-purple-500/30 transition-all">
+                      Debug Mode
+                    </button>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      text-xs font-orbitron uppercase tracking-wider
+                    </div>
+                  </div>
+
+                  {/* Pattern 2: Yellow Action Buttons */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 2 - Yellow Interactive Buttons</p>
+                    <button className="px-3 py-1.5 bg-black/90 border border-yellow-500/60 rounded text-yellow-500 text-xs font-orbitron uppercase tracking-wider hover:bg-yellow-500/20 hover:border-yellow-500 transition-all">
+                      View Mission
+                    </button>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      text-xs font-orbitron uppercase tracking-wider + yellow-500
+                    </div>
+                  </div>
+
+                  {/* Pattern 3: Canvas Text Style */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 3 - Canvas Node Labels</p>
+                    <div className="text-[10px] font-orbitron font-bold text-white text-center">
+                      MISSION NODE
+                    </div>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      font: 'bold 10px Orbitron' (Canvas API)
+                    </div>
+                  </div>
+
+                  {/* Pattern 4: Colored Labels */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 4 - Colored Section Labels</p>
+                    <div className="space-y-2">
+                      <div className="text-yellow-400 font-semibold text-sm">Yellow Primary Labels</div>
+                      <div className="text-cyan-400 font-semibold text-sm">Cyan Secondary Info</div>
+                      <div className="text-teal-400 font-semibold text-sm">Teal Status Text</div>
+                    </div>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      font-semibold + text-yellow-400/cyan-400/teal-400
+                    </div>
+                  </div>
+
+                  {/* Pattern 5: Small Debug Text */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 5 - Tiny Helper Text</p>
+                    <div className="text-[10px] text-gray-500 text-center">
+                      Clears all stuck missions from DB
+                    </div>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      text-[10px] text-gray-500
+                    </div>
+                  </div>
+
+                  {/* Pattern 6: Bold Headers with Icons */}
+                  <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-[10px] text-gray-500 mb-3">PATTERN 6 - Debug Panel Headers</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-500 font-bold">🔧</span>
+                      <span className="text-yellow-500 text-xs font-bold">Debug Panel</span>
+                    </div>
+                    <div className="mt-3 text-[10px] text-gray-600 font-mono">
+                      text-xs font-bold + icon emoji
+                    </div>
+                  </div>
+
+                  {/* Usage Examples */}
+                  <div className="bg-gray-900/50 rounded-lg p-4 mt-6">
+                    <h4 className="text-sm font-bold text-yellow-300 mb-2">STORY CLIMB QUICK REFERENCE</h4>
+                    <div className="text-xs text-gray-400 space-y-1">
+                      <p>• <span className="text-yellow-400">Small Buttons:</span> font-orbitron text-xs uppercase tracking-wider</p>
+                      <p>• <span className="text-yellow-400">Canvas Labels:</span> Orbitron 10px bold (white)</p>
+                      <p>• <span className="text-yellow-400">Section Headers:</span> font-bold or font-semibold with color</p>
+                      <p>• <span className="text-yellow-400">Helper Text:</span> text-[10px] text-gray-500</p>
+                      <p>• <span className="text-yellow-400">Interactive Elements:</span> text-yellow-500 with hover effects</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </Card>
         </section>
+          </>
+        )}
 
+        {/* EFFECTS TAB */}
+        {activeTab === 'effects' && (
+          <>
         {/* Effects Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-yellow-400 mb-6">Special Effects</h2>
@@ -1430,7 +1515,12 @@ export default function UIShowcase() {
             </div>
           </Card>
         </section>
+          </>
+        )}
 
+        {/* COLORS TAB */}
+        {activeTab === 'colors' && (
+          <>
         {/* Color Palette */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-yellow-400 mb-6">Color Palette</h2>
@@ -1460,6 +1550,8 @@ export default function UIShowcase() {
             </div>
           </Card>
         </section>
+          </>
+        )}
       </div>
 
       {/* Modals */}

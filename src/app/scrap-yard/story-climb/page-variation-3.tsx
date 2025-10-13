@@ -1,3 +1,30 @@
+/*
+ * VARIATION 3: MINIMAL TACTICAL DISPLAY
+ * =====================================
+ *
+ * DESIGN PHILOSOPHY:
+ * - Inspired by military tactical displays and professional control systems
+ * - Clean, minimal interface with maximum information density
+ * - Monochromatic color scheme with strategic accent colors
+ * - Sharp, precise lines and geometric precision
+ * - Flat design with subtle depth through borders only
+ * - Focus on readability and functional clarity
+ *
+ * KEY VISUAL ELEMENTS:
+ * - Canvas: Clean dark background with minimal grid
+ * - Node connections: Thin, precise white lines
+ * - Mission cards: Flat frames with thin borders, no shadows
+ * - UI panels: Minimal containers with single-pixel borders
+ * - Typography: Monospace for data, sans-serif for labels
+ * - Interactive states: Subtle border color changes only
+ *
+ * COLOR PALETTE:
+ * - Primary: #ffffff (Pure White)
+ * - Secondary: #404040 (Medium Gray)
+ * - Accent: #fab617 (Yellow) for critical elements only
+ * - Background: #0a0a0a (Near Black)
+ */
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -4637,7 +4664,52 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative bg-[#0a0a0a]">
+      {/* VARIATION 3: Minimal Tactical Background */}
+      <div className="fixed inset-0 -z-10">
+        {/* Subtle grid pattern - minimal and professional */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px'
+        }} />
+        {/* Corner reference marks - tactical style */}
+        <div className="absolute top-4 left-4 w-8 h-8 border-l border-t border-gray-700" />
+        <div className="absolute top-4 right-4 w-8 h-8 border-r border-t border-gray-700" />
+        <div className="absolute bottom-4 left-4 w-8 h-8 border-l border-b border-gray-700" />
+        <div className="absolute bottom-4 right-4 w-8 h-8 border-r border-b border-gray-700" />
+      </div>
+
+      {/* CSS for flashing animations - Minimal style */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes flash-red {
+          0%, 100% { border-color: rgba(239, 68, 68, 0.8); }
+          50% { border-color: rgba(239, 68, 68, 1); }
+        }
+        @keyframes flash-yellow {
+          0%, 100% { border-color: rgba(250, 182, 23, 0.8); }
+          50% { border-color: rgba(250, 182, 23, 1); }
+        }
+        .flash-red {
+          animation: flash-red 0.5s ease-in-out 3;
+        }
+        .flash-yellow {
+          animation: flash-yellow 0.5s ease-in-out 3;
+        }
+
+        /* VARIATION 3: Minimal tactical hover - just border color change */
+        .tactical-hover:hover {
+          border-color: rgba(250, 182, 23, 0.8) !important;
+        }
+
+        /* Monospace data display */
+        .tactical-data {
+          font-family: 'Consolas', 'Monaco', monospace;
+          letter-spacing: 0.05em;
+        }
+      `}} />
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
@@ -4654,9 +4726,9 @@ export default function StoryClimbPage() {
       </div>
 
       {/* Debug: Cancel Contracts Panel - Left side */}
-      <div className="fixed left-4 top-64 z-50 bg-black/90 border border-red-500/50 rounded-lg p-3 shadow-xl">
-        <div className="text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
-          Debug: Cancel Contracts
+      <div className="fixed left-4 top-64 z-50 bg-black border border-gray-700 p-3">
+        <div className="text-gray-400 font-mono text-xs uppercase tracking-wider mb-2 pb-2 border-b border-gray-800">
+          DEBUG / CANCEL
         </div>
 
         {activeMissions && activeMissions.length > 0 ? (
@@ -4672,7 +4744,7 @@ export default function StoryClimbPage() {
                       console.error('Failed to cancel mission:', error);
                     }
                   }}
-                  className="bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded hover:bg-red-600/30 hover:border-red-400 transition-colors"
+                  className="bg-transparent border border-gray-700 text-gray-400 px-2 py-1 hover:border-yellow-500 hover:text-yellow-500 transition-colors tactical-hover tactical-data text-[10px]"
                 >
                   Cancel
                 </button>
@@ -4906,18 +4978,17 @@ export default function StoryClimbPage() {
         <div className="flex gap-2">
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
-            {/* Canvas Container with Style Q background */}
-            <div 
-              className="relative rounded-lg" 
-              style={{ 
+            {/* Canvas Container - VARIATION 3: Minimal Tactical Frame */}
+            <div
+              className="relative"
+              style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
-                background: 'rgba(255, 255, 255, 0.005)',
-                backdropFilter: 'blur(1px)',
-                border: '1px solid rgba(255, 255, 255, 0.015)',
-                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
-                touchAction: 'none',  // Prevent touch scrolling
-                overscrollBehavior: 'none'  // Prevent scroll chaining
+                background: '#0a0a0a',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                boxShadow: 'none',
+                touchAction: 'none',
+                overscrollBehavior: 'none'
               }}
               onWheel={handleWheel}
             >
