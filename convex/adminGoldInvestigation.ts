@@ -132,7 +132,79 @@ export const findAffectedUsers = query({
   },
 });
 
+// Fix cumulative gold that was inflated by incorrect restoration
+export const fixCumulativeGoldInflation = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const goldData = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldData) {
+      throw new Error("Wallet not found");
+    }
+
+    // Calculate current gold with time accumulation
+    const hoursSinceSnapshot = (now - (goldData.lastSnapshotTime || goldData.createdAt)) / (1000 * 60 * 60);
+    const goldSinceSnapshot = goldData.totalGoldPerHour * hoursSinceSnapshot;
+    const currentGold = (goldData.accumulatedGold || 0) + goldSinceSnapshot;
+
+    const totalSpent = goldData.totalGoldSpentOnUpgrades || 0;
+    const currentCumulative = goldData.totalCumulativeGold || 0;
+
+    // CORRECT FORMULA: cumulative = accumulated + spent
+    const correctCumulative = currentGold + totalSpent;
+    const inflation = currentCumulative - correctCumulative;
+
+    if (Math.abs(inflation) < 0.01) {
+      return {
+        success: false,
+        message: `Cumulative gold is already correct: ${currentCumulative.toFixed(2)}`,
+        noFixNeeded: true
+      };
+    }
+
+    // Update to correct cumulative value
+    await ctx.db.patch(goldData._id, {
+      accumulatedGold: currentGold, // Snapshot the current gold
+      totalCumulativeGold: correctCumulative,
+      lastSnapshotTime: now,
+      updatedAt: now,
+    });
+
+    // Log the fix
+    await ctx.db.insert("auditLogs", {
+      type: "goldCorrectionCumulative",
+      timestamp: now,
+      createdAt: now,
+      stakeAddress: args.walletAddress,
+      goldBefore: currentGold,
+      goldAfter: currentGold,
+      goldAmount: 0,
+      reason: `Fixed cumulative inflation: ${currentCumulative.toFixed(2)} → ${correctCumulative.toFixed(2)}`,
+      cumulativeGoldBefore: currentCumulative,
+      cumulativeGoldAfter: correctCumulative,
+    });
+
+    return {
+      success: true,
+      message: `Fixed cumulative gold: ${currentCumulative.toFixed(2)} → ${correctCumulative.toFixed(2)}`,
+      inflation: inflation,
+      oldCumulative: currentCumulative,
+      newCumulative: correctCumulative,
+      currentAccumulated: currentGold,
+      totalSpent: totalSpent,
+    };
+  },
+});
+
 // Restore lost gold for a user (calculates exact amount at execution time)
+// DEPRECATED: This function incorrectly inflates cumulative gold. Use fixCumulativeGoldInflation after running this.
 export const restoreLostGold = mutation({
   args: {
     walletAddress: v.string(),
@@ -171,20 +243,16 @@ export const restoreLostGold = mutation({
       };
     }
 
-    // STEP 3: Add the lost gold back using the centralized function
-    const goldIncrease = calculateGoldIncrease(
-      {
-        ...goldData,
-        accumulatedGold: currentGold, // Use calculated current gold
-        lastSnapshotTime: now
-      },
-      goldToRestore
-    );
+    // STEP 3: CORRECTED - Only restore to accumulated, DON'T touch cumulative
+    // Cumulative was tracking correctly all along, only accumulated was destroyed
+    const newAccumulatedGold = currentGold + goldToRestore;
+    // Cumulative stays the same (it was already correct!)
+    const newCumulativeGold = totalCumulative;
 
     // STEP 4: Update the database with restored gold
     await ctx.db.patch(goldData._id, {
-      accumulatedGold: goldIncrease.newAccumulatedGold,
-      totalCumulativeGold: goldIncrease.newTotalCumulativeGold,
+      accumulatedGold: newAccumulatedGold,
+      totalCumulativeGold: newCumulativeGold,
       lastSnapshotTime: now,
       updatedAt: now,
     });
@@ -196,11 +264,11 @@ export const restoreLostGold = mutation({
       createdAt: now,
       stakeAddress: args.walletAddress,
       goldBefore: currentGold,
-      goldAfter: goldIncrease.newAccumulatedGold,
-      goldAmount: goldToRestore, // Amount restored (difference between before and after)
+      goldAfter: newAccumulatedGold,
+      goldAmount: goldToRestore,
       reason: "Bug fix: Restored gold lost to 50k cap during spending",
       cumulativeGoldBefore: goldData.totalCumulativeGold,
-      cumulativeGoldAfter: goldIncrease.newTotalCumulativeGold,
+      cumulativeGoldAfter: newCumulativeGold,
     });
 
     return {
@@ -208,9 +276,9 @@ export const restoreLostGold = mutation({
       message: `Successfully restored ${goldToRestore.toFixed(2)} gold`,
       goldRestored: goldToRestore,
       oldBalance: currentGold,
-      newBalance: goldIncrease.newAccumulatedGold,
+      newBalance: newAccumulatedGold,
       cumulativeBefore: goldData.totalCumulativeGold,
-      cumulativeAfter: goldIncrease.newTotalCumulativeGold,
+      cumulativeAfter: newCumulativeGold,
     };
   },
 });
