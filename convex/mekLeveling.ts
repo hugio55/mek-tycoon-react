@@ -266,10 +266,8 @@ export const upgradeMekLevel = mutation({
       : 0;
 
     const goldSinceSnapshot = goldMiningData.totalGoldPerHour * hoursSinceLastSnapshot;
-    const currentGold = Math.min(
-      50000, // Cap at 50,000 gold
-      (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot
-    );
+    // CRITICAL FIX: NO CAP - calculate true uncapped gold balance for spending
+    const currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot;
 
     // 7. Check if player has enough gold
     if (currentGold < upgradeCost) {

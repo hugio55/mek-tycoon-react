@@ -32,10 +32,11 @@ export function calculateCurrentGold(params: GoldCalculationParams): number {
   }
 
   // Normal calculation - user is verified and snapshots are working
+  // CRITICAL FIX: NO CAP - calculate true uncapped gold balance
   const now = Date.now();
   const hoursSinceLastUpdate = (now - params.lastSnapshotTime) / (1000 * 60 * 60);
   const goldSinceLastUpdate = params.goldPerHour * hoursSinceLastUpdate;
-  const calculatedGold = Math.min(50000, params.accumulatedGold + goldSinceLastUpdate);
+  const calculatedGold = params.accumulatedGold + goldSinceLastUpdate;
 
   return calculatedGold;
 }
@@ -56,9 +57,10 @@ export function calculateGoldSinceLastUpdate(
 }
 
 /**
- * Gold cap constant
+ * Gold cap constant - REMOVED (no more caps!)
+ * Kept for backwards compatibility but set to Infinity
  */
-export const GOLD_CAP = 50000;
+export const GOLD_CAP = Infinity;
 
 /**
  * Helper interface for gold mining record updates
@@ -114,29 +116,13 @@ export function calculateGoldIncrease(
   }
 
   // Add gold to both accumulated and cumulative
-  // CRITICAL: Track uncapped value to detect gold lost to cap
-  const uncappedAccumulated = currentAccumulated + goldToAdd;
-  const newAccumulatedGold = Math.min(GOLD_CAP, uncappedAccumulated);
-  const goldLostToCap = uncappedAccumulated - newAccumulatedGold;
+  // CRITICAL FIX: NO CAP - gold can grow infinitely
+  const newAccumulatedGold = currentAccumulated + goldToAdd;
 
-  // Add to cumulative (including any gold lost to cap)
+  // Add to cumulative
   const newTotalCumulativeGold = baseCumulative + goldToAdd;
 
-  // Defensive logging for edge cases
-  if (goldLostToCap > 0) {
-    console.log("[GOLD CAP] Gold capped at 50k:", {
-      goldToAdd,
-      currentAccumulated,
-      uncappedValue: uncappedAccumulated,
-      cappedValue: newAccumulatedGold,
-      goldLostToCap,
-      cumulativeStillGrows: newTotalCumulativeGold
-    });
-  }
-
-  // Verify invariant - MUST account for gold lost to cap
-  // The invariant allows for: cumulative >= accumulated + spent
-  // When accumulated hits cap, cumulative can be higher (tracking all-time gold)
+  // Verify invariant: cumulative >= accumulated + spent
   // Use epsilon to handle floating-point precision errors
   const EPSILON = 1e-10;
   const difference = newTotalCumulativeGold - (newAccumulatedGold + totalSpent);
@@ -146,11 +132,9 @@ export function calculateGoldIncrease(
       newTotalCumulativeGold,
       totalSpent,
       goldToAdd,
-      goldLostToCap,
       currentAccumulated,
       currentCumulative,
       baseCumulative,
-      uncappedAccumulated,
       calculation: {
         expected: `${newTotalCumulativeGold} >= ${newAccumulatedGold} + ${totalSpent}`,
         actual: `${newTotalCumulativeGold} >= ${newAccumulatedGold + totalSpent}`,
