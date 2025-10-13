@@ -119,7 +119,7 @@ export const initializeGoldMining = mutation({
         return sum + currentGold;
       }, 0);
 
-      // Update primary with merged data
+      // Update primary with merged data - NO CAP
       await ctx.db.patch(primary._id, {
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
@@ -127,7 +127,7 @@ export const initializeGoldMining = mutation({
         baseGoldPerHour,
         boostGoldPerHour,
         totalGoldPerHour,
-        accumulatedGold: Math.min(50000, totalAccumulatedGold),
+        accumulatedGold: totalAccumulatedGold, // CRITICAL FIX: NO CAP
         lastSnapshotTime: now,
         lastActiveTime: now,
         updatedAt: now,
@@ -141,7 +141,7 @@ export const initializeGoldMining = mutation({
       devLog.log(`[GoldMining] Merged ${duplicates.length} duplicates, total gold: ${totalAccumulatedGold.toFixed(2)}`);
 
       return {
-        currentGold: Math.min(50000, totalAccumulatedGold),
+        currentGold: totalAccumulatedGold, // CRITICAL FIX: NO CAP
         totalGoldPerHour
       };
     }

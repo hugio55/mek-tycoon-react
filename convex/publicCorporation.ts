@@ -45,7 +45,8 @@ export const getCorporationData = query({
       const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData._creationTime;
       const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
       const goldSinceLastUpdate = (goldMiningData.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-      currentGold = Math.min(50000, (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate);
+      // CRITICAL FIX: NO CAP - show true uncapped gold balance
+      currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate;
     }
 
     const goldEarnedSinceLastUpdate = currentGold - (goldMiningData.accumulatedGold || 0);
