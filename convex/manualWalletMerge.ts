@@ -45,7 +45,7 @@ export const manualMergeWalletsBySuffix = mutation({
     await ctx.db.patch(primary._id, {
       ownedMeks: mostMeks.ownedMeks || primary.ownedMeks,
       totalGoldPerHour: highestGoldRate,
-      accumulatedGold: Math.min(50000, totalAccumulatedGold),
+      accumulatedGold: totalAccumulatedGold, // CRITICAL FIX: Removed 50k cap during wallet merge
       isBlockchainVerified: matchingRecords.some(r => r.isBlockchainVerified),
       lastSnapshotTime: now,
       updatedAt: now,
@@ -60,7 +60,7 @@ export const manualMergeWalletsBySuffix = mutation({
       message: `Merged ${duplicates.length} duplicate(s) into wallet ${primary.walletAddress}`,
       primaryWallet: primary.walletAddress,
       deletedWallets: duplicates.map(d => d.walletAddress),
-      totalGold: Math.min(50000, totalAccumulatedGold),
+      totalGold: totalAccumulatedGold, // FIXED: Removed cap for accurate display
       goldPerHour: highestGoldRate
     };
   }

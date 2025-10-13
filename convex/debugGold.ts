@@ -25,7 +25,7 @@ export const checkGoldDebug = query({
 
     // Calculate what gold SHOULD be based on creation time
     const theoreticalGold = data.totalGoldPerHour * hoursSinceCreated;
-    const currentTotal = Math.min(50000, theoreticalGold);
+    const currentTotal = theoreticalGold; // FIXED: Removed cap for accurate debugging
 
     return {
       walletAddress: args.walletAddress,
@@ -46,7 +46,7 @@ export const checkGoldDebug = query({
         theoreticalGoldIfNoStops: theoreticalGold.toFixed(2),
         pendingAccumulation: "0.00", // No longer relevant - always calculated from creation
         currentTotalWithPending: currentTotal.toFixed(2),
-        hitCap: currentTotal >= 50000,
+        hitCap: false, // FIXED: No longer capping gold
       },
 
       debug: {

@@ -66,7 +66,7 @@ export const getTopGoldMiners = query({
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate; // FIXED: Removed 50k cap for accurate leaderboard display
       }
       const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
@@ -267,7 +267,7 @@ export const getAllCorporations = query({
         const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
         const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
         const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-        currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate; // FIXED: Removed 50k cap for accurate leaderboard display
       }
       const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
       let baseCumulativeGold = miner.totalCumulativeGold || 0;
@@ -369,7 +369,7 @@ export const getCorporationWalletDetails = query({
           const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
           const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
           const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+          currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate; // FIXED: Removed 50k cap for accurate leaderboard display
         }
         const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
@@ -411,7 +411,7 @@ export const getCorporationWalletDetails = query({
           const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
           const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
           const goldSinceLastUpdate = (miner.totalGoldPerHour || 0) * hoursSinceLastUpdate;
-          currentGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastUpdate);
+          currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate; // FIXED: Removed 50k cap for accurate leaderboard display
         }
         const goldEarnedSinceLastUpdate = currentGold - (miner.accumulatedGold || 0);
         let baseCumulativeGold = miner.totalCumulativeGold || 0;
