@@ -311,6 +311,7 @@ export default function MekRateLoggingPage() {
   const [mekNumberStyle, setMekNumberStyle] = useState<number>(0); // Mek number display style
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false); // Disconnect loading state
   // Level bar style locked to Bar Indicators (option 5)
 
   // Company name states
@@ -408,6 +409,7 @@ export default function MekRateLoggingPage() {
   const updateGroupCompanyName = useMutation(api.walletGroups.updateGroupCompanyName);
   const generateNonce = useMutation(api.walletAuthentication.generateNonce);
   const verifySignature = useAction(api.walletAuthentication.verifySignature);
+  const revokeAuthentication = useMutation(api.walletAuthentication.revokeAuthentication);
   const checkAuth = useQuery(
     api.walletAuthentication.checkAuthentication,
     (walletAddress && !walletAddress.includes('demo') && walletType !== 'Demo') ? { stakeAddress: walletAddress } : "skip"
@@ -1727,21 +1729,27 @@ export default function MekRateLoggingPage() {
           console.log('[Wallet Connect] Stake address converted:', stakeAddressRaw.substring(0, 20), '->', stakeAddress.substring(0, 20));
 
           // Check if already authenticated - skip signature if valid session exists
-          console.log('[Wallet Connect] Checking existing authentication...');
+          console.log('[Reconnect Flow] Step 1: Checking existing authentication...');
+          console.log('[Reconnect Flow] Stake address to check:', stakeAddress);
+          console.log('[Reconnect Flow] Current time:', new Date().toISOString());
           let existingAuth = null;
 
           try {
             // Check if Convex client is available
             // Note: 'api' here refers to Convex API (imported at top), not wallet API
             if (!convex) {
-              console.warn('[Wallet Connect] Convex client not initialized, skipping auth check');
+              console.warn('[Reconnect Flow] Convex client not initialized, skipping auth check');
             } else {
+              const authCheckStartTime = Date.now();
               existingAuth = await convex.query(api.walletAuthentication.checkAuthentication, {
                 stakeAddress
               });
+              const authCheckEndTime = Date.now();
+              console.log('[Reconnect Flow] Step 2: Auth check complete in', authCheckEndTime - authCheckStartTime, 'ms');
+              console.log('[Reconnect Flow] Step 2: Found auth result:', JSON.stringify(existingAuth, null, 2));
             }
           } catch (authCheckError) {
-            console.error('[Wallet Connect] Error checking authentication:', authCheckError);
+            console.error('[Reconnect Flow] ERROR checking authentication:', authCheckError);
             // Continue without existing auth - will request signature
           }
 
@@ -1749,13 +1757,20 @@ export default function MekRateLoggingPage() {
           let verifiedNonce = ''; // Store nonce for session management
 
           if (existingAuth && existingAuth.authenticated) {
-            console.log('[Wallet Connect] ✓ Valid session found - skipping signature request');
-            console.log('[Wallet Connect] Session expires at:', new Date(existingAuth.expiresAt || 0).toISOString());
+            console.log('[Reconnect Flow] ✓✓✓ PROBLEM: Valid session found - skipping signature request ✓✓✓');
+            console.log('[Reconnect Flow] Session details:');
+            console.log('[Reconnect Flow]   - Authenticated:', existingAuth.authenticated);
+            console.log('[Reconnect Flow]   - Expires at:', new Date(existingAuth.expiresAt || 0).toISOString());
+            console.log('[Reconnect Flow]   - Wallet name:', existingAuth.walletName);
+            console.log('[Reconnect Flow]   - Session ID:', existingAuth.sessionId);
+            console.log('[Reconnect Flow]   - Is legacy:', existingAuth.legacy);
+            console.log('[Reconnect Flow] THIS IS WHY SIGNATURE IS BEING SKIPPED!');
             signatureVerified = true;
             setIsSignatureVerified(true);
             setConnectionStatus('Valid session found - connecting...');
           } else {
-            console.log('[Wallet Connect] No valid session - requesting signature...');
+            console.log('[Reconnect Flow] ✓✓✓ CORRECT: No valid session - requesting signature... ✓✓✓');
+            console.log('[Reconnect Flow] Auth result:', existingAuth);
             // Generate nonce for signature verification - REQUIRED
             try {
               console.log('[Wallet Connect] Generating secure nonce...');
@@ -2365,19 +2380,40 @@ export default function MekRateLoggingPage() {
 
   // Disconnect wallet
   const disconnectWallet = async () => {
-    console.log('[Wallet Disconnect] === STARTING DISCONNECT ===');
-    console.log('[Wallet Disconnect] Current wallet:', walletAddress);
-    console.log('[Wallet Disconnect] Current Meks count:', ownedMeks.length);
+    console.log('[Disconnect Flow] === STARTING DISCONNECT ===');
+    console.log('[Disconnect Flow] Current wallet:', walletAddress);
+    console.log('[Disconnect Flow] Current Meks count:', ownedMeks.length);
+
+    // Set loading state to show user feedback
+    setIsDisconnecting(true);
 
     // Update last active time before disconnecting
     if (walletAddress) {
+      console.log('[Disconnect Flow] Step 1: Updating last active time...');
       await updateLastActive({
         walletAddress
       });
+
+      // CRITICAL: Revoke authentication session in Convex
+      // This ensures signature is required on next connection
+      console.log('[Disconnect Flow] Step 2: Calling revokeAuthentication mutation...');
+      console.log('[Disconnect Flow] Stake address for revocation:', walletAddress);
+      try {
+        const revokeStartTime = Date.now();
+        const revokeResult = await revokeAuthentication({
+          stakeAddress: walletAddress
+        });
+        const revokeEndTime = Date.now();
+        console.log('[Disconnect Flow] Step 2: Revocation complete in', revokeEndTime - revokeStartTime, 'ms');
+        console.log('[Disconnect Flow] Revocation result:', revokeResult);
+      } catch (error) {
+        console.error('[Disconnect Flow] ERROR revoking session:', error);
+        // Continue with disconnect even if revocation fails
+      }
     }
 
     // CRITICAL: Clear state FIRST
-    console.log('[Wallet Disconnect] Clearing React state...');
+    console.log('[Disconnect Flow] Step 3: Clearing React state...');
     setWalletConnected(false);
     setWalletAddress(null);
     setWalletType(null);
@@ -2387,12 +2423,12 @@ export default function MekRateLoggingPage() {
     setCumulativeGold(0);
     setIsSignatureVerified(false);
     walletApiRef.current = null; // Clear wallet API reference
-    console.log('[Wallet Disconnect] React state cleared');
+    console.log('[Disconnect Flow] Step 3: React state cleared');
 
     // CRITICAL: Clear session storage (this clears localStorage)
-    console.log('[Wallet Disconnect] Clearing localStorage...');
+    console.log('[Disconnect Flow] Step 4: Clearing localStorage...');
     clearWalletSession();
-    console.log('[Wallet Disconnect] localStorage cleared');
+    console.log('[Disconnect Flow] Step 4: localStorage cleared');
 
     // Clear intervals
     if (goldIntervalRef.current) {
@@ -2402,7 +2438,17 @@ export default function MekRateLoggingPage() {
       clearInterval(checkpointIntervalRef.current);
     }
 
-    console.log('[Wallet Disconnect] === DISCONNECT COMPLETE ===');
+    console.log('[Disconnect Flow] === DISCONNECT COMPLETE ===');
+
+    // CRITICAL: Force page reload to clear wallet extension's cached API
+    // This ensures signature is required on next connection
+    console.log('[Disconnect Flow] Step 5: Reloading page to clear wallet cache...');
+
+    // Add small delay to ensure Convex mutation propagates
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    console.log('[Disconnect Flow] Step 5: Page reload starting NOW...');
+    window.location.reload();
   };
 
   // STEP 1: Check for corporation name conflict before proceeding
@@ -2776,17 +2822,21 @@ export default function MekRateLoggingPage() {
       return;
     }
 
-    const handleUnload = async () => {
-      if (walletAddress) {
-        await updateLastActive({
+    const handleUnload = (e: BeforeUnloadEvent) => {
+      // Only save on natural page close, NOT during disconnect
+      // (disconnect already calls updateLastActive)
+      if (walletAddress && !isDisconnecting) {
+        // Use synchronous approach - queue the save without awaiting
+        // This prevents the "Are you sure you want to leave?" warning
+        updateLastActive({
           walletAddress
-        });
+        }).catch(err => console.error('[Unload] Failed to save:', err));
       }
     };
 
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
-  }, [walletAddress, currentGold]);
+  }, [walletAddress, currentGold, isDisconnecting]);
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -3501,13 +3551,30 @@ export default function MekRateLoggingPage() {
 
                     {/* 4. Disconnect Button */}
                     <button
-                      onClick={() => {
-                        setWalletDropdownOpen(false);
-                        disconnectWallet();
+                      onClick={async () => {
+                        // DO NOT close dropdown first - let page reload handle cleanup
+                        // Closing dropdown synchronously can cause race condition where
+                        // the button unmounts before async disconnect completes
+                        await disconnectWallet();
                       }}
-                      className="w-full px-4 py-4 text-left bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation"
+                      disabled={isDisconnecting}
+                      className={`w-full px-4 py-4 text-left transition-all uppercase tracking-wider text-base sm:text-base font-['Orbitron'] font-bold min-h-[48px] touch-manipulation ${
+                        isDisconnecting
+                          ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                          : 'bg-transparent text-red-400 hover:bg-red-500/10 active:bg-red-500/20'
+                      }`}
                     >
-                      DISCONNECT
+                      {isDisconnecting ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          DISCONNECTING...
+                        </span>
+                      ) : (
+                        'DISCONNECT'
+                      )}
                     </button>
                   </div>
                 )}

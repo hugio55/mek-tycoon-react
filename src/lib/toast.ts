@@ -28,9 +28,9 @@ function getToastStyles(type: ToastType, position: 'top' | 'center' | 'bottom'):
       shadow: 'rgba(239, 68, 68, 0.5)',
     },
     warning: {
-      bg: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      border: '#f59e0b',
-      shadow: 'rgba(245, 158, 11, 0.5)',
+      bg: 'linear-gradient(135deg, #fab617, #d97706)',
+      border: '#fab617',
+      shadow: 'rgba(250, 182, 23, 0.5)',
     },
     info: {
       bg: 'linear-gradient(135deg, #3b82f6, #2563eb)',

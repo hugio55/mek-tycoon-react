@@ -43,6 +43,7 @@ export const deployEventNodes = mutation({
           chipRewards: event.chipRewards || [], // Will be calculated client-side
           essenceRewards: event.essenceRewards || [],
           customRewards: event.customRewards || [],
+          genesisBuffs: event.genesisBuffs, // Include Genesis buffs for event nodes
           imageReference,
           image: imageReference, // Include both for compatibility
         };

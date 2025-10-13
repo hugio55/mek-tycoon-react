@@ -187,8 +187,8 @@ export default function MekRecruitmentModalV4({
     fontFamily: 'Roboto, sans-serif'
   };
 
-  // State for number of buffs to display (for testing spacing)
-  const [buffCount, setBuffCount] = useState<3 | 4>(4);
+  // State for number of buffs to display (locked to 3)
+  const buffCount = 3;
 
   // Debug states for success meter
   const [debugSuccessRate, setDebugSuccessRate] = useState(35);
@@ -399,16 +399,6 @@ export default function MekRecruitmentModalV4({
             <option value="chip">Chip Style</option>
           </select>
         )}
-
-        {/* Buff Count Selector (for testing) */}
-        <select
-          value={buffCount}
-          onChange={(e) => setBuffCount(Number(e.target.value) as 3 | 4)}
-          className="px-3 py-1.5 bg-gray-800/90 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:outline-none focus:border-yellow-500"
-        >
-          <option value="3">3 Buffs</option>
-          <option value="4">4 Buffs</option>
-        </select>
 
         {/* Debug Mode Toggle */}
         <button
