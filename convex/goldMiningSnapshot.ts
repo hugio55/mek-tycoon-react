@@ -535,15 +535,21 @@ export const getLastSnapshotTime = query({
   },
 });
 
-// Manual trigger for snapshot (admin only) - creates a public action
+// Manual trigger for snapshot (admin only) - uses batched processing
 export const triggerSnapshot = action({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    batchSize: v.optional(v.number()), // Optional: wallets per batch (default: 5)
+  },
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize || 5; // Safe default: 5 wallets per batch
+
     // Log the trigger
     await ctx.runMutation(internal.goldMiningSnapshot.logSnapshotTrigger);
 
-    // Run the actual snapshot
-    const result = await ctx.runAction(internal.goldMiningSnapshot.runManualSnapshot);
+    // Start batched snapshot processing
+    const result = await ctx.runAction(internal.goldMiningSnapshot.runBatchedSnapshot, {
+      batchSize,
+    });
 
     return result;
   },
@@ -809,6 +815,174 @@ export const runManualSnapshot = internalAction({
       updatedCount,
       errorCount,
       skippedCount,
+    };
+  },
+});
+
+// Batched snapshot processing - processes wallets in small batches to avoid timeout
+export const runBatchedSnapshot = internalAction({
+  args: {
+    batchSize: v.number(),
+  },
+  handler: async (ctx, args): Promise<{
+    success: boolean;
+    totalMiners: number;
+    updatedCount: number;
+    errorCount: number;
+    skippedCount: number;
+  }> => {
+    const now = Date.now();
+    console.log(`[Batched Snapshot] Starting with batch size: ${args.batchSize}`);
+
+    // Get all wallets
+    const allMiners: any[] = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
+    console.log(`[Batched Snapshot] Total wallets to process: ${allMiners.length}`);
+
+    let totalUpdated = 0;
+    let totalErrors = 0;
+    let totalSkipped = 0;
+
+    // Process in batches
+    for (let i = 0; i < allMiners.length; i += args.batchSize) {
+      const batch = allMiners.slice(i, i + args.batchSize);
+      const batchNum = Math.floor(i / args.batchSize) + 1;
+      const totalBatches = Math.ceil(allMiners.length / args.batchSize);
+
+      console.log(`[Batched Snapshot] Processing batch ${batchNum}/${totalBatches} (${batch.length} wallets)`);
+
+      for (const miner of batch) {
+        try {
+          // Skip fake test addresses
+          const stakeAddress = miner.walletAddress;
+          if (stakeAddress.startsWith('stake1u') && stakeAddress.length < 50) {
+            console.log(`[Batched Snapshot] Skipping fake test address: ${stakeAddress}`);
+            totalSkipped++;
+            continue;
+          }
+
+          console.log(`[Batched Snapshot] Processing: ${stakeAddress}`);
+
+          // Query blockchain
+          const walletData = await ctx.runAction(api.blockfrostNftFetcher.fetchNFTsByStakeAddress, {
+            stakeAddress: stakeAddress,
+            useCache: false,
+          });
+
+          if (walletData.success && walletData.meks) {
+            // Get level data
+            const allMekLevels = await ctx.runQuery(internal.goldMiningSnapshot.getMekLevelsForWallet, {
+              walletAddress: miner.walletAddress
+            });
+
+            const mekLevelsMap = new Map(allMekLevels.map(level => [level.assetId, level]));
+            const existingMeksMap = new Map(miner.ownedMeks.map(mek => [mek.assetId, mek]));
+
+            // Build mek details
+            const mekDetails = [];
+            let totalGoldPerHour = 0;
+
+            for (const blockchainMek of walletData.meks) {
+              const mekLevel = mekLevelsMap.get(blockchainMek.assetId);
+              const existingMek = existingMeksMap.get(blockchainMek.assetId);
+
+              if (mekLevel) {
+                const baseGoldPerHour = mekLevel.baseGoldPerHour || 0;
+                const levelBoostAmount = mekLevel.currentBoostAmount || 0;
+                const effectiveGoldPerHour = baseGoldPerHour + levelBoostAmount;
+
+                mekDetails.push({
+                  assetId: blockchainMek.assetId,
+                  assetName: blockchainMek.assetName,
+                  goldPerHour: effectiveGoldPerHour,
+                  rarityRank: existingMek?.rarityRank,
+                  baseGoldPerHour: baseGoldPerHour,
+                  currentLevel: mekLevel.currentLevel,
+                  levelBoostPercent: mekLevel.currentBoostPercent || 0,
+                  levelBoostAmount: levelBoostAmount,
+                });
+                totalGoldPerHour += effectiveGoldPerHour;
+              } else if (existingMek) {
+                mekDetails.push({
+                  assetId: blockchainMek.assetId,
+                  assetName: blockchainMek.assetName,
+                  goldPerHour: existingMek.goldPerHour,
+                  rarityRank: existingMek.rarityRank,
+                  baseGoldPerHour: existingMek.baseGoldPerHour,
+                  currentLevel: existingMek.currentLevel || 1,
+                  levelBoostPercent: existingMek.levelBoostPercent || 0,
+                  levelBoostAmount: existingMek.levelBoostAmount || 0,
+                });
+                totalGoldPerHour += existingMek.goldPerHour;
+              } else {
+                // New Mek - fetch data
+                const { getMekDataByNumber } = await import("../src/lib/mekNumberToVariation");
+                const mekData = getMekDataByNumber(blockchainMek.mekNumber);
+
+                if (mekData) {
+                  const goldPerHour = Math.round(mekData.goldPerHour * 100) / 100;
+                  mekDetails.push({
+                    assetId: blockchainMek.assetId,
+                    assetName: blockchainMek.assetName,
+                    goldPerHour: goldPerHour,
+                    rarityRank: mekData.finalRank,
+                    baseGoldPerHour: goldPerHour,
+                    currentLevel: 1,
+                    levelBoostPercent: 0,
+                    levelBoostAmount: 0,
+                  });
+                  totalGoldPerHour += goldPerHour;
+                }
+              }
+            }
+
+            // Update wallet
+            await ctx.runMutation(internal.goldMiningSnapshot.updateMinerAfterSnapshot, {
+              walletAddress: miner.walletAddress,
+              mekCount: walletData.meks.length,
+              totalGoldPerHour: totalGoldPerHour,
+              mekNumbers: walletData.meks.map((m: any) => m.mekNumber),
+              mekDetails: mekDetails,
+              snapshotSuccess: true,
+            });
+
+            totalUpdated++;
+            console.log(`[Batched Snapshot] ✓ Updated ${stakeAddress}: ${walletData.meks.length} Meks, ${totalGoldPerHour.toFixed(2)} g/hr`);
+          } else {
+            // Lookup failed
+            console.log(`[Batched Snapshot] ✗ Lookup failed for ${stakeAddress}`);
+            await ctx.runMutation(internal.goldMiningSnapshot.incrementSnapshotFailure, {
+              walletAddress: miner.walletAddress,
+            });
+            totalSkipped++;
+          }
+        } catch (error) {
+          console.error(`[Batched Snapshot] Error processing ${miner.walletAddress}:`, error);
+          totalErrors++;
+        }
+      }
+
+      // Log progress after each batch
+      console.log(`[Batched Snapshot] Batch ${batchNum}/${totalBatches} complete. Progress: ${totalUpdated} updated, ${totalErrors} errors, ${totalSkipped} skipped`);
+    }
+
+    // Log final results
+    await ctx.runMutation(internal.goldMiningSnapshot.logSnapshotResult, {
+      timestamp: now,
+      totalMiners: allMiners.length,
+      updatedCount: totalUpdated,
+      errorCount: totalErrors,
+      skippedCount: totalSkipped,
+      status: "completed",
+    });
+
+    console.log(`[Batched Snapshot] ✅ Complete! ${totalUpdated}/${allMiners.length} wallets updated`);
+
+    return {
+      success: true,
+      totalMiners: allMiners.length,
+      updatedCount: totalUpdated,
+      errorCount: totalErrors,
+      skippedCount: totalSkipped,
     };
   },
 });
