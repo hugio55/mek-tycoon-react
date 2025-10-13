@@ -22,10 +22,12 @@ interface VariationBuff {
   bonus: string;
   color?: string; // Hex color for Genesis tokens
   rarity?: string; // Rarity tier for Genesis tokens
+  image?: string; // Image path for Genesis tokens
 }
 
 interface StoryMissionCardProps {
   flashingMekSlots?: boolean;
+  isEventNode?: boolean; // Whether this is an event node (Genesis buffs) or mek node (Variation buffs)
   // Core mission data
   title?: string;
   mekImage?: string; // Path to the mek image
@@ -1226,7 +1228,9 @@ export default function StoryMissionCard({
             {variationBuffLayoutStyle === 1 && (
               // Layout 1: Horizontal with Text (Genesis Tokens)
               <>
-                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Genesis Buffs</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">
+                  {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
+                </div>
                 <div className="flex items-center justify-center gap-3">
                   <div className="text-[11px] text-gray-400 max-w-[90px] text-center leading-tight">
                     Hold tokens for success bonuses
@@ -1237,7 +1241,7 @@ export default function StoryMissionCard({
                       return (
                         <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                           <div
-                            className="relative w-[48px] h-[48px] rounded-full cursor-pointer transition-all hover:scale-110"
+                            className="relative w-[48px] h-[48px] rounded-full cursor-pointer transition-all hover:scale-110 overflow-hidden"
                             style={{
                               backgroundColor: buff.color || '#6B7280',
                               border: `2px solid ${buff.color || '#6B7280'}`,
@@ -1253,7 +1257,15 @@ export default function StoryMissionCard({
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                             }}
-                          />
+                          >
+                            {buff.image && (
+                              <img
+                                src={buff.image}
+                                alt={buff.name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
                           <span className="text-[10px] text-yellow-400 font-bold mt-0.5">{buff.bonus}</span>
                         </div>
                       );
@@ -1267,7 +1279,9 @@ export default function StoryMissionCard({
               // Layout 2: Olympic Rings Pattern (2 on top, 3 on bottom)
               <>
                 <div className="text-center mb-2">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">
+                    {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
+                  </div>
                   <div className="text-[11px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex flex-col items-center gap-3">
@@ -1335,7 +1349,9 @@ export default function StoryMissionCard({
               // Layout 3: Vertical Stack (text on top, Genesis tokens below)
               <>
                 <div className="text-center mb-3">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">
+                    {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
+                  </div>
                   <div className="text-[10px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex justify-center gap-2">
@@ -1371,7 +1387,9 @@ export default function StoryMissionCard({
             {variationBuffLayoutStyle === 4 && (
               // Layout 4: Compact Pills (Genesis token badges)
               <>
-                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">Genesis Buffs</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-2">
+                  {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
+                </div>
                 <div className="flex flex-wrap justify-center gap-1.5">
                   {variationBuffs.map((buff, index) => {
                     return (
@@ -1413,7 +1431,9 @@ export default function StoryMissionCard({
               // Layout 5: Side by Side (text left, Genesis tokens right)
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-shrink-0">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">
+                    {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
+                  </div>
                   <div className="text-[10px] text-gray-400 mt-1 max-w-[100px]">Hold tokens for success bonuses</div>
                 </div>
                 <div className="flex gap-1.5">
