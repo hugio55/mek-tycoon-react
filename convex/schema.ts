@@ -1836,6 +1836,7 @@ export default defineSchema({
     deviceId: v.optional(v.string()), // Device identifier for binding
     origin: v.optional(v.string()), // Origin URL for CORS validation
     usedAt: v.optional(v.number()), // Timestamp when nonce was consumed (replaces verified boolean)
+    revokedAt: v.optional(v.number()), // Timestamp when signature was revoked (e.g., on wallet disconnect)
 
     // Mobile & Platform Tracking
     platform: v.optional(v.string()), // mobile_ios, mobile_android, mobile_web, desktop

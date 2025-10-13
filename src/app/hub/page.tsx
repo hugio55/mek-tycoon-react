@@ -7,7 +7,8 @@ import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
-import { toastError, toastSuccess } from "@/lib/toast";
+import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
+import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
 
 // Demo wallet mock data
 const DEMO_WALLET_DATA = {
@@ -42,6 +43,7 @@ export default function HubPage() {
   const [currentEmployeePage, setCurrentEmployeePage] = useState(0);
   const [initError, setInitError] = useState<string | null>(null);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | 'all'>('7d');
@@ -427,26 +429,26 @@ export default function HubPage() {
     // Create popup element
     const popup = document.createElement('div');
     popup.className = 'gold-popup';
-    
+
     // Calculate XP if not provided (fallback)
     if (xpGained === 0 && amount > 0) {
       xpGained = Math.floor(amount / 10);
     }
-    
+
     // Build popup content
     let content = `<div style="text-align: center;">`;
     content += `<div style="font-size: 24px; margin-bottom: 8px;">+${amount} Gold Collected!</div>`;
-    
+
     // Always show XP (even if calculated)
     content += `<div style="font-size: 18px; color: #a855f7;">+${xpGained} XP Gained!</div>`;
-    
+
     if (leveledUp) {
       content += `<div style="font-size: 20px; color: #10b981; margin-top: 8px;">🎉 Level ${currentLevel}!</div>`;
     }
-    
+
     content += `</div>`;
     popup.innerHTML = content;
-    
+
     popup.style.cssText = `
       position: fixed;
       top: 50%;
@@ -461,13 +463,33 @@ export default function HubPage() {
       animation: goldPopup 1.5s ease-out forwards;
       box-shadow: 0 10px 40px rgba(255, 204, 0, 0.5);
     `;
-    
+
     document.body.appendChild(popup);
-    
+
     // Remove after animation
     setTimeout(() => {
       popup.remove();
     }, 1500);
+  };
+
+  const handleDisconnectWallet = () => {
+    try {
+      // Clear wallet data from localStorage
+      localStorage.removeItem('walletAddress');
+      localStorage.removeItem('stakeAddress');
+      localStorage.removeItem('walletName');
+
+      // Show success toast
+      toastSuccess('Wallet disconnected successfully');
+
+      // Small delay before reload to show toast
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      toastError('Failed to disconnect wallet');
+    }
   };
   
 
@@ -750,12 +772,7 @@ export default function HubPage() {
                 </button>
                 {walletAddress && walletAddress !== "demo_wallet_123" ? (
                   <button
-                    onClick={() => {
-                      // Disconnect wallet
-                      localStorage.removeItem('walletAddress');
-                      localStorage.removeItem('stakeAddress');
-                      window.location.href = '/';
-                    }}
+                    onClick={() => setShowDisconnectModal(true)}
                     className="px-4 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-transparent hover:bg-gray-900/30 rounded transition-all duration-200"
                     style={{
                       fontFamily: "'Inter', 'Segoe UI', sans-serif",
@@ -1536,7 +1553,14 @@ export default function HubPage() {
           }}
         />
       )}
-      
+
+      {/* Disconnect Confirmation Modal */}
+      <DisconnectConfirmModal
+        isOpen={showDisconnectModal}
+        onConfirm={handleDisconnectWallet}
+        onCancel={() => setShowDisconnectModal(false)}
+      />
+
     </div>
   );
 }

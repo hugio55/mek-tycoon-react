@@ -1,30 +1,3 @@
-/*
- * VARIATION 1: HEAVY INDUSTRIAL WITH HAZARD STRIPES
- * ================================================
- *
- * DESIGN PHILOSOPHY:
- * - Inspired by industrial safety equipment and military installations
- * - Heavy use of yellow/black hazard stripes for danger zones
- * - Metal textures with scratches, rust, and wear
- * - Sharp angular frames with bold yellow borders
- * - Grunge overlays throughout for weathered appearance
- * - Strong contrast between black backgrounds and yellow accents
- *
- * KEY VISUAL ELEMENTS:
- * - Canvas: Black background with diagonal hazard stripe patterns
- * - Node connections: Yellow glowing lines with industrial texture
- * - Mission cards: Metal frames with corner brackets and warning stripes
- * - UI panels: Dark with heavy borders and grunge overlays
- * - Typography: Bold, uppercase with Orbitron font
- * - Interactive states: Bright yellow glow effects on hover
- *
- * COLOR PALETTE:
- * - Primary: #fab617 (Safety Yellow)
- * - Secondary: #000000 (Deep Black)
- * - Accent: Orange (#ff8c00) for danger states
- * - Background: Black with 10% yellow tint overlay
- */
-
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -218,11 +191,12 @@ export default function StoryClimbPage() {
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   // Challenger effect locked to Phase Shift (quantum2)
   const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
-  const [debugPanelMinimized, setDebugPanelMinimized] = useState(true); // State to minimize debug panel - starts minimized
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
   // Success Meter Card Layout - how title, bar, and status are combined
   const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
   const colorScheme = 'circuit' as const; // Locked to Holographic Circuit
+  // Duration & Deploy Layout - 4 different arrangements
+  const [durationDeployLayout, setDurationDeployLayout] = useState<1 | 2 | 3 | 4>(1); // 1 = current, 2 = horizontal, 3 = deploy above, 4 = compact
 
   // Mission Statistics Tracking
   const [missionStats, setMissionStats] = useState({
@@ -3688,107 +3662,90 @@ export default function StoryClimbPage() {
         ctx.fillText('THE APEX MECHANISM', pos.x, pos.y + nodeSize - 15);
         ctx.restore();
       } else if (node.storyNodeType === 'event') {
-        // Draw EVENT text inside the node with curved text along bottom inner edge
+        // INDUSTRIAL EVENT NODE DESIGN
         ctx.save();
 
-        // Get the event name from deployed data
+        // Get the event data from deployed data
         const eventData = getEventDataForNode(node);
-        let eventTitle = '';
 
-        if (eventData?.name && eventData.name !== 'EVENT NODE') {
-          // Use deployed event name
-          eventTitle = eventData.name;
-        } else {
-          // Better fallback: use event number from label
-          const eventNumMatch = node.label?.match(/E(\d+)/);
-          if (eventNumMatch) {
-            const localEventNum = eventNumMatch[1];
-            // Extract chapter from node ID
-            const chapterMatch = node.id?.match(/ch(\d+)/);
-            const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
-            const globalEventNumber = (chapter - 1) * 20 + parseInt(localEventNum);
+        // Calculate event chapter and number
+        const eventNumMatch = node.label?.match(/E(\d+)/);
+        const chapterMatch = node.id?.match(/ch(\d+)/);
+        const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+        const localEventNum = eventNumMatch ? parseInt(eventNumMatch[1]) : 1;
+        const globalEventNumber = (chapter - 1) * 20 + localEventNum;
 
-            // Use a more descriptive default name
-            eventTitle = `Event ${globalEventNumber}`;
+        // Get the actual mission name from event data (e.g., "Rust Protocol")
+        let missionName = eventData?.name || `Event ${globalEventNumber}`;
 
-            console.log('📝 Using fallback event title:', eventTitle, 'for node:', node.label);
+        // Create chapter/event label (e.g., "Chapter 1: Event 1")
+        const chapterLabel = `Chapter ${chapter}: Event ${localEventNum}`;
+
+        // Draw "EVENT" label bar at top - industrial hazard stripe style
+        const labelWidth = nodeSize * 1.6;
+        const labelHeight = 18;
+        const labelY = pos.y - nodeSize / 2 - labelHeight / 2;
+
+        // Hazard stripe background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        ctx.fillRect(pos.x - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+
+        // Yellow borders
+        ctx.strokeStyle = '#fab617';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(pos.x - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+
+        // "EVENT" text
+        ctx.font = 'bold 10px "Orbitron", monospace';
+        ctx.fillStyle = '#fab617';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('EVENT', pos.x, labelY);
+
+        // Draw chapter/event label below EVENT bar
+        const chapterLabelY = labelY + labelHeight / 2 + 12;
+        ctx.font = 'bold 11px Verdana';
+        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#10b981' : '#6b7280';
+        ctx.fillText(chapterLabel.toUpperCase(), pos.x, chapterLabelY);
+
+        // Draw mission name in the center of the node
+        ctx.font = '600 12px Verdana';
+        ctx.fillStyle = isCompleted ? '#fab617' : isAvailable ? '#fab617' : '#9ca3af';
+
+        // Word wrap the mission name if needed
+        const maxWidth = nodeSize * 1.4;
+        const words = missionName.split(' ');
+        let line = '';
+        const lines: string[] = [];
+
+        for (const word of words) {
+          const testLine = line + (line ? ' ' : '') + word;
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && line) {
+            lines.push(line);
+            line = word;
           } else {
-            // Last resort fallback
-            eventTitle = 'Event';
+            line = testLine;
           }
         }
-        
-        // Draw curved text INSIDE the circle along the bottom with background
-        ctx.font = '500 11px Verdana'; // Lighter weight for better readability
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Calculate text arc parameters
-        const textRadius = nodeSize - 12; // Inside the circle, with padding from edge
-        const arcText = eventTitle.toUpperCase();
-        const letterSpacing = 0.16; // More spacing between letters for better readability
-        const totalArc = letterSpacing * (arcText.length - 1);
-        const startAngle = Math.PI / 2 + totalArc / 2; // Start from bottom, centered
-        
-        // Draw background arc for event title
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.lineWidth = 14;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, textRadius, startAngle - totalArc - 0.1, startAngle + 0.1);
-        ctx.stroke();
-        ctx.restore();
-        
-        // Draw each letter curved along the bottom inside of the circle
-        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#ffffff' : '#9ca3af'; // Keep title white when available
-        for (let i = 0; i < arcText.length; i++) {
-          const angle = startAngle - (i * letterSpacing);
-          const charX = pos.x + Math.cos(angle) * textRadius;
-          const charY = pos.y + Math.sin(angle) * textRadius;
-          
-          ctx.save();
-          ctx.translate(charX, charY);
-          ctx.rotate(angle - Math.PI / 2); // Rotate to follow the curve
-          ctx.fillText(arcText[i], 0, 0);
-          ctx.restore();
-        }
-        
-        // Draw "EVENT" curved at the top of the circle with background
-        ctx.font = 'bold 11px Trebuchet MS';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Add semi-transparent background for EVENT text
-        const eventText = 'EVENT';
-        const topRadius = nodeSize - 10; // EVENT text positioned away from rim
-        const topLetterSpacing = 0.15;
-        const topTotalArc = topLetterSpacing * (eventText.length - 1);
-        const topStartAngle = -Math.PI / 2 - topTotalArc / 2;
-        
-        // Draw background arc for EVENT text
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.lineWidth = 14;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, topRadius, topStartAngle - 0.1, topStartAngle + topTotalArc + 0.1);
-        ctx.stroke();
-        ctx.restore();
-        
-        // Draw EVENT text
-        ctx.fillStyle = '#8b5cf6';
-        for (let i = 0; i < eventText.length; i++) {
-          const angle = topStartAngle + (i * topLetterSpacing);
-          const charX = pos.x + Math.cos(angle) * topRadius;
-          const charY = pos.y + Math.sin(angle) * topRadius;
+        if (line) lines.push(line);
 
-          ctx.save();
-          ctx.translate(charX, charY);
-          ctx.rotate(angle + Math.PI / 2);
-          ctx.fillText(eventText[i], 0, 0);
-          ctx.restore();
-        }
+        // Draw mission name lines centered
+        const lineHeight = 14;
+        const startY = pos.y - ((lines.length - 1) * lineHeight) / 2;
+
+        // Add dark background for readability
+        const bgPadding = 6;
+        const bgHeight = lines.length * lineHeight + bgPadding * 2;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(pos.x - maxWidth / 2 - bgPadding, startY - lineHeight / 2 - bgPadding, maxWidth + bgPadding * 2, bgHeight);
+
+        // Draw text
+        ctx.fillStyle = isCompleted ? '#fab617' : isAvailable ? '#fab617' : '#9ca3af';
+        lines.forEach((line, i) => {
+          ctx.fillText(line.toUpperCase(), pos.x, startY + i * lineHeight);
+        });
+
         ctx.restore(); // Restore the context saved at the beginning of event node drawing
       } else {
         // Normal nodes - show number if available
@@ -4664,64 +4621,7 @@ export default function StoryClimbPage() {
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* VARIATION 1: Heavy Industrial Background with Hazard Stripes */}
-      <div className="fixed inset-0 bg-black -z-10">
-        {/* Diagonal hazard stripe pattern overlay */}
-        <div className="absolute inset-0 mek-overlay-hazard-stripes opacity-15" />
-        {/* Metal texture grid */}
-        <div className="absolute inset-0 mek-overlay-metal-texture opacity-20" />
-        {/* Grunge and scratches */}
-        <div className="absolute inset-0 mek-overlay-scratches opacity-40" />
-        {/* Yellow tint overlay for industrial feel */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5" />
-      </div>
-
-      {/* CSS for flashing animations + Industrial effects */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes flash-red {
-          0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
-        }
-        @keyframes flash-yellow {
-          0%, 100% { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
-          50% { border-color: rgba(245, 158, 11, 1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
-        }
-        .flash-red {
-          animation: flash-red 0.5s ease-in-out 3;
-        }
-        .flash-yellow {
-          animation: flash-yellow 0.5s ease-in-out 3;
-        }
-
-        /* VARIATION 1: Industrial yellow glow for interactive elements */
-        .industrial-glow-hover:hover {
-          box-shadow: 0 0 25px rgba(250, 182, 23, 0.6), inset 0 0 15px rgba(250, 182, 23, 0.2);
-          border-color: #fab617 !important;
-        }
-
-        /* Corner brackets for industrial frames */
-        .corner-brackets::before,
-        .corner-brackets::after {
-          content: '';
-          position: absolute;
-          width: 20px;
-          height: 20px;
-          border: 2px solid #fab617;
-        }
-        .corner-brackets::before {
-          top: -2px;
-          left: -2px;
-          border-right: none;
-          border-bottom: none;
-        }
-        .corner-brackets::after {
-          bottom: -2px;
-          right: -2px;
-          border-left: none;
-          border-top: none;
-        }
-      `}} />
+    <div className="min-h-screen">
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
@@ -4738,12 +4638,9 @@ export default function StoryClimbPage() {
       </div>
 
       {/* Debug: Cancel Contracts Panel - Left side */}
-      <div className="fixed left-4 top-64 z-50 mek-card-industrial border-2 border-red-500/50 p-3 shadow-xl corner-brackets">
-        {/* Hazard stripe header */}
-        <div className="mek-header-industrial mb-2 -mx-3 -mt-3 px-3 py-2">
-          <div className="text-red-500 font-bold text-xs uppercase tracking-wider font-orbitron">
-            Debug: Cancel Contracts
-          </div>
+      <div className="fixed left-4 top-64 z-50 bg-black/90 border border-red-500/50 rounded-lg p-3 shadow-xl">
+        <div className="text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
+          Debug: Cancel Contracts
         </div>
 
         {activeMissions && activeMissions.length > 0 ? (
@@ -4759,7 +4656,7 @@ export default function StoryClimbPage() {
                       console.error('Failed to cancel mission:', error);
                     }
                   }}
-                  className="bg-red-600/20 border-2 border-red-500/50 text-red-400 px-2 py-1 hover:bg-red-600/30 hover:border-red-400 transition-colors uppercase text-xs font-bold tracking-wider industrial-glow-hover"
+                  className="bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded hover:bg-red-600/30 hover:border-red-400 transition-colors"
                 >
                   Cancel
                 </button>
@@ -4781,7 +4678,7 @@ export default function StoryClimbPage() {
                   console.error('Failed to cancel all missions:', error);
                 }
               }}
-              className="w-full mt-2 bg-red-600/30 border-2 border-red-500 text-red-300 px-2 py-1 hover:bg-red-600/40 hover:border-red-300 transition-colors font-bold text-xs uppercase tracking-wider industrial-glow-hover"
+              className="w-full mt-2 bg-red-600/30 border border-red-500 text-red-300 px-2 py-1 rounded hover:bg-red-600/40 hover:border-red-300 transition-colors font-bold text-xs"
             >
               CANCEL ALL
             </button>
@@ -4803,7 +4700,7 @@ export default function StoryClimbPage() {
                 alert('Failed to cleanup stuck missions');
               }
             }}
-            className="w-full bg-orange-600/30 border-2 border-orange-500 text-orange-300 px-2 py-1 hover:bg-orange-600/40 hover:border-orange-300 transition-colors font-bold text-xs uppercase tracking-wider industrial-glow-hover"
+            className="w-full bg-orange-600/30 border border-orange-500 text-orange-300 px-2 py-1 rounded hover:bg-orange-600/40 hover:border-orange-300 transition-colors font-bold text-xs"
           >
             🔧 FORCE CLEANUP STUCK
           </button>
@@ -4813,114 +4710,65 @@ export default function StoryClimbPage() {
         </div>
       </div>
 
-      {/* Debug Panel - Collapsible */}
-      <div className="fixed bottom-4 right-4 z-50">
-        {debugPanelMinimized ? (
-          // Minimized state - just a small button
+      {/* Duration & Deploy Layout Debug Panel - Left side */}
+      <div className="fixed left-4 top-[500px] z-50 bg-black/95 border-2 border-cyan-500 rounded-lg p-3 shadow-xl max-w-[240px]">
+        <div className="text-cyan-400 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span>⚙️ Duration & Deploy</span>
+        </div>
+
+        <div className="space-y-2">
+          {/* Layout Option 1 - Current */}
           <button
-            onClick={() => setDebugPanelMinimized(false)}
-            className="bg-black/95 border-2 border-yellow-500 px-3 py-2 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2"
-            title="Expand Debug Panel"
+            onClick={() => setDurationDeployLayout(1)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 1
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
           >
-            <span className="text-yellow-500 font-bold">🔧</span>
-            <span className="text-yellow-500 text-xs font-bold">Debug</span>
-            <span className="text-yellow-500 text-sm">▶</span>
+            <div className="font-bold mb-1">Layout 1: Current</div>
+            <div className="text-[10px] opacity-70">Duration top, Deploy below</div>
           </button>
-        ) : (
-          // Expanded state - full debug panel
-          <div className="bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-yellow-500 font-bold">🔧 Debug Panel</h3>
-              <button
-                onClick={() => setDebugPanelMinimized(true)}
-                className="text-yellow-500 hover:text-yellow-400 text-lg font-bold px-2"
-                title="Minimize Debug Panel"
-              >
-                −
-              </button>
-            </div>
-            <div className="text-xs text-gray-300 space-y-2">
-              <div className="border-b border-gray-700 pb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-purple-400 font-semibold">Mode:</label>
-                  <button
-                    onClick={() => setDebugMode(!debugMode)}
-                    className={`px-3 py-1 rounded-md text-xs font-orbitron uppercase tracking-wider transition-all duration-200 ${
-                      debugMode
-                        ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 hover:bg-purple-500/30'
-                        : 'bg-gray-700/50 border border-gray-600 text-gray-400 hover:bg-gray-600/50'
-                    }`}
-                  >
-                    {debugMode ? '🐛 Debug: Click Any' : '🎮 Normal Mode'}
-                  </button>
-                </div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-green-400">Deployment Status:</div>
-                <div>Normal Nodes: {deployedNormalNodes.length}</div>
-                <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
-                <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
-                <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Contract Slot Colors:</div>
-                <select
-                  value={contractSlotColor}
-                  onChange={(e) => setContractSlotColor(e.target.value as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="cyan">Cyan Glow</option>
-                  <option value="purple">Purple Glow</option>
-                  <option value="gold">Gold Glow</option>
-                  <option value="emerald">Emerald Glow</option>
-                  <option value="crimson">Crimson Glow</option>
-                </select>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Mission Node Glow:</div>
-                <select
-                  value={missionGlowStyle}
-                  onChange={(e) => setMissionGlowStyle(parseInt(e.target.value) as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="1">Soft Radial Glow</option>
-                  <option value="2">Double Halo</option>
-                  <option value="3">Ethereal Aura</option>
-                  <option value="4">Gentle Pulse</option>
-                  <option value="5">Shimmer Edge</option>
-                </select>
-              </div>
-              {selectedNode && (
-                <div className="border-b border-gray-700 pb-2">
-                  <div className="text-yellow-400 font-semibold">Selected Node:</div>
-                  <div>ID: {selectedNode.id}</div>
-                  <div>Type: {selectedNode.storyNodeType}</div>
-                  <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
-                  {(() => {
-                    const deployedMek = getDeployedMekForNode(selectedNode);
-                    if (deployedMek) {
-                      return (
-                        <>
-                          <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
-                          <div className="pl-2">
-                            <div>Asset ID: #{deployedMek.assetId}</div>
-                            <div>Rank: {deployedMek.rank}</div>
-                            <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
-                            <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
-                          </div>
-                        </>
-                      );
-                    }
-                    return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
-                  })()}
-                </div>
-              )}
-              {!selectedNode && (
-                <div className="text-gray-500 italic">Click a node to see debug info</div>
-              )}
-            </div>
-          </div>
-        )}
+
+          {/* Layout Option 2 - Horizontal */}
+          <button
+            onClick={() => setDurationDeployLayout(2)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 2
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 2: Side by Side</div>
+            <div className="text-[10px] opacity-70">Duration left, Deploy right</div>
+          </button>
+
+          {/* Layout Option 3 - Deploy Above */}
+          <button
+            onClick={() => setDurationDeployLayout(3)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 3
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 3: Deploy First</div>
+            <div className="text-[10px] opacity-70">Deploy top, Duration below</div>
+          </button>
+
+          {/* Layout Option 4 - Compact */}
+          <button
+            onClick={() => setDurationDeployLayout(4)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 4
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 4: Compact Stack</div>
+            <div className="text-[10px] opacity-70">Tight spacing, equal heights</div>
+          </button>
+        </div>
       </div>
 
       {/* Debug: Lock Difficulty Panel - Collapsible */}
@@ -4993,18 +4841,18 @@ export default function StoryClimbPage() {
         <div className="flex gap-2">
           {/* Left Column - Tree Canvas - fixed width */}
           <div ref={containerRef} className="flex-shrink-0 overflow-hidden" style={{ width: '503px' }}>
-            {/* Canvas Container - VARIATION 1: Heavy Industrial Frame */}
-            <div
-              className="relative corner-brackets mek-card-industrial"
-              style={{
+            {/* Canvas Container with Style Q background */}
+            <div 
+              className="relative rounded-lg" 
+              style={{ 
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
-                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 50%, rgba(0, 0, 0, 0.95) 100%)',
-                backdropFilter: 'blur(3px)',
-                border: '3px solid rgba(250, 182, 23, 0.5)',
-                boxShadow: '0 0 30px rgba(250, 182, 23, 0.3) inset, 0 0 40px rgba(0, 0, 0, 0.8)',
-                touchAction: 'none',
-                overscrollBehavior: 'none'
+                background: 'rgba(255, 255, 255, 0.005)',
+                backdropFilter: 'blur(1px)',
+                border: '1px solid rgba(255, 255, 255, 0.015)',
+                boxShadow: '0 0 25px rgba(0, 0, 0, 0.3) inset',
+                touchAction: 'none',  // Prevent touch scrolling
+                overscrollBehavior: 'none'  // Prevent scroll chaining
               }}
               onWheel={handleWheel}
             >
@@ -5583,16 +5431,14 @@ export default function StoryClimbPage() {
                     </div>
 
                     {/* RIGHT - Duration and Deploy/Cancel Button */}
-                    <div className="w-32 h-full flex flex-col gap-1">
-                      {/* Check if there's an active mission for this node */}
-                      {(() => {
-                        const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
-                        const isActive = !!activeMission;
+                    {/* CONDITIONAL RENDERING BASED ON durationDeployLayout */}
+                    {(() => {
+                      const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
+                      const isActive = !!activeMission;
 
-                        return (
-                          <>
-                            {/* Mission Duration or Countdown Timer - extended height */}
-                            <div className="relative overflow-hidden rounded-sm" style={{ height: 'calc(55% + 12px)' }}>
+                      // Shared duration content JSX (to avoid duplication)
+                      const durationContent = (heightStyle?: React.CSSProperties) => (
+                        <div className="relative overflow-hidden rounded-sm" style={heightStyle || { height: 'calc(55% + 12px)' }}>
                               {isActive ? (
                                 // Show countdown timer when mission is active
                                 <>
@@ -5706,60 +5552,108 @@ export default function StoryClimbPage() {
                                   </div>
                                 </>
                               )}
-                            </div>
+                        </div>
+                      );
 
-                            {/* Deploy or Cancel Button - fills remaining space to align with bottom */}
-                            <div
-                              className="flex-1 mt-[17px]"
-                              onMouseEnter={() => {
-                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                                  setIsHoveringDeployButton(true);
-                                  setShowDeployTooltip(true);
-                                  setFlashingMekSlots(true);
+                      // Shared deploy button content (to avoid duplication)
+                      const deployButton = (containerClass?: string) => (
+                        <div
+                          className={containerClass || "flex-1 mt-[17px]"}
+                          onMouseEnter={() => {
+                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                              setIsHoveringDeployButton(true);
+                              setShowDeployTooltip(true);
+                              setFlashingMekSlots(true);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            setIsHoveringDeployButton(false);
+                            setShowDeployTooltip(false);
+                            setFlashingMekSlots(false);
+                          }}
+                          onMouseMove={(e) => {
+                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                              setMousePos({ x: e.clientX, y: e.clientY });
+                            }
+                          }}
+                        >
+                          <div className="w-full h-full relative">
+                            <HolographicButton
+                              text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
+                              onClick={() => {
+                                if (deployingNodes.has(selectedNode.id)) {
+                                  return; // Prevent clicks while deploying
+                                }
+                                if (isActive) {
+                                  // Show cancel confirmation lightbox
+                                  setPendingCancelNodeId(selectedNode.id);
+                                  setShowCancelLightbox(true);
+                                } else {
+                                  handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
+                                  setCompletedDifficulties(prev => ({
+                                    ...prev,
+                                    [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                                  }));
                                 }
                               }}
-                              onMouseLeave={() => {
-                                setIsHoveringDeployButton(false);
-                                setShowDeployTooltip(false);
-                                setFlashingMekSlots(false);
-                              }}
-                              onMouseMove={(e) => {
-                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                                  setMousePos({ x: e.clientX, y: e.clientY });
-                                }
-                              }}
-                            >
-                              <div className="w-full h-full relative">
-                                <HolographicButton
-                                  text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
-                                  onClick={() => {
-                                    if (deployingNodes.has(selectedNode.id)) {
-                                      return; // Prevent clicks while deploying
-                                    }
-                                    if (isActive) {
-                                      // Show cancel confirmation lightbox
-                                      setPendingCancelNodeId(selectedNode.id);
-                                      setShowCancelLightbox(true);
-                                    } else {
-                                      handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
-                                      setCompletedDifficulties(prev => ({
-                                        ...prev,
-                                        [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
-                                      }));
-                                    }
-                                  }}
-                                  isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
-                                  variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
-                                  alwaysOn={true}  // Always show particles
-                                  disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
-                                  className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
-                                />
-                              </div>
-                            </div>
-                          </>
+                              isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
+                              variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
+                              alwaysOn={true}  // Always show particles
+                              disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
+                              className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
+                            />
+                          </div>
+                        </div>
+                      );
+
+                      // LAYOUT 1: Current design (Duration top, Deploy below)
+                      if (durationDeployLayout === 1) {
+                        return (
+                          <div className="w-32 h-full flex flex-col gap-1">
+                            {durationContent()}
+                            {deployButton()}
+                          </div>
                         );
-                      })()}
-                    </div>
+                      }
+
+                      // LAYOUT 2: Side by side (Duration left, Deploy right)
+                      if (durationDeployLayout === 2) {
+                        return (
+                          <div className="w-64 h-full flex flex-row gap-2">
+                            <div className="flex-1">
+                              {durationContent({ height: '100%' })}
+                            </div>
+                            <div className="flex-1">
+                              {deployButton("h-full")}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // LAYOUT 3: Deploy above duration (reversed)
+                      if (durationDeployLayout === 3) {
+                        return (
+                          <div className="w-32 h-full flex flex-col gap-1">
+                            {deployButton("flex-1")}
+                            <div className="mt-[17px]">
+                              {durationContent({ height: 'calc(55% + 12px)' })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // LAYOUT 4: Compact stack (equal heights, tighter spacing)
+                      if (durationDeployLayout === 4) {
+                        return (
+                          <div className="w-32 h-full flex flex-col gap-2">
+                            {durationContent({ height: '50%' })}
+                            {deployButton("h-[50%]")}
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
                   </div>
                 ) : (
                   // Show placeholder when no node is selected

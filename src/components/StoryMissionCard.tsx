@@ -92,6 +92,10 @@ interface StoryMissionCardProps {
   // NFT supply tracking
   remainingNfts?: number;
   totalNfts?: number;
+
+  // Event node completion and ownership
+  isEventCompleted?: boolean; // Whether the event node has been completed
+  hasNftPurchased?: boolean; // Whether the user has purchased the NFT
 }
 
 export default function StoryMissionCard({
@@ -142,7 +146,9 @@ export default function StoryMissionCard({
   eventNodeId,
   eventImages,
   remainingNfts = 100,
-  totalNfts = 100
+  totalNfts = 100,
+  isEventCompleted = false,
+  hasNftPurchased = false
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -316,17 +322,17 @@ export default function StoryMissionCard({
 
             {/* Variation Buffs Card - Empty State (Layout 2: Classic Grid) */}
             <div className="bg-black/60 rounded-lg p-3 mb-4 border border-gray-700/30">
-              <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-2">Variation Buffs</div>
-              <div className="flex items-center justify-center gap-2">
+              <div className="text-xs text-gray-600 uppercase tracking-wider text-center mb-3">Variation Buffs</div>
+              <div className="flex items-center justify-center gap-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className="relative w-[24px] h-[24px] rounded-full bg-gray-800/30 border border-gray-700/30" />
-                    <span className="text-[10px] text-gray-700 uppercase mt-1">----</span>
-                    <span className="text-[10px] text-gray-600 font-bold">+--</span>
+                  <div key={i} className="flex flex-col items-center flex-1 max-w-[100px]">
+                    <div className="relative w-[80px] h-[80px] bg-gray-800/30 border border-gray-700/30 rounded-md flex items-center justify-center" />
+                    <span className="text-[13px] text-gray-700 uppercase mt-2 font-medium">----</span>
+                    <span className="text-[14px] text-gray-600 font-bold">+--</span>
                   </div>
                 ))}
               </div>
-              <div className="text-[9px] text-gray-600 text-center mt-2">Match traits for success bonuses</div>
+              <div className="text-sm text-gray-600 text-center mt-3">Match traits for success bonuses</div>
             </div>
 
             {/* Mek Deployment Slots Card - Empty State */}
@@ -371,12 +377,43 @@ export default function StoryMissionCard({
     );
   }
   
+  // Determine styling based on completion state
+  const getCompletionBorder = () => {
+    if (!isEventNode) return "mek-border-sharp-gold"; // Default for non-event nodes
+    if (hasNftPurchased) return "border-2 border-amber-400/80"; // Gold for NFT owned
+    if (isEventCompleted) return "border-2 border-green-500/80"; // Green for completed
+    return "mek-border-sharp-gold"; // Yellow for incomplete
+  };
+
+  const getCompletionOverlay = () => {
+    if (!isEventNode) return null;
+    if (hasNftPurchased) {
+      return (
+        <div className="absolute top-2 right-2 z-50 bg-amber-500/90 px-3 py-1 rounded border border-amber-300 shadow-lg">
+          <span className="text-xs font-bold text-black uppercase tracking-wider">NFT OWNED</span>
+        </div>
+      );
+    }
+    if (isEventCompleted) {
+      return (
+        <div className="absolute top-2 right-2 z-50 bg-green-500/90 px-3 py-1 rounded border border-green-300 shadow-lg flex items-center gap-1.5">
+          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+          </svg>
+          <span className="text-xs font-bold text-white uppercase tracking-wider">COMPLETE</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div
       className="relative w-full max-w-[328px] mx-auto"
       style={{ transform: `scale(${scale})`, transformOrigin: 'top center', ...style }}
     >
-      <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
+      {getCompletionOverlay()}
+      <div className={`mek-card-industrial ${getCompletionBorder()} overflow-hidden`}>
 
         {/* Mek Image Section with Hazard Stripe Header */}
         <div className="relative">
@@ -1095,34 +1132,38 @@ export default function StoryMissionCard({
                       </div>
 
                       {/* Elevated holographic button */}
-                      <button
-                        disabled={!completedDifficulties.has(currentDifficulty)}
-                        className={`
-                          w-full py-4 px-6 rounded-xl font-bold uppercase tracking-wider text-sm relative overflow-hidden
-                          transition-all duration-300
-                          ${completedDifficulties.has(currentDifficulty)
-                            ? 'bg-gradient-to-r from-yellow-500 via-teal-400 to-yellow-500 text-black hover:from-yellow-400 hover:via-teal-300 hover:to-yellow-400 cursor-pointer'
-                            : 'bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/50'
-                          }
-                        `}
-                        style={{
-                          boxShadow: completedDifficulties.has(currentDifficulty) ? '0 0 40px rgba(250, 182, 23, 0.7), 0 5px 20px rgba(0, 0, 0, 0.5)' : 'none'
-                        }}
-                      >
-                        {completedDifficulties.has(currentDifficulty) && (
-                          <>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" style={{
-                              animation: 'shimmer 3s infinite'
-                            }} />
-                            <div className="absolute inset-0 rounded-xl" style={{
-                              boxShadow: 'inset 0 0 30px rgba(255, 255, 255, 0.3)'
-                            }} />
-                          </>
-                        )}
-                        <span className="relative">
-                          {completedDifficulties.has(currentDifficulty) ? 'MINT NFT' : 'COMPLETE MISSION TO UNLOCK'}
-                        </span>
-                      </button>
+                      {(() => {
+                        const isMintable = isEventCompleted && !hasNftPurchased;
+
+                        if (isMintable) {
+                          // Active "Mint NFT" button with holographic effect
+                          return (
+                            <div className="relative">
+                              <HolographicButton
+                                text="MINT NFT"
+                                onClick={() => {
+                                  // TODO: Implement mint NFT functionality
+                                  console.log('Mint NFT clicked');
+                                }}
+                                isActive={true}
+                                variant="yellow"
+                                alwaysOn={true}
+                                className="w-full [&>div]:cursor-pointer"
+                              />
+                            </div>
+                          );
+                        } else {
+                          // Disabled "Complete Mission to Unlock" button
+                          return (
+                            <button
+                              disabled={true}
+                              className="w-full py-4 px-6 rounded-xl font-bold uppercase tracking-wider text-sm relative overflow-hidden transition-all duration-300 bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/50"
+                            >
+                              <span className="relative">COMPLETE MISSION TO UNLOCK</span>
+                            </button>
+                          );
+                        }
+                      })()}
                     </div>
                   </div>
                 );
@@ -1276,27 +1317,83 @@ export default function StoryMissionCard({
             )}
 
             {variationBuffLayoutStyle === 2 && (
-              // Layout 2: Olympic Rings Pattern (2 on top, 3 on bottom)
+              // Layout 2: Classic Grid (normal nodes) OR Olympic Rings (event nodes)
               <>
-                <div className="text-center mb-2">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider">
-                    {isEventNode ? 'Genesis Buffs' : 'Variation Buffs'}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
-                </div>
-                <div className="flex flex-col items-center gap-3">
-                  {/* Top row - first 2 tokens */}
-                  {variationBuffs.length >= 2 && (
-                    <div className="flex gap-4 justify-center">
-                      {variationBuffs.slice(0, 2).map((buff, index) => (
-                        <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                {isEventNode ? (
+                  // Olympic Rings Pattern for Event Nodes (2 on top, 3 on bottom)
+                  <>
+                    <div className="text-center mb-2">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                      <div className="text-[11px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      {/* Top row - first 2 tokens */}
+                      {variationBuffs.length >= 2 && (
+                        <div className="flex gap-4 justify-center">
+                          {variationBuffs.slice(0, 2).map((buff, index) => (
+                            <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
+                              <div
+                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                                style={{
+                                  backgroundColor: buff.color || '#6B7280',
+                                  border: `3px solid ${buff.color || '#6B7280'}`,
+                                  boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
+                                }}
+                                onMouseEnter={(e) => {
+                                  setHoveredBuff(buff.name);
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                                }}
+                                onMouseLeave={() => setHoveredBuff(null)}
+                                onMouseMove={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                                }}
+                              />
+                              <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {/* Bottom row - remaining tokens (up to 3) */}
+                      {variationBuffs.length > 2 && (
+                        <div className="flex gap-4 justify-center">
+                          {variationBuffs.slice(2, 5).map((buff, index) => (
+                            <div key={`${buff.id}-${index + 2}`} className="flex flex-col items-center">
+                              <div
+                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                                style={{
+                                  backgroundColor: buff.color || '#6B7280',
+                                  border: `3px solid ${buff.color || '#6B7280'}`,
+                                  boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
+                                }}
+                                onMouseEnter={(e) => {
+                                  setHoveredBuff(buff.name);
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                                }}
+                                onMouseLeave={() => setHoveredBuff(null)}
+                                onMouseMove={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
+                                }}
+                              />
+                              <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Classic Grid for Normal Nodes (single row with image/name/percentage)
+                  <>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-3">Variation Buffs</div>
+                    <div className="flex items-center justify-center gap-4">
+                      {variationBuffs.map((buff, index) => (
+                        <div key={`${buff.id}-${index}`} className="flex flex-col items-center flex-1 max-w-[100px]">
                           <div
-                            className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
-                            style={{
-                              backgroundColor: buff.color || '#6B7280',
-                              border: `3px solid ${buff.color || '#6B7280'}`,
-                              boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
-                            }}
+                            className="relative w-[80px] h-[80px] cursor-pointer transition-all hover:scale-105 flex items-center justify-center"
                             onMouseEnter={(e) => {
                               setHoveredBuff(buff.name);
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -1307,41 +1404,23 @@ export default function StoryMissionCard({
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                             }}
-                          />
-                          <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                          >
+                            {buff.image && (
+                              <img
+                                src={buff.image}
+                                alt={buff.name}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            )}
+                          </div>
+                          <span className="text-[13px] text-gray-400 uppercase mt-2 font-medium">{buff.name}</span>
+                          <span className="text-[14px] text-yellow-400 font-bold">{buff.bonus}</span>
                         </div>
                       ))}
                     </div>
-                  )}
-                  {/* Bottom row - remaining tokens (up to 3) */}
-                  {variationBuffs.length > 2 && (
-                    <div className="flex gap-4 justify-center">
-                      {variationBuffs.slice(2, 5).map((buff, index) => (
-                        <div key={`${buff.id}-${index + 2}`} className="flex flex-col items-center">
-                          <div
-                            className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
-                            style={{
-                              backgroundColor: buff.color || '#6B7280',
-                              border: `3px solid ${buff.color || '#6B7280'}`,
-                              boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
-                            }}
-                            onMouseEnter={(e) => {
-                              setHoveredBuff(buff.name);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
-                            }}
-                            onMouseLeave={() => setHoveredBuff(null)}
-                            onMouseMove={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
-                            }}
-                          />
-                          <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                    <div className="text-sm text-gray-400 text-center mt-3">Match traits for success bonuses</div>
+                  </>
+                )}
               </>
             )}
 

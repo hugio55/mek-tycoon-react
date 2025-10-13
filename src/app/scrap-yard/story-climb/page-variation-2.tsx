@@ -218,7 +218,6 @@ export default function StoryClimbPage() {
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   // Challenger effect locked to Phase Shift (quantum2)
   const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
-  const [debugPanelMinimized, setDebugPanelMinimized] = useState(true); // State to minimize debug panel - starts minimized
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
   // Success Meter Card Layout - how title, bar, and status are combined
   const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
@@ -3688,107 +3687,90 @@ export default function StoryClimbPage() {
         ctx.fillText('THE APEX MECHANISM', pos.x, pos.y + nodeSize - 15);
         ctx.restore();
       } else if (node.storyNodeType === 'event') {
-        // Draw EVENT text inside the node with curved text along bottom inner edge
+        // HOLOGRAPHIC EVENT NODE DESIGN
         ctx.save();
 
-        // Get the event name from deployed data
+        // Get the event data from deployed data
         const eventData = getEventDataForNode(node);
-        let eventTitle = '';
 
-        if (eventData?.name && eventData.name !== 'EVENT NODE') {
-          // Use deployed event name
-          eventTitle = eventData.name;
-        } else {
-          // Better fallback: use event number from label
-          const eventNumMatch = node.label?.match(/E(\d+)/);
-          if (eventNumMatch) {
-            const localEventNum = eventNumMatch[1];
-            // Extract chapter from node ID
-            const chapterMatch = node.id?.match(/ch(\d+)/);
-            const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
-            const globalEventNumber = (chapter - 1) * 20 + parseInt(localEventNum);
+        // Calculate event chapter and number
+        const eventNumMatch = node.label?.match(/E(\d+)/);
+        const chapterMatch = node.id?.match(/ch(\d+)/);
+        const chapter = chapterMatch ? parseInt(chapterMatch[1]) : 1;
+        const localEventNum = eventNumMatch ? parseInt(eventNumMatch[1]) : 1;
+        const globalEventNumber = (chapter - 1) * 20 + localEventNum;
 
-            // Use a more descriptive default name
-            eventTitle = `Event ${globalEventNumber}`;
+        // Get the actual mission name from event data (e.g., "Rust Protocol")
+        let missionName = eventData?.name || `Event ${globalEventNumber}`;
 
-            console.log('📝 Using fallback event title:', eventTitle, 'for node:', node.label);
+        // Create chapter/event label (e.g., "Chapter 1: Event 1")
+        const chapterLabel = `Chapter ${chapter}: Event ${localEventNum}`;
+
+        // Draw "EVENT" label bar at top - holographic cyan style
+        const labelWidth = nodeSize * 1.6;
+        const labelHeight = 18;
+        const labelY = pos.y - nodeSize / 2 - labelHeight / 2;
+
+        // Holographic background with glow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        ctx.fillRect(pos.x - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+
+        // Cyan borders with glow
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(pos.x - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+
+        // "EVENT" text in cyan
+        ctx.font = 'bold 10px "Orbitron", monospace';
+        ctx.fillStyle = '#22d3ee';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('EVENT', pos.x, labelY);
+
+        // Draw chapter/event label below EVENT bar
+        const chapterLabelY = labelY + labelHeight / 2 + 12;
+        ctx.font = 'bold 11px Verdana';
+        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#10b981' : '#6b7280';
+        ctx.fillText(chapterLabel.toUpperCase(), pos.x, chapterLabelY);
+
+        // Draw mission name in the center of the node
+        ctx.font = '600 12px Verdana';
+        ctx.fillStyle = isCompleted ? '#22d3ee' : isAvailable ? '#22d3ee' : '#9ca3af';
+
+        // Word wrap the mission name if needed
+        const maxWidth = nodeSize * 1.4;
+        const words = missionName.split(' ');
+        let line = '';
+        const lines: string[] = [];
+
+        for (const word of words) {
+          const testLine = line + (line ? ' ' : '') + word;
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && line) {
+            lines.push(line);
+            line = word;
           } else {
-            // Last resort fallback
-            eventTitle = 'Event';
+            line = testLine;
           }
         }
-        
-        // Draw curved text INSIDE the circle along the bottom with background
-        ctx.font = '500 11px Verdana'; // Lighter weight for better readability
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Calculate text arc parameters
-        const textRadius = nodeSize - 12; // Inside the circle, with padding from edge
-        const arcText = eventTitle.toUpperCase();
-        const letterSpacing = 0.16; // More spacing between letters for better readability
-        const totalArc = letterSpacing * (arcText.length - 1);
-        const startAngle = Math.PI / 2 + totalArc / 2; // Start from bottom, centered
-        
-        // Draw background arc for event title
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.lineWidth = 14;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, textRadius, startAngle - totalArc - 0.1, startAngle + 0.1);
-        ctx.stroke();
-        ctx.restore();
-        
-        // Draw each letter curved along the bottom inside of the circle
-        ctx.fillStyle = isCompleted ? '#ffffff' : isAvailable ? '#ffffff' : '#9ca3af'; // Keep title white when available
-        for (let i = 0; i < arcText.length; i++) {
-          const angle = startAngle - (i * letterSpacing);
-          const charX = pos.x + Math.cos(angle) * textRadius;
-          const charY = pos.y + Math.sin(angle) * textRadius;
-          
-          ctx.save();
-          ctx.translate(charX, charY);
-          ctx.rotate(angle - Math.PI / 2); // Rotate to follow the curve
-          ctx.fillText(arcText[i], 0, 0);
-          ctx.restore();
-        }
-        
-        // Draw "EVENT" curved at the top of the circle with background
-        ctx.font = 'bold 11px Trebuchet MS';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Add semi-transparent background for EVENT text
-        const eventText = 'EVENT';
-        const topRadius = nodeSize - 10; // EVENT text positioned away from rim
-        const topLetterSpacing = 0.15;
-        const topTotalArc = topLetterSpacing * (eventText.length - 1);
-        const topStartAngle = -Math.PI / 2 - topTotalArc / 2;
-        
-        // Draw background arc for EVENT text
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.lineWidth = 14;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, topRadius, topStartAngle - 0.1, topStartAngle + topTotalArc + 0.1);
-        ctx.stroke();
-        ctx.restore();
-        
-        // Draw EVENT text
-        ctx.fillStyle = '#8b5cf6';
-        for (let i = 0; i < eventText.length; i++) {
-          const angle = topStartAngle + (i * topLetterSpacing);
-          const charX = pos.x + Math.cos(angle) * topRadius;
-          const charY = pos.y + Math.sin(angle) * topRadius;
+        if (line) lines.push(line);
 
-          ctx.save();
-          ctx.translate(charX, charY);
-          ctx.rotate(angle + Math.PI / 2);
-          ctx.fillText(eventText[i], 0, 0);
-          ctx.restore();
-        }
+        // Draw mission name lines centered
+        const lineHeight = 14;
+        const startY = pos.y - ((lines.length - 1) * lineHeight) / 2;
+
+        // Add dark background for readability
+        const bgPadding = 6;
+        const bgHeight = lines.length * lineHeight + bgPadding * 2;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(pos.x - maxWidth / 2 - bgPadding, startY - lineHeight / 2 - bgPadding, maxWidth + bgPadding * 2, bgHeight);
+
+        // Draw text
+        ctx.fillStyle = isCompleted ? '#22d3ee' : isAvailable ? '#22d3ee' : '#9ca3af';
+        lines.forEach((line, i) => {
+          ctx.fillText(line.toUpperCase(), pos.x, startY + i * lineHeight);
+        });
+
         ctx.restore(); // Restore the context saved at the beginning of event node drawing
       } else {
         // Normal nodes - show number if available
@@ -4814,116 +4796,6 @@ export default function StoryClimbPage() {
             Clears all stuck missions from DB
           </div>
         </div>
-      </div>
-
-      {/* Debug Panel - Collapsible */}
-      <div className="fixed bottom-4 right-4 z-50">
-        {debugPanelMinimized ? (
-          // Minimized state - just a small button
-          <button
-            onClick={() => setDebugPanelMinimized(false)}
-            className="bg-black/95 border-2 border-yellow-500 px-3 py-2 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2"
-            title="Expand Debug Panel"
-          >
-            <span className="text-yellow-500 font-bold">🔧</span>
-            <span className="text-yellow-500 text-xs font-bold">Debug</span>
-            <span className="text-yellow-500 text-sm">▶</span>
-          </button>
-        ) : (
-          // Expanded state - full debug panel
-          <div className="bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-yellow-500 font-bold">🔧 Debug Panel</h3>
-              <button
-                onClick={() => setDebugPanelMinimized(true)}
-                className="text-yellow-500 hover:text-yellow-400 text-lg font-bold px-2"
-                title="Minimize Debug Panel"
-              >
-                −
-              </button>
-            </div>
-            <div className="text-xs text-gray-300 space-y-2">
-              <div className="border-b border-gray-700 pb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-purple-400 font-semibold">Mode:</label>
-                  <button
-                    onClick={() => setDebugMode(!debugMode)}
-                    className={`px-3 py-1 rounded-md text-xs font-orbitron uppercase tracking-wider transition-all duration-200 ${
-                      debugMode
-                        ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 hover:bg-purple-500/30'
-                        : 'bg-gray-700/50 border border-gray-600 text-gray-400 hover:bg-gray-600/50'
-                    }`}
-                  >
-                    {debugMode ? '🐛 Debug: Click Any' : '🎮 Normal Mode'}
-                  </button>
-                </div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-green-400">Deployment Status:</div>
-                <div>Normal Nodes: {deployedNormalNodes.length}</div>
-                <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
-                <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
-                <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Contract Slot Colors:</div>
-                <select
-                  value={contractSlotColor}
-                  onChange={(e) => setContractSlotColor(e.target.value as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="cyan">Cyan Glow</option>
-                  <option value="purple">Purple Glow</option>
-                  <option value="gold">Gold Glow</option>
-                  <option value="emerald">Emerald Glow</option>
-                  <option value="crimson">Crimson Glow</option>
-                </select>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Mission Node Glow:</div>
-                <select
-                  value={missionGlowStyle}
-                  onChange={(e) => setMissionGlowStyle(parseInt(e.target.value) as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="1">Soft Radial Glow</option>
-                  <option value="2">Double Halo</option>
-                  <option value="3">Ethereal Aura</option>
-                  <option value="4">Gentle Pulse</option>
-                  <option value="5">Shimmer Edge</option>
-                </select>
-              </div>
-              {selectedNode && (
-                <div className="border-b border-gray-700 pb-2">
-                  <div className="text-yellow-400 font-semibold">Selected Node:</div>
-                  <div>ID: {selectedNode.id}</div>
-                  <div>Type: {selectedNode.storyNodeType}</div>
-                  <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
-                  {(() => {
-                    const deployedMek = getDeployedMekForNode(selectedNode);
-                    if (deployedMek) {
-                      return (
-                        <>
-                          <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
-                          <div className="pl-2">
-                            <div>Asset ID: #{deployedMek.assetId}</div>
-                            <div>Rank: {deployedMek.rank}</div>
-                            <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
-                            <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
-                          </div>
-                        </>
-                      );
-                    }
-                    return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
-                  })()}
-                </div>
-              )}
-              {!selectedNode && (
-                <div className="text-gray-500 italic">Click a node to see debug info</div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Debug: Lock Difficulty Panel - Collapsible */}

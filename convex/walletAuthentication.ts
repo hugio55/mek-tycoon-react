@@ -540,6 +540,7 @@ export const checkAuthentication = query({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    console.log(`[checkAuth] Checking authentication for ${args.stakeAddress} at ${new Date(now).toISOString()}`);
 
     // NEW: Check sessions table first (robust method)
     const activeSessions = await ctx.db
@@ -556,8 +557,16 @@ export const checkAuthentication = query({
       .order("desc")
       .take(1);
 
+    console.log(`[checkAuth] Found ${activeSessions.length} active sessions (not revoked, not expired)`);
+
     if (activeSessions.length > 0) {
       const session = activeSessions[0];
+      console.log(`[checkAuth] ✓ Valid session found:`, {
+        sessionId: session.sessionId,
+        expiresAt: new Date(session.expiresAt).toISOString(),
+        revokedAt: session.revokedAt ? new Date(session.revokedAt).toISOString() : 'null',
+        isActive: session.isActive
+      });
       return {
         authenticated: true,
         expiresAt: session.expiresAt,
@@ -569,20 +578,29 @@ export const checkAuthentication = query({
 
     // FALLBACK: Check legacy signature-based sessions for backwards compatibility
     // This allows existing logged-in users to stay logged in during migration
+    console.log(`[checkAuth] No active sessions, checking legacy signatures...`);
     const signatures = await ctx.db
       .query("walletSignatures")
       .withIndex("by_stake_address", q => q.eq("stakeAddress", args.stakeAddress))
       .filter(q =>
         q.and(
           q.eq(q.field("verified"), true),
-          q.gt(q.field("expiresAt"), now)
+          q.gt(q.field("expiresAt"), now),
+          q.eq(q.field("revokedAt"), undefined) // CRITICAL: Check signature hasn't been revoked
         )
       )
       .order("desc")
       .take(1);
 
+    console.log(`[checkAuth] Found ${signatures.length} valid legacy signatures (verified, not expired, not revoked)`);
+
     if (signatures.length > 0) {
-      console.log(`[Auth] Found legacy signature session for ${args.stakeAddress} - will migrate on next login`);
+      console.log(`[checkAuth] ✓ Legacy signature session found:`, {
+        nonce: signatures[0].nonce,
+        expiresAt: new Date(signatures[0].expiresAt).toISOString(),
+        revokedAt: signatures[0].revokedAt ? new Date(signatures[0].revokedAt).toISOString() : 'null',
+        verified: signatures[0].verified
+      });
       return {
         authenticated: true,
         expiresAt: signatures[0].expiresAt,
@@ -591,6 +609,7 @@ export const checkAuthentication = query({
       };
     }
 
+    console.log(`[checkAuth] ✗ No valid authentication found for ${args.stakeAddress}`);
     return {
       authenticated: false,
       expiresAt: null,
@@ -757,20 +776,44 @@ export const revokeAuthentication = mutation({
       .filter(q => q.eq(q.field("revokedAt"), undefined))
       .collect();
 
-    let revokedCount = 0;
+    let sessionRevokedCount = 0;
     for (const session of activeSessions) {
       await ctx.db.patch(session._id, {
         revokedAt: now,
         isActive: false,
       });
-      revokedCount++;
+      sessionRevokedCount++;
     }
 
-    console.log(`[Auth] Revoked ${revokedCount} active sessions for wallet ${args.stakeAddress}`);
+    // CRITICAL FIX: Also revoke all valid signatures for this wallet
+    // This prevents the checkAuthentication fallback from granting access
+    const validSignatures = await ctx.db
+      .query("walletSignatures")
+      .withIndex("by_stake_address", q => q.eq("stakeAddress", args.stakeAddress))
+      .filter(q =>
+        q.and(
+          q.eq(q.field("verified"), true),
+          q.gt(q.field("expiresAt"), now),
+          q.eq(q.field("revokedAt"), undefined)
+        )
+      )
+      .collect();
+
+    let signatureRevokedCount = 0;
+    for (const signature of validSignatures) {
+      await ctx.db.patch(signature._id, {
+        revokedAt: now,
+      });
+      signatureRevokedCount++;
+    }
+
+    console.log(`[Auth] Revoked ${sessionRevokedCount} sessions and ${signatureRevokedCount} signatures for wallet ${args.stakeAddress}`);
 
     return {
       success: true,
-      revokedCount,
+      sessionsRevoked: sessionRevokedCount,
+      signaturesRevoked: signatureRevokedCount,
+      totalRevoked: sessionRevokedCount + signatureRevokedCount,
       stakeAddress: args.stakeAddress,
     };
   }

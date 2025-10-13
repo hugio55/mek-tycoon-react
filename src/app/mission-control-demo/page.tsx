@@ -6,7 +6,19 @@ import {
   CommandCenter,
   HierarchicalStack,
   MilitaryConsole,
-  AsymmetricFocus
+  AsymmetricFocus,
+  TallDeployVariationB,
+  TallDeployVariationC,
+  TallDeployVariationD,
+  AsymmetricFocusDurationA,
+  AsymmetricFocusDurationB,
+  AsymmetricFocusDurationC,
+  AsymmetricFocusDurationD,
+  AsymmetricDuration_Font1,
+  AsymmetricDuration_Font2,
+  AsymmetricDuration_Font3,
+  AsymmetricDuration_Font4,
+  AsymmetricDuration_Font5
 } from '@/components/MissionControlDesignVariations';
 
 export default function MissionControlDemo() {
@@ -21,29 +33,29 @@ export default function MissionControlDemo() {
         return {
           gold: '200,000',
           essence: '3',
-          chipT1: '1',
-          special: null
+          chipT1: 'Universal T4',
+          special: 'DMT Canister'
         };
       case 'boss':
         return {
           gold: '100,000',
           essence: '3',
-          chipT1: null,
-          special: null
+          chipT1: 'Universal T4',
+          special: 'DMT Canister'
         };
       case 'event':
         return {
           gold: '75,000',
-          essence: null,
-          chipT1: null,
-          special: '2'
+          essence: '2',
+          chipT1: 'Universal T4',
+          special: 'DMT Canister'
         };
       default:
         return {
           gold: '30,000',
-          essence: null,
-          chipT1: null,
-          special: null
+          essence: '1',
+          chipT1: 'Universal T4',
+          special: 'DMT Canister'
         };
     }
   };
@@ -57,8 +69,8 @@ export default function MissionControlDemo() {
       component: TacticalGrid
     },
     {
-      name: 'Command Center',
-      description: 'Horizontal strip layout with side-mounted deploy. Wide display for resource visibility.',
+      name: 'Command Center (Updated)',
+      description: 'Tall deploy with integrated arrow design. Arrow flows into button structure.',
       component: CommandCenter
     },
     {
@@ -75,6 +87,66 @@ export default function MissionControlDemo() {
       name: 'Asymmetric Focus',
       description: 'Hero-sized deploy button with supporting resource grid. Bold, action-focused design.',
       component: AsymmetricFocus
+    },
+    {
+      name: 'Tall Deploy: Chevron',
+      description: 'Wider button with chevron-shaped border and stacked arrow indicators pointing down.',
+      component: TallDeployVariationB
+    },
+    {
+      name: 'Tall Deploy: Duration',
+      description: 'Compact vertical layout showing duration at top with down arrow and vertical DEPLOY text.',
+      component: TallDeployVariationC
+    },
+    {
+      name: 'Tall Deploy: Arrow Shape',
+      description: 'Button itself shaped like a downward arrow. Most visually integrated design.',
+      component: TallDeployVariationD
+    },
+    {
+      name: 'Asymmetric + Duration A',
+      description: 'Duration displayed above deploy button in separate card. Clear separation.',
+      component: AsymmetricFocusDurationA
+    },
+    {
+      name: 'Asymmetric + Duration B',
+      description: 'Duration integrated as header bar inside deploy button. Compact design.',
+      component: AsymmetricFocusDurationB
+    },
+    {
+      name: 'Asymmetric + Duration C',
+      description: 'Duration shown as military badge in top-right corner. Sleek tactical look.',
+      component: AsymmetricFocusDurationC
+    },
+    {
+      name: 'Asymmetric + Duration D',
+      description: 'Duration in full-width info panel above. Emphasizes mission time.',
+      component: AsymmetricFocusDurationD
+    },
+    {
+      name: 'Font 1: Roboto Mono',
+      description: 'Clean, modern monospace font. Great for numbers and data.',
+      component: AsymmetricDuration_Font1
+    },
+    {
+      name: 'Font 2: Inter',
+      description: 'Highly legible sans-serif. Optimized for digital readability.',
+      component: AsymmetricDuration_Font2
+    },
+    {
+      name: 'Font 3: System Default',
+      description: 'Native system font. Most familiar and instantly readable.',
+      component: AsymmetricDuration_Font3
+    },
+    {
+      name: 'Font 4: Space Grotesk',
+      description: 'Modern geometric font. Stylish while maintaining clarity.',
+      component: AsymmetricDuration_Font4
+    },
+    {
+      name: 'Font 5: JetBrains Mono',
+      description: 'Developer-focused monospace. Excellent character distinction.',
+      component: AsymmetricDuration_Font5
     }
   ];
 
@@ -89,7 +161,7 @@ export default function MissionControlDemo() {
           Mission Control Design Variations
         </h1>
         <p className="text-gray-400 text-sm">
-          5 distinct layout options for reward display and deploy button placement
+          17 total layouts: 8 base designs + 4 duration variations + 5 font options for numbers
         </p>
       </div>
 
@@ -145,7 +217,7 @@ export default function MissionControlDemo() {
 
       {/* Variation Selector */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {variations.map((variation, index) => (
             <button
               key={index}
@@ -194,6 +266,7 @@ export default function MissionControlDemo() {
                     onDeploy={() => console.log('Deploy clicked!')}
                     canDeploy={canDeploy}
                     nodeType={nodeType}
+                    duration="5h"
                   />
                 </div>
               </div>
@@ -230,6 +303,7 @@ export default function MissionControlDemo() {
                           onDeploy={() => {}}
                           canDeploy={canDeploy}
                           nodeType={nodeType}
+                          duration="5h"
                         />
                       </div>
                     </div>

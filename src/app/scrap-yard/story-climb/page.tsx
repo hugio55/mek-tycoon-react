@@ -20,6 +20,7 @@ import { createPortal } from 'react-dom';
 import MissionCountdown from '@/components/MissionCountdown';
 import CancelMissionLightbox from '@/components/CancelMissionLightbox';
 import MintNFTLightbox from '@/components/MintNFTLightbox';
+import MintNFTLightboxVariationSelector from '@/components/MintNFTLightboxVariationSelector';
 import ContractSlots, { ContractSlot } from '@/components/ContractSlots';
 
 
@@ -105,6 +106,7 @@ export default function StoryClimbPage() {
   const [showCancelLightbox, setShowCancelLightbox] = useState(false);
   const [pendingCancelNodeId, setPendingCancelNodeId] = useState<string | null>(null);
   const [showMintLightbox, setShowMintLightbox] = useState(false);
+  const [mintLightboxVariation, setMintLightboxVariation] = useState<'standard' | 'holographic' | 'tactical'>('standard');
   const [deployingNodes, setDeployingNodes] = useState<Set<string>>(new Set());
 
   // Active missions and duration config queries (moved up to avoid hoisting issues)
@@ -191,11 +193,12 @@ export default function StoryClimbPage() {
   const [challengerFrameStyle, setChallengerFrameStyle] = useState<'spikes' | 'lightning' | 'sawblade' | 'flames' | 'crystals'>('spikes'); // For Challenger frame options
   // Challenger effect locked to Phase Shift (quantum2)
   const [debugMode, setDebugMode] = useState(true); // Debug mode to allow clicking any node - defaulting to true
-  const [debugPanelMinimized, setDebugPanelMinimized] = useState(true); // State to minimize debug panel - starts minimized
   const [lockDifficultyPanelMinimized, setLockDifficultyPanelMinimized] = useState(true); // State for lock difficulty panel
   // Success Meter Card Layout - how title, bar, and status are combined
   const [successMeterCardLayout, setSuccessMeterCardLayout] = useState<1 | 2 | 3 | 4 | 5>(1); // 1 = current design (unchanged)
   const colorScheme = 'circuit' as const; // Locked to Holographic Circuit
+  // Duration & Deploy Layout - 4 different arrangements
+  const [durationDeployLayout, setDurationDeployLayout] = useState<1 | 2 | 3 | 4>(1); // 1 = current, 2 = horizontal, 3 = deploy above, 4 = compact
 
   // Mission Statistics Tracking
   const [missionStats, setMissionStats] = useState({
@@ -212,6 +215,9 @@ export default function StoryClimbPage() {
   const [testSuccessRate, setTestSuccessRate] = useState(50);
   const [animationTick, setAnimationTick] = useState(0); // Minimal state for animation redraws
   const animationIdRef = useRef<number | null>(null); // Track animation ID for cleanup
+
+  // Event Node Completion State Debug
+  const [eventCompletionState, setEventCompletionState] = useState<'incomplete' | 'complete' | 'nft-owned'>('incomplete');
   const [showMekModal, setShowMekModal] = useState<string | null>(null);
   const [selectedMekSlot, setSelectedMekSlot] = useState<{ missionId: string; slotIndex: number } | null>(null);
   const [selectedMeks, setSelectedMeks] = useState<Record<string, any[]>>({});
@@ -1102,11 +1108,16 @@ export default function StoryClimbPage() {
     // For mek nodes, get the deployed mek's traits
     const deployedMek = getDeployedMekForNode(node);
     if (deployedMek && deployedMek.head && deployedMek.body && deployedMek.trait) {
+      // Use placeholder art images for each variation type
+      const headImage = '/variation-images-art-400px/ae1-gn3-ev1.png';
+      const bodyImage = '/variation-images-art-400px/ak3-aa5-mo1.png';
+      const traitImage = '/variation-images-art-400px/ar1-at1-nm1.png';
+
       // Return the three traits from the deployed mek
       return [
-        { id: 'head', name: deployedMek.head, bonus: '+10%' },
-        { id: 'body', name: deployedMek.body, bonus: '+10%' },
-        { id: 'trait', name: deployedMek.trait, bonus: '+10%' }
+        { id: 'head', name: deployedMek.head, bonus: '+10%', image: headImage },
+        { id: 'body', name: deployedMek.body, bonus: '+10%', image: bodyImage },
+        { id: 'trait', name: deployedMek.trait, bonus: '+10%', image: traitImage }
       ];
     }
 
@@ -1930,11 +1941,22 @@ export default function StoryClimbPage() {
       // Check if this is the selected node
       const isSelected = selectedNode && selectedNode.id === node.id;
 
+      // Check if this event node is mintable (completed but NFT not purchased) - only for selected node
+      const isMintable = node.storyNodeType === 'event' &&
+                        isSelected &&
+                        eventCompletionState === 'complete';
+
       // Update stroke color and width based on availability for non-mechanism nodes
       if (node.id !== 'start' && node.storyNodeType !== 'normal') {
-        // White ring for available nodes, yellow for selected, green for completed
-        strokeColor = isCompleted ? '#10b981' : (isSelected ? '#fab617' : (isAvailable ? '#ffffff' : '#6b7280'));
-        strokeWidth = isSelected ? 4 : (isAvailable ? 3 : 2);
+        // Check for mintable state first (green with special treatment)
+        if (isMintable) {
+          strokeColor = '#10b981'; // Green for completed/mintable
+          strokeWidth = 4;
+        } else {
+          // White ring for available nodes, yellow for selected, green for completed
+          strokeColor = isCompleted ? '#10b981' : (isSelected ? '#fab617' : (isAvailable ? '#ffffff' : '#6b7280'));
+          strokeWidth = isSelected ? 4 : (isAvailable ? 3 : 2);
+        }
         if (node.storyNodeType === 'final_boss' && isAvailable) {
           strokeWidth = isSelected ? 5 : 4; // Thicker stroke for final boss
         }
@@ -2330,7 +2352,54 @@ export default function StoryClimbPage() {
             ctx.restore();
           }
         }
-        
+
+        // Draw flashing blue ring for mintable event nodes
+        if (isMintable) {
+          ctx.save();
+          const time = Date.now() / 300; // Fast pulsing
+          const pulse = (Math.sin(time) + 1) / 2; // 0 to 1
+          const flashIntensity = 0.6 + pulse * 0.4; // 0.6 to 1.0
+
+          // Outer blue glow rings
+          for (let i = 0; i < 3; i++) {
+            const ringRadius = nodeSize + 8 + i * 6;
+            const ringAlpha = flashIntensity * (0.8 - i * 0.2);
+
+            ctx.strokeStyle = `rgba(59, 130, 246, ${ringAlpha})`; // Blue color
+            ctx.lineWidth = 3 - i;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, ringRadius, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Inner blue glow
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = `rgba(59, 130, 246, ${flashIntensity})`;
+          ctx.restore();
+        }
+
+        // Draw "MINT AVAILABLE" text overlay for mintable nodes
+        if (isMintable) {
+          ctx.save();
+          ctx.font = 'bold 11px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          // Draw text background
+          const time = Date.now() / 300;
+          const pulse = (Math.sin(time) + 1) / 2;
+          const bgAlpha = 0.85 + pulse * 0.15;
+          ctx.fillStyle = `rgba(0, 0, 0, ${bgAlpha})`;
+          ctx.fillRect(pos.x - 32, pos.y - 6, 64, 12);
+
+          // Draw text with glow
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = 'rgba(59, 130, 246, 1)';
+          ctx.fillStyle = '#3B82F6'; // Blue text
+          ctx.fillText('MINT AVAILABLE', pos.x, pos.y);
+          ctx.restore();
+        }
+
         // Draw border with adjusted colors for availability
         const isEventSelected = selectedNode && selectedNode.id === node.id;
         ctx.strokeStyle = isCompleted ? '#10b981' :
@@ -4726,115 +4795,121 @@ export default function StoryClimbPage() {
         </div>
       </div>
 
-      {/* Debug Panel - Collapsible */}
-      <div className="fixed bottom-4 right-4 z-50">
-        {debugPanelMinimized ? (
-          // Minimized state - just a small button
+      {/* Duration & Deploy Layout Debug Panel - Left side */}
+      <div className="fixed left-4 top-[500px] z-50 bg-black/95 border-2 border-cyan-500 rounded-lg p-3 shadow-xl max-w-[240px]">
+        <div className="text-cyan-400 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span>⚙️ Duration & Deploy</span>
+        </div>
+
+        <div className="space-y-2">
+          {/* Layout Option 1 - Big Square Deploy */}
           <button
-            onClick={() => setDebugPanelMinimized(false)}
-            className="bg-black/95 border-2 border-yellow-500 px-3 py-2 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2"
-            title="Expand Debug Panel"
+            onClick={() => setDurationDeployLayout(1)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 1
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
           >
-            <span className="text-yellow-500 font-bold">🔧</span>
-            <span className="text-yellow-500 text-xs font-bold">Debug</span>
-            <span className="text-yellow-500 text-sm">▶</span>
+            <div className="font-bold mb-1">Layout 1: Big Square</div>
+            <div className="text-[10px] opacity-70">Small duration, large deploy</div>
           </button>
-        ) : (
-          // Expanded state - full debug panel
-          <div className="bg-black/95 border-2 border-yellow-500 p-4 rounded-lg max-w-md max-h-96 overflow-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-yellow-500 font-bold">🔧 Debug Panel</h3>
-              <button
-                onClick={() => setDebugPanelMinimized(true)}
-                className="text-yellow-500 hover:text-yellow-400 text-lg font-bold px-2"
-                title="Minimize Debug Panel"
-              >
-                −
-              </button>
-            </div>
-            <div className="text-xs text-gray-300 space-y-2">
-              <div className="border-b border-gray-700 pb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-purple-400 font-semibold">Mode:</label>
-                  <button
-                    onClick={() => setDebugMode(!debugMode)}
-                    className={`px-3 py-1 rounded-md text-xs font-orbitron uppercase tracking-wider transition-all duration-200 ${
-                      debugMode
-                        ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 hover:bg-purple-500/30'
-                        : 'bg-gray-700/50 border border-gray-600 text-gray-400 hover:bg-gray-600/50'
-                    }`}
-                  >
-                    {debugMode ? '🐛 Debug: Click Any' : '🎮 Normal Mode'}
-                  </button>
-                </div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-green-400">Deployment Status:</div>
-                <div>Normal Nodes: {deployedNormalNodes.length}</div>
-                <div>Challenger Nodes: {deployedChallengerNodes.length}</div>
-                <div>Mini-Boss Nodes: {deployedMiniBossNodes.length}</div>
-                <div>Final Boss Nodes: {deployedFinalBossNodes.length}</div>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Contract Slot Colors:</div>
-                <select
-                  value={contractSlotColor}
-                  onChange={(e) => setContractSlotColor(e.target.value as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="cyan">Cyan Glow</option>
-                  <option value="purple">Purple Glow</option>
-                  <option value="gold">Gold Glow</option>
-                  <option value="emerald">Emerald Glow</option>
-                  <option value="crimson">Crimson Glow</option>
-                </select>
-              </div>
-              <div className="border-b border-gray-700 pb-2">
-                <div className="text-cyan-400 font-semibold mb-1">Mission Node Glow:</div>
-                <select
-                  value={missionGlowStyle}
-                  onChange={(e) => setMissionGlowStyle(parseInt(e.target.value) as any)}
-                  className="w-full bg-black/50 border border-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-                >
-                  <option value="1">Soft Radial Glow</option>
-                  <option value="2">Double Halo</option>
-                  <option value="3">Ethereal Aura</option>
-                  <option value="4">Gentle Pulse</option>
-                  <option value="5">Shimmer Edge</option>
-                </select>
-              </div>
-              {selectedNode && (
-                <div className="border-b border-gray-700 pb-2">
-                  <div className="text-yellow-400 font-semibold">Selected Node:</div>
-                  <div>ID: {selectedNode.id}</div>
-                  <div>Type: {selectedNode.storyNodeType}</div>
-                  <div>Challenger: {(selectedNode as any).challenger ? 'Yes' : 'No'}</div>
-                  {(() => {
-                    const deployedMek = getDeployedMekForNode(selectedNode);
-                    if (deployedMek) {
-                      return (
-                        <>
-                          <div className="text-green-400 mt-1">✓ Found Deployed Mek:</div>
-                          <div className="pl-2">
-                            <div>Asset ID: #{deployedMek.assetId}</div>
-                            <div>Rank: {deployedMek.rank}</div>
-                            <div>Gold: {deployedMek.goldReward?.toLocaleString()}</div>
-                            <div>XP: {deployedMek.xpReward?.toLocaleString()}</div>
-                          </div>
-                        </>
-                      );
-                    }
-                    return <div className="text-red-400 mt-1">❌ No mek found for this node</div>;
-                  })()}
-                </div>
-              )}
-              {!selectedNode && (
-                <div className="text-gray-500 italic">Click a node to see debug info</div>
-              )}
-            </div>
-          </div>
-        )}
+
+          {/* Layout Option 2 - Tall Deploy Button */}
+          <button
+            onClick={() => setDurationDeployLayout(2)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 2
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 2: Tall Deploy</div>
+            <div className="text-[10px] opacity-70">Tiny duration, 80% deploy</div>
+          </button>
+
+          {/* Layout Option 3 - Side-by-side equal */}
+          <button
+            onClick={() => setDurationDeployLayout(3)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 3
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 3: Side Equal</div>
+            <div className="text-[10px] opacity-70">Duration & deploy side-by-side</div>
+          </button>
+
+          {/* Layout Option 4 - Integrated */}
+          <button
+            onClick={() => setDurationDeployLayout(4)}
+            className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+              durationDeployLayout === 4
+                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300'
+                : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-cyan-500/50'
+            }`}
+          >
+            <div className="font-bold mb-1">Layout 4: Integrated</div>
+            <div className="text-[10px] opacity-70">Duration inside deploy button</div>
+          </button>
+        </div>
       </div>
+
+      {/* Event Node Completion State Debug Panel - Left side */}
+      {selectedNode?.storyNodeType === 'event' && (
+        <div className="fixed left-4 top-[800px] z-50 bg-black/95 border-2 border-purple-500 rounded-lg p-3 shadow-xl max-w-[240px]">
+          <div className="text-purple-400 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span>🎯 Event Completion</span>
+          </div>
+
+          <div className="space-y-2">
+            {/* Incomplete State */}
+            <button
+              onClick={() => setEventCompletionState('incomplete')}
+              className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+                eventCompletionState === 'incomplete'
+                  ? 'bg-yellow-500/30 border-2 border-yellow-400 text-yellow-300'
+                  : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-yellow-500/50'
+              }`}
+            >
+              <div className="font-bold mb-1">Incomplete</div>
+              <div className="text-[10px] opacity-70">Not yet completed</div>
+            </button>
+
+            {/* Completed but No NFT */}
+            <button
+              onClick={() => setEventCompletionState('complete')}
+              className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+                eventCompletionState === 'complete'
+                  ? 'bg-green-500/30 border-2 border-green-400 text-green-300'
+                  : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-green-500/50'
+              }`}
+            >
+              <div className="font-bold mb-1 flex items-center gap-1 justify-center">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+                Complete - No NFT
+              </div>
+              <div className="text-[10px] opacity-70">Completed, NFT not purchased</div>
+            </button>
+
+            {/* Completed with NFT Owned */}
+            <button
+              onClick={() => setEventCompletionState('nft-owned')}
+              className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
+                eventCompletionState === 'nft-owned'
+                  ? 'bg-amber-500/30 border-2 border-amber-400 text-amber-300'
+                  : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-amber-500/50'
+              }`}
+            >
+              <div className="font-bold mb-1">✨ NFT Owned</div>
+              <div className="text-[10px] opacity-70">Completed + NFT purchased</div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Debug: Lock Difficulty Panel - Collapsible */}
       {selectedNode && (
@@ -5496,16 +5571,14 @@ export default function StoryClimbPage() {
                     </div>
 
                     {/* RIGHT - Duration and Deploy/Cancel Button */}
-                    <div className="w-32 h-full flex flex-col gap-1">
-                      {/* Check if there's an active mission for this node */}
-                      {(() => {
-                        const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
-                        const isActive = !!activeMission;
+                    {/* CONDITIONAL RENDERING BASED ON durationDeployLayout */}
+                    {(() => {
+                      const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
+                      const isActive = !!activeMission;
 
-                        return (
-                          <>
-                            {/* Mission Duration or Countdown Timer - extended height */}
-                            <div className="relative overflow-hidden rounded-sm" style={{ height: 'calc(55% + 12px)' }}>
+                      // Shared duration content JSX (to avoid duplication)
+                      const durationContent = (heightStyle?: React.CSSProperties) => (
+                        <div className="relative overflow-hidden rounded-sm" style={heightStyle || { height: 'calc(55% + 12px)' }}>
                               {isActive ? (
                                 // Show countdown timer when mission is active
                                 <>
@@ -5619,11 +5692,106 @@ export default function StoryClimbPage() {
                                   </div>
                                 </>
                               )}
+                        </div>
+                      );
+
+                      // Shared deploy button content (to avoid duplication)
+                      const deployButton = (containerClass?: string, largeText: boolean = false, showArrow: boolean = false) => (
+                        <div
+                          className={containerClass || "flex-1 mt-[17px]"}
+                          onMouseEnter={() => {
+                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                              setIsHoveringDeployButton(true);
+                              setShowDeployTooltip(true);
+                              setFlashingMekSlots(true);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            setIsHoveringDeployButton(false);
+                            setShowDeployTooltip(false);
+                            setFlashingMekSlots(false);
+                          }}
+                          onMouseMove={(e) => {
+                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                              setMousePos({ x: e.clientX, y: e.clientY });
+                            }
+                          }}
+                        >
+                          <div className="w-full h-full relative">
+                            {showArrow && (
+                              <div className="absolute top-[20%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                                <svg width="32" height="24" viewBox="0 0 32 24" className="text-yellow-400" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8))' }}>
+                                  <path d="M 4 8 L 16 20 L 28 8 M 16 20 L 16 0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </div>
+                            )}
+                            <HolographicButton
+                              text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
+                              onClick={() => {
+                                if (deployingNodes.has(selectedNode.id)) {
+                                  return; // Prevent clicks while deploying
+                                }
+                                if (isActive) {
+                                  // Show cancel confirmation lightbox
+                                  setPendingCancelNodeId(selectedNode.id);
+                                  setShowCancelLightbox(true);
+                                } else {
+                                  handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
+                                  setCompletedDifficulties(prev => ({
+                                    ...prev,
+                                    [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                                  }));
+                                }
+                              }}
+                              isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
+                              variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
+                              alwaysOn={true}  // Always show particles
+                              disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
+                              className={largeText
+                                ? "w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-6 [&>div>div]:!px-3 [&>div]:cursor-pointer [&>div>div]:flex [&>div>div]:items-center [&>div>div]:justify-center [&_span]:!text-2xl [&_span]:!tracking-[0.2em] [&_span]:!font-black"
+                                : "w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
+                              }
+                            />
+                          </div>
+                        </div>
+                      );
+
+                      // LAYOUT 1: Duration LEFT, Deploy RIGHT - Side by side
+                      if (durationDeployLayout === 1) {
+                        return (
+                          <div className="w-64 h-full flex flex-row gap-2">
+                            <div className="w-32">
+                              {durationContent({ height: '100%' })}
+                            </div>
+                            <div className="w-32">
+                              {deployButton("h-full")}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // LAYOUT 2: Duration TOP (tiny), Deploy BOTTOM (huge)
+                      if (durationDeployLayout === 2) {
+                        return (
+                          <div className="w-32 h-full flex flex-col gap-2">
+                            {/* Duration box at top - 15% height */}
+                            <div style={{ height: '15%' }}>
+                              {durationContent({ height: '100%' })}
                             </div>
 
-                            {/* Deploy or Cancel Button - fills remaining space to align with bottom */}
-                            <div
-                              className="flex-1 mt-[17px]"
+                            {/* Deploy button - 85% height (fills remaining space) with arrow inside */}
+                            <div style={{ height: '85%' }}>
+                              {deployButton("h-full", true, true)}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // LAYOUT 3: Deploy ONLY - Duration badge in corner
+                      if (durationDeployLayout === 3) {
+                        return (
+                          <div className="w-40 h-full">
+                            <div className="w-full h-full relative"
                               onMouseEnter={() => {
                                 if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
                                   setIsHoveringDeployButton(true);
@@ -5642,37 +5810,84 @@ export default function StoryClimbPage() {
                                 }
                               }}
                             >
-                              <div className="w-full h-full relative">
-                                <HolographicButton
-                                  text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
-                                  onClick={() => {
-                                    if (deployingNodes.has(selectedNode.id)) {
-                                      return; // Prevent clicks while deploying
-                                    }
-                                    if (isActive) {
-                                      // Show cancel confirmation lightbox
-                                      setPendingCancelNodeId(selectedNode.id);
-                                      setShowCancelLightbox(true);
+                              <HolographicButton
+                                text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
+                                onClick={() => {
+                                  if (deployingNodes.has(selectedNode.id)) {
+                                    return;
+                                  }
+                                  if (isActive) {
+                                    setPendingCancelNodeId(selectedNode.id);
+                                    setShowCancelLightbox(true);
+                                  } else {
+                                    handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
+                                    setCompletedDifficulties(prev => ({
+                                      ...prev,
+                                      [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
+                                    }));
+                                  }
+                                }}
+                                isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
+                                variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
+                                alwaysOn={true}
+                                disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
+                                className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
+                              />
+                              {/* Duration overlay badge in top-right corner */}
+                              <div className="absolute top-2 right-2 bg-black/90 border border-yellow-500/50 rounded px-2 py-1 pointer-events-none">
+                                <div className="text-[8px] text-gray-400 uppercase tracking-wider">Duration</div>
+                                <div className="text-yellow-400 font-black text-sm" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+                                  {(() => {
+                                    const isChallenger = (selectedNode as any).challenger === true;
+                                    let minutes = 15;
+
+                                    if (selectedNode.storyNodeType === 'final_boss') {
+                                      minutes = calculateNodeDuration(selectedNode, 'finalboss');
+                                    } else if (selectedNode.storyNodeType === 'boss') {
+                                      minutes = calculateNodeDuration(selectedNode, 'miniboss');
+                                    } else if (selectedNode.storyNodeType === 'event') {
+                                      minutes = calculateNodeDuration(selectedNode, 'event');
+                                    } else if (isChallenger) {
+                                      minutes = calculateNodeDuration(selectedNode, 'challenger');
                                     } else {
-                                      handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
-                                      setCompletedDifficulties(prev => ({
-                                        ...prev,
-                                        [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
-                                      }));
+                                      minutes = calculateNodeDuration(selectedNode, 'normal');
                                     }
-                                  }}
-                                  isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
-                                  variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
-                                  alwaysOn={true}  // Always show particles
-                                  disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
-                                  className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
-                                />
+
+                                    if (minutes < 60) {
+                                      return `${minutes}m`;
+                                    } else if (minutes < 1440) {
+                                      const hours = Math.floor(minutes / 60);
+                                      const mins = minutes % 60;
+                                      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                                    } else {
+                                      const days = Math.floor(minutes / 1440);
+                                      const hours = Math.floor((minutes % 1440) / 60);
+                                      return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+                                    }
+                                  })()}
+                                </div>
                               </div>
                             </div>
-                          </>
+                          </div>
                         );
-                      })()}
-                    </div>
+                      }
+
+                      // LAYOUT 4: Deploy TOP (huge), Duration BOTTOM (tiny) - REVERSED
+                      if (durationDeployLayout === 4) {
+                        return (
+                          <div className="w-32 h-full flex flex-col gap-2">
+                            <div style={{ height: '85%' }}>
+                              {deployButton("h-full", true)}
+                            </div>
+                            <div style={{ height: '15%' }}>
+                              {durationContent({ height: '100%' })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
                   </div>
                 ) : (
                   // Show placeholder when no node is selected
@@ -6121,6 +6336,8 @@ export default function StoryClimbPage() {
                 variationBuffLayoutStyle={2} // Locked to Classic Grid
                 successMeterCardLayout={successMeterCardLayout}
                 flashingMekSlots={flashingMekSlots}
+                isEventCompleted={selectedNode.storyNodeType === 'event' ? eventCompletionState !== 'incomplete' : false}
+                hasNftPurchased={selectedNode.storyNodeType === 'event' ? eventCompletionState === 'nft-owned' : false}
               />
             ) : (
               // No node selected - show empty state with darkened card
@@ -6313,6 +6530,13 @@ export default function StoryClimbPage() {
         difficulty="easy"
         eventName="Chapter 1 - Event 1"
         nftPrice={50}
+        variation={mintLightboxVariation}
+      />
+
+      {/* Mint NFT Lightbox Variation Selector */}
+      <MintNFTLightboxVariationSelector
+        currentVariation={mintLightboxVariation}
+        onChange={setMintLightboxVariation}
       />
 
       {/* Debug Button - Fixed position on right side */}
