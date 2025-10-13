@@ -63,13 +63,48 @@ export default function MintNFTLightbox({
 
       {/* Lightbox */}
       <div
-        className="relative bg-black/30 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg p-8 max-w-2xl mx-4 shadow-2xl"
+        className="relative rounded-lg overflow-hidden p-8 max-w-2xl mx-4 shadow-2xl border border-yellow-500/50"
         onClick={(e) => e.stopPropagation()}
         style={{
-          boxShadow: '0 0 50px rgba(250, 182, 23, 0.3)',
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(20, 20, 20, 0.3) 100%)',
+          background: 'rgba(255, 255, 255, 0.001)',
+          backdropFilter: 'blur(0.1px)',
+          boxShadow: '0 0 45px rgba(0, 0, 0, 0.35) inset, 0 0 50px rgba(250, 182, 23, 0.3)',
         }}
       >
+        {/* Heat-strengthened glass - branching pattern */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-55" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          {/* Main trunk cracks */}
+          <path d="M10,50 L30,45 L50,48 L70,44 L90,46" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" fill="none"/>
+          <path d="M40,10 L42,30 L38,50 L41,70 L39,90" stroke="rgba(255,255,255,0.23)" strokeWidth="0.6" fill="none"/>
+          <path d="M60,5 L62,25 L58,45 L61,65 L59,85 L60,100" stroke="rgba(255,255,255,0.22)" strokeWidth="0.5" fill="none"/>
+
+          {/* Branching cracks */}
+          <path d="M30,45 L25,30" stroke="rgba(255,255,255,0.18)" strokeWidth="0.4" fill="none"/>
+          <path d="M30,45 L35,60" stroke="rgba(255,255,255,0.17)" strokeWidth="0.4" fill="none"/>
+          <path d="M50,48 L45,35" stroke="rgba(255,255,255,0.16)" strokeWidth="0.4" fill="none"/>
+          <path d="M50,48 L55,65" stroke="rgba(255,255,255,0.17)" strokeWidth="0.4" fill="none"/>
+          <path d="M70,44 L65,25" stroke="rgba(255,255,255,0.15)" strokeWidth="0.4" fill="none"/>
+          <path d="M70,44 L75,60" stroke="rgba(255,255,255,0.16)" strokeWidth="0.4" fill="none"/>
+
+          {/* Secondary branches */}
+          <path d="M25,30 L20,20" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" fill="none"/>
+          <path d="M25,30 L15,35" stroke="rgba(255,255,255,0.11)" strokeWidth="0.3" fill="none"/>
+          <path d="M35,60 L30,70" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" fill="none"/>
+          <path d="M35,60 L45,65" stroke="rgba(255,255,255,0.11)" strokeWidth="0.3" fill="none"/>
+          <path d="M45,35 L40,25" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" fill="none"/>
+          <path d="M55,65 L50,75" stroke="rgba(255,255,255,0.09)" strokeWidth="0.3" fill="none"/>
+          <path d="M55,65 L65,70" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" fill="none"/>
+          <path d="M65,25 L60,15" stroke="rgba(255,255,255,0.09)" strokeWidth="0.3" fill="none"/>
+          <path d="M75,60 L80,70" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" fill="none"/>
+          <path d="M75,60 L85,55" stroke="rgba(255,255,255,0.09)" strokeWidth="0.3" fill="none"/>
+
+          {/* Multiple edge fractures */}
+          <path d="M0,25 L-2,27 L0,29" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" fill="none"/>
+          <path d="M100,40 L102,42 L100,44" stroke="rgba(255,255,255,0.18)" strokeWidth="0.4" fill="none"/>
+          <path d="M70,0 L68,-2 L72,0" stroke="rgba(255,255,255,0.19)" strokeWidth="0.4" fill="none"/>
+          <path d="M20,100 L18,102 L22,100" stroke="rgba(255,255,255,0.17)" strokeWidth="0.4" fill="none"/>
+          <path d="M100,75 L102,77 L100,79" stroke="rgba(255,255,255,0.16)" strokeWidth="0.3" fill="none"/>
+        </svg>
         {/* Success Icon */}
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-full bg-yellow-500/20 border-2 border-yellow-500/50 flex items-center justify-center">
