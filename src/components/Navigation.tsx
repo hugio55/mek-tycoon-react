@@ -500,10 +500,30 @@ export default function Navigation({ fullWidth = false }: NavigationProps) {
       <button
         onClick={() => {
           playClickSound();
-          localStorage.removeItem('connectedWallet');
-          localStorage.removeItem('walletAddress');
-          localStorage.removeItem('stakeAddress');
-          window.location.href = '/';
+
+          // Clear ALL wallet session data (encrypted + localStorage)
+          try {
+            // Use proper session clearing from walletSessionManager
+            const { clearWalletSession } = require('@/lib/walletSessionManager');
+            clearWalletSession();
+          } catch (error) {
+            console.error('[Disconnect] Error clearing session:', error);
+            // Fallback: manually clear all wallet-related keys
+            localStorage.removeItem('connectedWallet');
+            localStorage.removeItem('walletAddress');
+            localStorage.removeItem('stakeAddress');
+            localStorage.removeItem('paymentAddress');
+            localStorage.removeItem('goldMiningWallet');
+            localStorage.removeItem('goldMiningWalletType');
+            localStorage.removeItem('mek_wallet_session');
+            localStorage.removeItem('mek_cached_meks');
+            localStorage.removeItem('mek_session_encrypted');
+            sessionStorage.clear();
+          }
+
+          // CRITICAL: Force full page reload to clear wallet connections from memory
+          // This ensures wallet providers (Eternl, Nami, etc.) will prompt for signature again
+          window.location.reload();
         }}
         className="text-red-400 hover:text-red-300 text-sm transition-colors"
       >

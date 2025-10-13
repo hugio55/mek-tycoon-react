@@ -1062,11 +1062,11 @@ export default function StoryClimbPage() {
 
   // Genesis Token definitions (matching EventNodeEditor)
   const GENESIS_TOKENS = {
-    blue: { name: 'Blue Genesis', rarity: 'common', quantity: 1000, buffPercent: 5, color: '#3B82F6' },
-    green: { name: 'Green Genesis', rarity: 'uncommon', quantity: 500, buffPercent: 10, color: '#10B981' },
-    yellow: { name: 'Yellow Genesis', rarity: 'rare', quantity: 250, buffPercent: 15, color: '#FBBF24' },
-    red: { name: 'Red Genesis', rarity: 'epic', quantity: 100, buffPercent: 20, color: '#EF4444' },
-    purple: { name: 'Purple Genesis', rarity: 'legendary', quantity: 50, buffPercent: 25, color: '#A855F7' }
+    rainbow: { name: 'Rainbow Genesis', rarity: 'legendary', quantity: 54, buffPercent: 25, color: '#A855F7', image: '/genesis-art/rainbow-genesis.png' },
+    pink: { name: 'Pink Genesis', rarity: 'epic', quantity: 88, buffPercent: 20, color: '#EC4899', image: '/genesis-art/pink-genesis.png' },
+    green: { name: 'Green Genesis', rarity: 'rare', quantity: 207, buffPercent: 15, color: '#10B981', image: '/genesis-art/green-genesis.png' },
+    red: { name: 'Red Genesis', rarity: 'uncommon', quantity: 318, buffPercent: 10, color: '#EF4444', image: '/genesis-art/red-genesis.png' },
+    teal: { name: 'Teal Genesis', rarity: 'common', quantity: 333, buffPercent: 5, color: '#14B8A6', image: '/genesis-art/teal-genesis.png' }
   } as const;
 
   // Helper function to get Genesis buffs from deployed event
@@ -1088,7 +1088,8 @@ export default function StoryClimbPage() {
               name: token.name,
               bonus: `+${token.buffPercent}%`,
               color: token.color,
-              rarity: token.rarity
+              rarity: token.rarity,
+              image: token.image
             };
           });
         }
@@ -4638,7 +4639,7 @@ export default function StoryClimbPage() {
   return (
     <div className="min-h-screen">
       {/* CSS for flashing animations */}
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes flash-red {
           0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
           50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
@@ -4653,7 +4654,7 @@ export default function StoryClimbPage() {
         .flash-yellow {
           animation: flash-yellow 0.5s ease-in-out 3;
         }
-      `}</style>
+      `}} />
       {/* Story Mode Title Card with Style Selector */}
       <StoryModeTitleCard
         chapter={previewMode ? `CHAPTER ${previewChapter}` : "CHAPTER 1"}
