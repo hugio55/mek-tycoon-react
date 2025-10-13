@@ -328,16 +328,16 @@ export const updateMinerAfterSnapshot = internalMutation({
         // Subsequent snapshot - calculate gold since last snapshot
         const hoursSinceLastSnapshot = (now - miner.lastSnapshotTime) / (1000 * 60 * 60);
         const goldSinceLastSnapshot = miner.totalGoldPerHour * hoursSinceLastSnapshot;
-        accumulatedGold = Math.min(50000, (miner.accumulatedGold || 0) + goldSinceLastSnapshot);
+        accumulatedGold = (miner.accumulatedGold || 0) + goldSinceLastSnapshot; // CRITICAL FIX: NO CAP!
 
-        // CRITICAL FIX: Also update cumulative gold (tracks all gold earned, even when capped)
+        // CRITICAL FIX: Also update cumulative gold (tracks all gold earned, uncapped)
         const baseCumulative = miner.totalCumulativeGold || 0;
         newTotalCumulativeGold = baseCumulative + goldSinceLastSnapshot;
       } else {
         // First snapshot - calculate ALL gold from creation
         const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
         const totalGoldEarned = miner.totalGoldPerHour * hoursSinceCreation;
-        accumulatedGold = Math.min(50000, totalGoldEarned);
+        accumulatedGold = totalGoldEarned; // CRITICAL FIX: NO CAP!
 
         // Initialize cumulative gold to match accumulated (first snapshot)
         newTotalCumulativeGold = totalGoldEarned + (miner.totalGoldSpentOnUpgrades || 0);
@@ -1148,7 +1148,7 @@ export const calculateGoldFromHistory = query({
     // If no snapshots yet, use simple calculation from creation
     if (sortedSnapshots.length === 0) {
       const hoursSinceCreation = (now - miner.createdAt) / (1000 * 60 * 60);
-      totalGold = Math.min(50000, miner.totalGoldPerHour * hoursSinceCreation);
+      totalGold = miner.totalGoldPerHour * hoursSinceCreation; // CRITICAL FIX: NO CAP!
       return { totalGold, snapshotCount: 0, method: "creation_time" };
     }
 
@@ -1181,8 +1181,7 @@ export const calculateGoldFromHistory = query({
     const hoursSinceLastSnapshot = (now - lastSnapshot.snapshotTime) / (1000 * 60 * 60);
     totalGold += lastSnapshot.totalGoldPerHour * hoursSinceLastSnapshot;
 
-    // Cap at 50,000
-    totalGold = Math.min(50000, totalGold);
+    // CRITICAL FIX: NO CAP - return true uncapped gold!
 
     return {
       totalGold,

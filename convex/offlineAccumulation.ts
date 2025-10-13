@@ -3,8 +3,7 @@ import { mutation, query, action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
 
-// Maximum gold cap
-const MAX_GOLD = 50000;
+// CRITICAL FIX: Removed MAX_GOLD = 50000 cap
 
 // Update all users' gold accumulation (runs via cron)
 export const updateAllUsersGold = action({
@@ -38,7 +37,7 @@ export const updateAllUsersGold = action({
 
           if (miner.isVerified === true) {
             goldGenerated = miner.totalGoldPerHour * hoursSinceSnapshot;
-            newGoldAmount = Math.min(MAX_GOLD, (miner.accumulatedGold || 0) + goldGenerated);
+            newGoldAmount = (miner.accumulatedGold || 0) + goldGenerated; // CRITICAL FIX: Removed 50k cap
           }
           // If not verified, gold stays at current accumulated amount
 
@@ -105,7 +104,7 @@ export const createGoldSnapshot = mutation({
 
     // Update the accumulated gold and snapshot time
     await ctx.db.patch(existing._id, {
-      accumulatedGold: Math.min(MAX_GOLD, args.accumulatedGold),
+      accumulatedGold: args.accumulatedGold, // CRITICAL FIX: Removed 50k cap from database write
       lastSnapshotTime: now,
       updatedAt: now,
     });
@@ -175,8 +174,8 @@ export const calculateOfflineGold = query({
       const hoursSinceSnapshot = (now - lastSnapshot) / (1000 * 60 * 60);
       goldSinceSnapshot = goldMiningData.totalGoldPerHour * hoursSinceSnapshot;
 
-      // Calculate total gold (capped at MAX_GOLD)
-      currentGold = Math.min(MAX_GOLD, (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot);
+      // Calculate total gold (FIXED: removed 50k cap)
+      currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceSnapshot;
 
       // Calculate offline gold (gold earned while inactive)
       const hoursSinceActive = (now - goldMiningData.lastActiveTime) / (1000 * 60 * 60);
