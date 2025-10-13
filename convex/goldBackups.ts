@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { calculateCurrentGold } from "./lib/goldCalculations";
+import { internal } from "./_generated/api";
 
 /**
  * Gold Backup System - Disaster Recovery for User Gold States
@@ -402,8 +403,7 @@ export const triggerManualDailyBackup = mutation({
   args: {},
   handler: async (ctx) => {
     // Call the internal daily backup function
-    const { runDailyBackup } = await import("./goldBackupScheduler");
-    return await runDailyBackup.handler(ctx, {});
+    return await ctx.runMutation(internal.goldBackupScheduler.runDailyBackup, {});
   },
 });
 
@@ -412,8 +412,7 @@ export const triggerManualCleanup = mutation({
   args: {},
   handler: async (ctx) => {
     // Call the internal cleanup function
-    const { runWeeklyCleanup } = await import("./goldBackupScheduler");
-    return await runWeeklyCleanup.handler(ctx, {});
+    return await ctx.runMutation(internal.goldBackupScheduler.runWeeklyCleanup, {});
   },
 });
 

@@ -146,10 +146,10 @@ export const getWalletMeksForDisplay = query({
     walletAddress: v.string(),
   },
   handler: async (ctx, { walletAddress }) => {
-    // Get gold mining data
+    // Get gold mining data (using index for better performance)
     const goldMiningData = await ctx.db
       .query("goldMining")
-      .filter(q => q.eq(q.field("walletAddress"), walletAddress))
+      .withIndex("by_wallet", q => q.eq("walletAddress", walletAddress))
       .first();
 
     if (!goldMiningData || !goldMiningData.ownedMeks) {
@@ -161,10 +161,10 @@ export const getWalletMeksForDisplay = query({
       };
     }
 
-    // Get level data for the Meks
+    // Get level data for the Meks (using index for better performance)
     const mekLevels = await ctx.db
       .query("mekLevels")
-      .filter(q => q.eq(q.field("walletAddress"), walletAddress))
+      .withIndex("by_wallet", q => q.eq("walletAddress", walletAddress))
       .collect();
 
     // Create level map
@@ -355,10 +355,10 @@ export const getCorporationWalletDetails = query({
       .first();
 
     if (!group) {
-      // Not a corporation, return single wallet
+      // Not a corporation, return single wallet (using index for better performance)
       const miner = await ctx.db
         .query("goldMining")
-        .filter(q => q.eq(q.field("walletAddress"), primaryWallet))
+        .withIndex("by_wallet", q => q.eq("walletAddress", primaryWallet))
         .first();
 
       if (!miner) return [];
@@ -400,7 +400,7 @@ export const getCorporationWalletDetails = query({
     for (const membership of memberships) {
       const miner = await ctx.db
         .query("goldMining")
-        .filter(q => q.eq(q.field("walletAddress"), membership.walletAddress))
+        .withIndex("by_wallet", q => q.eq("walletAddress", membership.walletAddress))
         .first();
 
       if (!miner) continue;
