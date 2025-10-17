@@ -211,6 +211,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
       <div 
         className={`relative w-full h-full ${
           mode === 'add' ? 'cursor-crosshair' :
+          mode === 'addLabel' ? 'cursor-text' :
           mode === 'connect' ? 'cursor-pointer' :
           'cursor-grab active:cursor-grabbing'
         }`}
@@ -240,7 +241,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
               <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
           )}
-          
+
           {/* Connections */}
           {connections.map((conn, index) => {
             const fromNode = nodes.find(n => n.id === conn.from);
@@ -287,7 +288,35 @@ const Canvas: React.FC<CanvasProps> = memo(({
             const isSelected = selectedNode === node.id;
             const isConnecting = connectFrom === node.id;
             const isStart = node.id === 'start' || node.id.startsWith('start-');
-            
+
+            // Render label nodes differently
+            if (node.isLabel) {
+              return (
+                <div
+                  key={node.id}
+                  className="talent-node absolute cursor-move transition-all duration-200 flex items-center justify-center px-3 py-2"
+                  style={{
+                    left: `${node.x}px`,
+                    top: `${node.y}px`,
+                    minWidth: '120px',
+                    background: 'rgba(147, 51, 234, 0.2)',
+                    border: `2px solid ${isSelected ? '#fbbf24' : '#9333ea'}`,
+                    borderRadius: '4px',
+                    boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : '0 0 10px rgba(147, 51, 234, 0.3)',
+                    zIndex: isSelected ? 20 : 10,
+                    transform: isSelected ? 'scale(1.1)' : 'scale(1)'
+                  }}
+                  onClick={(e) => handleNodeClick(node.id, e)}
+                  onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
+                  onDoubleClick={() => dispatch({ type: 'SET_EDITING_NODE', payload: node.id })}
+                >
+                  <div className="text-sm font-medium text-purple-200 pointer-events-none whitespace-nowrap">
+                    {node.labelText || 'Label'}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={node.id}>
                 <div
@@ -297,7 +326,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
                     height: isStart ? '50px' : '30px',
                     left: `${node.x}px`,
                     top: `${node.y}px`,
-                    background: isStart 
+                    background: isStart
                       ? 'radial-gradient(circle, #00ff88, #00cc66)'
                       : node.isSpell ? 'linear-gradient(135deg, #9333ea, #c084fc)'
                       : node.nodeType === 'stat' ? '#3b82f6'
@@ -309,7 +338,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
                       isSelected ? '#fbbf24' : isConnecting ? '#10b981' : 'transparent'
                     }`,
                     borderRadius: node.isSpell ? '4px' : '50%',
-                    boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' : 
+                    boxShadow: isSelected ? '0 0 20px rgba(251, 191, 36, 0.5)' :
                               isConnecting ? '0 0 20px rgba(16, 185, 129, 0.5)' :
                               isStart ? '0 0 15px rgba(0, 255, 136, 0.5)' : 'none',
                     zIndex: isSelected ? 20 : 10,
@@ -320,8 +349,8 @@ const Canvas: React.FC<CanvasProps> = memo(({
                   onDoubleClick={() => dispatch({ type: 'SET_EDITING_NODE', payload: node.id })}
                 >
                   {node.imageUrl ? (
-                    <img 
-                      src={node.imageUrl} 
+                    <img
+                      src={node.imageUrl}
                       alt={node.name}
                       className={`w-full h-full object-cover pointer-events-none ${node.isSpell ? 'rounded' : 'rounded-full'}`}
                     />
@@ -333,7 +362,7 @@ const Canvas: React.FC<CanvasProps> = memo(({
                 </div>
                 {/* Node name label */}
                 {node.name && (
-                  <div 
+                  <div
                     className="absolute pointer-events-none text-xs text-white font-medium"
                     style={{
                       left: `${node.x + (isStart ? 25 : 15)}px`,

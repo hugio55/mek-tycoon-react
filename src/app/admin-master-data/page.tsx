@@ -16,6 +16,7 @@ import MekRateAdmin from '@/components/MekRateAdmin';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
+import VariationSearchTable from '@/components/VariationSearchTable';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -44,11 +45,11 @@ const DATA_SYSTEMS = [
   { id: 'story-climb-mechanics', name: 'Story Climb Mechanics', icon: '🏔️', implemented: false },
   { id: 'daily-recipes', name: 'Daily Recipes (Universal Chips)', icon: '📖', implemented: false },
   { id: 'salvage-materials', name: 'Salvage Materials', icon: '🔧', implemented: false },
-  { id: 'circuitry-costs', name: 'Circuitry Crafting Costs', icon: '💰', implemented: false },
+  { id: 'circuitry-costs', name: 'Circuitry', icon: '💰', implemented: false },
   { id: 'mech-chip-recipes', name: 'Mech Chip Crafting Recipes', icon: '🔨', implemented: false },
   { id: 'single-missions', name: 'Single Missions Formulation', icon: '🎯', implemented: false },
   { id: 'global-game-data', name: 'Global Game Data', icon: '🌐', implemented: true },
-  { id: 'shop-system', name: 'Shop System', icon: '🛒', implemented: true },
+  { id: 'market-system', name: 'Market', icon: '🏪', implemented: true },
   { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true },
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
   { id: 'mek-rate-experiment', name: 'Mek Rate Experiment', icon: '💎', implemented: true },
@@ -78,6 +79,20 @@ export default function AdminMasterDataPage() {
     const initial: Record<string, 'incomplete' | 'in-progress' | 'complete'> = {};
     DATA_SYSTEMS.forEach(s => { initial[s.id] = s.implemented ? 'complete' : 'incomplete'; });
     return initial;
+  });
+
+  // Market configuration state
+  const [marketConfig, setMarketConfig] = useState({
+    durationCosts: {
+      '1': 100,
+      '3': 200,
+      '7': 500,
+      '14': 800,
+      '30': 1500
+    },
+    baseListingFee: 2,
+    minListingPrice: 1,
+    minEssenceAmount: 0.1
   });
 
   // Variation buff mutations
@@ -350,6 +365,7 @@ export default function AdminMasterDataPage() {
       'duration-subsystem',
       'buff-categories-sub',
       'variations-image-sync',
+      'variations-search',
       'variations-buff-assignment'
     ];
 
@@ -772,7 +788,7 @@ export default function AdminMasterDataPage() {
                   const subsections = {
                     'mek-systems': ['mek-base-config', 'mek-talent-tree', 'mek-detail-viewer'],
                     'story-climb-mechanics': ['difficulty-subsystem', 'duration-subsystem'],
-                    'variations': ['variations-image-sync', 'variations-buff-assignment']
+                    'variations': ['variations-image-sync', 'variations-search', 'variations-buff-assignment']
                   };
                   const sectionsToExpand = [system.id, ...(subsections[system.id as keyof typeof subsections] || [])];
                   setExpandedSections(new Set(sectionsToExpand));
@@ -1533,7 +1549,7 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
-          {/* Circuitry Crafting Costs */}
+          {/* Circuitry */}
           {activeTab === 'circuitry-costs' && (
           <div id="section-circuitry-costs" className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg shadow-lg shadow-black/50">
             <button
@@ -1542,13 +1558,13 @@ export default function AdminMasterDataPage() {
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">💰</span>
-                <h3 className="text-xl font-bold text-yellow-400">Circuitry Crafting Costs</h3>
+                <h3 className="text-xl font-bold text-yellow-400">Circuitry</h3>
               </div>
               <span className="text-gray-400">{expandedSections.has('circuitry-costs') ? '▼' : '▶'}</span>
             </button>
             {expandedSections.has('circuitry-costs') && (
               <div className="p-4 border-t border-gray-700/50">
-                <p className="text-gray-400 mb-4">Resource costs for circuitry crafting</p>
+                <p className="text-gray-400 mb-4">Circuitry system configuration</p>
                 <div className="bg-gray-800/30 rounded p-4">
                   <p className="text-sm text-gray-500">System not yet implemented</p>
                 </div>
@@ -1605,99 +1621,109 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
-          {/* Shop System */}
-          {activeTab === 'shop-system' && (
-          <div id="section-shop-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
+          {/* Market System */}
+          {activeTab === 'market-system' && (
+          <div id="section-market-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
             <button
-              onClick={() => toggleSection('shop-system')}
+              onClick={() => toggleSection('market-system')}
               className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🛒</span>
-                <h3 className="text-xl font-bold text-yellow-400">Shop System</h3>
+                <span className="text-2xl">🏪</span>
+                <h3 className="text-xl font-bold text-yellow-400">Market</h3>
                 <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
               </div>
-              <span className="text-gray-400">{expandedSections.has('shop-system') ? '▼' : '▶'}</span>
+              <span className="text-gray-400">{expandedSections.has('market-system') ? '▼' : '▶'}</span>
             </button>
-            {expandedSections.has('shop-system') && (
+            {expandedSections.has('market-system') && (
               <div className="p-4 border-t border-gray-700/50 space-y-4">
-                <p className="text-gray-400 mb-4">Comprehensive shop management, pricing, and rarity systems</p>
+                <p className="text-gray-400 mb-4">Essence marketplace configuration and listing fee management</p>
 
-                {/* Rarity Sorting System */}
-                <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-                  <h4 className="text-sm font-bold text-purple-400 mb-3">Item Rarity Sorting System</h4>
-                  <div className="space-y-3">
-                    <div className="bg-black/30 rounded p-3">
-                      <h5 className="text-yellow-300 font-semibold mb-2">Rarity Calculation Formula</h5>
-                      <div className="font-mono text-[10px] text-gray-500 bg-black/50 p-2 rounded">
-                        <div>rarityScore = baseRarity * categoryWeight * supplyFactor * demandMultiplier</div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-black/30 rounded p-3">
-                        <h5 className="text-green-400 font-semibold mb-1">Base Rarity Tiers</h5>
-                        <div className="text-xs space-y-1 text-gray-400">
-                          <div><span className="text-gray-300">Common:</span> 0-1000 score</div>
-                          <div><span className="text-blue-300">Uncommon:</span> 1001-5000 score</div>
-                          <div><span className="text-purple-300">Rare:</span> 5001-15000 score</div>
-                          <div><span className="text-orange-300">Epic:</span> 15001-50000 score</div>
-                          <div><span className="text-red-300">Legendary:</span> 50001+ score</div>
+                {/* Listing Duration & Fees - Editable */}
+                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                  <h4 className="text-sm font-bold text-yellow-400 mb-3">Listing Duration Options & Fees</h4>
+                  <div className="grid grid-cols-5 gap-3">
+                    {['1', '3', '7', '14', '30'].map((days) => (
+                      <div key={days} className="bg-black/30 rounded p-3">
+                        <div className="text-yellow-300 font-bold mb-2 text-center text-xs">
+                          {days} DAY{days !== '1' ? 'S' : ''}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            value={marketConfig.durationCosts[days as keyof typeof marketConfig.durationCosts]}
+                            onChange={(e) => setMarketConfig(prev => ({
+                              ...prev,
+                              durationCosts: {
+                                ...prev.durationCosts,
+                                [days]: parseInt(e.target.value) || 0
+                              }
+                            }))}
+                            className="w-full bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-yellow-300 text-xs text-center font-mono focus:border-yellow-500 focus:outline-none"
+                          />
+                          <span className="text-gray-400 text-[10px]">g</span>
                         </div>
                       </div>
-
-                      <div className="bg-black/30 rounded p-3">
-                        <h5 className="text-blue-400 font-semibold mb-1">Sort Priority Factors</h5>
-                        <div className="text-xs space-y-1 text-gray-400">
-                          <div>1. Rarity score (primary)</div>
-                          <div>2. Market demand (secondary)</div>
-                          <div>3. Recent sales velocity</div>
-                          <div>4. Price trend direction</div>
-                          <div>5. Alphabetical (fallback)</div>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-xs text-gray-400 bg-black/30 p-2 rounded">
+                    <div className="text-yellow-400 font-semibold mb-1">Notes:</div>
+                    <div>• Fees are deducted when listing is created</div>
+                    <div>• Longer durations cost more but provide better visibility</div>
+                    <div>• Expired listings are automatically removed</div>
                   </div>
                 </div>
 
-                {/* Shop Categories Configuration */}
+                {/* Market Configuration - Editable */}
                 <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                  <h4 className="text-sm font-bold text-blue-400 mb-3">Shop Categories & Filters</h4>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
-                    <div className="bg-black/30 rounded p-2">
-                      <div className="text-gray-300 font-semibold">Main Categories</div>
-                      <div className="text-gray-500 mt-1">• Meks<br/>• Chips<br/>• Materials<br/>• Blueprints</div>
+                  <h4 className="text-sm font-bold text-blue-400 mb-3">Market Configuration</h4>
+                  <div className="space-y-3 text-xs">
+                    <div className="flex justify-between items-center bg-black/30 p-3 rounded">
+                      <span className="text-gray-400">Base Listing Fee (%):</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={marketConfig.baseListingFee}
+                          onChange={(e) => setMarketConfig(prev => ({
+                            ...prev,
+                            baseListingFee: parseFloat(e.target.value) || 0
+                          }))}
+                          className="w-20 bg-black/50 border border-yellow-500/30 rounded px-2 py-1 text-yellow-300 text-center font-mono focus:border-yellow-500 focus:outline-none"
+                        />
+                        <span className="text-yellow-300">%</span>
+                      </div>
                     </div>
-                    <div className="bg-black/30 rounded p-2">
-                      <div className="text-gray-300 font-semibold">Sort Options</div>
-                      <div className="text-gray-500 mt-1">• Rarity<br/>• Price ↑↓<br/>• Recent<br/>• Trending</div>
+                    <div className="flex justify-between items-center bg-black/30 p-3 rounded">
+                      <span className="text-gray-400">Min Listing Price:</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={marketConfig.minListingPrice}
+                          onChange={(e) => setMarketConfig(prev => ({
+                            ...prev,
+                            minListingPrice: parseInt(e.target.value) || 0
+                          }))}
+                          className="w-20 bg-black/50 border border-green-500/30 rounded px-2 py-1 text-green-300 text-center font-mono focus:border-green-500 focus:outline-none"
+                        />
+                        <span className="text-green-300">gold</span>
+                      </div>
                     </div>
-                    <div className="bg-black/30 rounded p-2">
-                      <div className="text-gray-300 font-semibold">Filters</div>
-                      <div className="text-gray-500 mt-1">• Price Range<br/>• Rarity Tier<br/>• Seller<br/>• Time Listed</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dynamic Pricing Model */}
-                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                  <h4 className="text-sm font-bold text-green-400 mb-3">Dynamic Pricing Model</h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Base Price Calculation:</span>
-                      <span className="text-yellow-300 font-mono">rarityScore * 0.1 + minPrice</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Supply Adjustment:</span>
-                      <span className="text-blue-300">±30% based on stock levels</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Demand Multiplier:</span>
-                      <span className="text-purple-300">0.5x - 3.0x based on purchase rate</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Event Modifier:</span>
-                      <span className="text-orange-300">Special sales, holidays, etc.</span>
+                    <div className="flex justify-between items-center bg-black/30 p-3 rounded">
+                      <span className="text-gray-400">Min Essence Amount:</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={marketConfig.minEssenceAmount}
+                          onChange={(e) => setMarketConfig(prev => ({
+                            ...prev,
+                            minEssenceAmount: parseFloat(e.target.value) || 0
+                          }))}
+                          className="w-20 bg-black/50 border border-blue-500/30 rounded px-2 py-1 text-blue-300 text-center font-mono focus:border-blue-500 focus:outline-none"
+                        />
+                        <span className="text-blue-300">essence</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1905,6 +1931,29 @@ export default function AdminMasterDataPage() {
                           />
                         </div>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Variation Search & Browse Subsection */}
+                <div className="mb-4 bg-black/40 border border-cyan-500/30 rounded-lg">
+                  <button
+                    onClick={() => toggleSection('variations-search')}
+                    className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🔍</span>
+                      <h4 className="text-md font-bold text-cyan-400">Search & Browse All Variations</h4>
+                      <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">288 VARIATIONS</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">{expandedSections.has('variations-search') ? '▼' : '▶'}</span>
+                  </button>
+                  {expandedSections.has('variations-search') && (
+                    <div className="p-4 border-t border-cyan-500/20">
+                      <p className="text-sm text-gray-400 mb-4">
+                        Search and filter all 288 variations by name, style, or group. Click on any style or group to filter results.
+                      </p>
+                      <VariationSearchTable />
                     </div>
                   )}
                 </div>
@@ -2137,7 +2186,7 @@ export default function AdminMasterDataPage() {
 
                               {(() => {
                                 // Calculate buff percentage for selected variation
-                                const totalVariations = 309;
+                                const totalVariations = 288;
                                 const normalizedRank = selectedVariation.rank / totalVariations;
                                 let interpolatedValue: number;
 

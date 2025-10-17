@@ -2,6 +2,22 @@
 // It will be imported into the main component
 import React, { useState } from 'react';
 
+// Format time for countdown display (truncated to 2 largest units, lowercase)
+const formatCountdownTime = (remainingMs: number): string => {
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  } else if (hours > 0) {
+    return `${hours}h`;
+  } else {
+    return `${minutes}m`;
+  }
+};
+
 // Render locked/completed difficulty buttons with different styles
 const renderLockedDifficulty = (
   difficulty: 'easy' | 'medium' | 'hard',
@@ -192,7 +208,8 @@ export const renderDifficultyButton = (
   buttonStyle: number,
   onClick: () => void,
   isCompleted: boolean = false,
-  lockedStyle: number = 1
+  lockedStyle: number = 1,
+  activeMissionEndTime?: number // End time of active mission (if this difficulty is deployed)
 ) => {
   const colors = {
     easy: {
@@ -230,6 +247,71 @@ export const renderDifficultyButton = (
     }
   };
   const config = colors[difficulty];
+
+  // If there's an active mission on this difficulty, render active state (takes priority over completed)
+  if (activeMissionEndTime !== undefined) {
+    const now = Date.now();
+    const remainingMs = Math.max(0, activeMissionEndTime - now);
+    const timeString = formatCountdownTime(remainingMs);
+    const isExpiringSoon = remainingMs < 60000; // Less than 1 minute
+
+    return (
+      <button
+        key={difficulty}
+        onClick={onClick}
+        className="flex-1 px-3 py-1.5 text-xs font-black uppercase tracking-wider relative overflow-hidden group"
+        style={{
+          background: isExpiringSoon
+            ? 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.4) 0%, rgba(239, 68, 68, 0.2) 40%, rgba(239, 68, 68, 0.1) 100%)'
+            : 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.4) 0%, rgba(6, 182, 212, 0.2) 40%, rgba(6, 182, 212, 0.1) 100%)',
+          border: isExpiringSoon
+            ? '2px solid rgba(239, 68, 68, 1)'
+            : '2px solid rgba(6, 182, 212, 1)',
+          boxShadow: isExpiringSoon
+            ? `
+                0 0 8px rgba(239, 68, 68, 0.8),
+                0 0 15px rgba(239, 68, 68, 0.4),
+                inset 0 0 15px rgba(239, 68, 68, 0.2)
+              `
+            : `
+                0 0 8px rgba(6, 182, 212, 0.8),
+                0 0 15px rgba(6, 182, 212, 0.4),
+                inset 0 0 15px rgba(6, 182, 212, 0.2)
+              `,
+          borderRadius: '0',
+          filter: 'brightness(1.3) contrast(1.2)'
+        }}
+      >
+        <span className={`relative z-10 text-sm font-bold ${isExpiringSoon ? 'text-red-300' : 'text-cyan-300'}`}>
+          {timeString}
+        </span>
+        {/* Animated pulse effect */}
+        <div className="absolute inset-0 animate-pulse"
+          style={{
+            background: isExpiringSoon
+              ? 'radial-gradient(circle at center, rgba(239, 68, 68, 0.6) 0%, transparent 70%)'
+              : 'radial-gradient(circle at center, rgba(6, 182, 212, 0.6) 0%, transparent 70%)',
+            opacity: 0.3
+          }}
+        />
+        {/* Animated shimmer effect */}
+        <div className="absolute inset-0 opacity-40 pointer-events-none"
+          style={{
+            background: isExpiringSoon
+              ? `linear-gradient(105deg,
+                  transparent 40%,
+                  rgba(239, 68, 68, 0.3) 50%,
+                  transparent 60%)`
+              : `linear-gradient(105deg,
+                  transparent 40%,
+                  rgba(6, 182, 212, 0.3) 50%,
+                  transparent 60%)`,
+            animation: 'shimmer 2s infinite'
+          }}
+        />
+      </button>
+    );
+  }
 
   // If the difficulty is completed, render the locked state
   if (isCompleted) {

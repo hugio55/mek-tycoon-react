@@ -265,21 +265,6 @@ export default function MekRateLoggingPage() {
     }
   }, []);
 
-  // Background stars
-  const [backgroundStars, setBackgroundStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
-
-  // Satellites for background animation
-  const [satellites, setSatellites] = useState<Array<{
-    id: number,
-    startX: string,
-    startY: string,
-    endX: string,
-    endY: string,
-    delay: string,
-    duration: string,
-    color: 'yellow' | 'white'
-  }>>([]);
-
   // Wallet state
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>(''); // Track detailed connection progress
@@ -1061,62 +1046,12 @@ export default function MekRateLoggingPage() {
     }
   }, [walletConnected, companyNameData]);
 
-  // Generate background stars and satellites on mount
+  // Initialize app on mount
   useEffect(() => {
     // Guard against SSR
     if (typeof window === 'undefined') {
       return;
     }
-
-    const generatedBackgroundStars = [...Array(200)].map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      size: Math.random() * 2 + 0.5,
-      opacity: Math.random() * 0.8 + 0.4,
-      twinkle: Math.random() > 0.5,
-    }));
-    setBackgroundStars(generatedBackgroundStars);
-
-    // Generate satellites (yellow and white moving dots) with random paths
-    const generatedSatellites = [...Array(8)].map((_, i) => {
-      const edge = Math.floor(Math.random() * 4);
-      let startX: string, startY: string, endX: string, endY: string;
-
-      if (edge === 0) {
-        startX = `${-15 - Math.random() * 10}%`;
-        startY = `${Math.random() * 100}%`;
-        endX = `${115 + Math.random() * 10}%`;
-        endY = `${Math.random() * 100}%`;
-      } else if (edge === 1) {
-        startX = `${115 + Math.random() * 10}%`;
-        startY = `${Math.random() * 100}%`;
-        endX = `${-15 - Math.random() * 10}%`;
-        endY = `${Math.random() * 100}%`;
-      } else if (edge === 2) {
-        startX = `${Math.random() * 100}%`;
-        startY = `${-15 - Math.random() * 10}%`;
-        endX = `${Math.random() * 100}%`;
-        endY = `${115 + Math.random() * 10}%`;
-      } else {
-        startX = `${Math.random() * 100}%`;
-        startY = `${115 + Math.random() * 10}%`;
-        endX = `${Math.random() * 100}%`;
-        endY = `${-15 - Math.random() * 10}%`;
-      }
-
-      return {
-        id: i,
-        startX,
-        startY,
-        endX,
-        endY,
-        delay: `${Math.random() * 10}s`,
-        duration: `${30 + Math.random() * 20}s`,
-        color: (i % 2 === 0 ? 'yellow' : 'white') as 'yellow' | 'white'
-      };
-    });
-    setSatellites(generatedSatellites);
 
     // DEMO MODE: Initialize with demo data and skip wallet detection
     if (isDemoMode) {
@@ -2851,58 +2786,7 @@ export default function MekRateLoggingPage() {
   }, [toast]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black touch-manipulation">
-      {/* Deep space background - GPU accelerated */}
-      <div className="fixed inset-0 bg-gradient-to-b from-black via-gray-950 to-black" style={{ transform: 'translateZ(0)', willChange: 'auto' }} />
-
-      {/* Night sky stars - GPU layer */}
-      <div className="fixed inset-0" style={{ transform: 'translateZ(0)', willChange: 'auto' }}>
-        {backgroundStars.map((star) => (
-          <div
-            key={star.id}
-            className="absolute bg-white rounded-full pointer-events-none"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animation: star.twinkle ? 'starTwinkle 3s ease-in-out infinite' : 'none',
-              animationDelay: star.twinkle ? `${Math.random() * 3}s` : '0s',
-              boxShadow: `0 0 ${star.size * 2}px rgba(255, 255, 255, ${star.opacity * 0.5})`,
-              transform: 'translateZ(0)',
-              willChange: star.twinkle ? 'opacity' : 'auto'
-            }}
-          />
-        ))}
-
-        {/* Satellites moving diagonally across screen */}
-        {satellites.map((satellite) => {
-          const translateX = satellite.startX === '-5%' ? 'calc(110vw)' : 'calc(-110vw)';
-          const translateY = satellite.startY === '-5%' ? 'calc(110vh)' : 'calc(-110vh)';
-
-          return (
-            <div
-              key={satellite.id}
-              className={`absolute w-[3px] h-[3px] rounded-full pointer-events-none ${
-                satellite.color === 'yellow' ? 'bg-yellow-400' : 'bg-white'
-              }`}
-              style={{
-                left: satellite.startX,
-                top: satellite.startY,
-                '--translate-x': translateX,
-                '--translate-y': translateY,
-                animation: `satelliteMove ${satellite.duration} linear infinite`,
-                animationDelay: satellite.delay,
-                boxShadow: satellite.color === 'yellow'
-                  ? '0 0 6px rgba(250, 182, 23, 0.8), 0 0 12px rgba(250, 182, 23, 0.4)'
-                  : '0 0 4px rgba(255, 255, 255, 0.8)',
-              } as React.CSSProperties}
-            />
-          );
-        })}
-      </div>
-
+    <div className="fixed inset-0 overflow-hidden touch-manipulation">
       {/* Industrial grid overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
@@ -3085,26 +2969,6 @@ export default function MekRateLoggingPage() {
                           <span className="relative z-10">{wallet.name}</span>
                         </button>
                       ))}
-                    </div>
-
-                    {/* Skip to blockchain verification button */}
-                    <div className="mt-6 flex justify-center">
-                      <button
-                        onClick={() => {
-                          console.log('[Skip Mode] Bypassing wallet connection...');
-                          // Set up demo wallet state
-                          setWalletConnected(true);
-                          setWalletAddress('stake1_demo_test_wallet_for_verification');
-                          setWalletType('Demo');
-                          setIsAutoReconnecting(false);
-                          setIsSignatureVerified(false); // Keep signature verification false to show verification panel
-                          setShowVerificationPanel(true);
-                        }}
-                        className="group relative bg-black/20 border border-gray-500/30 text-gray-400 px-6 py-2 transition-all hover:bg-gray-500/10 hover:border-gray-400/50 hover:text-gray-300 uppercase tracking-wider font-['Orbitron'] text-sm backdrop-blur-sm overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <span className="relative z-10">Skip (Demo Mode)</span>
-                      </button>
                     </div>
                   </>
                 ) : (

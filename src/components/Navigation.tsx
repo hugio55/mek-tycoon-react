@@ -58,6 +58,7 @@ const navCategories: readonly NavCategory[] = [
       { label: "Profile", href: "/profile" },
       { label: "Search", href: "/search" },
       { label: "Leaderboard", href: "/leaderboard" },
+      { label: "Federation", href: "/federation" },
     ],
   },
   {
@@ -89,8 +90,6 @@ const navCategories: readonly NavCategory[] = [
       { label: "Mek Tree Tables", href: "/admin-mek-tree-tables" },
       { label: "Buff Categories", href: "/admin/buff-categories" },
       { label: "Frames", href: "/admin/frames" },
-      { label: "Spell Designer", href: "/admin-spells" },
-      { label: "Spell Caster 3D", href: "/spell-caster-3d" },
       { label: "Plinko", href: "/admin-plinko" },
       { label: "Story Rewards", href: "/story-rewards" },
       { label: "Event Node Rewards", href: "/event-node-rewards" },

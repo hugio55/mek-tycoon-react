@@ -17,6 +17,8 @@ type TalentNode = {
   variation?: string;
   variationType?: 'head' | 'body' | 'trait';
   imageUrl?: string;
+  isLabel?: boolean;
+  labelText?: string;
 };
 
 type Connection = {
@@ -95,6 +97,64 @@ const defaultTalentData = {
   ] as Connection[]
 };
 
+// Helper function to get variation image for a node
+const getVariationImage = (nodeId: string): string | null => {
+  const variationImages = [
+    '/variation-images-art-400px/ae1-gn3-ev1.png',
+    '/variation-images-art-400px/ak3-aa5-mo1.png',
+    '/variation-images-art-400px/ar1-at1-nm1.png'
+  ];
+
+  // Use node ID to deterministically select an image (so it doesn't change on re-render)
+  let hash = 0;
+  for (let i = 0; i < nodeId.length; i++) {
+    hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  const index = Math.abs(hash) % variationImages.length;
+  return variationImages[index];
+};
+
+// Helper function to find the edge of opaque pixels in a given direction
+const findPixelEdge = (
+  imageData: ImageData,
+  centerX: number,
+  centerY: number,
+  angle: number
+): { x: number; y: number } => {
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = imageData.data;
+
+  // Convert angle to radians
+  const rad = (angle * Math.PI) / 180;
+  const dx = Math.cos(rad);
+  const dy = Math.sin(rad);
+
+  // Start from center and trace outward
+  for (let distance = 0; distance < Math.max(width, height) / 2; distance += 0.5) {
+    const x = Math.round(centerX + dx * distance);
+    const y = Math.round(centerY + dy * distance);
+
+    // Check bounds
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+      return { x, y };
+    }
+
+    // Check alpha channel (4th value in RGBA)
+    const pixelIndex = (y * width + x) * 4;
+    const alpha = data[pixelIndex + 3];
+
+    // If we hit an opaque pixel (alpha > threshold)
+    if (alpha > 10) {
+      return { x, y };
+    }
+  }
+
+  // Fallback to center if no opaque pixel found
+  return { x: centerX, y: centerY };
+};
+
 export default function TalentsPage() {
   const router = useRouter();
   const [talentData, setTalentData] = useState<TalentData>({ nodes: [], connections: [] });
@@ -110,6 +170,10 @@ export default function TalentsPage() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [highestUnlockedY, setHighestUnlockedY] = useState<number | null>(null);
+  const [lineStyle, setLineStyle] = useState<'fade' | 'arc' | 'gap' | 'particles' | 'glow'>('fade');
+  const [labelStyle, setLabelStyle] = useState<'minimal' | 'bordered' | 'glass' | 'neon' | 'solid'>('minimal');
+  const [labelSize, setLabelSize] = useState(1); // Scale multiplier: 0.5 to 2
+  const [imageEdgeCache, setImageEdgeCache] = useState<Map<string, ImageData>>(new Map());
 
   // Prevent page scroll when over canvas
   useEffect(() => {
@@ -119,13 +183,67 @@ export default function TalentsPage() {
         return false;
       }
     };
-    
+
     window.addEventListener('wheel', preventScroll, { passive: false });
-    
+
     return () => {
       window.removeEventListener('wheel', preventScroll);
     };
   }, []);
+
+  // Load and analyze images to detect pixel edges
+  useEffect(() => {
+    const loadImageData = async (imagePath: string): Promise<ImageData | null> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          resolve(imageData);
+        };
+        img.onerror = () => resolve(null);
+        img.src = imagePath;
+      });
+    };
+
+    // Load all variation images
+    const loadAllImages = async () => {
+      const cache = new Map<string, ImageData>();
+
+      for (const node of talentData.nodes) {
+        const isVariationNode = node.id !== 'start' &&
+                               node.id !== 'heads' &&
+                               node.id !== 'bodies' &&
+                               node.id !== 'traits' &&
+                               !node.isLabel;
+
+        if (isVariationNode) {
+          const imagePath = getVariationImage(node.id);
+          if (imagePath && !cache.has(imagePath)) {
+            const imageData = await loadImageData(imagePath);
+            if (imageData) {
+              cache.set(imagePath, imageData);
+            }
+          }
+        }
+      }
+
+      setImageEdgeCache(cache);
+    };
+
+    if (talentData.nodes.length > 0) {
+      loadAllImages();
+    }
+  }, [talentData.nodes]);
 
   // Function to position view on a node
   const centerOnNode = (nodeId: string, nodes: TalentNode[], positionAtBottom: boolean = false) => {
@@ -143,9 +261,43 @@ export default function TalentsPage() {
     }
   };
 
-  // Load user's talent tree - first from localStorage, then from file
+  // Load user's talent tree - first from publicTalentTree (active tree), then from localStorage, then from file
   useEffect(() => {
-    // First try localStorage
+    // First try publicTalentTree (this is set by "Set as Active" in the builder)
+    const publicTree = localStorage.getItem('publicTalentTree');
+    if (publicTree) {
+      try {
+        const parsed = JSON.parse(publicTree);
+        if (parsed && parsed.nodes && parsed.connections) {
+          setTalentData(parsed);
+          // Reset unlocked nodes to only the main START node
+          const mainStartNode = parsed.nodes.find((n: TalentNode) =>
+            n.id === 'start' && n.tier === 0
+          );
+          if (mainStartNode) {
+            setUnlockedNodes(new Set(['start']));
+            setHighestUnlockedY(mainStartNode.y);
+            // Position START node at bottom of screen
+            setTimeout(() => centerOnNode('start', parsed.nodes, true), 100);
+          } else {
+            // Fallback to first tier 0 node
+            const firstNode = parsed.nodes.find((n: TalentNode) => n.tier === 0);
+            setUnlockedNodes(new Set([firstNode ? firstNode.id : 'start']));
+            if (firstNode) {
+              setHighestUnlockedY(firstNode.y);
+              setTimeout(() => centerOnNode(firstNode.id, parsed.nodes, true), 100);
+            }
+          }
+          setLoadStatus("Loaded active tree");
+          setTimeout(() => setLoadStatus(""), 3000);
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to parse publicTalentTree data:', e);
+      }
+    }
+
+    // Fallback to talentTreeData
     const savedData = localStorage.getItem('talentTreeData');
     if (savedData) {
       try {
@@ -153,7 +305,7 @@ export default function TalentsPage() {
         if (parsed && parsed.nodes && parsed.connections) {
           setTalentData(parsed);
           // Reset unlocked nodes to only the main START node
-          const mainStartNode = parsed.nodes.find((n: TalentNode) => 
+          const mainStartNode = parsed.nodes.find((n: TalentNode) =>
             n.id === 'start' && n.tier === 0
           );
           if (mainStartNode) {
@@ -355,36 +507,45 @@ export default function TalentsPage() {
     setPanOffset({ x: newPanX, y: newPanY });
   };
 
-  // Calculate progress stats
-  const totalNodes = talentData.nodes.length;
-  const unlockedCount = unlockedNodes.size;
+  // Calculate progress stats (excluding label nodes)
+  const totalNodes = talentData.nodes.filter(n => !n.isLabel).length;
+  const unlockedCount = Array.from(unlockedNodes).filter(nodeId => {
+    const node = talentData.nodes.find(n => n.id === nodeId);
+    return node && !node.isLabel;
+  }).length;
   const progressPercentage = totalNodes > 0 ? Math.round((unlockedCount / totalNodes) * 100) : 0;
-  
-  // Calculate path-specific progress
+
+  // Calculate path-specific progress (excluding label nodes)
   const calculatePathProgress = (pathId: string) => {
     // Find all nodes connected to this path (recursively)
     const getPathNodes = (startId: string, visited = new Set<string>()): Set<string> => {
       if (visited.has(startId)) return visited;
       visited.add(startId);
-      
+
       talentData.connections
         .filter(conn => conn.from === startId)
         .forEach(conn => getPathNodes(conn.to, visited));
-      
+
       return visited;
     };
-    
+
     const pathNodes = getPathNodes(pathId);
     pathNodes.delete('start'); // Remove start node from count
     pathNodes.delete(pathId); // Remove the path root itself
-    
-    const unlockedInPath = Array.from(pathNodes).filter(nodeId => 
+
+    // Filter out label nodes from the path
+    const nonLabelPathNodes = Array.from(pathNodes).filter(nodeId => {
+      const node = talentData.nodes.find(n => n.id === nodeId);
+      return node && !node.isLabel;
+    });
+
+    const unlockedInPath = nonLabelPathNodes.filter(nodeId =>
       unlockedNodes.has(nodeId) && nodeId !== 'start' && nodeId !== pathId
     ).length;
-    
+
     return {
       unlocked: unlockedInPath,
-      total: pathNodes.size
+      total: nonLabelPathNodes.length
     };
   };
   
@@ -397,9 +558,9 @@ export default function TalentsPage() {
       <BackgroundEffects />
       
       {/* Info Card with Title and Stats - Style M Ultra-thin dirty glass */}
-      <div className="fixed left-1/2 transform -translate-x-1/2 z-30" style={{ top: '250px', width: '850px' }}>
-        <div 
-          className="relative rounded-lg p-4 overflow-visible group hover:border-yellow-400/20 transition-all duration-300"
+      <div className="fixed left-1/2 transform -translate-x-1/2 z-30" style={{ top: '90px', width: '900px' }}>
+        <div
+          className="relative rounded-lg p-2 overflow-visible group hover:border-yellow-400/20 transition-all duration-300"
           style={{
             background: 'rgba(255, 255, 255, 0.01)',
             backdropFilter: 'blur(2px)',
@@ -408,7 +569,7 @@ export default function TalentsPage() {
           }}
         >
           {/* Style M glass effects */}
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none opacity-50"
             style={{
               background: `
@@ -418,90 +579,90 @@ export default function TalentsPage() {
               filter: 'blur(4px)',
             }}
           />
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none opacity-30"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E")`,
             }}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-center">
+
             {/* Left: Title and Description */}
             <div>
-              <h1 className="text-3xl font-bold text-yellow-400 uppercase tracking-wider mb-1"
+              <h1 className="text-xl font-bold text-yellow-400 uppercase tracking-wider mb-0.5"
                   style={{ textShadow: '0 0 20px rgba(255, 204, 0, 0.7)' }}>
                 CircuTree
               </h1>
-              <p className="text-gray-300 text-xs leading-relaxed">
+              <p className="text-gray-300 text-[10px] leading-tight">
                 Unlock powerful abilities by spending gold and essence.
               </p>
             </div>
-            
+
             {/* Right: Path Progress */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               <div className="text-center">
-                <div 
+                <div
                   className="text-yellow-400"
-                  style={{ 
+                  style={{
                     fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                    fontSize: '24px',
+                    fontSize: '18px',
                     fontWeight: 200,
-                    letterSpacing: '1px',
+                    letterSpacing: '0.5px',
                     lineHeight: '1',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >{progressPercentage}%</div>
-                <div className="text-[10px] text-gray-400 uppercase">Total</div>
+                <div className="text-[9px] text-gray-400 uppercase">Total</div>
               </div>
               <div className="text-center">
-                <div 
+                <div
                   className="text-cyan-400"
-                  style={{ 
+                  style={{
                     fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                    fontSize: '24px',
+                    fontSize: '18px',
                     fontWeight: 200,
-                    letterSpacing: '1px',
+                    letterSpacing: '0.5px',
                     lineHeight: '1',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >{headsProgress.unlocked}/{headsProgress.total}</div>
-                <div className="text-[10px] text-gray-400 uppercase">Heads</div>
+                <div className="text-[9px] text-gray-400 uppercase">Heads</div>
               </div>
               <div className="text-center">
-                <div 
+                <div
                   className="text-purple-400"
-                  style={{ 
+                  style={{
                     fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                    fontSize: '24px',
+                    fontSize: '18px',
                     fontWeight: 200,
-                    letterSpacing: '1px',
+                    letterSpacing: '0.5px',
                     lineHeight: '1',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >{bodiesProgress.unlocked}/{bodiesProgress.total}</div>
-                <div className="text-[10px] text-gray-400 uppercase">Bodies</div>
+                <div className="text-[9px] text-gray-400 uppercase">Bodies</div>
               </div>
               <div className="text-center">
-                <div 
+                <div
                   className="text-green-400"
-                  style={{ 
+                  style={{
                     fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                    fontSize: '24px',
+                    fontSize: '18px',
                     fontWeight: 200,
-                    letterSpacing: '1px',
+                    letterSpacing: '0.5px',
                     lineHeight: '1',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >{traitsProgress.unlocked}/{traitsProgress.total}</div>
-                <div className="text-[10px] text-gray-400 uppercase">Traits</div>
+                <div className="text-[9px] text-gray-400 uppercase">Traits</div>
               </div>
             </div>
           </div>
-          
+
           {/* Progress Bar with Milestones */}
-          <div className="mt-4 relative overflow-visible">
+          <div className="mt-2 relative overflow-visible">
             {/* Progress Bar Container */}
-            <div className="relative h-8 overflow-visible">
+            <div className="relative h-6 overflow-visible">
               {/* Background Track */}
               <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-2 bg-gray-800 rounded-full shadow-inner" />
               
@@ -618,9 +779,9 @@ export default function TalentsPage() {
           }}
         />
         
-        <div className="relative w-full h-full" style={{ paddingTop: '350px' }}>
+        <div className="relative w-full h-full" style={{ paddingTop: '180px' }}>
           {/* Zoom Controls */}
-          <div className="absolute top-[360px] right-4 z-20 flex flex-col gap-2 bg-gray-900/90 backdrop-blur p-2 rounded">
+          <div className="absolute top-[190px] right-4 z-20 flex flex-col gap-2 bg-gray-900/90 backdrop-blur p-2 rounded">
           <button
             onClick={() => setZoom(Math.min(3, zoom * 1.2))}
             className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
@@ -640,6 +801,56 @@ export default function TalentsPage() {
           >
             Reset
           </button>
+        </div>
+
+        {/* Line Style Selector */}
+        <div className="absolute top-[190px] left-4 z-20 bg-gray-900/90 backdrop-blur p-3 rounded space-y-3">
+          <div>
+            <label className="text-xs text-gray-400 mb-2 block">Line Style (Debug)</label>
+            <select
+              value={lineStyle}
+              onChange={(e) => setLineStyle(e.target.value as any)}
+              className="px-2 py-1 bg-gray-800 text-white rounded text-xs border border-gray-700 focus:border-yellow-400 w-full"
+            >
+              <option value="fade">1. Fade Out</option>
+              <option value="arc">2. Arc Circle</option>
+              <option value="gap">3. Simple Gap</option>
+              <option value="particles">4. Particle Burst</option>
+              <option value="glow">5. Glow Ring</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 mb-2 block">Label Style</label>
+            <select
+              value={labelStyle}
+              onChange={(e) => setLabelStyle(e.target.value as any)}
+              className="px-2 py-1 bg-gray-800 text-white rounded text-xs border border-gray-700 focus:border-purple-400 w-full"
+            >
+              <option value="minimal">Minimal</option>
+              <option value="bordered">Bordered</option>
+              <option value="glass">Glass</option>
+              <option value="neon">Neon</option>
+              <option value="solid">Solid</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Label Size: {labelSize.toFixed(1)}x</label>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={labelSize}
+              onChange={(e) => setLabelSize(parseFloat(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+            <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+              <span>0.5x</span>
+              <span>2.0x</span>
+            </div>
+          </div>
         </div>
         
         <div 
@@ -666,49 +877,285 @@ export default function TalentsPage() {
           {talentData.connections.map(conn => {
             const fromNode = talentData.nodes.find(n => n.id === conn.from);
             const toNode = talentData.nodes.find(n => n.id === conn.to);
-            
+
             if (!fromNode || !toNode) return null;
-            
+
+            // Determine if nodes are variation nodes
+            const isFromVariation = fromNode.id !== 'start' && fromNode.id !== 'heads' && fromNode.id !== 'bodies' && fromNode.id !== 'traits' && !fromNode.isLabel;
+            const isToVariation = toNode.id !== 'start' && toNode.id !== 'heads' && toNode.id !== 'bodies' && toNode.id !== 'traits' && !toNode.isLabel;
+
             // Calculate proper center offset based on node type
-            const getNodeCenterOffset = (nodeId: string) => {
-              if (nodeId === 'start') return 20; // 40px / 2
-              if (nodeId === 'heads' || nodeId === 'bodies' || nodeId === 'traits') return 17.5; // 35px / 2
-              return 15; // 30px / 2 for regular nodes
+            const getNodeCenterOffset = (node: TalentNode) => {
+              // For labels, the center is at node.x, node.y (because of translate(-50%, -50%))
+              if (node.isLabel) {
+                return { x: 0, y: 0 };
+              }
+              if (node.id === 'start') return { x: 20, y: 20 };
+              if (node.id === 'heads' || node.id === 'bodies' || node.id === 'traits') return { x: 17.5, y: 17.5 };
+              return { x: 30, y: 30 }; // Center of 60px variation image
             };
-            
-            const fromOffset = getNodeCenterOffset(fromNode.id);
-            const toOffset = getNodeCenterOffset(toNode.id);
-            
-            const fromX = fromNode.x + fromOffset;
-            const fromY = fromNode.y + fromOffset;
-            const toX = toNode.x + toOffset;
-            const toY = toNode.y + toOffset;
-            
+
+            const fromOffset = getNodeCenterOffset(fromNode);
+            const toOffset = getNodeCenterOffset(toNode);
+
+            let fromX = fromNode.x + fromOffset.x;
+            let fromY = fromNode.y + fromOffset.y;
+            let toX = toNode.x + toOffset.x;
+            let toY = toNode.y + toOffset.y;
+
+            // Calculate connection angle
             const dx = toX - fromX;
             const dy = toY - fromY;
-            const length = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
+
+            // Adjust connection points to pixel edges for variation nodes
+            if (isFromVariation) {
+              const imagePath = getVariationImage(fromNode.id);
+              const imageData = imagePath ? imageEdgeCache.get(imagePath) : null;
+              if (imageData) {
+                const edge = findPixelEdge(imageData, imageData.width / 2, imageData.height / 2, angle);
+                // Convert from image space (60x60 at 400px original) to world space
+                const scale = 60 / imageData.width;
+                fromX = fromNode.x + edge.x * scale;
+                fromY = fromNode.y + edge.y * scale;
+              }
+            }
+
+            if (isToVariation) {
+              const imagePath = getVariationImage(toNode.id);
+              const imageData = imagePath ? imageEdgeCache.get(imagePath) : null;
+              if (imageData) {
+                // Angle from TO node's perspective (reverse direction)
+                const reverseAngle = (angle + 180) % 360;
+                const edge = findPixelEdge(imageData, imageData.width / 2, imageData.height / 2, reverseAngle);
+                const scale = 60 / imageData.width;
+                toX = toNode.x + edge.x * scale;
+                toY = toNode.y + edge.y * scale;
+              }
+            }
+
+            // Recalculate after edge adjustment
+            const finalDx = toX - fromX;
+            const finalDy = toY - fromY;
+            const length = Math.sqrt(finalDx * finalDx + finalDy * finalDy);
+            const finalAngle = Math.atan2(finalDy, finalDx) * 180 / Math.PI;
+
             const isActive = unlockedNodes.has(conn.from) && unlockedNodes.has(conn.to);
-            
+
             return (
-              <div
-                key={`${conn.from}-${conn.to}`}
-                className="absolute transition-all duration-300"
-                style={{
-                  width: `${length}px`,
-                  height: '3px',
-                  left: `${fromX}px`,
-                  top: `${fromY}px`,
-                  transform: `rotate(${angle}deg)`,
-                  transformOrigin: '0 50%',
-                  background: isActive 
-                    ? 'linear-gradient(90deg, #ffcc00, #ffd700)' 
-                    : '#333',
-                  boxShadow: isActive ? '0 0 10px rgba(255, 204, 0, 0.6)' : 'none',
-                  zIndex: 1
-                }}
-              />
+              <div key={`${conn.from}-${conn.to}`}>
+                {/* Main line - Elongated diamond taper */}
+                {lineStyle === 'fade' && (
+                  <svg
+                    className="absolute transition-all duration-300"
+                    style={{
+                      width: `${length}px`,
+                      height: '20px',
+                      left: `${fromX}px`,
+                      top: `${fromY - 10}px`,
+                      transform: `rotate(${finalAngle}deg)`,
+                      transformOrigin: '0 50%',
+                      zIndex: 1,
+                      overflow: 'visible'
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id={`taper-gradient-${conn.from}-${conn.to}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor={isActive ? '#ffcc00' : '#333'} stopOpacity="0" />
+                        <stop offset="20%" stopColor={isActive ? '#ffcc00' : '#333'} stopOpacity="0.8" />
+                        <stop offset="50%" stopColor={isActive ? '#ffd700' : '#333'} stopOpacity="1" />
+                        <stop offset="80%" stopColor={isActive ? '#ffd700' : '#333'} stopOpacity="0.8" />
+                        <stop offset="100%" stopColor={isActive ? '#ffd700' : '#333'} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d={`M 0,10 L ${length * 0.5},8.5 L ${length},10 L ${length * 0.5},11.5 Z`}
+                      fill={`url(#taper-gradient-${conn.from}-${conn.to})`}
+                      style={{
+                        filter: isActive ? 'drop-shadow(0 0 4px rgba(255, 204, 0, 0.6))' : 'none'
+                      }}
+                    />
+                  </svg>
+                )}
+
+                {lineStyle === 'gap' && (
+                  <div
+                    className="absolute transition-all duration-300"
+                    style={{
+                      width: `${length}px`,
+                      height: '3px',
+                      left: `${fromX}px`,
+                      top: `${fromY}px`,
+                      transform: `rotate(${finalAngle}deg)`,
+                      transformOrigin: '0 50%',
+                      background: isActive
+                        ? 'linear-gradient(90deg, #ffcc00, #ffd700)'
+                        : '#333',
+                      boxShadow: isActive ? '0 0 10px rgba(255, 204, 0, 0.6)' : 'none',
+                      zIndex: 1
+                    }}
+                  />
+                )}
+
+                {lineStyle === 'arc' && (
+                  <>
+                    <div
+                      className="absolute transition-all duration-300"
+                      style={{
+                        width: `${length}px`,
+                        height: '3px',
+                        left: `${fromX}px`,
+                        top: `${fromY}px`,
+                        transform: `rotate(${finalAngle}deg)`,
+                        transformOrigin: '0 50%',
+                        background: isActive
+                          ? 'linear-gradient(90deg, #ffcc00, #ffd700)'
+                          : '#333',
+                        boxShadow: isActive ? '0 0 10px rgba(255, 204, 0, 0.6)' : 'none',
+                        zIndex: 1
+                      }}
+                    />
+                    {isFromVariation && (
+                      <div
+                        className="absolute rounded-full border-2"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          left: `${fromX - 15}px`,
+                          top: `${fromY - 15}px`,
+                          borderColor: isActive ? 'rgba(255, 204, 0, 0.5)' : 'rgba(51, 51, 51, 0.5)',
+                          zIndex: 2
+                        }}
+                      />
+                    )}
+                    {isToVariation && (
+                      <div
+                        className="absolute rounded-full border-2"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          left: `${toX - 15}px`,
+                          top: `${toY - 15}px`,
+                          borderColor: isActive ? 'rgba(255, 204, 0, 0.5)' : 'rgba(51, 51, 51, 0.5)',
+                          zIndex: 2
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+
+                {lineStyle === 'particles' && (
+                  <>
+                    <div
+                      className="absolute transition-all duration-300"
+                      style={{
+                        width: `${length}px`,
+                        height: '3px',
+                        left: `${fromX}px`,
+                        top: `${fromY}px`,
+                        transform: `rotate(${finalAngle}deg)`,
+                        transformOrigin: '0 50%',
+                        background: isActive
+                          ? 'linear-gradient(90deg, #ffcc00, #ffd700)'
+                          : '#333',
+                        boxShadow: isActive ? '0 0 10px rgba(255, 204, 0, 0.6)' : 'none',
+                        zIndex: 1
+                      }}
+                    />
+                    {isFromVariation && [0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
+                      const rad = (deg * Math.PI) / 180;
+                      const px = fromX + Math.cos(rad) * 25;
+                      const py = fromY + Math.sin(rad) * 25;
+                      return (
+                        <div
+                          key={`from-${deg}`}
+                          className="absolute rounded-full"
+                          style={{
+                            width: '4px',
+                            height: '4px',
+                            left: `${px - 2}px`,
+                            top: `${py - 2}px`,
+                            background: isActive ? '#ffcc00' : '#555',
+                            zIndex: 2
+                          }}
+                        />
+                      );
+                    })}
+                    {isToVariation && [0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
+                      const rad = (deg * Math.PI) / 180;
+                      const px = toX + Math.cos(rad) * 25;
+                      const py = toY + Math.sin(rad) * 25;
+                      return (
+                        <div
+                          key={`to-${deg}`}
+                          className="absolute rounded-full"
+                          style={{
+                            width: '4px',
+                            height: '4px',
+                            left: `${px - 2}px`,
+                            top: `${py - 2}px`,
+                            background: isActive ? '#ffcc00' : '#555',
+                            zIndex: 2
+                          }}
+                        />
+                      );
+                    })}
+                  </>
+                )}
+
+                {lineStyle === 'glow' && (
+                  <>
+                    <div
+                      className="absolute transition-all duration-300"
+                      style={{
+                        width: `${length}px`,
+                        height: '3px',
+                        left: `${fromX}px`,
+                        top: `${fromY}px`,
+                        transform: `rotate(${finalAngle}deg)`,
+                        transformOrigin: '0 50%',
+                        background: isActive
+                          ? 'linear-gradient(90deg, #ffcc00, #ffd700)'
+                          : '#333',
+                        boxShadow: isActive ? '0 0 10px rgba(255, 204, 0, 0.6)' : 'none',
+                        zIndex: 1
+                      }}
+                    />
+                    {isFromVariation && (
+                      <div
+                        className="absolute rounded-full"
+                        style={{
+                          width: '35px',
+                          height: '35px',
+                          left: `${fromX - 17.5}px`,
+                          top: `${fromY - 17.5}px`,
+                          background: isActive
+                            ? 'radial-gradient(circle, rgba(255,204,0,0.3) 0%, rgba(255,204,0,0.1) 50%, transparent 70%)'
+                            : 'radial-gradient(circle, rgba(51,51,51,0.3) 0%, rgba(51,51,51,0.1) 50%, transparent 70%)',
+                          boxShadow: isActive ? '0 0 20px rgba(255, 204, 0, 0.4)' : 'none',
+                          zIndex: 2
+                        }}
+                      />
+                    )}
+                    {isToVariation && (
+                      <div
+                        className="absolute rounded-full"
+                        style={{
+                          width: '35px',
+                          height: '35px',
+                          left: `${toX - 17.5}px`,
+                          top: `${toY - 17.5}px`,
+                          background: isActive
+                            ? 'radial-gradient(circle, rgba(255,204,0,0.3) 0%, rgba(255,204,0,0.1) 50%, transparent 70%)'
+                            : 'radial-gradient(circle, rgba(51,51,51,0.3) 0%, rgba(51,51,51,0.1) 50%, transparent 70%)',
+                          boxShadow: isActive ? '0 0 20px rgba(255, 204, 0, 0.4)' : 'none',
+                          zIndex: 2
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
             );
           })}
           
@@ -719,20 +1166,158 @@ export default function TalentsPage() {
             const isRoot = node.id === 'start';
             const isSubStart = node.id === 'heads' || node.id === 'bodies' || node.id === 'traits';
             const isLocked = !isUnlocked && !isAvailable;
-            
+            const isVariationNode = !isRoot && !isSubStart && !node.isLabel;
+
+            // For label nodes, render as text boxes
+            if (node.isLabel) {
+              // Define styles for each variation
+              const getLabelStyles = () => {
+                const baseStyles = {
+                  minWidth: `${80 * labelSize}px`,
+                  zIndex: 10,
+                  opacity: isLocked ? 0.6 : 1
+                };
+
+                switch (labelStyle) {
+                  case 'minimal':
+                    return {
+                      ...baseStyles,
+                      background: 'rgba(147, 51, 234, 0.15)',
+                      border: `1px solid ${isUnlocked ? '#fbbf24' : 'rgba(147, 51, 234, 0.4)'}`,
+                      borderRadius: '4px',
+                      boxShadow: isUnlocked ? '0 0 15px rgba(251, 191, 36, 0.3)' : 'none'
+                    };
+                  case 'bordered':
+                    return {
+                      ...baseStyles,
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      border: `3px solid ${isUnlocked ? '#fbbf24' : '#9333ea'}`,
+                      borderRadius: '8px',
+                      boxShadow: isUnlocked
+                        ? '0 0 20px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.2)'
+                        : '0 0 10px rgba(147, 51, 234, 0.3)'
+                    };
+                  case 'glass':
+                    return {
+                      ...baseStyles,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      border: `2px solid ${isUnlocked ? 'rgba(251, 191, 36, 0.6)' : 'rgba(255, 255, 255, 0.2)'}`,
+                      borderRadius: '12px',
+                      boxShadow: isUnlocked
+                        ? '0 8px 32px rgba(251, 191, 36, 0.3)'
+                        : '0 8px 32px rgba(31, 38, 135, 0.15)'
+                    };
+                  case 'neon':
+                    return {
+                      ...baseStyles,
+                      background: 'rgba(0, 0, 0, 0.8)',
+                      border: `2px solid ${isUnlocked ? '#fbbf24' : '#9333ea'}`,
+                      borderRadius: '6px',
+                      boxShadow: isUnlocked
+                        ? '0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px rgba(251, 191, 36, 0.5), inset 0 0 10px rgba(251, 191, 36, 0.2)'
+                        : '0 0 10px #9333ea, 0 0 20px rgba(147, 51, 234, 0.5), inset 0 0 10px rgba(147, 51, 234, 0.1)'
+                    };
+                  case 'solid':
+                    return {
+                      ...baseStyles,
+                      background: isUnlocked
+                        ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+                        : 'linear-gradient(135deg, #7c3aed 0%, #6b21a8 100%)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: isUnlocked
+                        ? '0 4px 15px rgba(251, 191, 36, 0.4)'
+                        : '0 4px 15px rgba(147, 51, 234, 0.3)'
+                    };
+                  default:
+                    return baseStyles;
+                }
+              };
+
+              const textColor = labelStyle === 'solid' && isUnlocked ? 'text-black' : 'text-purple-200';
+
+              return (
+                <div
+                  key={node.id}
+                  className="talent-node absolute transition-all duration-300 cursor-default flex items-center justify-center"
+                  style={{
+                    left: `${node.x}px`,
+                    top: `${node.y}px`,
+                    transform: `translate(-50%, -50%) scale(${labelSize})`,
+                    transformOrigin: 'center center',
+                    ...getLabelStyles()
+                  }}
+                  onClick={() => unlockNode(node)}
+                  onMouseEnter={() => setHoveredNode(node)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                >
+                  <div className="px-3 py-2">
+                    <div className={`text-sm font-medium ${textColor} pointer-events-none whitespace-nowrap`}>
+                      {node.name || 'Label'}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // For variation nodes, show PNG image directly (no circle)
+            if (isVariationNode) {
+              const imagePath = getVariationImage(node.id);
+
+              return (
+                <div
+                  key={node.id}
+                  className={`talent-node absolute transition-all duration-300 cursor-pointer ${
+                    isAvailable && !isUnlocked ? 'animate-pulse' : ''
+                  }`}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    left: `${node.x - 15}px`, // Center the image (offset by half the difference from 30px to 60px)
+                    top: `${node.y - 15}px`,
+                    zIndex: 10,
+                    opacity: isLocked ? 0.4 : 1,
+                    filter: isUnlocked
+                      ? 'drop-shadow(0 0 15px rgba(255, 204, 0, 0.8))'
+                      : isAvailable
+                      ? 'drop-shadow(0 0 8px rgba(255, 204, 0, 0.4))'
+                      : 'none'
+                  }}
+                  onClick={() => unlockNode(node)}
+                  onMouseEnter={() => setHoveredNode(node)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                >
+                  <img
+                    src={imagePath || ''}
+                    alt={node.name}
+                    className="w-full h-full object-contain pointer-events-none transition-all duration-300"
+                    style={{
+                      imageRendering: 'crisp-edges',
+                      // Silhouette effect for locked nodes - dark black shape like hidden Pokemon
+                      filter: isLocked
+                        ? 'brightness(0) saturate(0)'
+                        : 'none'
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            // For START and sub-start nodes, keep circular style
             return (
               <div
                 key={node.id}
-                className={`talent-node absolute flex items-center justify-center transition-all duration-300 cursor-pointer ${
-                  isAvailable && !isUnlocked ? 'animate-pulse' : ''
-                }`}
+                className={`talent-node absolute flex items-center justify-center transition-all duration-300 ${
+                  isRoot ? 'cursor-default' : 'cursor-pointer'
+                } ${isAvailable && !isUnlocked ? 'animate-pulse' : ''}`}
                 style={{
                   width: isRoot ? '40px' : isSubStart ? '35px' : '30px',
                   height: isRoot ? '40px' : isSubStart ? '35px' : '30px',
                   left: `${node.x}px`,
                   top: `${node.y}px`,
                   background: isUnlocked
-                    ? isRoot 
+                    ? isRoot
                       ? 'radial-gradient(circle, #00ff88 0%, #00cc66 100%)'
                       : isSubStart
                       ? 'radial-gradient(circle, #ffcc00 0%, #ff9900 100%)'
@@ -741,14 +1326,14 @@ export default function TalentsPage() {
                     ? 'radial-gradient(circle, #0a0a0a 0%, #050505 100%)'
                     : 'radial-gradient(circle, #2a2a2a 0%, #1a1a1a 100%)',
                   border: `3px solid ${
-                    isUnlocked 
+                    isUnlocked
                       ? isRoot ? '#00ff88' : '#ffd700'
-                      : isAvailable ? '#ffcc00' 
+                      : isAvailable ? '#ffcc00'
                       : '#222'
                   }`,
                   borderRadius: '50%',
-                  boxShadow: isUnlocked 
-                    ? isRoot 
+                  boxShadow: isUnlocked
+                    ? isRoot
                       ? '0 0 30px rgba(0, 255, 136, 0.8)'
                       : '0 0 25px rgba(255, 204, 0, 0.8)'
                     : isAvailable
@@ -762,7 +1347,7 @@ export default function TalentsPage() {
                 onMouseEnter={() => setHoveredNode(node)}
                 onMouseLeave={() => setHoveredNode(null)}
               >
-                <div 
+                <div
                   className="text-center pointer-events-none"
                   style={{
                     fontSize: isRoot ? '0.6rem' : '0.5rem',
@@ -772,55 +1357,9 @@ export default function TalentsPage() {
                     lineHeight: '1.1'
                   }}
                 >
-                  {(() => {
-                    // Map variation names to image files
-                    const variationImageMap: Record<string, string> = {
-                      'Taser': '/100x100/aa1-aa1-cd1.jpg',
-                      'Log': '/100x100/bc2-dm2-eh2.jpg',
-                      'Neon Flamingo': '/100x100/dp2-bi2-Ji2.jpg',
-                      'Nuke': '/100x100/hb1-gn1-hn1.jpg',
-                      'Mahogany': '/100x100/111-111-111.jpg',
-                      'Kevlar': '/100x100/222-222-222.jpg',
-                      'Hacker': '/100x100/333-333-333.jpg',
-                      'Exposed': '/100x100/444-444-444.jpg',
-                      'Flaked': '/100x100/555-555-555.jpg',
-                      'Milk': '/100x100/666-666-666.jpg',
-                      'Ace of Spades': '/100x100/777-777-777.jpg',
-                      'Lightning': '/100x100/888-888-888.jpg',
-                      'China': '/100x100/999-999-999.jpg',
-                      'Bubblegum': '/100x100/101-010-101.jpg'
-                    };
-                    
-                    const imagePath = node.variation 
-                      ? `/100x100/${node.variation.toLowerCase().replace(/ /g, '-')}.jpg`
-                      : variationImageMap[node.name.replace('\n', ' ')] || null;
-                    
-                    if (imagePath) {
-                      return (
-                        <>
-                          <img 
-                            src={imagePath}
-                            alt={node.name}
-                            className="w-full h-full object-cover rounded-full"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const textDiv = e.currentTarget.nextSibling as HTMLElement;
-                              if (textDiv) textDiv.style.display = 'block';
-                            }}
-                          />
-                          <div style={{ display: 'none' }}>
-                            {node.name.split('\n').map((line, i) => (
-                              <div key={i}>{line}</div>
-                            ))}
-                          </div>
-                        </>
-                      );
-                    }
-                    
-                    return node.name.split('\n').map((line, i) => (
-                      <div key={i}>{line}</div>
-                    ));
-                  })()}
+                  {node.name.split('\n').map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}
                 </div>
               </div>
             );
@@ -828,7 +1367,7 @@ export default function TalentsPage() {
           </div>
           
           {/* Tooltip - positioned within the canvas */}
-          {hoveredNode && (
+          {hoveredNode && !hoveredNode.isLabel && hoveredNode.id !== 'start' && (
             <div
               className="absolute pointer-events-none z-[100] rounded-lg"
               style={{

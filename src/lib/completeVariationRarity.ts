@@ -25,7 +25,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 1,
-    sourceKey: "UNK"
+    sourceKey: "222"
   },
   {
     name: "Burnt Ultimate",
@@ -34,7 +34,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 2,
-    sourceKey: "UNK"
+    sourceKey: "444"
   },
   {
     name: "Carving Ultimate",
@@ -70,7 +70,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 6,
-    sourceKey: "UNK"
+    sourceKey: "000"
   },
   {
     name: "Discomania",
@@ -79,7 +79,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 7,
-    sourceKey: "UNK"
+    sourceKey: "333"
   },
   {
     name: "Ellie Mesh",
@@ -97,7 +97,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 9,
-    sourceKey: "UNK"
+    sourceKey: "555"
   },
   {
     name: "Frost King",
@@ -106,7 +106,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 10,
-    sourceKey: "UNK"
+    sourceKey: "555"
   },
   {
     name: "Fury",
@@ -124,7 +124,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 12,
-    sourceKey: "UNK"
+    sourceKey: "000"
   },
   {
     name: "Golden Guns Ultimate",
@@ -133,7 +133,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 13,
-    sourceKey: "UNK"
+    sourceKey: "999"
   },
   {
     name: "Gone",
@@ -169,7 +169,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 17,
-    sourceKey: "UNK"
+    sourceKey: "222"
   },
   {
     name: "Luxury Ultimate",
@@ -178,7 +178,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 18,
-    sourceKey: "UNK"
+    sourceKey: "999"
   },
   {
     name: "Nyan Ultimate",
@@ -196,7 +196,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 20,
-    sourceKey: "UNK"
+    sourceKey: "999"
   },
   {
     name: "Oompah",
@@ -214,7 +214,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 22,
-    sourceKey: "UNK"
+    sourceKey: "444"
   },
   {
     name: "Peacock Ultimate",
@@ -241,7 +241,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 25,
-    sourceKey: "UNK"
+    sourceKey: "222"
   },
   {
     name: "Projectionist",
@@ -268,7 +268,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 28,
-    sourceKey: "UNK"
+    sourceKey: "000"
   },
   {
     name: "Vanished",
@@ -286,7 +286,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "0.03",
     tier: "legendary",
     rank: 30,
-    sourceKey: "UNK"
+    sourceKey: "333"
   },
   {
     name: "007",
@@ -2608,7 +2608,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     percentage: "12.53",
     tier: "common",
     rank: 288,
-    sourceKey: "UNK"
+    sourceKey: "NM1"
   }
 ];
 

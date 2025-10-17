@@ -129,14 +129,16 @@ export default function MissionCard({
                     >
                       <div className={`
                         w-full aspect-square rounded-full border-2 flex flex-col items-center justify-center transition-all
-                        ${isMatched 
-                          ? 'bg-yellow-900/40 border-yellow-400 shadow-lg shadow-yellow-400/50 scale-110' 
+                        ${isMatched
+                          ? 'bg-yellow-900/40 border-yellow-400 shadow-lg shadow-yellow-400/50 scale-110'
                           : 'bg-black/40 border-gray-700 hover:border-gray-600'
                         }
                       `}>
-                        <span className="text-[10px] font-bold text-center leading-tight text-yellow-400">
-                          {mult.id.length > 7 ? mult.id.substring(0, 7) : mult.id}
-                        </span>
+                        <div className="flex flex-col items-center justify-center min-h-[28px] mb-0.5">
+                          <span className="text-[10px] font-bold text-center leading-tight text-yellow-400 px-1">
+                            {mult.id.length > 7 ? mult.id.substring(0, 7) : mult.id}
+                          </span>
+                        </div>
                         <span className={`text-[10px] font-bold ${isMatched ? 'text-yellow-300' : 'text-gray-500'}`}>
                           {mult.bonus}
                         </span>

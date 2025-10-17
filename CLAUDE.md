@@ -146,10 +146,27 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 
 ## Important Data Structure
 
+### Variation Names & Mapping
+**🔑 SINGLE SOURCE OF TRUTH**: For complete variation data including 3-character source keys:
+- **File**: `/src/lib/completeVariationRarity.ts`
+- **Export**: `COMPLETE_VARIATION_RARITY` array with all 288 variations
+- **Each variation includes**:
+  - `name`: Display name (e.g., "Bumblebee", "Rust")
+  - `type`: "head" | "body" | "trait"
+  - `sourceKey`: 3-character code for file naming (e.g., "BC4", "AM1", "BJ1")
+  - `count`, `percentage`, `tier`, `rank`: Rarity data
+- **Use this for**: NFT images, essence bottles, any file naming that needs unique identifiers
+- **Example**: "Rust" head (rank 236) → sourceKey: "AM1", "Rust" body (rank 186) → sourceKey: "BJ1"
+
+**Alternative (names only)**: `/src/lib/variationsReferenceData.ts`
+- Contains ALL_VARIATIONS with `{ id, name, type }`
+- Good for dropdowns and UI displays, but lacks source keys
+
 ### Mek Variations (from CSV)
 - **102 Head Variations** (not 103)
 - **112 Body Variations**
-- **95 Trait Variations**
+- **74 Trait/Item Variations**
+- **Total: 288 variations**
 
 ### Mek Images Location
 **IMPORTANT**: All Mek images are stored in:
@@ -411,3 +428,23 @@ Example transformation:
 - App functional on port 3002/3003
 - Wallet integration disabled but components exist for future use
 - Crafting system properly structured with all 102 heads, 112 bodies, 95 traits
+- ## Error Type
+Runtime ChunkLoadError
+
+## Error Message
+Loading chunk app/layout failed.
+(timeout: http://localhost:3100/_next/static/chunks/app/layout.js)
+
+
+    at RootLayout (src\app\layout.tsx:55:11)
+
+## Code Frame
+  53 |         {/* Global background with animated stars and particles */}
+  54 |         <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
+> 55 |           <GlobalBackground />
+     |           ^
+  56 |         </div>
+  57 |         
+  58 |         {/* Content layer */}
+
+Next.js version: 15.5.4 (Webpack)

@@ -336,6 +336,20 @@ export const verifySignature = action({
 
       if (!rateLimitCheck.allowed) {
         console.warn(`[Security] Rate limit check failed for ${args.stakeAddress}`);
+
+        // LOG: Rate limit violation
+        await ctx.runMutation(internal.monitoring.logEvent, {
+          eventType: "warning",
+          category: "auth",
+          message: `Rate limit exceeded during authentication attempt`,
+          severity: "high",
+          functionName: "verifySignature",
+          walletAddress: args.stakeAddress,
+          details: {
+            error: rateLimitCheck.error,
+          },
+        });
+
         return {
           success: false,
           error: rateLimitCheck.error || "Rate limit exceeded"
@@ -449,6 +463,21 @@ export const verifySignature = action({
 
         console.log(`[Auth] SUCCESS: Wallet ${args.stakeAddress} authenticated successfully, session expires at ${new Date(sessionExpiresAt).toISOString()}`);
 
+        // LOG: Successful login
+        await ctx.runMutation(internal.monitoring.logEvent, {
+          eventType: "info",
+          category: "auth",
+          message: `Wallet successfully authenticated: ${args.walletName}`,
+          severity: "low",
+          functionName: "verifySignature",
+          walletAddress: args.stakeAddress,
+          details: {
+            walletName: args.walletName,
+            sessionId,
+            expiresAt: sessionExpiresAt,
+          },
+        });
+
         return {
           success: true,
           verified: true,
@@ -474,6 +503,20 @@ export const verifySignature = action({
         });
 
         console.error(`[Auth] FAILED: Invalid signature for ${args.stakeAddress} - ${verificationResult.error || 'unknown error'}`);
+
+        // LOG: Failed login attempt
+        await ctx.runMutation(internal.monitoring.logEvent, {
+          eventType: "warning",
+          category: "auth",
+          message: `Authentication failed - invalid signature`,
+          severity: "medium",
+          functionName: "verifySignature",
+          walletAddress: args.stakeAddress,
+          details: {
+            walletName: args.walletName,
+            error: verificationResult.error || 'unknown error',
+          },
+        });
 
         return {
           success: false,
@@ -808,6 +851,20 @@ export const revokeAuthentication = mutation({
     }
 
     console.log(`[Auth] Revoked ${sessionRevokedCount} sessions and ${signatureRevokedCount} signatures for wallet ${args.stakeAddress}`);
+
+    // LOG: Wallet disconnect
+    await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+      eventType: "info",
+      category: "auth",
+      message: `Wallet disconnected - ${sessionRevokedCount} sessions and ${signatureRevokedCount} signatures revoked`,
+      severity: "low",
+      functionName: "revokeAuthentication",
+      walletAddress: args.stakeAddress,
+      details: {
+        sessionsRevoked: sessionRevokedCount,
+        signaturesRevoked: signatureRevokedCount,
+      },
+    });
 
     return {
       success: true,

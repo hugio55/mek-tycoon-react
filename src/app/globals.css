@@ -1441,11 +1441,15 @@ body {
 
 /* Star twinkle animation for contracts page */
 @keyframes starTwinkle {
-  0%, 100% { 
-    opacity: 0.2; 
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
   }
-  50% { 
-    opacity: 1; 
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+    filter: blur(0.3px);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
   }
 }
 
@@ -1958,3 +1962,9 @@ body {
   animation: flash-yellow 0.5s ease-in-out 3;
 }
 
+
+/* Contract slot glow animation */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 30px rgba(250, 182, 23, 0.8); }
+  50% { box-shadow: 0 0 50px rgba(250, 182, 23, 0.7); }
+}

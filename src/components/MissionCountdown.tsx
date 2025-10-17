@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface MissionCountdownProps {
   endTime: number; // Timestamp when mission ends
@@ -9,6 +9,15 @@ interface MissionCountdownProps {
 
 export default function MissionCountdown({ endTime, onComplete }: MissionCountdownProps) {
   const [timeLeft, setTimeLeft] = useState(0);
+  const totalDuration = useRef<number>(0);
+  const startTime = useRef<number>(0);
+
+  // Initialize total duration when component mounts or endTime changes
+  useEffect(() => {
+    const now = Date.now();
+    totalDuration.current = Math.max(0, endTime - now);
+    startTime.current = now;
+  }, [endTime]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -56,7 +65,7 @@ export default function MissionCountdown({ endTime, onComplete }: MissionCountdo
           <div
             className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 transition-all duration-1000"
             style={{
-              width: `${Math.max(0, Math.min(100, (1 - (timeLeft / (endTime - Date.now() + timeLeft))) * 100))}%`
+              width: `${totalDuration.current > 0 ? Math.max(0, Math.min(100, ((totalDuration.current - timeLeft) / totalDuration.current) * 100)) : 0}%`
             }}
           />
         </div>

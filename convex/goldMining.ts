@@ -38,6 +38,18 @@ export const initializeGoldMining = mutation({
     // CRITICAL: Only accept stake addresses to prevent duplicates
     if (!args.walletAddress.startsWith('stake1')) {
       devLog.errorAlways(`[GoldMining] REJECTED non-stake address: ${args.walletAddress}`);
+
+      // LOG: Non-stake address rejection (security event)
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "warning",
+        category: "gold",
+        message: "Non-stake address rejected during initialization",
+        severity: "high",
+        functionName: "initializeGoldMining",
+        walletAddress: args.walletAddress,
+        details: { reason: "Only stake addresses are accepted" },
+      });
+
       return {
         success: false,
         error: "Only stake addresses are accepted. Please use stake address format."
@@ -140,6 +152,21 @@ export const initializeGoldMining = mutation({
 
       devLog.log(`[GoldMining] Merged ${duplicates.length} duplicates, total gold: ${totalAccumulatedGold.toFixed(2)}`);
 
+      // LOG: Duplicate wallet merge (data integrity event)
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "warning",
+        category: "gold",
+        message: `Merged ${duplicates.length} duplicate wallet records`,
+        severity: "medium",
+        functionName: "initializeGoldMining",
+        walletAddress: args.walletAddress,
+        details: {
+          duplicateCount: duplicates.length,
+          totalGoldMerged: totalAccumulatedGold,
+          primaryRecordId: primary._id,
+        },
+      });
+
       return {
         currentGold: totalAccumulatedGold, // CRITICAL FIX: NO CAP
         totalGoldPerHour
@@ -180,10 +207,9 @@ export const initializeGoldMining = mutation({
       devLog.log('[INIT MUTATION] Record updated successfully');
       devLog.log('[INIT MUTATION] ================================');
 
-      // Schedule automatic blockchain sync to fetch complete NFT data
-      await ctx.scheduler.runAfter(0, api.goldMining.syncWalletFromBlockchain, {
-        walletAddress: args.walletAddress
-      });
+      // REMOVED: Automatic blockchain sync on every login
+      // Snapshots should ONLY be created by the 6-hour cron job
+      // This was causing snapshots on every page refresh
 
       return {
         currentGold,
@@ -209,10 +235,9 @@ export const initializeGoldMining = mutation({
         version: 0, // Initialize version for concurrency control
       });
 
-      // Schedule automatic blockchain sync to fetch complete NFT data
-      await ctx.scheduler.runAfter(0, api.goldMining.syncWalletFromBlockchain, {
-        walletAddress: args.walletAddress
-      });
+      // REMOVED: Automatic blockchain sync on every login
+      // Snapshots should ONLY be created by the 6-hour cron job
+      // This was causing snapshots on every page refresh
 
       return {
         currentGold: 0,
@@ -366,6 +391,23 @@ export const updateGoldCheckpoint = mutation({
         oldCumulative: existing.totalCumulativeGold || 0,
         newTotalCumulativeGold
       });
+
+      // LOG: Significant gold accumulation (only if > 10 gold to reduce noise)
+      if (goldEarnedThisUpdate > 10) {
+        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+          eventType: "info",
+          category: "gold",
+          message: `Gold accumulated: +${goldEarnedThisUpdate.toFixed(2)} gold`,
+          severity: "low",
+          functionName: "updateGoldCheckpoint",
+          walletAddress: args.walletAddress,
+          details: {
+            goldEarned: goldEarnedThisUpdate,
+            newTotal: newAccumulatedGold,
+            rate: existing.totalGoldPerHour,
+          },
+        });
+      }
     } else {
       // If not verified, keep existing values (no new accumulation)
       newAccumulatedGold = existing.accumulatedGold || 0;

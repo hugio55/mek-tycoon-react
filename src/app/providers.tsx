@@ -14,14 +14,15 @@ export function Providers({ children }: { children: ReactNode }) {
   const isTalentBuilder = pathname === "/talent-builder";
   const isMekRateLogging = pathname === "/mek-rate-logging";
   const isCorpPage = pathname.startsWith("/corp/");
+  const isEssencePage = pathname === "/essence";
   const isAdminPage = pathname.startsWith("/admin");
 
   return (
     <ConvexProvider client={convex}>
       <SoundProvider>
       <div className="min-h-screen relative">
-        {isWelcomePage || isTalentBuilder || isMekRateLogging || isCorpPage ? (
-          // Root page, talent builder, mek-rate-logging, and corp pages without navigation
+        {isWelcomePage || isTalentBuilder || isMekRateLogging || isCorpPage || isEssencePage ? (
+          // Root page, talent builder, mek-rate-logging, corp pages, and essence page without navigation
           children
         ) : isAdminPage ? (
           // Admin pages with full width layout
