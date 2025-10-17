@@ -96,6 +96,10 @@ interface StoryMissionCardProps {
   // Event node completion and ownership
   isEventCompleted?: boolean; // Whether the event node has been completed
   hasNftPurchased?: boolean; // Whether the user has purchased the NFT
+
+  // Active mission tracking
+  activeMissionEndTime?: number; // End time of active mission (if deployed)
+  activeMissionDifficulty?: 'easy' | 'medium' | 'hard'; // Difficulty of active mission
 }
 
 export default function StoryMissionCard({
@@ -148,7 +152,9 @@ export default function StoryMissionCard({
   remainingNfts = 100,
   totalNfts = 100,
   isEventCompleted = false,
-  hasNftPurchased = false
+  hasNftPurchased = false,
+  activeMissionEndTime,
+  activeMissionDifficulty
 }: StoryMissionCardProps) {
   const [hoveredBuff, setHoveredBuff] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -387,20 +393,16 @@ export default function StoryMissionCard({
 
   const getCompletionOverlay = () => {
     if (!isEventNode) return null;
+
+    // Only show badge if NFT has been purchased
+    // Don't show checkmark when mintable (completed but not purchased) - "MINT AVAILABLE" shows on node instead
     if (hasNftPurchased) {
-      return (
-        <div className="absolute top-2 right-2 z-50 bg-amber-500/90 px-3 py-1 rounded border border-amber-300 shadow-lg">
-          <span className="text-xs font-bold text-black uppercase tracking-wider">NFT OWNED</span>
-        </div>
-      );
-    }
-    if (isEventCompleted) {
       return (
         <div className="absolute top-2 right-2 z-50 bg-green-500/90 px-3 py-1 rounded border border-green-300 shadow-lg flex items-center gap-1.5">
           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
           </svg>
-          <span className="text-xs font-bold text-white uppercase tracking-wider">COMPLETE</span>
+          <span className="text-xs font-bold text-white uppercase tracking-wider">NFT OWNED</span>
         </div>
       );
     }
@@ -890,6 +892,8 @@ export default function StoryMissionCard({
               {(['easy', 'medium', 'hard'] as const).map(difficulty => {
                 const isSelected = currentDifficulty === difficulty;
                 const isCompleted = completedDifficulties.has(difficulty);
+                // Pass active mission end time only if this difficulty is deployed
+                const activeEndTime = activeMissionDifficulty === difficulty ? activeMissionEndTime : undefined;
                 return renderDifficultyButton(
                   difficulty,
                   isSelected,
@@ -900,7 +904,8 @@ export default function StoryMissionCard({
                     }
                   },
                   isCompleted,
-                  lockedStyle
+                  lockedStyle,
+                  activeEndTime
                 );
               })}
             </div>
@@ -1324,7 +1329,7 @@ export default function StoryMissionCard({
                   <>
                     <div className="text-center mb-2">
                       <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
-                      <div className="text-[11px] text-gray-400 mt-1">Hold tokens for success bonuses</div>
+                      <div className="text-[11px] text-gray-400 mt-1">Attach Genesis Tokens for success bonuses</div>
                     </div>
                     <div className="flex flex-col items-center gap-3">
                       {/* Top row - first 2 tokens */}
@@ -1333,9 +1338,8 @@ export default function StoryMissionCard({
                           {variationBuffs.slice(0, 2).map((buff, index) => (
                             <div key={`${buff.id}-${index}`} className="flex flex-col items-center">
                               <div
-                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105 overflow-hidden flex items-center justify-center bg-black/40"
                                 style={{
-                                  backgroundColor: buff.color || '#6B7280',
                                   border: `3px solid ${buff.color || '#6B7280'}`,
                                   boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
                                 }}
@@ -1349,8 +1353,17 @@ export default function StoryMissionCard({
                                   const rect = e.currentTarget.getBoundingClientRect();
                                   setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                                 }}
-                              />
-                              <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                              >
+                                {buff.image && (
+                                  <img
+                                    src={buff.image}
+                                    alt={buff.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-300 font-medium mt-1 uppercase tracking-wide">{buff.name}</span>
+                              <span className="text-[11px] text-yellow-400 font-bold">{buff.bonus}</span>
                             </div>
                           ))}
                         </div>
@@ -1361,9 +1374,8 @@ export default function StoryMissionCard({
                           {variationBuffs.slice(2, 5).map((buff, index) => (
                             <div key={`${buff.id}-${index + 2}`} className="flex flex-col items-center">
                               <div
-                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105"
+                                className="relative w-[68px] h-[68px] rounded-full cursor-pointer transition-all hover:scale-105 overflow-hidden flex items-center justify-center bg-black/40"
                                 style={{
-                                  backgroundColor: buff.color || '#6B7280',
                                   border: `3px solid ${buff.color || '#6B7280'}`,
                                   boxShadow: `0 0 20px ${buff.color || '#6B7280'}80`
                                 }}
@@ -1377,8 +1389,17 @@ export default function StoryMissionCard({
                                   const rect = e.currentTarget.getBoundingClientRect();
                                   setMousePos({ x: rect.left + rect.width / 2, y: rect.top });
                                 }}
-                              />
-                              <span className="text-[11px] text-yellow-400 font-bold mt-1">{buff.bonus}</span>
+                              >
+                                {buff.image && (
+                                  <img
+                                    src={buff.image}
+                                    alt={buff.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-300 font-medium mt-1 uppercase tracking-wide">{buff.name}</span>
+                              <span className="text-[11px] text-yellow-400 font-bold">{buff.bonus}</span>
                             </div>
                           ))}
                         </div>

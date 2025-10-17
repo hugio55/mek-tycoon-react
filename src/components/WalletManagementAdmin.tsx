@@ -8,11 +8,13 @@ import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
+import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
+import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'production-launch-cleaner' | 'wallet-debug' | 'gold-repair';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'system-monitoring' | 'gold-repair';
 
 export default function WalletManagementAdmin() {
   const wallets = useQuery(api.adminVerificationReset.getAllWallets);
@@ -443,6 +445,7 @@ Check console for full timeline.
           latestUpdate: Math.max(...walletsInGroup.map(w =>
             w.lastSnapshotTime || w.updatedAt || 0
           )),
+          latestActive: Math.max(...walletsInGroup.map(w => w.lastActiveTime || 0)),
         };
 
         displayItems.push({
@@ -487,6 +490,14 @@ Check console for full timeline.
             aVal = (a.type === 'group' ? aData.companyName : aData.companyName) || '';
             bVal = (b.type === 'group' ? bData.companyName : bData.companyName) || '';
             break;
+          case 'type':
+            aVal = a.wallets[0].walletType || '';
+            bVal = b.wallets[0].walletType || '';
+            break;
+          case 'verified':
+            aVal = a.type === 'group' ? (aData.allVerified ? 1 : 0) : (aData.isVerified ? 1 : 0);
+            bVal = b.type === 'group' ? (bData.allVerified ? 1 : 0) : (bData.isVerified ? 1 : 0);
+            break;
           case 'meks':
             aVal = a.type === 'group' ? aData.totalMeks : aData.mekCount;
             bVal = b.type === 'group' ? bData.totalMeks : bData.mekCount;
@@ -516,6 +527,10 @@ Check console for full timeline.
               (aData.lastSnapshotTime || aData.updatedAt || 0);
             bVal = b.type === 'group' ? bData.latestUpdate :
               (bData.lastSnapshotTime || bData.updatedAt || 0);
+            break;
+          case 'lastActive':
+            aVal = a.type === 'group' ? aData.latestActive : (aData.lastActiveTime || 0);
+            bVal = b.type === 'group' ? bData.latestActive : (bData.lastActiveTime || 0);
             break;
           default:
             return 0;
@@ -591,6 +606,28 @@ Check console for full timeline.
           📸 Snapshot History
         </button>
         <button
+          onClick={() => setActiveSubmenu('snapshot-health')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'snapshot-health'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          📊 Snapshot Health
+        </button>
+
+        <button
+          onClick={() => setActiveSubmenu('duplicate-detection')}
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
+            activeSubmenu === 'duplicate-detection'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          🚨 Duplicate Detection
+        </button>
+
+        <button
           onClick={() => setActiveSubmenu('production-launch-cleaner')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
             activeSubmenu === 'production-launch-cleaner'
@@ -602,14 +639,14 @@ Check console for full timeline.
         </button>
 
         <button
-          onClick={() => setActiveSubmenu('wallet-debug')}
+          onClick={() => setActiveSubmenu('system-monitoring')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'wallet-debug'
+            activeSubmenu === 'system-monitoring'
               ? 'text-yellow-400 border-b-2 border-yellow-400'
               : 'text-gray-400 hover:text-gray-200'
           }`}
         >
-          🔍 Wallet Debug
+          📊 System Monitoring
         </button>
 
         <button
@@ -630,10 +667,14 @@ Check console for full timeline.
         <Suspense fallback={<div className="p-8 bg-gray-900/50 rounded-lg border border-gray-700 text-center"><div className="text-gray-400">Loading snapshot history...</div></div>}>
           <SnapshotHistoryViewer />
         </Suspense>
+      ) : activeSubmenu === 'snapshot-health' ? (
+        <SnapshotHealthDashboard />
+      ) : activeSubmenu === 'duplicate-detection' ? (
+        <DuplicateWalletDetector />
       ) : activeSubmenu === 'production-launch-cleaner' ? (
         <ProductionLaunchCleaner />
-      ) : activeSubmenu === 'wallet-debug' ? (
-        <WalletSnapshotDebug />
+      ) : activeSubmenu === 'system-monitoring' ? (
+        <SystemMonitoringDashboard />
       ) : activeSubmenu === 'gold-repair' ? (
         <div className="space-y-6">
           {/* Gold Repair Tool */}

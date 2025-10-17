@@ -189,7 +189,7 @@ export default function EventNodeEditor() {
   }>({ name: '', type: 'frame', description: '' });
 
   // Batch image assignment
-  const [eventImagesFolder, setEventImagesFolder] = useState<string>('/event-images/450px webp');
+  const [eventImagesFolder, setEventImagesFolder] = useState<string>('/event-nfts');
 
   // Deployment state
   const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus>({
@@ -216,21 +216,20 @@ export default function EventNodeEditor() {
   // Variation buffs data (optional detailed buff info indexed by event number)
   const variationBuffs: {[eventNumber: number]: Array<{name: string, count: number, type: 'head' | 'body' | 'trait'}>} = {};
 
-  // Global ranges for all 200 events
+  // Global ranges for all 200 events (per difficulty)
   const [globalRanges, setGlobalRanges] = useState({
-    minGold: 100,
-    maxGold: 10000,
-    goldRounding: 'none' as 'none' | '5' | '10',
-    minXP: 10,
-    maxXP: 1000,
-    xpRounding: 'none' as 'none' | '5' | '10',
+    easy: { minGold: 100, maxGold: 5000, minXP: 10, maxXP: 500 },
+    medium: { minGold: 200, maxGold: 10000, minXP: 20, maxXP: 1000 },
+    hard: { minGold: 400, maxGold: 20000, minXP: 40, maxXP: 2000 },
+    rewardRounding: '100' as 'none' | '10' | '100' | '1000',
     showVisualization: false
   });
 
-  // Deployment Fee configuration for all 200 events
+  // Deployment Fee configuration for all 200 events (per difficulty)
   const [deploymentFeeConfig, setDeploymentFeeConfig] = useState({
-    minFee: 1000,
-    maxFee: 100000,
+    easy: { minFee: 1000, maxFee: 50000 },
+    medium: { minFee: 2000, maxFee: 100000 },
+    hard: { minFee: 4000, maxFee: 200000 },
     interpolationType: 'linear' as 'linear' | 'exponential' | 'logarithmic',
     curveStrength: 1.5,
     feeRounding: '100' as 'none' | '10' | '100' | '1000',
@@ -357,13 +356,25 @@ export default function EventNodeEditor() {
           setGenesisBuffs(reconstructedBuffs);
         }
         if (loadedData.globalRanges) {
-          setGlobalRanges(loadedData.globalRanges);
+          setGlobalRanges({
+            easy: { minGold: 100, maxGold: 5000, minXP: 10, maxXP: 500, ...loadedData.globalRanges.easy },
+            medium: { minGold: 200, maxGold: 10000, minXP: 20, maxXP: 1000, ...loadedData.globalRanges.medium },
+            hard: { minGold: 400, maxGold: 20000, minXP: 40, maxXP: 2000, ...loadedData.globalRanges.hard },
+            showVisualization: loadedData.globalRanges.showVisualization || false
+          });
         }
         if (loadedData.eventImagesFolder) {
           setEventImagesFolder(loadedData.eventImagesFolder);
         }
         if (loadedData.deploymentFeeConfig) {
-          setDeploymentFeeConfig(loadedData.deploymentFeeConfig);
+          setDeploymentFeeConfig({
+            easy: { minFee: 1000, maxFee: 50000, ...loadedData.deploymentFeeConfig.easy },
+            medium: { minFee: 2000, maxFee: 100000, ...loadedData.deploymentFeeConfig.medium },
+            hard: { minFee: 4000, maxFee: 200000, ...loadedData.deploymentFeeConfig.hard },
+            interpolationType: loadedData.deploymentFeeConfig.interpolationType || 'linear',
+            curveStrength: loadedData.deploymentFeeConfig.curveStrength || 1.5,
+            showVisualization: loadedData.deploymentFeeConfig.showVisualization || false
+          });
         }
       } catch (error) {
         console.error('Failed to parse configuration data:', error);
@@ -417,48 +428,64 @@ export default function EventNodeEditor() {
     }
   }, [savedConfigs]);
 
-  // Apply rounding based on setting
-  const applyRounding = (value: number, rounding: 'none' | '5' | '10'): number => {
-    switch (rounding) {
-      case '5':
-        // Round to nearest 5
-        return Math.round(value / 5) * 5;
+  // Apply reward rounding (for gold and XP)
+  const applyRewardRounding = (value: number): number => {
+    switch (globalRanges.rewardRounding) {
       case '10':
-        // Round to nearest 10
         return Math.round(value / 10) * 10;
+      case '100':
+        return Math.round(value / 100) * 100;
+      case '1000':
+        return Math.round(value / 1000) * 1000;
+      default:
+        return Math.round(value);
+    }
+  };
+
+  // Apply fee rounding
+  const applyFeeRounding = (value: number): number => {
+    switch (deploymentFeeConfig.feeRounding) {
+      case '10':
+        return Math.round(value / 10) * 10;
+      case '100':
+        return Math.round(value / 100) * 100;
+      case '1000':
+        return Math.round(value / 1000) * 1000;
       default:
         return Math.round(value);
     }
   };
 
   // Calculate gold for an event within the selected chapter
-  const calculateChapterGold = (eventNumber: number): number => {
+  const calculateChapterGold = (eventNumber: number, difficulty: 'easy' | 'medium' | 'hard' = 'medium'): number => {
     const chapterStartEvent = (selectedChapter - 1) * 20 + 1;
     const chapterEndEvent = selectedChapter * 20;
 
     // Normalize position within the chapter (0 to 1)
     const normalizedPosition = (eventNumber - chapterStartEvent) / (chapterEndEvent - chapterStartEvent);
 
-    const gold = globalRanges.minGold + (globalRanges.maxGold - globalRanges.minGold) * normalizedPosition;
+    const difficultyConfig = globalRanges[difficulty];
+    const gold = difficultyConfig.minGold + (difficultyConfig.maxGold - difficultyConfig.minGold) * normalizedPosition;
 
-    return applyRounding(gold, globalRanges.goldRounding);
+    return applyRewardRounding(gold);
   };
 
   // Calculate XP for an event within the selected chapter
-  const calculateChapterXP = (eventNumber: number): number => {
+  const calculateChapterXP = (eventNumber: number, difficulty: 'easy' | 'medium' | 'hard' = 'medium'): number => {
     const chapterStartEvent = (selectedChapter - 1) * 20 + 1;
     const chapterEndEvent = selectedChapter * 20;
 
     // Normalize position within the chapter (0 to 1)
     const normalizedPosition = (eventNumber - chapterStartEvent) / (chapterEndEvent - chapterStartEvent);
 
-    const xp = globalRanges.minXP + (globalRanges.maxXP - globalRanges.minXP) * normalizedPosition;
+    const difficultyConfig = globalRanges[difficulty];
+    const xp = difficultyConfig.minXP + (difficultyConfig.maxXP - difficultyConfig.minXP) * normalizedPosition;
 
-    return applyRounding(xp, globalRanges.xpRounding);
+    return applyRewardRounding(xp);
   };
 
-  // Calculate deployment fee for an event based on its number
-  const calculateDeploymentFee = (eventNumber: number): number => {
+  // Calculate deployment fee for an event based on its number and difficulty
+  const calculateDeploymentFee = (eventNumber: number, difficulty: 'easy' | 'medium' | 'hard' = 'medium'): number => {
     // Calculate position within the current chapter (20 events per chapter)
     const chapterStartEvent = (selectedChapter - 1) * 20 + 1;
     const chapterEndEvent = selectedChapter * 20;
@@ -482,20 +509,13 @@ export default function EventNodeEditor() {
         interpolatedValue = normalizedPosition;
     }
 
-    const fee = deploymentFeeConfig.minFee +
-      (deploymentFeeConfig.maxFee - deploymentFeeConfig.minFee) * interpolatedValue;
+    // Get difficulty-specific min/max
+    const difficultyConfig = deploymentFeeConfig[difficulty];
+    const fee = difficultyConfig.minFee +
+      (difficultyConfig.maxFee - difficultyConfig.minFee) * interpolatedValue;
 
-    // Apply rounding
-    switch (deploymentFeeConfig.feeRounding) {
-      case '10':
-        return Math.round(fee / 10) * 10;
-      case '100':
-        return Math.round(fee / 100) * 100;
-      case '1000':
-        return Math.round(fee / 1000) * 1000;
-      default:
-        return Math.round(fee);
-    }
+    // Apply fee rounding
+    return applyFeeRounding(fee);
   };
 
   // Calculate duration for an event based on difficulty
@@ -541,15 +561,15 @@ export default function EventNodeEditor() {
     return Math.round(bonus * 10) / 10; // Round to 1 decimal place
   };
 
-  // Apply linear distribution to all 200 events
+  // Apply linear distribution to all 200 events (uses medium difficulty values)
   const applyGlobalRanges = () => {
-    const goldStep = (globalRanges.maxGold - globalRanges.minGold) / 199;
-    const xpStep = (globalRanges.maxXP - globalRanges.minXP) / 199;
+    const goldStep = (globalRanges.medium.maxGold - globalRanges.medium.minGold) / 199;
+    const xpStep = (globalRanges.medium.maxXP - globalRanges.medium.minXP) / 199;
 
     const newEventsData = eventsData.map((event, index) => ({
       ...event,
-      goldReward: applyRounding(globalRanges.minGold + (goldStep * index), globalRanges.goldRounding),
-      xpReward: applyRounding(globalRanges.minXP + (xpStep * index), globalRanges.xpRounding)
+      goldReward: applyRewardRounding(globalRanges.medium.minGold + (goldStep * index)),
+      xpReward: applyRewardRounding(globalRanges.medium.minXP + (xpStep * index))
     }));
 
     setEventsData(newEventsData);
@@ -598,9 +618,9 @@ export default function EventNodeEditor() {
       const encodedFolder = eventImagesFolder.replace(/ /g, '%20');
 
       // Generate paths for all 3 difficulties using e[number]-[E/M/H] naming
-      const easyPath = `${encodedFolder}/e${event.eventNumber}-E.webp`;
-      const mediumPath = `${encodedFolder}/e${event.eventNumber}-M.webp`;
-      const hardPath = `${encodedFolder}/e${event.eventNumber}-H.webp`;
+      const easyPath = `${encodedFolder}/e${event.eventNumber}-E.png`;
+      const mediumPath = `${encodedFolder}/e${event.eventNumber}-M.png`;
+      const hardPath = `${encodedFolder}/e${event.eventNumber}-H.png`;
 
       console.log(`Event ${event.eventNumber}: Easy=${easyPath}, Medium=${mediumPath}, Hard=${hardPath}`);
 
@@ -1315,66 +1335,162 @@ export default function EventNodeEditor() {
         {/* Chapter Reward Range Controls */}
         <div className="mb-4 bg-black/30 rounded p-3">
           <h5 className="text-purple-400 text-sm font-bold mb-3">Chapter {selectedChapter} Reward Ranges (Events {(selectedChapter - 1) * 20 + 1}-{selectedChapter * 20})</h5>
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <label className="text-yellow-400 text-xs">Gold Range</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="number"
-                  value={globalRanges.minGold}
-                  onChange={(e) => setGlobalRanges({...globalRanges, minGold: Number(e.target.value)})}
-                  className="w-24 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-xs text-yellow-400"
-                  placeholder="Min"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                  type="number"
-                  value={globalRanges.maxGold}
-                  onChange={(e) => setGlobalRanges({...globalRanges, maxGold: Number(e.target.value)})}
-                  className="w-24 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-xs text-yellow-400"
-                  placeholder="Max"
-                />
+
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            {/* Easy Rewards */}
+            <div className="bg-black/30 p-2 rounded border border-green-500/20">
+              <label className="text-green-400 text-xs font-semibold block mb-2">Easy Rewards</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-yellow-400 text-[10px]">Gold Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.easy.minGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, easy: {...globalRanges.easy, minGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.easy.maxGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, easy: {...globalRanges.easy, maxGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-blue-400 text-[10px]">XP Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.easy.minXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, easy: {...globalRanges.easy, minXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.easy.maxXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, easy: {...globalRanges.easy, maxXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
               </div>
-              <select
-                value={globalRanges.goldRounding}
-                onChange={(e) => setGlobalRanges({...globalRanges, goldRounding: e.target.value as any})}
-                className="w-full px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-xs text-yellow-400"
-              >
-                <option value="none">No Rounding</option>
-                <option value="5">Round to 0 or 5</option>
-                <option value="10">Round to 10s</option>
-              </select>
             </div>
 
-            <div>
-              <label className="text-blue-400 text-xs">XP Range</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="number"
-                  value={globalRanges.minXP}
-                  onChange={(e) => setGlobalRanges({...globalRanges, minXP: Number(e.target.value)})}
-                  className="w-24 px-2 py-1 bg-black/50 border border-blue-400/30 rounded text-xs text-blue-400"
-                  placeholder="Min"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                  type="number"
-                  value={globalRanges.maxXP}
-                  onChange={(e) => setGlobalRanges({...globalRanges, maxXP: Number(e.target.value)})}
-                  className="w-24 px-2 py-1 bg-black/50 border border-blue-400/30 rounded text-xs text-blue-400"
-                  placeholder="Max"
-                />
+            {/* Medium Rewards */}
+            <div className="bg-black/30 p-2 rounded border border-yellow-500/20">
+              <label className="text-yellow-400 text-xs font-semibold block mb-2">Medium Rewards</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-yellow-400 text-[10px]">Gold Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.medium.minGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, medium: {...globalRanges.medium, minGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.medium.maxGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, medium: {...globalRanges.medium, maxGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-blue-400 text-[10px]">XP Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.medium.minXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, medium: {...globalRanges.medium, minXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.medium.maxXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, medium: {...globalRanges.medium, maxXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
               </div>
-              <select
-                value={globalRanges.xpRounding}
-                onChange={(e) => setGlobalRanges({...globalRanges, xpRounding: e.target.value as any})}
-                className="w-full px-2 py-1 bg-black/50 border border-blue-400/30 rounded text-xs text-blue-400"
-              >
-                <option value="none">No Rounding</option>
-                <option value="5">Round to 0 or 5</option>
-                <option value="10">Round to 10s</option>
-              </select>
             </div>
+
+            {/* Hard Rewards */}
+            <div className="bg-black/30 p-2 rounded border border-red-500/20">
+              <label className="text-red-400 text-xs font-semibold block mb-2">Hard Rewards</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-yellow-400 text-[10px]">Gold Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.hard.minGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, hard: {...globalRanges.hard, minGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.hard.maxGold}
+                      onChange={(e) => setGlobalRanges({...globalRanges, hard: {...globalRanges.hard, maxGold: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-yellow-400/30 rounded text-[10px] text-yellow-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-blue-400 text-[10px]">XP Range</label>
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="number"
+                      value={globalRanges.hard.minXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, hard: {...globalRanges.hard, minXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500 text-[9px]">to</span>
+                    <input
+                      type="number"
+                      value={globalRanges.hard.maxXP}
+                      onChange={(e) => setGlobalRanges({...globalRanges, hard: {...globalRanges.hard, maxXP: Number(e.target.value)}})}
+                      className="w-full px-1 py-1 bg-black/50 border border-blue-400/30 rounded text-[10px] text-blue-400"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="text-purple-400 text-xs">Reward Rounding (gold & XP for all difficulties)</label>
+            <select
+              value={globalRanges.rewardRounding}
+              onChange={(e) => setGlobalRanges({...globalRanges, rewardRounding: e.target.value as any})}
+              className="w-full px-2 py-1 bg-black/50 border border-purple-400/30 rounded text-xs text-purple-400"
+            >
+              <option value="none">No Rounding</option>
+              <option value="10">Round to 10</option>
+              <option value="100">Round to 100</option>
+              <option value="1000">Round to 1000</option>
+            </select>
           </div>
 
           <button
@@ -1481,26 +1597,86 @@ export default function EventNodeEditor() {
             Configure gold deployment fees for Chapter {selectedChapter} (Events {(selectedChapter - 1) * 20 + 1}-{selectedChapter * 20})
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="text-green-400 text-xs">Min Fee (Event {(selectedChapter - 1) * 20 + 1})</label>
-              <input
-                type="number"
-                value={deploymentFeeConfig.minFee}
-                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, minFee: Number(e.target.value)})}
-                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
-                placeholder="Min Fee"
-              />
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            {/* Easy Fees */}
+            <div className="bg-black/30 p-2 rounded border border-green-500/20">
+              <label className="text-green-400 text-xs font-semibold block mb-2">Easy Fees</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-gray-500 text-[10px]">Min (Event 1)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.easy.minFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, easy: {...deploymentFeeConfig.easy, minFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+                    placeholder="Min"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-500 text-[10px]">Max (Event 20)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.easy.maxFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, easy: {...deploymentFeeConfig.easy, maxFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-green-400 text-xs">Max Fee (Event {selectedChapter * 20})</label>
-              <input
-                type="number"
-                value={deploymentFeeConfig.maxFee}
-                onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, maxFee: Number(e.target.value)})}
-                className="w-full px-2 py-1 bg-black/50 border border-green-400/30 rounded text-xs text-green-400"
-                placeholder="Max Fee"
-              />
+
+            {/* Medium Fees */}
+            <div className="bg-black/30 p-2 rounded border border-yellow-500/20">
+              <label className="text-yellow-400 text-xs font-semibold block mb-2">Medium Fees</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-gray-500 text-[10px]">Min (Event 1)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.medium.minFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, medium: {...deploymentFeeConfig.medium, minFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-xs text-yellow-400"
+                    placeholder="Min"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-500 text-[10px]">Max (Event 20)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.medium.maxFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, medium: {...deploymentFeeConfig.medium, maxFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-xs text-yellow-400"
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Hard Fees */}
+            <div className="bg-black/30 p-2 rounded border border-red-500/20">
+              <label className="text-red-400 text-xs font-semibold block mb-2">Hard Fees</label>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-gray-500 text-[10px]">Min (Event 1)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.hard.minFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, hard: {...deploymentFeeConfig.hard, minFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-red-400/30 rounded text-xs text-red-400"
+                    placeholder="Min"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-500 text-[10px]">Max (Event 20)</label>
+                  <input
+                    type="number"
+                    value={deploymentFeeConfig.hard.maxFee}
+                    onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, hard: {...deploymentFeeConfig.hard, maxFee: Number(e.target.value)}})}
+                    className="w-full px-2 py-1 bg-black/50 border border-red-400/30 rounded text-xs text-red-400"
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1518,7 +1694,7 @@ export default function EventNodeEditor() {
               </select>
             </div>
             <div>
-              <label className="text-green-400 text-xs">Rounding</label>
+              <label className="text-green-400 text-xs">Fee Rounding (all difficulties)</label>
               <select
                 value={deploymentFeeConfig.feeRounding}
                 onChange={(e) => setDeploymentFeeConfig({...deploymentFeeConfig, feeRounding: e.target.value as any})}
@@ -2291,7 +2467,7 @@ export default function EventNodeEditor() {
               type="text"
               value={eventImagesFolder}
               onChange={(e) => setEventImagesFolder(e.target.value)}
-              placeholder="e.g., /event-images/450px webp"
+              placeholder="e.g., /event-nfts"
               className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded text-sm text-gray-300 font-mono"
               title="Web-relative path from public folder (e.g., /event-images)"
             />
@@ -2303,7 +2479,7 @@ export default function EventNodeEditor() {
             </button>
           </div>
           <div className="mt-2 text-xs text-gray-400">
-            <span className="text-purple-300">ℹ️ Note:</span> Expects files named e1-E.webp, e1-M.webp, e1-H.webp (E=Easy, M=Medium, H=Hard) for each event
+            <span className="text-purple-300">ℹ️ Note:</span> Expects files named e1-E.png, e1-M.png, e1-H.png (E=Easy, M=Medium, H=Hard) for each event
           </div>
         </div>
 
@@ -2328,7 +2504,7 @@ export default function EventNodeEditor() {
                                   {/* Easy */}
                                   <div className="relative group">
                                     <img
-                                      src={leftEvent.images?.easy || `/event-images/450px%20webp/e${leftEvent.eventNumber}-E.webp`}
+                                      src={leftEvent.images?.easy || `/event-nfts/E${leftEvent.eventNumber}-E.png`}
                                       alt={`Event ${leftEvent.eventNumber} Easy`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-green-500/30 cursor-pointer hover:border-green-400 transition-all"
                                       onClick={() => setPreviewImage(leftEvent.eventNumber)}
@@ -2342,7 +2518,7 @@ export default function EventNodeEditor() {
                                   {/* Medium */}
                                   <div className="relative group">
                                     <img
-                                      src={leftEvent.images?.medium || `/event-images/450px%20webp/e${leftEvent.eventNumber}-M.webp`}
+                                      src={leftEvent.images?.medium || `/event-nfts/E${leftEvent.eventNumber}-M.png`}
                                       alt={`Event ${leftEvent.eventNumber} Medium`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-yellow-500/30 cursor-pointer hover:border-yellow-400 transition-all"
                                       onClick={() => setPreviewImage(leftEvent.eventNumber)}
@@ -2356,7 +2532,7 @@ export default function EventNodeEditor() {
                                   {/* Hard */}
                                   <div className="relative group">
                                     <img
-                                      src={leftEvent.images?.hard || `/event-images/450px%20webp/e${leftEvent.eventNumber}-H.webp`}
+                                      src={leftEvent.images?.hard || `/event-nfts/E${leftEvent.eventNumber}-H.png`}
                                       alt={`Event ${leftEvent.eventNumber} Hard`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-red-500/30 cursor-pointer hover:border-red-400 transition-all"
                                       onClick={() => setPreviewImage(leftEvent.eventNumber)}
@@ -2545,7 +2721,7 @@ export default function EventNodeEditor() {
                                   {/* Easy */}
                                   <div className="relative group">
                                     <img
-                                      src={rightEvent.images?.easy || `/event-images/450px%20webp/e${rightEvent.eventNumber}-E.webp`}
+                                      src={rightEvent.images?.easy || `/event-nfts/E${rightEvent.eventNumber}-E.png`}
                                       alt={`Event ${rightEvent.eventNumber} Easy`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-green-500/30 cursor-pointer hover:border-green-400 transition-all"
                                       onClick={() => setPreviewImage(rightEvent.eventNumber)}
@@ -2559,7 +2735,7 @@ export default function EventNodeEditor() {
                                   {/* Medium */}
                                   <div className="relative group">
                                     <img
-                                      src={rightEvent.images?.medium || `/event-images/450px%20webp/e${rightEvent.eventNumber}-M.webp`}
+                                      src={rightEvent.images?.medium || `/event-nfts/E${rightEvent.eventNumber}-M.png`}
                                       alt={`Event ${rightEvent.eventNumber} Medium`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-yellow-500/30 cursor-pointer hover:border-yellow-400 transition-all"
                                       onClick={() => setPreviewImage(rightEvent.eventNumber)}
@@ -2573,7 +2749,7 @@ export default function EventNodeEditor() {
                                   {/* Hard */}
                                   <div className="relative group">
                                     <img
-                                      src={rightEvent.images?.hard || `/event-images/450px%20webp/e${rightEvent.eventNumber}-H.webp`}
+                                      src={rightEvent.images?.hard || `/event-nfts/E${rightEvent.eventNumber}-H.png`}
                                       alt={`Event ${rightEvent.eventNumber} Hard`}
                                       className="w-[50px] h-[32px] rounded object-cover border border-red-500/30 cursor-pointer hover:border-red-400 transition-all"
                                       onClick={() => setPreviewImage(rightEvent.eventNumber)}
@@ -2800,11 +2976,11 @@ export default function EventNodeEditor() {
               <div className="flex flex-col items-center">
                 <div className="text-green-400 font-bold text-sm mb-2">EASY</div>
                 <img
-                  src={eventsData[previewImage - 1]?.images?.easy || `/event-images/450px%20webp/e${previewImage}-E.webp`}
+                  src={eventsData[previewImage - 1]?.images?.easy || `/event-nfts/E${previewImage}-E.png`}
                   alt={`Event ${previewImage} Easy`}
                   className="max-w-[350px] max-h-[350px] object-contain rounded border-2 border-green-500/30"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/event-images/placeholder.webp';
+                    (e.target as HTMLImageElement).src = '/event-images/placeholder.png';
                   }}
                 />
               </div>
@@ -2813,11 +2989,11 @@ export default function EventNodeEditor() {
               <div className="flex flex-col items-center">
                 <div className="text-yellow-400 font-bold text-sm mb-2">MEDIUM</div>
                 <img
-                  src={eventsData[previewImage - 1]?.images?.medium || `/event-images/450px%20webp/e${previewImage}-M.webp`}
+                  src={eventsData[previewImage - 1]?.images?.medium || `/event-nfts/E${previewImage}-M.png`}
                   alt={`Event ${previewImage} Medium`}
                   className="max-w-[350px] max-h-[350px] object-contain rounded border-2 border-yellow-500/30"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/event-images/placeholder.webp';
+                    (e.target as HTMLImageElement).src = '/event-images/placeholder.png';
                   }}
                 />
               </div>
@@ -2826,11 +3002,11 @@ export default function EventNodeEditor() {
               <div className="flex flex-col items-center">
                 <div className="text-red-400 font-bold text-sm mb-2">HARD</div>
                 <img
-                  src={eventsData[previewImage - 1]?.images?.hard || `/event-images/450px%20webp/e${previewImage}-H.webp`}
+                  src={eventsData[previewImage - 1]?.images?.hard || `/event-nfts/E${previewImage}-H.png`}
                   alt={`Event ${previewImage} Hard`}
                   className="max-w-[350px] max-h-[350px] object-contain rounded border-2 border-red-500/30"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/event-images/placeholder.webp';
+                    (e.target as HTMLImageElement).src = '/event-images/placeholder.png';
                   }}
                 />
               </div>

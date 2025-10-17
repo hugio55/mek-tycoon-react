@@ -289,9 +289,18 @@ export default function ContractsLayoutOption11() {
     const missionRewards = isGlobal ? sampleRewardsWithRates.global : sampleRewardsWithRates.regular;
     
     // Random variation buffs for this mission - select random variations
-    const missionMultipliers = isGlobal 
+    const missionMultipliers = isGlobal
       ? successMultipliers.slice(0, 10) // Max 10 for global missions
       : successMultipliers.slice(0, 10); // Max 10 for regular missions too
+
+    // Genesis Buffs - always available
+    const genesisBuffs = [
+      { id: 'teal', name: 'Teal', image: '/genesis-art/teal-genesis.png', bonus: '+5%' },
+      { id: 'red', name: 'Red', image: '/genesis-art/red-genesis.png', bonus: '+7%' },
+      { id: 'green', name: 'Green', image: '/genesis-art/green-genesis.png', bonus: '+15%' },
+      { id: 'pink', name: 'Pink', image: '/genesis-art/pink-genesis.png', bonus: '+20%' },
+      { id: 'rainbow', name: 'Rainbow', image: '/genesis-art/rainbow-genesis.png', bonus: '+30%' },
+    ];
     
     // Calculate matched bonuses
     const matched = matchedBonuses[contractId] || [];
@@ -1154,7 +1163,11 @@ export default function ContractsLayoutOption11() {
           missionMultipliers={missionMultipliers}
           matchedVariations={matched}
           onBuffClick={(buff) => setSelectedBuff(buff)}
-          
+
+          // Genesis Buffs
+          genesisBuffs={genesisBuffs}
+          onGenesisBuffClick={(buff) => console.log('Genesis buff clicked:', buff)}
+
           // Mek Slots
           mekSlotCount={mekSlotCount}
           selectedMeks={meks}

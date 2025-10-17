@@ -2223,4 +2223,292 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_action_type", ["actionType"])
     .index("by_wallet_and_timestamp", ["walletAddress", "timestamp"]),
+
+  // FEDERATION SYSTEM - groups of walletGroups (like WoW guilds)
+
+  // Federations - main federation data
+  federations: defineTable({
+    federationId: v.string(), // UUID for this federation
+    name: v.string(), // Federation name
+    description: v.optional(v.string()),
+    leaderGroupId: v.string(), // The walletGroup that leads this federation
+    createdAt: v.number(),
+    updatedAt: v.number(),
+
+    // Mining & gameplay data
+    totalMiningPower: v.optional(v.number()), // Calculated from variation diversity
+    lastMiningUpdate: v.optional(v.number()),
+
+    // Visual/customization
+    emblem: v.optional(v.string()), // Image URL or emoji
+    color: v.optional(v.string()), // Hex color for federation theme
+
+    // Stats
+    memberCount: v.number(), // Cached count of member groups
+    totalMekCount: v.optional(v.number()), // Total Meks across all members
+    uniqueVariationCount: v.optional(v.number()), // Unique variations owned
+  })
+    .index("by_federation_id", ["federationId"])
+    .index("by_leader", ["leaderGroupId"])
+    .index("by_name", ["name"]),
+
+  // Federation Memberships - which walletGroups belong to which federations
+  federationMemberships: defineTable({
+    federationId: v.string(), // Reference to federations
+    groupId: v.string(), // Reference to walletGroups
+    joinedAt: v.number(),
+    role: v.union(v.literal("leader"), v.literal("officer"), v.literal("member")), // Member roles
+
+    // Contribution tracking
+    variationsContributed: v.optional(v.number()), // Unique variations this group contributes
+    mekCount: v.optional(v.number()), // Number of Meks this group owns
+    lastContributionUpdate: v.optional(v.number()),
+  })
+    .index("by_federation", ["federationId"])
+    .index("by_group", ["groupId"])
+    .index("by_federation_and_group", ["federationId", "groupId"]),
+
+  // Federation Invites - pending invitations to join federations
+  federationInvites: defineTable({
+    federationId: v.string(), // Reference to federations
+    invitedGroupId: v.string(), // WalletGroup being invited
+    invitedByGroupId: v.string(), // WalletGroup that sent the invite
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected"), v.literal("cancelled")),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+    expiresAt: v.number(), // Invites expire after 7 days
+    message: v.optional(v.string()), // Optional message from inviter
+  })
+    .index("by_federation", ["federationId"])
+    .index("by_invited_group", ["invitedGroupId"])
+    .index("by_status", ["status"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Federation Variation Collection - tracks which variations the federation owns
+  federationVariationCollection: defineTable({
+    federationId: v.string(),
+    variationId: v.number(), // Reference to variationsReference
+    count: v.number(), // How many of this variation the federation owns
+    contributingGroups: v.array(v.string()), // Array of groupIds that own this variation
+    lastUpdated: v.number(),
+  })
+    .index("by_federation", ["federationId"])
+    .index("by_federation_and_variation", ["federationId", "variationId"])
+    .index("by_variation", ["variationId"]),
+
+  // Planet Mining - federation mining activities
+  planetMining: defineTable({
+    miningId: v.string(), // UUID
+    federationId: v.string(),
+    planetName: v.string(), // Name of planet being mined
+    startedAt: v.number(),
+    completesAt: v.number(),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("cancelled")),
+
+    // Mining mechanics
+    requiredDiversity: v.number(), // How many unique variations needed for success
+    currentDiversity: v.number(), // How many unique variations the federation has
+    successRate: v.number(), // Calculated success rate (0-100)
+
+    // Rewards
+    resourcesEarned: v.optional(v.any()), // Materials/resources from mining
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_federation", ["federationId"])
+    .index("by_status", ["status"])
+    .index("by_completion", ["completesAt"]),
+
+  // Essence System - Global configuration
+  essenceConfig: defineTable({
+    configType: v.string(), // "global" - only one config record
+
+    // Slot unlock costs (gold + essence requirements)
+    slot2GoldCost: v.number(), // Gold cost for slot 2
+    slot3GoldCost: v.number(), // Gold cost for slot 3
+    slot4GoldCost: v.number(), // Gold cost for slot 4
+    slot5GoldCost: v.number(), // Gold cost for slot 5
+
+    slot2EssenceCount: v.number(), // How many essence types needed for slot 2
+    slot3EssenceCount: v.number(), // How many essence types needed for slot 3
+    slot4EssenceCount: v.number(), // How many essence types needed for slot 4
+    slot5EssenceCount: v.number(), // How many essence types needed for slot 5
+
+    // Rarity groups for slot requirements (variation IDs)
+    rarityGroup1: v.array(v.number()), // Common variations
+    rarityGroup2: v.array(v.number()), // Uncommon variations
+    rarityGroup3: v.array(v.number()), // Rare variations
+    rarityGroup4: v.array(v.number()), // Epic/Legendary variations
+
+    // Swap costs
+    swapBaseCost: v.number(), // Starting gold cost for first swap
+    swapCostIncrement: v.number(), // How much cost increases per swap
+    swapCostMax: v.number(), // Maximum swap cost
+
+    // Generation settings
+    essenceRate: v.number(), // Base rate (0.1 per day per variation)
+    essenceCap: v.number(), // Base cap (10 per variation type)
+
+    lastUpdated: v.number(),
+  })
+    .index("by_config_type", ["configType"]),
+
+  // Essence Slots - player's 5 Mek slots
+  essenceSlots: defineTable({
+    walletAddress: v.string(),
+    slotNumber: v.number(), // 1-5
+
+    // Slot state
+    isUnlocked: v.boolean(),
+    unlockedAt: v.optional(v.number()),
+
+    // Slotted Mek data (null if empty)
+    mekAssetId: v.optional(v.string()),
+    mekNumber: v.optional(v.number()),
+    mekSourceKey: v.optional(v.string()),
+
+    // Variation data for essence generation
+    headVariationId: v.optional(v.number()),
+    headVariationName: v.optional(v.string()),
+    bodyVariationId: v.optional(v.number()),
+    bodyVariationName: v.optional(v.string()),
+    itemVariationId: v.optional(v.number()),
+    itemVariationName: v.optional(v.string()),
+
+    slottedAt: v.optional(v.number()),
+    lastModified: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_slot", ["walletAddress", "slotNumber"])
+    .index("by_mek", ["mekAssetId"]),
+
+  // Essence Slot Requirements - per-player random requirements for unlocking slots
+  essenceSlotRequirements: defineTable({
+    walletAddress: v.string(),
+    slotNumber: v.number(), // 2-5 (slot 1 is always free)
+
+    goldCost: v.number(),
+
+    // Required essences (randomly selected based on rarity groups)
+    requiredEssences: v.array(v.object({
+      variationId: v.number(),
+      variationName: v.string(),
+      amountRequired: v.number(),
+    })),
+
+    generatedAt: v.number(), // When requirements were generated
+    seedUsed: v.string(), // Wallet address used as seed
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_slot", ["walletAddress", "slotNumber"]),
+
+  // Essence Tracking - per-player essence generation tracking
+  essenceTracking: defineTable({
+    walletAddress: v.string(),
+
+    isActive: v.boolean(), // Whether essence generation is active
+    activationTime: v.optional(v.number()), // When first slot was filled
+    lastCalculationTime: v.number(), // Last time essence was calculated
+    lastCheckpointTime: v.number(), // Last daily checkpoint
+
+    // Swap tracking
+    totalSwapCount: v.number(),
+    currentSwapCost: v.number(), // Current cost to swap (increases with each swap)
+
+    createdAt: v.number(),
+    lastModified: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_active", ["isActive"])
+    .index("by_last_checkpoint", ["lastCheckpointTime"]),
+
+  // Essence Balances - sparse storage of essence amounts
+  essenceBalances: defineTable({
+    walletAddress: v.string(),
+    variationId: v.number(),
+    variationName: v.string(),
+    variationType: v.union(v.literal("head"), v.literal("body"), v.literal("item")),
+
+    accumulatedAmount: v.number(), // Current essence amount (capped at essenceCap)
+    lastUpdated: v.number(),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_variation", ["walletAddress", "variationId"])
+    .index("by_variation", ["variationId"]),
+
+  // Essence Player Buffs - per-player rate multipliers and cap bonuses
+  essencePlayerBuffs: defineTable({
+    walletAddress: v.string(),
+    variationId: v.number(),
+
+    rateMultiplier: v.number(), // Multiplier for generation rate (1.0 = base, 1.5 = 50% faster)
+    capBonus: v.number(), // Additional cap amount (base is 10)
+
+    source: v.string(), // Where buff came from ("achievement", "upgrade", "event", etc.)
+    appliedAt: v.number(),
+    expiresAt: v.optional(v.number()), // Null for permanent buffs
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_variation", ["walletAddress", "variationId"])
+    .index("by_expires", ["expiresAt"]),
+
+  // System Monitoring - 24/7 backend monitoring and error tracking
+  systemMonitoring: defineTable({
+    timestamp: v.number(),
+    eventType: v.union(
+      v.literal("error"),
+      v.literal("critical_error"),
+      v.literal("warning"),
+      v.literal("snapshot"),
+      v.literal("cron"),
+      v.literal("database_issue"),
+      v.literal("info")
+    ),
+    category: v.string(), // "snapshot", "auth", "gold", "leaderboard", etc.
+    message: v.string(),
+    details: v.optional(v.any()), // Additional context (error objects, stack traces, etc.)
+
+    // For filtering/analysis
+    severity: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("critical")
+    ),
+
+    // Context
+    functionName: v.optional(v.string()),
+    walletAddress: v.optional(v.string()), // If related to specific wallet
+
+    resolved: v.optional(v.boolean()), // For tracking if issue was fixed
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_event_type", ["eventType"])
+    .index("by_severity", ["severity"])
+    .index("by_category", ["category"])
+    .index("by_wallet", ["walletAddress"]),
+
+  // System Monitoring Summaries - Periodic health reports
+  monitoringSummaries: defineTable({
+    startTime: v.number(),
+    endTime: v.number(),
+    intervalMinutes: v.number(),
+
+    totalEvents: v.number(),
+    errorCount: v.number(),
+    criticalErrorCount: v.number(),
+    warningCount: v.number(),
+    snapshotCount: v.number(),
+    cronCount: v.number(),
+
+    topErrors: v.optional(v.array(v.string())), // Most common error messages
+    criticalEvents: v.optional(v.array(v.any())), // List of critical events
+
+    systemHealth: v.union(
+      v.literal("healthy"),
+      v.literal("warning"),
+      v.literal("critical")
+    ),
+  })
+    .index("by_end_time", ["endTime"])
+    .index("by_health", ["systemHealth"]),
 });

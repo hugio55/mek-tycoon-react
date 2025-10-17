@@ -457,31 +457,9 @@ export const getAllWallets = query({
       walletToGroupMap.set(membership.walletAddress, membership.groupId);
     }
 
-    // Group by user fingerprint to deduplicate display
-    const userGroups = new Map<string, typeof allMiners>();
-    allMiners.forEach(miner => {
-      const fingerprint = `${miner.ownedMeks.length}_${miner.totalGoldPerHour}`;
-      const existing = userGroups.get(fingerprint) || [];
-      existing.push(miner);
-      userGroups.set(fingerprint, existing);
-    });
-
-    // For each user, pick the best record to display
-    const dedupedMiners = [];
-    for (const [fingerprint, miners] of userGroups.entries()) {
-      // Sort to find best record (verified > highest gold > most recent)
-      const sorted = miners.sort((a, b) => {
-        if (a.isBlockchainVerified && !b.isBlockchainVerified) return -1;
-        if (!a.isBlockchainVerified && b.isBlockchainVerified) return 1;
-        const aGold = a.accumulatedGold || 0;
-        const bGold = b.accumulatedGold || 0;
-        if (aGold !== bGold) return bGold - aGold;
-        return b.lastActiveTime - a.lastActiveTime;
-      });
-      dedupedMiners.push(sorted[0]); // Keep only the best one
-    }
-
-    return dedupedMiners.map(miner => {
+    // Return ALL wallets without deduplication
+    // Each wallet is a unique user, even if they have the same MEK count
+    return allMiners.map(miner => {
       // Calculate current gold (respecting verification status)
       let currentGold = miner.accumulatedGold || 0;
 

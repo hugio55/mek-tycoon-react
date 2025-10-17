@@ -7,12 +7,14 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { getAllVariations } from "../../lib/variationsData";
 import { Template, TalentNode, Connection, DragState, BuilderMode, EssenceRequirement } from "./types";
 import { getErrorMessage } from "./utils";
+import { createSaveData, loadSaveDataSafely, CURRENT_SAVE_VERSION } from "./saveMigrations";
 
 export default function TalentBuilderPage() {
   const [nodes, setNodes] = useState<TalentNode[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [mode, setMode] = useState<'select' | 'add' | 'connect'>('select');
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [mode, setMode] = useState<'select' | 'add' | 'connect' | 'addLabel' | 'lasso'>('select');
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -22,6 +24,39 @@ export default function TalentBuilderPage() {
   });
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [boxSelection, setBoxSelection] = useState<{
+    isSelecting: boolean;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    addToSelection: boolean;
+  }>({
+    isSelecting: false,
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+    addToSelection: false
+  });
+  const [lassoSelection, setLassoSelection] = useState<{
+    isSelecting: boolean;
+    points: { x: number; y: number }[];
+  }>({
+    isSelecting: false,
+    points: []
+  });
+  const [rotationHandle, setRotationHandle] = useState<{
+    isDragging: boolean;
+    startAngle: number;
+    centroidX: number;
+    centroidY: number;
+  }>({
+    isDragging: false,
+    startAngle: 0,
+    centroidX: 0,
+    centroidY: 0
+  });
   const [editingNode, setEditingNode] = useState<string | null>(null);
   const [variationSearch, setVariationSearch] = useState("");
   const [showVariationPicker, setShowVariationPicker] = useState(false);
@@ -31,6 +66,17 @@ export default function TalentBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<string>("");
   const [autoSave, setAutoSave] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Autosave state
+  const [changeCounter, setChangeCounter] = useState(0);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const [lastConvexBackup, setLastConvexBackup] = useState<Date | null>(null);
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const convexBackupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const skipChangeTracking = useRef(false); // Flag to skip tracking during load/undo
+  const nodesRef = useRef(nodes); // Keep current nodes in ref for timers
+  const connectionsRef = useRef(connections);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -58,7 +104,8 @@ export default function TalentBuilderPage() {
   const [currentSaveName, setCurrentSaveName] = useState<string | null>(null);
   const [showStorySaveDialog, setShowStorySaveDialog] = useState(false);
   const [storySaveName, setStorySaveName] = useState<string>("");
-  
+  const [backupFiles, setBackupFiles] = useState<{filename: string, timestamp: string, size: number}[]>([]);
+
   // Convex queries and mutations
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
   const createTemplate = useMutation(api.mekTreeTemplates.createTemplate);
@@ -81,6 +128,20 @@ export default function TalentBuilderPage() {
     }
   }, []);
 
+  // Load backup files when loader modal opens
+  useEffect(() => {
+    if (showCiruTreeLoader) {
+      fetch('/api/list-backups')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setBackupFiles(data.backups);
+          }
+        })
+        .catch(err => console.error('Failed to load backups:', err));
+    }
+  }, [showCiruTreeLoader]);
+
   // Note: Wheel event is handled by onWheel prop on the canvas div
   // This prevents page scroll and enables zoom functionality
   
@@ -99,8 +160,8 @@ export default function TalentBuilderPage() {
           loadedNodes.push({
             id: 'start',
             name: 'START',
-            x: 1500,
-            y: 1500,
+            x: 3000,
+            y: 3000,
             tier: 0,
             desc: 'The beginning of your journey',
             xp: 0
@@ -132,8 +193,8 @@ export default function TalentBuilderPage() {
         {
           id: 'start',
           name: 'START',
-          x: 1500,
-          y: 1500,
+          x: 3000,
+          y: 3000,
           tier: 0,
           desc: 'The beginning of your journey',
           xp: 0
@@ -166,11 +227,154 @@ export default function TalentBuilderPage() {
         e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
       }
     };
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges, builderMode]);
-  
+
+  // Update refs when state changes
+  useEffect(() => {
+    nodesRef.current = nodes;
+    connectionsRef.current = connections;
+  }, [nodes, connections]);
+
+  // Autosave function - saves to localStorage only (lightweight)
+  const performAutoSave = useCallback(() => {
+    const currentNodes = nodesRef.current;
+    const currentConnections = connectionsRef.current;
+
+    if (currentNodes.length === 0) return; // Don't autosave empty trees
+
+    try {
+      // Create save data
+      const saveData = createSaveData(currentNodes, currentConnections);
+
+      // Save to localStorage only (no file backup for autosaves)
+      localStorage.setItem('talentTreeData', JSON.stringify(saveData));
+      localStorage.setItem('talentTreeData-autosave', JSON.stringify({
+        ...saveData,
+        autoSavedAt: new Date().toISOString()
+      }));
+
+      setLastAutoSave(new Date());
+      setChangeCounter(0); // Reset change counter
+      setAutosaveError(null); // Clear any previous errors
+      console.log('[Autosave] Saved to localStorage');
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('[Autosave] Failed:', e);
+      setAutosaveError(`Autosave failed: ${errorMsg}`);
+    }
+  }, []);
+
+  // Convex backup function - saves to backend every 10 minutes
+  const performConvexBackup = useCallback(async () => {
+    const currentNodes = nodesRef.current;
+    const currentConnections = connectionsRef.current;
+
+    if (currentNodes.length === 0) return;
+
+    try {
+      const saveData = {
+        name: currentSaveName || 'Auto-backup',
+        data: createSaveData(currentNodes, currentConnections),
+        isActive: false
+      };
+
+      // Create file system backup via API
+      const response = await fetch('/api/save-backup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setLastConvexBackup(new Date());
+        console.log('[Convex Backup] Created:', result.filename);
+      } else {
+        console.error('[Convex Backup] Failed:', result.error);
+      }
+    } catch (e) {
+      console.error('[Convex Backup] Error:', e);
+    }
+  }, [currentSaveName]);
+
+  // AUTOSAVE: Track changes to nodes/connections and increment counter
+  useEffect(() => {
+    // Skip if tree is empty or this is the initial load
+    if (nodes.length === 0 && connections.length === 0) return;
+
+    // Skip if this change is from loading/undo/redo (non-user action)
+    if (skipChangeTracking.current) {
+      skipChangeTracking.current = false; // Reset flag
+      return;
+    }
+
+    // Increment change counter
+    setChangeCounter(prev => {
+      const newCount = prev + 1;
+
+      // Trigger autosave after 10 changes
+      if (newCount >= 10) {
+        console.log('[Autosave] Triggered by change count (10 changes)');
+        performAutoSave();
+        return 0; // Reset counter (performAutoSave also resets it, but this is clearer)
+      }
+
+      return newCount;
+    });
+  }, [nodes, connections]);
+
+  // AUTOSAVE: Set up 2-minute timer for autosave (runs once on mount)
+  useEffect(() => {
+    // Set up 2-minute autosave timer
+    autoSaveTimerRef.current = setInterval(() => {
+      const currentNodes = nodesRef.current;
+      if (currentNodes.length > 0) {
+        console.log('[Autosave] Triggered by 2-minute timer');
+        performAutoSave();
+      }
+    }, 2 * 60 * 1000); // 2 minutes in milliseconds
+
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+    };
+  }, [performAutoSave]); // Only run once on mount
+
+  // CONVEX BACKUP: Set up 10-minute timer for backend backups (runs once on mount)
+  useEffect(() => {
+    // Set up 10-minute Convex backup timer
+    convexBackupTimerRef.current = setInterval(() => {
+      const currentNodes = nodesRef.current;
+      if (currentNodes.length > 0) {
+        console.log('[Convex Backup] Triggered by 10-minute timer');
+        performConvexBackup();
+      }
+    }, 10 * 60 * 1000); // 10 minutes in milliseconds
+
+    // Cleanup on unmount
+    return () => {
+      if (convexBackupTimerRef.current) {
+        clearInterval(convexBackupTimerRef.current);
+      }
+    };
+  }, [performConvexBackup]); // Only run once on mount
+
+  // Force re-render every second to update "X seconds ago" display
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    const timer = setInterval(() => {
+      forceUpdate({});
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Load saved story modes on mount
   useEffect(() => {
     const saved = localStorage.getItem('savedStoryModes');
@@ -190,15 +394,17 @@ export default function TalentBuilderPage() {
   
   const undo = useCallback(() => {
     if (historyIndex > 0) {
+      skipChangeTracking.current = true; // Don't count undo as a change
       const prevState = history[historyIndex - 1];
       setNodes(prevState.nodes);
       setConnections(prevState.connections);
       setHistoryIndex(historyIndex - 1);
     }
   }, [history, historyIndex]);
-  
+
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
+      skipChangeTracking.current = true; // Don't count redo as a change
       const nextState = history[historyIndex + 1];
       setNodes(nextState.nodes);
       setConnections(nextState.connections);
@@ -220,13 +426,14 @@ export default function TalentBuilderPage() {
     try {
       // Load existing saves
       const existingSaves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
-      
+
+      // Create versioned save data with migration support
       const saveData = {
         name: saveName,
-        data: { nodes, connections, savedAt: Date.now() },
+        data: createSaveData(nodes, connections),
         isActive: false
       };
-      
+
       if (isOverwrite) {
         // Find and update existing save
         const existingIndex = existingSaves.findIndex((s: any) => s.name === saveName);
@@ -240,16 +447,38 @@ export default function TalentBuilderPage() {
         // Add new save
         existingSaves.push(saveData);
       }
-      
+
       // Save back to localStorage
       localStorage.setItem('ciruTreeSaves', JSON.stringify(existingSaves));
-      
+
       // Also save as the current working tree
       localStorage.setItem('talentTreeData', JSON.stringify(saveData.data));
       setHasUnsavedChanges(false);
       setCurrentSaveName(saveName);
-      
-      setSaveStatus("Saved as: " + saveName);
+
+      // Create automatic file system backup
+      try {
+        const response = await fetch('/api/save-backup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          console.log('Backup created:', result.filename);
+          setSaveStatus("Saved as: " + saveName + " (backup created)");
+        } else {
+          console.error('Backup failed:', result.error);
+          setSaveStatus("Saved as: " + saveName + " (backup failed)");
+        }
+      } catch (backupError) {
+        console.error('Backup error:', backupError);
+        setSaveStatus("Saved as: " + saveName + " (backup failed)");
+      }
+
       setTimeout(() => setSaveStatus(""), 2000);
       return true;
     } catch (e) {
@@ -263,20 +492,25 @@ export default function TalentBuilderPage() {
   const handleSaveClick = () => {
     setShowSaveDialog(true);
   };
-  
+
   const loadFromLocalStorage = () => {
     const savedData = localStorage.getItem('talentTreeData');
     if (savedData) {
       try {
-        const parsed = JSON.parse(savedData);
-        setNodes(parsed.nodes || []);
-        setConnections(parsed.connections || []);
+        const rawData = JSON.parse(savedData);
+
+        // Migrate and validate the save data for backwards compatibility
+        const migratedData = loadSaveDataSafely(rawData);
+
+        skipChangeTracking.current = true; // Don't count load as a change
+        setNodes(migratedData.nodes || []);
+        setConnections(migratedData.connections || []);
         setSaveStatus("Loaded");
         setTimeout(() => setSaveStatus(""), 2000);
-        
+
         // Center view on start node if exists
-        if (parsed?.nodes && Array.isArray(parsed.nodes) && parsed.nodes.length > 0) {
-          const startNode = parsed.nodes.find((n: TalentNode) => n.id === 'start') || parsed.nodes[0];
+        if (migratedData.nodes && migratedData.nodes.length > 0) {
+          const startNode = migratedData.nodes.find((n: TalentNode) => n.id === 'start') || migratedData.nodes[0];
           if (startNode && canvasRef.current) {
             const canvasRect = canvasRef.current.getBoundingClientRect();
             const centerX = canvasRect.width / 2;
@@ -290,7 +524,7 @@ export default function TalentBuilderPage() {
         return true;
       } catch (e) {
         console.error('Failed to load:', e);
-        setSaveStatus("Load failed");
+        setSaveStatus(`Load failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
         setTimeout(() => setSaveStatus(""), 3000);
         return false;
       }
@@ -580,7 +814,44 @@ export default function TalentBuilderPage() {
   const updateNode = useCallback((nodeId: string, updates: Partial<TalentNode>) => {
     setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, ...updates } : n));
   }, []);
-  
+
+  // Rotate selected nodes around their centroid
+  const rotateSelectedNodes = useCallback((angleDegrees: number) => {
+    if (selectedNodes.size === 0) return;
+
+    // Calculate centroid of selected nodes
+    const selectedNodeObjects = nodes.filter(n => selectedNodes.has(n.id));
+    if (selectedNodeObjects.length === 0) return;
+
+    const centroidX = selectedNodeObjects.reduce((sum, n) => sum + n.x, 0) / selectedNodeObjects.length;
+    const centroidY = selectedNodeObjects.reduce((sum, n) => sum + n.y, 0) / selectedNodeObjects.length;
+
+    const angleRad = (angleDegrees * Math.PI) / 180;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+
+    // Rotate each node around the centroid
+    setNodes(prev => prev.map(n => {
+      if (!selectedNodes.has(n.id)) return n;
+
+      // Translate to origin
+      const translatedX = n.x - centroidX;
+      const translatedY = n.y - centroidY;
+
+      // Rotate
+      const rotatedX = translatedX * cos - translatedY * sin;
+      const rotatedY = translatedX * sin + translatedY * cos;
+
+      // Translate back
+      const newX = rotatedX + centroidX;
+      const newY = rotatedY + centroidY;
+
+      return { ...n, x: newX, y: newY };
+    }));
+
+    pushToHistory();
+  }, [selectedNodes, nodes, pushToHistory]);
+
   // Keyboard event handlers - must be after deleteNode is defined
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -619,6 +890,10 @@ export default function TalentBuilderPage() {
         setMode('connect');
         setConnectFrom(null);
       }
+      if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        setMode('lasso');
+      }
       
       // Story mode node type hotkeys
       if (builderMode === 'story') {
@@ -654,7 +929,7 @@ export default function TalentBuilderPage() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNode, editingNode, deleteNode, pushToHistory, undo, redo, builderMode, mode, nodes, updateNode]);
+  }, [selectedNode, editingNode, deleteNode, pushToHistory, undo, redo, builderMode, mode, nodes, updateNode, rotateSelectedNodes]);
 
   const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -689,6 +964,24 @@ export default function TalentBuilderPage() {
     // Allow dragging in both select and add modes
     if (mode === 'connect') return;
     e.stopPropagation();
+
+    // If this node isn't in the selection, make it the only selection (unless Shift/Ctrl held)
+    if (!selectedNodes.has(nodeId) && !e.shiftKey && !e.ctrlKey) {
+      setSelectedNodes(new Set([nodeId]));
+      setSelectedNode(nodeId);
+    } else if (e.shiftKey || e.ctrlKey) {
+      // Add/remove from selection with Shift/Ctrl
+      setSelectedNodes(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(nodeId)) {
+          newSet.delete(nodeId);
+        } else {
+          newSet.add(nodeId);
+        }
+        return newSet;
+      });
+    }
+
     const nodeElement = e.currentTarget as HTMLElement;
     const rect = nodeElement.getBoundingClientRect();
     setDragState({
@@ -700,6 +993,71 @@ export default function TalentBuilderPage() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    // Handle rotation handle dragging
+    if (rotationHandle.isDragging) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const mouseX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const mouseY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      // Calculate angle from centroid to mouse
+      const currentAngle = Math.atan2(
+        mouseY - rotationHandle.centroidY,
+        mouseX - rotationHandle.centroidX
+      );
+
+      // Calculate angle difference
+      const angleDiff = (currentAngle - rotationHandle.startAngle) * 180 / Math.PI;
+
+      // Apply rotation
+      rotateSelectedNodes(angleDiff);
+
+      // Update start angle for next frame
+      setRotationHandle(prev => ({ ...prev, startAngle: currentAngle }));
+      return;
+    }
+
+    // Handle box selection
+    if (boxSelection.isSelecting) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const worldX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const worldY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      setBoxSelection(prev => ({
+        ...prev,
+        endX: worldX,
+        endY: worldY
+      }));
+      return;
+    }
+
+    // Handle lasso selection
+    if (lassoSelection.isSelecting) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const worldX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const worldY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      // Add point to lasso path (throttle to avoid too many points)
+      const lastPoint = lassoSelection.points[lassoSelection.points.length - 1];
+      const distance = Math.sqrt(
+        Math.pow(worldX - lastPoint.x, 2) + Math.pow(worldY - lastPoint.y, 2)
+      );
+
+      // Only add point if moved at least 5 pixels
+      if (distance > 5) {
+        setLassoSelection(prev => ({
+          ...prev,
+          points: [...prev.points, { x: worldX, y: worldY }]
+        }));
+      }
+      return;
+    }
+
     // Handle panning
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
@@ -711,40 +1069,166 @@ export default function TalentBuilderPage() {
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
-    
+
     // Handle node dragging
     if (!dragState.isDragging || !dragState.nodeId) return;
-    
+
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     // Calculate new position accounting for pan and zoom
-    // In story mode with bottom anchor, we need to handle Y differently
     const worldX = (e.clientX - rect.left - panOffset.x) / zoom - dragState.offsetX;
     let worldY = (e.clientY - rect.top - panOffset.y) / zoom - dragState.offsetY;
-    
-    // In story mode, the grid is anchored at the bottom, but dragging should still feel natural
-    // No inversion needed - the calculation is already correct
-    
-    updateNode(dragState.nodeId, {
-      x: snapPosition(worldX),
-      y: snapPosition(worldY)
-    });
+
+    // Get the dragged node's current position
+    const draggedNode = nodes.find(n => n.id === dragState.nodeId);
+    if (!draggedNode) return;
+
+    // Calculate the delta movement
+    const deltaX = snapPosition(worldX) - draggedNode.x;
+    const deltaY = snapPosition(worldY) - draggedNode.y;
+
+    // If no movement, skip update
+    if (deltaX === 0 && deltaY === 0) return;
+
+    // Move all selected nodes together
+    if (selectedNodes.size > 1 && selectedNodes.has(dragState.nodeId)) {
+      // Update all selected nodes
+      setNodes(prev => prev.map(node => {
+        if (selectedNodes.has(node.id)) {
+          return {
+            ...node,
+            x: node.x + deltaX,
+            y: node.y + deltaY
+          };
+        }
+        return node;
+      }));
+    } else {
+      // Just move the single dragged node
+      updateNode(dragState.nodeId, {
+        x: snapPosition(worldX),
+        y: snapPosition(worldY)
+      });
+    }
   };
 
   const handleMouseUp = () => {
+    // Handle rotation handle
+    if (rotationHandle.isDragging) {
+      setRotationHandle(prev => ({ ...prev, isDragging: false }));
+      return;
+    }
+
+    // Handle box selection
+    if (boxSelection.isSelecting) {
+      // Calculate the box boundaries
+      const minX = Math.min(boxSelection.startX, boxSelection.endX);
+      const maxX = Math.max(boxSelection.startX, boxSelection.endX);
+      const minY = Math.min(boxSelection.startY, boxSelection.endY);
+      const maxY = Math.max(boxSelection.startY, boxSelection.endY);
+
+      // Find nodes within the selection box
+      const newSelectedIds = new Set<string>();
+      nodes.forEach(node => {
+        // Get node size based on type
+        const isStart = node.id === 'start' || node.id.startsWith('start-');
+        const nodeSize = isStart ? 25 : 15; // Half of node diameter for radius
+
+        // Check if node center is within box
+        const nodeCenterX = node.x + nodeSize;
+        const nodeCenterY = node.y + nodeSize;
+
+        if (nodeCenterX >= minX && nodeCenterX <= maxX &&
+            nodeCenterY >= minY && nodeCenterY <= maxY) {
+          newSelectedIds.add(node.id);
+        }
+      });
+
+      // Update selection - merge with existing if shift was held
+      if (newSelectedIds.size > 0) {
+        if (boxSelection.addToSelection) {
+          // Add to existing selection
+          const mergedSelection = new Set([...selectedNodes, ...newSelectedIds]);
+          setSelectedNodes(mergedSelection);
+          // Keep the current selected node or pick the first from new selection
+          if (!selectedNode || !mergedSelection.has(selectedNode)) {
+            setSelectedNode(Array.from(mergedSelection)[0]);
+          }
+        } else {
+          // Replace selection
+          setSelectedNodes(newSelectedIds);
+          setSelectedNode(Array.from(newSelectedIds)[0]);
+        }
+      }
+
+      // Reset box selection
+      setBoxSelection({
+        isSelecting: false,
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 0,
+        addToSelection: false
+      });
+      return;
+    }
+
+    // Handle lasso selection
+    if (lassoSelection.isSelecting) {
+      const points = lassoSelection.points;
+      if (points.length < 3) {
+        setLassoSelection({ isSelecting: false, points: [] });
+        return;
+      }
+
+      // Find nodes within the lasso polygon using ray casting algorithm
+      const newSelectedIds = new Set<string>();
+      nodes.forEach(node => {
+        const isStart = node.id === 'start' || node.id.startsWith('start-');
+        const nodeSize = isStart ? 25 : 15;
+        const nodeCenterX = node.x + nodeSize;
+        const nodeCenterY = node.y + nodeSize;
+
+        // Point-in-polygon test using ray casting
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+          const xi = points[i].x, yi = points[i].y;
+          const xj = points[j].x, yj = points[j].y;
+
+          const intersect = ((yi > nodeCenterY) !== (yj > nodeCenterY))
+            && (nodeCenterX < (xj - xi) * (nodeCenterY - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+
+        if (inside) {
+          newSelectedIds.add(node.id);
+        }
+      });
+
+      // Update selection
+      if (newSelectedIds.size > 0) {
+        setSelectedNodes(newSelectedIds);
+        setSelectedNode(Array.from(newSelectedIds)[0]);
+      }
+
+      // Reset lasso selection
+      setLassoSelection({ isSelecting: false, points: [] });
+      return;
+    }
+
     setDragState({ isDragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
     setIsPanning(false);
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    
+
     // Check if clicking on a node (nodes have the talent-node class)
     const isNodeClick = target.closest('.talent-node');
-    
+
     if (isNodeClick) return; // Let node handle its own click
-    
+
     // Handle middle mouse button for panning in any mode
     if (e.button === 1) { // Middle mouse button
       e.preventDefault();
@@ -752,18 +1236,60 @@ export default function TalentBuilderPage() {
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
-    
+
     // Clear connection when clicking empty space in connect mode
     if (mode === 'connect' && e.button === 0) {
       setConnectFrom(null);
       return;
     }
-    
+
+    // Start box selection in select mode
+    if (mode === 'select' && e.button === 0) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const worldX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const worldY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      setBoxSelection({
+        isSelecting: true,
+        startX: worldX,
+        startY: worldY,
+        endX: worldX,
+        endY: worldY,
+        addToSelection: e.shiftKey || e.ctrlKey
+      });
+
+      // Clear selection if not holding Shift/Ctrl
+      if (!e.shiftKey && !e.ctrlKey) {
+        setSelectedNodes(new Set());
+        setSelectedNode(null);
+      }
+
+      return;
+    }
+
+    // Start lasso selection in lasso mode
+    if (mode === 'lasso' && e.button === 0) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const worldX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const worldY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      setLassoSelection({
+        isSelecting: true,
+        points: [{ x: worldX, y: worldY }]
+      });
+
+      return;
+    }
+
     // If in add mode, add a node at clicked position
     if (mode === 'add' && e.button === 0) { // Left click only
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      
+
       // Calculate the exact click position in canvas coordinates
       const clickX = (e.clientX - rect.left - panOffset.x) / zoom;
       const clickY = (e.clientY - rect.top - panOffset.y) / zoom;
@@ -789,7 +1315,42 @@ export default function TalentBuilderPage() {
       addNodeWithoutSnap(x, y);
       return;
     }
-    
+
+    // If in addLabel mode, add a label node at clicked position
+    if (mode === 'addLabel' && e.button === 0) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const clickX = (e.clientX - rect.left - panOffset.x) / zoom;
+      const clickY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+      const snappedX = snapPosition(clickX);
+      const snappedY = snapPosition(clickY);
+
+      // Create label node
+      const uniqueId = `label-${Date.now()}`;
+      const newNode: TalentNode = {
+        id: uniqueId,
+        name: 'Label',
+        x: snappedX,
+        y: snappedY,
+        tier: 0,
+        desc: '',
+        xp: 0,
+        isLabel: true,
+        labelText: 'New Label'
+      };
+
+      setNodes([...nodes, newNode]);
+      setSelectedNode(newNode.id);
+      setEditingNode(newNode.id);
+
+      setTimeout(() => {
+        pushToHistory();
+      }, 0);
+      return;
+    }
+
     // Start panning if in select mode and left click
     if (mode === 'select' && e.button === 0) {
       setIsPanning(true);
@@ -1096,15 +1657,46 @@ export default function TalentBuilderPage() {
               Mode: <span className="text-white">{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
               {mode === 'connect' && connectFrom && <span className="ml-2 text-green-400">→ Click target node</span>}
               {mode === 'add' && <span className="ml-2 text-green-400">→ Click to place node</span>}
-              {mode === 'select' && <span className="ml-2 text-blue-400">→ Click & drag to pan, click node to select</span>}
+              {mode === 'addLabel' && <span className="ml-2 text-purple-400">→ Click to place label</span>}
+              {mode === 'select' && <span className="ml-2 text-blue-400">→ Box select | Hold Shift to add to selection</span>}
+              {mode === 'lasso' && <span className="ml-2 text-cyan-400">→ Draw to select nodes</span>}
+              {selectedNodes.size > 1 && <span className="ml-2 text-gray-400 text-xs">| {selectedNodes.size} nodes selected - drag rotation handle to rotate</span>}
             </div>
             {saveStatus && (
               <div className="px-3 py-1 bg-green-600 text-white rounded text-sm animate-pulse">
                 {saveStatus}
               </div>
             )}
+
+            {/* Autosave Status Indicator */}
+            {lastAutoSave && (
+              <div className="px-3 py-1 bg-blue-900/50 border border-blue-500/30 text-blue-200 rounded text-xs">
+                ⚡ Autosaved {Math.floor((Date.now() - lastAutoSave.getTime()) / 1000)}s ago
+                {changeCounter > 0 && <span className="ml-2 text-blue-400">({changeCounter}/10 changes)</span>}
+              </div>
+            )}
+
+            {/* Convex Backup Status */}
+            {lastConvexBackup && (
+              <div className="px-3 py-1 bg-purple-900/50 border border-purple-500/30 text-purple-200 rounded text-xs">
+                ☁️ Backed up {Math.floor((Date.now() - lastConvexBackup.getTime()) / 60000)}m ago
+              </div>
+            )}
+
+            {/* Autosave Error Notification */}
+            {autosaveError && (
+              <div className="px-3 py-1 bg-red-900/80 border border-red-500/50 text-red-200 rounded text-xs flex items-center gap-2">
+                <span>⚠️ {autosaveError}</span>
+                <button
+                  onClick={() => setAutosaveError(null)}
+                  className="text-red-400 hover:text-red-200 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
           </div>
-          
+
           {/* Right Controls */}
           <div className="flex items-center gap-2">
             <button
@@ -1147,7 +1739,18 @@ export default function TalentBuilderPage() {
               <button onClick={handleSaveClick} className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white">
                 Save
               </button>
-              <button onClick={() => setShowCiruTreeLoader(true)} className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white">
+              {currentSaveName && (
+                <button
+                  onClick={() => {
+                    saveToLocalStorage(currentSaveName, true);
+                  }}
+                  className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
+                  title={`Update "${currentSaveName}"`}
+                >
+                  Update
+                </button>
+              )}
+              <button onClick={() => setShowCiruTreeLoader(true)} className="px-3 py-1 text-sm rounded bg-cyan-600 hover:bg-cyan-700 text-white">
                 Load
               </button>
               <button onClick={startNewTree} className="px-3 py-1 text-sm rounded bg-purple-600 hover:bg-purple-700 text-white">
@@ -1413,8 +2016,22 @@ export default function TalentBuilderPage() {
             >
               Connect
             </button>
+            <button
+              onClick={() => setMode('lasso')}
+              className={`px-3 py-1 text-sm rounded ${mode === 'lasso' ? 'bg-cyan-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+              title="Lasso selection (L)"
+            >
+              Lasso
+            </button>
           </div>
-          
+
+          <button
+            onClick={() => setMode('addLabel')}
+            className={`px-3 py-1 text-sm rounded ml-4 ${mode === 'addLabel' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+          >
+            Add Label
+          </button>
+
           <button onClick={clearAll} className="px-2 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded ml-4">
             Clear
           </button>
@@ -1440,6 +2057,7 @@ export default function TalentBuilderPage() {
           className={`relative w-full h-full ${
             isPanning ? 'cursor-grabbing' :
             mode === 'add' ? 'cursor-crosshair' :
+            mode === 'addLabel' ? 'cursor-text' :
             mode === 'connect' ? 'cursor-pointer' :
             'cursor-grab'
           }`}
@@ -1485,7 +2103,7 @@ export default function TalentBuilderPage() {
                 <rect width="100%" height="100%" fill="url(#grid)" />
               </svg>
             )}
-            
+
             {/* Story Mode Runway Guidelines */}
             {builderMode === 'story' && (
               <div className="absolute inset-0 pointer-events-none">
@@ -1598,9 +2216,49 @@ export default function TalentBuilderPage() {
               );
             })}
             
+            {/* Box Selection Rectangle */}
+            {boxSelection.isSelecting && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${Math.min(boxSelection.startX, boxSelection.endX)}px`,
+                  top: `${Math.min(boxSelection.startY, boxSelection.endY)}px`,
+                  width: `${Math.abs(boxSelection.endX - boxSelection.startX)}px`,
+                  height: `${Math.abs(boxSelection.endY - boxSelection.startY)}px`,
+                  border: '2px dashed #fbbf24',
+                  background: 'rgba(251, 191, 36, 0.1)',
+                  pointerEvents: 'none',
+                  zIndex: 100
+                }}
+              />
+            )}
+
+            {/* Lasso Selection Path */}
+            {lassoSelection.isSelecting && lassoSelection.points.length > 1 && (
+              <svg
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: 'none',
+                  zIndex: 100
+                }}
+              >
+                <polyline
+                  points={lassoSelection.points.map(p => `${p.x},${p.y}`).join(' ')}
+                  fill="rgba(251, 191, 36, 0.1)"
+                  stroke="#fbbf24"
+                  strokeWidth="2"
+                  strokeDasharray="5,5"
+                />
+              </svg>
+            )}
+
             {/* Nodes */}
             {nodes.map(node => {
-              const isSelected = selectedNode === node.id;
+              const isSelected = selectedNode === node.id || selectedNodes.has(node.id);
               const isConnecting = connectFrom === node.id;
               const isStart = node.id === 'start' || node.id.startsWith('start-');
               const isUnconnected = unconnectedNodes.has(node.id);
@@ -1891,109 +2549,6 @@ export default function TalentBuilderPage() {
               {/* CiruTree specific fields */}
               {builderMode === 'circutree' && (
                 <>
-                  {/* Node Type Selector */}
-                  <div>
-                    <label className="text-xs text-gray-400">Node Type</label>
-                    <div className="flex gap-2 mt-1">
-                      <button
-                        onClick={() => updateNode(node.id, { isSpell: false })}
-                        className={`flex-1 px-2 py-1 text-sm rounded ${
-                          !node.isSpell ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                      >
-                        Variation
-                      </button>
-                      <button
-                        onClick={() => updateNode(node.id, { isSpell: true })}
-                        className={`flex-1 px-2 py-1 text-sm rounded ${
-                          node.isSpell ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                      >
-                        Spell
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Spell-specific fields */}
-                  {node.isSpell ? (
-                    <>
-                      {/* Spell Selection from Saved Spells */}
-                      <div>
-                        <label className="text-xs text-gray-400">Select Spell</label>
-                        <select
-                          value={node.spellType || ''}
-                          onChange={(e) => {
-                            const spell = savedSpells.find(s => s.id === e.target.value);
-                            if (spell) {
-                              updateNode(node.id, {
-                                spellType: spell.id,
-                                name: spell.name,
-                                desc: spell.description,
-                                goldCost: spell.unlockPrice.gold,
-                                xp: spell.unlockPrice.level
-                              });
-                            } else {
-                              updateNode(node.id, { spellType: e.target.value });
-                            }
-                          }}
-                          className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
-                        >
-                          <option value="">Select a spell...</option>
-                          {savedSpells.length > 0 ? (
-                            savedSpells.map(spell => (
-                              <option key={spell.id} value={spell.id}>
-                                {spell.name} ({spell.rarity})
-                              </option>
-                            ))
-                          ) : (
-                            <>
-                              <option value="placeholder1">No saved spells - Create in Spell Designer</option>
-                            </>
-                          )}
-                        </select>
-                      </div>
-                      
-                      {/* Display Spell Info */}
-                      {node.spellType && savedSpells.find(s => s.id === node.spellType) && (
-                        <div className="p-2 bg-gray-800/50 rounded text-xs">
-                          <div className="text-yellow-400 mb-1">Spell Details:</div>
-                          {(() => {
-                            const spell = savedSpells.find(s => s.id === node.spellType);
-                            return spell ? (
-                              <>
-                                <div>Flux: {spell.fluxAmount}</div>
-                                <div>Cooldown: {spell.cooldown}s</div>
-                                <div>Range: {spell.range}</div>
-                                {spell.essenceRequirements?.length > 0 && (
-                                  <div className="mt-1">
-                                    <span className="text-gray-400">Essences:</span>
-                                    {spell.essenceRequirements.map((e: any, i: number) => (
-                                      <span key={i} className="ml-1">
-                                        {e.type} x{e.amount}{i < spell.essenceRequirements.length - 1 ? ',' : ''}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </>
-                            ) : null;
-                          })()}
-                        </div>
-                      )}
-                      
-                      {/* Special Ingredient */}
-                      <div>
-                        <label className="text-xs text-gray-400">Special Ingredient</label>
-                        <input
-                          type="text"
-                          value={node.specialIngredient || ''}
-                          onChange={(e) => updateNode(node.id, { specialIngredient: e.target.value })}
-                          placeholder="e.g., Dragon Scale"
-                          className="w-full px-2 py-1 bg-gray-800 text-white rounded text-sm"
-                        />
-                      </div>
-                    </>
-                  ) : null}
-                  
                   {/* Gold Cost */}
                   <div>
                     <label className="text-xs text-gray-400">Gold Cost</label>
@@ -2372,29 +2927,124 @@ export default function TalentBuilderPage() {
               </button>
             </div>
           ))}
+
+          {/* Rotation Handle */}
+          {selectedNodes.size > 0 && (() => {
+            // Calculate centroid of selected nodes
+            const selectedNodeObjects = nodes.filter(n => selectedNodes.has(n.id));
+            if (selectedNodeObjects.length === 0) return null;
+
+            const centroidX = selectedNodeObjects.reduce((sum, n) => sum + n.x, 0) / selectedNodeObjects.length;
+            const centroidY = selectedNodeObjects.reduce((sum, n) => sum + n.y, 0) / selectedNodeObjects.length;
+
+            // Position handle above centroid
+            const handleDistance = 80;
+            const handleX = centroidX;
+            const handleY = centroidY - handleDistance;
+
+            return (
+              <>
+                {/* Line from centroid to handle */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${centroidX}px`,
+                    top: `${centroidY}px`,
+                    width: '2px',
+                    height: `${handleDistance}px`,
+                    background: '#fbbf24',
+                    transformOrigin: 'top center',
+                    pointerEvents: 'none',
+                    opacity: 0.5
+                  }}
+                />
+
+                {/* Centroid marker */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${centroidX - 4}px`,
+                    top: `${centroidY - 4}px`,
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#fbbf24',
+                    border: '2px solid #fff',
+                    pointerEvents: 'none',
+                    opacity: 0.7
+                  }}
+                />
+
+                {/* Rotation handle */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${handleX - 12}px`,
+                    top: `${handleY - 12}px`,
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: '#fbbf24',
+                    border: '3px solid #fff',
+                    cursor: 'grab',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    zIndex: 200,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    const rect = canvasRef.current?.getBoundingClientRect();
+                    if (!rect) return;
+
+                    const mouseX = (e.clientX - rect.left - panOffset.x) / zoom;
+                    const mouseY = (e.clientY - rect.top - panOffset.y) / zoom;
+
+                    const startAngle = Math.atan2(mouseY - centroidY, mouseX - centroidX);
+
+                    setRotationHandle({
+                      isDragging: true,
+                      startAngle,
+                      centroidX,
+                      centroidY
+                    });
+                  }}
+                >
+                  {/* Rotation icon (circular arrow) */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                  </svg>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
       
       {/* CiruTree Load Modal */}
       {showCiruTreeLoader && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <h2 className="text-2xl font-bold text-yellow-400 mb-4">Load CiruTree</h2>
-            
-            <div className="flex-1 overflow-y-auto">
-              {(() => {
-                const saves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
-                if (saves.length === 0) {
+
+            <div className="flex-1 overflow-y-auto space-y-6">
+              {/* Current Saves Section */}
+              <div>
+                <h3 className="text-lg font-bold text-yellow-400 mb-3">Current Saves (LocalStorage)</h3>
+                {(() => {
+                  const saves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
+                  if (saves.length === 0) {
+                    return (
+                      <div className="text-center py-4 text-gray-400 bg-gray-800/50 rounded">
+                        No saved CiruTrees found. Create and save a tree first!
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div className="text-center py-8 text-gray-400">
-                      No saved CiruTrees found. Create and save a tree first!
-                    </div>
-                  );
-                }
-                
-                return (
-                  <div className="grid grid-cols-2 gap-4">
-                    {saves.map((save: any, index: number) => (
+                    <div className="grid grid-cols-2 gap-4">
+                      {saves.map((save: any, index: number) => (
                       <div
                         key={index}
                         className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-all"
@@ -2410,25 +3060,33 @@ export default function TalentBuilderPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              setNodes(save.data.nodes || []);
-                              setConnections(save.data.connections || []);
-                              localStorage.setItem('talentTreeData', JSON.stringify(save.data));
-                              
-                              // Auto-align to start node
-                              const startNode = save.data.nodes?.find((n: any) => n.id === 'start');
-                              if (startNode && canvasRef.current) {
-                                const canvasRect = canvasRef.current.getBoundingClientRect();
-                                setPanOffset({
-                                  x: canvasRect.width / 2 - startNode.x,
-                                  y: canvasRect.height / 2 - startNode.y
-                                });
-                                setZoom(1);
+                              try {
+                                // Migrate and validate save data for backwards compatibility
+                                const migratedData = loadSaveDataSafely(save.data);
+
+                                skipChangeTracking.current = true; // Don't count load as a change
+                                setNodes(migratedData.nodes || []);
+                                setConnections(migratedData.connections || []);
+                                localStorage.setItem('talentTreeData', JSON.stringify(migratedData));
+
+                                // Auto-align to start node
+                                const startNode = migratedData.nodes?.find((n: any) => n.id === 'start');
+                                if (startNode && canvasRef.current) {
+                                  const canvasRect = canvasRef.current.getBoundingClientRect();
+                                  setPanOffset({
+                                    x: canvasRect.width / 2 - startNode.x,
+                                    y: canvasRect.height / 2 - startNode.y
+                                  });
+                                  setZoom(1);
+                                }
+
+                                setCurrentSaveName(save.name);
+                                setShowCiruTreeLoader(false);
+                                setSaveStatus('Loaded: ' + save.name);
+                                setTimeout(() => setSaveStatus(''), 2000);
+                              } catch (e) {
+                                alert(`Failed to load save: ${e instanceof Error ? e.message : 'Unknown error'}`);
                               }
-                              
-                              setCurrentSaveName(save.name);
-                              setShowCiruTreeLoader(false);
-                              setSaveStatus('Loaded: ' + save.name);
-                              setTimeout(() => setSaveStatus(''), 2000);
                             }}
                             className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
                           >
@@ -2473,8 +3131,82 @@ export default function TalentBuilderPage() {
                   </div>
                 );
               })()}
+              </div>
+
+              {/* Backup Files Section */}
+              <div>
+                <h3 className="text-lg font-bold text-blue-400 mb-3">File System Backups ({backupFiles.length})</h3>
+                {backupFiles.length === 0 ? (
+                  <div className="text-center py-4 text-gray-400 bg-gray-800/50 rounded">
+                    No backup files found. Backups are created automatically when you save.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {backupFiles.map((backup, index) => {
+                      const date = new Date(backup.timestamp);
+                      const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                      return (
+                        <div
+                          key={index}
+                          className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-all border border-blue-900/30"
+                        >
+                          <h3 className="font-bold text-blue-400 mb-2 text-sm">{backup.filename}</h3>
+                          <div className="text-xs text-gray-400 mb-3">
+                            <div>Date: {formattedDate}</div>
+                            <div>Size: {(backup.size / 1024).toFixed(1)} KB</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/load-backup?filename=${encodeURIComponent(backup.filename)}`);
+                                  const result = await response.json();
+
+                                  if (result.success && result.data) {
+                                    // Migrate and validate backup data for backwards compatibility
+                                    const migratedData = loadSaveDataSafely(result.data.data);
+
+                                    skipChangeTracking.current = true; // Don't count load as a change
+                                    setNodes(migratedData.nodes || []);
+                                    setConnections(migratedData.connections || []);
+                                    localStorage.setItem('talentTreeData', JSON.stringify(migratedData));
+
+                                    // Auto-align to start node
+                                    const startNode = migratedData.nodes?.find((n: any) => n.id === 'start');
+                                    if (startNode && canvasRef.current) {
+                                      const canvasRect = canvasRef.current.getBoundingClientRect();
+                                      setPanOffset({
+                                        x: canvasRect.width / 2 - startNode.x,
+                                        y: canvasRect.height / 2 - startNode.y
+                                      });
+                                      setZoom(1);
+                                    }
+
+                                    setCurrentSaveName(result.data.name || 'Backup');
+                                    setShowCiruTreeLoader(false);
+                                    setSaveStatus('Loaded backup: ' + backup.filename);
+                                    setTimeout(() => setSaveStatus(''), 2000);
+                                  } else {
+                                    alert('Failed to load backup: ' + (result.error || 'Unknown error'));
+                                  }
+                                } catch (error) {
+                                  console.error('Error loading backup:', error);
+                                  alert(`Failed to load backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                            >
+                              Load
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-            
+
             <button
               onClick={() => setShowCiruTreeLoader(false)}
               className="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
@@ -2534,6 +3266,7 @@ export default function TalentBuilderPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
+                            skipChangeTracking.current = true; // Don't count template load as a change
                             setNodes(template.nodes);
                             setConnections(template.connections);
                             setSelectedTemplateId(template._id);
@@ -2616,6 +3349,7 @@ export default function TalentBuilderPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
+                              skipChangeTracking.current = true; // Don't count story load as a change
                               setNodes(save.data.nodes);
                               setConnections(save.data.connections);
                               setStoryChapter(save.chapter);
@@ -2664,12 +3398,12 @@ export default function TalentBuilderPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold text-yellow-400 mb-4">Save Tree</h2>
-            
+
             {/* Check if we have existing saves */}
             {(() => {
               const existingSaves = JSON.parse(localStorage.getItem('ciruTreeSaves') || '[]');
               const hasSaves = existingSaves.length > 0;
-              
+
               return (
                 <div className="space-y-4">
                   {currentSaveName && (
@@ -2677,7 +3411,7 @@ export default function TalentBuilderPage() {
                       <p className="text-sm text-gray-400">Current save: <span className="text-yellow-400">{currentSaveName}</span></p>
                     </div>
                   )}
-                  
+
                   {hasSaves && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-300 mb-2">Overwrite existing save:</h3>
@@ -2698,7 +3432,7 @@ export default function TalentBuilderPage() {
                           </option>
                         ))}
                       </select>
-                      
+
                       <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-gray-700"></div>
@@ -2709,7 +3443,7 @@ export default function TalentBuilderPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div>
                     <h3 className="text-sm font-semibold text-gray-300 mb-2">Save as new file:</h3>
                     <input
@@ -2726,15 +3460,15 @@ export default function TalentBuilderPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Press Enter to save or leave blank for timestamp</p>
                   </div>
-                  
+
                   <div className="flex gap-2 justify-end mt-6">
                     <button
                       onClick={() => {
-                        const timestamp = new Date().toLocaleString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric', 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        const timestamp = new Date().toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
                         });
                         saveToLocalStorage(timestamp, false);
                         setShowSaveDialog(false);

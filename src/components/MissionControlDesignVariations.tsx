@@ -58,7 +58,7 @@ export const TacticalGrid: React.FC<DesignVariationProps> = ({ rewards, onDeploy
         {/* Reward Grid - 2x2 below deploy */}
         <div className="bg-black/60 border border-yellow-500/30 p-2 rounded-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-yellow-500/20 to-transparent" />
-          <div className="text-[10px] text-gray-500 uppercase mb-1 tracking-wider">GOLD</div>
+          <div className="text-[10px] text-gray-400 uppercase mb-1 tracking-wider font-medium">GOLD</div>
           <div className="text-yellow-400 font-bold text-sm" style={{ fontFamily: 'Orbitron, monospace' }}>
             {rewards.gold}
           </div>
@@ -66,7 +66,7 @@ export const TacticalGrid: React.FC<DesignVariationProps> = ({ rewards, onDeploy
 
         <div className={`bg-black/60 border p-2 rounded-sm relative overflow-hidden ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/30'}`}>
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-purple-500/10 to-transparent" />
-          <div className="text-[10px] text-gray-500 uppercase mb-1 tracking-wider">ESSENCE</div>
+          <div className="text-[10px] text-gray-400 uppercase mb-1 tracking-wider font-medium">ESSENCE</div>
           <div className={rewards.essence ? 'text-purple-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
             {rewards.essence || '---'}
           </div>
@@ -74,15 +74,15 @@ export const TacticalGrid: React.FC<DesignVariationProps> = ({ rewards, onDeploy
 
         <div className={`bg-black/60 border p-2 rounded-sm relative overflow-hidden ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/30'}`}>
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-cyan-500/10 to-transparent" />
-          <div className="text-[10px] text-gray-500 uppercase mb-1 tracking-wider">CHIP T1</div>
+          <div className="text-[10px] text-gray-400 uppercase mb-1 tracking-wider font-medium">CHIP</div>
           <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
-            {rewards.chipT1 || '---'}
+            {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
           </div>
         </div>
 
         <div className={`bg-black/60 border p-2 rounded-sm relative overflow-hidden ${rewards.special ? 'border-green-500/30' : 'border-gray-700/30'}`}>
           <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-green-500/10 to-transparent" />
-          <div className="text-[10px] text-gray-500 uppercase mb-1 tracking-wider">SPECIAL</div>
+          <div className="text-[10px] text-gray-400 uppercase mb-1 tracking-wider font-medium">SPECIAL</div>
           <div className={rewards.special ? 'text-green-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
             {rewards.special || '---'}
           </div>
@@ -104,7 +104,7 @@ export const CommandCenter: React.FC<DesignVariationProps> = ({ rewards, onDeplo
           <div className="grid grid-cols-4 gap-3">
             {/* Gold */}
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">GOLD</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">GOLD</div>
               <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-2 py-1 rounded-sm border border-yellow-500/40">
                 <div className="text-yellow-400 font-bold text-xs" style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.gold}
@@ -114,7 +114,7 @@ export const CommandCenter: React.FC<DesignVariationProps> = ({ rewards, onDeplo
 
             {/* Essence */}
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">ESSENCE</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">ESSENCE</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.essence ? 'from-purple-500/20 to-transparent border-purple-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
@@ -124,17 +124,17 @@ export const CommandCenter: React.FC<DesignVariationProps> = ({ rewards, onDeplo
 
             {/* Chip T1 */}
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">CHIP T1</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">CHIP</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.chipT1 ? 'from-cyan-500/20 to-transparent border-cyan-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
             </div>
 
             {/* Special */}
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">SPECIAL</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">SPECIAL</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.special ? 'from-green-500/20 to-transparent border-green-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.special || '---'}
@@ -207,21 +207,21 @@ export const HierarchicalStack: React.FC<DesignVariationProps> = ({ rewards, onD
       {/* Secondary Resources */}
       <div className="grid grid-cols-3 gap-2">
         <div className={`bg-black/60 border rounded-sm p-2 text-center ${rewards.essence ? 'border-purple-500/40' : 'border-gray-700/30'}`}>
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">ESSENCE</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">ESSENCE</div>
           <div className={rewards.essence ? 'text-purple-400 font-bold text-sm mt-1' : 'text-gray-600 text-sm mt-1'} style={{ fontFamily: 'Orbitron, monospace' }}>
             {rewards.essence || '---'}
           </div>
         </div>
 
         <div className={`bg-black/60 border rounded-sm p-2 text-center ${rewards.chipT1 ? 'border-cyan-500/40' : 'border-gray-700/30'}`}>
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">CHIP T1</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">CHIP</div>
           <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-sm mt-1' : 'text-gray-600 text-sm mt-1'} style={{ fontFamily: 'Orbitron, monospace' }}>
-            {rewards.chipT1 || '---'}
+            {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
           </div>
         </div>
 
         <div className={`bg-black/60 border rounded-sm p-2 text-center ${rewards.special ? 'border-green-500/40' : 'border-gray-700/30'}`}>
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">SPECIAL</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">SPECIAL</div>
           <div className={rewards.special ? 'text-green-400 font-bold text-sm mt-1' : 'text-gray-600 text-sm mt-1'} style={{ fontFamily: 'Orbitron, monospace' }}>
             {rewards.special || '---'}
           </div>
@@ -286,7 +286,7 @@ export const MilitaryConsole: React.FC<DesignVariationProps> = ({ rewards, onDep
               {/* Essence */}
               <div className={`bg-gradient-to-r ${rewards.essence ? 'from-purple-500/5' : 'from-gray-800/5'} to-transparent border-l-3 ${rewards.essence ? 'border-purple-500' : 'border-gray-700'} pl-3 py-1`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">ESSENCE</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">ESSENCE</span>
                   <span className={rewards.essence ? 'text-purple-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.essence || '---'}
                   </span>
@@ -296,9 +296,9 @@ export const MilitaryConsole: React.FC<DesignVariationProps> = ({ rewards, onDep
               {/* Chip T1 */}
               <div className={`bg-gradient-to-r ${rewards.chipT1 ? 'from-cyan-500/5' : 'from-gray-800/5'} to-transparent border-l-3 ${rewards.chipT1 ? 'border-cyan-500' : 'border-gray-700'} pl-3 py-1`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">CHIP T1</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">CHIP</span>
                   <span className={rewards.chipT1 ? 'text-cyan-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                    {rewards.chipT1 || '---'}
+                    {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                   </span>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export const MilitaryConsole: React.FC<DesignVariationProps> = ({ rewards, onDep
               {/* Special */}
               <div className={`bg-gradient-to-r ${rewards.special ? 'from-green-500/5' : 'from-gray-800/5'} to-transparent border-l-3 ${rewards.special ? 'border-green-500' : 'border-gray-700'} pl-3 py-1`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">SPECIAL</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-sm' : 'text-gray-600 text-sm'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -406,7 +406,7 @@ export const AsymmetricFocus: React.FC<DesignVariationProps> = ({ rewards, onDep
         {/* Right - Resource Grid */}
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
 
             <div className="grid grid-cols-2 gap-2">
               {/* Gold - Larger emphasis */}
@@ -421,23 +421,23 @@ export const AsymmetricFocus: React.FC<DesignVariationProps> = ({ rewards, onDep
 
               {/* Secondary resources - smaller */}
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
 
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
 
               {/* Special - full width at bottom */}
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -462,7 +462,7 @@ export const TallDeployVariationB: React.FC<DesignVariationProps> = ({ rewards, 
         <div className="flex-1 bg-black/80 border-2 border-yellow-500/20 rounded-sm p-3">
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">GOLD</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">GOLD</div>
               <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-2 py-1 rounded-sm border border-yellow-500/40">
                 <div className="text-yellow-400 font-bold text-xs" style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.gold}
@@ -470,7 +470,7 @@ export const TallDeployVariationB: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">ESSENCE</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">ESSENCE</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.essence ? 'from-purple-500/20 to-transparent border-purple-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
@@ -478,15 +478,15 @@ export const TallDeployVariationB: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">CHIP T1</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">CHIP</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.chipT1 ? 'from-cyan-500/20 to-transparent border-cyan-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">SPECIAL</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">SPECIAL</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.special ? 'from-green-500/20 to-transparent border-green-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.special || '---'}
@@ -540,7 +540,7 @@ export const TallDeployVariationC: React.FC<DesignVariationProps> = ({ rewards, 
         <div className="flex-1 bg-black/80 border-2 border-yellow-500/20 rounded-sm p-3">
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">GOLD</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">GOLD</div>
               <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-2 py-1 rounded-sm border border-yellow-500/40">
                 <div className="text-yellow-400 font-bold text-xs" style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.gold}
@@ -548,7 +548,7 @@ export const TallDeployVariationC: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">ESSENCE</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">ESSENCE</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.essence ? 'from-purple-500/20 to-transparent border-purple-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
@@ -556,15 +556,15 @@ export const TallDeployVariationC: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">CHIP T1</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">CHIP</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.chipT1 ? 'from-cyan-500/20 to-transparent border-cyan-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">SPECIAL</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">SPECIAL</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.special ? 'from-green-500/20 to-transparent border-green-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.special || '---'}
@@ -631,7 +631,7 @@ export const TallDeployVariationD: React.FC<DesignVariationProps> = ({ rewards, 
         <div className="flex-1 bg-black/80 border-2 border-yellow-500/20 rounded-sm p-3">
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">GOLD</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">GOLD</div>
               <div className="bg-gradient-to-b from-yellow-500/20 to-transparent px-2 py-1 rounded-sm border border-yellow-500/40">
                 <div className="text-yellow-400 font-bold text-xs" style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.gold}
@@ -639,7 +639,7 @@ export const TallDeployVariationD: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">ESSENCE</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">ESSENCE</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.essence ? 'from-purple-500/20 to-transparent border-purple-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
@@ -647,15 +647,15 @@ export const TallDeployVariationD: React.FC<DesignVariationProps> = ({ rewards, 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">CHIP T1</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">CHIP</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.chipT1 ? 'from-cyan-500/20 to-transparent border-cyan-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
             </div>
             <div className="text-center">
-              <div className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">SPECIAL</div>
+              <div className="text-xs text-gray-300 uppercase tracking-widest mb-1 font-semibold">SPECIAL</div>
               <div className={`bg-gradient-to-b px-2 py-1 rounded-sm border ${rewards.special ? 'from-green-500/20 to-transparent border-green-500/40' : 'from-gray-800/20 to-transparent border-gray-700/40'}`}>
                 <div className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.special || '---'}
@@ -708,7 +708,7 @@ export const TallDeployVariationD: React.FC<DesignVariationProps> = ({ rewards, 
 
 // ASYMMETRIC FOCUS WITH DURATION VARIATIONS
 
-// VARIATION A: Duration Above Deploy - Simple Stack
+// VARIATION A: Duration Above Deploy - Simple Stack (with Inter font for numbers)
 export const AsymmetricFocusDurationA: React.FC<DesignVariationProps> = ({ rewards, onDeploy, canDeploy, nodeType, duration = "5h" }) => {
   return (
     <div className="space-y-3">
@@ -716,32 +716,32 @@ export const AsymmetricFocusDurationA: React.FC<DesignVariationProps> = ({ rewar
         {/* Left - Resource Grid */}
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-yellow-600 uppercase tracking-wider font-semibold">GOLD</span>
-                  <span className="text-yellow-400 font-black text-base" style={{ fontFamily: 'Orbitron, monospace' }}>
+                  <span className="text-yellow-400 font-black text-base" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {rewards.gold}
                   </span>
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
-                <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
+                <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
-                <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
+                <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
-                  <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
+                  <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
                     {rewards.special || '---'}
                   </span>
                 </div>
@@ -755,7 +755,7 @@ export const AsymmetricFocusDurationA: React.FC<DesignVariationProps> = ({ rewar
           {/* Duration Display */}
           <div className="bg-black/80 border border-yellow-500/30 rounded-sm px-4 py-2 text-center">
             <div className="text-[9px] text-gray-500 uppercase tracking-[0.2em]">DURATION</div>
-            <div className="text-yellow-400 text-2xl font-black leading-none mt-1" style={{ fontFamily: 'Orbitron, monospace' }}>
+            <div className="text-yellow-400 text-2xl font-black leading-none mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
               {duration}
             </div>
           </div>
@@ -857,7 +857,7 @@ export const AsymmetricFocusDurationB: React.FC<DesignVariationProps> = ({ rewar
         {/* Right - Resource Grid */}
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -868,20 +868,20 @@ export const AsymmetricFocusDurationB: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -957,7 +957,7 @@ export const AsymmetricFocusDurationC: React.FC<DesignVariationProps> = ({ rewar
         {/* Right - Resource Grid */}
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -968,20 +968,20 @@ export const AsymmetricFocusDurationC: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -1063,7 +1063,7 @@ export const AsymmetricFocusDurationD: React.FC<DesignVariationProps> = ({ rewar
         {/* Right - Resource Grid */}
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1074,20 +1074,20 @@ export const AsymmetricFocusDurationD: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Orbitron, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -1110,7 +1110,7 @@ export const AsymmetricDuration_Font1: React.FC<DesignVariationProps> = ({ rewar
       <div className="flex gap-3 items-stretch">
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1121,20 +1121,20 @@ export const AsymmetricDuration_Font1: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Roboto Mono, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Roboto Mono, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Roboto Mono, monospace' }}>
                     {rewards.special || '---'}
                   </span>
@@ -1195,7 +1195,7 @@ export const AsymmetricDuration_Font2: React.FC<DesignVariationProps> = ({ rewar
       <div className="flex gap-3 items-stretch">
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1206,20 +1206,20 @@ export const AsymmetricDuration_Font2: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Inter, sans-serif' }}>
                     {rewards.special || '---'}
                   </span>
@@ -1280,7 +1280,7 @@ export const AsymmetricDuration_Font3: React.FC<DesignVariationProps> = ({ rewar
       <div className="flex gap-3 items-stretch">
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1291,20 +1291,20 @@ export const AsymmetricDuration_Font3: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'}>
                     {rewards.special || '---'}
                   </span>
@@ -1365,7 +1365,7 @@ export const AsymmetricDuration_Font4: React.FC<DesignVariationProps> = ({ rewar
       <div className="flex gap-3 items-stretch">
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1376,20 +1376,20 @@ export const AsymmetricDuration_Font4: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     {rewards.special || '---'}
                   </span>
@@ -1450,7 +1450,7 @@ export const AsymmetricDuration_Font5: React.FC<DesignVariationProps> = ({ rewar
       <div className="flex gap-3 items-stretch">
         <div className="flex-1">
           <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
-            <div className="text-[9px] text-gray-500 uppercase tracking-[0.3em] mb-2 text-center">MISSION COSTS</div>
+            <div className="text-xs text-gray-300 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
             <div className="grid grid-cols-2 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/30 rounded-sm p-2">
                 <div className="flex items-center justify-between">
@@ -1461,20 +1461,20 @@ export const AsymmetricDuration_Font5: React.FC<DesignVariationProps> = ({ rewar
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.essence ? 'border-purple-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">ESSENCE</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">ESSENCE</div>
                 <div className={rewards.essence ? 'text-purple-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                   {rewards.essence || '---'}
                 </div>
               </div>
               <div className={`bg-black/40 border rounded-sm p-1.5 ${rewards.chipT1 ? 'border-cyan-500/30' : 'border-gray-700/20'}`}>
-                <div className="text-[9px] text-gray-500 uppercase">CHIP T1</div>
+                <div className="text-xs text-gray-300 uppercase font-semibold">CHIP</div>
                 <div className={rewards.chipT1 ? 'text-cyan-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                  {rewards.chipT1 || '---'}
+                  {rewards.chipT1 ? `T1 ${rewards.chipT1}` : '---'}
                 </div>
               </div>
               <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${rewards.special ? 'border-green-500/30' : 'border-gray-700/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-gray-500 uppercase">SPECIAL</span>
+                  <span className="text-xs text-gray-300 uppercase font-semibold">SPECIAL</span>
                   <span className={rewards.special ? 'text-green-400 font-bold text-xs' : 'text-gray-600 text-xs'} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                     {rewards.special || '---'}
                   </span>

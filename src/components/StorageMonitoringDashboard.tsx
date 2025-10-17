@@ -26,6 +26,9 @@ export default function StorageMonitoringDashboard() {
         <h2 className="text-2xl font-bold text-yellow-500 mb-4 uppercase tracking-wider font-['Orbitron']">
           Storage Monitoring Dashboard
         </h2>
+        <div className="mb-4 text-sm text-gray-400 italic">
+          Note: Stats based on most recent 5,000 records per table (sampling to prevent database overload)
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-black/40 border border-yellow-500/30 rounded p-4">

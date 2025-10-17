@@ -39,6 +39,9 @@ export type TalentNode = {
   };
   abilityId?: string;
   passiveEffect?: string;
+  // Label node fields
+  isLabel?: boolean;
+  labelText?: string;
 };
 
 export type Connection = {
@@ -55,7 +58,7 @@ export type DragState = {
 
 export type BuilderMode = 'circutree' | 'mek';
 
-export type CanvasMode = 'select' | 'add' | 'connect';
+export type CanvasMode = 'select' | 'add' | 'connect' | 'addLabel';
 
 export interface Template {
   _id: string;

@@ -6,10 +6,11 @@ interface HolographicButtonProps {
   text?: string;
   onClick?: () => void;
   isActive?: boolean;
-  variant?: 'blue' | 'yellow' | 'gray';
+  variant?: 'blue' | 'yellow' | 'gray' | 'red';
   alwaysOn?: boolean;
   className?: string;
   disabled?: boolean;
+  hideIcon?: boolean;
 }
 
 export default function HolographicButton({
@@ -19,7 +20,8 @@ export default function HolographicButton({
   variant = 'yellow',
   alwaysOn = false,
   className = "",
-  disabled = false
+  disabled = false,
+  hideIcon = false
 }: HolographicButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -51,6 +53,8 @@ export default function HolographicButton({
         this.color = alwaysOn ? `hsl(48, 100%, 50%)` : `hsl(${45 + Math.random() * 15}, 100%, 50%)`;
       } else if (variantColor === 'gray') {
         this.color = `hsl(0, 0%, ${40 + Math.random() * 20}%)`;
+      } else if (variantColor === 'red') {
+        this.color = alwaysOn ? `hsl(0, 100%, 50%)` : `hsl(${Math.random() * 15}, 100%, 50%)`;
       } else {
         this.color = `hsl(${180 + Math.random() * 60}, 100%, 50%)`;
       }
@@ -146,6 +150,14 @@ export default function HolographicButton({
         glowBright: 'rgba(156,163,175,',
         gradient: 'from-gray-900/90 via-gray-800/90 to-black/90'
       }
+    : variant === 'red'
+    ? {
+        primary: '#ef4444',
+        secondary: '#f87171',
+        glow: 'rgba(239,68,68,',
+        glowBright: 'rgba(248,113,113,',
+        gradient: 'from-gray-900/90 via-red-950/90 to-black/90'
+      }
     : {
         primary: '#06b6d4',
         secondary: '#22d3ee',
@@ -180,12 +192,14 @@ export default function HolographicButton({
                 ? 'from-gray-900/90 via-amber-950/90 to-black/90'
                 : variant === 'gray'
                 ? 'from-gray-900/90 via-gray-800/90 to-black/90'
+                : variant === 'red'
+                ? 'from-gray-900/90 via-red-950/90 to-black/90'
                 : 'from-gray-900/90 via-blue-950/90 to-black/90'
               : 'from-gray-900/90 via-gray-800/90 to-black/90'
             }
             backdrop-blur-md
             border-2 transition-all duration-300
-            px-8 py-6
+            px-8 py-3
           `}
           style={{
             borderColor: isActive
@@ -218,7 +232,7 @@ export default function HolographicButton({
                 <div
                   key={i}
                   className={`absolute top-0 w-px h-full opacity-50 bg-gradient-to-b from-transparent ${
-                    variant === 'yellow' ? 'via-yellow-400' : 'via-cyan-400'
+                    variant === 'yellow' ? 'via-yellow-400' : variant === 'red' ? 'via-red-400' : 'via-cyan-400'
                   } to-transparent`}
                   style={{
                     left: `${20 * (i + 1)}%`,
@@ -255,30 +269,54 @@ export default function HolographicButton({
 
           {/* Content */}
           <div className="relative z-10 flex items-center justify-center h-full">
-            {/* Text centered vertically */}
-            <span
-              className={`text-4xl font-bold uppercase ${
-                isActive
-                  ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : 'text-cyan-400'
-                  : 'text-gray-500'
-              }`}
-              style={{
-                fontFamily: 'Orbitron, monospace',
-                letterSpacing: '0.2em',
-                filter: isActive
-                  ? isHovered
-                    ? `drop-shadow(0 0 25px ${colors.glowBright}0.9)) brightness(1.1)`
-                    : `drop-shadow(0 0 20px ${colors.glow}0.8))`
-                  : 'none',
-                textShadow: isActive
-                  ? isHovered
-                    ? `0 0 30px ${colors.glowBright}0.9), 0 0 60px ${colors.glowBright}0.5)`
-                    : `0 0 20px ${colors.glow}0.8), 0 0 40px ${colors.glow}0.4)`
-                  : 'none'
-              }}
-            >
-              {text}
-            </span>
+            {/* Arrow and Text */}
+            <div className="flex flex-col items-center justify-center">
+              {/* Upward arrow icon - moved down 5px */}
+              {!hideIcon && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className={isActive && isHovered ? 'animate-pulse' : ''} style={{ marginTop: '5px', marginBottom: '-4px' }}>
+                  <path d="M12 2L22 8V16L12 22L2 16V8L12 2Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={isActive
+                          ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : variant === 'red' ? 'text-red-400' : 'text-cyan-400'
+                          : 'text-gray-500'}
+                        fill={isActive ? 'currentColor' : 'none'}
+                        fillOpacity={isActive ? 0.2 : 0} />
+                  <path d="M12 7V17M7 10L12 7L17 10"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        className={isActive
+                          ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : variant === 'red' ? 'text-red-400' : 'text-cyan-400'
+                          : 'text-gray-500'} />
+                </svg>
+              )}
+
+              {/* Text moved up 5px (from 15px to 10px) */}
+              <span
+                className={`text-2xl font-bold uppercase whitespace-nowrap ${
+                  isActive
+                    ? variant === 'yellow' ? 'text-yellow-400' : variant === 'gray' ? 'text-gray-500' : variant === 'red' ? 'text-red-400' : 'text-cyan-400'
+                    : 'text-gray-500'
+                }`}
+                style={{
+                  fontFamily: 'Orbitron, monospace',
+                  letterSpacing: '0.2em',
+                  marginTop: '2px',
+                  filter: isActive
+                    ? isHovered
+                      ? `drop-shadow(0 0 25px ${colors.glowBright}0.9)) brightness(1.1)`
+                      : `drop-shadow(0 0 20px ${colors.glow}0.8))`
+                    : 'none',
+                  textShadow: isActive
+                    ? isHovered
+                      ? `0 0 30px ${colors.glowBright}0.9), 0 0 60px ${colors.glowBright}0.5)`
+                      : `0 0 20px ${colors.glow}0.8), 0 0 40px ${colors.glow}0.4)`
+                    : 'none'
+                }}
+              >
+                {text}
+              </span>
+            </div>
           </div>
 
           {/* Frame corners */}

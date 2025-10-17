@@ -9,33 +9,40 @@ export const getStorageStats = query({
     const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
 
+    // Use limited sampling to avoid exceeding 16MB read limit
+    const SAMPLE_LIMIT = 5000;
+
     const [
       goldMiningCount,
-      ownershipHistoryCount,
-      ownershipHistoryRecent24h,
-      ownershipHistoryRecent7d,
-      ownershipHistoryRecent30d,
-      goldSnapshotsCount,
-      goldSnapshotsRecent24h,
-      goldSnapshotsRecent7d,
-      goldCheckpointsCount,
-      snapshotLogsCount,
-      auditLogsCount,
+      ownershipHistorySample,
+      goldSnapshotsSample,
+      goldCheckpointsSample,
+      snapshotLogsSample,
+      auditLogsSample,
       nftMetadataCount,
     ] = await Promise.all([
-      ctx.db.query("goldMining").collect().then(r => r.length),
-      ctx.db.query("mekOwnershipHistory").collect().then(r => r.length),
-      ctx.db.query("mekOwnershipHistory").collect().then(r => r.filter(s => s.snapshotTime >= oneDayAgo).length),
-      ctx.db.query("mekOwnershipHistory").collect().then(r => r.filter(s => s.snapshotTime >= sevenDaysAgo).length),
-      ctx.db.query("mekOwnershipHistory").collect().then(r => r.filter(s => s.snapshotTime >= thirtyDaysAgo).length),
-      ctx.db.query("goldSnapshots").collect().then(r => r.length),
-      ctx.db.query("goldSnapshots").collect().then(r => r.filter(s => s.timestamp >= oneDayAgo).length),
-      ctx.db.query("goldSnapshots").collect().then(r => r.filter(s => s.timestamp >= sevenDaysAgo).length),
-      ctx.db.query("goldCheckpoints").collect().then(r => r.length),
-      ctx.db.query("goldMiningSnapshotLogs").collect().then(r => r.length),
-      ctx.db.query("auditLogs").collect().then(r => r.length),
-      ctx.db.query("nftMetadata").collect().then(r => r.length),
+      ctx.db.query("goldMining").take(SAMPLE_LIMIT).then(r => r.length),
+      ctx.db.query("mekOwnershipHistory").order("desc").take(SAMPLE_LIMIT),
+      ctx.db.query("goldSnapshots").order("desc").take(SAMPLE_LIMIT),
+      ctx.db.query("goldCheckpoints").take(SAMPLE_LIMIT).then(r => r.length),
+      ctx.db.query("goldMiningSnapshotLogs").take(SAMPLE_LIMIT).then(r => r.length),
+      ctx.db.query("auditLogs").take(SAMPLE_LIMIT).then(r => r.length),
+      ctx.db.query("nftMetadata").take(SAMPLE_LIMIT).then(r => r.length),
     ]);
+
+    // Calculate counts from samples
+    const ownershipHistoryCount = ownershipHistorySample.length;
+    const ownershipHistoryRecent24h = ownershipHistorySample.filter(s => s.snapshotTime >= oneDayAgo).length;
+    const ownershipHistoryRecent7d = ownershipHistorySample.filter(s => s.snapshotTime >= sevenDaysAgo).length;
+    const ownershipHistoryRecent30d = ownershipHistorySample.filter(s => s.snapshotTime >= thirtyDaysAgo).length;
+
+    const goldSnapshotsCount = goldSnapshotsSample.length;
+    const goldSnapshotsRecent24h = goldSnapshotsSample.filter(s => s.timestamp >= oneDayAgo).length;
+    const goldSnapshotsRecent7d = goldSnapshotsSample.filter(s => s.timestamp >= sevenDaysAgo).length;
+
+    const goldCheckpointsCount = goldCheckpointsSample;
+    const snapshotLogsCount = snapshotLogsSample;
+    const auditLogsCount = auditLogsSample;
 
     const avgMeksPerSnapshot = 5;
     const ownershipHistorySize = ownershipHistoryCount * (100 + avgMeksPerSnapshot * 106);

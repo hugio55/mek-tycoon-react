@@ -29,9 +29,9 @@ export const runNightlySnapshot = internalAction({
 
     for (const miner of allMiners) {
       try {
-        // Skip if wallet hasn't been active in last 7 days
-        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-        if (miner.lastActiveTime < sevenDaysAgo) {
+        // Skip if wallet hasn't been active in last 15 days
+        const fifteenDaysAgo = now - (15 * 24 * 60 * 60 * 1000);
+        if (miner.lastActiveTime < fifteenDaysAgo) {
           console.log(`Skipping inactive wallet: ${miner.walletAddress}`);
           skippedCount++;
           continue;
@@ -235,6 +235,25 @@ export const runNightlySnapshot = internalAction({
       status: "completed",
     });
 
+    // LOG: Snapshot completion summary to monitoring dashboard
+    const severity = errorCount > 0 ? "medium" : "low";
+    const eventType = errorCount > 0 ? "warning" : "snapshot";
+
+    await ctx.runMutation(internal.monitoring.logEvent, {
+      eventType,
+      category: "snapshot",
+      message: `6-hour snapshot completed: ${updatedCount}/${allMiners.length} wallets updated successfully${errorCount > 0 ? `, ${errorCount} errors` : ''}${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
+      severity,
+      functionName: "runNightlySnapshot",
+      details: {
+        totalWallets: allMiners.length,
+        successfulUpdates: updatedCount,
+        errors: errorCount,
+        skipped: skippedCount,
+        duration: Date.now() - now,
+      },
+    });
+
     return {
       success: true,
       totalMiners: allMiners.length,
@@ -305,12 +324,80 @@ export const updateMinerAfterSnapshot = internalMutation({
       console.error(`  Current MEK count: ${currentMekCount}, Snapshot claimed: ${snapshotMekCount}`);
       console.error(`  This suggests a blockchain lookup failure - preserving existing data`);
 
+      // LOG: Snapshot validation failure
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "critical_error",
+        category: "snapshot",
+        message: `Snapshot validation FAILED: Blockchain returned 0 MEKs but wallet has ${currentMekCount} MEKs in database`,
+        severity: "critical",
+        functionName: "updateMinerAfterSnapshot",
+        walletAddress: args.walletAddress,
+        details: {
+          currentMekCount,
+          snapshotMekCount,
+          reason: "Blockchain lookup failure - data preserved",
+        },
+      });
+
       // Don't create a bad snapshot - return error
       return {
         success: false,
         error: "Snapshot validation failed: blockchain returned 0 MEKs but wallet has MEKs in database",
         skipped: true
       };
+    }
+
+    // ANTI-CHEAT: Check for asset overlaps before storing snapshot
+    // OPTIMIZED: Query all wallets ONCE instead of once-per-MEK (prevents 16MB read limit crash)
+
+    // Build a set of our MEK asset IDs for fast O(1) lookup
+    const ourMekIds = new Set(args.mekDetails.map(m => m.assetId));
+
+    // Query all OTHER wallets ONCE (instead of once per MEK)
+    const otherWallets = await ctx.db
+      .query("goldMining")
+      .filter((q) => q.neq(q.field("walletAddress"), args.walletAddress))
+      .collect();
+
+    // Check each wallet for any overlapping MEKs (in memory, fast)
+    for (const otherWallet of otherWallets) {
+      const overlappingMeks = otherWallet.ownedMeks.filter(m => ourMekIds.has(m.assetId));
+
+      if (overlappingMeks.length > 0) {
+        console.warn(`[ANTI-CHEAT] Found ${overlappingMeks.length} MEK(s) in multiple wallets!`);
+        for (const mek of overlappingMeks) {
+          console.warn(`  MEK ${mek.assetName} (${mek.assetId.substring(0, 20)}...) in both wallets`);
+        }
+        console.warn(`  Removing from ${otherWallet.walletAddress.substring(0, 15)}... (blockchain says it's in ${args.walletAddress.substring(0, 15)}...)`);
+
+        // LOG: Anti-cheat detection
+        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+          eventType: "warning",
+          category: "snapshot",
+          message: `ANTI-CHEAT: ${overlappingMeks.length} MEK(s) found in multiple wallets - removed from ${otherWallet.walletAddress.substring(0, 15)}...`,
+          severity: "high",
+          functionName: "updateMinerAfterSnapshot",
+          walletAddress: args.walletAddress,
+          details: {
+            overlappingMeks: overlappingMeks.map(m => m.assetName),
+            removedFromWallet: otherWallet.walletAddress,
+            mekCount: overlappingMeks.length,
+            oldRate: otherWallet.totalGoldPerHour,
+          },
+        });
+
+        // Remove ALL overlapping MEKs from the other wallet
+        const filteredMeks = otherWallet.ownedMeks.filter(m => !ourMekIds.has(m.assetId));
+        const newRate = filteredMeks.reduce((sum, m) => sum + (m.goldPerHour || 0), 0);
+
+        await ctx.db.patch(otherWallet._id, {
+          ownedMeks: filteredMeks,
+          totalGoldPerHour: newRate,
+          updatedAt: Date.now()
+        });
+
+        console.warn(`  Updated ${otherWallet.walletAddress.substring(0, 15)}...: ${otherWallet.ownedMeks.length} → ${filteredMeks.length} MEKs, ${otherWallet.totalGoldPerHour.toFixed(2)} → ${newRate.toFixed(2)} g/hr`);
+      }
     }
 
     // CRITICAL: Calculate accumulated gold properly FIRST
@@ -428,6 +515,23 @@ export const updateMinerAfterSnapshot = internalMutation({
 
     await ctx.db.patch(miner._id, patchData);
 
+    // LOG: Successful snapshot update
+    await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+      eventType: "snapshot",
+      category: "snapshot",
+      message: `Snapshot completed for wallet: ${args.mekCount} MEKs, ${args.totalGoldPerHour.toFixed(2)} g/hr, ${accumulatedGold.toFixed(2)} gold accumulated`,
+      severity: "low",
+      functionName: "updateMinerAfterSnapshot",
+      walletAddress: args.walletAddress,
+      details: {
+        mekCount: args.mekCount,
+        totalGoldPerHour: args.totalGoldPerHour,
+        accumulatedGold,
+        newTotalCumulativeGold,
+        isVerified,
+      },
+    });
+
     return { success: true };
   },
 });
@@ -542,6 +646,15 @@ export const triggerSnapshot = action({
   },
   handler: async (ctx, args) => {
     const batchSize = args.batchSize || 5; // Safe default: 5 wallets per batch
+
+    // LOG: Snapshot triggered
+    await ctx.runMutation(internal.monitoring.logEvent, {
+      eventType: "snapshot",
+      category: "snapshot",
+      message: `Snapshot triggered manually with batch size ${batchSize}`,
+      severity: "low",
+      functionName: "triggerSnapshot",
+    });
 
     // Log the trigger
     await ctx.runMutation(internal.goldMiningSnapshot.logSnapshotTrigger);
@@ -809,6 +922,25 @@ export const runManualSnapshot = internalAction({
 
     console.log('[runManualSnapshot] ✅ Snapshot completed successfully');
 
+    // LOG: Snapshot completion summary to monitoring dashboard
+    const severity = errorCount > 0 ? "medium" : "low";
+    const eventType = errorCount > 0 ? "warning" : "snapshot";
+
+    await ctx.runMutation(internal.monitoring.logEvent, {
+      eventType,
+      category: "snapshot",
+      message: `Manual snapshot completed: ${updatedCount}/${allMiners.length} wallets updated successfully${errorCount > 0 ? `, ${errorCount} errors` : ''}${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
+      severity,
+      functionName: "runManualSnapshot",
+      details: {
+        totalWallets: allMiners.length,
+        successfulUpdates: updatedCount,
+        errors: errorCount,
+        skipped: skippedCount,
+        duration: Date.now() - now,
+      },
+    });
+
     return {
       success: true,
       totalMiners: allMiners.length,
@@ -835,6 +967,20 @@ export const runBatchedSnapshot = internalAction({
     // Get all wallets
     const allMiners: any[] = await ctx.runQuery(internal.goldMiningSnapshot.getAllMinersForSnapshot);
     console.log(`[Batched Snapshot] Total wallets to process: ${allMiners.length}`);
+
+    // LOG: Batched snapshot starting
+    await ctx.runMutation(internal.monitoring.logEvent, {
+      eventType: "snapshot",
+      category: "snapshot",
+      message: `Batched snapshot started: ${allMiners.length} wallets in batches of ${args.batchSize}`,
+      severity: "low",
+      functionName: "runBatchedSnapshot",
+      details: {
+        totalWallets: allMiners.length,
+        batchSize: args.batchSize,
+        estimatedBatches: Math.ceil(allMiners.length / args.batchSize),
+      },
+    });
 
     // Initialize snapshot session state
     await ctx.runMutation(internal.goldMiningSnapshot.initializeSnapshotSession, {
@@ -1088,6 +1234,25 @@ export const finalizeSnapshotSession = internalMutation({
       });
 
       console.log(`[Snapshot] ✅ Session ${args.sessionId} complete! ${session.processedCount}/${session.totalWallets} wallets updated`);
+
+      // LOG: Snapshot completion summary to monitoring dashboard
+      const severity = session.errorCount > 0 ? "medium" : "low";
+      const eventType = session.errorCount > 0 ? "warning" : "snapshot";
+
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType,
+        category: "snapshot",
+        message: `Snapshot completed: ${session.processedCount}/${session.totalWallets} wallets updated successfully${session.errorCount > 0 ? `, ${session.errorCount} errors` : ''}${session.skippedCount > 0 ? `, ${session.skippedCount} skipped` : ''}`,
+        severity,
+        functionName: "finalizeSnapshotSession",
+        details: {
+          totalWallets: session.totalWallets,
+          successfulUpdates: session.processedCount,
+          errors: session.errorCount,
+          skipped: session.skippedCount,
+          duration: Date.now() - session.startTime,
+        },
+      });
     }
   },
 });

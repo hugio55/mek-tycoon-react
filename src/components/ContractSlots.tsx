@@ -80,13 +80,43 @@ export default function ContractSlots({ slots, onSlotClick, className = '', fill
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Render active slot content
+  const renderActiveSlotContent = (slot: ContractSlot) => {
+    const timeDisplay = slot.startTime && slot.duration
+      ? formatTimeRemaining(slot.startTime + slot.duration)
+      : 'Processing...';
+
+    // Format display name - if it contains "Mek" show as "Mek #XXXX", otherwise use as-is
+    const displayName = slot.nodeName
+      ? (slot.nodeName.includes('Mek') || slot.nodeName.match(/^\d+$/)
+        ? `Mek #${slot.nodeName.replace(/\D/g, '')}`
+        : slot.nodeName)
+      : 'Mission';
+
+    return (
+      <div className="flex-1 text-center">
+        <div className="text-xs text-cyan-300 font-['Orbitron'] uppercase tracking-wider font-semibold">
+          {displayName}
+        </div>
+        <div className="text-base font-bold font-mono text-cyan-400">
+          {timeDisplay}
+        </div>
+      </div>
+    );
+  };
+
+  // Active slot classes with diagonal stripes texture
+  const getActiveSlotClasses = () => {
+    return "relative overflow-hidden border-2 transition-all duration-300 py-2 px-2 text-center flex items-center justify-between bg-cyan-950/40 border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.8)]";
+  };
+
   return (
     <div className={`contract-slots-bar ${className}`} style={{ position: 'relative', zIndex: 9999 }}>
       <div className="bg-black/60 backdrop-blur-sm border border-yellow-500/30 py-1 px-3" style={{ overflow: 'visible' }}>
         {/* Label at the top */}
         <div className="text-center mb-1">
-          <span className="text-[10px] text-gray-500 uppercase tracking-wider font-['Orbitron']">
-            Simultaneous Contracts
+          <span className="text-xs text-white uppercase tracking-wider font-['Orbitron'] font-bold">
+            Contracts
           </span>
         </div>
         <div className="grid grid-cols-5 gap-2" style={{ overflow: 'visible' }}>
@@ -97,7 +127,6 @@ export default function ContractSlots({ slots, onSlotClick, className = '', fill
               className={`
                 relative group
                 ${slot.status === 'locked' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                ${slot.status === 'active' ? 'animate-pulse' : ''}
               `}
               onClick={() => {
                 if (slot.status === 'locked') return;
@@ -111,49 +140,45 @@ export default function ContractSlots({ slots, onSlotClick, className = '', fill
               }}
             >
               {/* Slot Container */}
-              <div className={`
-                relative overflow-hidden
-                border transition-all duration-300
-                py-1 px-2 text-center flex items-center justify-between
-                ${slot.status === 'active'
-                  ? `${activeColors.bg} ${activeColors.border} ${activeColors.glow} animate-pulse`
-                  : 'bg-black/40 border-yellow-500/20'}
-                ${slot.status === 'available' ? 'hover:border-yellow-500/50 hover:bg-yellow-950/10' : ''}
-              `}>
+              <div className={
+                slot.status === 'active'
+                  ? getActiveSlotClasses()
+                  : `relative overflow-hidden border-2 transition-all duration-300 py-2 px-2 text-center flex items-center justify-between bg-black/40 border-yellow-500/20 ${slot.status === 'available' ? 'hover:border-yellow-500/50 hover:bg-yellow-950/10' : ''}`
+              }>
                 {/* Corner Brackets */}
                 <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/40" />
                 <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/40" />
                 <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/40" />
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/40" />
 
+                {/* Diagonal stripes texture overlay for active slots */}
+                {slot.status === 'active' && (
+                  <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,255,255,0.1) 8px, rgba(0,255,255,0.1) 16px)'
+                  }} />
+                )}
+
                 {/* Slot Content based on status */}
                 {slot.status === 'available' && (
                   <div className="flex-1 text-center">
-                    <div className="text-xs font-bold uppercase tracking-wider font-['Orbitron'] text-yellow-500">
+                    <div className="text-xs font-bold uppercase tracking-wider font-['Orbitron'] text-cyan-500">
                       CONTRACT {slot.id}
                     </div>
-                    <div className="text-[10px] font-mono text-gray-400 mt-0.5">
+                    <div className="text-xs font-mono text-gray-400 mt-0.5">
                       Available
                     </div>
                   </div>
                 )}
 
-                {slot.status === 'active' && (
-                  <div className="flex-1 text-center">
-                    <div className="text-[10px] text-gray-400 font-['Orbitron'] uppercase tracking-wider">
-                      {slot.nodeName || 'Mission'}
-                    </div>
-                    <div className={`text-sm font-bold font-mono ${activeColors.text}`}>
-                      {slot.startTime && slot.duration
-                        ? formatTimeRemaining(slot.startTime + slot.duration)
-                        : 'Processing...'}
-                    </div>
-                  </div>
-                )}
+                {slot.status === 'active' && renderActiveSlotContent(slot)}
 
                 {slot.status === 'locked' && (
-                  <div className="flex-1 text-center">
-                    <div className="text-xl">🔒</div>
+                  <div className="flex-1 text-center flex items-center justify-center py-2">
+                    <svg className="w-8 h-8 text-gray-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="6" y="10" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.2"/>
+                      <path d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="12" cy="15" r="1.5" fill="currentColor"/>
+                    </svg>
                   </div>
                 )}
 
@@ -177,7 +202,7 @@ export default function ContractSlots({ slots, onSlotClick, className = '', fill
                 {slot.status === 'active' && slot.startTime && slot.duration && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
                     <div
-                      className={`h-full bg-gradient-to-r ${activeColors.progress} transition-all duration-1000`}
+                      className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000"
                       style={{
                         width: `${Math.max(0, Math.min(100, ((currentTime - slot.startTime) / slot.duration) * 100))}%`
                       }}

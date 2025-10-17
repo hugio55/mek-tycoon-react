@@ -1,4 +1,5 @@
 import { internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 const LEADERBOARD_SIZE = 100; // Top N miners to cache
 
@@ -117,6 +118,17 @@ export const updateGoldLeaderboard = internalMutation({
       };
     } catch (error) {
       console.error("Leaderboard update failed:", error);
+
+      // LOG: Leaderboard update failure
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "error",
+        category: "leaderboard",
+        message: "Leaderboard update failed",
+        severity: "high",
+        functionName: "updateGoldLeaderboard",
+        details: { error: String(error) },
+      });
+
       return {
         success: false,
         error: String(error),

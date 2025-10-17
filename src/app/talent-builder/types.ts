@@ -59,6 +59,9 @@ export type TalentNode = {
   // Additional optional fields found in code
   unlocked?: boolean;
   buffGrant?: any; // Type not clear from usage
+  // Label node fields
+  isLabel?: boolean;
+  labelText?: string;
 };
 
 export type Connection = {

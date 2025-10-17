@@ -45,6 +45,10 @@ interface IndustrialMissionCardProps {
   missionMultipliers?: MissionMultiplier[];
   matchedVariations?: string[];
   onBuffClick?: (buff: MissionMultiplier) => void;
+
+  // Genesis Buffs
+  genesisBuffs?: MissionMultiplier[];
+  onGenesisBuffClick?: (buff: MissionMultiplier) => void;
   
   // Mek Slots
   mekSlotCount?: number;
@@ -147,6 +151,9 @@ export default function IndustrialMissionCard({
   missionMultipliers = [],
   matchedVariations = [],
   onBuffClick,
+
+  genesisBuffs = [],
+  onGenesisBuffClick,
   
   mekSlotCount = 8,
   selectedMeks = [],
@@ -390,7 +397,7 @@ export default function IndustrialMissionCard({
                     return (
                       <div key={mult.id} className="relative">
                         <div className="flex flex-col items-center">
-                          <div 
+                          <div
                             onClick={() => {
                               setSelectedBuff(mult);
                               onBuffClick?.(mult);
@@ -408,8 +415,10 @@ export default function IndustrialMissionCard({
                               sizes="60px"
                             />
                           </div>
-                          <div className={`text-[9px] font-medium mt-1 ${isMatched ? 'text-white' : 'text-gray-400'} uppercase tracking-wider text-center`}>
-                            {mult.name}
+                          <div className="flex flex-col items-center justify-center min-h-[26px] mb-0.5">
+                            <div className={`text-[9px] font-medium ${isMatched ? 'text-white' : 'text-gray-400'} uppercase tracking-wider text-center leading-tight px-1`}>
+                              {mult.name}
+                            </div>
                           </div>
                           <div className={`text-[10px] font-bold ${isMatched ? 'text-yellow-400 drop-shadow-[0_0_4px_rgba(250,182,23,0.5)]' : 'text-gray-500'}`}>
                             {mult.bonus}
@@ -418,6 +427,50 @@ export default function IndustrialMissionCard({
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Genesis Buffs Section */}
+          {genesisBuffs.length > 0 && (
+            <div className="mb-4">
+              <div className="mb-3">
+                <div className="text-xs text-gray-500 uppercase tracking-wider">Genesis Buffs</div>
+                <div className="text-[10px] text-gray-400 mt-1">
+                  Attach Genesis Tokens for success bonuses
+                </div>
+              </div>
+
+              {/* Grid Layout for Genesis Buffs - 5 circular images */}
+              <div className="flex justify-center">
+                <div className="grid grid-cols-5 gap-2 max-w-[400px]">
+                  {genesisBuffs.map((buff) => (
+                    <div key={buff.id} className="relative">
+                      <div className="flex flex-col items-center">
+                        <div
+                          onClick={() => {
+                            onGenesisBuffClick?.(buff);
+                          }}
+                          className="relative w-[60px] h-[60px] rounded-full bg-black/60 border-2 border-gray-700 overflow-hidden cursor-pointer transition-all hover:scale-110 hover:border-yellow-400"
+                        >
+                          <Image
+                            src={buff.image}
+                            alt={buff.id}
+                            fill
+                            className="rounded-full object-cover"
+                            sizes="60px"
+                          />
+                        </div>
+                        <div className="text-[9px] font-medium mt-1 text-gray-400 uppercase tracking-wider text-center">
+                          {buff.name}
+                        </div>
+                        <div className="text-[10px] font-bold text-gray-500">
+                          {buff.bonus}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -449,8 +502,8 @@ export default function IndustrialMissionCard({
                       onMouseLeave={() => onMekHover?.(null)}
                       className={`
                         w-full h-full flex flex-col items-center justify-center transition-all relative
-                        ${isLocked 
-                          ? 'bg-black/80 opacity-30' 
+                        ${isLocked
+                          ? 'bg-black/80 opacity-30'
                           : assignedMek
                             ? 'bg-gradient-to-br from-yellow-900/40 to-yellow-800/20'
                             : 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/10 hover:shadow-lg hover:shadow-yellow-500/20 cursor-pointer'
@@ -566,11 +619,45 @@ export default function IndustrialMissionCard({
             <div className="text-xs text-gray-400 mb-2">
               Deployment Fee: <span className="text-yellow-400 font-bold">{formatGoldAmount(deployFee)} Gold</span>
             </div>
-            <button 
+            <button
               onClick={onDeploy}
-              className="px-12 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black rounded font-bold text-base uppercase tracking-wider transition-all shadow-lg hover:shadow-yellow-500/30"
+              className="relative px-12 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black rounded font-bold text-lg uppercase tracking-[0.2em] transition-all shadow-lg hover:shadow-yellow-500/30 overflow-hidden group"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
-              DEPLOY
+              {/* Particle effect overlay */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full opacity-60 animate-pulse"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animationDelay: `${Math.random() * 2}s`,
+                      animationDuration: `${1 + Math.random() * 2}s`
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Hover glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              {/* Button content with arrow */}
+              <div className="relative flex flex-col items-center justify-center">
+                {/* Upward arrow */}
+                <svg
+                  className="w-5 h-5 -mb-3"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M10 3L10 17M10 3L5 8M10 3L15 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                </svg>
+
+                {/* DEPLOY text */}
+                <span className="font-black text-shadow-sm">DEPLOY</span>
+              </div>
             </button>
           </div>
         </div>

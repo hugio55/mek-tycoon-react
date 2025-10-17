@@ -3,6 +3,7 @@ import { mutation, query, action } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { calculateGoldDecrease, validateGoldInvariant } from "./lib/goldCalculations";
 import { devLog } from "./lib/devLog";
+import { internal } from "./_generated/api";
 
 // Gold cost structure for each level upgrade
 const UPGRADE_COSTS = [
@@ -211,6 +212,17 @@ export const upgradeMekLevel = mutation({
 
     // Check if wallet is verified
     if (!goldMiningData.isBlockchainVerified) {
+      // LOG: Unverified wallet attempted upgrade (security event)
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "warning",
+        category: "gold",
+        message: "Unverified wallet attempted MEK upgrade",
+        severity: "high",
+        functionName: "upgradeMekLevel",
+        walletAddress: args.walletAddress,
+        details: { assetId: args.assetId },
+      });
+
       throw new Error("Wallet must be blockchain verified to upgrade Meks");
     }
 
@@ -424,6 +436,21 @@ export const upgradeMekLevel = mutation({
       const currentVersion = goldMiningData.version || 0;
       const latestVersion = latestGoldMiningData.version || 0;
       if (currentVersion !== latestVersion) {
+        // LOG: Concurrent modification detected (race condition)
+        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+          eventType: "warning",
+          category: "gold",
+          message: "Concurrent modification detected during MEK upgrade",
+          severity: "medium",
+          functionName: "upgradeMekLevel",
+          walletAddress: args.walletAddress,
+          details: {
+            assetId: args.assetId,
+            expectedVersion: currentVersion,
+            actualVersion: latestVersion,
+          },
+        });
+
         throw new Error("Concurrent modification detected. Please refresh and try again.");
       }
 
@@ -495,6 +522,27 @@ export const upgradeMekLevel = mutation({
         remainingGold: goldDecrease.newAccumulatedGold,
       });
 
+      // LOG: High-value MEK upgrades (levels 7-10 cost 4000-32000 gold)
+      if (newLevel >= 7) {
+        await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+          eventType: "info",
+          category: "gold",
+          message: `MEK upgraded to Level ${newLevel} (high-value)`,
+          severity: "low",
+          functionName: "upgradeMekLevel",
+          walletAddress: args.walletAddress,
+          details: {
+            assetId: args.assetId,
+            assetName: ownedMek.assetName,
+            fromLevel: mekLevel.currentLevel,
+            toLevel: newLevel,
+            goldSpent: upgradeCost,
+            newBoostAmount: newBoostAmount,
+            remainingGold: goldDecrease.newAccumulatedGold,
+          },
+        });
+      }
+
       return {
         success: true,
         newLevel: mekLevel.currentLevel + 1,
@@ -514,6 +562,21 @@ export const upgradeMekLevel = mutation({
           failureReason: String(error),
         });
       }
+
+      // LOG: Failed MEK upgrade
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "error",
+        category: "gold",
+        message: "MEK upgrade failed",
+        severity: "medium",
+        functionName: "upgradeMekLevel",
+        walletAddress: args.walletAddress,
+        details: {
+          assetId: args.assetId,
+          error: String(error),
+          upgradeCost: calculateUpgradeCost(mekLevel?.currentLevel || 1),
+        },
+      });
 
       throw error;
     }

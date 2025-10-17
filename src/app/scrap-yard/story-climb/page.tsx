@@ -22,6 +22,7 @@ import CancelMissionLightbox from '@/components/CancelMissionLightbox';
 import MintNFTLightbox from '@/components/MintNFTLightbox';
 import MintNFTLightboxVariationSelector from '@/components/MintNFTLightboxVariationSelector';
 import ContractSlots, { ContractSlot } from '@/components/ContractSlots';
+import { AsymmetricFocusDurationA } from '@/components/MissionControlDesignVariations';
 
 
 interface StoryNode {
@@ -461,7 +462,7 @@ export default function StoryClimbPage() {
               chipRewards,
               globalEventNumber: eventNumber,
               // Ensure 'image' field exists for compatibility - handle various field names
-              image: event.image || event.imageReference || event.imagePath || `/event-images/450px%20webp/${eventNumber}.webp`
+              image: event.image || event.imageReference || event.imagePath || `/event-nfts/E${((eventNumber - 1) % 20) + 1}-E.png`
             };
 
             // IMPORTANT: Use global event number as primary key to avoid collisions
@@ -1101,8 +1102,49 @@ export default function StoryClimbPage() {
         }
       }
 
-      // Fallback: Return empty array if no Genesis buffs configured
-      return [];
+      // Fallback: Return all 5 Genesis tokens if no specific buffs configured
+      return [
+        {
+          id: 'genesis-teal',
+          name: 'Teal',
+          bonus: '+5%',
+          color: '#14B8A6',
+          rarity: 'common',
+          image: '/genesis-art/teal-genesis.png'
+        },
+        {
+          id: 'genesis-red',
+          name: 'Red',
+          bonus: '+7%',
+          color: '#EF4444',
+          rarity: 'uncommon',
+          image: '/genesis-art/red-genesis.png'
+        },
+        {
+          id: 'genesis-green',
+          name: 'Green',
+          bonus: '+15%',
+          color: '#10B981',
+          rarity: 'rare',
+          image: '/genesis-art/green-genesis.png'
+        },
+        {
+          id: 'genesis-pink',
+          name: 'Pink',
+          bonus: '+20%',
+          color: '#EC4899',
+          rarity: 'epic',
+          image: '/genesis-art/pink-genesis.png'
+        },
+        {
+          id: 'genesis-rainbow',
+          name: 'Rainbow',
+          bonus: '+30%',
+          color: '#A855F7',
+          rarity: 'legendary',
+          image: '/genesis-art/rainbow-genesis.png'
+        }
+      ];
     }
 
     // For mek nodes, get the deployed mek's traits
@@ -1247,12 +1289,18 @@ export default function StoryClimbPage() {
     const rewards = getNodeRewards(node);
     const contractFee = getNodeContractFeeWithRewards(node);
 
+    // Get the first selected Mek to display in contract slot
+    const firstMek = (selectedMeks[node.id] || []).filter(Boolean)[0];
+    const nodeName = firstMek
+      ? `Mek #${firstMek.id || (firstMek.name && firstMek.name.replace ? firstMek.name.replace(/\D/g, '') : node.id)}`
+      : (node.label || `Node ${node.id}`);
+
     try {
       // Start the mission in the database
       await startMission({
         nodeId: node.id,
         nodeType: node.storyNodeType || 'normal',
-        nodeName: node.label || `Node ${node.id}`,
+        nodeName: nodeName,
         duration: durationMs,
         contractFee: contractFee,
         expectedRewards: {
@@ -1509,19 +1557,22 @@ export default function StoryClimbPage() {
   }, []);
   
   // Function to get a random event image for event nodes
-  const getEventImage = useCallback((nodeId: string): string => {
+  const getEventImage = useCallback((nodeId: string, difficulty: 'easy' | 'medium' | 'hard' = 'easy'): string => {
     // Use node ID to deterministically select an event image
     let hash = 0;
     for (let i = 0; i < nodeId.length; i++) {
       hash = ((hash << 5) - hash) + nodeId.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
-    // There are 200 event images numbered 1.webp through 200.webp
-    const totalEventImages = 200;
+    // There are 20 event images (E1 through E20), each with E/M/H variants
+    const totalEventImages = 20;
     const index = Math.abs(hash) % totalEventImages;
 
-    // Return the correct filename (1-indexed)
-    return `${index + 1}.webp`;
+    // Map difficulty to suffix
+    const suffix = difficulty === 'easy' ? 'E' : difficulty === 'medium' ? 'M' : 'H';
+
+    // Return the correct filename (1-indexed): E1-E.png, E1-M.png, E1-H.png
+    return `E${index + 1}-${suffix}.png`;
   }, []);
 
   // Load images for nodes and wait for them to load
@@ -1580,7 +1631,7 @@ export default function StoryClimbPage() {
             img.src = imagePath;
           } else {
             const eventImageName = getEventImage(node.id);
-            const fallbackPath = `/event-images/450px%20webp/${eventImageName.replace(/ /g, '%20')}`;
+            const fallbackPath = `/event-nfts/${eventImageName.replace(/ /g, '%20')}`;
             img.src = fallbackPath;
           }
 
@@ -2353,61 +2404,66 @@ export default function StoryClimbPage() {
           }
         }
 
-        // Draw flashing blue ring for mintable event nodes
+        // Draw green overlay for mintable event nodes (completed state)
         if (isMintable) {
           ctx.save();
-          const time = Date.now() / 300; // Fast pulsing
-          const pulse = (Math.sin(time) + 1) / 2; // 0 to 1
-          const flashIntensity = 0.6 + pulse * 0.4; // 0.6 to 1.0
-
-          // Outer blue glow rings
-          for (let i = 0; i < 3; i++) {
-            const ringRadius = nodeSize + 8 + i * 6;
-            const ringAlpha = flashIntensity * (0.8 - i * 0.2);
-
-            ctx.strokeStyle = `rgba(59, 130, 246, ${ringAlpha})`; // Blue color
-            ctx.lineWidth = 3 - i;
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, ringRadius, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          // Inner blue glow
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = `rgba(59, 130, 246, ${flashIntensity})`;
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize - 3, 0, Math.PI * 2);
+          ctx.fill();
           ctx.restore();
         }
 
-        // Draw "MINT AVAILABLE" text overlay for mintable nodes
+        // Draw "NFT AVAILABLE" text overlay for mintable nodes (two lines, large, bright)
         if (isMintable) {
           ctx.save();
-          ctx.font = 'bold 11px Arial';
+          ctx.font = 'bold 16px Arial';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
 
-          // Draw text background
-          const time = Date.now() / 300;
-          const pulse = (Math.sin(time) + 1) / 2;
-          const bgAlpha = 0.85 + pulse * 0.15;
-          ctx.fillStyle = `rgba(0, 0, 0, ${bgAlpha})`;
-          ctx.fillRect(pos.x - 32, pos.y - 6, 64, 12);
+          const line1 = 'NFT';
+          const line2 = 'AVAILABLE';
+          const lineHeight = 18;
 
-          // Draw text with glow
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = 'rgba(59, 130, 246, 1)';
-          ctx.fillStyle = '#3B82F6'; // Blue text
-          ctx.fillText('MINT AVAILABLE', pos.x, pos.y);
+          // Draw text with bright glow
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = 'rgba(255, 255, 255, 1)';
+          ctx.fillStyle = '#FFFFFF'; // Bright white text
+
+          // Line 1
+          ctx.fillText(line1, pos.x, pos.y - lineHeight / 2);
+          // Line 2
+          ctx.fillText(line2, pos.x, pos.y + lineHeight / 2);
           ctx.restore();
         }
 
         // Draw border with adjusted colors for availability
         const isEventSelected = selectedNode && selectedNode.id === node.id;
-        ctx.strokeStyle = isCompleted ? '#10b981' :
-                         (isEventSelected ? '#fab617' : (isAvailable ? '#ffffff' : '#3f3f46')); // White for available, yellow for selected
-        ctx.lineWidth = isAvailable ? 2 : 1; // Thinner when not available
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
-        ctx.stroke();
+
+        // Apply pulsating blue glow to stroke for mintable nodes
+        if (isMintable) {
+          ctx.save();
+          const time = Date.now() / 300; // Fast pulsing
+          const pulse = (Math.sin(time) + 1) / 2; // 0 to 1
+          const glowIntensity = 15 + pulse * 10; // 15 to 25 blur
+
+          ctx.shadowBlur = glowIntensity;
+          ctx.shadowColor = `rgba(59, 130, 246, ${0.8 + pulse * 0.2})`; // Blue glow
+          ctx.strokeStyle = '#3B82F6'; // Blue stroke
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          // Normal stroke for non-mintable nodes
+          ctx.strokeStyle = isCompleted ? '#10b981' :
+                           (isEventSelected ? '#fab617' : (isAvailable ? '#ffffff' : '#3f3f46')); // White for available, yellow for selected
+          ctx.lineWidth = isAvailable ? 2 : 1; // Thinner when not available
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, nodeSize, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       } else if (node.storyNodeType === 'boss') {
         // DESIGN OPTION 1: Holographic Energy Shield
         const halfSize = nodeSize;
@@ -3218,8 +3274,8 @@ export default function StoryClimbPage() {
         }
       }
       
-      // Draw checkmark for all completed nodes (including mechanisms)
-      if (isCompleted && node.id !== 'start') {
+      // Draw checkmark for all completed nodes (including mechanisms), but NOT for mintable nodes
+      if (isCompleted && node.id !== 'start' && !isMintable) {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -3845,6 +3901,50 @@ export default function StoryClimbPage() {
         const endTime = activeMission.startTime + activeMission.duration;
         const remainingMs = Math.max(0, endTime - now);
 
+        // Draw cyan selection ring for active mission nodes when selected
+        const isActiveMissionSelected = selectedNode && selectedNode.id === node.id;
+        if (isActiveMissionSelected) {
+          ctx.save();
+          const time = Date.now() / 400;
+          const rawPulse = Math.sin(time);
+          const easedPulse = rawPulse < 0 ? -Math.pow(-rawPulse, 1.5) : Math.pow(rawPulse, 1.5);
+          const pulseIntensity = 0.7 + easedPulse * 0.25;
+
+          // Baby blue/cyan glow for selected active missions
+          if (node.storyNodeType === 'event' || node.storyNodeType === 'normal') {
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+            gradient.addColorStop(0, `rgba(6, 182, 212, ${pulseIntensity * 0.9})`); // Cyan instead of yellow
+            gradient.addColorStop(0.3, `rgba(6, 182, 212, ${pulseIntensity * 0.6})`);
+            gradient.addColorStop(0.6, `rgba(6, 182, 212, ${pulseIntensity * 0.3})`);
+            gradient.addColorStop(1, `rgba(6, 182, 212, 0)`);
+
+            for (let i = 2; i >= 0; i--) {
+              ctx.beginPath();
+              ctx.arc(pos.x, pos.y, nodeSize + i * 8 + easedPulse * 2, 0, Math.PI * 2);
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2 + (2 - i);
+              ctx.globalAlpha = 0.8 - i * 0.2;
+              ctx.stroke();
+            }
+          } else {
+            // Square cyan glow for boss nodes with active missions
+            const gradient = ctx.createRadialGradient(pos.x, pos.y, nodeSize, pos.x, pos.y, nodeSize + 35);
+            gradient.addColorStop(0, `rgba(6, 182, 212, ${pulseIntensity * 0.9})`);
+            gradient.addColorStop(0.3, `rgba(6, 182, 212, ${pulseIntensity * 0.6})`);
+            gradient.addColorStop(0.6, `rgba(6, 182, 212, ${pulseIntensity * 0.3})`);
+            gradient.addColorStop(1, `rgba(6, 182, 212, 0)`);
+
+            for (let i = 2; i >= 0; i--) {
+              const offset = i * 8 + easedPulse * 2;
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2 + (2 - i);
+              ctx.globalAlpha = 0.8 - i * 0.2;
+              ctx.strokeRect(pos.x - nodeSize - offset, pos.y - nodeSize - offset, (nodeSize + offset) * 2, (nodeSize + offset) * 2);
+            }
+          }
+          ctx.restore();
+        }
+
         if (remainingMs > 0) {
           // Calculate time components
           const totalSeconds = Math.floor(remainingMs / 1000);
@@ -3987,7 +4087,8 @@ export default function StoryClimbPage() {
           ctx.fillText(timeString, pos.x, pos.y);
 
           // Draw a circular progress indicator
-          const progress = (currentTime - activeMission.startTime) / activeMission.duration;
+          const elapsedTime = Date.now() - activeMission.startTime;
+          const progress = Math.min(1, elapsedTime / activeMission.duration); // Clamp to 1.0 max
           ctx.strokeStyle = remainingMs < 60000 ? `rgba(239, 68, 68, ${pulseAmount})` : `rgba(6, 182, 212, ${pulseAmount})`;
           ctx.lineWidth = 3;
           ctx.lineCap = 'round';
@@ -4895,7 +4996,7 @@ export default function StoryClimbPage() {
               <div className="text-[10px] opacity-70">Completed, NFT not purchased</div>
             </button>
 
-            {/* Completed with NFT Owned */}
+            {/* Completed with NFT Purchased */}
             <button
               onClick={() => setEventCompletionState('nft-owned')}
               className={`w-full px-3 py-2 rounded text-xs font-semibold transition-all ${
@@ -4904,7 +5005,7 @@ export default function StoryClimbPage() {
                   : 'bg-gray-800/50 border border-gray-600 text-gray-400 hover:border-amber-500/50'
               }`}
             >
-              <div className="font-bold mb-1">✨ NFT Owned</div>
+              <div className="font-bold mb-1">✨ NFT PURCHASED</div>
               <div className="text-[10px] opacity-70">Completed + NFT purchased</div>
             </button>
           </div>
@@ -5488,251 +5589,153 @@ export default function StoryClimbPage() {
                     </div>
                   )}
 
-                  {/* ASYMMETRIC FOCUS DESIGN - Hero Deploy with Supporting Resources */}
-                  {selectedNode ? (
-                    <div className="flex gap-3 items-stretch">
-                      {/* LEFT - Resource Grid */}
-                      <div className="flex-1">
-                        <div className="bg-gray-900/50 border border-yellow-500/20 rounded-sm h-full p-3">
-                        <div className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-2 text-center font-bold">
-                          CONTRACT FEES
+                  {/* ASYMMETRIC FOCUS DESIGN - Using AsymmetricFocusDurationA Layout */}
+                  {selectedNode ? (() => {
+                    const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
+                    const isActive = !!activeMission;
+
+                    // Calculate gold fee
+                    const baseFee = selectedNode.storyNodeType === 'final_boss' ? 200000 :
+                                   selectedNode.storyNodeType === 'boss' ? 100000 :
+                                   selectedNode.storyNodeType === 'event' ? 75000 :
+                                   selectedNode.storyNodeType === 'normal' ? 30000 : 50000;
+                    const goldFee = currentDifficultyConfig ?
+                      Math.round(baseFee * currentDifficultyConfig.deploymentFeeMultiplier) : baseFee;
+
+                    // Calculate duration
+                    const isChallenger = (selectedNode as any).challenger === true;
+                    let minutes = 15;
+                    if (selectedNode.storyNodeType === 'final_boss') {
+                      minutes = calculateNodeDuration(selectedNode, 'finalboss');
+                    } else if (selectedNode.storyNodeType === 'boss') {
+                      minutes = calculateNodeDuration(selectedNode, 'miniboss');
+                    } else if (selectedNode.storyNodeType === 'event') {
+                      minutes = calculateNodeDuration(selectedNode, 'event');
+                    } else if (isChallenger) {
+                      minutes = calculateNodeDuration(selectedNode, 'challenger');
+                    } else {
+                      minutes = calculateNodeDuration(selectedNode, 'normal');
+                    }
+
+                    // Format duration
+                    let durationString = '';
+                    if (minutes < 60) {
+                      durationString = `${minutes}m`;
+                    } else if (minutes < 1440) {
+                      const hours = Math.floor(minutes / 60);
+                      const mins = minutes % 60;
+                      durationString = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                    } else {
+                      const days = Math.floor(minutes / 1440);
+                      const hours = Math.floor((minutes % 1440) / 60);
+                      durationString = hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+                    }
+
+                    return (
+                      <div className="flex gap-3 items-stretch">
+                        {/* LEFT - Resource Grid (AsymmetricFocusDurationA style) */}
+                        <div className="flex-1">
+                          <div className="bg-black/80 border border-yellow-500/20 rounded-sm h-full p-3">
+                            <div className="text-xs text-gray-400 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {/* Gold Row */}
+                              <div className={`col-span-2 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border ${flashingFees ? 'flash-red border-red-500' : 'border-yellow-500/30'} rounded-sm p-2`}>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-yellow-600 uppercase tracking-wider font-semibold">GOLD</span>
+                                  <span className="text-yellow-400 font-black text-base" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                    {formatGoldAmount(goldFee)}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Essence Row */}
+                              <div className={`bg-black/40 border rounded-sm p-1.5 ${flashingFees ? 'flash-red border-red-500' : 'border-purple-500/30'}`}>
+                                <div className="text-xs text-gray-400 uppercase font-semibold">ESSENCE</div>
+                                <div className="text-purple-400 font-bold text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>1.5</div>
+                              </div>
+                              {/* Chip Row */}
+                              <div className={`bg-black/40 border rounded-sm p-1.5 ${flashingFees ? 'flash-red border-red-500' : 'border-cyan-500/30'}`}>
+                                <div className="text-xs text-gray-400 uppercase font-semibold">CHIP</div>
+                                <div className="text-cyan-400 font-bold text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>T1 A-Mod</div>
+                              </div>
+                              {/* Special Row */}
+                              <div className={`col-span-2 bg-black/40 border rounded-sm p-1.5 ${flashingFees ? 'flash-red border-red-500' : 'border-green-500/30'}`}>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-400 uppercase font-semibold">SPECIAL</span>
+                                  <span className="text-green-400 font-bold text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>1</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          {/* Row 1: Gold */}
-                          <div className={`bg-gradient-to-r from-yellow-500/20 via-yellow-500/10 to-yellow-500/5 border ${flashingFees ? 'flash-red border-red-500' : 'border-yellow-500/30'} rounded-sm overflow-hidden`}>
-                            <div className="flex h-7">
-                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
-                                <span className="text-sm text-yellow-400 uppercase font-black">GOLD</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-end">
-                                <span className="text-yellow-400 font-black text-base">
-                                  {formatGoldAmount(
-                                    (() => {
-                                      const baseFee = selectedNode.storyNodeType === 'final_boss' ? 200000 :
-                                                     selectedNode.storyNodeType === 'boss' ? 100000 :
-                                                     selectedNode.storyNodeType === 'event' ? 75000 :
-                                                     selectedNode.storyNodeType === 'normal' ? 30000 : 50000;
-                                      return currentDifficultyConfig ?
-                                        Math.round(baseFee * currentDifficultyConfig.deploymentFeeMultiplier) : baseFee;
-                                    })()
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Row 2: Essence */}
-                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-purple-500/30'} rounded-sm overflow-hidden`}>
-                            <div className="flex h-7">
-                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
-                                <span className="text-[10px] text-gray-400 uppercase font-bold">ESSENCE</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
-                                <span className="text-purple-400 font-bold text-[11px]">Ace of Spades Ultimate</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
-                                <span className="text-purple-300 font-bold text-xs">1.5</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Row 3: Chip */}
-                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-cyan-500/30'} rounded-sm overflow-hidden`}>
-                            <div className="flex h-7">
-                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
-                                <span className="text-[10px] text-gray-400 uppercase font-bold">CHIP</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
-                                <span className="text-cyan-400 font-bold text-[11px]">Bowling</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
-                                <span className="text-cyan-300 font-bold text-xs">A-Mod</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Row 4: Special */}
-                          <div className={`bg-gray-800/40 border ${flashingFees ? 'flash-red border-red-500' : 'border-green-500/30'} rounded-sm overflow-hidden`}>
-                            <div className="flex h-7">
-                              <div className="bg-black/30 px-2 flex items-center justify-start w-16">
-                                <span className="text-[10px] text-gray-400 uppercase font-bold">SPECIAL</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 flex-1 px-2 flex items-center justify-start">
-                                <span className="text-green-400 font-bold text-[11px]">DMT Canister</span>
-                              </div>
-                              <div className="border-l-2 border-gray-700 px-2 flex items-center justify-center w-16">
-                                <span className="text-green-300 font-bold text-xs">1</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* RIGHT - Duration and Deploy/Cancel Button */}
-                    {/* CONDITIONAL RENDERING BASED ON durationDeployLayout */}
-                    {(() => {
-                      const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
-                      const isActive = !!activeMission;
-
-                      // Shared duration content JSX (to avoid duplication)
-                      const durationContent = (heightStyle?: React.CSSProperties) => (
-                        <div className="relative overflow-hidden rounded-sm" style={heightStyle || { height: 'calc(55% + 12px)' }}>
-                              {isActive ? (
-                                // Show countdown timer when mission is active
-                                <>
-                                  {/* Animated background gradient - cyan theme for active */}
-                                  <div className="absolute inset-0 bg-gradient-to-br from-black via-cyan-950/30 to-black" />
-
-                                  {/* Scan line effect - cyan */}
-                                  <div className="absolute inset-0 opacity-20"
-                                    style={{
-                                      backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(6, 182, 212, 0.3) 50%)',
-                                      backgroundSize: '100% 4px',
-                                      animation: 'scan 4s linear infinite'
+                        {/* RIGHT - Duration + Deploy Button (AsymmetricFocusDurationA style) */}
+                        <div className="flex-shrink-0 flex flex-col gap-2 w-32">
+                          {/* Duration Display */}
+                          <div className="bg-black/80 border border-yellow-500/30 rounded-sm px-4 py-2 text-center relative overflow-hidden">
+                            {isActive ? (
+                              <>
+                                {/* Active mission countdown */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-black via-cyan-950/30 to-black" />
+                                <div className="absolute inset-0 opacity-20"
+                                  style={{
+                                    backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(6, 182, 212, 0.3) 50%)',
+                                    backgroundSize: '100% 4px',
+                                    animation: 'scan 4s linear infinite'
+                                  }}
+                                />
+                                <div className="absolute inset-0 border border-cyan-500/30"
+                                  style={{ boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2)' }}
+                                />
+                                <div className="relative">
+                                  <MissionCountdown
+                                    endTime={activeMission.startTime + activeMission.duration}
+                                    onComplete={async () => {
+                                      await completeMission({ nodeId: selectedNode.id });
+                                      if (!completedNodes.has(selectedNode.id)) {
+                                        const newCompleted = new Set(completedNodes);
+                                        newCompleted.add(selectedNode.id);
+                                        setCompletedNodes(newCompleted);
+                                      }
                                     }}
                                   />
-
-                                  {/* Border glow - cyan */}
-                                  <div className="absolute inset-0 border border-cyan-500/30"
-                                    style={{ boxShadow: 'inset 0 0 20px rgba(6, 182, 212, 0.2)' }}
-                                  />
-
-                                  {/* Countdown Content */}
-                                  <div className="relative h-full flex items-center justify-center px-2 py-2">
-                                    <MissionCountdown
-                                      endTime={activeMission.startTime + activeMission.duration}
-                                      onComplete={async () => {
-                                        // Complete the mission when timer expires
-                                        await completeMission({ nodeId: selectedNode.id });
-                                        // Mark node as completed
-                                        if (!completedNodes.has(selectedNode.id)) {
-                                          const newCompleted = new Set(completedNodes);
-                                          newCompleted.add(selectedNode.id);
-                                          setCompletedNodes(newCompleted);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </>
-                              ) : (
-                                // Show duration when mission is not active
-                                <>
-                                  {/* Animated background gradient */}
-                                  <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black" />
-
-                                  {/* Scan line effect */}
-                                  <div className="absolute inset-0 opacity-20"
-                                    style={{
-                                      backgroundImage: 'linear-gradient(0deg, transparent 50%, rgba(250, 182, 23, 0.3) 50%)',
-                                      backgroundSize: '100% 4px',
-                                      animation: 'scan 8s linear infinite'
-                                    }}
-                                  />
-
-                                  {/* Hexagonal pattern overlay */}
-                                  <div className="absolute inset-0 opacity-10"
-                                    style={{
-                                      backgroundImage: `
-                                        linear-gradient(30deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%),
-                                        linear-gradient(150deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%),
-                                        linear-gradient(270deg, transparent 29%, rgba(250, 182, 23, 0.5) 30%, transparent 31%)
-                                      `,
-                                      backgroundSize: '20px 35px'
-                                    }}
-                                  />
-
-                                  {/* Border glow */}
-                                  <div className="absolute inset-0 border border-yellow-500/30"
-                                    style={{ boxShadow: 'inset 0 0 20px rgba(250, 182, 23, 0.1)' }}
-                                  />
-
-                                  {/* Content */}
-                                  <div className="relative h-full flex flex-col items-center justify-center px-2 py-2">
-                                    <div className="text-xs text-gray-400 uppercase tracking-[0.2em] text-center font-bold">Duration</div>
-                                    <div className="text-center mt-1">
-                                      <span className="text-yellow-400 font-black text-2xl"
-                                        style={{
-                                          fontFamily: 'Roboto Mono, monospace',
-                                          textShadow: '0 0 20px rgba(250, 182, 23, 0.6), 0 0 40px rgba(250, 182, 23, 0.3)'
-                                        }}>
-                                        {(() => {
-                                          // Calculate duration based on node position
-                                          const isChallenger = (selectedNode as any).challenger === true;
-                                          let minutes = 15; // default
-
-                                          if (selectedNode.storyNodeType === 'final_boss') {
-                                            minutes = calculateNodeDuration(selectedNode, 'finalboss');
-                                          } else if (selectedNode.storyNodeType === 'boss') {
-                                            minutes = calculateNodeDuration(selectedNode, 'miniboss');
-                                          } else if (selectedNode.storyNodeType === 'event') {
-                                            minutes = calculateNodeDuration(selectedNode, 'event');
-                                          } else if (isChallenger) {
-                                            minutes = calculateNodeDuration(selectedNode, 'challenger');
-                                          } else {
-                                            minutes = calculateNodeDuration(selectedNode, 'normal');
-                                          }
-
-                                          // Format duration display
-                                          if (minutes < 60) {
-                                            return `${minutes}m`;
-                                          } else if (minutes < 1440) { // Less than 24 hours
-                                            const hours = Math.floor(minutes / 60);
-                                            const mins = minutes % 60;
-                                            return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-                                          } else { // Days
-                                            const days = Math.floor(minutes / 1440);
-                                            const hours = Math.floor((minutes % 1440) / 60);
-                                            return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
-                                          }
-                                        })()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                        </div>
-                      );
-
-                      // Shared deploy button content (to avoid duplication)
-                      const deployButton = (containerClass?: string, largeText: boolean = false, showArrow: boolean = false) => (
-                        <div
-                          className={containerClass || "flex-1 mt-[17px]"}
-                          onMouseEnter={() => {
-                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                              setIsHoveringDeployButton(true);
-                              setShowDeployTooltip(true);
-                              setFlashingMekSlots(true);
-                            }
-                          }}
-                          onMouseLeave={() => {
-                            setIsHoveringDeployButton(false);
-                            setShowDeployTooltip(false);
-                            setFlashingMekSlots(false);
-                          }}
-                          onMouseMove={(e) => {
-                            if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                              setMousePos({ x: e.clientX, y: e.clientY });
-                            }
-                          }}
-                        >
-                          <div className="w-full h-full relative">
-                            {showArrow && (
-                              <div className="absolute top-[20%] left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                                <svg width="32" height="24" viewBox="0 0 32 24" className="text-yellow-400" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8))' }}>
-                                  <path d="M 4 8 L 16 20 L 28 8 M 16 20 L 16 0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-[9px] text-gray-500 uppercase tracking-[0.2em]">DURATION</div>
+                                <div className="text-yellow-400 text-2xl font-black leading-none mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                  {durationString}
+                                </div>
+                              </>
                             )}
+                          </div>
+
+                          {/* Deploy Button */}
+                          <div
+                            className="flex-1"
+                            onMouseEnter={() => {
+                              if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                                setIsHoveringDeployButton(true);
+                                setShowDeployTooltip(true);
+                                setFlashingMekSlots(true);
+                              }
+                            }}
+                            onMouseLeave={() => {
+                              setIsHoveringDeployButton(false);
+                              setShowDeployTooltip(false);
+                              setFlashingMekSlots(false);
+                            }}
+                            onMouseMove={(e) => {
+                              if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
+                                setMousePos({ x: e.clientX, y: e.clientY });
+                              }
+                            }}
+                          >
                             <HolographicButton
                               text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
                               onClick={() => {
-                                if (deployingNodes.has(selectedNode.id)) {
-                                  return; // Prevent clicks while deploying
-                                }
+                                if (deployingNodes.has(selectedNode.id)) return;
                                 if (isActive) {
-                                  // Show cancel confirmation lightbox
                                   setPendingCancelNodeId(selectedNode.id);
                                   setShowCancelLightbox(true);
                                 } else {
@@ -5744,217 +5747,73 @@ export default function StoryClimbPage() {
                                 }
                               }}
                               isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
-                              variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
-                              alwaysOn={true}  // Always show particles
+                              variant={isActive ? "red" : deployingNodes.has(selectedNode.id) || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
+                              alwaysOn={true}
                               disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
-                              className={largeText
-                                ? "w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-6 [&>div>div]:!px-3 [&>div]:cursor-pointer [&>div>div]:flex [&>div>div]:items-center [&>div>div]:justify-center [&_span]:!text-2xl [&_span]:!tracking-[0.2em] [&_span]:!font-black"
-                                : "w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
-                              }
+                              hideIcon={isActive}
+                              className="w-32 h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
                             />
                           </div>
                         </div>
-                      );
-
-                      // LAYOUT 1: Duration LEFT, Deploy RIGHT - Side by side
-                      if (durationDeployLayout === 1) {
-                        return (
-                          <div className="w-64 h-full flex flex-row gap-2">
-                            <div className="w-32">
-                              {durationContent({ height: '100%' })}
-                            </div>
-                            <div className="w-32">
-                              {deployButton("h-full")}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // LAYOUT 2: Duration TOP (tiny), Deploy BOTTOM (huge)
-                      if (durationDeployLayout === 2) {
-                        return (
-                          <div className="w-32 h-full flex flex-col gap-2">
-                            {/* Duration box at top - 15% height */}
-                            <div style={{ height: '15%' }}>
-                              {durationContent({ height: '100%' })}
-                            </div>
-
-                            {/* Deploy button - 85% height (fills remaining space) with arrow inside */}
-                            <div style={{ height: '85%' }}>
-                              {deployButton("h-full", true, true)}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // LAYOUT 3: Deploy ONLY - Duration badge in corner
-                      if (durationDeployLayout === 3) {
-                        return (
-                          <div className="w-40 h-full">
-                            <div className="w-full h-full relative"
-                              onMouseEnter={() => {
-                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                                  setIsHoveringDeployButton(true);
-                                  setShowDeployTooltip(true);
-                                  setFlashingMekSlots(true);
-                                }
-                              }}
-                              onMouseLeave={() => {
-                                setIsHoveringDeployButton(false);
-                                setShowDeployTooltip(false);
-                                setFlashingMekSlots(false);
-                              }}
-                              onMouseMove={(e) => {
-                                if (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0)) {
-                                  setMousePos({ x: e.clientX, y: e.clientY });
-                                }
-                              }}
-                            >
-                              <HolographicButton
-                                text={deployingNodes.has(selectedNode.id) ? "DEPLOYING..." : isActive ? "CANCEL" : "DEPLOY"}
-                                onClick={() => {
-                                  if (deployingNodes.has(selectedNode.id)) {
-                                    return;
-                                  }
-                                  if (isActive) {
-                                    setPendingCancelNodeId(selectedNode.id);
-                                    setShowCancelLightbox(true);
-                                  } else {
-                                    handleNodeDeploy(selectedNode as ExtendedStoryNode, false);
-                                    setCompletedDifficulties(prev => ({
-                                      ...prev,
-                                      [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), selectedDifficulty])
-                                    }));
-                                  }
-                                }}
-                                isActive={isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].length > 0)}
-                                variant={deployingNodes.has(selectedNode.id) || isActive || (selectedMeks[selectedNode.id] && selectedMeks[selectedNode.id].filter(Boolean).length > 0) ? "yellow" : "gray"}
-                                alwaysOn={true}
-                                disabled={deployingNodes.has(selectedNode.id) || (!isActive && (!selectedMeks[selectedNode.id] || selectedMeks[selectedNode.id].length === 0))}
-                                className="w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-3 [&>div]:cursor-pointer [&_span]:!text-lg [&_span]:!tracking-[0.25em]"
-                              />
-                              {/* Duration overlay badge in top-right corner */}
-                              <div className="absolute top-2 right-2 bg-black/90 border border-yellow-500/50 rounded px-2 py-1 pointer-events-none">
-                                <div className="text-[8px] text-gray-400 uppercase tracking-wider">Duration</div>
-                                <div className="text-yellow-400 font-black text-sm" style={{ fontFamily: 'Roboto Mono, monospace' }}>
-                                  {(() => {
-                                    const isChallenger = (selectedNode as any).challenger === true;
-                                    let minutes = 15;
-
-                                    if (selectedNode.storyNodeType === 'final_boss') {
-                                      minutes = calculateNodeDuration(selectedNode, 'finalboss');
-                                    } else if (selectedNode.storyNodeType === 'boss') {
-                                      minutes = calculateNodeDuration(selectedNode, 'miniboss');
-                                    } else if (selectedNode.storyNodeType === 'event') {
-                                      minutes = calculateNodeDuration(selectedNode, 'event');
-                                    } else if (isChallenger) {
-                                      minutes = calculateNodeDuration(selectedNode, 'challenger');
-                                    } else {
-                                      minutes = calculateNodeDuration(selectedNode, 'normal');
-                                    }
-
-                                    if (minutes < 60) {
-                                      return `${minutes}m`;
-                                    } else if (minutes < 1440) {
-                                      const hours = Math.floor(minutes / 60);
-                                      const mins = minutes % 60;
-                                      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-                                    } else {
-                                      const days = Math.floor(minutes / 1440);
-                                      const hours = Math.floor((minutes % 1440) / 60);
-                                      return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
-                                    }
-                                  })()}
+                      </div>
+                    );
+                  })() : (
+                    // Show placeholder when no node is selected
+                    <div className="opacity-30">
+                      <div className="flex gap-3 items-stretch">
+                        <div className="flex-1">
+                          <div className="bg-black/80 border border-gray-700/20 rounded-sm h-full p-3">
+                            <div className="text-xs text-gray-500 uppercase tracking-[0.3em] mb-2 text-center font-bold">MISSION COSTS</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-600 uppercase tracking-wider font-semibold">GOLD</span>
+                                  <span className="text-gray-600 font-black text-base" style={{ fontFamily: 'Inter, sans-serif' }}>---</span>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // LAYOUT 4: Deploy TOP (huge), Duration BOTTOM (tiny) - REVERSED
-                      if (durationDeployLayout === 4) {
-                        return (
-                          <div className="w-32 h-full flex flex-col gap-2">
-                            <div style={{ height: '85%' }}>
-                              {deployButton("h-full", true)}
-                            </div>
-                            <div style={{ height: '15%' }}>
-                              {durationContent({ height: '100%' })}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      return null;
-                    })()}
-                  </div>
-                ) : (
-                  // Show placeholder when no node is selected
-                  <div className="opacity-30">
-                    <div className="flex gap-3 items-stretch">
-                      {/* LEFT - Resource Grid */}
-                      <div className="flex-1">
-                        <div className="bg-black/80 border border-gray-700/20 rounded-sm h-full p-3">
-                          <div className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-2 text-center font-bold">
-                            CONTRACT FEES
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">GOLD</span>
-                                <span className="text-gray-600 font-black text-lg">---</span>
+                              <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                                <div className="text-xs text-gray-500 uppercase font-semibold">ESSENCE</div>
+                                <div className="text-gray-600 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>---</div>
                               </div>
-                            </div>
-                            <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
-                              <div className="text-[9px] text-gray-600 uppercase">ACE ESSENCE</div>
-                              <div className="text-gray-600 font-bold text-sm">--</div>
-                            </div>
-                            <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
-                              <div className="text-[9px] text-gray-600 uppercase">BOWLING CHIP</div>
-                              <div className="text-gray-600 font-bold text-sm">--</div>
-                            </div>
-                            <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[9px] text-gray-600 uppercase">SPECIAL</span>
-                                <span className="text-gray-600 font-bold text-sm">---</span>
+                              <div className="bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                                <div className="text-xs text-gray-500 uppercase font-semibold">CHIP</div>
+                                <div className="text-gray-600 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>---</div>
+                              </div>
+                              <div className="col-span-2 bg-black/20 border border-gray-700/30 rounded-sm p-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-500 uppercase font-semibold">SPECIAL</span>
+                                  <span className="text-gray-600 text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>---</span>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      {/* RIGHT - Deploy Button (disabled) */}
-                      <div className="flex-shrink-0">
-                        <div className="w-32 h-[140px]">
-                          <button disabled className="w-full h-full relative overflow-hidden bg-gray-900/40 border-2 border-gray-800 cursor-not-allowed opacity-50 rounded-sm">
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                              <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
-                                <path d="M5 12L5 19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V12"
-                                      stroke="currentColor"
-                                      strokeWidth="2.5"
-                                      fill="none"
-                                      fillOpacity="0"
-                                      className="text-gray-700" />
-                                <path d="M12 7V17M7 10L12 7L17 10"
-                                      stroke="currentColor"
-                                      strokeWidth="2.5"
-                                      className="text-gray-700" />
-                              </svg>
-                              <div>
-                                <div className="font-black text-base tracking-[0.3em] uppercase text-gray-700">
-                                  DEPLOY
-                                </div>
-                                <div className="text-[9px] tracking-[0.2em] uppercase mt-0.5 text-gray-800">
-                                  SELECT NODE
-                                </div>
+                        <div className="flex-shrink-0 flex flex-col gap-2">
+                          <div className="bg-black/80 border border-gray-700/30 rounded-sm px-4 py-2 text-center">
+                            <div className="text-[9px] text-gray-600 uppercase tracking-[0.2em]">DURATION</div>
+                            <div className="text-gray-600 text-2xl font-black leading-none mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>--</div>
+                          </div>
+                          <div className="flex-1 w-32">
+                            <button disabled className="w-full h-full relative overflow-hidden bg-gray-900/40 border-2 border-gray-800 cursor-not-allowed opacity-50 rounded-sm">
+                              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
+                                  <path d="M5 12L5 19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V12"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        className="text-gray-700" />
+                                  <path d="M12 7V17M7 10L12 7L17 10"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        className="text-gray-700" />
+                                </svg>
+                                <div className="font-black text-base tracking-[0.3em] uppercase text-gray-700">DEPLOY</div>
                               </div>
-                            </div>
-                          </button>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
                   {/* Tooltip for inactive deploy button */}
                   {showDeployTooltip && typeof window !== 'undefined' && createPortal(
                     <div
@@ -6137,7 +5996,9 @@ export default function StoryClimbPage() {
           {/* Right Column - Mission Card Details */}
           <div className="flex-grow pr-5">
             {/* Show card for selected node */}
-            {selectedNode ? (
+            {selectedNode ? (() => {
+              const activeMission = activeMissions?.find(m => m.nodeId === selectedNode.id);
+              return (
               <StoryMissionCard
                 isEventNode={selectedNode.storyNodeType === 'event'}
                 successPercentage={showTestPanel ? testSuccessRate :
@@ -6170,20 +6031,24 @@ export default function StoryClimbPage() {
                 mekImage={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    // For events, we now pass images through eventImages prop instead
-                    // Return a fallback for backward compatibility
-                    const eventImageName = getEventImage(selectedNode.id);
-                    return `/event-images/450px webp/${eventImageName.replace(/ /g, '%20')}`;
+                    // Use actual event number, not hash
+                    const eventNum = eventData?.localEventNumber || eventData?.globalEventNumber || 1;
+                    const imgNum = ((eventNum - 1) % 20) + 1;
+                    return `/event-nfts/E${imgNum}-E.png`;
                   }
                   return getMekImage(selectedNode.id, true);
                 })()}
                 eventImages={(() => {
                   if (selectedNode.storyNodeType === 'event') {
                     const eventData = getEventDataForNode(selectedNode);
-                    // Return the 3-image object if available
-                    if (eventData?.images) {
-                      return eventData.images;
-                    }
+                    // Use actual event number to generate difficulty images
+                    const eventNum = eventData?.localEventNumber || eventData?.globalEventNumber || 1;
+                    const imgNum = ((eventNum - 1) % 20) + 1;
+                    return {
+                      easy: `/event-nfts/E${imgNum}-E.png`,
+                      medium: `/event-nfts/E${imgNum}-M.png`,
+                      hard: `/event-nfts/E${imgNum}-H.png`
+                    };
                   }
                   return undefined;
                 })()}
@@ -6321,13 +6186,15 @@ export default function StoryClimbPage() {
                 difficultyConfig={currentDifficultyConfig}
                 lockedStyle={1}
                 completedDifficulties={completedDifficulties[selectedNode.id] || new Set()}
+                activeMissionEndTime={activeMission ? (activeMission.startTime + activeMission.duration) : undefined}
+                activeMissionDifficulty={activeMission?.difficulty as 'easy' | 'medium' | 'hard' | undefined}
                 onDifficultyComplete={(difficulty: DifficultyLevel) => {
                   setCompletedDifficulties(prev => ({
                     ...prev,
                     [selectedNode.id]: new Set([...(prev[selectedNode.id] || []), difficulty])
                   }));
                 }}
-                mekContributions={selectedMeks[selectedNode.id]?.map((mek: any, idx: number) => ({
+                mekContributions={selectedMeks[selectedNode.id]?.filter(Boolean).map((mek: any, idx: number) => ({
                   mekId: mek.id || `mek-${idx}`,
                   name: mek.name || `MEK ${idx + 1}`,
                   rank: mek.rank || 1000,
@@ -6339,7 +6206,8 @@ export default function StoryClimbPage() {
                 isEventCompleted={selectedNode.storyNodeType === 'event' ? eventCompletionState !== 'incomplete' : false}
                 hasNftPurchased={selectedNode.storyNodeType === 'event' ? eventCompletionState === 'nft-owned' : false}
               />
-            ) : (
+              );
+            })() : (
               // No node selected - show empty state with darkened card
               <div className="opacity-30">
                 <StoryMissionCard
