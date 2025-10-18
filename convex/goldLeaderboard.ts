@@ -477,21 +477,34 @@ export const getAllCorporationsCached = query({
       .withIndex("by_category_rank", q => q.eq("category", "gold"))
       .collect();
 
-    // Return all cached entries with full display info
-    return cachedLeaderboard
+    // Filter out entries with 0 gold and deduplicate by wallet address
+    const seenWallets = new Set<string>();
+    const filteredEntries = cachedLeaderboard
       .sort((a, b) => a.rank - b.rank)
-      .map(entry => ({
-        walletAddress: entry.walletAddress,
-        displayWallet: entry.username || (entry.walletAddress ?
-          `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
-          'Unknown'),
-        currentGold: Math.floor(entry.value),
-        hourlyRate: entry.metadata?.goldPerHour || 0,
-        mekCount: entry.metadata?.mekDetails?.total || 0,
-        isCurrentUser: currentWallet === entry.walletAddress,
-        lastActive: entry.lastUpdated,
-        rank: entry.rank,
-      }));
+      .filter(entry => {
+        // Skip if 0 gold
+        if (entry.value <= 0) return false;
+
+        // Skip if duplicate wallet address (keep first occurrence)
+        if (seenWallets.has(entry.walletAddress)) return false;
+        seenWallets.add(entry.walletAddress);
+
+        return true;
+      });
+
+    // Return filtered entries with full display info
+    return filteredEntries.map(entry => ({
+      walletAddress: entry.walletAddress,
+      displayWallet: entry.username || (entry.walletAddress ?
+        `${entry.walletAddress.slice(0, 8)}...${entry.walletAddress.slice(-6)}` :
+        'Unknown'),
+      currentGold: Math.floor(entry.value),
+      hourlyRate: entry.metadata?.goldPerHour || 0,
+      mekCount: entry.metadata?.mekDetails?.total || 0,
+      isCurrentUser: currentWallet === entry.walletAddress,
+      lastActive: entry.lastUpdated,
+      rank: entry.rank,
+    }));
   },
 });
 
