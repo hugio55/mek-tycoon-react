@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, lazy, Suspense, useMemo, useCallback, useRef } from 'react';
+import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { restoreWalletSession } from '@/lib/walletSessionManager';
 import StorageMonitoringDashboard from '@/components/StorageMonitoringDashboard';
+import SystemMonitoringDashboard from '@/components/SystemMonitoringDashboard';
 import ProductionLaunchCleaner from '@/components/ProductionLaunchCleaner';
 import WalletSnapshotDebug from '@/components/WalletSnapshotDebug';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
@@ -14,9 +16,23 @@ import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
 
-type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'system-monitoring' | 'gold-repair';
+type SubMenu = 'wallet-list' | 'storage-monitoring' | 'snapshot-history' | 'snapshot-health' | 'duplicate-detection' | 'production-launch-cleaner' | 'gold-repair';
+type SnapshotHealthTab = 'health' | 'logging';
 
 export default function WalletManagementAdmin() {
+  // Restore wallet session for authentication
+  const [stakeAddress, setStakeAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const session = await restoreWalletSession();
+      if (session?.stakeAddress) {
+        setStakeAddress(session.stakeAddress);
+        console.log('[Wallet Management] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
+      }
+    };
+    loadSession();
+  }, []);
   const wallets = useQuery(api.adminVerificationReset.getAllWallets);
   const resetVerification = useMutation(api.adminVerificationReset.resetVerificationStatus);
   const deleteWallet = useMutation(api.adminVerificationReset.deleteWallet);
@@ -38,6 +54,7 @@ export default function WalletManagementAdmin() {
   const resetAllProgress = useMutation(api.adminResetAllProgress.resetAllProgress);
 
   const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>('wallet-list');
+  const [snapshotHealthTab, setSnapshotHealthTab] = useState<SnapshotHealthTab>('health');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [isMerging, setIsMerging] = useState(false);
@@ -639,17 +656,6 @@ Check console for full timeline.
         </button>
 
         <button
-          onClick={() => setActiveSubmenu('system-monitoring')}
-          className={`px-4 py-2 text-sm font-semibold transition-colors ${
-            activeSubmenu === 'system-monitoring'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          📊 System Monitoring
-        </button>
-
-        <button
           onClick={() => setActiveSubmenu('gold-repair')}
           className={`px-4 py-2 text-sm font-semibold transition-colors ${
             activeSubmenu === 'gold-repair'
@@ -668,13 +674,42 @@ Check console for full timeline.
           <SnapshotHistoryViewer />
         </Suspense>
       ) : activeSubmenu === 'snapshot-health' ? (
-        <SnapshotHealthDashboard />
+        <div className="space-y-4">
+          {/* Sub-tabs for Snapshot Health */}
+          <div className="flex gap-2 border-b border-gray-700">
+            <button
+              onClick={() => setSnapshotHealthTab('health')}
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                snapshotHealthTab === 'health'
+                  ? 'text-yellow-400 border-b-2 border-yellow-400'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              📊 Snapshot Health System
+            </button>
+            <button
+              onClick={() => setSnapshotHealthTab('logging')}
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                snapshotHealthTab === 'logging'
+                  ? 'text-yellow-400 border-b-2 border-yellow-400'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              📋 Overall Logging System
+            </button>
+          </div>
+
+          {/* Render sub-tab content */}
+          {snapshotHealthTab === 'health' ? (
+            <SnapshotHealthDashboard />
+          ) : (
+            <SystemMonitoringDashboard stakeAddress={stakeAddress} />
+          )}
+        </div>
       ) : activeSubmenu === 'duplicate-detection' ? (
         <DuplicateWalletDetector />
       ) : activeSubmenu === 'production-launch-cleaner' ? (
         <ProductionLaunchCleaner />
-      ) : activeSubmenu === 'system-monitoring' ? (
-        <SystemMonitoringDashboard />
       ) : activeSubmenu === 'gold-repair' ? (
         <div className="space-y-6">
           {/* Gold Repair Tool */}
