@@ -630,7 +630,7 @@ Check console for full timeline.
               : 'text-gray-400 hover:text-gray-200'
           }`}
         >
-          📊 Snapshot Health
+          📊 Convex Logging
         </button>
 
         <button
