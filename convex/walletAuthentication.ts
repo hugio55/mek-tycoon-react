@@ -1,6 +1,6 @@
-import { mutation, query, action } from "./_generated/server";
+import { mutation, query, action, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { generateSessionId } from "./lib/sessionUtils";
 
 // Rate Limiting Configuration

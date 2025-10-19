@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
 
 interface AirdropClaimBannerProps {
   userId: Id<"users"> | null;
@@ -60,18 +61,18 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   if (!verificationStatus || !verificationStatus.isVerified) return null;
   if (!goldMiningData) return null;
 
-  // Calculate current gold
+  // Calculate cumulative gold (total earned over all time)
   const now = Date.now();
-  let currentGold = goldMiningData.accumulatedGold || 0;
+  let cumulativeGold = goldMiningData.totalCumulativeGold || 0;
   if (goldMiningData.isBlockchainVerified) {
     const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
     const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
     const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
-    currentGold = (goldMiningData.accumulatedGold || 0) + goldSinceLastUpdate;
+    cumulativeGold = (goldMiningData.totalCumulativeGold || 0) + goldSinceLastUpdate;
   }
 
   // Check if user has enough gold
-  if (currentGold <= (activeConfig.minimumGold || 0)) return null;
+  if (cumulativeGold <= (activeConfig.minimumGold || 0)) return null;
 
   // Validate Cardano address
   const validateAddress = (addr: string): { valid: boolean; message?: string } => {
@@ -135,71 +136,54 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     <>
       {/* Airdrop Claim Banner */}
       <div
-        className="mb-6 p-6 rounded-xl border-4 cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+        className="mb-6 p-6 rounded-xl border-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.25) 100%)',
-          borderColor: '#a855f7',
-          boxShadow: '0 0 30px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.1)',
-          animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.4) 100%)',
+          borderColor: '#06b6d4',
+          boxShadow: '0 0 40px rgba(6, 182, 212, 0.8), inset 0 0 30px rgba(59, 130, 246, 0.3)'
         }}
-        onClick={() => setShowAddressModal(true)}
       >
-        <div className="flex items-start gap-4">
-          <div
-            className="text-4xl"
+        <div className="text-center">
+          <h3
+            className="text-xl font-bold mb-2"
             style={{
-              filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.6))'
+              fontFamily: "'Orbitron', sans-serif",
+              color: '#e0f2fe',
+              textShadow: '0 0 15px rgba(6, 182, 212, 0.8)',
+              letterSpacing: '0.05em'
             }}
           >
-            🎁
-          </div>
-          <div className="flex-1">
-            <h3
-              className="text-xl font-bold mb-2"
-              style={{
-                fontFamily: "'Orbitron', sans-serif",
-                color: '#f3e8ff',
-                textShadow: '0 0 10px rgba(168, 85, 247, 0.6)',
-                letterSpacing: '0.05em'
-              }}
-            >
-              {activeConfig.nftName || 'FREE NFT AIRDROP AVAILABLE!'}
-            </h3>
-            <p
-              className="text-base mb-4"
-              style={{
-                color: '#e9d5ff',
-                lineHeight: '1.6'
-              }}
-            >
-              {activeConfig.nftDescription || 'Claim your commemorative NFT as an early supporter!'}
-              <br />
-              <span className="text-sm text-purple-300">
-                You have {Math.floor(currentGold).toLocaleString()}g and are eligible to claim.
-              </span>
-            </p>
-            <button
-              className="inline-block px-6 py-3 rounded-lg font-bold transition-all duration-200"
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-                color: '#ffffff',
-                fontFamily: "'Orbitron', sans-serif",
-                letterSpacing: '0.05em',
-                boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)',
-                textTransform: 'uppercase',
-                fontSize: '14px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(168, 85, 247, 0.4)';
-              }}
-            >
-              Claim Your NFT Now →
-            </button>
+            Phase 1: Commemorative NFT
+          </h3>
+          <p
+            className="text-sm mb-2"
+            style={{
+              color: '#bae6fd',
+              lineHeight: '1.5',
+              fontSize: '0.875rem'
+            }}
+          >
+            {activeConfig.nftDescription || 'Claim your commemorative NFT as an early supporter!'}
+          </p>
+          <p
+            className="text-sm mb-4"
+            style={{
+              color: '#7dd3fc',
+              lineHeight: '1.6'
+            }}
+          >
+            You have accumulated a total of {Math.floor(cumulativeGold).toLocaleString()}g and are eligible to claim.
+          </p>
+          <div className="w-full max-w-xs mx-auto">
+            <HolographicButton
+              text="Claim Your NFT"
+              onClick={() => setShowAddressModal(true)}
+              isActive={true}
+              variant="yellow"
+              alwaysOn={true}
+              hideIcon={true}
+              className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+            />
           </div>
         </div>
       </div>
@@ -211,25 +195,25 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
           onClick={handleCloseModal}
         >
           <div
-            className="bg-black/95 border-2 border-purple-500/50 rounded-lg shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden"
+            className="bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden"
             style={{
-              boxShadow: '0 0 60px rgba(168, 85, 247, 0.3), inset 0 0 30px rgba(168, 85, 247, 0.05)'
+              boxShadow: '0 0 60px rgba(6, 182, 212, 0.4), inset 0 0 30px rgba(6, 182, 212, 0.08)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Corner brackets */}
-            <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-purple-400/70" />
-            <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-purple-400/70" />
-            <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-purple-400/70" />
-            <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-purple-400/70" />
+            <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-cyan-400/70" />
+            <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-cyan-400/70" />
+            <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-cyan-400/70" />
+            <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-cyan-400/70" />
 
             {/* Grid pattern overlay */}
             <div
               className="absolute inset-0 opacity-[0.03] pointer-events-none"
               style={{
                 backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent 19px, #a855f7 19px, #a855f7 20px),
-                  repeating-linear-gradient(90deg, transparent, transparent 19px, #a855f7 19px, #a855f7 20px)
+                  repeating-linear-gradient(0deg, transparent, transparent 19px, #06b6d4 19px, #06b6d4 20px),
+                  repeating-linear-gradient(90deg, transparent, transparent 19px, #06b6d4 19px, #06b6d4 20px)
                 `
               }}
             />
@@ -241,14 +225,14 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
                   className="text-2xl sm:text-3xl font-bold mb-2"
                   style={{
                     fontFamily: "'Orbitron', sans-serif",
-                    color: '#f3e8ff',
-                    textShadow: '0 0 15px rgba(168, 85, 247, 0.6)',
+                    color: '#e0f2fe',
+                    textShadow: '0 0 15px rgba(6, 182, 212, 0.8)',
                     letterSpacing: '0.05em'
                   }}
                 >
                   Submit Receive Address
                 </h3>
-                <p className="text-sm text-purple-300/80">
+                <p className="text-sm text-cyan-300/80">
                   Enter your Cardano wallet address to receive your NFT
                 </p>
               </div>
@@ -268,7 +252,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
                 <>
                   {/* Address Input */}
                   <div className="mb-6">
-                    <label className="block text-xs uppercase tracking-wider text-purple-300 mb-2 font-bold">
+                    <label className="block text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">
                       Cardano Receive Address
                     </label>
                     <input
@@ -321,8 +305,8 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
                   )}
 
                   {/* Info Box */}
-                  <div className="mb-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-                    <p className="text-xs text-purple-200">
+                  <div className="mb-6 p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-lg">
+                    <p className="text-xs text-cyan-200">
                       <strong>Important:</strong> Make sure this is a Cardano mainnet address you control. NFTs will be sent to this address after processing.
                     </p>
                   </div>
@@ -343,18 +327,18 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
                       className="flex-1 px-6 py-3 rounded-lg font-bold transition-all uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
                         background: addressValidation.valid && !isSubmitting
-                          ? 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)'
+                          ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
                           : '#374151',
                         color: addressValidation.valid && !isSubmitting ? '#ffffff' : '#6b7280',
                         fontFamily: "'Orbitron', sans-serif",
                         boxShadow: addressValidation.valid && !isSubmitting
-                          ? '0 4px 12px rgba(168, 85, 247, 0.4)'
+                          ? '0 4px 12px rgba(6, 182, 212, 0.5)'
                           : 'none'
                       }}
                     >
                       {isSubmitting ? (
                         <span className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-purple-200 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-cyan-200 border-t-transparent rounded-full animate-spin" />
                           Submitting...
                         </span>
                       ) : (
