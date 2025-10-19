@@ -1,14 +1,16 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { useState } from "react";
-import { useWallet } from "../contexts/WalletContext";
 
-export default function SystemMonitoringDashboard() {
+interface SystemMonitoringDashboardProps {
+  stakeAddress?: string | null;
+}
+
+export default function SystemMonitoringDashboard({ stakeAddress = null }: SystemMonitoringDashboardProps = {}) {
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [selectedSeverity, setSelectedSeverity] = useState<string>("all");
-  const { stakeAddress } = useWallet();
 
   // Get recent events (requires authentication)
   const recentEvents = useQuery(
