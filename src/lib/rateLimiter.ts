@@ -189,9 +189,10 @@ class RateLimiter {
 
 // Create specialized rate limiters for different operations
 export const walletRateLimiter = new RateLimiter({
-  maxRequests: 5,
-  windowMs: 60000,
-  circuitBreakerThreshold: 3,
+  maxRequests: 15, // Increased from 5 - allow more connection attempts
+  windowMs: 60000, // 1 minute window
+  circuitBreakerThreshold: 8, // Increased from 3 - be more lenient with failures
+  circuitBreakerResetMs: 30000, // Reduced from 60s - faster recovery
 });
 
 export const blockchainRateLimiter = new RateLimiter({
