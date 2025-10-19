@@ -1,6 +1,6 @@
 "use client";
 
-// Force rebuild with correct production DB
+// Final rebuild with fixed env var (no newline)
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
