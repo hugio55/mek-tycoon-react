@@ -1,6 +1,6 @@
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 // Helper function to log monitoring events
 export const logEvent = internalMutation({
@@ -42,7 +42,7 @@ export const logEvent = internalMutation({
 });
 
 // INTERNAL: Query recent monitoring events (requires authentication wrapper)
-const _getRecentEvents = internalQuery({
+export const _getRecentEvents = internalQuery({
   args: {
     limit: v.optional(v.number()),
     eventType: v.optional(v.string()),
@@ -97,7 +97,7 @@ export const getRecentEvents = query({
     }
 
     // Call internal query
-    return await ctx.runQuery(api.monitoring._getRecentEvents, {
+    return await ctx.runQuery(internal.monitoring._getRecentEvents, {
       limit: args.limit,
       eventType: args.eventType,
       category: args.category,
@@ -107,7 +107,7 @@ export const getRecentEvents = query({
 });
 
 // INTERNAL: Get monitoring summary for a time range (requires authentication wrapper)
-const _getSummary = internalQuery({
+export const _getSummary = internalQuery({
   args: {
     startTime: v.optional(v.number()),
     endTime: v.optional(v.number()),
@@ -195,7 +195,7 @@ export const getSummary = query({
     }
 
     // Call internal query
-    return await ctx.runQuery(api.monitoring._getSummary, {
+    return await ctx.runQuery(internal.monitoring._getSummary, {
       startTime: args.startTime,
       endTime: args.endTime,
     });
@@ -203,7 +203,7 @@ export const getSummary = query({
 });
 
 // INTERNAL: Get latest monitoring summaries (requires authentication wrapper)
-const _getLatestSummaries = internalQuery({
+export const _getLatestSummaries = internalQuery({
   args: {
     limit: v.optional(v.number()),
   },
@@ -236,7 +236,7 @@ export const getLatestSummaries = query({
     }
 
     // Call internal query
-    return await ctx.runQuery(api.monitoring._getLatestSummaries, {
+    return await ctx.runQuery(internal.monitoring._getLatestSummaries, {
       limit: args.limit,
     });
   },

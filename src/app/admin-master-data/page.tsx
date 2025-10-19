@@ -17,6 +17,8 @@ import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import VariationSearchTable from '@/components/VariationSearchTable';
+import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
+import EssenceListingLightboxV5YellowGradient from '@/components/EssenceListingLightbox-V5-YellowGradient';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -35,6 +37,107 @@ const STORY_CLIMB_SUBSECTIONS = [
   { id: 'normal-rewards', name: 'Normal Mek Node Rewards', icon: '🎁' }
 ];
 
+
+// Admin Essence Tool Component
+function AdminEssenceTool() {
+  const [walletAddress, setWalletAddress] = useState('');
+  const [variationName, setVariationName] = useState('Bumblebee');
+  const [amount, setAmount] = useState('5.0');
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const adminAddEssence = useMutation(api.essence.adminAddEssence);
+
+  const handleAddEssence = async () => {
+    if (!walletAddress.trim()) {
+      setStatusMessage({ type: 'error', text: 'Please enter a wallet address' });
+      return;
+    }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setStatusMessage({ type: 'error', text: 'Please enter a valid amount' });
+      return;
+    }
+
+    try {
+      const result = await adminAddEssence({
+        walletAddress: walletAddress.trim(),
+        variationName,
+        amount: numAmount,
+      });
+
+      setStatusMessage({
+        type: 'success',
+        text: `Successfully added ${numAmount} ${variationName} essence. New total: ${result.newAmount}`
+      });
+    } catch (error) {
+      setStatusMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to add essence'
+      });
+    }
+  };
+
+  return (
+    <div className="mt-6 bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+      <h4 className="text-lg font-bold text-purple-400 mb-3">Admin Essence Tool</h4>
+      <p className="text-sm text-gray-400 mb-4">
+        Add essence to any wallet for testing purposes
+      </p>
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Wallet Address:</label>
+          <input
+            type="text"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+            placeholder="stake1u..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Variation Name:</label>
+          <input
+            type="text"
+            value={variationName}
+            onChange={(e) => setVariationName(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Amount:</label>
+          <input
+            type="number"
+            step="0.1"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+          />
+        </div>
+
+        <button
+          onClick={handleAddEssence}
+          className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded transition-colors"
+        >
+          Add Essence
+        </button>
+
+        {statusMessage && (
+          <div className={`p-3 rounded ${
+            statusMessage.type === 'success'
+              ? 'bg-green-900/30 border border-green-500/30 text-green-400'
+              : 'bg-red-900/30 border border-red-500/30 text-red-400'
+          }`}>
+            {statusMessage.text}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Data system definitions
 const DATA_SYSTEMS = [
@@ -56,7 +159,8 @@ const DATA_SYSTEMS = [
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Wallet Management', icon: '👛', implemented: true },
   { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
-  { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false }
+  { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
+  { id: 'nfts', name: 'NFTs', icon: '🎨', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -66,6 +170,7 @@ export default function AdminMasterDataPage() {
   const [storyClimbSubTab, setStoryClimbSubTab] = useState<string>('difficulty-subsystem');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
+  const [showEssenceListingLightbox, setShowEssenceListingLightbox] = useState(false);
   const [menuHeaderCollapsed, setMenuHeaderCollapsed] = useState(true); // Default to collapsed
   const [systemStatusCollapsed, setSystemStatusCollapsed] = useState(false);
   const [masterRangeCollapsed, setMasterRangeCollapsed] = useState(true); // Default to collapsed
@@ -788,7 +893,8 @@ export default function AdminMasterDataPage() {
                   const subsections = {
                     'mek-systems': ['mek-base-config', 'mek-talent-tree', 'mek-detail-viewer'],
                     'story-climb-mechanics': ['difficulty-subsystem', 'duration-subsystem'],
-                    'variations': ['variations-image-sync', 'variations-search', 'variations-buff-assignment']
+                    'variations': ['variations-image-sync', 'variations-search', 'variations-buff-assignment'],
+                    'nfts': ['commemorative-token-1']
                   };
                   const sectionsToExpand = [system.id, ...(subsections[system.id as keyof typeof subsections] || [])];
                   setExpandedSections(new Set(sectionsToExpand));
@@ -1727,6 +1833,18 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Test Listing Lightbox Button */}
+                <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                  <h4 className="text-sm font-bold text-purple-400 mb-3">Test Listing Interface</h4>
+                  <p className="text-xs text-gray-400 mb-3">Preview the essence listing lightbox with test data</p>
+                  <button
+                    onClick={() => setShowEssenceListingLightbox(true)}
+                    className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold uppercase tracking-wider rounded-lg transition-all shadow-lg shadow-yellow-500/30"
+                  >
+                    Open Listing Lightbox
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -2579,6 +2697,9 @@ export default function AdminMasterDataPage() {
 
                 {/* Wallet Management Component with built-in tabs */}
                 <WalletManagementAdmin />
+
+                {/* Admin Essence Tool */}
+                <AdminEssenceTool />
               </div>
           </div>
           )}
@@ -2622,6 +2743,52 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* NFTs - Airdrop Management */}
+          {activeTab === 'nfts' && (
+          <div id="section-nfts" className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+              <p className="text-gray-400 mb-4">
+                Manage NFT airdrops and commemorative token distributions. Configure campaigns, track submissions, and monitor distribution status.
+              </p>
+
+              {/* Commemorative Token 1 Subsection */}
+              <div className="mb-4 ml-6 bg-black/70 border border-yellow-500/20 rounded">
+                <button
+                  onClick={() => toggleSection('commemorative-token-1')}
+                  className="w-full p-3 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🏅</span>
+                    <h4 className="text-sm font-semibold text-yellow-300">Commemorative Token 1</h4>
+                    <span className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">ACTIVE</span>
+                  </div>
+                  <span className="text-gray-400 text-sm">{expandedSections.has('commemorative-token-1') ? '▼' : '▶'}</span>
+                </button>
+                {expandedSections.has('commemorative-token-1') && (
+                  <div className="p-4 border-t border-yellow-500/20">
+                    <p className="text-sm text-gray-400 mb-4">
+                      First commemorative NFT airdrop for early gold miners. Users with verified wallets and gold &gt; 0 can claim their reward NFT.
+                    </p>
+
+                    <CommemorativeToken1Admin />
+                  </div>
+                )}
+              </div>
+
+              {/* Future Campaign Placeholder */}
+              <div className="mb-4 ml-6 bg-black/70 border border-gray-700/20 rounded opacity-50">
+                <div className="w-full p-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎖️</span>
+                    <h4 className="text-sm font-semibold text-gray-500">Commemorative Token 2</h4>
+                    <span className="px-2 py-0.5 bg-gray-700/30 text-gray-500 text-xs font-bold rounded">PLANNED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          )}
+
         </div>
       </div>
 
@@ -2629,6 +2796,29 @@ export default function AdminMasterDataPage() {
       <GameDataLightbox
         isOpen={showGameDataLightbox}
         onClose={() => setShowGameDataLightbox(false)}
+      />
+
+      {/* Essence Listing Lightbox */}
+      <EssenceListingLightboxV5YellowGradient
+        show={showEssenceListingLightbox}
+        onClose={() => setShowEssenceListingLightbox(false)}
+        onSubmit={(data) => {
+          console.log('Listing created:', data);
+          alert(`Listing created!\n${data.amount} ${data.variation}\nPrice: ${data.price}g per unit\nDuration: ${data.duration} days`);
+          setShowEssenceListingLightbox(false);
+        }}
+        ownedEssenceVariations={[
+          { name: 'Bumblebee', amount: 3.5 },
+          { name: 'Bowling', amount: 1.0 },
+          { name: 'Blue Cheer', amount: 7.2 },
+          { name: 'Crystal Ball', amount: 0.5 },
+          { name: 'Disco Ball', amount: 12.3 },
+        ]}
+        durationOptions={Object.entries(marketConfig.durationCosts).map(([days, cost]) => ({
+          days: parseInt(days),
+          label: `${days} Day${days !== '1' ? 's' : ''}`,
+          cost: cost
+        }))}
       />
     </div>
   );

@@ -27,8 +27,8 @@ export default function EssenceListingLightboxV5YellowGradient({
 }: Props) {
   const [selectedVariation, setSelectedVariation] = useState("");
   const [essenceAmount, setEssenceAmount] = useState("0");
-  const [pricePerUnit, setPricePerUnit] = useState("0");
-  const [selectedDuration, setSelectedDuration] = useState(7);
+  const [pricePerUnit, setPricePerUnit] = useState("100");
+  const [selectedDuration, setSelectedDuration] = useState(1);
 
   if (!show) return null;
 
@@ -136,25 +136,20 @@ export default function EssenceListingLightboxV5YellowGradient({
                 New Listing
               </h2>
               <p className="text-xs text-yellow-700/70 mt-0.5">
-                Market deployment protocol
+                Select an essence to list on the market
               </p>
             </div>
 
-            {/* Essence Bottle Image - Floating */}
-            <div className="w-20 h-20 flex items-center justify-center">
-              <img
-                src="/essence-images/1k base.png"
-                alt={selectedVariation || "Essence bottle"}
-                className={`w-full h-full object-contain ${
-                  !selectedVariation ? "brightness-0 invert opacity-20" : ""
-                }`}
-                style={
-                  !selectedVariation
-                    ? { filter: "brightness(0) saturate(0) invert(0.4)" }
-                    : undefined
-                }
-              />
-            </div>
+            {/* Essence Bottle Image - Only show when essence is selected */}
+            {selectedVariation && (
+              <div className="w-20 h-20 flex items-center justify-center">
+                <img
+                  src={`/essence-images/named-100px/${selectedVariation}.png`}
+                  alt={selectedVariation}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -222,10 +217,10 @@ export default function EssenceListingLightboxV5YellowGradient({
                   −
                 </button>
 
-                <div className="flex-1 relative">
+                <div className="flex-1 relative flex items-center">
                   {/* Pulsing indicator when slider is at 0 - positioned to overlap with slider thumb */}
                   {shouldPulseThumb && (
-                    <div className="absolute left-0 w-4 h-4 bg-yellow-500 rounded-full pulse-indicator pointer-events-none z-30" style={{ top: '1px' }} />
+                    <div className="absolute left-0 w-4 h-4 bg-yellow-500 rounded-full pulse-indicator pointer-events-none" style={{ zIndex: 30, top: 'calc(50% - 8px)' }} />
                   )}
 
                   <input
@@ -275,7 +270,7 @@ export default function EssenceListingLightboxV5YellowGradient({
                     <button
                       type="button"
                       onClick={() => updateDigit(idx, true)}
-                      className="w-11 h-7 flex items-center justify-center bg-gradient-to-b from-yellow-900/30 to-black hover:from-yellow-800/40 hover:to-black border-t border-x border-yellow-700/40 text-yellow-600/70 hover:text-yellow-400 transition-all text-xs"
+                      className="w-11 h-9 flex items-center justify-center bg-gradient-to-b from-yellow-900/30 to-black hover:from-yellow-800/40 hover:to-black border-t border-x border-yellow-700/40 text-yellow-600/70 hover:text-yellow-400 transition-all text-lg font-bold"
                     >
                       ▴
                     </button>
@@ -287,7 +282,7 @@ export default function EssenceListingLightboxV5YellowGradient({
                     <button
                       type="button"
                       onClick={() => updateDigit(idx, false)}
-                      className="w-11 h-7 flex items-center justify-center bg-gradient-to-t from-yellow-900/30 to-black hover:from-yellow-800/40 hover:to-black border-b border-x border-yellow-700/40 text-yellow-600/70 hover:text-yellow-400 transition-all text-xs"
+                      className="w-11 h-9 flex items-center justify-center bg-gradient-to-t from-yellow-900/30 to-black hover:from-yellow-800/40 hover:to-black border-b border-x border-yellow-700/40 text-yellow-600/70 hover:text-yellow-400 transition-all text-lg font-bold"
                     >
                       ▾
                     </button>
@@ -338,7 +333,7 @@ export default function EssenceListingLightboxV5YellowGradient({
             {/* Summary with Updated Fee Structure */}
             <div className="bg-gradient-to-br from-black to-yellow-950/20 border border-yellow-700/40 p-3 space-y-1.5">
               <div className="flex justify-between items-center">
-                <span className="text-yellow-700/70 text-sm font-bold">Total Value</span>
+                <span className="text-yellow-700/70 text-sm font-bold">Essence Value</span>
                 <span className="text-yellow-300 font-medium text-lg">
                   {totalValue.toLocaleString()}g
                 </span>

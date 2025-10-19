@@ -726,6 +726,50 @@ export const updateEssenceConfig = mutation({
   },
 });
 
+// Admin function to add essence for testing
+export const adminAddEssence = mutation({
+  args: {
+    walletAddress: v.string(),
+    variationName: v.string(),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { walletAddress, variationName, amount } = args;
+
+    // Find the variation by name to get its ID
+    // For now, just use the name as a simple identifier
+    const now = Date.now();
+
+    // Try to find existing balance
+    const existingBalance = await ctx.db
+      .query("essenceBalances")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .collect();
+
+    const balance = existingBalance.find(b => b.variationName === variationName);
+
+    if (balance) {
+      // Update existing balance
+      await ctx.db.patch(balance._id, {
+        accumulatedAmount: balance.accumulatedAmount + amount,
+        lastUpdated: now,
+      });
+    } else {
+      // Create new balance
+      await ctx.db.insert("essenceBalances", {
+        walletAddress,
+        variationId: 0, // Placeholder - doesn't matter for market testing
+        variationName,
+        variationType: "item" as const,
+        accumulatedAmount: amount,
+        lastUpdated: now,
+      });
+    }
+
+    return { success: true, newAmount: (balance?.accumulatedAmount || 0) + amount };
+  },
+});
+
 // Daily checkpoint for market visibility (internal - called by cron)
 export const dailyEssenceCheckpoint = internalMutation({
   args: {},
