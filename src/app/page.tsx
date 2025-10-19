@@ -6,7 +6,6 @@ import { api } from "@/convex/_generated/api";
 import { getMekDataByNumber, getMekImageUrl, parseMekNumber } from "@/lib/mekNumberToVariation";
 import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
 import BlockchainVerificationPanel from "@/components/BlockchainVerificationPanel";
-import { walletRateLimiter, rateLimitedCall } from "@/lib/rateLimiter";
 import HolographicButton from "@/components/ui/SciFiButtons/HolographicButton";
 import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
 // MekLevelUpgrade component removed - using inline upgrade UI from demo
@@ -27,6 +26,7 @@ import { VirtualMekGrid } from "@/components/VirtualMekGrid";
 import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/AnimatedNumber";
 import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
+import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
@@ -598,10 +598,7 @@ export default function MekRateLoggingPage() {
       if (webViewCheck.isWebView && webViewCheck.walletType) {
         console.log('[WebView Auto-Connect] Detected WebView for wallet:', webViewCheck.walletType);
 
-        // Reset rate limiter for WebView auto-connect (user is already in the wallet app)
         const displayName = getWalletDisplayName(webViewCheck.walletType);
-        walletRateLimiter.reset(displayName);
-        console.log('[WebView Auto-Connect] Rate limiter reset for', displayName);
 
         // Set WebView mode flags
         setIsWebViewMode(true);
@@ -1626,23 +1623,19 @@ export default function MekRateLoggingPage() {
       }
 
       // Desktop wallet flow (has wallet.api)
-      // Use rate limiter for wallet connection
-      const connectResult = await rateLimitedCall(
-        wallet.name,
-        walletRateLimiter,
-        async () => {
-          console.log('[Wallet Connect] Calling wallet.api.enable()...');
+      // Direct wallet connection (rate limiting handled by backend)
+      console.log('[Wallet Connect] Calling wallet.api.enable()...');
 
-          // Enable wallet with 30 second timeout
-          const walletApi = await Promise.race([
-            wallet.api.enable(),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Wallet connection timeout after 30 seconds')), 30000)
-            )
-          ]) as any;
+      // Enable wallet with 30 second timeout
+      const walletApi = await Promise.race([
+        wallet.api.enable(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet connection timeout after 30 seconds')), 30000)
+        )
+      ]) as any;
 
-          // Get stake addresses (used for NFT ownership)
-          const stakeAddresses = await walletApi.getRewardAddresses();
+      // Get stake addresses (used for NFT ownership)
+      const stakeAddresses = await walletApi.getRewardAddresses();
 
           if (!stakeAddresses || stakeAddresses.length === 0) {
             throw new Error("No stake addresses found in wallet");
@@ -1826,25 +1819,8 @@ export default function MekRateLoggingPage() {
           }
           } // End of signature request else block
 
-          return { api: walletApi, stakeAddress, nonce: verifiedNonce };
-        },
-        (retryAfter, reason) => {
-          setWalletError(`Rate limited: ${reason}. Retry in ${Math.ceil(retryAfter / 1000)}s`);
-        }
-      );
-
-      // Check if rate limited
-      if (!connectResult) {
-        console.log('[Wallet Connect] Rate limited - resetting state');
-        setIsConnecting(false);
-        setConnectionStatus('');
-        setWalletError('Rate limited. Please wait a moment and try again.');
-        return;
-      }
-
-      console.log('[Wallet Connect] Connection result received:', !!connectResult);
-
-      const { api: walletApi, stakeAddress, nonce } = connectResult;
+        console.log('[Wallet Connect] Connection successful');
+        const nonce = verifiedNonce;
 
       // Also get payment addresses as backup
       const paymentAddresses = await walletApi.getUsedAddresses();
@@ -3553,6 +3529,11 @@ export default function MekRateLoggingPage() {
                 </div>
               )}
 
+            </div>
+
+            {/* AIRDROP CLAIM BANNER - Show if eligible and campaign is active */}
+            <div className="max-w-[600px] mx-auto mb-6 px-4 sm:px-0">
+              <AirdropClaimBanner userId={null} walletAddress={walletAddress} />
             </div>
 
             {/* Combined Card - Stacked Layout */}
