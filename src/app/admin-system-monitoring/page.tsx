@@ -2,14 +2,25 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function SystemMonitoringPage() {
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [selectedSeverity, setSelectedSeverity] = useState<string>("all");
+  const [stakeAddress, setStakeAddress] = useState<string | null>(null);
 
-  // TODO: Replace with actual wallet connection
-  const stakeAddress = null;
+  // Restore wallet session on mount
+  useEffect(() => {
+    const loadSession = async () => {
+      const session = await restoreWalletSession();
+      if (session?.stakeAddress) {
+        setStakeAddress(session.stakeAddress);
+        console.log('[System Monitoring] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
+      }
+    };
+    loadSession();
+  }, []);
 
   // Get recent events (requires authentication)
   const recentEvents = useQuery(
