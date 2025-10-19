@@ -77,6 +77,11 @@ export const detectDuplicateWallets = query({
         if (uniqueAddresses.size > 1) {
           const [mekCount, goldPerHour] = fingerprint.split('_').map(Number);
 
+          // Skip empty wallet fingerprints - these are not suspicious
+          if (mekCount === 0) {
+            continue;
+          }
+
           fingerprintDuplicates.push({
             fingerprint,
             mekCount,
