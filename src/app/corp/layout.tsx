@@ -31,13 +31,11 @@ export default function CorpLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}
-        style={{ margin: 0, padding: 0, backgroundColor: '#000000' }}
-      >
-        {children}
-      </body>
-    </html>
+    <div
+      className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}
+      style={{ margin: 0, padding: 0, minHeight: '100vh', backgroundColor: '#000000' }}
+    >
+      {children}
+    </div>
   );
 }

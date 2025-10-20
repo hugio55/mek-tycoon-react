@@ -13,6 +13,91 @@ cd "C:\Users\Ben Meyers\Documents\Mek Tycoon\mek-tycoon-react" && npm run dev:al
 ```
 This starts both Next.js (port 3100) and Convex in one terminal.
 
+## 🚨 CRITICAL: SESSION PROTECTION 🚨
+**NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**
+
+Claude Code sessions can suddenly terminate, losing all context and interrupting work. **Before executing ANY command, check this list:**
+
+### Commands That WILL Kill Claude Code Session
+**NEVER run these commands:**
+- `exit` - Exits the shell/terminal
+- `logout` - Logs out of the session
+- `quit` - Quits interactive programs
+- `shutdown` - Shuts down the system
+- `restart` - Restarts the system
+- `reboot` - Reboots the system
+- `taskkill /F /IM claude*` - Kills Claude process on Windows
+- `Stop-Process -Name claude*` - PowerShell command to kill Claude
+- `pkill claude` - Kills Claude on Unix/Linux
+- `killall claude` - Kills all Claude processes
+- Closing the terminal window manually
+- Ctrl+D (EOF signal that can exit shells)
+- Any command that terminates the parent terminal/console
+
+### Operations That CAN Kill Claude Code Session
+**Be extremely careful with:**
+1. **Package Installation**:
+   - Installing packages that conflict with Claude's dependencies
+   - Running `npm install` on packages that modify global state
+   - Upgrading Node.js or npm while Claude is running
+
+2. **File System Operations**:
+   - Deleting files in Claude's working directory
+   - Modifying permissions that lock Claude out
+   - Running out of disk space
+
+3. **Network Issues**:
+   - VPN disconnections
+   - Network adapter resets
+   - Firewall changes blocking Claude's connection
+   - Internet connectivity loss
+
+4. **System Resource Issues**:
+   - Running out of memory
+   - CPU-intensive operations that freeze the system
+   - Disk I/O errors
+
+5. **Process Management**:
+   - Task Manager force-close of Claude process
+   - Windows Updates forcing restarts
+   - Antivirus quarantining Claude files
+   - System sleep/hibernate (sometimes)
+
+### Safe Alternatives
+**Instead of session-ending commands, use:**
+- Instead of `exit`: Just leave Claude running and switch tasks
+- Instead of `taskkill`: Ask user before terminating anything
+- Instead of `shutdown`: Warn user to save Claude context first
+- Instead of risky package installs: Check package.json and ask user first
+- Instead of system-wide changes: Make project-local changes only
+
+### When Things Go Wrong
+**If you anticipate something might kill the session:**
+1. **STOP immediately**
+2. **Warn the user**: "This command might terminate the Claude Code session. Should I proceed?"
+3. **Suggest alternatives**: Provide safer options
+4. **Get explicit confirmation**: Wait for user approval
+5. **Document context**: If session must end, tell user what to resume with
+
+### Red Flags to Watch For
+**Always double-check before running:**
+- Any command with `kill`, `stop`, `exit`, `quit`, `shutdown`, `restart`
+- Commands that modify system-level configurations
+- Package installations that aren't in current package.json
+- Terminal control sequences (Ctrl+C, Ctrl+D, Ctrl+Z)
+- Batch files or scripts that might contain exit commands
+- Commands that open new shells (might close current one)
+
+### Working Around Session Constraints
+**If you need to do something that might end the session:**
+1. Complete all current tasks first
+2. Summarize all work done in the session
+3. Provide clear "resume instructions" for next session
+4. Get user's explicit permission
+5. Document any in-progress work in files (not just context)
+
+**Remember**: Losing session context is extremely disruptive. When in doubt, ask the user before executing anything that might terminate Claude Code.
+
 ## Project Overview
 Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The game combines resource management, crafting, and collection mechanics with a sleek, futuristic UI.
 

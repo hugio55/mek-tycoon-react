@@ -1,14 +1,13 @@
 @echo off
-echo ========================================
-echo Starting Mek Tycoon Development Servers
-echo ========================================
+REM Start staging development server on port 3200
+
 echo.
-echo Next.js will run on: http://localhost:3100
-echo Convex Dashboard: https://dashboard.convex.dev
-echo.
-echo Press Ctrl+C to stop both servers
+echo ========================================
+echo   STAGING ENVIRONMENT (Port 3200)
+echo   Database: brave-dodo-490 (staging)
+echo   Branch: essence-system
 echo ========================================
 echo.
 
-cd /d "%~dp0"
-npm run dev:all
+REM Start both Next.js and Convex
+npx concurrently "npx next dev -p 3200 -H 0.0.0.0" "npx convex dev --typecheck=disable --url https://brave-dodo-490.convex.cloud"
