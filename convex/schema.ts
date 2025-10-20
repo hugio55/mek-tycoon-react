@@ -2511,4 +2511,84 @@ export default defineSchema({
   })
     .index("by_end_time", ["endTime"])
     .index("by_health", ["systemHealth"]),
+
+  // ==========================================
+  // NFT AIRDROP SYSTEM
+  // ==========================================
+
+  // Global airdrop configuration - Controls visibility and settings
+  airdropConfig: defineTable({
+    campaignName: v.string(), // "Commemorative Token 1"
+    isActive: v.boolean(), // Master on/off switch
+    nftName: v.string(), // Display name for the NFT
+    nftDescription: v.string(),
+    imageUrl: v.optional(v.string()), // Preview image
+
+    // Eligibility requirements
+    minimumGold: v.number(), // Must have this much gold to qualify
+
+    // Timing
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+
+    // NMKR Integration
+    nmkrProjectId: v.optional(v.string()),
+    nmkrApiKey: v.optional(v.string()),
+
+    // Stats (for admin dashboard)
+    totalEligible: v.optional(v.number()), // Count of users who qualify
+    totalSubmitted: v.optional(v.number()), // Count of addresses submitted
+    totalSent: v.optional(v.number()), // Count of NFTs successfully sent
+
+    // Test Mode - Restrict visibility to specific wallets during testing
+    testMode: v.optional(v.boolean()), // When true, only testWallets can see banner
+    testWallets: v.optional(v.array(v.string())), // Wallet addresses allowed to see in test mode
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_campaign", ["campaignName"])
+    .index("by_active", ["isActive"]),
+
+  // User airdrop submissions - Tracks each user's claim
+  airdropSubmissions: defineTable({
+    // User identification
+    userId: v.id("users"),
+    walletAddress: v.string(), // Their connected/verified wallet
+
+    // Submission details
+    receiveAddress: v.string(), // Where they want NFT sent (Cardano addr1...)
+    goldAtSubmission: v.number(), // Proof they were eligible at time of submission
+    submittedAt: v.number(),
+
+    // Processing status
+    status: v.union(
+      v.literal("pending"),      // Address submitted, awaiting processing
+      v.literal("processing"),   // Being sent via NMKR
+      v.literal("sent"),         // Successfully sent
+      v.literal("failed")        // Failed to send
+    ),
+
+    // Success tracking
+    sentAt: v.optional(v.number()), // When NFT was sent
+    transactionHash: v.optional(v.string()), // Blockchain proof (tx hash)
+    transactionUrl: v.optional(v.string()), // Link to cardanoscan.io
+
+    // Failure tracking
+    errorMessage: v.optional(v.string()),
+    retryCount: v.optional(v.number()),
+    lastRetryAt: v.optional(v.number()),
+
+    // Campaign tracking
+    campaignName: v.string(), // Links to airdropConfig
+
+    // Admin notes
+    adminNotes: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_status", ["status"])
+    .index("by_campaign", ["campaignName"])
+    .index("by_submitted_date", ["submittedAt"])
+    .index("by_receive_address", ["receiveAddress"]),
 });
