@@ -31,6 +31,9 @@ export const metadata: Metadata = {
   icons: {
     icon: '/fav2.png',
   },
+  other: {
+    'build-timestamp': new Date().toISOString(),
+  },
 };
 
 export const viewport: Viewport = {
