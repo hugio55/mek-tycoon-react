@@ -139,6 +139,7 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 - `@import "tailwindcss"` syntax (v4 only)
 - `@theme inline` directive (v4 only)
 - `@tailwindcss/postcss` package (v4 only)
+- **Browser default alerts/confirms** - `window.alert()`, `window.confirm()`, `window.prompt()` - ALWAYS use custom lightbox modals instead
 
 ### ALWAYS USE:
 - `npm ci` when possible (respects lock file)
@@ -345,16 +346,23 @@ When user types `/ui-team`, activate these three agents together:
 - `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
-### `/ultra` - Ultimate wallet and database debugging
-When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using a single message with multiple Task tool calls. **The project-lead agent is the primary coordinator** - it analyzes the problem, delegates specific tasks to specialist agents, sequences the work order, and ensures all teams stay aligned.
+### `/ultra` - Strategic multi-agent coordination
+When user types `/ultra`, activate ONLY the `@project-lead` agent. **The project-lead will analyze the problem and selectively launch only the relevant specialist agents needed for the specific issue.**
 
-**IMPORTANT**:
-- Must launch all agents in parallel in a single response, not sequentially
-- **The project-lead should actively delegate and coordinate** - don't just launch agents independently
-- Project-lead analyzes the issue, identifies which specialists are needed, and assigns specific tasks to each
+**CRITICAL RULES**:
+- **ONLY launch the project-lead agent initially** - do NOT blindly launch all 11 agents
+- **Project-lead must be strategic** - it should analyze the problem and activate only relevant specialists
+- **No unnecessary agents** - if the issue is clearly unrelated to mobile, don't launch mobile-responsive-optimizer
+- **Be critical and selective** - fewer, targeted agents are better than launching everything
 
-**Project Coordination (PRIMARY ROLE):**
-- `@project-lead` - **Main delegator**: analyzes problems, assigns tasks to specialists, sequences work order, tracks progress, integrates solutions across teams
+**How It Works**:
+1. User types `/ultra` describing their issue
+2. Claude launches ONLY the `@project-lead` agent
+3. Project-lead analyzes the problem and identifies which specialists are actually needed
+4. Project-lead launches only the relevant agents and coordinates their work
+5. Project-lead integrates solutions and ensures teams stay aligned
+
+**Available Specialist Agents (for project-lead to selectively activate)**:
 
 **Wallet Integration Team:**
 - `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
@@ -374,7 +382,12 @@ When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using 
 - `@visual-test` - Verify visual changes in browser and check console errors
 - `@mobile-responsive-optimizer` - Transform desktop UI to mobile-responsive design
 
-Use for: wallet connection failures, NFTs not syncing, database/UI desync, cumulative gold errors, code quality issues, UI/UX problems
+**Example Decision-Making**:
+- Issue: "NFTs not showing in wallet" → Launch wallet integrator + state-sync debugger (NOT mobile optimizer)
+- Issue: "Convex query returning wrong data" → Launch convex architect + state-sync (NOT UI or wallet teams)
+- Issue: "Button layout broken on mobile" → Launch mobile optimizer + ui-layout debugger (NOT wallet or database teams)
+
+Use for: Complex multi-domain problems that need coordinated analysis and selective specialist deployment
 
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:
