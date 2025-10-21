@@ -2533,9 +2533,10 @@ export default defineSchema({
 
     // NMKR Integration
     nmkrProjectId: v.optional(v.string()),
-    nmkrApiKey: v.optional(v.string()),
+    nmkrApiKey: v.optional(v.string()), // Encrypted in production
+    policyId: v.optional(v.string()), // Cardano policy ID for this collection
 
-    // Stats (for admin dashboard)
+    // Statistics
     totalEligible: v.optional(v.number()), // Count of users who qualify
     totalSubmitted: v.optional(v.number()), // Count of addresses submitted
     totalSent: v.optional(v.number()), // Count of NFTs successfully sent
@@ -2591,4 +2592,38 @@ export default defineSchema({
     .index("by_campaign", ["campaignName"])
     .index("by_submitted_date", ["submittedAt"])
     .index("by_receive_address", ["receiveAddress"]),
+
+  // Commemorative NFT Purchases - Payment-based NFT sales via NMKR
+  commemorativePurchases: defineTable({
+    // User identification
+    userId: v.id("users"),
+    walletAddress: v.string(), // Their verified stake address
+    paymentAddress: v.string(), // addr1... where NFT was sent
+    campaignName: v.string(), // "Commemorative Token 1"
+
+    // Eligibility proof
+    goldAtPurchase: v.number(), // Proof they were eligible
+    purchasedAt: v.number(), // Timestamp
+
+    // NMKR Data (from webhook)
+    nmkrTransactionId: v.optional(v.string()),
+    nmkrPaymentId: v.optional(v.string()),
+    transactionHash: v.optional(v.string()), // Cardano tx hash
+    policyId: v.optional(v.string()),
+    assetName: v.optional(v.string()),
+
+    // Status tracking
+    status: v.union(
+      v.literal("pending"),    // Widget opened, awaiting payment
+      v.literal("paid"),       // Payment confirmed, NFT minting
+      v.literal("completed"),  // NFT successfully sent
+      v.literal("failed")      // Payment or minting failed
+    ),
+
+    errorMessage: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_campaign", ["campaignName"])
+    .index("by_status", ["status"]),
 });

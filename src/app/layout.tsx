@@ -1,3 +1,4 @@
+// Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
@@ -7,6 +8,9 @@ import { Providers } from "./providers";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import EnvironmentIndicator from "@/components/EnvironmentIndicator";
+import EnvironmentDebugPanel from "@/components/EnvironmentDebugPanel";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +33,9 @@ export const metadata: Metadata = {
   description: "This website is for testing a core mechanic of a future Over Exposed product. It is not an actual game and it offers no rewards. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
   icons: {
     icon: '/fav2.png',
+  },
+  other: {
+    'build-timestamp': new Date().toISOString(),
   },
 };
 
@@ -58,10 +65,20 @@ export default function RootLayout({
         {/* Content layer */}
         <div className="relative z-10">
           <DemoModeWrapper>
-            <Providers>{children}</Providers>
+            <Providers>
+              <EnvironmentIndicator />
+              <EnvironmentDebugPanel />
+              {children}
+            </Providers>
           </DemoModeWrapper>
         </div>
         <SpeedInsights />
+
+        {/* NMKR Payment Widget Script */}
+        <Script
+          src="https://cdn.nmkr.io/widget/v1/nmkr-payment-widget.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
