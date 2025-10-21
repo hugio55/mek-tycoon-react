@@ -1,5 +1,6 @@
 "use client";
 
+// Final rebuild with fixed env var (no newline)
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -9,6 +10,7 @@ import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
 import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
 import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
+import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
 
 // Demo wallet mock data
 const DEMO_WALLET_DATA = {
@@ -648,7 +650,18 @@ export default function HubPage() {
       
       {/* Main Content */}
       <div className="relative z-10 py-6">
-        
+
+        {/* Commemorative NFT Banner */}
+        {!isDemoMode && (
+          <div className="mx-auto max-w-7xl px-4">
+            <CommemorativeNFTBanner
+              userId={userId}
+              walletAddress={walletAddress}
+              walletApi={typeof window !== 'undefined' && (window as any).cardano?.nami}
+            />
+          </div>
+        )}
+
         {/* Hub Title Section */}
         <div
           className="relative mb-6 rounded-xl overflow-hidden"
