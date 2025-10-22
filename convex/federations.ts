@@ -39,13 +39,13 @@ export const getAllFederations = query({
   },
 });
 
-// Get federation for a specific walletGroup
-export const getFederationByGroup = query({
-  args: { groupId: v.string() },
+// Get federation for a specific wallet/corporation
+export const getFederationByWallet = query({
+  args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!membership) return null;
@@ -72,13 +72,13 @@ export const getFederationVariations = query({
   },
 });
 
-// Get pending invites for a group
+// Get pending invites for a wallet/corporation
 export const getPendingInvites = query({
-  args: { groupId: v.string() },
+  args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
     const invites = await ctx.db
       .query("federationInvites")
-      .withIndex("by_invited_group", (q) => q.eq("invitedGroupId", args.groupId))
+      .withIndex("by_invited_wallet", (q) => q.eq("invitedWalletAddress", args.walletAddress))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
 
@@ -108,7 +108,7 @@ export const createFederation = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
-    leaderGroupId: v.string(),
+    leaderWalletAddress: v.string(),
     emblem: v.optional(v.string()),
     color: v.optional(v.string()),
   },
@@ -121,7 +121,7 @@ export const createFederation = mutation({
       federationId,
       name: args.name,
       description: args.description,
-      leaderGroupId: args.leaderGroupId,
+      leaderWalletAddress: args.leaderWalletAddress,
       emblem: args.emblem,
       color: args.color || "#fab617",
       memberCount: 1,
@@ -132,7 +132,7 @@ export const createFederation = mutation({
     // Add leader as first member
     await ctx.db.insert("federationMemberships", {
       federationId,
-      groupId: args.leaderGroupId,
+      walletAddress: args.leaderWalletAddress,
       joinedAt: now,
       role: "leader",
     });

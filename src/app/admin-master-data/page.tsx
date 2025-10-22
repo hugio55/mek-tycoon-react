@@ -23,6 +23,7 @@ import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
 import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
 import SimpleNFTMinter from '@/components/admin/nft/SimpleNFTMinter';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
+import OverlayEditor from '@/components/OverlayEditor';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -63,7 +64,8 @@ const DATA_SYSTEMS = [
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
   { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
-  { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true }
+  { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
+  { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
