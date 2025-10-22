@@ -60,7 +60,7 @@ const DATA_SYSTEMS = [
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
   { id: 'mek-rate-experiment', name: 'Mek Rate Experiment', icon: '💎', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
-  { id: 'wallet-management', name: 'Wallet Management', icon: '👛', implemented: true },
+  { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
   { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true }
@@ -74,19 +74,12 @@ export default function AdminMasterDataPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
   const [menuHeaderCollapsed, setMenuHeaderCollapsed] = useState(true); // Default to collapsed
-  const [systemStatusCollapsed, setSystemStatusCollapsed] = useState(false);
   const [masterRangeCollapsed, setMasterRangeCollapsed] = useState(true); // Default to collapsed
 
   // Save system state
   const [isSaving, setIsSaving] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
-  const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>(() => {
-    // Always use defaults during initial render to avoid hydration mismatch
-    const initial: Record<string, 'incomplete' | 'in-progress' | 'complete'> = {};
-    DATA_SYSTEMS.forEach(s => { initial[s.id] = s.implemented ? 'complete' : 'incomplete'; });
-    return initial;
-  });
 
   // Market configuration state
   const [marketConfig, setMarketConfig] = useState({
@@ -337,31 +330,6 @@ export default function AdminMasterDataPage() {
     return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
   };
 
-  // Load system completion status from localStorage after mount
-  useEffect(() => {
-    const saved = localStorage.getItem('systemImplementationStatus');
-    if (saved) {
-      try {
-        setSystemCompletion(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse saved system status:', e);
-      }
-    }
-  }, []); // Only run once on mount
-
-  // Save system completion status to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('systemImplementationStatus', JSON.stringify(systemCompletion));
-    }
-  }, [systemCompletion]);
-
-  // Visual Progress Calculation
-  const implementedCount = Object.values(systemCompletion).filter(status => status === 'complete').length;
-  const inProgressCount = Object.values(systemCompletion).filter(status => status === 'in-progress').length;
-  const totalCount = DATA_SYSTEMS.length;
-  const progressPercentage = (implementedCount / totalCount) * 100;
-
   const toggleSection = (sectionId: string) => {
     // List of known subsection IDs
     const subsectionIds = [
@@ -502,86 +470,6 @@ export default function AdminMasterDataPage() {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Simple Systems Checklist */}
-        <div className="bg-black/50 backdrop-blur border border-gray-700/50 rounded-lg p-4 mb-8">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSystemStatusCollapsed(!systemStatusCollapsed)}
-                className="text-gray-400 hover:text-gray-200 transition-colors"
-              >
-                <span className="text-sm">{systemStatusCollapsed ? '▶' : '▼'}</span>
-              </button>
-              <h2 className="text-sm font-bold text-gray-400">System Implementation Status</h2>
-            </div>
-            <div className="text-xs text-gray-500">
-              <span className="text-green-400">{implementedCount}</span>
-              {inProgressCount > 0 && <span className="text-orange-400">/{inProgressCount}</span>}
-              <span className="text-gray-500">/{totalCount}</span>
-              <span className="ml-2 text-gray-600">(Complete{inProgressCount > 0 && '/In Progress'}/Total)</span>
-            </div>
-          </div>
-          {!systemStatusCollapsed && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {DATA_SYSTEMS.map((system) => {
-              const status = systemCompletion[system.id];
-              const isComplete = status === 'complete';
-              const isInProgress = status === 'in-progress';
-
-              return (
-                <div
-                  key={system.id}
-                  className={`flex items-center justify-between rounded px-3 py-2 transition-all ${
-                    isComplete
-                      ? 'bg-green-900/40 border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
-                      : isInProgress
-                      ? 'bg-orange-900/30 border border-orange-500/50'
-                      : 'bg-gray-900/30 border border-gray-700/30'
-                  }`}
-                >
-                  <span
-                    className={`text-xs cursor-pointer transition-colors ${
-                      isComplete
-                        ? 'text-green-300 font-semibold'
-                        : isInProgress
-                        ? 'text-orange-300'
-                        : 'text-gray-300 hover:text-yellow-400'
-                    }`}
-                    onClick={() => {
-                      if (system.id === 'global-game-data') {
-                        setShowGameDataLightbox(true);
-                      } else {
-                        navigateToSection(system.id);
-                      }
-                    }}
-                  >
-                    {system.name}
-                  </span>
-                  <select
-                    value={status}
-                    onChange={(e) => setSystemCompletion(prev => ({
-                      ...prev,
-                      [system.id]: e.target.value as 'incomplete' | 'in-progress' | 'complete'
-                    }))}
-                    className={`text-xs px-2 py-1 rounded border bg-black/50 ${
-                      isComplete
-                        ? 'text-green-400 border-green-500/30 font-semibold'
-                        : isInProgress
-                        ? 'text-orange-400 border-orange-500/30'
-                        : 'text-gray-400 border-gray-600/30'
-                    }`}
-                  >
-                    <option value="incomplete">Incomplete</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="complete">Complete</option>
-                  </select>
-                </div>
-              );
-            })}
-            </div>
-          )}
         </div>
 
         {/* Menu Header UI Control System */}
@@ -788,7 +676,7 @@ export default function AdminMasterDataPage() {
                   if (system.id === 'story-climb-mechanics') {
                     setStoryClimbSubTab('difficulty-subsystem');
                   }
-                  // Reset wallet management sub-tab to default when switching to Wallet Management
+                  // Reset player management sub-tab to default when switching to Player Management
                   if (system.id === 'wallet-management') {
                   }
                   // Auto-expand all subsections for this system
@@ -2582,15 +2470,15 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
-          {/* Wallet Management */}
+          {/* Player Management */}
           {activeTab === 'wallet-management' && (
           <div id="section-wallet-management" className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg shadow-lg shadow-black/50">
             <div className="p-4">
                 <p className="text-gray-400 mb-4">
-                  View and manage all connected wallets. Reset verification status for testing or permanently remove wallets from the system.
+                  View and manage all connected players. Reset verification status for testing or permanently remove players from the system.
                 </p>
 
-                {/* Wallet Management Component with built-in tabs */}
+                {/* Player Management Component with built-in tabs */}
                 <WalletManagementAdmin />
               </div>
           </div>

@@ -2242,14 +2242,15 @@ export default defineSchema({
     .index("by_action_type", ["actionType"])
     .index("by_wallet_and_timestamp", ["walletAddress", "timestamp"]),
 
-  // FEDERATION SYSTEM - groups of walletGroups (like WoW guilds)
+  // FEDERATION SYSTEM - groups of corporations (1 wallet = 1 corp)
 
   // Federations - main federation data
   federations: defineTable({
     federationId: v.string(), // UUID for this federation
     name: v.string(), // Federation name
     description: v.optional(v.string()),
-    leaderGroupId: v.string(), // The walletGroup that leads this federation
+    leaderWalletAddress: v.optional(v.string()), // The wallet/corporation that leads this federation (optional for legacy data)
+    leaderGroupId: v.optional(v.string()), // Legacy leader group ID field
     createdAt: v.number(),
     updatedAt: v.number(),
 
@@ -2262,35 +2263,36 @@ export default defineSchema({
     color: v.optional(v.string()), // Hex color for federation theme
 
     // Stats
-    memberCount: v.number(), // Cached count of member groups
+    memberCount: v.number(), // Cached count of member corporations
     totalMekCount: v.optional(v.number()), // Total Meks across all members
     uniqueVariationCount: v.optional(v.number()), // Unique variations owned
   })
     .index("by_federation_id", ["federationId"])
-    .index("by_leader", ["leaderGroupId"])
+    .index("by_leader", ["leaderWalletAddress"])
     .index("by_name", ["name"]),
 
-  // Federation Memberships - which walletGroups belong to which federations
+  // Federation Memberships - which corporations belong to which federations
   federationMemberships: defineTable({
     federationId: v.string(), // Reference to federations
-    groupId: v.string(), // Reference to walletGroups
+    walletAddress: v.optional(v.string()), // Corporation wallet address (optional for legacy data)
+    groupId: v.optional(v.string()), // Legacy group ID field
     joinedAt: v.number(),
     role: v.union(v.literal("leader"), v.literal("officer"), v.literal("member")), // Member roles
 
     // Contribution tracking
-    variationsContributed: v.optional(v.number()), // Unique variations this group contributes
-    mekCount: v.optional(v.number()), // Number of Meks this group owns
+    variationsContributed: v.optional(v.number()), // Unique variations this corp contributes
+    mekCount: v.optional(v.number()), // Number of Meks this corp owns
     lastContributionUpdate: v.optional(v.number()),
   })
     .index("by_federation", ["federationId"])
-    .index("by_group", ["groupId"])
-    .index("by_federation_and_group", ["federationId", "groupId"]),
+    .index("by_wallet", ["walletAddress"])
+    .index("by_federation_and_wallet", ["federationId", "walletAddress"]),
 
   // Federation Invites - pending invitations to join federations
   federationInvites: defineTable({
     federationId: v.string(), // Reference to federations
-    invitedGroupId: v.string(), // WalletGroup being invited
-    invitedByGroupId: v.string(), // WalletGroup that sent the invite
+    invitedWalletAddress: v.string(), // Corporation being invited
+    invitedByWalletAddress: v.string(), // Corporation that sent the invite
     status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected"), v.literal("cancelled")),
     createdAt: v.number(),
     respondedAt: v.optional(v.number()),
@@ -2298,7 +2300,7 @@ export default defineSchema({
     message: v.optional(v.string()), // Optional message from inviter
   })
     .index("by_federation", ["federationId"])
-    .index("by_invited_group", ["invitedGroupId"])
+    .index("by_invited_wallet", ["invitedWalletAddress"])
     .index("by_status", ["status"])
     .index("by_expires", ["expiresAt"]),
 
@@ -2307,7 +2309,7 @@ export default defineSchema({
     federationId: v.string(),
     variationId: v.number(), // Reference to variationsReference
     count: v.number(), // How many of this variation the federation owns
-    contributingGroups: v.array(v.string()), // Array of groupIds that own this variation
+    contributingWallets: v.array(v.string()), // Array of wallet addresses that own this variation
     lastUpdated: v.number(),
   })
     .index("by_federation", ["federationId"])
@@ -2345,11 +2347,13 @@ export default defineSchema({
     slot3GoldCost: v.number(), // Gold cost for slot 3
     slot4GoldCost: v.number(), // Gold cost for slot 4
     slot5GoldCost: v.number(), // Gold cost for slot 5
+    slot6GoldCost: v.number(), // Gold cost for slot 6
 
     slot2EssenceCount: v.number(), // How many essence types needed for slot 2
     slot3EssenceCount: v.number(), // How many essence types needed for slot 3
     slot4EssenceCount: v.number(), // How many essence types needed for slot 4
     slot5EssenceCount: v.number(), // How many essence types needed for slot 5
+    slot6EssenceCount: v.number(), // How many essence types needed for slot 6
 
     // Rarity groups for slot requirements (variation IDs)
     rarityGroup1: v.array(v.number()), // Common variations
@@ -2370,10 +2374,10 @@ export default defineSchema({
   })
     .index("by_config_type", ["configType"]),
 
-  // Essence Slots - player's 5 Mek slots
+  // Essence Slots - player's 6 Mek slots
   essenceSlots: defineTable({
     walletAddress: v.string(),
-    slotNumber: v.number(), // 1-5
+    slotNumber: v.number(), // 1-6
 
     // Slot state
     isUnlocked: v.boolean(),
@@ -2402,7 +2406,7 @@ export default defineSchema({
   // Essence Slot Requirements - per-player random requirements for unlocking slots
   essenceSlotRequirements: defineTable({
     walletAddress: v.string(),
-    slotNumber: v.number(), // 2-5 (slot 1 is always free)
+    slotNumber: v.number(), // 2-6 (slot 1 is always free)
 
     goldCost: v.number(),
 
@@ -2863,4 +2867,29 @@ export default defineSchema({
     .index("by_project", ["nmkrProjectId"])
     .index("by_status", ["status"])
     .index("by_date", ["syncStartedAt"]),
+
+  // Image Overlays - Visual editor for positioning elements on images
+  overlays: defineTable({
+    imageKey: v.string(), // Unique identifier for the image (e.g., "mechanism-slots", "battle-screen")
+    imagePath: v.string(), // Path to the image file
+    imageWidth: v.number(), // Original image width
+    imageHeight: v.number(), // Original image height
+
+    zones: v.array(
+      v.object({
+        id: v.string(), // Unique zone ID
+        type: v.string(), // "mechanism-slot", "button", "clickable", etc.
+        x: v.number(), // X position (pixels)
+        y: v.number(), // Y position (pixels)
+        width: v.number(), // Zone width (pixels)
+        height: v.number(), // Zone height (pixels)
+        label: v.optional(v.string()), // Display label
+        metadata: v.optional(v.any()), // Additional data
+      })
+    ),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_imageKey", ["imageKey"]),
 });

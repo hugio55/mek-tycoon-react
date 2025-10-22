@@ -59,7 +59,7 @@ export default function SystemMonitoringPage() {
             <h2 className="text-2xl font-bold text-red-400 mb-2">Authentication Required</h2>
             <p className="text-gray-300">Please connect your wallet to view system monitoring data.</p>
             <p className="text-gray-400 mt-4 text-sm">
-              Tip: Access monitoring from Admin Master → Wallet Management → System Monitoring tab
+              Tip: Access monitoring from Admin Master → Player Management → System Monitoring tab
             </p>
           </div>
         </div>

@@ -51,25 +51,31 @@ export default function EssenceMarketPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [buttonStyle, setButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [siphonButtonStyle, setSiphonButtonStyle] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20>(14);
   const headerLayout = 5; // Locked to Option 5: Compact Grid - Gold Prominent
   const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
   const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
-  const [timerDisplayVariation, setTimerDisplayVariation] = useState<1 | 2 | 3 | 4 | 5>(1); // Timer floating text variations
-  const [corporationDisplayStyle, setCorporationDisplayStyle] = useState<1 | 2 | 3 | 4 | 5>(1); // Corporation name display variations
+  const timerDisplayVariation = 5; // Locked to Variation 5: Clock + Text w/ Background
   const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35>(34); // Default to Option 34: Vertical v4 - Bold Labels
+  const bottleImageSize = 130; // Locked to 130px
   const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
   const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
+  const [siphonHoverEffect, setSiphonHoverEffect] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
   const buttonVariation = 3; // Locked to Style 3: Minimal Modern
   const [debugListingCount, setDebugListingCount] = useState<number>(0);
   const [showExpiredListings, setShowExpiredListings] = useState(false);
-  const [essenceLabelFont, setEssenceLabelFont] = useState<'orbitron' | 'rajdhani' | 'saira' | 'teko' | 'michroma' | 'audiowide' | 'quantico' | 'electrolize' | 'russo' | 'exo'>('orbitron');
+  const essenceLabelFont = 'exo'; // Locked to Exo 2
+  const essenceLabelFontSize = 24; // Locked to 24px base size
+  const [stockNumberFontSize, setStockNumberFontSize] = useState<number>(36); // Font size for stock number
+  const [priceNumberFontSize, setPriceNumberFontSize] = useState<number>(36); // Font size for price number
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const [purchaseAmount, setPurchaseAmount] = useState(0.1);
+
+  // Tooltip state for insufficient funds
+  const [hoveredInsufficientListing, setHoveredInsufficientListing] = useState<string | null>(null);
 
   // Purchase history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -509,342 +515,53 @@ export default function EssenceMarketPage() {
     }
   };
 
-  // Siphon button style variations
-  const getSiphonButtonStyle = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
-    const baseClasses = "relative w-full px-4 py-2 font-bold uppercase transition-all cursor-pointer overflow-hidden";
-
-    switch(styleNum) {
-      case 1: // Neon Outline - Glowing stroke text
-        return `${baseClasses} rounded tracking-[0.4em] text-base`;
-      case 2: // Embossed 3D - Raised beveled look
-        return `${baseClasses} rounded-lg tracking-wide text-base`;
-      case 3: // Wireframe Tech - Minimal thin border
-        return `${baseClasses} rounded-sm tracking-[0.5em] text-xs font-light`;
-      case 4: // Blocky Retro - Chunky arcade style
-        return `${baseClasses} rounded-none tracking-[0.2em] text-lg font-black`;
-      case 5: // Sliced Diagonal - Angled stripe cut
-        return `${baseClasses} rounded-md tracking-wider text-sm`;
-      case 6: // Wireframe Condensed - Tighter spacing
-        return `${baseClasses} rounded-sm tracking-[0.6em] text-[11px] font-extralight`;
-      case 7: // Wireframe Bold - Heavier weight
-        return `${baseClasses} rounded-sm tracking-[0.45em] text-xs font-normal`;
-      case 8: // Wireframe Expanded - Wider letters
-        return `${baseClasses} rounded-sm tracking-[0.7em] text-xs font-thin`;
-      case 9: // Wireframe Sharp - No rounding
-        return `${baseClasses} rounded-none tracking-[0.5em] text-xs font-light`;
-      case 10: // Wireframe Rounded - More curves
-        return `${baseClasses} rounded-md tracking-[0.5em] text-xs font-light`;
-      case 11: // Solid Teal - Based on style 6 with solid background
-        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
-      case 12: // Solid Yellow - Based on style 6 with solid background
-        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
-      case 13: // Solid Amber - Based on style 6 with solid background
-        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
-      case 14: // Solid Cyan - Based on style 6 with solid background
-        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
-      case 15: // Solid Lime - Based on style 6 with solid background
-        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
-      case 16: // Solid Cyan - Larger with subtle white glow pulse
-        return `${baseClasses} rounded-lg tracking-[0.5em] text-sm font-light`;
-      case 17: // Solid Cyan - Larger with bright white glow pulse
-        return `${baseClasses} rounded-lg tracking-[0.5em] text-base font-normal`;
-      case 18: // Solid Cyan - Larger with white shimmer
-        return `${baseClasses} rounded-lg tracking-[0.5em] text-sm font-light`;
-      case 19: // Solid Cyan - Larger with constant white glow
-        return `${baseClasses} rounded-lg tracking-[0.5em] text-base font-normal`;
-      case 20: // Solid Cyan - Largest with rapid white pulse
-        return `${baseClasses} rounded-lg tracking-[0.45em] text-lg font-medium`;
-      default:
-        return baseClasses;
-    }
+  // Siphon button style - locked to style 19 (Solid Cyan with constant white glow)
+  const getSiphonButtonStyle = () => {
+    return "relative w-full px-4 py-2 font-bold uppercase transition-none cursor-pointer overflow-hidden rounded-lg tracking-[0.5em] text-base font-normal";
   };
 
-  const getSiphonButtonClipPath = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
-    switch(styleNum) {
-      case 1: // Neon Outline - No clip path
-        return undefined;
-      case 2: // Embossed 3D - Subtle corner cuts for depth
-        return 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)';
-      case 3: // Wireframe Tech - Sharp precise cuts
-        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
-      case 4: // Blocky Retro - No clip path (pure rectangle)
-        return undefined;
-      case 5: // Sliced Diagonal - Diagonal cut through button
-        return 'polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%)';
-      case 6: // Wireframe Condensed - Smaller cuts
-        return 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
-      case 7: // Wireframe Bold - Same as original
-        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
-      case 8: // Wireframe Expanded - Larger cuts
-        return 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)';
-      case 9: // Wireframe Sharp - Sharp corners, no cuts
-        return undefined;
-      case 10: // Wireframe Rounded - Same cuts as original
-        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
-      case 11: // Solid Teal - No clip path, rounded corners only
-      case 12: // Solid Yellow - No clip path, rounded corners only
-      case 13: // Solid Amber - No clip path, rounded corners only
-      case 14: // Solid Cyan - No clip path, rounded corners only
-      case 15: // Solid Lime - No clip path, rounded corners only
-      case 16: // Solid Cyan variations - No clip path, rounded corners only
-      case 17:
-      case 18:
-      case 19:
-      case 20:
-        return undefined;
-      default:
-        return undefined;
-    }
+  const getSiphonButtonClipPath = () => {
+    return undefined; // Style 19 uses rounded corners, no clip path
   };
 
-  const getSiphonButtonTextures = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
-    switch(styleNum) {
-      case 1: // Neon Outline - Pulsing glow effect
-        return (
-          <>
-            <div className="absolute inset-0" style={{
-              background: 'radial-gradient(ellipse at center, rgba(0, 255, 255, 0.15) 0%, transparent 60%)',
-              animation: 'pulse 2s ease-in-out infinite'
-            }} />
-            <div className="absolute inset-0 opacity-20" style={{
-              background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 255, 0.1) 1px, rgba(0, 255, 255, 0.1) 2px)'
-            }} />
-          </>
-        );
-      case 2: // Embossed 3D - Beveled depth with highlights
-        return (
-          <>
-            <div className="absolute inset-0" style={{
-              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2) 0%, rgba(0, 0, 0, 0.3) 100%)',
-              boxShadow: 'inset 3px 3px 6px rgba(255, 255, 255, 0.15), inset -3px -3px 6px rgba(0, 0, 0, 0.5)'
-            }} />
-          </>
-        );
-      case 3: // Wireframe Tech - Precise grid pattern
-        return (
-          <>
-            <div className="absolute inset-0 opacity-25" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(250, 182, 23, 0.2) 4px, rgba(250, 182, 23, 0.2) 5px), repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(250, 182, 23, 0.2) 4px, rgba(250, 182, 23, 0.2) 5px)'
-            }} />
-          </>
-        );
-      case 4: // Blocky Retro - Pixelated pattern
-        return (
-          <>
-            <div className="absolute inset-0" style={{
-              background: 'repeating-conic-gradient(from 0deg, rgba(250, 182, 23, 0.15) 0deg 90deg, rgba(250, 182, 23, 0.05) 90deg 180deg)',
-              backgroundSize: '8px 8px'
-            }} />
-            <div className="absolute inset-0" style={{
-              boxShadow: 'inset 0 4px 0 rgba(255, 255, 255, 0.3), inset 0 -4px 0 rgba(0, 0, 0, 0.5)'
-            }} />
-          </>
-        );
-      case 5: // Sliced Diagonal - Angled stripe through center
-        return (
-          <>
-            <div className="absolute inset-0" style={{
-              background: 'linear-gradient(135deg, transparent 0%, transparent 45%, rgba(250, 182, 23, 0.3) 48%, rgba(250, 182, 23, 0.3) 52%, transparent 55%, transparent 100%)'
-            }} />
-            <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-15" />
-          </>
-        );
-      case 6: // Wireframe Condensed - Fine grid
-        return (
-          <>
-            <div className="absolute inset-0 opacity-30" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.25) 3px, rgba(250, 182, 23, 0.25) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.25) 3px, rgba(250, 182, 23, 0.25) 4px)'
-            }} />
-          </>
-        );
-      case 7: // Wireframe Bold - Thicker grid
-        return (
-          <>
-            <div className="absolute inset-0 opacity-35" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(250, 182, 23, 0.3) 5px, rgba(250, 182, 23, 0.3) 6px), repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(250, 182, 23, 0.3) 5px, rgba(250, 182, 23, 0.3) 6px)'
-            }} />
-          </>
-        );
-      case 8: // Wireframe Expanded - Sparse grid
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(250, 182, 23, 0.2) 6px, rgba(250, 182, 23, 0.2) 7px), repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(250, 182, 23, 0.2) 6px, rgba(250, 182, 23, 0.2) 7px)'
-            }} />
-          </>
-        );
-      case 9: // Wireframe Sharp - Crosshatch pattern
-        return (
-          <>
-            <div className="absolute inset-0 opacity-25" style={{
-              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(250, 182, 23, 0.15) 4px, rgba(250, 182, 23, 0.15) 5px), repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(250, 182, 23, 0.15) 4px, rgba(250, 182, 23, 0.15) 5px)'
-            }} />
-          </>
-        );
-      case 10: // Wireframe Rounded - Dotted grid
-        return (
-          <>
-            <div className="absolute inset-0 opacity-30" style={{
-              backgroundImage: 'radial-gradient(circle, rgba(250, 182, 23, 0.3) 1px, transparent 1px)',
-              backgroundSize: '8px 8px'
-            }} />
-          </>
-        );
-      case 11: // Solid Teal - Fine grid on solid teal background
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-          </>
-        );
-      case 12: // Solid Yellow - Fine grid on solid yellow background
-        return (
-          <>
-            <div className="absolute inset-0 opacity-15" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
-            }} />
-          </>
-        );
-      case 13: // Solid Amber - Fine grid on solid amber background
-        return (
-          <>
-            <div className="absolute inset-0 opacity-15" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
-            }} />
-          </>
-        );
-      case 14: // Solid Cyan - Fine grid on solid cyan background
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-          </>
-        );
-      case 15: // Solid Lime - Fine grid on solid lime background
-        return (
-          <>
-            <div className="absolute inset-0 opacity-15" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
-            }} />
-          </>
-        );
-      case 16: // Solid Cyan - Larger with subtle white glow pulse (slow)
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-            <div className="absolute inset-0 animate-pulse" style={{
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%)',
-              animationDuration: '2s'
-            }} />
-          </>
-        );
-      case 17: // Solid Cyan - Larger with bright white glow pulse (medium)
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-            <div className="absolute inset-0 animate-pulse" style={{
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25) 0%, transparent 65%)',
-              animationDuration: '1.5s'
-            }} />
-          </>
-        );
-      case 18: // Solid Cyan - Larger with white shimmer sweep
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute inset-y-0 w-[200%] animate-[shimmer_3s_linear_infinite]" style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)',
-                left: '-100%'
-              }} />
-            </div>
-          </>
-        );
-      case 19: // Solid Cyan - Larger with constant white glow (no animation)
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-            <div className="absolute inset-0" style={{
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%)'
-            }} />
-          </>
-        );
-      case 20: // Solid Cyan - Largest with rapid white pulse (fast)
-        return (
-          <>
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
-            }} />
-            <div className="absolute inset-0 animate-pulse" style={{
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 60%)',
-              animationDuration: '1s'
-            }} />
-          </>
-        );
-      default:
-        return null;
-    }
+  const getSiphonButtonTextures = () => {
+    // Style 19: Solid Cyan with constant white glow (no animation)
+    return (
+      <>
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+        }} />
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%)'
+        }} />
+      </>
+    );
   };
 
-  const getSiphonButtonColors = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20, canAfford: boolean) => {
+  const getSiphonButtonColors = (canAfford: boolean) => {
     if (!canAfford) {
-      return "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600";
+      return "bg-gray-900/40 border-2 border-gray-700/40 text-gray-500/70 cursor-not-allowed";
     }
 
-    switch(styleNum) {
-      case 1: // Neon Outline - Bright cyan outline with text-stroke effect
-        return "bg-black/40 border-2 border-cyan-400 text-transparent hover:border-cyan-300 hover:shadow-[0_0_25px_rgba(0,255,255,0.6),inset_0_0_15px_rgba(0,255,255,0.2)]"
-          + " [text-shadow:0_0_10px_#00ffff,0_0_20px_#00ffff,0_0_30px_#00ffff,-1px_-1px_0_#00ffff,1px_-1px_0_#00ffff,-1px_1px_0_#00ffff,1px_1px_0_#00ffff]";
-      case 2: // Embossed 3D - Raised gold/yellow with depth
-        return "bg-gradient-to-b from-yellow-400/30 to-yellow-600/20 border-2 border-yellow-500/50 text-yellow-300 hover:from-yellow-400/40 hover:to-yellow-600/30 shadow-[0_4px_8px_rgba(0,0,0,0.4)]";
-      case 3: // Wireframe Tech - Thin precise amber lines
-        return "bg-transparent border border-amber-400/70 text-amber-300 hover:border-amber-300 hover:bg-amber-500/5 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]";
-      case 4: // Blocky Retro - Bold chunky arcade yellow
-        return "bg-yellow-500/25 border-4 border-yellow-400 text-yellow-300 hover:bg-yellow-500/35 hover:text-yellow-200 shadow-[0_6px_0_rgba(202,138,4,0.8),0_8px_12px_rgba(0,0,0,0.5)]";
-      case 5: // Sliced Diagonal - Orange gradient with angle
-        return "bg-gradient-to-br from-orange-500/20 via-yellow-500/25 to-orange-600/20 border-2 border-orange-400/70 text-orange-300 hover:from-orange-500/30 hover:border-orange-300";
-      case 6: // Wireframe Condensed - Teal wireframe
-        return "bg-transparent border border-teal-400/70 text-teal-300 hover:border-teal-300 hover:bg-teal-500/5 hover:shadow-[0_0_10px_rgba(45,212,191,0.3)]";
-      case 7: // Wireframe Bold - Yellow wireframe with thicker border
-        return "bg-transparent border-2 border-yellow-400/80 text-yellow-300 hover:border-yellow-300 hover:bg-yellow-500/5 hover:shadow-[0_0_12px_rgba(250,204,21,0.4)]";
-      case 8: // Wireframe Expanded - Lime wireframe
-        return "bg-transparent border border-lime-400/70 text-lime-300 hover:border-lime-300 hover:bg-lime-500/5 hover:shadow-[0_0_10px_rgba(163,230,53,0.3)]";
-      case 9: // Wireframe Sharp - Orange wireframe
-        return "bg-transparent border border-orange-400/70 text-orange-300 hover:border-orange-300 hover:bg-orange-500/5 hover:shadow-[0_0_10px_rgba(251,146,60,0.3)]";
-      case 10: // Wireframe Rounded - Cyan wireframe
-        return "bg-transparent border border-cyan-400/70 text-cyan-300 hover:border-cyan-300 hover:bg-cyan-500/5 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]";
-      case 11: // Solid Teal - Solid background with white text
-        return "bg-teal-500 border border-teal-400/30 text-white hover:bg-teal-600 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)]";
-      case 12: // Solid Yellow - Solid background with dark text
-        return "bg-yellow-500 border border-yellow-400/30 text-gray-900 hover:bg-yellow-600 hover:shadow-[0_0_15px_rgba(250,204,21,0.4)]";
-      case 13: // Solid Amber - Solid background with dark text
-        return "bg-amber-500 border border-amber-400/30 text-gray-900 hover:bg-amber-600 hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]";
-      case 14: // Solid Cyan - Solid background with white text
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)]";
-      case 15: // Solid Lime - Solid background with dark text
-        return "bg-lime-500 border border-lime-400/30 text-gray-900 hover:bg-lime-600 hover:shadow-[0_0_15px_rgba(163,230,53,0.4)]";
-      case 16: // Solid Cyan - Larger with subtle white glow
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_5px_rgba(255,255,255,0.5),0_0_10px_rgba(255,255,255,0.3)]";
-      case 17: // Solid Cyan - Larger with bright white glow
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_8px_rgba(255,255,255,0.7),0_0_15px_rgba(255,255,255,0.5),0_0_20px_rgba(255,255,255,0.3)]";
-      case 18: // Solid Cyan - Larger with white shimmer glow
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_6px_rgba(255,255,255,0.6),0_0_12px_rgba(255,255,255,0.4)]";
-      case 19: // Solid Cyan - Larger with constant white glow
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_7px_rgba(255,255,255,0.6),0_0_14px_rgba(255,255,255,0.4)]";
-      case 20: // Solid Cyan - Largest with rapid white pulse glow
-        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_10px_rgba(255,255,255,0.8),0_0_18px_rgba(255,255,255,0.6),0_0_25px_rgba(255,255,255,0.4)]";
+    // Style 19: Solid Cyan with constant white glow
+    return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_7px_rgba(255,255,255,0.6),0_0_14px_rgba(255,255,255,0.4)]";
+  };
+
+  // Siphon button hover effects
+  const getSiphonHoverEffect = () => {
+    switch (siphonHoverEffect) {
+      case 1: // Zoom/Scale
+        return "hover:scale-110";
+      case 2: // Intense Glow + Small Zoom
+        return "hover:scale-105 hover:shadow-[0_0_30px_rgba(34,211,238,0.8),0_0_60px_rgba(34,211,238,0.5)]";
+      case 3: // Rotate & Scale
+        return "hover:scale-105 hover:rotate-1";
+      case 4: // Slide Up
+        return "hover:-translate-y-1";
+      case 5: // Pulse & Glow
+        return "hover:animate-pulse hover:shadow-[0_0_25px_rgba(34,211,238,0.7)]";
       default:
-        return "bg-yellow-500/20 border-2 border-yellow-500/60 text-yellow-400";
+        return "hover:scale-110";
     }
   };
 
@@ -866,6 +583,34 @@ export default function EssenceMarketPage() {
       .replace(/\|/g, '')
       .replace(/\s+/g, '-')
       .toLowerCase();
+  };
+
+  // Calculate dynamic font size for essence label based on name length
+  const getEssenceLabelFontSize = (essenceName: string, baseFontSize: number): { fontSize: number, lineClamp: number } => {
+    const nameLength = essenceName.length;
+
+    // Very short names (≤8 chars): use full base size
+    if (nameLength <= 8) {
+      return { fontSize: baseFontSize, lineClamp: 1 };
+    }
+
+    // Short names (9-12 chars): slight reduction
+    if (nameLength <= 12) {
+      return { fontSize: Math.round(baseFontSize * 0.95), lineClamp: 1 };
+    }
+
+    // Medium names (13-16 chars): more aggressive reduction for wrapping
+    if (nameLength <= 16) {
+      return { fontSize: Math.round(baseFontSize * 0.65), lineClamp: 2 };
+    }
+
+    // Long names (17-20 chars): significant reduction, allow 2 lines
+    if (nameLength <= 20) {
+      return { fontSize: Math.round(baseFontSize * 0.6), lineClamp: 2 };
+    }
+
+    // Very long names (21+ chars): maximum reduction, 2 lines
+    return { fontSize: Math.round(baseFontSize * 0.55), lineClamp: 2 };
   };
 
   // Price layout variations - Total-focused with glowing quantity boxes
@@ -1944,10 +1689,15 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
                     PRICE
                   </div>
-                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
                 </div>
@@ -1991,10 +1741,15 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
                     PRICE
                   </div>
-                  <div className={`font-extralight text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-extralight text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
                 </div>
@@ -2038,10 +1793,15 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
                     PRICE
                   </div>
-                  <div className={`font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
                 </div>
@@ -2085,10 +1845,15 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
                     PRICE
                   </div>
-                  <div className={`font-normal text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-normal text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
                 </div>
@@ -2132,10 +1897,15 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
                     PRICE
                   </div>
-                  <div className={`font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tight ${
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tight inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
                 </div>
@@ -2384,7 +2154,7 @@ export default function EssenceMarketPage() {
 
               <div className="relative space-y-2">
                 {/* Stock */}
-                <div className="text-center">
+                <div className="text-center h-[60px] flex flex-col justify-between">
                   <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-1 font-semibold">
                     STOCK
                   </div>
@@ -2430,8 +2200,7 @@ export default function EssenceMarketPage() {
               }} />
 
               <div className="relative space-y-1.5">
-                {/* Stock */}
-                <div className="text-center">
+                <div className="text-center h-[60px] flex flex-col justify-between">
                   <div className="text-[10px] text-cyan-300/80 uppercase tracking-wide mb-0.5 font-semibold">
                     STOCK
                   </div>
@@ -2450,12 +2219,16 @@ export default function EssenceMarketPage() {
                   <div className="text-[10px] text-yellow-300/80 uppercase tracking-wide mb-0.5 font-semibold">
                     PRICE
                   </div>
-                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
-                    pricePerUnit.toLocaleString().length > 6 ? 'text-base' :
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-xl' :
-                    pricePerUnit.toLocaleString().length > 4 ? 'text-2xl' : 'text-3xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}
+                  <div
+                    className="font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 6 ? 16 :
+                        pricePerUnit.toLocaleString().length > 5 ? 20 :
+                        pricePerUnit.toLocaleString().length > 4 ? 24 : 30) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-[10px] text-yellow-400/50 uppercase mt-0.5 font-light">G/EA</div>
                 </div>
@@ -2495,12 +2268,16 @@ export default function EssenceMarketPage() {
                   <div className="text-[9px] text-yellow-300/60 uppercase tracking-widest mb-0.5 font-bold">
                     PRICE
                   </div>
-                  <div className={`font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
-                    pricePerUnit.toLocaleString().length > 6 ? 'text-xl' :
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
-                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-5xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 6 ? 20 :
+                        pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 48) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                 </div>
               </div>
@@ -2517,33 +2294,41 @@ export default function EssenceMarketPage() {
 
               <div className="relative space-y-2">
                 {/* Stock */}
-                <div className="text-center">
-                  <div className="text-xs text-cyan-300/90 uppercase tracking-wider mb-1 font-bold">
+                <div className="text-center h-[60px] flex flex-col justify-between">
+                  <div className="text-xs text-cyan-300/60 uppercase tracking-wider font-bold">
                     STOCK
                   </div>
-                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
-                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
+                  <div
+                    className="font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] flex items-center justify-center"
+                    style={{ fontSize: `${stockNumberFontSize}px` }}
+                  >
                     {quantityFormatted}
                   </div>
-                  <div className="text-xs text-cyan-400/60 uppercase mt-1 font-light">essence</div>
+                  <div className="text-xs text-cyan-400/40 uppercase font-light">essence</div>
                 </div>
 
                 <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
 
-                {/* Price */}
-                <div className="text-center">
-                  <div className="text-xs text-yellow-300/90 uppercase tracking-wider mb-1 font-bold">
+                {/* Price - Extra responsive sizing for very large numbers */}
+                <div className="text-center h-[60px] flex flex-col justify-between">
+                  <div className="text-xs text-yellow-300/60 uppercase tracking-wider font-bold">
                     PRICE
                   </div>
-                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
-                    pricePerUnit.toLocaleString().length > 6 ? 'text-lg' :
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
-                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${
+                        pricePerUnit.toLocaleString().length > 7 ? priceNumberFontSize * 0.56 :
+                        pricePerUnit.toLocaleString().length > 6 ? priceNumberFontSize * 0.67 :
+                        pricePerUnit.toLocaleString().length > 5 ? priceNumberFontSize * 0.83 :
+                        pricePerUnit.toLocaleString().length > 4 ? priceNumberFontSize * 0.83 : priceNumberFontSize
+                      }px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/60 uppercase mt-1 font-light">each</div>
+                  <div className="text-xs text-yellow-400/40 uppercase font-light">each</div>
                 </div>
               </div>
             </div>
@@ -2582,13 +2367,17 @@ export default function EssenceMarketPage() {
                   <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-1.5 font-semibold">
                     PRICE
                   </div>
-                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
-                    pricePerUnit.toLocaleString().length > 7 ? 'text-base' :
-                    pricePerUnit.toLocaleString().length > 6 ? 'text-xl' :
-                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
-                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
-                  }`}>
-                    {pricePerUnit.toLocaleString()}g
+                  <div
+                    className="font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] inline-flex items-baseline justify-center"
+                    style={{
+                      fontSize: `${(pricePerUnit.toLocaleString().length > 7 ? 16 :
+                        pricePerUnit.toLocaleString().length > 6 ? 20 :
+                        pricePerUnit.toLocaleString().length > 5 ? 24 :
+                        pricePerUnit.toLocaleString().length > 4 ? 30 : 36) * (priceNumberFontSize / 36)}px`
+                    }}
+                  >
+                    <span>{pricePerUnit.toLocaleString()}</span>
+                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/50 uppercase mt-1.5 font-light">each</div>
                 </div>
@@ -2675,7 +2464,7 @@ export default function EssenceMarketPage() {
 
       case 5: // Clock icon + text with subtle background
         return (
-          <div className="mb-2 flex items-center justify-center">
+          <div className="mt-3 flex items-center justify-center">
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${styles.containerClass.includes('red') ? 'bg-red-900/10' : styles.containerClass.includes('orange') ? 'bg-orange-900/10' : styles.containerClass.includes('yellow') ? 'bg-yellow-900/10' : 'bg-white/5'}`}>
               <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
               <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
@@ -2690,83 +2479,25 @@ export default function EssenceMarketPage() {
     }
   };
 
-  // Corporation name display variations
-  const renderCorporationName = (companyName: string, style: 1 | 2 | 3 | 4 | 5) => {
-    switch(style) {
-      case 1: // Minimal Label - Simple gray text with icon
-        return (
-          <div className="mb-3 text-center">
-            <div className="text-gray-500 text-[10px] uppercase tracking-wide">
-              ⚙ {companyName}
-            </div>
-          </div>
-        );
-
-      case 2: // Industrial Tag - Yellow bordered box
-        return (
-          <div className="mb-3">
-            <div className="bg-black/40 border border-yellow-500/30 rounded px-3 py-1.5 text-center">
-              <div className="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">LISTED BY</div>
-              <div className="text-yellow-400/80 text-[11px] font-bold uppercase tracking-wide">{companyName}</div>
-            </div>
-          </div>
-        );
-
-      case 3: // Hazard Strip - Yellow/black diagonal stripes
-        return (
-          <div className="mb-3 relative overflow-hidden">
-            <div
-              className="absolute inset-0 opacity-20 pointer-events-none"
-              style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 20px)'
-              }}
-            />
-            <div className="relative bg-black/50 border-y border-yellow-500/40 py-1.5 text-center">
-              <div className="text-yellow-400 text-[10px] font-bold uppercase tracking-widest">
-                ◆ {companyName} ◆
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4: // Stencil Plate - Military style with corners
-        return (
-          <div className="mb-3 relative">
-            <div className="bg-gray-900/40 border border-yellow-500/20 rounded-sm px-3 py-2 text-center relative">
-              {/* Corner brackets */}
-              <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/50" />
-              <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/50" />
-              <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/50" />
-              <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/50" />
-
-              <div className="text-gray-600 text-[8px] uppercase tracking-widest mb-1">CORP</div>
-              <div className="text-yellow-400/70 text-[11px] font-bold uppercase tracking-wider">{companyName}</div>
-            </div>
-          </div>
-        );
-
-      case 5: // Compact Inline - Single line with divider (clickable)
-        return (
-          <div className="mb-3 text-center">
-            <button
-              className="inline-flex items-center gap-2 text-[10px] transition-all duration-300 group cursor-pointer hover:scale-105"
-              onClick={() => {
-                // TODO: Navigate to corporation page
-                console.log('Navigate to corporation:', companyName);
-              }}
-            >
-              <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 group-hover:to-yellow-400 transition-all duration-300" />
-              <span className="text-gray-500 uppercase tracking-wide group-hover:text-yellow-400 group-hover:tracking-widest transition-all duration-300">
-                {companyName}
-              </span>
-              <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 group-hover:to-yellow-400 transition-all duration-300" />
-            </button>
-          </div>
-        );
-
-      default:
-        return null;
-    }
+  // Corporation name display - Compact Inline (clickable)
+  const renderCorporationName = (companyName: string) => {
+    return (
+      <div className="mb-3 text-center">
+        <button
+          className="inline-flex items-center gap-2 text-[10px] transition-all duration-300 cursor-pointer hover:scale-105"
+          onClick={() => {
+            // TODO: Navigate to corporation page
+            console.log('Navigate to corporation:', companyName);
+          }}
+        >
+          <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 hover:to-yellow-400 transition-all duration-300" />
+          <span className="text-gray-500 uppercase tracking-wide hover:text-yellow-400 hover:tracking-widest transition-all duration-300">
+            {companyName}
+          </span>
+          <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 hover:to-yellow-400 transition-all duration-300" />
+        </button>
+      </div>
+    );
   };
 
   // Header button styling variations
@@ -3020,7 +2751,7 @@ export default function EssenceMarketPage() {
         </button>
 
         {!debugPanelCollapsed && (
-          <div className="bg-black/90 border border-yellow-500/50 p-3 rounded-lg backdrop-blur-sm space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto">
+          <div className="bg-black/90 border border-yellow-500/50 p-3 rounded-lg backdrop-blur-sm space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto" style={{ transform: 'scale(0.85)', transformOrigin: 'top right' }}>
             <div className="text-yellow-400 text-xs uppercase tracking-wider font-bold mb-2 pb-2 border-b border-yellow-500/30">Debug Controls</div>
 
             {/* Listing Count Toggle */}
@@ -3060,6 +2791,22 @@ export default function EssenceMarketPage() {
               >
                 <option value="active">Active Only</option>
                 <option value="all">Show All (Including Expired)</option>
+              </select>
+            </div>
+
+            {/* Siphon Button Hover Effect */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Siphon Button Hover</label>
+              <select
+                value={siphonHoverEffect}
+                onChange={(e) => setSiphonHoverEffect(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Effect 1: Zoom/Scale (110%)</option>
+                <option value={2}>Effect 2: Intense Glow</option>
+                <option value={3}>Effect 3: Rotate & Scale</option>
+                <option value={4}>Effect 4: Slide Up</option>
+                <option value={5}>Effect 5: Pulse & Glow</option>
               </select>
             </div>
 
@@ -3109,88 +2856,42 @@ export default function EssenceMarketPage() {
               </select>
             </div>
 
-            {/* Siphon Button Style Selector */}
+            {/* Stock Number Font Size */}
             <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Siphon Button Style</label>
-              <select
-                value={siphonButtonStyle}
-                onChange={(e) => setSiphonButtonStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20)}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Style 1: Neon Outline - Glowing stroke text</option>
-                <option value={2}>Style 2: Embossed 3D - Raised beveled look</option>
-                <option value={3}>Style 3: Wireframe Tech - Minimal thin border</option>
-                <option value={4}>Style 4: Blocky Retro - Chunky arcade style</option>
-                <option value={5}>Style 5: Sliced Diagonal - Angled stripe cut</option>
-                <option value={6}>Style 6: Wireframe Condensed - Teal fine grid</option>
-                <option value={7}>Style 7: Wireframe Bold - Yellow thick grid</option>
-                <option value={8}>Style 8: Wireframe Expanded - Lime sparse grid</option>
-                <option value={9}>Style 9: Wireframe Sharp - Orange crosshatch</option>
-                <option value={10}>Style 10: Wireframe Rounded - Cyan dotted</option>
-                <option value={11}>Style 11: Solid Teal - Teal background rounded</option>
-                <option value={12}>Style 12: Solid Yellow - Yellow background rounded</option>
-                <option value={13}>Style 13: Solid Amber - Amber background rounded</option>
-                <option value={14}>Style 14: Solid Cyan - Cyan background rounded</option>
-                <option value={15}>Style 15: Solid Lime - Lime background rounded</option>
-                <option value={16}>Style 16: Cyan Glow - Larger subtle white glow</option>
-                <option value={17}>Style 17: Cyan Bright - Larger bright white glow</option>
-                <option value={18}>Style 18: Cyan Shimmer - Larger white shimmer</option>
-                <option value={19}>Style 19: Cyan Steady - Larger constant white glow</option>
-                <option value={20}>Style 20: Cyan Pulse - Largest rapid white pulse</option>
-              </select>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
+                Stock Number Size: {stockNumberFontSize}px
+              </label>
+              <input
+                type="range"
+                min="18"
+                max="72"
+                step="1"
+                value={stockNumberFontSize}
+                onChange={(e) => setStockNumberFontSize(Number(e.target.value))}
+                className="w-full debug-slider"
+                style={{
+                  background: `linear-gradient(to right, #fab617 0%, #fab617 ${((stockNumberFontSize - 18) / 54) * 100}%, #374151 ${((stockNumberFontSize - 18) / 54) * 100}%, #374151 100%)`
+                }}
+              />
             </div>
 
-            {/* Timer Display Variation */}
+            {/* Price Number Font Size */}
             <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Timer Display Style</label>
-              <select
-                value={timerDisplayVariation}
-                onChange={(e) => setTimerDisplayVariation(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Variation 1: Clock Left + Text</option>
-                <option value={2}>Variation 2: Clock Above (Stacked)</option>
-                <option value={3}>Variation 3: Clock in Circle + Text</option>
-                <option value={4}>Variation 4: Large Clock + Small Text</option>
-                <option value={5}>Variation 5: Clock + Text w/ Background</option>
-              </select>
-            </div>
-
-            {/* Corporation Display Style */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Corporation Display</label>
-              <select
-                value={corporationDisplayStyle}
-                onChange={(e) => setCorporationDisplayStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Style 1: Minimal Label</option>
-                <option value={2}>Style 2: Industrial Tag</option>
-                <option value={3}>Style 3: Hazard Strip</option>
-                <option value={4}>Style 4: Stencil Plate</option>
-                <option value={5}>Style 5: Compact Inline</option>
-              </select>
-            </div>
-
-            {/* Essence Label Font */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Essence Label Font</label>
-              <select
-                value={essenceLabelFont}
-                onChange={(e) => setEssenceLabelFont(e.target.value as 'orbitron' | 'rajdhani' | 'saira' | 'teko' | 'michroma' | 'audiowide' | 'quantico' | 'electrolize' | 'russo' | 'exo')}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value="orbitron">Orbitron</option>
-                <option value="rajdhani">Rajdhani</option>
-                <option value="saira">Saira Condensed</option>
-                <option value="teko">Teko</option>
-                <option value="michroma">Michroma</option>
-                <option value="audiowide">Audiowide</option>
-                <option value="quantico">Quantico</option>
-                <option value="electrolize">Electrolize</option>
-                <option value="russo">Russo One</option>
-                <option value="exo">Exo 2</option>
-              </select>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
+                Price Number Size: {priceNumberFontSize}px
+              </label>
+              <input
+                type="range"
+                min="18"
+                max="72"
+                step="1"
+                value={priceNumberFontSize}
+                onChange={(e) => setPriceNumberFontSize(Number(e.target.value))}
+                className="w-full debug-slider"
+                style={{
+                  background: `linear-gradient(to right, #fab617 0%, #fab617 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 100%)`
+                }}
+              />
             </div>
 
             {/* Gold Management */}
@@ -4806,11 +4507,12 @@ export default function EssenceMarketPage() {
                   )}
 
                   {/* Essence Image */}
-                  <div className="flex justify-center items-center mb-3 h-24">
+                  <div className="flex justify-center items-center mb-3" style={{ height: `${bottleImageSize}px` }}>
                     <img
                       src={`/essence-images/named-bottles-1k/${sanitizeVariationName(listing.itemVariation || '')}.png`}
                       alt={listing.itemVariation || "Essence"}
-                      className="max-w-[100px] max-h-[100px] w-auto h-auto object-contain"
+                      className="w-auto h-auto object-contain"
+                      style={{ maxWidth: `${bottleImageSize}px`, maxHeight: `${bottleImageSize}px` }}
                       onError={(e) => {
                         // Show placeholder text when image not found
                         const target = e.target as HTMLImageElement;
@@ -4818,7 +4520,9 @@ export default function EssenceMarketPage() {
                         if (parent) {
                           target.style.display = 'none';
                           const placeholder = document.createElement('div');
-                          placeholder.className = 'w-24 h-24 rounded-lg border-2 border-dashed border-yellow-500/30 flex items-center justify-center bg-black/40';
+                          placeholder.className = 'rounded-lg border-2 border-dashed border-yellow-500/30 flex items-center justify-center bg-black/40';
+                          placeholder.style.width = `${bottleImageSize}px`;
+                          placeholder.style.height = `${bottleImageSize}px`;
                           placeholder.innerHTML = `<span class="text-yellow-500/50 text-xs font-bold uppercase text-center px-2">${listing.itemVariation?.replace(/\s+essence$/i, '') || 'Essence'}</span>`;
                           parent.appendChild(placeholder);
                         }
@@ -4827,32 +4531,46 @@ export default function EssenceMarketPage() {
                   </div>
 
                   {/* Essence Details */}
-                  <div className="mb-3">
-                    <div className={`font-bold text-yellow-400 uppercase tracking-wide text-center text-sm ${
-                      essenceLabelFont === 'orbitron' ? 'font-orbitron' :
-                      essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
-                      essenceLabelFont === 'saira' ? 'font-saira' :
-                      essenceLabelFont === 'teko' ? 'font-teko' :
-                      essenceLabelFont === 'michroma' ? 'font-michroma' :
-                      essenceLabelFont === 'audiowide' ? 'font-audiowide' :
-                      essenceLabelFont === 'quantico' ? 'font-quantico' :
-                      essenceLabelFont === 'electrolize' ? 'font-electrolize' :
-                      essenceLabelFont === 'russo' ? 'font-russo' :
-                      essenceLabelFont === 'exo' ? 'font-exo' :
-                      'font-orbitron'
-                    }`}>
-                      {listing.itemVariation || "Unknown Essence"}
-                    </div>
+                  <div className="mb-3 h-14 flex items-center justify-center">
+                    {(() => {
+                      const essenceName = listing.itemVariation || "Unknown Essence";
+                      const { fontSize, lineClamp } = getEssenceLabelFontSize(essenceName, essenceLabelFontSize);
+
+                      return (
+                        <div
+                          className={`font-bold text-yellow-400 uppercase tracking-wide text-center ${
+                            essenceLabelFont === 'geist' ? 'font-sans' :
+                            essenceLabelFont === 'orbitron' ? 'font-orbitron' :
+                            essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
+                            essenceLabelFont === 'saira' ? 'font-saira' :
+                            essenceLabelFont === 'teko' ? 'font-teko' :
+                            essenceLabelFont === 'michroma' ? 'font-michroma' :
+                            essenceLabelFont === 'audiowide' ? 'font-audiowide' :
+                            essenceLabelFont === 'quantico' ? 'font-quantico' :
+                            essenceLabelFont === 'electrolize' ? 'font-electrolize' :
+                            essenceLabelFont === 'russo' ? 'font-russo' :
+                            essenceLabelFont === 'exo' ? 'font-exo' :
+                            'font-orbitron'
+                          }`}
+                          style={{
+                            fontSize: `${fontSize}px`,
+                            lineHeight: '1.3',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
+                            hyphens: 'auto'
+                          }}
+                        >
+                          {essenceName}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Price Display */}
                   {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
 
                   {/* Corporation Name */}
-                  {!isOwn && (listing as any).sellerCompanyName && renderCorporationName((listing as any).sellerCompanyName, corporationDisplayStyle)}
-
-                  {/* Time Left - Countdown Timer */}
-                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt, timerDisplayVariation)}
+                  {!isOwn && (listing as any).sellerCompanyName && renderCorporationName((listing as any).sellerCompanyName)}
 
                   {/* Action Button */}
                   {isOwn ? (
@@ -4863,27 +4581,46 @@ export default function EssenceMarketPage() {
                       ⊗ CANCEL
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleOpenPurchaseModal(listing)}
-                      disabled={!canAfford}
-                      className={`${getSiphonButtonStyle(siphonButtonStyle)} ${getSiphonButtonColors(siphonButtonStyle, canAfford)}`}
-                      style={{
-                        clipPath: canAfford ? getSiphonButtonClipPath(siphonButtonStyle) : undefined
-                      }}
-                    >
-                      {canAfford ? (
-                        getSiphonButtonTextures(siphonButtonStyle)
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-15" />
-                          <div className="absolute inset-0 mek-overlay-rust opacity-10" />
-                        </>
+                    <div className="relative">
+                      <button
+                        onClick={() => canAfford && handleOpenPurchaseModal(listing)}
+                        disabled={!canAfford}
+                        onMouseEnter={() => !canAfford && setHoveredInsufficientListing(listing._id)}
+                        onMouseLeave={() => setHoveredInsufficientListing(null)}
+                        className={`${getSiphonButtonStyle()} ${getSiphonButtonColors(canAfford)} ${canAfford ? getSiphonHoverEffect() : ''}`}
+                        style={{
+                          clipPath: canAfford ? getSiphonButtonClipPath() : undefined
+                        }}
+                      >
+                        {canAfford ? (
+                          getSiphonButtonTextures()
+                        ) : (
+                          <>
+                            <div className="absolute inset-0 mek-overlay-scratches opacity-15" />
+                            <div className="absolute inset-0 mek-overlay-rust opacity-10" />
+                          </>
+                        )}
+                        <span className="relative z-10">
+                          SIPHON
+                        </span>
+                      </button>
+
+                      {/* Custom Tooltip for Insufficient Funds */}
+                      {!canAfford && hoveredInsufficientListing === listing._id && (
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 pointer-events-none">
+                          <div className="relative px-3 py-1.5 bg-gray-900/95 border border-yellow-500/40 rounded text-yellow-400 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                            <div className="absolute inset-0 mek-overlay-scratches opacity-10" />
+                            <span className="relative z-10">Insufficient Funds</span>
+                            {/* Arrow pointing down */}
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-yellow-500/40" />
+                          </div>
+                        </div>
                       )}
-                      <span className="relative z-10">
-                        {canAfford ? "SIPHON" : "⊗ INSUFFICIENT FUNDS"}
-                      </span>
-                    </button>
+                    </div>
                   )}
+
+                  {/* Time Left - Countdown Timer (Below Button) */}
+                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt, timerDisplayVariation)}
                 </div>
               );
             })

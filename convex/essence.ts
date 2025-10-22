@@ -62,8 +62,8 @@ export const initializeEssenceSystem = mutation({
       lastModified: now,
     });
 
-    // Create 5 slot records (slot 1 unlocked, 2-5 locked)
-    for (let i = 1; i <= 5; i++) {
+    // Create 6 slot records (slot 1 unlocked, 2-6 locked)
+    for (let i = 1; i <= 6; i++) {
       await ctx.db.insert("essenceSlots", {
         walletAddress,
         slotNumber: i,
@@ -73,7 +73,7 @@ export const initializeEssenceSystem = mutation({
       });
     }
 
-    // Generate slot requirements for slots 2-5
+    // Generate slot requirements for slots 2-6
     await generateSlotRequirements(ctx, walletAddress);
 
     return { success: true, message: "Essence system initialized" };
@@ -160,6 +160,27 @@ async function generateSlotRequirements(ctx: any, walletAddress: string) {
       variationId: varId,
       variationName: `Variation ${varId}`,
       amountRequired: 10,
+    })),
+    generatedAt: now,
+    seedUsed: walletAddress,
+  });
+
+  // Slot 6: All groups (hardest)
+  const slot6Pool = [
+    ...config.rarityGroup1,
+    ...config.rarityGroup2,
+    ...config.rarityGroup3,
+    ...config.rarityGroup4,
+  ];
+  const slot6Essences = rng.selectFrom(slot6Pool, config.slot6EssenceCount);
+  await ctx.db.insert("essenceSlotRequirements", {
+    walletAddress,
+    slotNumber: 6,
+    goldCost: config.slot6GoldCost,
+    requiredEssences: slot6Essences.map((varId: number) => ({
+      variationId: varId,
+      variationName: `Variation ${varId}`,
+      amountRequired: 12,
     })),
     generatedAt: now,
     seedUsed: walletAddress,
@@ -446,8 +467,8 @@ export const unlockSlot = mutation({
   handler: async (ctx, args) => {
     const { walletAddress, slotNumber } = args;
 
-    if (slotNumber < 2 || slotNumber > 5) {
-      throw new Error("Invalid slot number (must be 2-5)");
+    if (slotNumber < 2 || slotNumber > 6) {
+      throw new Error("Invalid slot number (must be 2-6)");
     }
 
     // Get slot
@@ -670,10 +691,12 @@ export const updateEssenceConfig = mutation({
     slot3GoldCost: v.optional(v.number()),
     slot4GoldCost: v.optional(v.number()),
     slot5GoldCost: v.optional(v.number()),
+    slot6GoldCost: v.optional(v.number()),
     slot2EssenceCount: v.optional(v.number()),
     slot3EssenceCount: v.optional(v.number()),
     slot4EssenceCount: v.optional(v.number()),
     slot5EssenceCount: v.optional(v.number()),
+    slot6EssenceCount: v.optional(v.number()),
     rarityGroup1: v.optional(v.array(v.number())),
     rarityGroup2: v.optional(v.array(v.number())),
     rarityGroup3: v.optional(v.array(v.number())),
@@ -705,10 +728,12 @@ export const updateEssenceConfig = mutation({
         slot3GoldCost: args.slot3GoldCost || 50000,
         slot4GoldCost: args.slot4GoldCost || 150000,
         slot5GoldCost: args.slot5GoldCost || 500000,
+        slot6GoldCost: args.slot6GoldCost || 1000000,
         slot2EssenceCount: args.slot2EssenceCount || 2,
         slot3EssenceCount: args.slot3EssenceCount || 3,
         slot4EssenceCount: args.slot4EssenceCount || 4,
         slot5EssenceCount: args.slot5EssenceCount || 5,
+        slot6EssenceCount: args.slot6EssenceCount || 6,
         rarityGroup1: args.rarityGroup1 || [],
         rarityGroup2: args.rarityGroup2 || [],
         rarityGroup3: args.rarityGroup3 || [],

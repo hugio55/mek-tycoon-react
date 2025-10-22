@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -10,17 +11,32 @@ interface MekLevelsViewerProps {
 }
 
 export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsViewerProps) {
+  const [mounted, setMounted] = useState(false);
   const mekLevels = useQuery(api.mekLeveling.getMekLevels, { walletAddress });
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData, { walletAddress });
 
-  if (!mekLevels || !goldMiningData) {
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-8 max-w-4xl w-full mx-4">
-          <div className="text-gray-400">Loading Mek levels...</div>
-        </div>
+  // Mount portal and lock body scroll
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const loadingContent = (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-8 max-w-4xl w-full mx-4">
+        <div className="text-gray-400">Loading Mek levels...</div>
       </div>
-    );
+    </div>
+  );
+
+  // Only render portal on client-side after mount
+  if (!mounted) return null;
+
+  if (!mekLevels || !goldMiningData) {
+    return createPortal(loadingContent, document.body);
   }
 
   // Create a map of existing level records
@@ -49,7 +65,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     return a.mekNumber - b.mekNumber; // Then by Mek number
   });
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-700">
@@ -186,4 +202,8 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       </div>
     </div>
   );
+
+  // Only render portal on client-side after mount
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
 }
