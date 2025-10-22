@@ -82,12 +82,13 @@ export async function POST(request: NextRequest) {
       ReceiverAddress,
     } = payload;
 
-    // Validate required fields
+    // Validate required fields (return 200 even if missing for NMKR test webhooks)
     if (!TxHash || !ProjectUid) {
-      console.error('Missing required fields in webhook payload');
+      console.log('Test webhook or missing required fields, acknowledging');
       return NextResponse.json({
-        error: 'Missing required fields'
-      }, { status: 400 });
+        success: true,
+        message: 'Test webhook received'
+      }, { status: 200 });
     }
 
     // Only process finished transactions
