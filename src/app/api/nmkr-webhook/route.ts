@@ -44,12 +44,20 @@ function verifyHMAC(payload: string, receivedHash: string, secret: string): bool
 }
 
 export async function POST(request: NextRequest) {
+  console.log('NMKR Webhook POST received');
+
   try {
     const url = new URL(request.url);
     const payloadHash = url.searchParams.get('payloadHash');
 
     // Get raw body for HMAC verification
-    const bodyText = await request.text();
+    let bodyText: string;
+    try {
+      bodyText = await request.text();
+    } catch (error) {
+      console.log('Could not read request body, returning success anyway');
+      return NextResponse.json({ success: true, message: 'Acknowledged' });
+    }
 
     // Handle empty body (NMKR test webhook)
     if (!bodyText || bodyText.trim() === '') {
@@ -60,7 +68,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const payload = JSON.parse(bodyText);
+    let payload: any;
+    try {
+      payload = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.log('Invalid JSON, returning success anyway:', bodyText.substring(0, 100));
+      return NextResponse.json({ success: true, message: 'Acknowledged' });
+    }
 
     console.log('NMKR Webhook received:', {
       eventType: payload.EventType,
@@ -151,13 +165,24 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// GET request handler (NMKR might test with GET first)
+export async function GET(request: NextRequest) {
+  console.log('NMKR Webhook GET received');
+  return NextResponse.json({
+    success: true,
+    message: 'NMKR webhook endpoint is ready',
+    status: 'active'
+  });
+}
+
 // OPTIONS request for CORS preflight
 export async function OPTIONS(request: NextRequest) {
+  console.log('NMKR Webhook OPTIONS received');
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, x-nmkr-signature',
     },
   });
