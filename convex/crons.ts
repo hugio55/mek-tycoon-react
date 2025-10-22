@@ -22,11 +22,11 @@ crons.interval(
   api.goldBackups.triggerManualDailyBackup
 );
 
-// Update pre-computed leaderboard rankings every 5 minutes
+// Update pre-computed leaderboard rankings every 15 minutes (reduced from 5 to save bandwidth)
 crons.interval(
   "update leaderboard rankings",
   {
-    minutes: 5
+    minutes: 15
   },
   internal.leaderboardUpdater.updateGoldLeaderboard
 );
@@ -95,6 +95,67 @@ crons.daily(
     minuteUTC: 15
   },
   internal.monitoring.cleanupOldSummaries
+);
+
+// Clean up old ownership snapshots (mekOwnershipHistory) older than 30 days (runs daily at 4 AM UTC)
+crons.daily(
+  "cleanup old ownership snapshots",
+  {
+    hourUTC: 4,
+    minuteUTC: 0
+  },
+  internal.snapshotCleanup.cleanupOldSnapshots
+);
+
+// Clean up old snapshot logs older than 7 days (runs daily at 4:15 AM UTC)
+crons.daily(
+  "cleanup old snapshot logs",
+  {
+    hourUTC: 4,
+    minuteUTC: 15
+  },
+  internal.snapshotCleanup.cleanupOldSnapshotLogs
+);
+
+// Clean up old transaction history tables (runs weekly on Monday at 2 AM UTC)
+crons.weekly(
+  "cleanup old stock price history",
+  {
+    dayOfWeek: "monday",
+    hourUTC: 2,
+    minuteUTC: 0
+  },
+  internal.transactionCleanup.cleanupOldStockPriceHistory
+);
+
+crons.weekly(
+  "cleanup old gold transactions",
+  {
+    dayOfWeek: "monday",
+    hourUTC: 2,
+    minuteUTC: 15
+  },
+  internal.transactionCleanup.cleanupOldGoldTransactions
+);
+
+crons.weekly(
+  "cleanup old bank transactions",
+  {
+    dayOfWeek: "monday",
+    hourUTC: 2,
+    minuteUTC: 30
+  },
+  internal.transactionCleanup.cleanupOldBankTransactions
+);
+
+crons.weekly(
+  "cleanup old stock transactions",
+  {
+    dayOfWeek: "monday",
+    hourUTC: 2,
+    minuteUTC: 45
+  },
+  internal.transactionCleanup.cleanupOldStockTransactions
 );
 
 export default crons;

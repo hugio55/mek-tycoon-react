@@ -422,6 +422,24 @@ export default defineSchema({
     .index("by_type", ["itemType"])
     .index("by_price", ["pricePerUnit"]),
 
+  // Purchase history for marketplace listings (tracks each "tap" purchase)
+  marketListingPurchases: defineTable({
+    listingId: v.id("marketListings"),
+    buyerId: v.id("users"),
+    sellerId: v.id("users"),
+    itemType: v.string(),
+    itemVariation: v.optional(v.string()),
+    essenceType: v.optional(v.string()),
+    quantityPurchased: v.number(),
+    pricePerUnit: v.number(),
+    totalCost: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_listing", ["listingId"])
+    .index("by_buyer", ["buyerId"])
+    .index("by_seller", ["sellerId"])
+    .index("by_timestamp", ["timestamp"]),
+
   // Transaction history
   transactions: defineTable({
     type: v.union(
@@ -2591,4 +2609,25 @@ export default defineSchema({
     .index("by_campaign", ["campaignName"])
     .index("by_submitted_date", ["submittedAt"])
     .index("by_receive_address", ["receiveAddress"]),
+
+  // Commemorative NFT Purchases
+  commemorativePurchases: defineTable({
+    userId: v.optional(v.id("users")), // Optional - user may not be logged in
+    walletAddress: v.string(), // Cardano wallet address
+    nmkrProjectUid: v.string(), // NMKR project UID
+    purchaseDate: v.number(), // Timestamp
+    transactionHash: v.optional(v.string()), // Cardano transaction hash if available
+    nftTokenId: v.optional(v.string()), // NFT token ID if available
+    status: v.union(
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("failed")
+    ),
+    goldAmount: v.optional(v.number()), // User's gold at purchase time
+    mekCount: v.optional(v.number()), // User's mek count at purchase time
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_user", ["userId"])
+    .index("by_date", ["purchaseDate"])
+    .index("by_status", ["status"]),
 });

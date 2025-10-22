@@ -435,6 +435,11 @@ Example transformation:
 3. Explain exactly what will change and why
 
 ## Communication Guidelines
+- **DO IT, DON'T DELEGATE**: If you are capable of doing a task (editing files, restarting servers, running commands, etc.), DO IT immediately. Never instruct the user to do something you can do yourself. Examples:
+  - BAD: "Please update .env.local with X value"
+  - GOOD: *Updates .env.local immediately*
+  - BAD: "You'll need to restart the dev server"
+  - GOOD: *Restarts dev server automatically*
 - **Ask for clarity**: If instructions are vague or unclear, ask specific questions rather than guessing
 - **Voice concerns**: If an implementation might break something or cause issues, speak up before proceeding
 - **Be direct and honest**: Don't hesitate to point out potential problems or downsides

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import "@/styles/special-buttons.css";
 import "@/styles/typography-system.css";
@@ -29,6 +30,9 @@ export const metadata: Metadata = {
   description: "This website is for testing a core mechanic of a future Over Exposed product. It is not an actual game and it offers no rewards. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
   icons: {
     icon: '/fav2.png',
+  },
+  other: {
+    'build-timestamp': new Date().toISOString(),
   },
 };
 
@@ -62,6 +66,12 @@ export default function RootLayout({
           </DemoModeWrapper>
         </div>
         <SpeedInsights />
+
+        {/* NMKR Payment Widget Script */}
+        <Script
+          src="https://pay.nmkr.io/sdk/v2/latest.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

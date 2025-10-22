@@ -8,6 +8,7 @@ import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
 import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
+import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
 import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
 
 // Demo wallet mock data
@@ -833,6 +834,12 @@ export default function HubPage() {
             </div>
           </div>
         </div>
+
+        {/* Commemorative NFT Banner */}
+        <CommemorativeNFTBanner
+          userId={userId?.toString()}
+          walletAddress={walletAddress || undefined}
+        />
 
         {/* VERIFICATION WARNING - Only show if wallet exists but is NOT verified */}
         {verificationStatus && verificationStatus.exists && !verificationStatus.isVerified && (
