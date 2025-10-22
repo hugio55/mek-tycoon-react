@@ -11,7 +11,6 @@ import UsernameModal from "@/components/UsernameModal";
 import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
 import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
 import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
-import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
 
 // Demo wallet mock data
 const DEMO_WALLET_DATA = {
