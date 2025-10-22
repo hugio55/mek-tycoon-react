@@ -144,20 +144,20 @@ export const createFederation = mutation({
   },
 });
 
-// Invite a walletGroup to join federation
+// Invite a wallet/corporation to join federation
 export const inviteToFederation = mutation({
   args: {
     federationId: v.string(),
-    invitedGroupId: v.string(),
-    invitedByGroupId: v.string(),
+    invitedWalletAddress: v.string(),
+    invitedByWalletAddress: v.string(),
     message: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if inviter is a member with permission
     const inviterMembership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_federation_and_group", (q) =>
-        q.eq("federationId", args.federationId).eq("groupId", args.invitedByGroupId)
+      .withIndex("by_federation_and_wallet", (q) =>
+        q.eq("federationId", args.federationId).eq("walletAddress", args.invitedByWalletAddress)
       )
       .first();
 
@@ -165,20 +165,20 @@ export const inviteToFederation = mutation({
       throw new Error("Only leaders and officers can invite members");
     }
 
-    // Check if group is already a member
+    // Check if wallet is already a member
     const existingMembership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", args.invitedGroupId))
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.invitedWalletAddress))
       .first();
 
     if (existingMembership) {
-      throw new Error("Group is already in a federation");
+      throw new Error("Corporation is already in a federation");
     }
 
     // Check for existing pending invite
     const existingInvite = await ctx.db
       .query("federationInvites")
-      .withIndex("by_invited_group", (q) => q.eq("invitedGroupId", args.invitedGroupId))
+      .withIndex("by_invited_wallet", (q) => q.eq("invitedWalletAddress", args.invitedWalletAddress))
       .filter((q) =>
         q.and(
           q.eq(q.field("federationId"), args.federationId),
@@ -188,7 +188,7 @@ export const inviteToFederation = mutation({
       .first();
 
     if (existingInvite) {
-      throw new Error("Invite already sent to this group");
+      throw new Error("Invite already sent to this corporation");
     }
 
     const now = Date.now();
@@ -196,8 +196,8 @@ export const inviteToFederation = mutation({
 
     await ctx.db.insert("federationInvites", {
       federationId: args.federationId,
-      invitedGroupId: args.invitedGroupId,
-      invitedByGroupId: args.invitedByGroupId,
+      invitedWalletAddress: args.invitedWalletAddress,
+      invitedByWalletAddress: args.invitedByWalletAddress,
       status: "pending",
       message: args.message,
       createdAt: now,
@@ -212,7 +212,7 @@ export const inviteToFederation = mutation({
 export const acceptInvite = mutation({
   args: {
     inviteId: v.id("federationInvites"),
-    groupId: v.string(),
+    walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
     const invite = await ctx.db.get(args.inviteId);
@@ -221,8 +221,8 @@ export const acceptInvite = mutation({
       throw new Error("Invite not found");
     }
 
-    if (invite.invitedGroupId !== args.groupId) {
-      throw new Error("This invite is not for your group");
+    if (invite.invitedWalletAddress !== args.walletAddress) {
+      throw new Error("This invite is not for your corporation");
     }
 
     if (invite.status !== "pending") {
@@ -235,10 +235,10 @@ export const acceptInvite = mutation({
 
     const now = Date.now();
 
-    // Add group to federation
+    // Add wallet to federation
     await ctx.db.insert("federationMemberships", {
       federationId: invite.federationId,
-      groupId: args.groupId,
+      walletAddress: args.walletAddress,
       joinedAt: now,
       role: "member",
     });
@@ -273,12 +273,12 @@ export const acceptInvite = mutation({
 export const rejectInvite = mutation({
   args: {
     inviteId: v.id("federationInvites"),
-    groupId: v.string(),
+    walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
     const invite = await ctx.db.get(args.inviteId);
 
-    if (!invite || invite.invitedGroupId !== args.groupId) {
+    if (!invite || invite.invitedWalletAddress !== args.walletAddress) {
       throw new Error("Invalid invite");
     }
 
@@ -295,13 +295,13 @@ export const rejectInvite = mutation({
 export const leaveFederation = mutation({
   args: {
     federationId: v.string(),
-    groupId: v.string(),
+    walletAddress: v.string(),
   },
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("federationMemberships")
-      .withIndex("by_federation_and_group", (q) =>
-        q.eq("federationId", args.federationId).eq("groupId", args.groupId)
+      .withIndex("by_federation_and_wallet", (q) =>
+        q.eq("federationId", args.federationId).eq("walletAddress", args.walletAddress)
       )
       .first();
 
