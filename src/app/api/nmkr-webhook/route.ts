@@ -44,39 +44,51 @@ function verifyHMAC(payload: string, receivedHash: string, secret: string): bool
 }
 
 export async function POST(request: NextRequest) {
+  // FAST PATH: Return 200 immediately for NMKR test
+  // Process actual webhooks asynchronously
+  const url = new URL(request.url);
+  const payloadHash = url.searchParams.get('payloadHash');
+
+  // Clone request for async processing
+  const requestClone = request.clone();
+
+  // Start async processing (don't await)
+  processWebhookAsync(requestClone, url, payloadHash).catch(err =>
+    console.error('Async webhook processing error:', err)
+  );
+
+  // Return 200 immediately
+  return NextResponse.json({ success: true, message: 'Webhook received' });
+}
+
+async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: string | null) {
   console.log('NMKR Webhook POST received');
 
   try {
-    const url = new URL(request.url);
-    const payloadHash = url.searchParams.get('payloadHash');
-
     // Get raw body for HMAC verification
     let bodyText: string;
     try {
       bodyText = await request.text();
     } catch (error) {
-      console.log('Could not read request body, returning success anyway');
-      return NextResponse.json({ success: true, message: 'Acknowledged' });
+      console.log('Could not read request body');
+      return;
     }
 
     // Handle empty body (NMKR test webhook)
     if (!bodyText || bodyText.trim() === '') {
       console.log('Empty webhook received (likely NMKR test)');
-      return NextResponse.json({
-        success: true,
-        message: 'Test webhook acknowledged'
-      });
+      return;
     }
 
     let payload: any;
     try {
       payload = JSON.parse(bodyText);
     } catch (parseError) {
-      console.log('Invalid JSON, returning success anyway:', bodyText.substring(0, 100));
-      return NextResponse.json({ success: true, message: 'Acknowledged' });
+      console.log('Invalid JSON:', bodyText.substring(0, 100));
+      return;
     }
 
-    console.log('NMKR Webhook received:', {
+    console.log('NMKR Webhook payload:', {
       eventType: payload.EventType,
       projectUid: payload.ProjectUid,
       txHash: payload.TxHash,
@@ -90,7 +102,7 @@ export async function POST(request: NextRequest) {
         const isValid = verifyHMAC(bodyText, payloadHash, process.env.NMKR_WEBHOOK_SECRET);
         if (!isValid) {
           console.error('Invalid NMKR webhook signature for real transaction');
-          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+          return;
         }
         console.log('✓ HMAC signature verified');
       } else {
@@ -111,22 +123,16 @@ export async function POST(request: NextRequest) {
       ReceiverAddress,
     } = payload;
 
-    // Validate required fields (return 200 even if missing for NMKR test webhooks)
+    // Validate required fields
     if (!TxHash || !ProjectUid) {
-      console.log('Test webhook or missing required fields, acknowledging');
-      return NextResponse.json({
-        success: true,
-        message: 'Test webhook received'
-      }, { status: 200 });
+      console.log('Test webhook or missing required fields');
+      return;
     }
 
     // Only process finished transactions
     if (EventType !== 'transactionfinished') {
       console.log(`Webhook received with event: ${EventType}, skipping processing`);
-      return NextResponse.json({
-        success: true,
-        message: `Event type: ${EventType}`
-      });
+      return;
     }
 
     // Update purchase status in database
@@ -149,24 +155,9 @@ export async function POST(request: NextRequest) {
       console.log(`✓ Successfully updated purchase status for tx: ${TxHash}`);
     } catch (dbError) {
       console.error('Failed to update purchase in database:', dbError);
-      // Don't fail the webhook - NMKR might retry
     }
-
-    // Send success response to NMKR
-    return NextResponse.json({
-      success: true,
-      message: 'Webhook processed successfully',
-      transactionHash: TxHash
-    });
-
   } catch (error) {
-    console.error('NMKR webhook error:', error);
-
-    // Return 200 to prevent NMKR from retrying on our errors
-    return NextResponse.json({
-      success: false,
-      message: 'Internal processing error, logged for review'
-    }, { status: 200 });
+    console.error('NMKR webhook processing error:', error);
   }
 }
 
