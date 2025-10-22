@@ -27,6 +27,7 @@ import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/
 import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
+import { useActivityTracking } from '@/hooks/useActivityTracking';
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
@@ -428,6 +429,14 @@ export default function MekRateLoggingPage() {
     api.goldMining.getCorporationStats,
     walletAddress ? { walletAddress } : "skip"
   );
+
+  // Track genuine user activity (clicks, scrolls, keyboard, mouse movement)
+  // Only updates lastActiveTime when user is actually interacting with the page
+  useActivityTracking({
+    walletAddress,
+    enabled: walletConnected && !isDemoMode,
+    debounceMs: 30000 // Update database max once per 30 seconds
+  });
 
   // LOG: ownedMeks state changes (CRITICAL FOR DEBUGGING WALLET SWITCH BUG)
   useEffect(() => {

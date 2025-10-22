@@ -12,6 +12,7 @@ import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
+import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -28,7 +29,7 @@ export default function WalletManagementAdmin() {
       const session = await restoreWalletSession();
       if (session?.stakeAddress) {
         setStakeAddress(session.stakeAddress);
-        console.log('[Wallet Management] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
+        console.log('[Player Management] Wallet session restored:', session.stakeAddress.slice(0, 12) + '...');
       }
     };
     loadSession();
@@ -62,6 +63,7 @@ export default function WalletManagementAdmin() {
   const [isRunningSnapshot, setIsRunningSnapshot] = useState(false);
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
+  const [viewingEssence, setViewingEssence] = useState<string | null>(null);
   const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
   const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
   const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
@@ -70,6 +72,7 @@ export default function WalletManagementAdmin() {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [expandedCorporations, setExpandedCorporations] = useState<Set<string>>(new Set());
+  const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
 
   // Drag-to-scroll state
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -839,7 +842,7 @@ Check console for full timeline.
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                Wallet Management
+                Player Management
               </h3>
               <p className="text-sm text-gray-400 mt-1">
                 {wallets.length} connected wallets • {verifiedCount} verified
@@ -847,108 +850,41 @@ Check console for full timeline.
             </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Wallet suffix"
-              value={suffixToMerge}
-              onChange={(e) => setSuffixToMerge(e.target.value)}
-              className="px-3 py-2 w-32 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
-            />
-            <button
-              onClick={handleManualMergeBySuffix}
-              disabled={isMerging}
-              className="px-4 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Merge wallets ending with this suffix"
-            >
-              {isMerging ? 'Merging...' : 'Merge by Suffix'}
-            </button>
-          </div>
+          <select
+            onChange={async (e) => {
+              const action = e.target.value;
+              e.target.value = ''; // Reset dropdown
 
-          <button
-            onClick={handleMergeAllDuplicates}
-            disabled={isMerging}
-            className="px-4 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Merge all duplicate wallet records"
-          >
-            {isMerging ? 'Merging...' : 'Merge All Duplicates'}
-          </button>
-
-          <button
-            onClick={async () => {
-              if (!confirm('This will delete ALL non-stake address wallets. Are you sure?')) return;
-              try {
-                const result = await cleanupDuplicates({});
-                setStatusMessage({
-                  type: 'success',
-                  message: result.message
-                });
-                setTimeout(() => setStatusMessage(null), 5000);
-              } catch (error) {
-                setStatusMessage({ type: 'error', message: 'Failed to cleanup duplicates' });
-                setTimeout(() => setStatusMessage(null), 5000);
+              switch(action) {
+                case 'run-snapshot':
+                  await handleRunSnapshot();
+                  break;
+                case 'reset-all':
+                  if (!confirm('⚠️ RESET ALL PROGRESS ⚠️\n\nThis will reset EVERYONE\'S progress:\n• All mechanisms → Level 1\n• All gold → 0\n• All cumulative gold → 0\n\nWallets stay verified and continue earning.\n\nAre you SURE?')) return;
+                  if (!confirm('FINAL WARNING: This will reset ALL players in the entire game. Type "RESET" in your mind to confirm.')) return;
+                  if (!confirm('Last chance to back out. This affects EVERYONE. Continue?')) return;
+                  try {
+                    setStatusMessage({ type: 'success', message: 'Resetting all progress...' });
+                    const result = await resetAllProgress({});
+                    setStatusMessage({
+                      type: 'success',
+                      message: result.message
+                    });
+                    setTimeout(() => setStatusMessage(null), 10000);
+                  } catch (error) {
+                    setStatusMessage({ type: 'error', message: 'Failed to reset progress: ' + String(error) });
+                    setTimeout(() => setStatusMessage(null), 5000);
+                  }
+                  break;
               }
             }}
-            className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded-lg transition-colors font-bold"
-            title="Remove ALL non-stake address wallets"
-          >
-            🧹 Cleanup Non-Stake Wallets
-          </button>
-
-          <button
-            onClick={async () => {
-              if (!confirm('This will ungroup ALL wallet groups (remove corporation groupings). Are you sure?')) return;
-              try {
-                const result = await ungroupAllWallets({});
-                setStatusMessage({
-                  type: 'success',
-                  message: result.message
-                });
-                setTimeout(() => setStatusMessage(null), 5000);
-              } catch (error) {
-                setStatusMessage({ type: 'error', message: 'Failed to ungroup wallets' });
-                setTimeout(() => setStatusMessage(null), 5000);
-              }
-            }}
-            className="px-4 py-2 bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded-lg transition-colors font-bold"
-            title="Remove all wallet groups (ungroup corporations)"
-          >
-            🔓 Ungroup All Wallets
-          </button>
-
-          <button
-            onClick={handleRunSnapshot}
             disabled={isRunningSnapshot}
-            className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Manually trigger 6-hour blockchain snapshot"
+            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isRunningSnapshot ? 'Running...' : '▶ Run Snapshot'}
-          </button>
-
-          <button
-            onClick={async () => {
-              if (!confirm('⚠️ RESET ALL PROGRESS ⚠️\n\nThis will reset EVERYONE\'S progress:\n• All mechanisms → Level 1\n• All gold → 0\n• All cumulative gold → 0\n\nWallets stay verified and continue earning.\n\nAre you SURE?')) return;
-              if (!confirm('FINAL WARNING: This will reset ALL players in the entire game. Type "RESET" in your mind to confirm.')) return;
-              if (!confirm('Last chance to back out. This affects EVERYONE. Continue?')) return;
-
-              try {
-                setStatusMessage({ type: 'success', message: 'Resetting all progress...' });
-                const result = await resetAllProgress({});
-                setStatusMessage({
-                  type: 'success',
-                  message: result.message
-                });
-                setTimeout(() => setStatusMessage(null), 10000);
-              } catch (error) {
-                setStatusMessage({ type: 'error', message: 'Failed to reset progress: ' + String(error) });
-                setTimeout(() => setStatusMessage(null), 5000);
-              }
-            }}
-            className="px-4 py-2 bg-red-900/50 hover:bg-red-900/70 text-red-200 border-2 border-red-500 rounded-lg transition-colors font-bold animate-pulse"
-            title="RESET ALL PROGRESS - Resets everyone back to level 1 and 0 gold"
-          >
-            🔴 RESET ALL PROGRESS
-          </button>
+            <option value="">Admin Actions...</option>
+            <option value="run-snapshot">▶ Run Snapshot</option>
+            <option value="reset-all">🔴 RESET ALL PROGRESS</option>
+          </select>
 
           <input
             type="text"
@@ -989,77 +925,77 @@ Check console for full timeline.
             <tr className="border-b border-gray-700 bg-gray-800/50">
               <th
                 onClick={() => handleSort('wallet')}
-                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Wallet {sortColumn === 'wallet' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('companyName')}
-                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Company Name {sortColumn === 'companyName' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('type')}
-                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Type {sortColumn === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('verified')}
-                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Verified {sortColumn === 'verified' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('meks')}
-                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 MEKs {sortColumn === 'meks' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('goldPerHour')}
-                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Gold/hr {sortColumn === 'goldPerHour' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('currentGold')}
-                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Current Gold {sortColumn === 'currentGold' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('cumulativeGold')}
-                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Cumulative Gold {sortColumn === 'cumulativeGold' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('goldSpent')}
-                className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Gold Spent {sortColumn === 'goldSpent' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('firstConnected')}
-                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 First Connected {sortColumn === 'firstConnected' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('lastUpdate')}
-                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Last Update {sortColumn === 'lastUpdate' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 onClick={() => handleSort('lastActive')}
-                className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+                className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
               >
                 Last Active {sortColumn === 'lastActive' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+              <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
@@ -1079,7 +1015,7 @@ Check console for full timeline.
                   // Aggregate header row
                   rows.push(
                     <tr key={`group-${item.groupId}`} className="hover:bg-gray-800/30 transition-colors bg-yellow-900/5">
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
@@ -1100,13 +1036,13 @@ Check console for full timeline.
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <span className="text-sm font-bold text-yellow-400">{item.aggregateStats.companyName}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <span className="text-sm text-gray-400">Multi-Wallet</span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         {item.aggregateStats.allVerified ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
                             ✓ All Verified
@@ -1117,35 +1053,35 @@ Check console for full timeline.
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-bold text-yellow-400">{item.aggregateStats.totalMeks}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-bold text-gray-300">{item.aggregateStats.totalGoldPerHour.toFixed(2)}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-bold text-yellow-400">{Math.floor(item.aggregateStats.totalCurrentGold).toLocaleString()}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-bold text-yellow-400">{Math.floor(item.aggregateStats.totalCumulativeGold).toLocaleString()}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-bold text-red-400">{Math.floor(item.aggregateStats.totalGoldSpent).toLocaleString()}</span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">
                           {new Date(item.aggregateStats.oldestCreatedAt).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">
                           {new Date(item.aggregateStats.latestUpdate).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">-</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <div className="text-xs text-gray-500 italic">Expand to manage individual wallets</div>
                       </td>
                     </tr>
@@ -1156,7 +1092,7 @@ Check console for full timeline.
                     item.wallets.forEach((wallet) => {
                       rows.push(
                         <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors bg-gray-900/40">
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2">
                     <div className="font-mono text-sm text-gray-300">
                       <div className="mb-1">
                         {wallet.walletAddress.substring(0, 12)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
@@ -1174,17 +1110,17 @@ Check console for full timeline.
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2">
                     {wallet.companyName ? (
                       <span className="text-sm font-semibold text-yellow-400">{wallet.companyName}</span>
                     ) : (
                       <span className="text-sm text-gray-600 italic">No name</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2">
                     <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-2 py-2 text-center">
                     {wallet.isVerified ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
                         ✓ Verified
@@ -1195,13 +1131,13 @@ Check console for full timeline.
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     {editingGold?.walletAddress === wallet.walletAddress ? (
                       <input
                         type="number"
@@ -1244,22 +1180,22 @@ Check console for full timeline.
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     <span className="text-sm font-semibold text-yellow-400">
                       {(wallet.totalCumulativeGold || 0).toLocaleString()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     <span className="text-sm font-semibold text-red-400">
                       {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-2 py-2 text-center">
                     <span className="text-xs text-gray-400">
                       {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-2 py-2 text-center">
                     <span className="text-xs text-gray-400">
                       {wallet.lastSnapshotTime
                         ? new Date(wallet.lastSnapshotTime).toLocaleString()
@@ -1268,108 +1204,128 @@ Check console for full timeline.
                         : 'N/A'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-2 py-2 text-center">
                     <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="grid grid-cols-5 gap-2 min-w-max">
-                      <button
-                        onClick={() => setViewingMekLevels(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
-                        title="View all Mek levels for this wallet"
-                      >
-                        View Levels
+                  <td className="px-2 py-2">
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
+                      onMouseLeave={() => setHoveredDropdown(null)}
+                    >
+                      <button className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded transition-colors whitespace-nowrap">
+                        Actions ▼
                       </button>
-                      <button
-                        onClick={() => setViewingActivityLog(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
-                        title="View activity log (upgrades, connections, etc.)"
-                      >
-                        📋 Activity
-                      </button>
-                      <button
-                        onClick={() => setDiagnosticWallet(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
-                        title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
-                      >
-                        🔍 Boost Sync
-                      </button>
-                      <button
-                        onClick={() => handleSingleWalletSnapshot(wallet.walletAddress)}
-                        disabled={isRunningSnapshot}
-                        className="px-3 py-1.5 text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-700 rounded transition-colors whitespace-nowrap disabled:opacity-50"
-                        title="Run blockchain snapshot for this wallet (with debug logging)"
-                      >
-                        📸 Snapshot
-                      </button>
-                      {wallet.isVerified && (
-                        <button
-                          onClick={() => handleResetVerification(wallet.walletAddress)}
-                          className="px-3 py-1.5 text-xs bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded transition-colors whitespace-nowrap"
-                          title="Reset verification (for testing)"
+
+                      {hoveredDropdown === wallet.walletAddress && (
+                        <div
+                          className="absolute top-full right-0 mt-0 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
+                          onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
+                          onMouseLeave={() => setHoveredDropdown(null)}
                         >
-                          Reset Verify
-                        </button>
-                      )}
-                      {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
-                        <button
-                          onClick={() => manualSetMeks({
-                            walletAddress: wallet.walletAddress,
-                            mekCount: 45,
-                            totalGoldPerHour: 176.56
-                          })}
-                          className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
-                          title="Manually fix MEK ownership"
-                        >
-                          Fix MEKs
-                        </button>
-                      )}
-                      {wallet.totalCumulativeGold < wallet.currentGold && (
-                        <>
                           <button
-                            onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                            title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                            onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors"
+                            title="View all Mek levels for this wallet"
                           >
-                            🔧 Fix Cumul.
+                            View Levels
                           </button>
                           <button
-                            onClick={() => handleReconstructFromSnapshots(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                            title="Reconstruct from Snapshots"
+                            onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-400 transition-colors"
+                            title="View essence balances for this wallet"
                           >
-                            📸 Reconstruct
+                            View Essence
                           </button>
-                        </>
+                          <button
+                            onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
+                            title="View activity log (upgrades, connections, etc.)"
+                          >
+                            📋 Activity
+                          </button>
+                          <button
+                            onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
+                            title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
+                          >
+                            🔍 Boost Sync
+                          </button>
+                          <button
+                            onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); }}
+                            disabled={isRunningSnapshot}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
+                            title="Run blockchain snapshot for this wallet (with debug logging)"
+                          >
+                            📸 Snapshot
+                          </button>
+                          {wallet.isVerified && (
+                            <button
+                              onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); }}
+                              className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
+                              title="Reset verification (for testing)"
+                            >
+                              Reset Verify
+                            </button>
+                          )}
+                          {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
+                            <button
+                              onClick={() => { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); }}
+                              className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
+                              title="Manually fix MEK ownership"
+                            >
+                              Fix MEKs
+                            </button>
+                          )}
+                          {wallet.totalCumulativeGold < wallet.currentGold && (
+                            <>
+                              <button
+                                onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
+                                title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                              >
+                                🔧 Fix Cumul.
+                              </button>
+                              <button
+                                onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
+                                title="Reconstruct from Snapshots"
+                              >
+                                📸 Reconstruct
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
+                            title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                          >
+                            🎯 Exact Recon.
+                          </button>
+                          <button
+                            onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
+                            title="Reset all Mek levels to Level 1"
+                          >
+                            Reset Levels
+                          </button>
+                          <button
+                            onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
+                            title="Reset all gold (spendable + cumulative) to zero"
+                          >
+                            Reset All Gold
+                          </button>
+                          <div className="border-t border-gray-700 my-1"></div>
+                          <button
+                            onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                            className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
+                            title="Delete wallet permanently"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
-                      <button
-                        onClick={() => handleReconstructExact(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
-                        title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
-                      >
-                        🎯 Exact Recon.
-                      </button>
-                      <button
-                        onClick={() => handleResetMekLevels(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
-                        title="Reset all Mek levels to Level 1"
-                      >
-                        Reset Levels
-                      </button>
-                      <button
-                        onClick={() => handleResetAllGold(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
-                        title="Reset all gold (spendable + cumulative) to zero"
-                      >
-                        Reset All Gold
-                      </button>
-                      <button
-                        onClick={() => handleDeleteWallet(wallet.walletAddress)}
-                        className="px-3 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors whitespace-nowrap"
-                        title="Delete wallet permanently"
-                      >
-                        Delete
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -1383,7 +1339,7 @@ Check console for full timeline.
                   const wallet = item.wallets[0];
                   return (
                     <tr key={wallet._id} className="hover:bg-gray-800/30 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <div className="font-mono text-sm text-gray-300">
                           <div className="mb-1">
                             {wallet.walletAddress.substring(0, 12)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
@@ -1401,17 +1357,17 @@ Check console for full timeline.
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         {wallet.companyName ? (
                           <span className="text-sm font-semibold text-yellow-400">{wallet.companyName}</span>
                         ) : (
                           <span className="text-sm text-gray-600 italic">No name</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         {wallet.isVerified ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
                             ✓ Verified
@@ -1422,13 +1378,13 @@ Check console for full timeline.
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         {editingGold?.walletAddress === wallet.walletAddress ? (
                           <input
                             type="number"
@@ -1471,22 +1427,22 @@ Check console for full timeline.
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-semibold text-yellow-400">
                           {(wallet.totalCumulativeGold || 0).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right">
                         <span className="text-sm font-semibold text-red-400">
                           {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">
                           {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">
                           {wallet.lastSnapshotTime
                             ? new Date(wallet.lastSnapshotTime).toLocaleString()
@@ -1495,108 +1451,128 @@ Check console for full timeline.
                             : 'N/A'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center">
                         <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="grid grid-cols-5 gap-2 min-w-max">
-                          <button
-                            onClick={() => setViewingMekLevels(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap"
-                            title="View all Mek levels for this wallet"
-                          >
-                            View Levels
+                      <td className="px-2 py-2">
+                        <div
+                          className="relative"
+                          onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
+                          onMouseLeave={() => setHoveredDropdown(null)}
+                        >
+                          <button className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded transition-colors whitespace-nowrap">
+                            Actions ▼
                           </button>
-                          <button
-                            onClick={() => setViewingActivityLog(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
-                            title="View activity log (upgrades, connections, etc.)"
-                          >
-                            📋 Activity
-                          </button>
-                          <button
-                            onClick={() => setDiagnosticWallet(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
-                            title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
-                          >
-                            🔍 Boost Sync
-                          </button>
-                          <button
-                            onClick={() => handleSingleWalletSnapshot(wallet.walletAddress)}
-                            disabled={isRunningSnapshot}
-                            className="px-3 py-1.5 text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 border border-indigo-700 rounded transition-colors whitespace-nowrap disabled:opacity-50"
-                            title="Run blockchain snapshot for this wallet (with debug logging)"
-                          >
-                            📸 Snapshot
-                          </button>
-                          {wallet.isVerified && (
-                            <button
-                              onClick={() => handleResetVerification(wallet.walletAddress)}
-                              className="px-3 py-1.5 text-xs bg-orange-900/30 hover:bg-orange-900/50 text-orange-400 border border-orange-700 rounded transition-colors whitespace-nowrap"
-                              title="Reset verification (for testing)"
+
+                          {hoveredDropdown === wallet.walletAddress && (
+                            <div
+                              className="absolute top-full right-0 mt-0 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
+                              onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
+                              onMouseLeave={() => setHoveredDropdown(null)}
                             >
-                              Reset Verify
-                            </button>
-                          )}
-                          {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
-                            <button
-                              onClick={() => manualSetMeks({
-                                walletAddress: wallet.walletAddress,
-                                mekCount: 45,
-                                totalGoldPerHour: 176.56
-                              })}
-                              className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap"
-                              title="Manually fix MEK ownership"
-                            >
-                              Fix MEKs
-                            </button>
-                          )}
-                          {wallet.totalCumulativeGold < wallet.currentGold && (
-                            <>
                               <button
-                                onClick={() => handleFixCumulativeGold(wallet.walletAddress)}
-                                className="px-3 py-1.5 text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                                title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                                onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors"
+                                title="View all Mek levels for this wallet"
                               >
-                                🔧 Fix Cumul.
+                                View Levels
                               </button>
                               <button
-                                onClick={() => handleReconstructFromSnapshots(wallet.walletAddress)}
-                                className="px-3 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded transition-colors whitespace-nowrap animate-pulse"
-                                title="Reconstruct from Snapshots"
+                                onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-400 transition-colors"
+                                title="View essence balances for this wallet"
                               >
-                                📸 Reconstruct
+                                View Essence
                               </button>
-                            </>
+                              <button
+                                onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
+                                title="View activity log (upgrades, connections, etc.)"
+                              >
+                                📋 Activity
+                              </button>
+                              <button
+                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
+                                title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
+                              >
+                                🔍 Boost Sync
+                              </button>
+                              <button
+                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); }}
+                                disabled={isRunningSnapshot}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
+                                title="Run blockchain snapshot for this wallet (with debug logging)"
+                              >
+                                📸 Snapshot
+                              </button>
+                              {wallet.isVerified && (
+                                <button
+                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); }}
+                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
+                                  title="Reset verification (for testing)"
+                                >
+                                  Reset Verify
+                                </button>
+                              )}
+                              {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
+                                <button
+                                  onClick={() => { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); }}
+                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
+                                  title="Manually fix MEK ownership"
+                                >
+                                  Fix MEKs
+                                </button>
+                              )}
+                              {wallet.totalCumulativeGold < wallet.currentGold && (
+                                <>
+                                  <button
+                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
+                                    title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                                  >
+                                    🔧 Fix Cumul.
+                                  </button>
+                                  <button
+                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); }}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
+                                    title="Reconstruct from Snapshots"
+                                  >
+                                    📸 Reconstruct
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
+                                title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                              >
+                                🎯 Exact Recon.
+                              </button>
+                              <button
+                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
+                                title="Reset all Mek levels to Level 1"
+                              >
+                                Reset Levels
+                              </button>
+                              <button
+                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
+                                title="Reset all gold (spendable + cumulative) to zero"
+                              >
+                                Reset All Gold
+                              </button>
+                              <div className="border-t border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
+                                title="Delete wallet permanently"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           )}
-                          <button
-                            onClick={() => handleReconstructExact(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600 rounded transition-colors whitespace-nowrap"
-                            title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
-                          >
-                            🎯 Exact Recon.
-                          </button>
-                          <button
-                            onClick={() => handleResetMekLevels(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 border border-yellow-700 rounded transition-colors whitespace-nowrap"
-                            title="Reset all Mek levels to Level 1"
-                          >
-                            Reset Levels
-                          </button>
-                          <button
-                            onClick={() => handleResetAllGold(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-700 rounded transition-colors whitespace-nowrap"
-                            title="Reset all gold (spendable + cumulative) to zero"
-                          >
-                            Reset All Gold
-                          </button>
-                          <button
-                            onClick={() => handleDeleteWallet(wallet.walletAddress)}
-                            className="px-3 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-700 rounded transition-colors whitespace-nowrap"
-                            title="Delete wallet permanently"
-                          >
-                            Delete
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1631,6 +1607,13 @@ Check console for full timeline.
         <MekLevelsViewer
           walletAddress={viewingMekLevels}
           onClose={() => setViewingMekLevels(null)}
+        />
+      )}
+
+      {viewingEssence && (
+        <EssenceBalancesViewer
+          walletAddress={viewingEssence}
+          onClose={() => setViewingEssence(null)}
         />
       )}
 

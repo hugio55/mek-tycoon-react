@@ -14,14 +14,8 @@ import { Id } from "./_generated/dataModel";
 
 const NMKR_API_BASE = "https://studio-api.nmkr.io";
 
-// Get NMKR API key from environment
-const getApiKey = () => {
-  const apiKey = process.env.NMKR_API_KEY;
-  if (!apiKey) {
-    throw new Error("NMKR_API_KEY not set in environment variables");
-  }
-  return apiKey;
-};
+// Convex doesn't support process.env - environment variables must be passed explicitly
+// or accessed through Convex's environment system at deploy time
 
 // ==========================================
 // PROJECT MANAGEMENT
@@ -38,22 +32,32 @@ export const createProject = action({
     policyExpires: v.optional(v.boolean()), // If true, policy locks after minting completes
     policyLocksDateTime: v.optional(v.string()), // ISO datetime string for when policy locks
     maxNftCount: v.optional(v.number()), // Maximum NFTs that can be minted in this project
+    apiKey: v.string(), // NMKR API key (passed from client)
+    payoutWallet: v.string(), // Cardano payout wallet address
   },
   handler: async (ctx, args) => {
-    const apiKey = getApiKey();
+    const apiKey = args.apiKey;
+
+    // If policyExpires is true, we need to provide an expiration date
+    // Default: 1 year from now
+    const policyExpires = args.policyExpires ?? false;
+    const policyLocksDateTime = args.policyLocksDateTime ||
+      (policyExpires ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined);
 
     const requestBody = {
       projectname: args.projectName,
       description: args.description || args.projectName,
-      policyExpires: args.policyExpires ?? true,
-      policyLocksDateTime: args.policyLocksDateTime, // Optional: specific lock datetime
-      maxNftCount: args.maxNftCount, // Optional: max supply
-      // Enable metadata for all NFTs
+      policyExpires,
+      policyLocksDateTime, // Required if policyExpires is true
+      maxNftSupply: args.maxNftCount || 10000, // REQUIRED: Max NFTs in project (default 10k)
+      addressExpiretime: 60, // REQUIRED: Payment address expiration (5-60 minutes)
+      payoutWalletaddress: args.payoutWallet, // REQUIRED: Cardano wallet for payouts (note: lowercase 'address')
       enableFiatPayments: false, // We handle our own payments
       activatePayin: false,
     };
 
     console.log("[NMKR] Creating project:", args.projectName);
+    console.log("[NMKR] Request body:", JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(`${NMKR_API_BASE}/v2/CreateProject`, {
       method: "POST",
@@ -72,13 +76,48 @@ export const createProject = action({
 
     const result = await response.json();
     console.log("[NMKR] Project created successfully:", result);
+    console.log("[NMKR] Full response keys:", Object.keys(result));
 
     return {
-      projectUid: result.projectUid,
+      projectUid: result.uid, // NMKR returns "uid" not "projectUid"
       projectName: result.projectname,
       policyId: result.policyId,
       paymentAddress: result.payinAddress,
     };
+  },
+});
+
+/**
+ * Get all projects for this API key from NMKR
+ */
+export const listProjects = action({
+  args: {
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = args.apiKey;
+
+    console.log("[NMKR] Fetching all projects for API key");
+
+    const response = await fetch(
+      `${NMKR_API_BASE}/v2/ListProjects`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[NMKR] List projects failed:", errorText);
+      throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
+    }
+
+    const projects = await response.json();
+    console.log("[NMKR] Found projects:", projects.length);
+    return projects;
   },
 });
 
@@ -88,9 +127,10 @@ export const createProject = action({
 export const getProject = action({
   args: {
     projectUid: v.string(),
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const apiKey = getApiKey();
+    const apiKey = args.apiKey;
 
     const response = await fetch(
       `${NMKR_API_BASE}/v2/GetProject/${args.projectUid}`,
@@ -130,9 +170,10 @@ export const uploadNFT = action({
     assetName: v.optional(v.string()), // On-chain asset name (if not provided, auto-generated)
     metadata: v.optional(v.any()), // Custom metadata attributes
     rarityScore: v.optional(v.number()),
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const apiKey = getApiKey();
+    const apiKey = args.apiKey;
 
     // Build metadata attributes
     const metadataAttributes: Record<string, string> = {};
@@ -197,9 +238,10 @@ export const mintAndSendNFT = action({
     nftUid: v.string(), // Specific NFT to mint (from uploadNFT)
     receiverAddress: v.string(), // Cardano wallet address to send to
     metadata: v.optional(v.any()), // Optional metadata to attach
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const apiKey = getApiKey();
+    const apiKey = args.apiKey;
 
     const requestBody = {
       nftProjectUid: args.projectUid,
@@ -245,9 +287,10 @@ export const mintAndSendRandom = action({
     projectUid: v.string(),
     receiverAddress: v.string(),
     count: v.optional(v.number()), // Number of NFTs to mint (default 1)
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
-    const apiKey = getApiKey();
+    const apiKey = args.apiKey;
 
     const requestBody = {
       nftProjectUid: args.projectUid,
@@ -290,6 +333,8 @@ export const mintAndSendRandom = action({
 export const createProjectFromEvent = action({
   args: {
     eventId: v.id("nftEvents"),
+    apiKey: v.string(),
+    payoutWallet: v.string(),
   },
   handler: async (ctx, args) => {
     // Get event details
@@ -310,6 +355,8 @@ export const createProjectFromEvent = action({
       projectName: `${event.eventName} #${event.eventNumber}`,
       description: event.storyContext || `NFTs for ${event.eventName}`,
       policyExpires: true,
+      apiKey: args.apiKey,
+      payoutWallet: args.payoutWallet,
     });
 
     // Update event with NMKR project info
@@ -329,6 +376,7 @@ export const createProjectFromEvent = action({
 export const uploadEventVariations = action({
   args: {
     eventId: v.id("nftEvents"),
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
     // Get event and project info
@@ -373,6 +421,7 @@ export const uploadEventVariations = action({
           difficulty: variation.difficulty,
           supply: variation.supplyTotal.toString(),
         },
+        apiKey: args.apiKey,
       });
 
       // Update variation with NMKR asset info
@@ -402,6 +451,7 @@ export const mintTestNFT = action({
     nftName: v.string(),
     imageUrl: v.string(),
     receiverAddress: v.string(),
+    apiKey: v.string(),
   },
   handler: async (ctx, args) => {
     console.log("[NMKR] Starting test NFT mint workflow");
@@ -412,6 +462,7 @@ export const mintTestNFT = action({
       nftName: args.nftName,
       imageUrl: args.imageUrl,
       nftDescription: "Test NFT",
+      apiKey: args.apiKey,
     });
 
     console.log("[NMKR] NFT uploaded, now minting...");
@@ -421,6 +472,7 @@ export const mintTestNFT = action({
       projectUid: args.projectUid,
       nftUid: uploadResult.nftUid,
       receiverAddress: args.receiverAddress,
+      apiKey: args.apiKey,
     });
 
     return {

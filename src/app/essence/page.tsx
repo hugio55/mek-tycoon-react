@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import EssenceDonutChart from "@/components/essence-donut-chart";
+import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
 import "@/styles/global-design-system.css";
 
 // Session Timer Component - Shows countdown to session expiration
@@ -138,6 +139,7 @@ export default function EssenceDonutPage() {
   const [isSlotting, setIsSlotting] = useState(false);
   const [filterDesign, setFilterDesign] = useState<1 | 2 | 3 | 4 | 5>(1); // Select filter design
   const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1); // Select hover effect style
+  const [isDistributionOpen, setIsDistributionOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Header-related state
@@ -546,6 +548,48 @@ export default function EssenceDonutPage() {
         
         {/* Main Content Area */}
         <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <button
+              onClick={() => setIsDistributionOpen(true)}
+              className="group relative mek-card-industrial mek-border-sharp-gold p-12 hover:scale-105 transition-transform duration-300"
+            >
+              {/* Animated background */}
+              <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+              {/* Content */}
+              <div className="relative z-10 text-center">
+                <div className="mb-4">
+                  <svg className="w-24 h-24 mx-auto text-yellow-400 group-hover:text-yellow-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                  </svg>
+                </div>
+                <h2 className="mek-text-industrial text-4xl text-yellow-400 mb-2">
+                  VIEW DISTRIBUTION
+                </h2>
+                <p className="text-gray-400 uppercase tracking-wider text-sm">
+                  Click to analyze essence allocation
+                </p>
+              </div>
+
+              {/* Corner accents */}
+              <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-yellow-400/60 group-hover:border-yellow-300 transition-colors" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-yellow-400/60 group-hover:border-yellow-300 transition-colors" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Essence Distribution Lightbox */}
+      <EssenceDistributionLightbox
+        isOpen={isDistributionOpen}
+        onClose={() => setIsDistributionOpen(false)}
+      />
+
+      {/* OLD CONTENT - KEEPING FOR REFERENCE BUT HIDDEN */}
+      <div className="hidden">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Chart Container - Left Side */}
             <div className="lg:col-span-2">
@@ -565,7 +609,7 @@ export default function EssenceDonutPage() {
                       placeholder="Search essence..."
                       className="w-full px-4 py-2 bg-black/80 backdrop-blur-sm border-2 border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/60 transition-all"
                     />
-                    
+
                     {/* Search icon */}
                     <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1210,20 +1254,6 @@ export default function EssenceDonutPage() {
           </div>
         </div>
       </div>
-      
-      {/* CSS for flashing animation */}
-      <style jsx>{`
-        @keyframes flash {
-          0%, 100% {
-            opacity: 1;
-            filter: brightness(1);
-          }
-          50% {
-            opacity: 0.7;
-            filter: brightness(1.5);
-          }
-        }
-      `}</style>
     </div>
   );
 }

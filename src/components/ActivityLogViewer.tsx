@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -9,16 +11,31 @@ interface ActivityLogViewerProps {
 }
 
 export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLogViewerProps) {
+  const [mounted, setMounted] = useState(false);
   const logs = useQuery(api.auditLogs.getWalletLogs, { stakeAddress: walletAddress, limit: 100 });
 
-  if (!logs) {
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-8 max-w-4xl w-full mx-4">
-          <div className="text-gray-400">Loading activity logs...</div>
-        </div>
+  // Mount portal and lock body scroll
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const loadingContent = (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-8 max-w-4xl w-full mx-4">
+        <div className="text-gray-400">Loading activity logs...</div>
       </div>
-    );
+    </div>
+  );
+
+  // Only render portal on client-side after mount
+  if (!mounted) return null;
+
+  if (!logs) {
+    return createPortal(loadingContent, document.body);
   }
 
   const formatTimestamp = (timestamp: number) => {
@@ -135,7 +152,7 @@ export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLo
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-gray-900 border-2 border-yellow-500 rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-700">
@@ -221,4 +238,6 @@ export default function ActivityLogViewer({ walletAddress, onClose }: ActivityLo
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
