@@ -50,6 +50,16 @@ export async function POST(request: NextRequest) {
 
     // Get raw body for HMAC verification
     const bodyText = await request.text();
+
+    // Handle empty body (NMKR test webhook)
+    if (!bodyText || bodyText.trim() === '') {
+      console.log('Empty webhook received (likely NMKR test)');
+      return NextResponse.json({
+        success: true,
+        message: 'Test webhook acknowledged'
+      });
+    }
+
     const payload = JSON.parse(bodyText);
 
     console.log('NMKR Webhook received:', {
