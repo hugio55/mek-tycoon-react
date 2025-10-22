@@ -51,18 +51,20 @@ export default function EssenceMarketPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [buttonStyle, setButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(3);
+  const [siphonButtonStyle, setSiphonButtonStyle] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20>(14);
   const headerLayout = 5; // Locked to Option 5: Compact Grid - Gold Prominent
   const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
   const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
-  const timeRemainingStyle = 9; // Locked to Style 9: Condensed Label
-  const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15>(4); // Default to Option 4: Emphasized Price
+  const [timerDisplayVariation, setTimerDisplayVariation] = useState<1 | 2 | 3 | 4 | 5>(1); // Timer floating text variations
+  const [corporationDisplayStyle, setCorporationDisplayStyle] = useState<1 | 2 | 3 | 4 | 5>(1); // Corporation name display variations
+  const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35>(34); // Default to Option 34: Vertical v4 - Bold Labels
   const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
   const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
-  const [buyOrderLayout, setBuyOrderLayout] = useState<1 | 2 | 3 | 4 | 5 | 6>(4);
   const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
   const buttonVariation = 3; // Locked to Style 3: Minimal Modern
   const [debugListingCount, setDebugListingCount] = useState<number>(0);
   const [showExpiredListings, setShowExpiredListings] = useState(false);
+  const [essenceLabelFont, setEssenceLabelFont] = useState<'orbitron' | 'rajdhani' | 'saira' | 'teko' | 'michroma' | 'audiowide' | 'quantico' | 'electrolize' | 'russo' | 'exo'>('orbitron');
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -148,46 +150,46 @@ export default function EssenceMarketPage() {
     // Expired - red
     if (remaining <= 0) {
       return {
-        containerClass: "bg-red-900/20 border border-red-500/30",
-        labelClass: "text-red-400/60",
-        timeClass: "text-red-400"
+        containerClass: "bg-red-900/30 border-2 border-red-400/60",
+        labelClass: "text-red-300/80",
+        timeClass: "text-red-200 font-extrabold"
       };
     }
 
     const totalHours = remaining / (1000 * 60 * 60);
 
-    // 0-1 hour - red
+    // 0-1 hour - red (bright and urgent)
     if (totalHours < 1) {
       return {
-        containerClass: "bg-red-900/20 border border-red-500/30",
-        labelClass: "text-red-400/60",
-        timeClass: "text-red-400"
+        containerClass: "bg-red-900/30 border-2 border-red-400/60",
+        labelClass: "text-red-300/80",
+        timeClass: "text-red-200 font-extrabold"
       };
     }
 
     // 1-5 hours - orange
     if (totalHours < 5) {
       return {
-        containerClass: "bg-orange-900/10 border border-orange-500/20",
-        labelClass: "text-orange-400/70",
-        timeClass: "text-orange-400"
+        containerClass: "bg-orange-900/20 border border-orange-400/40",
+        labelClass: "text-orange-300/80",
+        timeClass: "text-orange-200 font-bold"
       };
     }
 
     // 5-12 hours - yellow
     if (totalHours < 12) {
       return {
-        containerClass: "bg-yellow-900/10 border border-yellow-500/20",
-        labelClass: "text-yellow-400/70",
-        timeClass: "text-yellow-400"
+        containerClass: "bg-yellow-900/20 border border-yellow-400/40",
+        labelClass: "text-yellow-300/80",
+        timeClass: "text-yellow-200 font-bold"
       };
     }
 
     // 12+ hours - white (calm and neutral)
     return {
-      containerClass: "bg-white/5 border border-white/20",
-      labelClass: "text-white/70",
-      timeClass: "text-white"
+      containerClass: "bg-white/10 border border-white/30",
+      labelClass: "text-white/80",
+      timeClass: "text-white font-bold"
     };
   };
 
@@ -241,6 +243,7 @@ export default function EssenceMarketPage() {
   const cancelListing = useMutation(api.marketplace.cancelListing);
   const clearMarketplace = useMutation(api.seedMarketplace.clearMarketplaceListings);
   const seedMarketplace = useMutation(api.seedMarketplace.seedMarketplaceListings);
+  const updateGold = useMutation(api.adminUsers.updateGold);
 
   // Filter to only owned essence variations with amounts
   const ownedEssenceVariationsReal = (essenceState?.balances || [])
@@ -506,9 +509,349 @@ export default function EssenceMarketPage() {
     }
   };
 
+  // Siphon button style variations
+  const getSiphonButtonStyle = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
+    const baseClasses = "relative w-full px-4 py-2 font-bold uppercase transition-all cursor-pointer overflow-hidden";
+
+    switch(styleNum) {
+      case 1: // Neon Outline - Glowing stroke text
+        return `${baseClasses} rounded tracking-[0.4em] text-base`;
+      case 2: // Embossed 3D - Raised beveled look
+        return `${baseClasses} rounded-lg tracking-wide text-base`;
+      case 3: // Wireframe Tech - Minimal thin border
+        return `${baseClasses} rounded-sm tracking-[0.5em] text-xs font-light`;
+      case 4: // Blocky Retro - Chunky arcade style
+        return `${baseClasses} rounded-none tracking-[0.2em] text-lg font-black`;
+      case 5: // Sliced Diagonal - Angled stripe cut
+        return `${baseClasses} rounded-md tracking-wider text-sm`;
+      case 6: // Wireframe Condensed - Tighter spacing
+        return `${baseClasses} rounded-sm tracking-[0.6em] text-[11px] font-extralight`;
+      case 7: // Wireframe Bold - Heavier weight
+        return `${baseClasses} rounded-sm tracking-[0.45em] text-xs font-normal`;
+      case 8: // Wireframe Expanded - Wider letters
+        return `${baseClasses} rounded-sm tracking-[0.7em] text-xs font-thin`;
+      case 9: // Wireframe Sharp - No rounding
+        return `${baseClasses} rounded-none tracking-[0.5em] text-xs font-light`;
+      case 10: // Wireframe Rounded - More curves
+        return `${baseClasses} rounded-md tracking-[0.5em] text-xs font-light`;
+      case 11: // Solid Teal - Based on style 6 with solid background
+        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
+      case 12: // Solid Yellow - Based on style 6 with solid background
+        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
+      case 13: // Solid Amber - Based on style 6 with solid background
+        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
+      case 14: // Solid Cyan - Based on style 6 with solid background
+        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
+      case 15: // Solid Lime - Based on style 6 with solid background
+        return `${baseClasses} rounded-lg tracking-[0.6em] text-[11px] font-extralight`;
+      case 16: // Solid Cyan - Larger with subtle white glow pulse
+        return `${baseClasses} rounded-lg tracking-[0.5em] text-sm font-light`;
+      case 17: // Solid Cyan - Larger with bright white glow pulse
+        return `${baseClasses} rounded-lg tracking-[0.5em] text-base font-normal`;
+      case 18: // Solid Cyan - Larger with white shimmer
+        return `${baseClasses} rounded-lg tracking-[0.5em] text-sm font-light`;
+      case 19: // Solid Cyan - Larger with constant white glow
+        return `${baseClasses} rounded-lg tracking-[0.5em] text-base font-normal`;
+      case 20: // Solid Cyan - Largest with rapid white pulse
+        return `${baseClasses} rounded-lg tracking-[0.45em] text-lg font-medium`;
+      default:
+        return baseClasses;
+    }
+  };
+
+  const getSiphonButtonClipPath = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
+    switch(styleNum) {
+      case 1: // Neon Outline - No clip path
+        return undefined;
+      case 2: // Embossed 3D - Subtle corner cuts for depth
+        return 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)';
+      case 3: // Wireframe Tech - Sharp precise cuts
+        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
+      case 4: // Blocky Retro - No clip path (pure rectangle)
+        return undefined;
+      case 5: // Sliced Diagonal - Diagonal cut through button
+        return 'polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%)';
+      case 6: // Wireframe Condensed - Smaller cuts
+        return 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
+      case 7: // Wireframe Bold - Same as original
+        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
+      case 8: // Wireframe Expanded - Larger cuts
+        return 'polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)';
+      case 9: // Wireframe Sharp - Sharp corners, no cuts
+        return undefined;
+      case 10: // Wireframe Rounded - Same cuts as original
+        return 'polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)';
+      case 11: // Solid Teal - No clip path, rounded corners only
+      case 12: // Solid Yellow - No clip path, rounded corners only
+      case 13: // Solid Amber - No clip path, rounded corners only
+      case 14: // Solid Cyan - No clip path, rounded corners only
+      case 15: // Solid Lime - No clip path, rounded corners only
+      case 16: // Solid Cyan variations - No clip path, rounded corners only
+      case 17:
+      case 18:
+      case 19:
+      case 20:
+        return undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  const getSiphonButtonTextures = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20) => {
+    switch(styleNum) {
+      case 1: // Neon Outline - Pulsing glow effect
+        return (
+          <>
+            <div className="absolute inset-0" style={{
+              background: 'radial-gradient(ellipse at center, rgba(0, 255, 255, 0.15) 0%, transparent 60%)',
+              animation: 'pulse 2s ease-in-out infinite'
+            }} />
+            <div className="absolute inset-0 opacity-20" style={{
+              background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 255, 0.1) 1px, rgba(0, 255, 255, 0.1) 2px)'
+            }} />
+          </>
+        );
+      case 2: // Embossed 3D - Beveled depth with highlights
+        return (
+          <>
+            <div className="absolute inset-0" style={{
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2) 0%, rgba(0, 0, 0, 0.3) 100%)',
+              boxShadow: 'inset 3px 3px 6px rgba(255, 255, 255, 0.15), inset -3px -3px 6px rgba(0, 0, 0, 0.5)'
+            }} />
+          </>
+        );
+      case 3: // Wireframe Tech - Precise grid pattern
+        return (
+          <>
+            <div className="absolute inset-0 opacity-25" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(250, 182, 23, 0.2) 4px, rgba(250, 182, 23, 0.2) 5px), repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(250, 182, 23, 0.2) 4px, rgba(250, 182, 23, 0.2) 5px)'
+            }} />
+          </>
+        );
+      case 4: // Blocky Retro - Pixelated pattern
+        return (
+          <>
+            <div className="absolute inset-0" style={{
+              background: 'repeating-conic-gradient(from 0deg, rgba(250, 182, 23, 0.15) 0deg 90deg, rgba(250, 182, 23, 0.05) 90deg 180deg)',
+              backgroundSize: '8px 8px'
+            }} />
+            <div className="absolute inset-0" style={{
+              boxShadow: 'inset 0 4px 0 rgba(255, 255, 255, 0.3), inset 0 -4px 0 rgba(0, 0, 0, 0.5)'
+            }} />
+          </>
+        );
+      case 5: // Sliced Diagonal - Angled stripe through center
+        return (
+          <>
+            <div className="absolute inset-0" style={{
+              background: 'linear-gradient(135deg, transparent 0%, transparent 45%, rgba(250, 182, 23, 0.3) 48%, rgba(250, 182, 23, 0.3) 52%, transparent 55%, transparent 100%)'
+            }} />
+            <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-15" />
+          </>
+        );
+      case 6: // Wireframe Condensed - Fine grid
+        return (
+          <>
+            <div className="absolute inset-0 opacity-30" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(250, 182, 23, 0.25) 3px, rgba(250, 182, 23, 0.25) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(250, 182, 23, 0.25) 3px, rgba(250, 182, 23, 0.25) 4px)'
+            }} />
+          </>
+        );
+      case 7: // Wireframe Bold - Thicker grid
+        return (
+          <>
+            <div className="absolute inset-0 opacity-35" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(250, 182, 23, 0.3) 5px, rgba(250, 182, 23, 0.3) 6px), repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(250, 182, 23, 0.3) 5px, rgba(250, 182, 23, 0.3) 6px)'
+            }} />
+          </>
+        );
+      case 8: // Wireframe Expanded - Sparse grid
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(250, 182, 23, 0.2) 6px, rgba(250, 182, 23, 0.2) 7px), repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(250, 182, 23, 0.2) 6px, rgba(250, 182, 23, 0.2) 7px)'
+            }} />
+          </>
+        );
+      case 9: // Wireframe Sharp - Crosshatch pattern
+        return (
+          <>
+            <div className="absolute inset-0 opacity-25" style={{
+              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(250, 182, 23, 0.15) 4px, rgba(250, 182, 23, 0.15) 5px), repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(250, 182, 23, 0.15) 4px, rgba(250, 182, 23, 0.15) 5px)'
+            }} />
+          </>
+        );
+      case 10: // Wireframe Rounded - Dotted grid
+        return (
+          <>
+            <div className="absolute inset-0 opacity-30" style={{
+              backgroundImage: 'radial-gradient(circle, rgba(250, 182, 23, 0.3) 1px, transparent 1px)',
+              backgroundSize: '8px 8px'
+            }} />
+          </>
+        );
+      case 11: // Solid Teal - Fine grid on solid teal background
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+          </>
+        );
+      case 12: // Solid Yellow - Fine grid on solid yellow background
+        return (
+          <>
+            <div className="absolute inset-0 opacity-15" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
+            }} />
+          </>
+        );
+      case 13: // Solid Amber - Fine grid on solid amber background
+        return (
+          <>
+            <div className="absolute inset-0 opacity-15" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
+            }} />
+          </>
+        );
+      case 14: // Solid Cyan - Fine grid on solid cyan background
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+          </>
+        );
+      case 15: // Solid Lime - Fine grid on solid lime background
+        return (
+          <>
+            <div className="absolute inset-0 opacity-15" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px)'
+            }} />
+          </>
+        );
+      case 16: // Solid Cyan - Larger with subtle white glow pulse (slow)
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+            <div className="absolute inset-0 animate-pulse" style={{
+              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%)',
+              animationDuration: '2s'
+            }} />
+          </>
+        );
+      case 17: // Solid Cyan - Larger with bright white glow pulse (medium)
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+            <div className="absolute inset-0 animate-pulse" style={{
+              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.25) 0%, transparent 65%)',
+              animationDuration: '1.5s'
+            }} />
+          </>
+        );
+      case 18: // Solid Cyan - Larger with white shimmer sweep
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute inset-y-0 w-[200%] animate-[shimmer_3s_linear_infinite]" style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 48%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.3) 52%, transparent 100%)',
+                left: '-100%'
+              }} />
+            </div>
+          </>
+        );
+      case 19: // Solid Cyan - Larger with constant white glow (no animation)
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+            <div className="absolute inset-0" style={{
+              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%)'
+            }} />
+          </>
+        );
+      case 20: // Solid Cyan - Largest with rapid white pulse (fast)
+        return (
+          <>
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
+            }} />
+            <div className="absolute inset-0 animate-pulse" style={{
+              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 60%)',
+              animationDuration: '1s'
+            }} />
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const getSiphonButtonColors = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20, canAfford: boolean) => {
+    if (!canAfford) {
+      return "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600";
+    }
+
+    switch(styleNum) {
+      case 1: // Neon Outline - Bright cyan outline with text-stroke effect
+        return "bg-black/40 border-2 border-cyan-400 text-transparent hover:border-cyan-300 hover:shadow-[0_0_25px_rgba(0,255,255,0.6),inset_0_0_15px_rgba(0,255,255,0.2)]"
+          + " [text-shadow:0_0_10px_#00ffff,0_0_20px_#00ffff,0_0_30px_#00ffff,-1px_-1px_0_#00ffff,1px_-1px_0_#00ffff,-1px_1px_0_#00ffff,1px_1px_0_#00ffff]";
+      case 2: // Embossed 3D - Raised gold/yellow with depth
+        return "bg-gradient-to-b from-yellow-400/30 to-yellow-600/20 border-2 border-yellow-500/50 text-yellow-300 hover:from-yellow-400/40 hover:to-yellow-600/30 shadow-[0_4px_8px_rgba(0,0,0,0.4)]";
+      case 3: // Wireframe Tech - Thin precise amber lines
+        return "bg-transparent border border-amber-400/70 text-amber-300 hover:border-amber-300 hover:bg-amber-500/5 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]";
+      case 4: // Blocky Retro - Bold chunky arcade yellow
+        return "bg-yellow-500/25 border-4 border-yellow-400 text-yellow-300 hover:bg-yellow-500/35 hover:text-yellow-200 shadow-[0_6px_0_rgba(202,138,4,0.8),0_8px_12px_rgba(0,0,0,0.5)]";
+      case 5: // Sliced Diagonal - Orange gradient with angle
+        return "bg-gradient-to-br from-orange-500/20 via-yellow-500/25 to-orange-600/20 border-2 border-orange-400/70 text-orange-300 hover:from-orange-500/30 hover:border-orange-300";
+      case 6: // Wireframe Condensed - Teal wireframe
+        return "bg-transparent border border-teal-400/70 text-teal-300 hover:border-teal-300 hover:bg-teal-500/5 hover:shadow-[0_0_10px_rgba(45,212,191,0.3)]";
+      case 7: // Wireframe Bold - Yellow wireframe with thicker border
+        return "bg-transparent border-2 border-yellow-400/80 text-yellow-300 hover:border-yellow-300 hover:bg-yellow-500/5 hover:shadow-[0_0_12px_rgba(250,204,21,0.4)]";
+      case 8: // Wireframe Expanded - Lime wireframe
+        return "bg-transparent border border-lime-400/70 text-lime-300 hover:border-lime-300 hover:bg-lime-500/5 hover:shadow-[0_0_10px_rgba(163,230,53,0.3)]";
+      case 9: // Wireframe Sharp - Orange wireframe
+        return "bg-transparent border border-orange-400/70 text-orange-300 hover:border-orange-300 hover:bg-orange-500/5 hover:shadow-[0_0_10px_rgba(251,146,60,0.3)]";
+      case 10: // Wireframe Rounded - Cyan wireframe
+        return "bg-transparent border border-cyan-400/70 text-cyan-300 hover:border-cyan-300 hover:bg-cyan-500/5 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]";
+      case 11: // Solid Teal - Solid background with white text
+        return "bg-teal-500 border border-teal-400/30 text-white hover:bg-teal-600 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)]";
+      case 12: // Solid Yellow - Solid background with dark text
+        return "bg-yellow-500 border border-yellow-400/30 text-gray-900 hover:bg-yellow-600 hover:shadow-[0_0_15px_rgba(250,204,21,0.4)]";
+      case 13: // Solid Amber - Solid background with dark text
+        return "bg-amber-500 border border-amber-400/30 text-gray-900 hover:bg-amber-600 hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]";
+      case 14: // Solid Cyan - Solid background with white text
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)]";
+      case 15: // Solid Lime - Solid background with dark text
+        return "bg-lime-500 border border-lime-400/30 text-gray-900 hover:bg-lime-600 hover:shadow-[0_0_15px_rgba(163,230,53,0.4)]";
+      case 16: // Solid Cyan - Larger with subtle white glow
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_5px_rgba(255,255,255,0.5),0_0_10px_rgba(255,255,255,0.3)]";
+      case 17: // Solid Cyan - Larger with bright white glow
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_8px_rgba(255,255,255,0.7),0_0_15px_rgba(255,255,255,0.5),0_0_20px_rgba(255,255,255,0.3)]";
+      case 18: // Solid Cyan - Larger with white shimmer glow
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_6px_rgba(255,255,255,0.6),0_0_12px_rgba(255,255,255,0.4)]";
+      case 19: // Solid Cyan - Larger with constant white glow
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_7px_rgba(255,255,255,0.6),0_0_14px_rgba(255,255,255,0.4)]";
+      case 20: // Solid Cyan - Largest with rapid white pulse glow
+        return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_10px_rgba(255,255,255,0.8),0_0_18px_rgba(255,255,255,0.6),0_0_25px_rgba(255,255,255,0.4)]";
+      default:
+        return "bg-yellow-500/20 border-2 border-yellow-500/60 text-yellow-400";
+    }
+  };
+
   // Helper to sanitize variation name to match bottle filenames
   const sanitizeVariationName = (name: string): string => {
     return name
+      .replace(/\s+essence$/i, '') // Remove " Essence" suffix
       .replace(/'/g, '')
       .replace(/\./g, '')
       .replace(/&/g, 'and')
@@ -798,7 +1141,7 @@ export default function EssenceMarketPage() {
   };
 
   // Pricing Info Layout - Remaining and Price Per Essence
-  const renderPricingInfo = (pricePerUnit: number, quantity: number, layoutNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15) => {
+  const renderPricingInfo = (pricePerUnit: number, quantity: number, layoutNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35) => {
     const quantityFormatted = quantity.toFixed(1);
 
     switch(layoutNum) {
@@ -1119,26 +1462,1311 @@ export default function EssenceMarketPage() {
           </div>
         );
 
+      case 11: // Holographic Compact - Reduced padding, larger fonts
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded blur opacity-75" />
+
+            <div className="relative bg-black/95 border border-cyan-400/40 rounded p-2 overflow-hidden">
+              {/* Animated shimmer */}
+              <div className="absolute inset-0 opacity-10" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.3) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-2">
+                {/* Stock Count */}
+                <div className="text-center py-1">
+                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mb-1 font-mono">
+                    STOCK
+                  </div>
+                  <div className="text-3xl font-bold text-cyan-300 drop-shadow-[0_0_10px_rgba(0,255,255,0.8)]">
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-[10px] text-cyan-400/40 uppercase mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-4/5 bg-gradient-to-b from-transparent via-cyan-400/60 to-transparent" />
+
+                {/* Unit Price */}
+                <div className="text-center py-1">
+                  <div className="text-[10px] text-yellow-300/70 uppercase tracking-wider mb-1 font-mono">
+                    PRICE
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-300 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-yellow-400/40 uppercase mt-0.5">gold/unit</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 12: // Holographic Tight - Minimal gap, large numbers (responsive sizing)
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-1.5">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-0.5">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-0.5">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 13: // Holographic Maximized - Huge numbers, minimal padding
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow - stronger */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-cyan-500/30 rounded blur opacity-90" />
+
+            <div className="relative bg-black/95 border-2 border-cyan-400/60 rounded px-1.5 py-1 overflow-hidden">
+              {/* Shimmer */}
+              <div className="absolute inset-0 opacity-20" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.5) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-1">
+                {/* Stock - cyan */}
+                <div className="text-center">
+                  <div className="text-[11px] text-cyan-300/90 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    QTY
+                  </div>
+                  <div className="text-5xl font-bold text-cyan-300 leading-none drop-shadow-[0_0_15px_rgba(0,255,255,1)]">
+                    {quantityFormatted}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-cyan-400/80 to-transparent shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+
+                {/* Price - yellow */}
+                <div className="text-center">
+                  <div className="text-[11px] text-yellow-300/90 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    GOLD/EA
+                  </div>
+                  <div className="text-5xl font-bold text-yellow-300 leading-none drop-shadow-[0_0_15px_rgba(250,204,21,1)]">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 14: // Holographic Edge-to-Edge - Maximum space usage
+        return (
+          <div className="mb-3 relative">
+            {/* Strong outer glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400/40 via-blue-500/40 to-cyan-400/40 rounded blur-md opacity-95" />
+
+            <div className="relative bg-black/95 border-2 border-cyan-400/70 rounded px-1 py-0.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-25" style={{
+                background: 'linear-gradient(45deg, transparent 25%, rgba(0,255,255,0.6) 50%, transparent 75%)',
+                animation: 'shimmer 2.5s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-0.5">
+                {/* Stock - cyan themed */}
+                <div className="text-center">
+                  <div className="text-xs text-cyan-300 uppercase tracking-widest font-mono font-extrabold mb-0.5">
+                    STOCK
+                  </div>
+                  <div className="text-6xl font-extrabold text-cyan-300 leading-none drop-shadow-[0_0_20px_rgba(0,255,255,1)]">
+                    {quantityFormatted}
+                  </div>
+                </div>
+
+                {/* Glowing divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500/40 via-cyan-400 to-cyan-500/40 shadow-[0_0_12px_rgba(0,255,255,0.8)]" style={{
+                  transform: 'translateX(-50%)'
+                }} />
+
+                {/* Price - yellow themed */}
+                <div className="text-center">
+                  <div className="text-xs text-yellow-300 uppercase tracking-widest font-mono font-extrabold mb-0.5">
+                    PER ESS
+                  </div>
+                  <div className="text-6xl font-extrabold text-yellow-300 leading-none drop-shadow-[0_0_20px_rgba(250,204,21,1)]">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 15: // Holographic Ultra-Compact - Absolute maximum
+        return (
+          <div className="mb-3 relative">
+            {/* Maximum glow */}
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-400/50 via-blue-500/50 to-cyan-400/50 rounded-lg blur-lg opacity-100" />
+
+            <div className="relative bg-black/98 border-2 border-cyan-400/80 rounded overflow-hidden">
+              {/* Strong shimmer */}
+              <div className="absolute inset-0 opacity-30" style={{
+                background: 'linear-gradient(45deg, transparent 20%, rgba(0,255,255,0.7) 50%, transparent 80%)',
+                animation: 'shimmer 2s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 divide-x divide-cyan-400/60">
+                {/* Stock - Maximum cyan glow */}
+                <div className="text-center px-0.5 py-1">
+                  <div className="text-sm text-cyan-200 uppercase tracking-widest font-mono font-black mb-1 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+                    QTY
+                  </div>
+                  <div className="text-7xl font-black text-cyan-200 leading-none drop-shadow-[0_0_25px_rgba(0,255,255,1)] filter brightness-110">
+                    {quantityFormatted}
+                  </div>
+                </div>
+
+                {/* Price - Maximum yellow glow */}
+                <div className="text-center px-0.5 py-1">
+                  <div className="text-sm text-yellow-200 uppercase tracking-widest font-mono font-black mb-1 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
+                    G/EA
+                  </div>
+                  <div className="text-7xl font-black text-yellow-200 leading-none drop-shadow-[0_0_25px_rgba(250,204,21,1)] filter brightness-110">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 16: // Holographic Tight v2 - Sans-serif, more padding
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-3 py-2 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-2">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wider mb-1 font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-1">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wider mb-1 font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-1">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 17: // Holographic Tight v3 - Condensed, tighter tracking
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-1">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-tight mb-0.5 font-mono font-extrabold">
+                    STOCK
+                  </div>
+                  <div className={`font-extrabold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-tighter ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-[10px] text-cyan-400/50 uppercase mt-0.5 tracking-tight">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-tight mb-0.5 font-mono font-extrabold">
+                    PRICE
+                  </div>
+                  <div className={`font-extrabold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tighter ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-yellow-400/50 uppercase mt-0.5 tracking-tight">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 18: // Holographic Tight v4 - Wider tracking, more column space
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-0.5 tracking-widest">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-0.5 tracking-widest">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 19: // Holographic Tight v5 - Rounded weights, adjusted vertical spacing
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-2 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-1.5">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-1 font-semibold">
+                    STOCK
+                  </div>
+                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-1 font-light">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-1 font-semibold">
+                    PRICE
+                  </div>
+                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-1 font-light">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 20: // Holographic Tight v6 - Mixed fonts (mono numbers, sans labels)
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-1.5">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-0.5 font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold font-mono text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-0.5">ESS</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-0.5 font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-bold font-mono text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-0.5">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 21: // Mixed: Left from option 18, Right with thin font
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock - From option 18 style */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Thin font */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 22: // Mixed: Left from option 18, Right with extralight font
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock - From option 18 style */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Extralight font */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-extralight text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 23: // Mixed: Left from option 18, Right with light font
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock - From option 18 style */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Light font */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 24: // Mixed: Left from option 18, Right with normal font
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock - From option 18 style */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Normal font weight */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-normal text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 25: // Mixed: Left from option 18, Right with light font + tighter tracking
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock - From option 18 style */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Light font with tighter tracking */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-light text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tight ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 26: // Option 21 refined - Smaller base font size
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Smaller base size */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-xl' : pricePerUnit.toLocaleString().length > 4 ? 'text-2xl' : 'text-3xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 27: // Option 21 refined - More aggressive responsive sizing
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - More aggressive responsive sizing */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-wide ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-lg' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-2xl' : 'text-3xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 28: // Option 21 refined - Tighter tracking on numbers
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Tighter tracking */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tighter ${
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-2xl' : 'text-3xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 29: // Option 21 refined - Reduced base + tighter tracking
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Both reduced size and tighter tracking */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-tighter ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-base' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-lg' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-xl' : 'text-2xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 30: // Option 21 refined - Ultra compact price
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-1.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-3">
+                {/* Stock */}
+                <div className="text-center min-w-0">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] tracking-wide ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 tracking-widest mt-0.5">essence</div>
+                </div>
+
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Ultra compact with very tight tracking */}
+                <div className="text-center min-w-0 px-1">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-widest mb-0.5 font-mono font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-thin text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] tracking-[-0.05em] ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-sm' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-base' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-lg' : 'text-2xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 31: // Vertical v1 - Based on option 19 aesthetic
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-3 py-3 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative space-y-2">
+                {/* Stock */}
+                <div className="text-center">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-1 font-semibold">
+                    STOCK
+                  </div>
+                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-1 font-light">ESS</div>
+                </div>
+
+                {/* Horizontal divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-1 font-semibold">
+                    PRICE
+                  </div>
+                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-1 font-light">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 32: // Vertical v2 - Tighter spacing
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2 py-2 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative space-y-1.5">
+                {/* Stock */}
+                <div className="text-center">
+                  <div className="text-[10px] text-cyan-300/80 uppercase tracking-wide mb-0.5 font-semibold">
+                    STOCK
+                  </div>
+                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-2xl' : 'text-3xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-[10px] text-cyan-400/50 uppercase mt-0.5 font-light">ESS</div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center">
+                  <div className="text-[10px] text-yellow-300/80 uppercase tracking-wide mb-0.5 font-semibold">
+                    PRICE
+                  </div>
+                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-base' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-2xl' : 'text-3xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-yellow-400/50 uppercase mt-0.5 font-light">G/EA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 33: // Vertical v3 - Larger text, minimal labels
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-3 py-2.5 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative space-y-2">
+                {/* Stock */}
+                <div className="text-center">
+                  <div className="text-[9px] text-cyan-300/60 uppercase tracking-widest mb-0.5 font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-bold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-5xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center">
+                  <div className="text-[9px] text-yellow-300/60 uppercase tracking-widest mb-0.5 font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-bold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-5xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 34: // Vertical v4 - Bold labels, medium numbers
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-2.5 py-2.5 overflow-hidden">
+
+              <div className="relative space-y-2">
+                {/* Stock */}
+                <div className="text-center">
+                  <div className="text-xs text-cyan-300/90 uppercase tracking-wider mb-1 font-bold">
+                    STOCK
+                  </div>
+                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/60 uppercase mt-1 font-light">essence</div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+
+                {/* Price */}
+                <div className="text-center">
+                  <div className="text-xs text-yellow-300/90 uppercase tracking-wider mb-1 font-bold">
+                    PRICE
+                  </div>
+                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-lg' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/60 uppercase mt-1 font-light">each</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 35: // Vertical v5 - Ultra spacious for large numbers
+        return (
+          <div className="mb-3 relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/25 via-blue-500/25 to-cyan-500/25 rounded blur-sm opacity-80" />
+
+            <div className="relative bg-black/95 border border-cyan-400/50 rounded px-4 py-3 overflow-hidden">
+              <div className="absolute inset-0 opacity-15" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.4) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative space-y-3">
+                {/* Stock */}
+                <div className="text-center">
+                  <div className="text-xs text-cyan-300/80 uppercase tracking-wide mb-1.5 font-semibold">
+                    STOCK
+                  </div>
+                  <div className={`font-semibold text-cyan-300 leading-none drop-shadow-[0_0_12px_rgba(0,255,255,0.9)] ${
+                    quantityFormatted.length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-xs text-cyan-400/50 uppercase mt-1.5 font-light">essence</div>
+                </div>
+
+                <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent" />
+
+                {/* Price - Extra responsive sizing for very large numbers */}
+                <div className="text-center">
+                  <div className="text-xs text-yellow-300/80 uppercase tracking-wide mb-1.5 font-semibold">
+                    PRICE
+                  </div>
+                  <div className={`font-semibold text-yellow-300 leading-none drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] ${
+                    pricePerUnit.toLocaleString().length > 7 ? 'text-base' :
+                    pricePerUnit.toLocaleString().length > 6 ? 'text-xl' :
+                    pricePerUnit.toLocaleString().length > 5 ? 'text-2xl' :
+                    pricePerUnit.toLocaleString().length > 4 ? 'text-3xl' : 'text-4xl'
+                  }`}>
+                    {pricePerUnit.toLocaleString()}g
+                  </div>
+                  <div className="text-xs text-yellow-400/50 uppercase mt-1.5 font-light">each</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
   };
 
   // Time remaining display variations
-  const renderTimeRemaining = (expiresAt: number) => {
+  const renderTimeRemaining = (expiresAt: number, variation: 1 | 2 | 3 | 4 | 5) => {
     const styles = getCountdownStyles(expiresAt);
     const timeText = formatCountdown(expiresAt);
 
-    // Style 9: Condensed Label - Small Text Block (Locked)
-    return (
-      <div className="mb-2">
-        <div className={`px-2 py-1 ${styles.containerClass} rounded`}>
-          <div className={`${styles.timeClass} text-[11px] font-bold text-center`}>
-            {timeText}
-          </div>
-        </div>
-      </div>
+    // Check if timer is in red zone (less than 1 hour)
+    const remaining = expiresAt - currentTime;
+    const totalHours = remaining / (1000 * 60 * 60);
+    const isUrgent = totalHours < 1;
+
+    // Custom clock SVG icon component
+    const ClockIcon = ({ className = "" }: { className?: string }) => (
+      <svg
+        className={className}
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
     );
+
+    switch(variation) {
+      case 1: // Clock icon left, text right (compact)
+        return (
+          <div className="mb-2 flex items-center justify-center gap-1.5">
+            <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+            <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+              {timeText}
+            </div>
+          </div>
+        );
+
+      case 2: // Clock icon above text (stacked)
+        return (
+          <div className="mb-2 flex flex-col items-center gap-0.5">
+            <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+            <div className={`${styles.timeClass} text-[10px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+              {timeText}
+            </div>
+          </div>
+        );
+
+      case 3: // Clock icon with circular container
+        return (
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <div className={`rounded-full p-1 ${styles.containerClass}`}>
+              <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+            </div>
+            <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+              {timeText}
+            </div>
+          </div>
+        );
+
+      case 4: // Large clock icon with small text below
+        return (
+          <div className="mb-2 flex flex-col items-center gap-1">
+            <ClockIcon className={`w-4 h-4 ${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+            <div className={`${styles.timeClass} text-[9px] font-bold tracking-wide ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+              {timeText}
+            </div>
+          </div>
+        );
+
+      case 5: // Clock icon + text with subtle background
+        return (
+          <div className="mb-2 flex items-center justify-center">
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${styles.containerClass.includes('red') ? 'bg-red-900/10' : styles.containerClass.includes('orange') ? 'bg-orange-900/10' : styles.containerClass.includes('yellow') ? 'bg-yellow-900/10' : 'bg-white/5'}`}>
+              <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+              <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+                {timeText}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Corporation name display variations
+  const renderCorporationName = (companyName: string, style: 1 | 2 | 3 | 4 | 5) => {
+    switch(style) {
+      case 1: // Minimal Label - Simple gray text with icon
+        return (
+          <div className="mb-3 text-center">
+            <div className="text-gray-500 text-[10px] uppercase tracking-wide">
+              ⚙ {companyName}
+            </div>
+          </div>
+        );
+
+      case 2: // Industrial Tag - Yellow bordered box
+        return (
+          <div className="mb-3">
+            <div className="bg-black/40 border border-yellow-500/30 rounded px-3 py-1.5 text-center">
+              <div className="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">LISTED BY</div>
+              <div className="text-yellow-400/80 text-[11px] font-bold uppercase tracking-wide">{companyName}</div>
+            </div>
+          </div>
+        );
+
+      case 3: // Hazard Strip - Yellow/black diagonal stripes
+        return (
+          <div className="mb-3 relative overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(250, 182, 23, 0.3) 10px, rgba(250, 182, 23, 0.3) 20px)'
+              }}
+            />
+            <div className="relative bg-black/50 border-y border-yellow-500/40 py-1.5 text-center">
+              <div className="text-yellow-400 text-[10px] font-bold uppercase tracking-widest">
+                ◆ {companyName} ◆
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4: // Stencil Plate - Military style with corners
+        return (
+          <div className="mb-3 relative">
+            <div className="bg-gray-900/40 border border-yellow-500/20 rounded-sm px-3 py-2 text-center relative">
+              {/* Corner brackets */}
+              <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-yellow-500/50" />
+              <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-yellow-500/50" />
+              <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-yellow-500/50" />
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-yellow-500/50" />
+
+              <div className="text-gray-600 text-[8px] uppercase tracking-widest mb-1">CORP</div>
+              <div className="text-yellow-400/70 text-[11px] font-bold uppercase tracking-wider">{companyName}</div>
+            </div>
+          </div>
+        );
+
+      case 5: // Compact Inline - Single line with divider (clickable)
+        return (
+          <div className="mb-3 text-center">
+            <button
+              className="inline-flex items-center gap-2 text-[10px] transition-all duration-300 group cursor-pointer hover:scale-105"
+              onClick={() => {
+                // TODO: Navigate to corporation page
+                console.log('Navigate to corporation:', companyName);
+              }}
+            >
+              <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 group-hover:to-yellow-400 transition-all duration-300" />
+              <span className="text-gray-500 uppercase tracking-wide group-hover:text-yellow-400 group-hover:tracking-widest transition-all duration-300">
+                {companyName}
+              </span>
+              <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 group-hover:to-yellow-400 transition-all duration-300" />
+            </button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   // Header button styling variations
@@ -1422,20 +3050,6 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
-            {/* Bounty Layout Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Bounty Layout</label>
-          <select
-            value={buyOrderLayout}
-            onChange={(e) => setBuyOrderLayout(Number(e.target.value) as 1 | 2 | 3)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Layout 1: Table + Cards</option>
-            <option value="2">Layout 2: All Cards</option>
-            <option value="3">Layout 3: Side-by-Side</option>
-          </select>
-        </div>
-
             {/* Expiration Filter */}
             <div>
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Listing Status</label>
@@ -1454,7 +3068,7 @@ export default function EssenceMarketPage() {
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Pricing Info Layout</label>
               <select
                 value={pricingInfoLayout}
-                onChange={(e) => setPricingInfoLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)}
+                onChange={(e) => setPricingInfoLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35)}
                 className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
               >
                 <option value={1}>Option 1: Horizontal Split Panel</option>
@@ -1467,7 +3081,131 @@ export default function EssenceMarketPage() {
                 <option value={8}>Option 8: Industrial Warning Panel</option>
                 <option value={9}>Option 9: Sleek Hexagonal Tech</option>
                 <option value={10}>Option 10: Compact Terminal Readout</option>
+                <option value={11}>Option 11: Holographic Compact</option>
+                <option value={12}>Option 12: Holographic Tight</option>
+                <option value={13}>Option 13: Holographic Maximized</option>
+                <option value={14}>Option 14: Holographic Edge-to-Edge</option>
+                <option value={15}>Option 15: Holographic Ultra-Compact</option>
+                <option value={16}>Option 16: Holo Tight v2 (More Padding)</option>
+                <option value={17}>Option 17: Holo Tight v3 (Condensed)</option>
+                <option value={18}>Option 18: Holo Tight v4 (Wide Tracking)</option>
+                <option value={19}>Option 19: Holo Tight v5 (Rounded)</option>
+                <option value={20}>Option 20: Holo Tight v6 (Mono Numbers)</option>
+                <option value={21}>Option 21: Mixed - Thin Font</option>
+                <option value={22}>Option 22: Mixed - Extralight Font</option>
+                <option value={23}>Option 23: Mixed - Light Font</option>
+                <option value={24}>Option 24: Mixed - Normal Font</option>
+                <option value={25}>Option 25: Mixed - Light Alt</option>
+                <option value={26}>Option 26: Refined - Smaller Base</option>
+                <option value={27}>Option 27: Refined - Aggressive Responsive</option>
+                <option value={28}>Option 28: Refined - Tight Tracking</option>
+                <option value={29}>Option 29: Refined - Reduced + Tight</option>
+                <option value={30}>Option 30: Refined - Ultra Compact</option>
+                <option value={31}>Option 31: Vertical v1 - Standard</option>
+                <option value={32}>Option 32: Vertical v2 - Compact</option>
+                <option value={33}>Option 33: Vertical v3 - Large Numbers</option>
+                <option value={34}>Option 34: Vertical v4 - Bold Labels</option>
+                <option value={35}>Option 35: Vertical v5 - Spacious</option>
               </select>
+            </div>
+
+            {/* Siphon Button Style Selector */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Siphon Button Style</label>
+              <select
+                value={siphonButtonStyle}
+                onChange={(e) => setSiphonButtonStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Style 1: Neon Outline - Glowing stroke text</option>
+                <option value={2}>Style 2: Embossed 3D - Raised beveled look</option>
+                <option value={3}>Style 3: Wireframe Tech - Minimal thin border</option>
+                <option value={4}>Style 4: Blocky Retro - Chunky arcade style</option>
+                <option value={5}>Style 5: Sliced Diagonal - Angled stripe cut</option>
+                <option value={6}>Style 6: Wireframe Condensed - Teal fine grid</option>
+                <option value={7}>Style 7: Wireframe Bold - Yellow thick grid</option>
+                <option value={8}>Style 8: Wireframe Expanded - Lime sparse grid</option>
+                <option value={9}>Style 9: Wireframe Sharp - Orange crosshatch</option>
+                <option value={10}>Style 10: Wireframe Rounded - Cyan dotted</option>
+                <option value={11}>Style 11: Solid Teal - Teal background rounded</option>
+                <option value={12}>Style 12: Solid Yellow - Yellow background rounded</option>
+                <option value={13}>Style 13: Solid Amber - Amber background rounded</option>
+                <option value={14}>Style 14: Solid Cyan - Cyan background rounded</option>
+                <option value={15}>Style 15: Solid Lime - Lime background rounded</option>
+                <option value={16}>Style 16: Cyan Glow - Larger subtle white glow</option>
+                <option value={17}>Style 17: Cyan Bright - Larger bright white glow</option>
+                <option value={18}>Style 18: Cyan Shimmer - Larger white shimmer</option>
+                <option value={19}>Style 19: Cyan Steady - Larger constant white glow</option>
+                <option value={20}>Style 20: Cyan Pulse - Largest rapid white pulse</option>
+              </select>
+            </div>
+
+            {/* Timer Display Variation */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Timer Display Style</label>
+              <select
+                value={timerDisplayVariation}
+                onChange={(e) => setTimerDisplayVariation(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Variation 1: Clock Left + Text</option>
+                <option value={2}>Variation 2: Clock Above (Stacked)</option>
+                <option value={3}>Variation 3: Clock in Circle + Text</option>
+                <option value={4}>Variation 4: Large Clock + Small Text</option>
+                <option value={5}>Variation 5: Clock + Text w/ Background</option>
+              </select>
+            </div>
+
+            {/* Corporation Display Style */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Corporation Display</label>
+              <select
+                value={corporationDisplayStyle}
+                onChange={(e) => setCorporationDisplayStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Style 1: Minimal Label</option>
+                <option value={2}>Style 2: Industrial Tag</option>
+                <option value={3}>Style 3: Hazard Strip</option>
+                <option value={4}>Style 4: Stencil Plate</option>
+                <option value={5}>Style 5: Compact Inline</option>
+              </select>
+            </div>
+
+            {/* Essence Label Font */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Essence Label Font</label>
+              <select
+                value={essenceLabelFont}
+                onChange={(e) => setEssenceLabelFont(e.target.value as 'orbitron' | 'rajdhani' | 'saira' | 'teko' | 'michroma' | 'audiowide' | 'quantico' | 'electrolize' | 'russo' | 'exo')}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value="orbitron">Orbitron</option>
+                <option value="rajdhani">Rajdhani</option>
+                <option value="saira">Saira Condensed</option>
+                <option value="teko">Teko</option>
+                <option value="michroma">Michroma</option>
+                <option value="audiowide">Audiowide</option>
+                <option value="quantico">Quantico</option>
+                <option value="electrolize">Electrolize</option>
+                <option value="russo">Russo One</option>
+                <option value="exo">Exo 2</option>
+              </select>
+            </div>
+
+            {/* Gold Management */}
+            <div className="pt-4 border-t border-yellow-500/30">
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold</label>
+              <button
+                onClick={async () => {
+                  if (userId) {
+                    await updateGold({ userId, gold: 10000 });
+                  }
+                }}
+                className="w-full px-3 py-2 bg-yellow-900/30 border border-yellow-500/50 text-yellow-400 text-xs font-bold rounded hover:bg-yellow-900/50 transition-all"
+              >
+                SET GOLD TO 10,000
+              </button>
             </div>
 
             {/* Marketplace Reseed */}
@@ -1664,7 +3402,7 @@ export default function EssenceMarketPage() {
                   MARKET
                 </h1>
                 <div className="flex items-center gap-4">
-                  {renderHeaderButtons(buttonVariation, {
+                  {renderHeaderButtons({
                     onCreateListing: () => setShowCreateListing(true),
                     onToggleMyListings: () => setShowMyListingsModal(true),
                     showOnlyMyListings,
@@ -1742,27 +3480,8 @@ export default function EssenceMarketPage() {
               </button>
             </div>
 
-            {/* Debug: Layout Selector */}
-            <div className="mb-6 p-4 bg-black/60 border border-yellow-500/30 rounded-lg">
-              <label className="block text-xs text-yellow-400/70 uppercase tracking-wider mb-2">
-                Debug: Bounty Layout
-              </label>
-              <select
-                value={buyOrderLayout}
-                onChange={(e) => setBuyOrderLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6)}
-                className="w-full px-3 py-2 bg-black/80 border border-gray-700 text-yellow-400 font-semibold text-sm rounded focus:border-yellow-500/70 focus:outline-none cursor-pointer"
-              >
-                <option value="1">Layout 1: Table + Cards</option>
-                <option value="2">Layout 2: All Cards</option>
-                <option value="3">Layout 3: Side-by-Side</option>
-                <option value="4">Layout 4: Compact Table-Row (Mobile)</option>
-                <option value="5">Layout 5: Slim Horizontal Cards (Mobile)</option>
-                <option value="6">Layout 6: Ultra-Compact List (Mobile)</option>
-              </select>
-            </div>
-
             {/* BOUNTIES LAYOUT 1: Table + Cards */}
-            {buyOrderLayout === 1 && (
+            {false && (
               <>
             {/* Open Bountys Table */}
             <div className="mb-8">
@@ -1845,7 +3564,7 @@ export default function EssenceMarketPage() {
             )}
 
             {/* BOUNTIES LAYOUT 2: All Cards (More Visual) */}
-            {buyOrderLayout === 2 && (
+            {false && (
               <>
             {/* Open Bountys Card Grid */}
             <div className="mb-8">
@@ -1936,7 +3655,7 @@ export default function EssenceMarketPage() {
             )}
 
             {/* BOUNTIES LAYOUT 3: Side-by-Side (Clearer Separation) */}
-            {buyOrderLayout === 3 && (
+            {false && (
               <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column: Open Bountys */}
@@ -2015,8 +3734,6 @@ export default function EssenceMarketPage() {
             )}
 
             {/* BOUNTIES LAYOUT 4: Mobile-Friendly Toggle with Earnings Emphasis */}
-            {buyOrderLayout === 4 && (
-              <>
             {/* Toggle Buttons */}
             <div className="mb-6 flex gap-3">
               <button
@@ -2209,11 +3926,9 @@ export default function EssenceMarketPage() {
                 </div>
               </div>
             )}
-            </>
-            )}
 
             {/* BOUNTIES LAYOUT 5: Slim Horizontal Card Design */}
-            {buyOrderLayout === 5 && (
+            {false && (
               <>
             {/* Toggle Buttons */}
             <div className="mb-6 flex gap-3">
@@ -2361,7 +4076,7 @@ export default function EssenceMarketPage() {
             )}
 
             {/* BOUNTIES LAYOUT 6: Ultra-Compact List with Dividers */}
-            {buyOrderLayout === 6 && (
+            {false && (
               <>
             {/* Toggle Buttons */}
             <div className="mb-6 flex gap-3">
@@ -3093,20 +4808,39 @@ export default function EssenceMarketPage() {
                   {/* Essence Image */}
                   <div className="flex justify-center items-center mb-3 h-24">
                     <img
-                      src={`/essence-images/named-100px/${sanitizeVariationName(listing.itemVariation || '')}.png`}
+                      src={`/essence-images/named-bottles-1k/${sanitizeVariationName(listing.itemVariation || '')}.png`}
                       alt={listing.itemVariation || "Essence"}
                       className="max-w-[100px] max-h-[100px] w-auto h-auto object-contain"
                       onError={(e) => {
-                        // Fallback to placeholder if image not found
+                        // Show placeholder text when image not found
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          target.style.display = 'none';
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'w-24 h-24 rounded-lg border-2 border-dashed border-yellow-500/30 flex items-center justify-center bg-black/40';
+                          placeholder.innerHTML = `<span class="text-yellow-500/50 text-xs font-bold uppercase text-center px-2">${listing.itemVariation?.replace(/\s+essence$/i, '') || 'Essence'}</span>`;
+                          parent.appendChild(placeholder);
+                        }
                       }}
                     />
                   </div>
 
                   {/* Essence Details */}
                   <div className="mb-3">
-                    <div className="font-bold text-yellow-400 uppercase tracking-wide text-center text-sm">
+                    <div className={`font-bold text-yellow-400 uppercase tracking-wide text-center text-sm ${
+                      essenceLabelFont === 'orbitron' ? 'font-orbitron' :
+                      essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
+                      essenceLabelFont === 'saira' ? 'font-saira' :
+                      essenceLabelFont === 'teko' ? 'font-teko' :
+                      essenceLabelFont === 'michroma' ? 'font-michroma' :
+                      essenceLabelFont === 'audiowide' ? 'font-audiowide' :
+                      essenceLabelFont === 'quantico' ? 'font-quantico' :
+                      essenceLabelFont === 'electrolize' ? 'font-electrolize' :
+                      essenceLabelFont === 'russo' ? 'font-russo' :
+                      essenceLabelFont === 'exo' ? 'font-exo' :
+                      'font-orbitron'
+                    }`}>
                       {listing.itemVariation || "Unknown Essence"}
                     </div>
                   </div>
@@ -3114,8 +4848,11 @@ export default function EssenceMarketPage() {
                   {/* Price Display */}
                   {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
 
+                  {/* Corporation Name */}
+                  {!isOwn && (listing as any).sellerCompanyName && renderCorporationName((listing as any).sellerCompanyName, corporationDisplayStyle)}
+
                   {/* Time Left - Countdown Timer */}
-                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt)}
+                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt, timerDisplayVariation)}
 
                   {/* Action Button */}
                   {isOwn ? (
@@ -3129,17 +4866,13 @@ export default function EssenceMarketPage() {
                     <button
                       onClick={() => handleOpenPurchaseModal(listing)}
                       disabled={!canAfford}
-                      className={`${getButtonStyle(buttonStyle)} ${
-                        canAfford
-                          ? "mek-button-primary"
-                          : "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed"
-                      }`}
+                      className={`${getSiphonButtonStyle(siphonButtonStyle)} ${getSiphonButtonColors(siphonButtonStyle, canAfford)}`}
                       style={{
-                        clipPath: canAfford ? getButtonClipPath(buttonStyle) : undefined
+                        clipPath: canAfford ? getSiphonButtonClipPath(siphonButtonStyle) : undefined
                       }}
                     >
                       {canAfford ? (
-                        getButtonTextures(buttonStyle)
+                        getSiphonButtonTextures(siphonButtonStyle)
                       ) : (
                         <>
                           <div className="absolute inset-0 mek-overlay-scratches opacity-15" />
@@ -3147,7 +4880,7 @@ export default function EssenceMarketPage() {
                         </>
                       )}
                       <span className="relative z-10">
-                        {canAfford ? "◆ TAP ESSENCE" : "⊗ INSUFFICIENT FUNDS"}
+                        {canAfford ? "SIPHON" : "⊗ INSUFFICIENT FUNDS"}
                       </span>
                     </button>
                   )}
@@ -3501,7 +5234,7 @@ export default function EssenceMarketPage() {
               </button>
 
               {/* Title */}
-              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">TAP ESSENCE</h2>
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">SIPHON ESSENCE</h2>
 
               {/* Essence Name */}
               <div className="mb-4">
@@ -3658,23 +5391,23 @@ export default function EssenceMarketPage() {
                           }}
                         />
                         <div className="relative">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">
-                                {listing.itemVariation || listing.itemType}
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
-                                <span className="text-yellow-400">{listing.quantity}</span>
-                                <span className="text-gray-600">×</span>
-                                <span className="text-yellow-400">{listing.pricePerUnit}g</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
-                              <div className="text-xs text-yellow-400/60">{new Date(listing.listedAt).toLocaleDateString()}</div>
+                          {/* Essence Name */}
+                          <div className="mb-3">
+                            <div className="font-bold text-yellow-400 uppercase tracking-wide text-center text-sm">
+                              {listing.itemVariation || listing.itemType}
                             </div>
                           </div>
+
+                          {/* Price Display - Using same component as main grid */}
+                          {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
+
+                          {/* Deployment Date */}
+                          <div className="mb-3 text-center p-2 bg-black/40 border border-yellow-500/20 rounded">
+                            <div className="mek-label-uppercase text-gray-500 text-[10px] mb-1">DEPLOYED</div>
+                            <div className="text-xs text-yellow-400/70">{new Date(listing.listedAt).toLocaleDateString()}</div>
+                          </div>
+
+                          {/* Recall Button */}
                           <button
                             onClick={() => handleCancelListing(listing._id)}
                             className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"

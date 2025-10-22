@@ -17,21 +17,22 @@ export const seedMarketplaceListings = mutation({
         username: "Market Vendor",
         gold: 100000,
         totalEssence: {
-          stone: 100,
-          disco: 100,
-          paul: 100,
-          cartoon: 100,
-          candy: 100,
-          tiles: 100,
-          moss: 100,
-          bullish: 100,
-          journalist: 100,
-          laser: 100,
-          flashbulb: 100,
-          accordion: 100,
-          turret: 100,
-          drill: 100,
-          security: 100,
+          // DEPRECATED - use essenceBalances table instead
+          stone: 0,
+          disco: 0,
+          paul: 0,
+          cartoon: 0,
+          candy: 0,
+          tiles: 0,
+          moss: 0,
+          bullish: 0,
+          journalist: 0,
+          laser: 0,
+          flashbulb: 0,
+          accordion: 0,
+          turret: 0,
+          drill: 0,
+          security: 0,
         },
         craftingSlots: 3,
         lastLogin: Date.now(),
@@ -84,52 +85,10 @@ export const seedMarketplaceListings = mutation({
       });
     }
     
-    // Mock essence listings with diverse countdown timers
-    // Color thresholds: White (12+ hrs), Yellow (5-12 hrs), Orange (1-5 hrs), Red (0-1 hr & expired)
-    const essenceListings = [
-      // EXPIRED (Red) - only one
-      { type: "stone", price: 122, qty: 3.0, expiresIn: -1000 }, // Expired
+    // REMOVED: Fake essence listings
+    // Essence is now managed through essenceBalances table
+    // Use admin panel to add real essence to players
 
-      // WHITE (12+ hours)
-      { type: "tiles", price: 600, qty: 8.0, expiresIn: 25 * 24 * 60 * 60 * 1000 }, // 25 days
-      { type: "candy", price: 900, qty: 6.0, expiresIn: 18 * 24 * 60 * 60 * 1000 }, // 18 days
-      { type: "moss", price: 1500, qty: 4.0, expiresIn: 3 * 24 * 60 * 60 * 1000 }, // 3 days
-      { type: "disco", price: 1800, qty: 3.0, expiresIn: 36 * 60 * 60 * 1000 }, // 36 hours
-      { type: "paul", price: 2000, qty: 5.0, expiresIn: 18 * 60 * 60 * 1000 }, // 18 hours
-      { type: "cartoon", price: 2200, qty: 2.0, expiresIn: 13 * 60 * 60 * 1000 }, // 13 hours
-
-      // YELLOW (5-12 hours)
-      { type: "bullish", price: 2500, qty: 1.0, expiresIn: 11 * 60 * 60 * 1000 }, // 11 hours
-      { type: "journalist", price: 2800, qty: 1.5, expiresIn: 9 * 60 * 60 * 1000 }, // 9 hours
-      { type: "laser", price: 3200, qty: 2.5, expiresIn: 7 * 60 * 60 * 1000 }, // 7 hours
-      { type: "flashbulb", price: 3600, qty: 3.5, expiresIn: 5.5 * 60 * 60 * 1000 }, // 5.5 hours
-
-      // ORANGE (1-5 hours)
-      { type: "accordion", price: 4000, qty: 4.5, expiresIn: 4 * 60 * 60 * 1000 }, // 4 hours
-      { type: "turret", price: 4500, qty: 5.5, expiresIn: 2.5 * 60 * 60 * 1000 }, // 2.5 hours
-      { type: "drill", price: 5000, qty: 6.5, expiresIn: 1.5 * 60 * 60 * 1000 }, // 1.5 hours
-
-      // RED (0-1 hour)
-      { type: "security", price: 5500, qty: 7.5, expiresIn: 55 * 60 * 1000 }, // 55 minutes
-      { type: "stone", price: 6000, qty: 8.5, expiresIn: 25 * 60 * 1000 }, // 25 minutes
-      { type: "tiles", price: 6500, qty: 9.5, expiresIn: 3 * 60 * 1000 }, // 3 minutes
-      { type: "candy", price: 7000, qty: 10.5, expiresIn: 45 * 1000 }, // 45 seconds
-    ];
-
-    for (const listing of essenceListings) {
-      await ctx.db.insert("marketListings", {
-        sellerId: demoSeller._id,
-        itemType: "essence",
-        itemVariation: `${listing.type} essence`,
-        essenceType: listing.type,
-        quantity: listing.qty,
-        pricePerUnit: listing.price,
-        status: "active",
-        listedAt: now - Math.floor(Math.random() * 3 * 24 * 60 * 60 * 1000), // Random time in past 3 days
-        expiresAt: now + listing.expiresIn,
-      });
-    }
-    
     // Mock OE items
     const oeListings = [
       { 
@@ -218,9 +177,9 @@ export const seedMarketplaceListings = mutation({
     }
     
     return {
-      message: "Successfully seeded marketplace with mock listings",
+      message: "Successfully seeded marketplace with mock listings (essence removed - use admin panel)",
       chipListings: chipListings.length,
-      essenceListings: essenceListings.length,
+      essenceListings: 0, // Removed - use essenceBalances
       oeListings: oeListings.length,
       frameListings: frameListings.length,
       oemListings: oemListings.length,

@@ -149,6 +149,25 @@ export const getEligibleUsersCount = query({
   },
 });
 
+// Get company names for wallet addresses
+export const getWalletCompanyNames = query({
+  args: { walletAddresses: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const companyMap: Record<string, string | null> = {};
+
+    for (const walletAddress of args.walletAddresses) {
+      const miner = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+
+      companyMap[walletAddress] = miner?.companyName || null;
+    }
+
+    return companyMap;
+  },
+});
+
 // ==========================================
 // MUTATIONS
 // ==========================================

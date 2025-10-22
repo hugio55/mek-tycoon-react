@@ -124,6 +124,14 @@ Rename or reuse for campaign settings:
 
 ## NMKR Integration
 
+### API Credentials
+
+**NMKR API Key:** `b51a09ab3dd14e2a83140a2a77b8bb80`
+- **Created:** 2025-10-22
+- **Expires:** 2026-10-22
+- **Environment Variable:** `NMKR_API_KEY` (stored in `.env.local`)
+- **Usage:** Server-side API calls for project creation, NFT upload, and minting
+
 ### NMKR Payment Widget
 
 **Documentation:** https://docs.nmkr.io/developer-tools/pay-button
