@@ -124,23 +124,34 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
     setIsSubmitting(true);
     setError('');
 
+    console.log('[CompanyNameModal] Starting submission:', {
+      walletAddress,
+      trimmedName,
+      isDemoMode
+    });
+
     // OPTIMISTIC UPDATE: Show success immediately
     setOptimisticName(trimmedName);
 
     try {
+      console.log('[CompanyNameModal] Calling setCompanyNameMutation...');
       const result = await setCompanyNameMutation({
         walletAddress,
         companyName: trimmedName
       });
 
+      console.log('[CompanyNameModal] Mutation result:', result);
+
       if (result.success) {
         // SUCCESS: Clear optimistic state and close
+        console.log('[CompanyNameModal] Success! Company name set to:', result.companyName);
         setOptimisticName(null);
         onSuccess?.(result.companyName!);
         onClose();
         setCompanyName('');
       } else {
         // ROLLBACK: Clear optimistic state and show error
+        console.log('[CompanyNameModal] Mutation failed:', result.error);
         setOptimisticName(null);
         setError(result.error || 'Failed to set corporation name');
       }
@@ -148,8 +159,14 @@ export const CompanyNameModal: React.FC<CompanyNameModalProps> = ({
       // ROLLBACK: Clear optimistic state and show error
       setOptimisticName(null);
       setError('Network error. Please try again.');
-      console.error('Corporation name submission error:', err);
+      console.error('[CompanyNameModal] Corporation name submission error:', err);
+      console.error('[CompanyNameModal] Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        raw: err
+      });
     } finally {
+      console.log('[CompanyNameModal] Submission complete, resetting isSubmitting');
       setIsSubmitting(false);
     }
   };

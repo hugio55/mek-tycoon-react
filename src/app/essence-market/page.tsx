@@ -51,16 +51,30 @@ export default function EssenceMarketPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [buttonStyle, setButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [headerLayout, setHeaderLayout] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const headerLayout = 5; // Locked to Option 5: Compact Grid - Gold Prominent
   const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
-  const [goldDisplayVariation, setGoldDisplayVariation] = useState<1 | 2 | 3 | 4>(1);
-  const [timeRemainingStyle, setTimeRemainingStyle] = useState<1 | 2 | 3>(1);
-  const priceLayoutStyle = 8; // Locked to Style 8: Three-Row Compact
-  const [listingCardStyle, setListingCardStyle] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1);
+  const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
+  const timeRemainingStyle = 9; // Locked to Style 9: Condensed Label
+  const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15>(4); // Default to Option 4: Emphasized Price
+  const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
+  const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
   const [buyOrderLayout, setBuyOrderLayout] = useState<1 | 2 | 3 | 4 | 5 | 6>(4);
   const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
-  const [buttonVariation, setButtonVariation] = useState<number>(1);
+  const buttonVariation = 3; // Locked to Style 3: Minimal Modern
   const [debugListingCount, setDebugListingCount] = useState<number>(0);
+  const [showExpiredListings, setShowExpiredListings] = useState(false);
+
+  // Purchase modal state
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<any>(null);
+  const [purchaseAmount, setPurchaseAmount] = useState(0.1);
+
+  // Purchase history modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyListingId, setHistoryListingId] = useState<Id<"marketListings"> | null>(null);
+
+  // My Listings modal state
+  const [showMyListingsModal, setShowMyListingsModal] = useState(false);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -131,7 +145,7 @@ export default function EssenceMarketPage() {
   const getCountdownStyles = (expiresAt: number) => {
     const remaining = expiresAt - currentTime;
 
-    // Expired - red and alarming
+    // Expired - red
     if (remaining <= 0) {
       return {
         containerClass: "bg-red-900/20 border border-red-500/30",
@@ -142,8 +156,17 @@ export default function EssenceMarketPage() {
 
     const totalHours = remaining / (1000 * 60 * 60);
 
-    // Below 1 hour - orange
+    // 0-1 hour - red
     if (totalHours < 1) {
+      return {
+        containerClass: "bg-red-900/20 border border-red-500/30",
+        labelClass: "text-red-400/60",
+        timeClass: "text-red-400"
+      };
+    }
+
+    // 1-5 hours - orange
+    if (totalHours < 5) {
       return {
         containerClass: "bg-orange-900/10 border border-orange-500/20",
         labelClass: "text-orange-400/70",
@@ -151,7 +174,7 @@ export default function EssenceMarketPage() {
       };
     }
 
-    // 1-12 hours - yellow
+    // 5-12 hours - yellow
     if (totalHours < 12) {
       return {
         containerClass: "bg-yellow-900/10 border border-yellow-500/20",
@@ -216,6 +239,8 @@ export default function EssenceMarketPage() {
   const createListing = useMutation(api.marketplace.createListing);
   const purchaseItem = useMutation(api.marketplace.purchaseItem);
   const cancelListing = useMutation(api.marketplace.cancelListing);
+  const clearMarketplace = useMutation(api.seedMarketplace.clearMarketplaceListings);
+  const seedMarketplace = useMutation(api.seedMarketplace.seedMarketplaceListings);
 
   // Filter to only owned essence variations with amounts
   const ownedEssenceVariationsReal = (essenceState?.balances || [])
@@ -260,6 +285,12 @@ export default function EssenceMarketPage() {
   // Filter and sort listings
   const filteredListings = listings.filter(listing => {
     if (showOnlyMyListings && listing.sellerId !== userId) return false;
+
+    // Filter out expired listings if not showing them
+    if (!showExpiredListings && listing.expiresAt) {
+      const isExpired = listing.expiresAt - currentTime <= 0;
+      if (isExpired) return false;
+    }
 
     // Filter by variation type (head/body/trait)
     if (selectedRarity !== "all" && listing.itemVariation) {
@@ -341,9 +372,23 @@ export default function EssenceMarketPage() {
         quantity,
       });
       alert("Purchase successful!");
+      setShowPurchaseModal(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     }
+  };
+
+  // Handle opening purchase modal
+  const handleOpenPurchaseModal = (listing: any) => {
+    setSelectedListing(listing);
+    setPurchaseAmount(0.1); // Set to minimum
+    setShowPurchaseModal(true);
+  };
+
+  // Handle purchase history modal
+  const handleOpenHistoryModal = (listingId: Id<"marketListings">) => {
+    setHistoryListingId(listingId);
+    setShowHistoryModal(true);
   };
 
   // Handle cancel listing
@@ -649,28 +694,22 @@ export default function EssenceMarketPage() {
           </div>
         );
 
-      case 8: // Three-Row Compact - Smaller, tighter spacing
+      case 8: // Tapping Mode - Remaining and Price Per Essence
         return (
-          <div className="mb-3 p-2 bg-black/60 border border-yellow-500/20 rounded">
-            <div className="space-y-1.5">
-              {/* Row 1: Quantity */}
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Remaining Amount */}
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-300 uppercase tracking-wide">QTY</span>
-                <span className="text-sm text-blue-400">{quantityFormatted}</span>
+                <span className="mek-label-uppercase text-gray-500 text-xs">REMAINING:</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted}</span>
               </div>
-              <div className="h-px bg-yellow-500/15" />
+              <div className="h-px bg-yellow-500/20" />
 
-              {/* Row 2: Unit Price */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-300 uppercase tracking-wide">UNIT</span>
-                <span className="text-sm text-white">{pricePerUnit.toLocaleString()}<span className="text-[10px]">g</span></span>
-              </div>
-              <div className="h-px bg-yellow-500/15" />
-
-              {/* Row 3: Total */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-300 uppercase tracking-wide">TOTAL</span>
-                <span className="text-lg font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-xs">g</span></span>
+              {/* Price Per Essence */}
+              <div className="p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+                <div className="mek-label-uppercase text-yellow-400/60 text-[10px] text-center mb-1">PRICE</div>
+                <div className="text-2xl font-bold text-yellow-400 text-center">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[10px] text-gray-400 text-center">per essence</div>
               </div>
             </div>
           </div>
@@ -758,64 +797,323 @@ export default function EssenceMarketPage() {
     }
   };
 
-  // Time remaining display variations - 3 non-pill designs
-  const renderTimeRemaining = (expiresAt: number, styleNum: 1 | 2 | 3) => {
-    const styles = getCountdownStyles(expiresAt);
-    const timeText = formatCountdown(expiresAt);
+  // Pricing Info Layout - Remaining and Price Per Essence
+  const renderPricingInfo = (pricePerUnit: number, quantity: number, layoutNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15) => {
+    const quantityFormatted = quantity.toFixed(1);
 
-    switch(styleNum) {
-      case 1: // Rectangular Bar - Clean horizontal strip
+    switch(layoutNum) {
+      case 1: // Horizontal Split Panel - Side by side
         return (
-          <div className="mb-3">
-            <div className={`p-2.5 ${styles.containerClass} rounded-md`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className={`${styles.labelClass} text-[9px] uppercase tracking-wider font-semibold`}>
-                  ⏱ Expires
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Left: Remaining */}
+              <div className="border-r border-yellow-500/20 pr-3">
+                <div className="mek-label-uppercase text-gray-500 text-[9px] mb-1">REMAINING</div>
+                <div className="text-xl font-bold text-yellow-400">{quantityFormatted}</div>
+              </div>
+              {/* Right: Price */}
+              <div className="pl-3">
+                <div className="mek-label-uppercase text-gray-500 text-[9px] mb-1">PRICE</div>
+                <div className="text-xl font-bold text-yellow-400">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[9px] text-gray-400">per essence</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2: // Stat Cards (Gaming Style) - Two cards side by side
+        return (
+          <div className="mb-3 flex gap-2">
+            {/* Remaining Card */}
+            <div className="flex-1 p-2.5 bg-black/70 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.2)]">
+              <div className="text-2xl font-bold text-yellow-400 text-center mb-1">{quantityFormatted}</div>
+              <div className="mek-label-uppercase text-yellow-400/60 text-[8px] text-center">IN STOCK</div>
+            </div>
+            {/* Price Card */}
+            <div className="flex-1 p-2.5 bg-black/70 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.2)]">
+              <div className="text-2xl font-bold text-yellow-400 text-center mb-1">{pricePerUnit.toLocaleString()}g</div>
+              <div className="mek-label-uppercase text-yellow-400/60 text-[8px] text-center">PER UNIT</div>
+            </div>
+          </div>
+        );
+
+      case 3: // Compact Single Row - All in one line
+        return (
+          <div className="mb-3 px-3 py-2 bg-black/70 border border-yellow-500/20 rounded">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-yellow-400 font-bold">{quantityFormatted} REMAINING</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-yellow-400 font-bold">{pricePerUnit.toLocaleString()}g per essence</span>
+            </div>
+          </div>
+        );
+
+      case 4: // Emphasized Price (Current Style Enhanced) - Price gets focus
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Remaining Amount - Small at top */}
+              <div className="flex items-center justify-between">
+                <span className="mek-label-uppercase text-gray-500 text-xs">REMAINING:</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted}</span>
+              </div>
+              <div className="h-px bg-yellow-500/20" />
+
+              {/* Price Per Essence - Large emphasized box */}
+              <div className="p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+                <div className="mek-label-uppercase text-yellow-400/60 text-[10px] text-center mb-1">PRICE</div>
+                <div className="text-2xl font-bold text-yellow-400 text-center">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[10px] text-gray-400 text-center">per essence</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5: // Data Table Style - Structured rows
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Row 1: Remaining */}
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wider">Remaining</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted} essence</span>
+              </div>
+              <div className="h-px bg-yellow-500/10" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wider">Unit Price</span>
+                <span className="text-yellow-400 font-bold">{pricePerUnit.toLocaleString()}g</span>
+              </div>
+              <div className="h-px bg-yellow-500/10" />
+
+              {/* Row 3: Total Value */}
+              <div className="flex items-center justify-between py-1 bg-yellow-500/5 -mx-3 px-3">
+                <span className="text-yellow-400/70 text-xs uppercase tracking-wider font-bold">Total Value</span>
+                <span className="text-yellow-400 font-bold text-lg">{(pricePerUnit * quantity).toLocaleString()}g</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 6: // HUD Tactical Display - Military interface with scan lines
+        return (
+          <div className="mb-3 relative p-4 bg-black/90 border-2 border-cyan-400/30 rounded overflow-hidden">
+            {/* Scan line overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: 'repeating-linear-gradient(0deg, rgba(0,255,255,0.03) 0px, rgba(0,255,255,0.03) 1px, transparent 1px, transparent 2px)',
+            }} />
+
+            {/* Corner brackets */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-400" />
+            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-400" />
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-400" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-400" />
+
+            <div className="relative space-y-3">
+              {/* Quantity - Cyan themed */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] text-cyan-400/70 uppercase tracking-widest font-mono">QTY.AVAIL</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-cyan-400 font-mono">{quantityFormatted}</span>
+                  <span className="text-xs text-cyan-400/50">UNITS</span>
                 </div>
-                <div className={`${styles.timeClass} text-base font-bold font-mono tracking-wide`}>
-                  {timeText}
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-cyan-400/20 via-yellow-400/40 to-cyan-400/20" />
+
+              {/* Price - Yellow themed */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-mono">COST/UNIT</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-yellow-400 font-mono">{pricePerUnit.toLocaleString()}</span>
+                  <span className="text-xs text-yellow-400/50">GOLD</span>
                 </div>
               </div>
             </div>
           </div>
         );
 
-      case 2: // Corner Brackets - Military frame
+      case 7: // Holographic Data Panel - Futuristic with glow effects
         return (
           <div className="mb-3 relative">
-            <div className={`p-3 ${styles.containerClass} relative`}>
-              <div className="absolute inset-0 mek-overlay-metal-texture opacity-10" />
-              {/* Corner brackets */}
-              <div className="absolute top-0 left-0 w-3 h-3 border-l-2 border-t-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute top-0 right-0 w-3 h-3 border-r-2 border-t-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute bottom-0 left-0 w-3 h-3 border-l-2 border-b-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-r-2 border-b-2" style={{borderColor: 'currentColor'}} />
+            {/* Outer glow container */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-75" />
 
-              <div className={`${styles.labelClass} text-[9px] text-center font-bold tracking-[0.2em] uppercase mb-1`}>
-                TIME LEFT
-              </div>
-              <div className={`${styles.timeClass} text-base font-black text-center tracking-widest uppercase`} style={{fontFamily: '"Courier New", monospace'}}>
-                {timeText}
+            <div className="relative bg-black/95 border border-cyan-400/40 rounded-lg p-3 overflow-hidden">
+              {/* Animated background shimmer */}
+              <div className="absolute inset-0 opacity-10" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.3) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-4">
+                {/* Stock Count */}
+                <div className="text-center p-2">
+                  <div className="text-[8px] text-cyan-300/60 uppercase tracking-widest mb-1 font-mono">
+                    STOCK LEVEL
+                  </div>
+                  <div className="text-2xl font-bold text-cyan-300 mb-0.5 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-[9px] text-cyan-400/40 uppercase">essence</div>
+                </div>
+
+                {/* Vertical divider with glow */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent" />
+
+                {/* Unit Price */}
+                <div className="text-center p-2">
+                  <div className="text-[8px] text-yellow-300/60 uppercase tracking-widest mb-1 font-mono">
+                    UNIT COST
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-300 mb-0.5 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-[9px] text-yellow-400/40 uppercase">gold/essence</div>
+                </div>
               </div>
             </div>
           </div>
         );
 
-      case 3: // Angled Block - Sci-fi HUD style
+      case 8: // Industrial Warning Panel - Hazard stripes and grunge
         return (
-          <div className="mb-3">
-            <div
-              className={`relative p-3 ${styles.containerClass}`}
-              style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-            >
-              <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10" />
-              <div className="flex items-center justify-between gap-2">
-                <div className={`${styles.labelClass} text-[8px] uppercase tracking-wider font-bold`}>
-                  ▸ COUNTDOWN
+          <div className="mb-3 relative">
+            {/* Hazard stripe background */}
+            <div className="absolute inset-0 opacity-10" style={{
+              background: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #facc15 10px, #facc15 20px)',
+            }} />
+
+            <div className="relative border-2 border-yellow-500/40 bg-black/85 p-3 clip-path-[polygon(0_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%)]">
+              {/* Metal scratch overlay */}
+              <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cline x1=\'0\' y1=\'10\' x2=\'100\' y2=\'15\' stroke=\'white\' stroke-width=\'0.5\'/%3E%3Cline x1=\'0\' y1=\'40\' x2=\'100\' y2=\'38\' stroke=\'white\' stroke-width=\'0.3\'/%3E%3Cline x1=\'0\' y1=\'70\' x2=\'100\' y2=\'75\' stroke=\'white\' stroke-width=\'0.4\'/%3E%3C/svg%3E")',
+              }} />
+
+              <div className="relative space-y-2">
+                {/* Stock warning block */}
+                <div className="bg-black/60 border-l-4 border-cyan-400 p-2.5 pl-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-cyan-400/60 uppercase tracking-wider font-bold mb-0.5">
+                        INVENTORY
+                      </div>
+                      <div className="text-2xl font-bold text-cyan-300 leading-none">
+                        {quantityFormatted}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-cyan-400/40 uppercase -rotate-90 origin-center">
+                      UNITS
+                    </div>
+                  </div>
                 </div>
-                <div className={`${styles.timeClass} text-base font-bold font-mono`}>
-                  {timeText}
+
+                {/* Price info block */}
+                <div className="bg-black/60 border-l-4 border-yellow-500 p-2.5 pl-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-yellow-400/60 uppercase tracking-wider font-bold mb-0.5">
+                        COST PER ESSENCE
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-400 leading-none">
+                        {pricePerUnit.toLocaleString()}g
+                      </div>
+                    </div>
+                    <div className="text-xs text-yellow-400/30 uppercase font-bold">
+                      /EA
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 9: // Sleek Hexagonal Tech - Angular modern design
+        return (
+          <div className="mb-3 flex gap-2">
+            {/* Quantity Hex */}
+            <div className="flex-1 relative group">
+              {/* Hexagonal border effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-cyan-700/20" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+              <div className="absolute inset-[2px] bg-black/90" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+
+              <div className="relative px-4 py-3 text-center">
+                <div className="text-[8px] text-cyan-400/50 uppercase tracking-widest mb-1">
+                  AVAILABLE
+                </div>
+                <div className="text-3xl font-bold text-cyan-400 mb-0.5 drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]">
+                  {quantityFormatted}
+                </div>
+                <div className="text-[8px] text-cyan-400/40 uppercase tracking-wide">
+                  essence
+                </div>
+              </div>
+            </div>
+
+            {/* Price Hex */}
+            <div className="flex-1 relative group">
+              {/* Hexagonal border effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-yellow-700/20" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+              <div className="absolute inset-[2px] bg-black/90" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+
+              <div className="relative px-4 py-3 text-center">
+                <div className="text-[8px] text-yellow-400/50 uppercase tracking-widest mb-1">
+                  PRICE/UNIT
+                </div>
+                <div className="text-3xl font-bold text-yellow-400 mb-0.5 drop-shadow-[0_0_6px_rgba(250,182,23,0.5)]">
+                  {pricePerUnit.toLocaleString()}
+                </div>
+                <div className="text-[8px] text-yellow-400/40 uppercase tracking-wide">
+                  gold
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 10: // Compact Terminal Readout - Minimal monospace style
+        return (
+          <div className="mb-3 relative bg-black/95 border border-green-500/30 rounded font-mono text-xs overflow-hidden">
+            {/* CRT scanline effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+              background: 'repeating-linear-gradient(0deg, rgba(0,255,0,0.1) 0px, rgba(0,255,0,0.1) 1px, transparent 1px, transparent 3px)',
+            }} />
+
+            <div className="relative p-3 space-y-1.5">
+              {/* Terminal prompt style */}
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="text-cyan-400/70 uppercase">stock_query</span>
+                <span className="text-cyan-400/40">=</span>
+                <span className="text-cyan-300 font-bold">{quantityFormatted}</span>
+                <span className="text-cyan-400/50">essence</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="text-yellow-400/70 uppercase">price_query</span>
+                <span className="text-yellow-400/40">=</span>
+                <span className="text-yellow-300 font-bold">{pricePerUnit.toLocaleString()}</span>
+                <span className="text-yellow-400/50">gold</span>
+                <span className="text-yellow-400/40">/</span>
+                <span className="text-yellow-400/50">unit</span>
+              </div>
+
+              {/* Blinking cursor */}
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="inline-block w-2 h-3 bg-green-400/60 animate-pulse" />
               </div>
             </div>
           </div>
@@ -824,6 +1122,23 @@ export default function EssenceMarketPage() {
       default:
         return null;
     }
+  };
+
+  // Time remaining display variations
+  const renderTimeRemaining = (expiresAt: number) => {
+    const styles = getCountdownStyles(expiresAt);
+    const timeText = formatCountdown(expiresAt);
+
+    // Style 9: Condensed Label - Small Text Block (Locked)
+    return (
+      <div className="mb-2">
+        <div className={`px-2 py-1 ${styles.containerClass} rounded`}>
+          <div className={`${styles.timeClass} text-[11px] font-bold text-center`}>
+            {timeText}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Header button styling variations
@@ -1080,22 +1395,6 @@ export default function EssenceMarketPage() {
           <div className="bg-black/90 border border-yellow-500/50 p-3 rounded-lg backdrop-blur-sm space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto">
             <div className="text-yellow-400 text-xs uppercase tracking-wider font-bold mb-2 pb-2 border-b border-yellow-500/30">Debug Controls</div>
 
-            {/* Button Variation Selector */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Button Variation</label>
-              <select
-                value={buttonVariation}
-                onChange={(e) => setButtonVariation(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Style 1: Industrial Stack</option>
-                <option value={2}>Style 2: Angled Casino Chips</option>
-                <option value={3}>Style 3: Minimal Modern</option>
-                <option value={4}>Style 4: Retro Arcade</option>
-                <option value={5}>Style 5: Industrial Tags</option>
-              </select>
-            </div>
-
             {/* Listing Count Toggle */}
             <div>
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Test Listing Count</label>
@@ -1123,23 +1422,7 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
-            {/* Header Layout Selector */}
-            <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Header Layout</label>
-          <select
-            value={headerLayout}
-            onChange={(e) => setHeaderLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">OPTION 1: Current Layout (Reference)</option>
-            <option value="2">OPTION 2: Horizontal Row - Buttons + Gold Right</option>
-            <option value="3">OPTION 3: Stacked Buttons on Right</option>
-            <option value="4">OPTION 4: Integrated Bar - Industrial Frame</option>
-            <option value="5">OPTION 5: Compact Grid - Gold Prominent</option>
-          </select>
-        </div>
-
-        {/* Bounty Layout Selector */}
+            {/* Bounty Layout Selector */}
         <div>
           <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Bounty Layout</label>
           <select
@@ -1153,41 +1436,67 @@ export default function EssenceMarketPage() {
           </select>
         </div>
 
-        {/* Gold Display Variation Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold Display Variation</label>
-          <select
-            value={goldDisplayVariation}
-            onChange={(e) => setGoldDisplayVariation(Number(e.target.value) as 1 | 2 | 3 | 4)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Variation 1: Stacked - Number over GOLD</option>
-            <option value="2">Variation 2: Inline - Number + G</option>
-            <option value="3">Variation 3: Minimal - Just Number</option>
-            <option value="4">Variation 4: Vertical Compact</option>
-          </select>
-        </div>
+            {/* Expiration Filter */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Listing Status</label>
+              <select
+                value={showExpiredListings ? "all" : "active"}
+                onChange={(e) => setShowExpiredListings(e.target.value === "all")}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value="active">Active Only</option>
+                <option value="all">Show All (Including Expired)</option>
+              </select>
+            </div>
 
-        {/* Listing Card Style Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Listing Card Style</label>
-          <select
-            value={listingCardStyle}
-            onChange={(e) => setListingCardStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Style 1: Ultra Bright Glass</option>
-            <option value="2">Style 2: Prominent Yellow Border</option>
-            <option value="3">Style 3: Prominent White Border</option>
-            <option value="4">Style 4: Prominent Gray Border</option>
-            <option value="5">Style 5: Double Border (Yellow & White)</option>
-            <option value="6">Style 6: Neon Holographic</option>
-            <option value="7">Style 7: Carbon Fiber</option>
-            <option value="8">Style 8: Deep Frosted</option>
-            <option value="9">Style 9: Rainbow Gradient Border</option>
-            <option value="10">Style 10: Military Stencil</option>
-          </select>
-        </div>
+            {/* Pricing Info Layout Selector */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Pricing Info Layout</label>
+              <select
+                value={pricingInfoLayout}
+                onChange={(e) => setPricingInfoLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Option 1: Horizontal Split Panel</option>
+                <option value={2}>Option 2: Stat Cards (Gaming)</option>
+                <option value={3}>Option 3: Compact Single Row</option>
+                <option value={4}>Option 4: Emphasized Price</option>
+                <option value={5}>Option 5: Data Table Style</option>
+                <option value={6}>Option 6: HUD Tactical Display</option>
+                <option value={7}>Option 7: Holographic Data Panel</option>
+                <option value={8}>Option 8: Industrial Warning Panel</option>
+                <option value={9}>Option 9: Sleek Hexagonal Tech</option>
+                <option value={10}>Option 10: Compact Terminal Readout</option>
+              </select>
+            </div>
+
+            {/* Marketplace Reseed */}
+            <div className="pt-4 border-t border-yellow-500/30">
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Marketplace Data</label>
+              <div className="space-y-2">
+                <button
+                  onClick={async () => {
+                    if (confirm("Clear all marketplace listings? This cannot be undone.")) {
+                      await clearMarketplace();
+                      alert("Marketplace cleared!");
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-bold rounded hover:bg-red-900/50 transition-all"
+                >
+                  CLEAR ALL LISTINGS
+                </button>
+                <button
+                  onClick={async () => {
+                    await seedMarketplace();
+                    alert("Marketplace reseeded with new timer variations!");
+                  }}
+                  className="w-full px-3 py-2 bg-green-900/30 border border-green-500/50 text-green-400 text-xs font-bold rounded hover:bg-green-900/50 transition-all"
+                >
+                  RESEED MARKETPLACE
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
       </div>
@@ -1219,16 +1528,10 @@ export default function EssenceMarketPage() {
                       <span>LIST ITEM</span>
                     </button>
                     <button
-                      onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
+                      onClick={() => setShowMyListingsModal(true)}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
                       <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                    </button>
-                    <button
-                      onClick={() => setShowOffersView(!showOffersView)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOffersView)}
-                    >
-                      <span>BOUNTIES</span>
                     </button>
                   </div>
                 </div>
@@ -1263,16 +1566,10 @@ export default function EssenceMarketPage() {
                     <span>LIST ITEM</span>
                   </button>
                   <button
-                    onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
+                    onClick={() => setShowMyListingsModal(true)}
                     className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                   >
                     <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <button
-                    onClick={() => setShowOffersView(!showOffersView)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOffersView)}
-                  >
-                    <span>BOUNTIES</span>
                   </button>
                   <div className="w-px h-10 bg-yellow-500/30 mx-2" />
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
@@ -1304,16 +1601,10 @@ export default function EssenceMarketPage() {
                       <span>LIST ITEM</span>
                     </button>
                     <button
-                      onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
+                      onClick={() => setShowMyListingsModal(true)}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
                       <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                    </button>
-                    <button
-                      onClick={() => setShowOffersView(!showOffersView)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOffersView)}
-                    >
-                      <span>BOUNTIES</span>
                     </button>
                   </div>
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
@@ -1346,16 +1637,10 @@ export default function EssenceMarketPage() {
                     <span>LIST ITEM</span>
                   </button>
                   <button
-                    onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
+                    onClick={() => setShowMyListingsModal(true)}
                     className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                   >
                     <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <button
-                    onClick={() => setShowOffersView(!showOffersView)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOffersView)}
-                  >
-                    <span>BOUNTIES</span>
                   </button>
                   <div className="w-px h-10 bg-yellow-500/50 mx-2" />
                   <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
@@ -1381,10 +1666,8 @@ export default function EssenceMarketPage() {
                 <div className="flex items-center gap-4">
                   {renderHeaderButtons(buttonVariation, {
                     onCreateListing: () => setShowCreateListing(true),
-                    onToggleMyListings: () => setShowOnlyMyListings(!showOnlyMyListings),
-                    onToggleOffersView: () => setShowOffersView(!showOffersView),
+                    onToggleMyListings: () => setShowMyListingsModal(true),
                     showOnlyMyListings,
-                    showOffersView,
                     listingCount: debugListingCount
                   })}
                   <div className="h-16 w-px bg-yellow-500/30" />
@@ -2829,10 +3112,10 @@ export default function EssenceMarketPage() {
                   </div>
 
                   {/* Price Display */}
-                  {renderPriceDisplay(listing.pricePerUnit, listing.quantity, priceLayoutStyle)}
+                  {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
 
                   {/* Time Left - Countdown Timer */}
-                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt, timeRemainingStyle)}
+                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt)}
 
                   {/* Action Button */}
                   {isOwn ? (
@@ -2844,7 +3127,7 @@ export default function EssenceMarketPage() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => handlePurchase(listing._id, listing.quantity)}
+                      onClick={() => handleOpenPurchaseModal(listing)}
                       disabled={!canAfford}
                       className={`${getButtonStyle(buttonStyle)} ${
                         canAfford
@@ -2864,7 +3147,7 @@ export default function EssenceMarketPage() {
                         </>
                       )}
                       <span className="relative z-10">
-                        {canAfford ? "◆ PURCHASE" : "⊗ INSUFFICIENT FUNDS"}
+                        {canAfford ? "◆ TAP ESSENCE" : "⊗ INSUFFICIENT FUNDS"}
                       </span>
                     </button>
                   )}
@@ -2873,74 +3156,6 @@ export default function EssenceMarketPage() {
             })
           )}
         </div>
-
-        {/* My Listings Section */}
-        {myListings && myListings.filter(l => l.itemType === "essence").length > 0 && (
-          <div className="mt-8">
-            <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
-              <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">ACTIVE DEPLOYMENTS</h2>
-              <p className="mek-label-uppercase text-yellow-400/60 mt-1">
-                {myListings.filter(l => l.itemType === "essence").length} ESSENCE LISTINGS
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myListings
-                .filter(l => l.itemType === "essence")
-                .map((listing) => (
-                  <div key={listing._id} className="relative p-4 rounded-lg overflow-hidden hover:border-yellow-400/10 transition-all duration-500"
-                    style={{
-                      background: `linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)`,
-                      backdropFilter: 'blur(3px) brightness(1.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                    }}
-                  >
-                    {/* Crosshatch pattern */}
-                    <div
-                      className="absolute inset-0 pointer-events-none opacity-40"
-                      style={{
-                        backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
-                                          repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
-                      }}
-                    />
-                    {/* Radial gradient accents */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
-                                     radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
-                                     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
-                      }}
-                    />
-                    <div className="relative">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">
-                            {listing.itemVariation || listing.itemType}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
-                            <span className="text-yellow-400">{listing.quantity}</span>
-                            <span className="text-gray-600">×</span>
-                            <span className="text-yellow-400">{listing.pricePerUnit}g</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
-                          <div className="text-xs text-yellow-400/60">{new Date(listing.listedAt).toLocaleDateString()}</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleCancelListing(listing._id)}
-                        className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
-                      >
-                        ⊗ RECALL
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
 
         {/* Create Listing Modal - Industrial Sci-Fi Design - REPLACED WITH V5 LIGHTBOX */}
         {false && showCreateListing && (
@@ -3272,6 +3487,217 @@ export default function EssenceMarketPage() {
           ownedEssenceVariations={ownedEssenceVariations}
           durationOptions={DURATION_OPTIONS}
         />
+
+        {/* Purchase Modal with Slider */}
+        {showPurchaseModal && selectedListing && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-md w-full mek-card-industrial mek-border-sharp-gold p-6 rounded-lg">
+              {/* Close button */}
+              <button
+                onClick={() => setShowPurchaseModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">TAP ESSENCE</h2>
+
+              {/* Essence Name */}
+              <div className="mb-4">
+                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">ESSENCE TYPE</div>
+                <div className="text-yellow-400 font-bold text-lg">{selectedListing.essenceType}</div>
+              </div>
+
+              {/* Remaining Amount */}
+              <div className="mb-4">
+                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">AVAILABLE</div>
+                <div className="text-blue-400 font-bold">{selectedListing.quantity.toFixed(1)} essence</div>
+              </div>
+
+              {/* Slider */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="mek-label-uppercase text-gray-500 text-xs">PURCHASE AMOUNT</div>
+                  <div className="text-yellow-400 font-bold">{purchaseAmount.toFixed(1)}</div>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max={selectedListing.quantity}
+                  step="0.1"
+                  value={purchaseAmount}
+                  onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-yellow"
+                />
+                <div className="flex justify-between mt-2">
+                  <button
+                    onClick={() => setPurchaseAmount(0.1)}
+                    className="text-gray-400 hover:text-yellow-400 text-xs font-bold uppercase tracking-wider"
+                  >
+                    MIN
+                  </button>
+                  <button
+                    onClick={() => setPurchaseAmount(selectedListing.quantity)}
+                    className="text-yellow-400 hover:text-yellow-300 text-xs font-bold uppercase tracking-wider"
+                  >
+                    MAX
+                  </button>
+                </div>
+              </div>
+
+              {/* Cost Display */}
+              <div className="mb-6 p-4 bg-black/80 border border-yellow-500/30 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="mek-label-uppercase text-gray-500 text-xs">PRICE PER ESSENCE</div>
+                  <div className="text-yellow-400 font-bold">{selectedListing.pricePerUnit.toLocaleString()}g</div>
+                </div>
+                <div className="h-px bg-yellow-500/20 my-2" />
+                <div className="flex items-center justify-between">
+                  <div className="mek-label-uppercase text-yellow-400/80 text-sm">TOTAL COST</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {(purchaseAmount * selectedListing.pricePerUnit).toLocaleString()}g
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Button */}
+              <button
+                onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                disabled={!userProfile || userProfile.gold < (purchaseAmount * selectedListing.pricePerUnit)}
+                className={`w-full py-3 rounded-lg font-bold uppercase tracking-wider transition-all ${
+                  userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
+                    ? "mek-button-primary"
+                    : "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed"
+                }`}
+              >
+                {userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
+                  ? "◆ CONFIRM PURCHASE"
+                  : "⊗ INSUFFICIENT FUNDS"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Purchase History Modal */}
+        {showHistoryModal && historyListingId && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-2xl w-full mek-card-industrial mek-border-sharp-gold p-6 rounded-lg max-h-[80vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">PURCHASE HISTORY</h2>
+
+              {/* History list would go here - requires query implementation */}
+              <div className="text-gray-400">
+                <p>Purchase history tracking will be available once backend queries are implemented.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Listings Modal */}
+        {showMyListingsModal && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-6xl w-full rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                onClick={() => setShowMyListingsModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold z-10"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
+                  <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
+                    MY LISTINGS
+                  </h2>
+                </div>
+                <p className="mek-label-uppercase text-yellow-400/60 ml-4">
+                  {myListings?.filter(l => l.itemType === "essence").length || 0} ACTIVE ESSENCE DEPLOYMENTS
+                </p>
+              </div>
+
+              {/* Active Deployments Content */}
+              {myListings && myListings.filter(l => l.itemType === "essence").length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {myListings
+                    .filter(l => l.itemType === "essence")
+                    .map((listing) => (
+                      <div key={listing._id} className="relative p-4 rounded-lg overflow-hidden hover:border-yellow-400/10 transition-all duration-500"
+                        style={{
+                          background: `linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)`,
+                          backdropFilter: 'blur(3px) brightness(1.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                        }}
+                      >
+                        {/* Crosshatch pattern */}
+                        <div
+                          className="absolute inset-0 pointer-events-none opacity-40"
+                          style={{
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+                                              repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
+                          }}
+                        />
+                        {/* Radial gradient accents */}
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
+                                         radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
+                                         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
+                          }}
+                        />
+                        <div className="relative">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">
+                                {listing.itemVariation || listing.itemType}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
+                                <span className="text-yellow-400">{listing.quantity}</span>
+                                <span className="text-gray-600">×</span>
+                                <span className="text-yellow-400">{listing.pricePerUnit}g</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
+                              <div className="text-xs text-yellow-400/60">{new Date(listing.listedAt).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleCancelListing(listing._id)}
+                            className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
+                          >
+                            ⊗ RECALL
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-lg">
+                    No active listings found.
+                  </div>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Click "LIST ITEM" to create a new essence listing.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         </>
         )}
       </div>

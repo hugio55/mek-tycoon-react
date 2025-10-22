@@ -1255,9 +1255,15 @@ export const setCompanyName = mutation({
     companyName: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log('[setCompanyName] Mutation called with:', {
+      walletAddress: args.walletAddress?.slice(0, 20) + '...',
+      companyName: args.companyName
+    });
+
     // Validate company name
     const validation = validateCompanyName(args.companyName);
     if (!validation.valid) {
+      console.log('[setCompanyName] Validation failed:', validation.error);
       return {
         success: false,
         error: validation.error
@@ -1267,6 +1273,7 @@ export const setCompanyName = mutation({
     const trimmedName = args.companyName.trim();
 
     // Check if company name is already taken (case-insensitive)
+    console.log('[setCompanyName] Checking if name is taken...');
     const existingCompany = await ctx.db
       .query("goldMining")
       .filter((q) =>
@@ -1278,6 +1285,7 @@ export const setCompanyName = mutation({
       .first();
 
     if (existingCompany) {
+      console.log('[setCompanyName] Name already taken by:', existingCompany.walletAddress?.slice(0, 20) + '...');
       return {
         success: false,
         error: "Company name is already taken"
@@ -1285,12 +1293,14 @@ export const setCompanyName = mutation({
     }
 
     // Find the user's gold mining record
+    console.log('[setCompanyName] Finding user record...');
     const existing = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
       .first();
 
     if (!existing) {
+      console.log('[setCompanyName] User record not found for wallet:', args.walletAddress?.slice(0, 20) + '...');
       return {
         success: false,
         error: "Wallet not found. Please connect your wallet first."
@@ -1298,11 +1308,13 @@ export const setCompanyName = mutation({
     }
 
     // Update with the new company name
+    console.log('[setCompanyName] Updating company name...');
     await ctx.db.patch(existing._id, {
       companyName: trimmedName,
       updatedAt: Date.now(),
     });
 
+    console.log('[setCompanyName] Success! Company name set to:', trimmedName);
     return {
       success: true,
       companyName: trimmedName

@@ -1,2 +1,0 @@
-@echo off
-start chrome "file:///C:/Users/Ben Meyers/Documents/Mek Tycoon/TYCOON REACT 8-27/mek-tycoon-react/dev-toolbar.html" --app="file:///C:/Users/Ben Meyers/Documents/Mek Tycoon/TYCOON REACT 8-27/mek-tycoon-react/dev-toolbar.html" --window-size=1200,300

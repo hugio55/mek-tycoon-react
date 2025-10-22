@@ -84,26 +84,49 @@ export const seedMarketplaceListings = mutation({
       });
     }
     
-    // Mock essence listings
-    const essenceTypes = [
-      "stone", "disco", "paul", "cartoon", "candy", 
-      "tiles", "moss", "bullish", "journalist", "laser"
+    // Mock essence listings with diverse countdown timers
+    // Color thresholds: White (12+ hrs), Yellow (5-12 hrs), Orange (1-5 hrs), Red (0-1 hr & expired)
+    const essenceListings = [
+      // EXPIRED (Red) - only one
+      { type: "stone", price: 122, qty: 3.0, expiresIn: -1000 }, // Expired
+
+      // WHITE (12+ hours)
+      { type: "tiles", price: 600, qty: 8.0, expiresIn: 25 * 24 * 60 * 60 * 1000 }, // 25 days
+      { type: "candy", price: 900, qty: 6.0, expiresIn: 18 * 24 * 60 * 60 * 1000 }, // 18 days
+      { type: "moss", price: 1500, qty: 4.0, expiresIn: 3 * 24 * 60 * 60 * 1000 }, // 3 days
+      { type: "disco", price: 1800, qty: 3.0, expiresIn: 36 * 60 * 60 * 1000 }, // 36 hours
+      { type: "paul", price: 2000, qty: 5.0, expiresIn: 18 * 60 * 60 * 1000 }, // 18 hours
+      { type: "cartoon", price: 2200, qty: 2.0, expiresIn: 13 * 60 * 60 * 1000 }, // 13 hours
+
+      // YELLOW (5-12 hours)
+      { type: "bullish", price: 2500, qty: 1.0, expiresIn: 11 * 60 * 60 * 1000 }, // 11 hours
+      { type: "journalist", price: 2800, qty: 1.5, expiresIn: 9 * 60 * 60 * 1000 }, // 9 hours
+      { type: "laser", price: 3200, qty: 2.5, expiresIn: 7 * 60 * 60 * 1000 }, // 7 hours
+      { type: "flashbulb", price: 3600, qty: 3.5, expiresIn: 5.5 * 60 * 60 * 1000 }, // 5.5 hours
+
+      // ORANGE (1-5 hours)
+      { type: "accordion", price: 4000, qty: 4.5, expiresIn: 4 * 60 * 60 * 1000 }, // 4 hours
+      { type: "turret", price: 4500, qty: 5.5, expiresIn: 2.5 * 60 * 60 * 1000 }, // 2.5 hours
+      { type: "drill", price: 5000, qty: 6.5, expiresIn: 1.5 * 60 * 60 * 1000 }, // 1.5 hours
+
+      // RED (0-1 hour)
+      { type: "security", price: 5500, qty: 7.5, expiresIn: 55 * 60 * 1000 }, // 55 minutes
+      { type: "stone", price: 6000, qty: 8.5, expiresIn: 25 * 60 * 1000 }, // 25 minutes
+      { type: "tiles", price: 6500, qty: 9.5, expiresIn: 3 * 60 * 1000 }, // 3 minutes
+      { type: "candy", price: 7000, qty: 10.5, expiresIn: 45 * 1000 }, // 45 seconds
     ];
-    
-    for (const essenceType of essenceTypes) {
-      const price = Math.floor(Math.random() * 50) + 10; // 10-60 gold per essence
-      const quantity = Math.floor(Math.random() * 20) + 5; // 5-25 essence
-      
+
+    for (const listing of essenceListings) {
       await ctx.db.insert("marketListings", {
         sellerId: demoSeller._id,
         itemType: "essence",
-        itemVariation: `${essenceType} essence`,
-        essenceType,
-        quantity,
-        pricePerUnit: price,
+        itemVariation: `${listing.type} essence`,
+        essenceType: listing.type,
+        quantity: listing.qty,
+        pricePerUnit: listing.price,
         status: "active",
         listedAt: now - Math.floor(Math.random() * 3 * 24 * 60 * 60 * 1000), // Random time in past 3 days
-        expiresAt: now + 7 * 24 * 60 * 60 * 1000, // 7 days from now
+        expiresAt: now + listing.expiresIn,
       });
     }
     
@@ -194,10 +217,10 @@ export const seedMarketplaceListings = mutation({
       });
     }
     
-    return { 
+    return {
       message: "Successfully seeded marketplace with mock listings",
       chipListings: chipListings.length,
-      essenceListings: essenceTypes.length,
+      essenceListings: essenceListings.length,
       oeListings: oeListings.length,
       frameListings: frameListings.length,
       oemListings: oemListings.length,

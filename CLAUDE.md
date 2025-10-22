@@ -13,6 +13,91 @@ cd "C:\Users\Ben Meyers\Documents\Mek Tycoon\mek-tycoon-react" && npm run dev:al
 ```
 This starts both Next.js (port 3100) and Convex in one terminal.
 
+## 🚨 CRITICAL: SESSION PROTECTION 🚨
+**NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**
+
+Claude Code sessions can suddenly terminate, losing all context and interrupting work. **Before executing ANY command, check this list:**
+
+### Commands That WILL Kill Claude Code Session
+**NEVER run these commands:**
+- `exit` - Exits the shell/terminal
+- `logout` - Logs out of the session
+- `quit` - Quits interactive programs
+- `shutdown` - Shuts down the system
+- `restart` - Restarts the system
+- `reboot` - Reboots the system
+- `taskkill /F /IM claude*` - Kills Claude process on Windows
+- `Stop-Process -Name claude*` - PowerShell command to kill Claude
+- `pkill claude` - Kills Claude on Unix/Linux
+- `killall claude` - Kills all Claude processes
+- Closing the terminal window manually
+- Ctrl+D (EOF signal that can exit shells)
+- Any command that terminates the parent terminal/console
+
+### Operations That CAN Kill Claude Code Session
+**Be extremely careful with:**
+1. **Package Installation**:
+   - Installing packages that conflict with Claude's dependencies
+   - Running `npm install` on packages that modify global state
+   - Upgrading Node.js or npm while Claude is running
+
+2. **File System Operations**:
+   - Deleting files in Claude's working directory
+   - Modifying permissions that lock Claude out
+   - Running out of disk space
+
+3. **Network Issues**:
+   - VPN disconnections
+   - Network adapter resets
+   - Firewall changes blocking Claude's connection
+   - Internet connectivity loss
+
+4. **System Resource Issues**:
+   - Running out of memory
+   - CPU-intensive operations that freeze the system
+   - Disk I/O errors
+
+5. **Process Management**:
+   - Task Manager force-close of Claude process
+   - Windows Updates forcing restarts
+   - Antivirus quarantining Claude files
+   - System sleep/hibernate (sometimes)
+
+### Safe Alternatives
+**Instead of session-ending commands, use:**
+- Instead of `exit`: Just leave Claude running and switch tasks
+- Instead of `taskkill`: Ask user before terminating anything
+- Instead of `shutdown`: Warn user to save Claude context first
+- Instead of risky package installs: Check package.json and ask user first
+- Instead of system-wide changes: Make project-local changes only
+
+### When Things Go Wrong
+**If you anticipate something might kill the session:**
+1. **STOP immediately**
+2. **Warn the user**: "This command might terminate the Claude Code session. Should I proceed?"
+3. **Suggest alternatives**: Provide safer options
+4. **Get explicit confirmation**: Wait for user approval
+5. **Document context**: If session must end, tell user what to resume with
+
+### Red Flags to Watch For
+**Always double-check before running:**
+- Any command with `kill`, `stop`, `exit`, `quit`, `shutdown`, `restart`
+- Commands that modify system-level configurations
+- Package installations that aren't in current package.json
+- Terminal control sequences (Ctrl+C, Ctrl+D, Ctrl+Z)
+- Batch files or scripts that might contain exit commands
+- Commands that open new shells (might close current one)
+
+### Working Around Session Constraints
+**If you need to do something that might end the session:**
+1. Complete all current tasks first
+2. Summarize all work done in the session
+3. Provide clear "resume instructions" for next session
+4. Get user's explicit permission
+5. Document any in-progress work in files (not just context)
+
+**Remember**: Losing session context is extremely disruptive. When in doubt, ask the user before executing anything that might terminate Claude Code.
+
 ## Project Overview
 Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The game combines resource management, crafting, and collection mechanics with a sleek, futuristic UI.
 
@@ -54,6 +139,7 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 - `@import "tailwindcss"` syntax (v4 only)
 - `@theme inline` directive (v4 only)
 - `@tailwindcss/postcss` package (v4 only)
+- **Browser default alerts/confirms** - `window.alert()`, `window.confirm()`, `window.prompt()` - ALWAYS use custom lightbox modals instead
 
 ### ALWAYS USE:
 - `npm ci` when possible (respects lock file)
@@ -260,16 +346,23 @@ When user types `/ui-team`, activate these three agents together:
 - `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
-### `/ultra` - Ultimate wallet and database debugging
-When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using a single message with multiple Task tool calls. **The project-lead agent is the primary coordinator** - it analyzes the problem, delegates specific tasks to specialist agents, sequences the work order, and ensures all teams stay aligned.
+### `/ultra` - Strategic multi-agent coordination
+When user types `/ultra`, activate ONLY the `@project-lead` agent. **The project-lead will analyze the problem and selectively launch only the relevant specialist agents needed for the specific issue.**
 
-**IMPORTANT**:
-- Must launch all agents in parallel in a single response, not sequentially
-- **The project-lead should actively delegate and coordinate** - don't just launch agents independently
-- Project-lead analyzes the issue, identifies which specialists are needed, and assigns specific tasks to each
+**CRITICAL RULES**:
+- **ONLY launch the project-lead agent initially** - do NOT blindly launch all 11 agents
+- **Project-lead must be strategic** - it should analyze the problem and activate only relevant specialists
+- **No unnecessary agents** - if the issue is clearly unrelated to mobile, don't launch mobile-responsive-optimizer
+- **Be critical and selective** - fewer, targeted agents are better than launching everything
 
-**Project Coordination (PRIMARY ROLE):**
-- `@project-lead` - **Main delegator**: analyzes problems, assigns tasks to specialists, sequences work order, tracks progress, integrates solutions across teams
+**How It Works**:
+1. User types `/ultra` describing their issue
+2. Claude launches ONLY the `@project-lead` agent
+3. Project-lead analyzes the problem and identifies which specialists are actually needed
+4. Project-lead launches only the relevant agents and coordinates their work
+5. Project-lead integrates solutions and ensures teams stay aligned
+
+**Available Specialist Agents (for project-lead to selectively activate)**:
 
 **Wallet Integration Team:**
 - `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
@@ -289,7 +382,12 @@ When user types `/ultra`, activate ALL ELEVEN agents together IN PARALLEL using 
 - `@visual-test` - Verify visual changes in browser and check console errors
 - `@mobile-responsive-optimizer` - Transform desktop UI to mobile-responsive design
 
-Use for: wallet connection failures, NFTs not syncing, database/UI desync, cumulative gold errors, code quality issues, UI/UX problems
+**Example Decision-Making**:
+- Issue: "NFTs not showing in wallet" → Launch wallet integrator + state-sync debugger (NOT mobile optimizer)
+- Issue: "Convex query returning wrong data" → Launch convex architect + state-sync (NOT UI or wallet teams)
+- Issue: "Button layout broken on mobile" → Launch mobile optimizer + ui-layout debugger (NOT wallet or database teams)
+
+Use for: Complex multi-domain problems that need coordinated analysis and selective specialist deployment
 
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:
@@ -337,6 +435,11 @@ Example transformation:
 3. Explain exactly what will change and why
 
 ## Communication Guidelines
+- **DO IT, DON'T DELEGATE**: If you are capable of doing a task (editing files, restarting servers, running commands, etc.), DO IT immediately. Never instruct the user to do something you can do yourself. Examples:
+  - BAD: "Please update .env.local with X value"
+  - GOOD: *Updates .env.local immediately*
+  - BAD: "You'll need to restart the dev server"
+  - GOOD: *Restarts dev server automatically*
 - **Ask for clarity**: If instructions are vague or unclear, ask specific questions rather than guessing
 - **Voice concerns**: If an implementation might break something or cause issues, speak up before proceeding
 - **Be direct and honest**: Don't hesitate to point out potential problems or downsides

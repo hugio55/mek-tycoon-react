@@ -422,6 +422,24 @@ export default defineSchema({
     .index("by_type", ["itemType"])
     .index("by_price", ["pricePerUnit"]),
 
+  // Purchase history for marketplace listings (tracks each "tap" purchase)
+  marketListingPurchases: defineTable({
+    listingId: v.id("marketListings"),
+    buyerId: v.id("users"),
+    sellerId: v.id("users"),
+    itemType: v.string(),
+    itemVariation: v.optional(v.string()),
+    essenceType: v.optional(v.string()),
+    quantityPurchased: v.number(),
+    pricePerUnit: v.number(),
+    totalCost: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_listing", ["listingId"])
+    .index("by_buyer", ["buyerId"])
+    .index("by_seller", ["sellerId"])
+    .index("by_timestamp", ["timestamp"]),
+
   // Transaction history
   transactions: defineTable({
     type: v.union(
@@ -2533,10 +2551,9 @@ export default defineSchema({
 
     // NMKR Integration
     nmkrProjectId: v.optional(v.string()),
-    nmkrApiKey: v.optional(v.string()), // Encrypted in production
-    policyId: v.optional(v.string()), // Cardano policy ID for this collection
+    nmkrApiKey: v.optional(v.string()),
 
-    // Statistics
+    // Stats (for admin dashboard)
     totalEligible: v.optional(v.number()), // Count of users who qualify
     totalSubmitted: v.optional(v.number()), // Count of addresses submitted
     totalSent: v.optional(v.number()), // Count of NFTs successfully sent
@@ -2593,46 +2610,24 @@ export default defineSchema({
     .index("by_submitted_date", ["submittedAt"])
     .index("by_receive_address", ["receiveAddress"]),
 
-  // Commemorative NFT Purchases - Track paid NFT purchases via NMKR
+  // Commemorative NFT Purchases
   commemorativePurchases: defineTable({
-    // User identification
-    userId: v.id("users"),
-    walletAddress: v.string(), // Stake address
-    paymentAddress: v.string(), // Payment address (addr1...)
-
-    // Campaign details
-    campaignName: v.string(), // e.g., "commemorative-token-1"
-    nmkrProjectId: v.string(), // NMKR project UID
-
-    // Purchase status
+    userId: v.optional(v.id("users")), // Optional - user may not be logged in
+    walletAddress: v.string(), // Cardano wallet address
+    nmkrProjectUid: v.string(), // NMKR project UID
+    purchaseDate: v.number(), // Timestamp
+    transactionHash: v.optional(v.string()), // Cardano transaction hash if available
+    nftTokenId: v.optional(v.string()), // NFT token ID if available
     status: v.union(
-      v.literal("pending"),    // Payment initiated
-      v.literal("completed"),  // Payment confirmed, NFT sent
-      v.literal("failed"),     // Payment failed
-      v.literal("refunded")    // Payment refunded
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("failed")
     ),
-
-    // Blockchain data
-    transactionHash: v.optional(v.string()), // Payment tx hash
-    nftTokenId: v.optional(v.string()),      // NFT token ID after minting
-    paymentAmount: v.optional(v.string()),   // Amount paid in lovelace
-
-    // Eligibility snapshot (at time of purchase)
-    goldSnapshot: v.number(),
-    mekCountSnapshot: v.number(),
-
-    // Timestamps
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    completedAt: v.optional(v.number()),
-    failedAt: v.optional(v.number()),
-
-    // Admin notes
-    adminNotes: v.optional(v.string()),
+    goldAmount: v.optional(v.number()), // User's gold at purchase time
+    mekCount: v.optional(v.number()), // User's mek count at purchase time
   })
-    .index("by_user", ["userId"])
     .index("by_wallet", ["walletAddress"])
-    .index("by_campaign", ["campaignName"])
-    .index("by_status", ["status"])
-    .index("by_transaction", ["transactionHash"]),
+    .index("by_user", ["userId"])
+    .index("by_date", ["purchaseDate"])
+    .index("by_status", ["status"]),
 });
