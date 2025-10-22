@@ -180,10 +180,10 @@ async function processPurchase(ctx: any, args: {
       quantity: listing.quantity - purchaseQuantity,
     });
   }
-  
+
   // Log transactions
   const now = Date.now();
-  
+
   await ctx.db.insert("transactions", {
     type: "purchase",
     userId: args.buyerId,
@@ -193,7 +193,7 @@ async function processPurchase(ctx: any, args: {
     details: `Purchased ${purchaseQuantity}x for ${totalCost}g`,
     timestamp: now,
   });
-  
+
   await ctx.db.insert("transactions", {
     type: "sale",
     userId: listing.sellerId,
@@ -203,7 +203,21 @@ async function processPurchase(ctx: any, args: {
     details: `Sold ${purchaseQuantity}x for ${totalCost}g`,
     timestamp: now,
   });
-  
+
+  // Record purchase in history for marketplace analytics
+  await ctx.db.insert("marketListingPurchases", {
+    listingId: args.listingId,
+    buyerId: args.buyerId,
+    sellerId: listing.sellerId,
+    itemType: listing.itemType,
+    itemVariation: listing.itemVariation,
+    essenceType: listing.essenceType,
+    quantityPurchased: purchaseQuantity,
+    pricePerUnit: listing.pricePerUnit,
+    totalCost: totalCost,
+    timestamp: now,
+  });
+
   return { success: true, totalCost };
 }
 
@@ -509,10 +523,10 @@ export const purchaseListing = mutation({
         quantity: listing.quantity - purchaseQuantity,
       });
     }
-    
+
     // Log transactions
     const now = Date.now();
-    
+
     await ctx.db.insert("transactions", {
       type: "purchase",
       userId: args.buyerId,
@@ -522,7 +536,7 @@ export const purchaseListing = mutation({
       details: `Purchased ${purchaseQuantity}x for ${totalCost}g`,
       timestamp: now,
     });
-    
+
     await ctx.db.insert("transactions", {
       type: "sale",
       userId: listing.sellerId,
@@ -532,7 +546,21 @@ export const purchaseListing = mutation({
       details: `Sold ${purchaseQuantity}x for ${totalCost}g`,
       timestamp: now,
     });
-    
+
+    // Record purchase in history for marketplace analytics
+    await ctx.db.insert("marketListingPurchases", {
+      listingId: args.listingId,
+      buyerId: args.buyerId,
+      sellerId: listing.sellerId,
+      itemType: listing.itemType,
+      itemVariation: listing.itemVariation,
+      essenceType: listing.essenceType,
+      quantityPurchased: purchaseQuantity,
+      pricePerUnit: listing.pricePerUnit,
+      totalCost: totalCost,
+      timestamp: now,
+    });
+
     return { success: true, totalCost };
   },
 });
@@ -586,6 +614,33 @@ export const createAdminListing = mutation({
     });
     
     return listingId;
+  },
+});
+
+// Get purchase history for a listing
+export const getListingPurchaseHistory = query({
+  args: {
+    listingId: v.id("marketListings"),
+  },
+  handler: async (ctx, args) => {
+    const purchases = await ctx.db
+      .query("marketListingPurchases")
+      .withIndex("by_listing", (q) => q.eq("listingId", args.listingId))
+      .order("desc")
+      .collect();
+
+    // Get buyer info for each purchase
+    const purchasesWithBuyers = await Promise.all(
+      purchases.map(async (purchase) => {
+        const buyer = await ctx.db.get(purchase.buyerId);
+        return {
+          ...purchase,
+          buyerName: buyer?.username || buyer?.walletAddress || "Unknown",
+        };
+      })
+    );
+
+    return purchasesWithBuyers;
   },
 });
 

@@ -2,8 +2,9 @@ import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const LEADERBOARD_SIZE = 100; // Top N miners to cache
+const SIGNIFICANT_CHANGE_THRESHOLD = 100; // Only update if gold changed by at least this amount
 
-// Pre-compute gold leaderboard rankings every 5 minutes
+// Pre-compute gold leaderboard rankings every 15 minutes
 export const updateGoldLeaderboard = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -54,6 +55,9 @@ export const updateGoldLeaderboard = internalMutation({
       const topMiners = sortedMiners.slice(0, LEADERBOARD_SIZE);
 
       // Use upsert pattern: update existing entries, insert new ones
+      let updatedCount = 0;
+      let skippedCount = 0;
+
       for (let i = 0; i < topMiners.length; i++) {
         const miner = topMiners[i];
         const rank = i + 1;
@@ -85,8 +89,17 @@ export const updateGoldLeaderboard = internalMutation({
         };
 
         if (existingEntry) {
-          // Update existing entry
-          await ctx.db.patch(existingEntry._id, entryData);
+          // Skip update if value hasn't changed significantly and wallet is the same
+          const goldChanged = Math.abs(existingEntry.value - miner.currentGold) >= SIGNIFICANT_CHANGE_THRESHOLD;
+          const walletChanged = existingEntry.walletAddress !== miner.walletAddress;
+
+          if (goldChanged || walletChanged) {
+            // Update existing entry
+            await ctx.db.patch(existingEntry._id, entryData);
+            updatedCount++;
+          } else {
+            skippedCount++;
+          }
         } else {
           // Insert new entry
           await ctx.db.insert("leaderboardCache", {
@@ -95,6 +108,7 @@ export const updateGoldLeaderboard = internalMutation({
             rank,
             ...entryData,
           });
+          updatedCount++;
         }
       }
 
@@ -109,11 +123,13 @@ export const updateGoldLeaderboard = internalMutation({
         await ctx.db.delete(entry._id);
       }
 
-      console.log(`Leaderboard updated: ${topMiners.length} entries cached at ${new Date(now).toISOString()}`);
+      console.log(`Leaderboard updated: ${updatedCount} entries updated, ${skippedCount} skipped (no significant change) at ${new Date(now).toISOString()}`);
 
       return {
         success: true,
-        entriesUpdated: topMiners.length,
+        entriesUpdated: updatedCount,
+        entriesSkipped: skippedCount,
+        totalEntries: topMiners.length,
         timestamp: now,
       };
     } catch (error) {

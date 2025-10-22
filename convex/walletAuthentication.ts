@@ -1,6 +1,6 @@
 import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { generateSessionId } from "./lib/sessionUtils";
 
 // Rate Limiting Configuration
@@ -175,6 +175,7 @@ async function resetFailedAttempts(ctx: any, stakeAddress: string): Promise<void
 const ALLOWED_ORIGINS = [
   'https://mek.overexposed.io',
   'http://localhost:3100',
+  'http://localhost:3200', // Staging environment
   'http://localhost:3000', // Dev fallback
   'http://localhost:3001',
   'http://localhost:3002',

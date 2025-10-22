@@ -5,6 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ALL_VARIATIONS_FLAT } from "@/lib/variationsReferenceData";
+import EssenceListingLightboxV5YellowGradient from "@/components/EssenceListingLightbox-V5-YellowGradient";
+import { renderHeaderButtons } from "@/lib/headerButtonVariations";
 
 // Variation type categories for essence filtering
 const RARITY_CATEGORIES = [
@@ -35,6 +37,9 @@ export default function EssenceMarketPage() {
   const [selectedRarity, setSelectedRarity] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const dropdownMenuStyle = 3; // Locked to Style 3: Black Gloss
+  const [debugPanelCollapsed, setDebugPanelCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyMyListings, setShowOnlyMyListings] = useState(false);
   const [showCreateListing, setShowCreateListing] = useState(false);
@@ -46,10 +51,30 @@ export default function EssenceMarketPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [buttonStyle, setButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [headerLayout, setHeaderLayout] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [headerButtonStyle, setHeaderButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(5);
-  const [timeRemainingStyle, setTimeRemainingStyle] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [priceLayoutStyle, setPriceLayoutStyle] = useState<1 | 2 | 3 | 4>(1);
+  const headerLayout = 5; // Locked to Option 5: Compact Grid - Gold Prominent
+  const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
+  const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
+  const timeRemainingStyle = 9; // Locked to Style 9: Condensed Label
+  const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15>(4); // Default to Option 4: Emphasized Price
+  const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
+  const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
+  const [buyOrderLayout, setBuyOrderLayout] = useState<1 | 2 | 3 | 4 | 5 | 6>(4);
+  const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
+  const buttonVariation = 3; // Locked to Style 3: Minimal Modern
+  const [debugListingCount, setDebugListingCount] = useState<number>(0);
+  const [showExpiredListings, setShowExpiredListings] = useState(false);
+
+  // Purchase modal state
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<any>(null);
+  const [purchaseAmount, setPurchaseAmount] = useState(0.1);
+
+  // Purchase history modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyListingId, setHistoryListingId] = useState<Id<"marketListings"> | null>(null);
+
+  // My Listings modal state
+  const [showMyListingsModal, setShowMyListingsModal] = useState(false);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -81,15 +106,18 @@ export default function EssenceMarketPage() {
       if (!target.closest('.sort-dropdown-container')) {
         setSortDropdownOpen(false);
       }
+      if (!target.closest('.category-dropdown-container')) {
+        setCategoryDropdownOpen(false);
+      }
     };
 
-    if (sortDropdownOpen) {
+    if (sortDropdownOpen || categoryDropdownOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [sortDropdownOpen]);
+  }, [sortDropdownOpen, categoryDropdownOpen]);
 
-  // Format countdown timer
+  // Format countdown timer - Only show detailed countdown when less than 1 day
   const formatCountdown = (expiresAt: number) => {
     const remaining = expiresAt - currentTime;
     if (remaining <= 0) return "EXPIRED";
@@ -99,10 +127,15 @@ export default function EssenceMarketPage() {
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
+    // If at least 1 day remaining, only show days
+    if (days >= 1) {
+      return `${days}d`;
+    }
+
+    // If less than 1 day, show hours, minutes, seconds
     const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0 || days > 0) parts.push(`${hours}h`);
-    if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
     parts.push(`${seconds}s`);
 
     return parts.join(" ");
@@ -112,7 +145,7 @@ export default function EssenceMarketPage() {
   const getCountdownStyles = (expiresAt: number) => {
     const remaining = expiresAt - currentTime;
 
-    // Expired - red and alarming
+    // Expired - red
     if (remaining <= 0) {
       return {
         containerClass: "bg-red-900/20 border border-red-500/30",
@@ -123,8 +156,17 @@ export default function EssenceMarketPage() {
 
     const totalHours = remaining / (1000 * 60 * 60);
 
-    // Below 1 hour - orange
+    // 0-1 hour - red
     if (totalHours < 1) {
+      return {
+        containerClass: "bg-red-900/20 border border-red-500/30",
+        labelClass: "text-red-400/60",
+        timeClass: "text-red-400"
+      };
+    }
+
+    // 1-5 hours - orange
+    if (totalHours < 5) {
       return {
         containerClass: "bg-orange-900/10 border border-orange-500/20",
         labelClass: "text-orange-400/70",
@@ -132,7 +174,7 @@ export default function EssenceMarketPage() {
       };
     }
 
-    // 1-12 hours - yellow
+    // 5-12 hours - yellow
     if (totalHours < 12) {
       return {
         containerClass: "bg-yellow-900/10 border border-yellow-500/20",
@@ -197,14 +239,27 @@ export default function EssenceMarketPage() {
   const createListing = useMutation(api.marketplace.createListing);
   const purchaseItem = useMutation(api.marketplace.purchaseItem);
   const cancelListing = useMutation(api.marketplace.cancelListing);
+  const clearMarketplace = useMutation(api.seedMarketplace.clearMarketplaceListings);
+  const seedMarketplace = useMutation(api.seedMarketplace.seedMarketplaceListings);
 
   // Filter to only owned essence variations with amounts
-  const ownedEssenceVariations = (essenceState?.balances || [])
+  const ownedEssenceVariationsReal = (essenceState?.balances || [])
     .filter(b => b.accumulatedAmount > 0)
     .map(b => ({
       name: b.variationName,
       amount: b.accumulatedAmount
     }));
+
+  // Add demo data for UI testing when no wallet connected or no essence owned
+  const ownedEssenceVariations = ownedEssenceVariationsReal.length > 0
+    ? ownedEssenceVariationsReal
+    : [
+        { name: "Bumblebee", amount: 5.0 },
+        { name: "Bowling", amount: 2.5 },
+        { name: "Blue Cheer", amount: 8.3 },
+        { name: "Crystal Ball", amount: 1.0 },
+        { name: "Disco Ball", amount: 15.7 },
+      ];
 
   // Filter to essence variations the user does NOT own (for requests)
   const unownedEssenceVariations = ALL_VARIATIONS_FLAT.filter(variation => {
@@ -230,6 +285,12 @@ export default function EssenceMarketPage() {
   // Filter and sort listings
   const filteredListings = listings.filter(listing => {
     if (showOnlyMyListings && listing.sellerId !== userId) return false;
+
+    // Filter out expired listings if not showing them
+    if (!showExpiredListings && listing.expiresAt) {
+      const isExpired = listing.expiresAt - currentTime <= 0;
+      if (isExpired) return false;
+    }
 
     // Filter by variation type (head/body/trait)
     if (selectedRarity !== "all" && listing.itemVariation) {
@@ -311,9 +372,23 @@ export default function EssenceMarketPage() {
         quantity,
       });
       alert("Purchase successful!");
+      setShowPurchaseModal(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     }
+  };
+
+  // Handle opening purchase modal
+  const handleOpenPurchaseModal = (listing: any) => {
+    setSelectedListing(listing);
+    setPurchaseAmount(0.1); // Set to minimum
+    setShowPurchaseModal(true);
+  };
+
+  // Handle purchase history modal
+  const handleOpenHistoryModal = (listingId: Id<"marketListings">) => {
+    setHistoryListingId(listingId);
+    setShowHistoryModal(true);
   };
 
   // Handle cancel listing
@@ -431,78 +506,614 @@ export default function EssenceMarketPage() {
     }
   };
 
-  // Price layout variations - horizontal layouts
-  const renderPriceDisplay = (pricePerUnit: number, quantity: number, styleNum: 1 | 2 | 3 | 4) => {
+  // Helper to sanitize variation name to match bottle filenames
+  const sanitizeVariationName = (name: string): string => {
+    return name
+      .replace(/'/g, '')
+      .replace(/\./g, '')
+      .replace(/&/g, 'and')
+      .replace(/\?/g, '')
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-')
+      .replace(/:/g, '')
+      .replace(/\*/g, '')
+      .replace(/"/g, '')
+      .replace(/</g, '')
+      .replace(/>/g, '')
+      .replace(/\|/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase();
+  };
+
+  // Price layout variations - Total-focused with glowing quantity boxes
+  const renderPriceDisplay = (pricePerUnit: number, quantity: number, styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
     const totalPrice = pricePerUnit * quantity;
+    const quantityFormatted = quantity.toFixed(1);
 
     switch(styleNum) {
-      case 1: // Split Columns - Two equal columns side by side
+      case 1: // Total Focused - Blue glowing quantity box
         return (
-          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg grid grid-cols-2 gap-3">
-            <div>
-              <div className="mek-label-uppercase text-yellow-400/60 text-[10px] mb-1">UNIT PRICE</div>
-              <div className="text-lg font-bold text-yellow-400">{pricePerUnit.toLocaleString()}g</div>
-              <div className="text-[10px] text-gray-400">per essence</div>
-            </div>
-            <div className="border-l border-yellow-500/20 pl-3">
-              <div className="mek-label-uppercase text-yellow-400/60 text-[10px] mb-1">TOTAL</div>
-              <div className="text-lg font-bold text-yellow-400">{totalPrice.toLocaleString()}g</div>
-              <div className="text-[10px] text-gray-400">for {quantity} essence</div>
-            </div>
-          </div>
-        );
-
-      case 2: // Unified Bar - Single row with separator
-        return (
-          <div className="mb-3 p-2.5 bg-black/80 border border-yellow-500/20 rounded-lg">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="mek-label-uppercase text-yellow-400/60 text-[9px]">UNIT:</span>
-                  <span className="text-base font-bold text-yellow-400">{pricePerUnit.toLocaleString()}g</span>
+          <div className="mb-3 p-3 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="mek-label-uppercase text-yellow-400/60 text-[9px]">Total</span>
+                  <div className="relative px-2 py-1 bg-blue-500/20 border border-blue-400/50 rounded shadow-[0_0_8px_rgba(59,130,246,0.4)]">
+                    <span className="text-sm font-bold text-blue-300">{quantityFormatted}×</span>
+                  </div>
                 </div>
+                <span className="text-2xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
               </div>
-              <div className="w-px h-8 bg-yellow-500/30" />
-              <div className="flex-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="mek-label-uppercase text-yellow-400/60 text-[9px]">TOTAL:</span>
-                  <span className="text-base font-bold text-yellow-400">{totalPrice.toLocaleString()}g</span>
-                </div>
+              <div className="h-px bg-yellow-500/15" />
+              <div className="flex items-baseline justify-between">
+                <span className="text-[8px] text-gray-500 uppercase">Unit</span>
+                <span className="text-sm text-gray-400">{pricePerUnit.toLocaleString()}<span className="text-xs">g</span></span>
               </div>
             </div>
           </div>
         );
 
-      case 3: // Divided Panels - Two distinct boxes
+      case 2: // Compact Total - Small glowing badge
+        return (
+          <div className="mb-3 p-2.5 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="mek-label-uppercase text-yellow-400/60 text-[8px]">Total</span>
+                  <div className="px-1.5 py-0.5 bg-blue-500/25 border border-blue-400/40 rounded-sm shadow-[0_0_6px_rgba(59,130,246,0.3)]">
+                    <span className="text-xs font-bold text-blue-200">{quantityFormatted}×</span>
+                  </div>
+                </div>
+                <span className="text-xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-sm">g</span></span>
+              </div>
+              <div className="flex items-baseline justify-end">
+                <span className="text-xs text-gray-500">{pricePerUnit.toLocaleString()}g ea</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3: // Large Total - Prominent quantity with pulse
+        return (
+          <div className="mb-3 p-3.5 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="mek-label-uppercase text-yellow-400/60 text-[9px]">Total Cost</span>
+                  <div className="relative px-2.5 py-1 bg-blue-500/20 border-2 border-blue-400/60 rounded shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                    <div className="absolute inset-0 bg-blue-400/10 rounded animate-pulse" />
+                    <span className="relative text-base font-bold text-blue-200">{quantityFormatted}×</span>
+                  </div>
+                </div>
+                <span className="text-3xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-lg">g</span></span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-gray-500 uppercase">{pricePerUnit.toLocaleString()}g per unit</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4: // Minimal Total - Clean blue box
+        return (
+          <div className="mb-3 p-3 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="px-2 py-1 bg-blue-900/40 border border-blue-400/40 rounded shadow-[0_0_6px_rgba(59,130,246,0.35)]">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[8px] text-blue-300/70 uppercase">Qty</span>
+                    <span className="text-sm font-bold text-blue-200">{quantityFormatted}</span>
+                  </div>
+                </div>
+                <span className="text-2xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+              </div>
+              <div className="text-right text-xs text-gray-500">
+                @{pricePerUnit.toLocaleString()}g
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5: // Angled Quantity - HUD style
+        return (
+          <div className="mb-3 p-3 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div
+                  className="relative px-3 py-1.5 bg-blue-500/20 border-l-2 border-blue-400/60 shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)' }}
+                >
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[7px] text-blue-300/60 uppercase tracking-wider">QTY</span>
+                    <span className="text-base font-mono font-bold text-blue-200">{quantityFormatted}</span>
+                  </div>
+                </div>
+                <span className="text-2xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+              </div>
+              <div className="text-right text-[10px] text-gray-500">
+                Unit: {pricePerUnit.toLocaleString()}g
+              </div>
+            </div>
+          </div>
+        );
+
+      case 6: // Three-Row Clean - Simple dividers
+        return (
+          <div className="mb-3 p-3 bg-black/60 border border-yellow-500/20 rounded-md">
+            <div className="space-y-2">
+              {/* Row 1: Quantity */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">Quantity</span>
+                <span className="text-lg font-bold text-yellow-400">{quantityFormatted}</span>
+              </div>
+              <div className="h-px bg-yellow-500/20" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">Unit Price</span>
+                <span className="text-lg font-bold text-yellow-400">{pricePerUnit.toLocaleString()}<span className="text-sm">g</span></span>
+              </div>
+              <div className="h-px bg-yellow-500/20" />
+
+              {/* Row 3: Total */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">Total</span>
+                <span className="text-2xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 7: // Three-Row Industrial - Hazard stripes and metal textures
+        return (
+          <div className="mb-3 p-3 bg-black/80 border-2 border-yellow-500/40 rounded-md relative overflow-hidden">
+            <div className="absolute inset-0 mek-overlay-scratches opacity-20" />
+            <div className="absolute top-0 left-0 right-0 h-1 mek-overlay-hazard-stripes opacity-40" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 mek-overlay-hazard-stripes opacity-40" />
+            <div className="relative z-10 space-y-2.5">
+              {/* Row 1: Quantity */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold">QTY</span>
+                <span className="text-xl font-bold text-yellow-400 font-mono">{quantityFormatted}</span>
+              </div>
+              <div className="h-px bg-gradient-to-r from-yellow-500/0 via-yellow-500/40 to-yellow-500/0" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold">Unit</span>
+                <span className="text-xl font-bold text-yellow-400 font-mono">{pricePerUnit.toLocaleString()}<span className="text-sm">g</span></span>
+              </div>
+              <div className="h-px bg-gradient-to-r from-yellow-500/0 via-yellow-500/40 to-yellow-500/0" />
+
+              {/* Row 3: Total */}
+              <div className="flex items-center justify-between bg-yellow-500/5 -mx-3 px-3 py-2 -mb-3">
+                <span className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold">Total</span>
+                <span className="text-2xl font-bold text-yellow-400 font-mono">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 8: // Tapping Mode - Remaining and Price Per Essence
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Remaining Amount */}
+              <div className="flex items-center justify-between">
+                <span className="mek-label-uppercase text-gray-500 text-xs">REMAINING:</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted}</span>
+              </div>
+              <div className="h-px bg-yellow-500/20" />
+
+              {/* Price Per Essence */}
+              <div className="p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+                <div className="mek-label-uppercase text-yellow-400/60 text-[10px] text-center mb-1">PRICE</div>
+                <div className="text-2xl font-bold text-yellow-400 text-center">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[10px] text-gray-400 text-center">per essence</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 9: // Three-Row Glowing - Yellow glow effects
+        return (
+          <div className="mb-3 p-3 bg-black/70 border-2 border-yellow-500/30 rounded-lg shadow-[0_0_15px_rgba(250,182,23,0.2)]">
+            <div className="space-y-3">
+              {/* Row 1: Quantity */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-yellow-400/60 uppercase tracking-wider">Quantity</span>
+                <div className="px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.3)]">
+                  <span className="text-lg font-bold text-yellow-400">{quantityFormatted}</span>
+                </div>
+              </div>
+              <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-yellow-400/60 uppercase tracking-wider">Unit Price</span>
+                <div className="px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.3)]">
+                  <span className="text-lg font-bold text-yellow-400">{pricePerUnit.toLocaleString()}<span className="text-sm">g</span></span>
+                </div>
+              </div>
+              <div className="h-px bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent" />
+
+              {/* Row 3: Total */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-yellow-400/60 uppercase tracking-wider">Total</span>
+                <div className="px-3 py-1.5 bg-yellow-500/15 border-2 border-yellow-500/40 rounded-lg shadow-[0_0_12px_rgba(250,182,23,0.4)]">
+                  <span className="text-2xl font-bold text-yellow-400">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 10: // Three-Row Tactical - Angled HUD elements
+        return (
+          <div className="mb-3 p-3 bg-black/70 border-2 border-yellow-500/30 rounded-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-yellow-500/20" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-yellow-500/20" />
+            <div className="relative z-10 space-y-2.5">
+              {/* Row 1: Quantity */}
+              <div className="flex items-center justify-between">
+                <div
+                  className="px-2.5 py-1 bg-yellow-500/10 border-l-2 border-yellow-500/40"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%)' }}
+                >
+                  <span className="text-[9px] text-yellow-400/70 uppercase tracking-wider font-bold">QTY</span>
+                </div>
+                <span className="text-xl font-bold text-yellow-400 font-mono">{quantityFormatted}</span>
+              </div>
+              <div className="h-px bg-gradient-to-r from-yellow-500/40 to-yellow-500/0" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between">
+                <div
+                  className="px-2.5 py-1 bg-yellow-500/10 border-l-2 border-yellow-500/40"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%)' }}
+                >
+                  <span className="text-[9px] text-yellow-400/70 uppercase tracking-wider font-bold">Unit</span>
+                </div>
+                <span className="text-xl font-bold text-yellow-400 font-mono">{pricePerUnit.toLocaleString()}<span className="text-sm">g</span></span>
+              </div>
+              <div className="h-px bg-gradient-to-r from-yellow-500/40 to-yellow-500/0" />
+
+              {/* Row 3: Total */}
+              <div className="flex items-center justify-between">
+                <div
+                  className="px-2.5 py-1 bg-yellow-500/10 border-l-2 border-yellow-500/40"
+                  style={{ clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%)' }}
+                >
+                  <span className="text-[9px] text-yellow-400/70 uppercase tracking-wider font-bold">Total</span>
+                </div>
+                <span className="text-2xl font-bold text-yellow-400 font-mono">{totalPrice.toLocaleString()}<span className="text-base">g</span></span>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Pricing Info Layout - Remaining and Price Per Essence
+  const renderPricingInfo = (pricePerUnit: number, quantity: number, layoutNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15) => {
+    const quantityFormatted = quantity.toFixed(1);
+
+    switch(layoutNum) {
+      case 1: // Horizontal Split Panel - Side by side
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Left: Remaining */}
+              <div className="border-r border-yellow-500/20 pr-3">
+                <div className="mek-label-uppercase text-gray-500 text-[9px] mb-1">REMAINING</div>
+                <div className="text-xl font-bold text-yellow-400">{quantityFormatted}</div>
+              </div>
+              {/* Right: Price */}
+              <div className="pl-3">
+                <div className="mek-label-uppercase text-gray-500 text-[9px] mb-1">PRICE</div>
+                <div className="text-xl font-bold text-yellow-400">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[9px] text-gray-400">per essence</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2: // Stat Cards (Gaming Style) - Two cards side by side
         return (
           <div className="mb-3 flex gap-2">
-            <div className="flex-1 p-2 bg-black/80 border border-yellow-500/20 rounded-md">
-              <div className="mek-label-uppercase text-yellow-400/60 text-[9px] text-center mb-0.5">UNIT</div>
-              <div className="text-base font-bold text-yellow-400 text-center">{pricePerUnit.toLocaleString()}g</div>
+            {/* Remaining Card */}
+            <div className="flex-1 p-2.5 bg-black/70 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.2)]">
+              <div className="text-2xl font-bold text-yellow-400 text-center mb-1">{quantityFormatted}</div>
+              <div className="mek-label-uppercase text-yellow-400/60 text-[8px] text-center">IN STOCK</div>
             </div>
-            <div className="flex items-center">
-              <div className="text-yellow-500/50 text-xl">×</div>
-            </div>
-            <div className="flex-1 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
-              <div className="mek-label-uppercase text-yellow-400/70 text-[9px] text-center mb-0.5">TOTAL</div>
-              <div className="text-base font-bold text-yellow-400 text-center">{totalPrice.toLocaleString()}g</div>
+            {/* Price Card */}
+            <div className="flex-1 p-2.5 bg-black/70 border border-yellow-500/30 rounded shadow-[0_0_8px_rgba(250,182,23,0.2)]">
+              <div className="text-2xl font-bold text-yellow-400 text-center mb-1">{pricePerUnit.toLocaleString()}g</div>
+              <div className="mek-label-uppercase text-yellow-400/60 text-[8px] text-center">PER UNIT</div>
             </div>
           </div>
         );
 
-      case 4: // Compact Inline - Minimal single line
+      case 3: // Compact Single Row - All in one line
         return (
-          <div className="mb-3 p-2 bg-black/80 border border-yellow-500/20 rounded-lg">
+          <div className="mb-3 px-3 py-2 bg-black/70 border border-yellow-500/20 rounded">
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-yellow-400 font-bold text-base">{pricePerUnit.toLocaleString()}g</span>
-                <span className="text-gray-500 text-xs">ea</span>
+              <span className="text-yellow-400 font-bold">{quantityFormatted} REMAINING</span>
+              <span className="text-gray-400 mx-2">•</span>
+              <span className="text-yellow-400 font-bold">{pricePerUnit.toLocaleString()}g per essence</span>
+            </div>
+          </div>
+        );
+
+      case 4: // Emphasized Price (Current Style Enhanced) - Price gets focus
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Remaining Amount - Small at top */}
+              <div className="flex items-center justify-between">
+                <span className="mek-label-uppercase text-gray-500 text-xs">REMAINING:</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted}</span>
               </div>
-              <div className="h-4 w-px bg-yellow-500/20" />
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-gray-500 text-xs">×{quantity}</span>
-                <span className="text-yellow-400/50">=</span>
-                <span className="text-yellow-400 font-bold text-base">{totalPrice.toLocaleString()}g</span>
+              <div className="h-px bg-yellow-500/20" />
+
+              {/* Price Per Essence - Large emphasized box */}
+              <div className="p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+                <div className="mek-label-uppercase text-yellow-400/60 text-[10px] text-center mb-1">PRICE</div>
+                <div className="text-2xl font-bold text-yellow-400 text-center">{pricePerUnit.toLocaleString()}g</div>
+                <div className="text-[10px] text-gray-400 text-center">per essence</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5: // Data Table Style - Structured rows
+        return (
+          <div className="mb-3 p-3 bg-black/80 border border-yellow-500/20 rounded-lg">
+            <div className="space-y-2">
+              {/* Row 1: Remaining */}
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wider">Remaining</span>
+                <span className="text-yellow-400 font-bold">{quantityFormatted} essence</span>
+              </div>
+              <div className="h-px bg-yellow-500/10" />
+
+              {/* Row 2: Unit Price */}
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wider">Unit Price</span>
+                <span className="text-yellow-400 font-bold">{pricePerUnit.toLocaleString()}g</span>
+              </div>
+              <div className="h-px bg-yellow-500/10" />
+
+              {/* Row 3: Total Value */}
+              <div className="flex items-center justify-between py-1 bg-yellow-500/5 -mx-3 px-3">
+                <span className="text-yellow-400/70 text-xs uppercase tracking-wider font-bold">Total Value</span>
+                <span className="text-yellow-400 font-bold text-lg">{(pricePerUnit * quantity).toLocaleString()}g</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 6: // HUD Tactical Display - Military interface with scan lines
+        return (
+          <div className="mb-3 relative p-4 bg-black/90 border-2 border-cyan-400/30 rounded overflow-hidden">
+            {/* Scan line overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: 'repeating-linear-gradient(0deg, rgba(0,255,255,0.03) 0px, rgba(0,255,255,0.03) 1px, transparent 1px, transparent 2px)',
+            }} />
+
+            {/* Corner brackets */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-400" />
+            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-400" />
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-400" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-400" />
+
+            <div className="relative space-y-3">
+              {/* Quantity - Cyan themed */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] text-cyan-400/70 uppercase tracking-widest font-mono">QTY.AVAIL</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-cyan-400 font-mono">{quantityFormatted}</span>
+                  <span className="text-xs text-cyan-400/50">UNITS</span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-cyan-400/20 via-yellow-400/40 to-cyan-400/20" />
+
+              {/* Price - Yellow themed */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-mono">COST/UNIT</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-yellow-400 font-mono">{pricePerUnit.toLocaleString()}</span>
+                  <span className="text-xs text-yellow-400/50">GOLD</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 7: // Holographic Data Panel - Futuristic with glow effects
+        return (
+          <div className="mb-3 relative">
+            {/* Outer glow container */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-75" />
+
+            <div className="relative bg-black/95 border border-cyan-400/40 rounded-lg p-3 overflow-hidden">
+              {/* Animated background shimmer */}
+              <div className="absolute inset-0 opacity-10" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.3) 50%, transparent 70%)',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+
+              <div className="relative grid grid-cols-2 gap-4">
+                {/* Stock Count */}
+                <div className="text-center p-2">
+                  <div className="text-[8px] text-cyan-300/60 uppercase tracking-widest mb-1 font-mono">
+                    STOCK LEVEL
+                  </div>
+                  <div className="text-2xl font-bold text-cyan-300 mb-0.5 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
+                    {quantityFormatted}
+                  </div>
+                  <div className="text-[9px] text-cyan-400/40 uppercase">essence</div>
+                </div>
+
+                {/* Vertical divider with glow */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent" />
+
+                {/* Unit Price */}
+                <div className="text-center p-2">
+                  <div className="text-[8px] text-yellow-300/60 uppercase tracking-widest mb-1 font-mono">
+                    UNIT COST
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-300 mb-0.5 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
+                    {pricePerUnit.toLocaleString()}
+                  </div>
+                  <div className="text-[9px] text-yellow-400/40 uppercase">gold/essence</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 8: // Industrial Warning Panel - Hazard stripes and grunge
+        return (
+          <div className="mb-3 relative">
+            {/* Hazard stripe background */}
+            <div className="absolute inset-0 opacity-10" style={{
+              background: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #facc15 10px, #facc15 20px)',
+            }} />
+
+            <div className="relative border-2 border-yellow-500/40 bg-black/85 p-3 clip-path-[polygon(0_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%)]">
+              {/* Metal scratch overlay */}
+              <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cline x1=\'0\' y1=\'10\' x2=\'100\' y2=\'15\' stroke=\'white\' stroke-width=\'0.5\'/%3E%3Cline x1=\'0\' y1=\'40\' x2=\'100\' y2=\'38\' stroke=\'white\' stroke-width=\'0.3\'/%3E%3Cline x1=\'0\' y1=\'70\' x2=\'100\' y2=\'75\' stroke=\'white\' stroke-width=\'0.4\'/%3E%3C/svg%3E")',
+              }} />
+
+              <div className="relative space-y-2">
+                {/* Stock warning block */}
+                <div className="bg-black/60 border-l-4 border-cyan-400 p-2.5 pl-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-cyan-400/60 uppercase tracking-wider font-bold mb-0.5">
+                        INVENTORY
+                      </div>
+                      <div className="text-2xl font-bold text-cyan-300 leading-none">
+                        {quantityFormatted}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-cyan-400/40 uppercase -rotate-90 origin-center">
+                      UNITS
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price info block */}
+                <div className="bg-black/60 border-l-4 border-yellow-500 p-2.5 pl-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-yellow-400/60 uppercase tracking-wider font-bold mb-0.5">
+                        COST PER ESSENCE
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-400 leading-none">
+                        {pricePerUnit.toLocaleString()}g
+                      </div>
+                    </div>
+                    <div className="text-xs text-yellow-400/30 uppercase font-bold">
+                      /EA
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 9: // Sleek Hexagonal Tech - Angular modern design
+        return (
+          <div className="mb-3 flex gap-2">
+            {/* Quantity Hex */}
+            <div className="flex-1 relative group">
+              {/* Hexagonal border effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-cyan-700/20" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+              <div className="absolute inset-[2px] bg-black/90" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+
+              <div className="relative px-4 py-3 text-center">
+                <div className="text-[8px] text-cyan-400/50 uppercase tracking-widest mb-1">
+                  AVAILABLE
+                </div>
+                <div className="text-3xl font-bold text-cyan-400 mb-0.5 drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]">
+                  {quantityFormatted}
+                </div>
+                <div className="text-[8px] text-cyan-400/40 uppercase tracking-wide">
+                  essence
+                </div>
+              </div>
+            </div>
+
+            {/* Price Hex */}
+            <div className="flex-1 relative group">
+              {/* Hexagonal border effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-yellow-700/20" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+              <div className="absolute inset-[2px] bg-black/90" style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              }} />
+
+              <div className="relative px-4 py-3 text-center">
+                <div className="text-[8px] text-yellow-400/50 uppercase tracking-widest mb-1">
+                  PRICE/UNIT
+                </div>
+                <div className="text-3xl font-bold text-yellow-400 mb-0.5 drop-shadow-[0_0_6px_rgba(250,182,23,0.5)]">
+                  {pricePerUnit.toLocaleString()}
+                </div>
+                <div className="text-[8px] text-yellow-400/40 uppercase tracking-wide">
+                  gold
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 10: // Compact Terminal Readout - Minimal monospace style
+        return (
+          <div className="mb-3 relative bg-black/95 border border-green-500/30 rounded font-mono text-xs overflow-hidden">
+            {/* CRT scanline effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+              background: 'repeating-linear-gradient(0deg, rgba(0,255,0,0.1) 0px, rgba(0,255,0,0.1) 1px, transparent 1px, transparent 3px)',
+            }} />
+
+            <div className="relative p-3 space-y-1.5">
+              {/* Terminal prompt style */}
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="text-cyan-400/70 uppercase">stock_query</span>
+                <span className="text-cyan-400/40">=</span>
+                <span className="text-cyan-300 font-bold">{quantityFormatted}</span>
+                <span className="text-cyan-400/50">essence</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="text-yellow-400/70 uppercase">price_query</span>
+                <span className="text-yellow-400/40">=</span>
+                <span className="text-yellow-300 font-bold">{pricePerUnit.toLocaleString()}</span>
+                <span className="text-yellow-400/50">gold</span>
+                <span className="text-yellow-400/40">/</span>
+                <span className="text-yellow-400/50">unit</span>
+              </div>
+
+              {/* Blinking cursor */}
+              <div className="flex items-center gap-2">
+                <span className="text-green-400/60">{'>'}</span>
+                <span className="inline-block w-2 h-3 bg-green-400/60 animate-pulse" />
               </div>
             </div>
           </div>
@@ -514,110 +1125,20 @@ export default function EssenceMarketPage() {
   };
 
   // Time remaining display variations
-  const renderTimeRemaining = (expiresAt: number, styleNum: 1 | 2 | 3 | 4 | 5) => {
+  const renderTimeRemaining = (expiresAt: number) => {
     const styles = getCountdownStyles(expiresAt);
     const timeText = formatCountdown(expiresAt);
 
-    switch(styleNum) {
-      case 1: // Hexagonal Badge - Angular with monospace
-        return (
-          <div className="mb-3 relative">
-            <div
-              className={`p-3 ${styles.containerClass}`}
-              style={{
-                clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)',
-              }}
-            >
-              <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10" />
-              <div className={`${styles.labelClass} text-[9px] text-center mb-1 font-mono tracking-widest`}>
-                ⏱ TIME REMAINING
-              </div>
-              <div className={`${styles.timeClass} text-base font-black text-center font-mono tracking-wider`}>
-                {timeText}
-              </div>
-            </div>
+    // Style 9: Condensed Label - Small Text Block (Locked)
+    return (
+      <div className="mb-2">
+        <div className={`px-2 py-1 ${styles.containerClass} rounded`}>
+          <div className={`${styles.timeClass} text-[11px] font-bold text-center`}>
+            {timeText}
           </div>
-        );
-
-      case 2: // Circular Arc - Round badge with system font
-        return (
-          <div className="mb-3 flex justify-center">
-            <div className={`relative w-28 h-28 rounded-full ${styles.containerClass} p-1`}>
-              <div className="absolute inset-0 rounded-full" style={{
-                background: `conic-gradient(${styles.timeClass.includes('red') ? '#ef4444' : styles.timeClass.includes('orange') ? '#f97316' : styles.timeClass.includes('yellow') ? '#facc15' : '#ffffff'} ${Math.random() * 360}deg, transparent 0deg)`
-              }} />
-              <div className="absolute inset-2 rounded-full bg-black/90 flex flex-col items-center justify-center">
-                <div className={`${styles.labelClass} text-[8px] uppercase tracking-wide mb-1`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'}}>
-                  Time Left
-                </div>
-                <div className={`${styles.timeClass} text-sm font-semibold text-center leading-tight`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'}}>
-                  {timeText}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3: // Diagonal Banner - Slanted with condensed font
-        return (
-          <div className="mb-3 relative">
-            <div
-              className={`p-2 ${styles.containerClass} transform -skew-x-6`}
-            >
-              <div className="absolute inset-0 mek-overlay-hazard-stripes opacity-20" />
-              <div className="transform skew-x-6">
-                <div className={`${styles.labelClass} text-[8px] text-center uppercase tracking-[0.2em] font-bold mb-0.5`}>
-                  ⟨ COUNTDOWN ⟩
-                </div>
-                <div className={`${styles.timeClass} text-lg font-black text-center`} style={{fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '-0.05em'}}>
-                  {timeText}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4: // Bracket Frame - Military with stencil font
-        return (
-          <div className="mb-3 relative">
-            <div className={`p-3 ${styles.containerClass} relative`}>
-              <div className="absolute inset-0 mek-overlay-metal-texture opacity-10" />
-              {/* Corner brackets */}
-              <div className="absolute top-0 left-0 w-3 h-3 border-l-2 border-t-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute top-0 right-0 w-3 h-3 border-r-2 border-t-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute bottom-0 left-0 w-3 h-3 border-l-2 border-b-2" style={{borderColor: 'currentColor'}} />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-r-2 border-b-2" style={{borderColor: 'currentColor'}} />
-
-              <div className={`${styles.labelClass} text-[10px] text-center font-bold tracking-[0.3em] uppercase mb-1`}>
-                ◢ MISSION TIMER ◣
-              </div>
-              <div className={`${styles.timeClass} text-base font-black text-center tracking-widest uppercase`} style={{fontFamily: '"Courier New", monospace'}}>
-                {timeText}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5: // Minimalist Pill - Simple rounded with light sans-serif
-        return (
-          <div className="mb-3">
-            <div className={`px-4 py-2 ${styles.containerClass} rounded-full`}>
-              <div className="flex items-center justify-center gap-2">
-                <div className={`${styles.labelClass} text-[9px] uppercase tracking-wide font-light`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
-                  Expires in
-                </div>
-                <div className="w-px h-3 bg-current opacity-30" />
-                <div className={`${styles.timeClass} text-sm font-medium`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'}}>
-                  {timeText}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
+        </div>
+      </div>
+    );
   };
 
   // Header button styling variations
@@ -665,7 +1186,7 @@ export default function EssenceMarketPage() {
           : 'bg-gray-900/40 border-2 border-gray-700/60 hover:bg-gray-800/40 hover:border-gray-600/60 text-gray-400'
         } text-sm font-bold tracking-[0.2em] uppercase`;
       case 5: // Brushed Metal
-        return `${baseClasses} px-4 py-2 ${isActive
+        return `${baseClasses} px-4 py-1.5 ${isActive
           ? 'bg-gradient-to-b from-yellow-400 to-yellow-500 text-black border border-yellow-300 shadow-lg shadow-yellow-500/25'
           : 'bg-gradient-to-b from-gray-700/25 to-gray-800/20 border border-gray-600/50 hover:from-gray-700/30 hover:to-gray-800/25 text-gray-400'
         } rounded text-xs font-semibold tracking-wider uppercase shadow-inner`;
@@ -674,94 +1195,316 @@ export default function EssenceMarketPage() {
     }
   };
 
+  // Dropdown menu styling variations
+  const getDropdownMenuClasses = (styleNum: 1 | 2 | 3 | 4 | 5) => {
+    const containerBase = "absolute mt-1 z-50 min-w-[160px] overflow-hidden rounded shadow-lg";
+    const itemBase = "w-full px-4 py-2 text-left text-xs font-semibold tracking-wider uppercase transition-all";
+
+    switch(styleNum) {
+      case 1: // Brushed Metal (current - too yellow)
+        return {
+          container: `${containerBase} left-0 bg-gradient-to-b from-black via-gray-900 to-black border border-yellow-500/40 shadow-inner`,
+          item: (isActive: boolean) => `${itemBase} shadow-inner ${
+            isActive
+              ? 'bg-gradient-to-b from-yellow-400 to-yellow-500 text-black border-y border-yellow-300/50'
+              : 'bg-gradient-to-b from-yellow-500/15 to-yellow-600/10 text-yellow-400 hover:from-yellow-500/20 hover:to-yellow-600/15 border-y border-transparent hover:border-yellow-500/20'
+          }`
+        };
+      case 2: // Dark Minimal
+        return {
+          container: `${containerBase} left-0 bg-black/95 border border-gray-700/50`,
+          item: (isActive: boolean) => `${itemBase} ${
+            isActive
+              ? 'bg-gray-800/80 text-yellow-400 border-l-2 border-yellow-500'
+              : 'bg-transparent text-gray-400 hover:bg-gray-800/40 hover:text-yellow-400 border-l-2 border-transparent hover:border-gray-600'
+          }`
+        };
+      case 3: // Black Gloss
+        return {
+          container: `${containerBase} left-0 bg-gradient-to-b from-gray-900 to-black border border-gray-600/30`,
+          item: (isActive: boolean) => `${itemBase} ${
+            isActive
+              ? 'bg-gradient-to-r from-gray-700 to-gray-800 text-white border-y border-gray-500/50'
+              : 'bg-black/50 text-gray-300 hover:bg-gradient-to-r hover:from-gray-800/50 hover:to-gray-900/50 hover:text-white border-y border-transparent'
+          }`
+        };
+      case 4: // Industrial Gray
+        return {
+          container: `${containerBase} left-0 bg-gradient-to-b from-gray-800 via-gray-900 to-black border border-gray-600/60`,
+          item: (isActive: boolean) => `${itemBase} ${
+            isActive
+              ? 'bg-gray-700/60 text-yellow-400 border-y border-yellow-500/30'
+              : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/50 hover:text-yellow-400 border-y border-transparent hover:border-gray-600/40'
+          }`
+        };
+      case 5: // Matte Dark
+        return {
+          container: `${containerBase} left-0 bg-gray-950 border border-gray-700/40`,
+          item: (isActive: boolean) => `${itemBase} ${
+            isActive
+              ? 'bg-gray-800 text-yellow-400 border-l-4 border-yellow-500'
+              : 'bg-transparent text-gray-400 hover:bg-gray-900 hover:text-gray-200 border-l-4 border-transparent hover:border-gray-700'
+          }`
+        };
+      default:
+        return {
+          container: containerBase,
+          item: (isActive: boolean) => itemBase
+        };
+    }
+  };
+
+  // Listing card styling variations
+  const getListingCardStyles = (styleNum: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
+    switch (styleNum) {
+      case 1: // Ultra Bright Glass
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
+          style: {
+            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
+            backdropFilter: 'blur(4px) brightness(1.25)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+          }
+        };
+      case 2: // Prominent Yellow Border
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/60 transition-all duration-500",
+          style: {
+            background: `linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.05) 100%)`,
+            backdropFilter: 'blur(3px) brightness(1.1)',
+            border: '2px solid rgba(250, 182, 23, 0.3)',
+            boxShadow: '0 0 10px rgba(250, 182, 23, 0.15)',
+          }
+        };
+      case 3: // Prominent White Border
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-white/30 transition-all duration-500",
+          style: {
+            background: `linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)`,
+            backdropFilter: 'blur(4px) brightness(1.12)',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          }
+        };
+      case 4: // Prominent Gray Border - Bright Glass
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-gray-400 transition-all duration-500",
+          style: {
+            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.05) 100%)`,
+            backdropFilter: 'blur(5px) brightness(1.18)',
+            border: '2px solid rgba(150, 150, 150, 0.4)',
+          }
+        };
+      case 5: // Double Border - Yellow & White
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/50 transition-all duration-500",
+          style: {
+            background: `linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
+            backdropFilter: 'blur(4px) brightness(1.15)',
+            border: '2px solid rgba(250, 182, 23, 0.25)',
+            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 12px rgba(250, 182, 23, 0.12)',
+          }
+        };
+      case 6: // Neon Holographic
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-cyan-400/40 transition-all duration-500",
+          style: {
+            background: `linear-gradient(135deg, rgba(0, 255, 255, 0.03) 0%, rgba(255, 0, 255, 0.03) 50%, rgba(0, 255, 255, 0.03) 100%)`,
+            backdropFilter: 'blur(6px) brightness(1.2) saturate(1.3)',
+            border: '2px solid rgba(100, 255, 255, 0.25)',
+            boxShadow: '0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
+          }
+        };
+      case 7: // Carbon Fiber
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-gray-500 transition-all duration-500",
+          style: {
+            background: `linear-gradient(125deg, rgba(30, 30, 30, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%)`,
+            backdropFilter: 'blur(2px) brightness(0.9)',
+            border: '2px solid rgba(60, 60, 60, 0.6)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 2px 8px rgba(0, 0, 0, 0.5)',
+          }
+        };
+      case 8: // Deep Frosted
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-blue-300/20 transition-all duration-500",
+          style: {
+            background: `linear-gradient(150deg, rgba(200, 220, 255, 0.08) 0%, rgba(150, 180, 255, 0.12) 100%)`,
+            backdropFilter: 'blur(12px) brightness(1.3) saturate(0.8)',
+            border: '1px solid rgba(200, 220, 255, 0.25)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+          }
+        };
+      case 9: // Rainbow Gradient Border
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-transparent transition-all duration-500",
+          style: {
+            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.06) 100%)`,
+            backdropFilter: 'blur(4px) brightness(1.12)',
+            border: '3px solid transparent',
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                              linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #8a2be2, #ff0080)`,
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'padding-box, border-box',
+          }
+        };
+      case 10: // Military Stencil
+        return {
+          className: "relative p-4 overflow-hidden group hover:border-yellow-500/40 transition-all duration-500",
+          style: {
+            background: `linear-gradient(180deg, rgba(40, 40, 20, 0.7) 0%, rgba(20, 20, 10, 0.85) 100%)`,
+            backdropFilter: 'blur(3px) brightness(1.05)',
+            border: '3px solid rgba(250, 182, 23, 0.4)',
+            borderRadius: '2px',
+            boxShadow: 'inset 2px 2px 0 rgba(0, 0, 0, 0.3), inset -2px -2px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5)',
+            clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+          }
+        };
+      default:
+        return {
+          className: "relative p-4 rounded-lg overflow-hidden group hover:border-yellow-400/20 transition-all duration-500",
+          style: {
+            background: `linear-gradient(105deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.06) 100%)`,
+            backdropFilter: 'blur(4px) brightness(1.25)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+          }
+        };
+    }
+  };
+
   return (
     <div className="min-h-screen text-white overflow-hidden relative">
-      {/* Debug Dropdowns */}
-      <div className="fixed right-4 top-20 z-50 bg-black/90 border border-yellow-500/50 p-3 rounded-lg backdrop-blur-sm space-y-4">
-        {/* Header Layout Selector */}
+      {/* Debug Panel - Collapsible */}
+      <div className="fixed right-4 top-20 z-50">
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setDebugPanelCollapsed(!debugPanelCollapsed)}
+          className="absolute -left-8 top-0 w-8 h-8 bg-black/90 border border-yellow-500/50 rounded-l-lg flex items-center justify-center hover:bg-yellow-500/10 transition-colors"
+        >
+          <svg
+            className={`w-4 h-4 text-yellow-400 transition-transform ${debugPanelCollapsed ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {!debugPanelCollapsed && (
+          <div className="bg-black/90 border border-yellow-500/50 p-3 rounded-lg backdrop-blur-sm space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto">
+            <div className="text-yellow-400 text-xs uppercase tracking-wider font-bold mb-2 pb-2 border-b border-yellow-500/30">Debug Controls</div>
+
+            {/* Listing Count Toggle */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Test Listing Count</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDebugListingCount(0)}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    debugListingCount === 0
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  0 Listings
+                </button>
+                <button
+                  onClick={() => setDebugListingCount(8)}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    debugListingCount === 8
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  8 Listings
+                </button>
+              </div>
+            </div>
+
+            {/* Bounty Layout Selector */}
         <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Header Layout</label>
+          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Bounty Layout</label>
           <select
-            value={headerLayout}
-            onChange={(e) => setHeaderLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+            value={buyOrderLayout}
+            onChange={(e) => setBuyOrderLayout(Number(e.target.value) as 1 | 2 | 3)}
             className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
           >
-            <option value="1">Layout 1: Centered Buttons</option>
-            <option value="2">Layout 2: Stacked Left</option>
-            <option value="3">Layout 3: Inline Right</option>
-            <option value="4">Layout 4: Bar with Dividers</option>
-            <option value="5">Layout 5: Split Sides</option>
+            <option value="1">Layout 1: Table + Cards</option>
+            <option value="2">Layout 2: All Cards</option>
+            <option value="3">Layout 3: Side-by-Side</option>
           </select>
         </div>
 
-        {/* Header Button Style Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Header Button Style</label>
-          <select
-            value={headerButtonStyle}
-            onChange={(e) => setHeaderButtonStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Style 1: Sleek Minimal</option>
-            <option value="2">Style 2: Heavy Industrial</option>
-            <option value="3">Style 3: Holographic Glow</option>
-            <option value="4">Style 4: Military Stencil</option>
-            <option value="5">Style 5: Brushed Metal</option>
-          </select>
-        </div>
+            {/* Expiration Filter */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Listing Status</label>
+              <select
+                value={showExpiredListings ? "all" : "active"}
+                onChange={(e) => setShowExpiredListings(e.target.value === "all")}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value="active">Active Only</option>
+                <option value="all">Show All (Including Expired)</option>
+              </select>
+            </div>
 
-        {/* Time Remaining Style Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Time Remaining Style</label>
-          <select
-            value={timeRemainingStyle}
-            onChange={(e) => setTimeRemainingStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Style 1: Hexagonal Badge</option>
-            <option value="2">Style 2: Circular Arc</option>
-            <option value="3">Style 3: Diagonal Banner</option>
-            <option value="4">Style 4: Bracket Frame</option>
-            <option value="5">Style 5: Minimalist Pill</option>
-          </select>
-        </div>
+            {/* Pricing Info Layout Selector */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Pricing Info Layout</label>
+              <select
+                value={pricingInfoLayout}
+                onChange={(e) => setPricingInfoLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)}
+                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
+              >
+                <option value={1}>Option 1: Horizontal Split Panel</option>
+                <option value={2}>Option 2: Stat Cards (Gaming)</option>
+                <option value={3}>Option 3: Compact Single Row</option>
+                <option value={4}>Option 4: Emphasized Price</option>
+                <option value={5}>Option 5: Data Table Style</option>
+                <option value={6}>Option 6: HUD Tactical Display</option>
+                <option value={7}>Option 7: Holographic Data Panel</option>
+                <option value={8}>Option 8: Industrial Warning Panel</option>
+                <option value={9}>Option 9: Sleek Hexagonal Tech</option>
+                <option value={10}>Option 10: Compact Terminal Readout</option>
+              </select>
+            </div>
 
-        {/* Purchase Button Style Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Purchase Button</label>
-          <select
-            value={buttonStyle}
-            onChange={(e) => setButtonStyle(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Style 1: Hazard Angled</option>
-            <option value="2">Style 2: Military Notched</option>
-            <option value="3">Style 3: Tactical Hex</option>
-            <option value="4">Style 4: Industrial Frame</option>
-            <option value="5">Style 5: Battle Scarred</option>
-          </select>
-        </div>
+            {/* Marketplace Reseed */}
+            <div className="pt-4 border-t border-yellow-500/30">
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Marketplace Data</label>
+              <div className="space-y-2">
+                <button
+                  onClick={async () => {
+                    if (confirm("Clear all marketplace listings? This cannot be undone.")) {
+                      await clearMarketplace();
+                      alert("Marketplace cleared!");
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-bold rounded hover:bg-red-900/50 transition-all"
+                >
+                  CLEAR ALL LISTINGS
+                </button>
+                <button
+                  onClick={async () => {
+                    await seedMarketplace();
+                    alert("Marketplace reseeded with new timer variations!");
+                  }}
+                  className="w-full px-3 py-2 bg-green-900/30 border border-green-500/50 text-green-400 text-xs font-bold rounded hover:bg-green-900/50 transition-all"
+                >
+                  RESEED MARKETPLACE
+                </button>
+              </div>
+            </div>
 
-        {/* Price Layout Style Selector */}
-        <div>
-          <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Price Layout</label>
-          <select
-            value={priceLayoutStyle}
-            onChange={(e) => setPriceLayoutStyle(Number(e.target.value) as 1 | 2 | 3 | 4)}
-            className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-          >
-            <option value="1">Style 1: Split Columns</option>
-            <option value="2">Style 2: Unified Bar</option>
-            <option value="3">Style 3: Divided Panels</option>
-            <option value="4">Style 4: Compact Inline</option>
-          </select>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 py-6">
         {/* Title Section - Military Command Panel */}
-        <div className="relative mb-6 mek-card-industrial mek-border-sharp-gold rounded-xl p-7 mek-glow-yellow">
+        <div className="relative mb-6 mek-card-industrial mek-border-sharp-gold rounded-xl p-4 mek-glow-yellow">
           <div className="absolute top-0 left-0 right-0 h-3 mek-overlay-hazard-stripes opacity-60" />
           <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
           <div className="absolute inset-0 mek-overlay-rust pointer-events-none" />
@@ -769,7 +1512,7 @@ export default function EssenceMarketPage() {
             <div className="absolute inset-0 mek-overlay-metal-texture" />
           </div>
 
-          {/* Layout Variation 1: Centered Buttons Below Title */}
+          {/* OPTION 1: Current Layout - EXACT REFERENCE POINT */}
           {headerLayout === 1 && (
             <div className="relative">
               <div className="flex justify-between items-start mb-4">
@@ -785,17 +1528,11 @@ export default function EssenceMarketPage() {
                       <span>LIST ITEM</span>
                     </button>
                     <button
-                      onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
+                      onClick={() => setShowMyListingsModal(true)}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
                       <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
                     </button>
-                    <button
-                      onClick={() => setShowOffersView(!showOffersView)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOffersView)}
-                    >
-                      <span>OFFERS</span>
-                    </button>
                   </div>
                 </div>
                 <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
@@ -814,159 +1551,167 @@ export default function EssenceMarketPage() {
             </div>
           )}
 
-          {/* Layout Variation 2: Stacked Buttons Left-Aligned */}
+          {/* OPTION 2: Horizontal Row - Buttons + Gold on Right */}
           {headerLayout === 2 && (
-            <div className="relative flex justify-between">
-              <div className="space-y-3">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow mb-2">
+            <div className="relative">
+              <div className="flex justify-between items-center">
+                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
+                  MARKET
+                </h1>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowCreateListing(true)}
+                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                  >
+                    <span>LIST ITEM</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMyListingsModal(true)}
+                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                  >
+                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                  </button>
+                  <div className="w-px h-10 bg-yellow-500/30 mx-2" />
+                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
+                    <div className="relative flex items-center gap-2">
+                      <div className="mek-value-primary text-2xl">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* OPTION 3: Stacked Buttons on Right */}
+          {headerLayout === 3 && (
+            <div className="relative">
+              <div className="flex justify-between items-start">
+                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
                   MARKET
                 </h1>
                 <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderListButtonClasses(headerButtonStyle)}
-                  >
-                    <span className="text-lg">⊕</span>
-                    <span>LIST ESSENCE</span>
-                  </button>
-                  <button
-                    onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOnlyMyListings)}
-                  >
-                    {showOnlyMyListings && <span className="text-green-600">✓</span>}
-                    <span>MY LISTINGS</span>
-                  </button>
-                </div>
-              </div>
-              <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes self-start">
-                <div className="relative">
-                  <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                  <div className="mek-value-primary text-3xl">
-                    {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowCreateListing(true)}
+                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                    >
+                      <span>LIST ITEM</span>
+                    </button>
+                    <button
+                      onClick={() => setShowMyListingsModal(true)}
+                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                    >
+                      <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-8 h-1 bg-yellow-500/50" />
-                    <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
+                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
+                    <div className="relative flex items-center gap-2">
+                      <div className="mek-value-primary text-2xl">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Layout Variation 3: Buttons Inline Right of Title */}
-          {headerLayout === 3 && (
-            <div className="relative flex justify-between items-center">
-              <div className="flex items-center gap-6">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderListButtonClasses(headerButtonStyle)}
-                  >
-                    <span>⊕</span>
-                    <span>LIST</span>
-                  </button>
-                  <button
-                    onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOnlyMyListings)}
-                  >
-                    {showOnlyMyListings && <span className="text-green-600">✓</span>}
-                    <span>MY LISTINGS</span>
-                  </button>
-                </div>
-              </div>
-              <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
-                <div className="relative">
-                  <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                  <div className="mek-value-primary text-3xl">
-                    {Math.floor(userProfile?.gold || 0).toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-8 h-1 bg-yellow-500/50" />
-                    <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Layout Variation 4: Horizontal Bar with Dividers */}
+          {/* OPTION 4: Integrated Bar - Buttons + Gold in Industrial Frame */}
           {headerLayout === 4 && (
             <div className="relative">
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-center mb-4">
                 <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
                   MARKET
                 </h1>
-                <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
-                  <div className="relative">
-                    <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                    <div className="mek-value-primary text-3xl">
-                      {Math.floor(userProfile?.gold || 0).toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-8 h-1 bg-yellow-500/50" />
-                      <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
+              </div>
+              <div className="relative flex items-center gap-2 p-3 bg-black/40 border-2 border-yellow-500/30 rounded-lg mek-overlay-diagonal-stripes">
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  <button
+                    onClick={() => setShowCreateListing(true)}
+                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                  >
+                    <span>LIST ITEM</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMyListingsModal(true)}
+                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
+                  >
+                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                  </button>
+                  <div className="w-px h-10 bg-yellow-500/50 mx-2" />
+                  <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
+                    <div className="relative flex items-center gap-2">
+                      <div className="mek-value-primary text-2xl">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-black/40 border border-yellow-500/20 rounded-lg">
-                <button
-                  onClick={() => setShowCreateListing(true)}
-                  className={`${getHeaderListButtonClasses(headerButtonStyle)} flex-1`}
-                >
-                  <span className="text-lg">⊕</span>
-                  <span>LIST ESSENCE</span>
-                </button>
-                <div className="w-px h-8 bg-yellow-500/30" />
-                <button
-                  onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
-                  className={`${getHeaderMyListingsButtonClasses(headerButtonStyle, showOnlyMyListings)} flex-1`}
-                >
-                  {showOnlyMyListings && <span className="text-green-600">✓</span>}
-                  <span>MY LISTINGS</span>
-                </button>
               </div>
             </div>
           )}
 
-          {/* Layout Variation 5: Split Sides - Buttons Float on Opposite Ends */}
+          {/* OPTION 5: Compact Grid - Gold Prominent on Right */}
           {headerLayout === 5 && (
             <div className="relative">
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-center">
                 <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
                   MARKET
                 </h1>
-                <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
-                  <div className="relative">
-                    <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                    <div className="mek-value-primary text-3xl">
-                      {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                <div className="flex items-center gap-4">
+                  {renderHeaderButtons(buttonVariation, {
+                    onCreateListing: () => setShowCreateListing(true),
+                    onToggleMyListings: () => setShowMyListingsModal(true),
+                    showOnlyMyListings,
+                    listingCount: debugListingCount
+                  })}
+                  <div className="h-16 w-px bg-yellow-500/30" />
+
+                  {/* Gold Display Variations */}
+                  {goldDisplayVariation === 1 && (
+                    /* Variation 1: Stacked - Number over GOLD */
+                    <div className="relative flex flex-col items-center">
+                      <div className="gold-display-medium text-4xl leading-none">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                      <span className="text-yellow-400/70 text-xs tracking-widest mt-1 uppercase">GOLD</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-8 h-1 bg-yellow-500/50" />
-                      <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
+                  )}
+
+                  {goldDisplayVariation === 2 && (
+                    /* Variation 2: Inline - Number + G */
+                    <div className="relative flex items-baseline gap-1">
+                      <div className="gold-display-medium text-4xl leading-none">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                      <span className="text-yellow-400/80 text-2xl font-light">G</span>
                     </div>
-                  </div>
+                  )}
+
+                  {goldDisplayVariation === 3 && (
+                    /* Variation 3: Minimal - Just Number */
+                    <div className="relative">
+                      <div className="gold-display-medium text-4xl leading-none">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {goldDisplayVariation === 4 && (
+                    /* Variation 4: Vertical Compact */
+                    <div className="relative flex items-start gap-1">
+                      <span className="text-yellow-400/70 text-[10px] tracking-wider uppercase mt-1">GOLD</span>
+                      <div className="gold-display-medium text-3xl leading-none">
+                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <button
-                  onClick={() => setShowCreateListing(true)}
-                  className={getHeaderListButtonClasses(headerButtonStyle)}
-                >
-                  <span className="text-lg">⊕</span>
-                  <span>LIST ESSENCE</span>
-                </button>
-                <button
-                  onClick={() => setShowOnlyMyListings(!showOnlyMyListings)}
-                  className={getHeaderMyListingsButtonClasses(headerButtonStyle, showOnlyMyListings)}
-                >
-                  {showOnlyMyListings && <span className="text-green-600">✓</span>}
-                  <span>MY LISTINGS</span>
-                </button>
               </div>
             </div>
           )}
@@ -986,22 +1731,44 @@ export default function EssenceMarketPage() {
               <span>RETURN TO MARKET</span>
             </button>
 
-            {/* Create Request Button */}
+            {/* Create Bounty Button */}
             <div className="mb-6">
               <button
                 onClick={() => setShowCreateRequest(true)}
                 className="mek-button-primary px-6 py-3 font-bold uppercase tracking-wider"
               >
                 <span className="text-lg mr-2">⊕</span>
-                CREATE REQUEST
+                CREATE BOUNTY
               </button>
             </div>
 
-            {/* Available Requests Table */}
+            {/* Debug: Layout Selector */}
+            <div className="mb-6 p-4 bg-black/60 border border-yellow-500/30 rounded-lg">
+              <label className="block text-xs text-yellow-400/70 uppercase tracking-wider mb-2">
+                Debug: Bounty Layout
+              </label>
+              <select
+                value={buyOrderLayout}
+                onChange={(e) => setBuyOrderLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6)}
+                className="w-full px-3 py-2 bg-black/80 border border-gray-700 text-yellow-400 font-semibold text-sm rounded focus:border-yellow-500/70 focus:outline-none cursor-pointer"
+              >
+                <option value="1">Layout 1: Table + Cards</option>
+                <option value="2">Layout 2: All Cards</option>
+                <option value="3">Layout 3: Side-by-Side</option>
+                <option value="4">Layout 4: Compact Table-Row (Mobile)</option>
+                <option value="5">Layout 5: Slim Horizontal Cards (Mobile)</option>
+                <option value="6">Layout 6: Ultra-Compact List (Mobile)</option>
+              </select>
+            </div>
+
+            {/* BOUNTIES LAYOUT 1: Table + Cards */}
+            {buyOrderLayout === 1 && (
+              <>
+            {/* Open Bountys Table */}
             <div className="mb-8">
               <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
-                <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">AVAILABLE REQUESTS</h2>
-                <p className="mek-label-uppercase text-yellow-400/60 mt-1">FULFILL REQUESTS TO EARN GOLD</p>
+                <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">OPEN BOUNTIES</h2>
+                <p className="mek-label-uppercase text-yellow-400/60 mt-1">SELL ESSENCE TO FILL BOUNTIES</p>
               </div>
 
               {/* Table */}
@@ -1024,7 +1791,7 @@ export default function EssenceMarketPage() {
                         <td className="px-4 py-3 text-right text-yellow-400 font-bold">2,500g</td>
                         <td className="px-4 py-3 text-center">
                           <button className="px-4 py-1 bg-yellow-400/10 border border-yellow-400/30 hover:bg-yellow-400/20 text-yellow-400 rounded text-xs font-semibold uppercase tracking-wider">
-                            Fulfill
+                            FILL BOUNTY
                           </button>
                         </td>
                       </tr>
@@ -1034,7 +1801,7 @@ export default function EssenceMarketPage() {
                         <td className="px-4 py-3 text-right text-yellow-400 font-bold">7,000g</td>
                         <td className="px-4 py-3 text-center">
                           <button className="px-4 py-1 bg-yellow-400/10 border border-yellow-400/30 hover:bg-yellow-400/20 text-yellow-400 rounded text-xs font-semibold uppercase tracking-wider">
-                            Fulfill
+                            FILL BOUNTY
                           </button>
                         </td>
                       </tr>
@@ -1044,14 +1811,14 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
-            {/* My Requests Section */}
+            {/* My Bountys Section */}
             <div>
               <div className="mb-4 p-3 bg-black/60 border-l-4 border-blue-500 mek-overlay-diagonal-stripes">
-                <h2 className="mek-text-industrial text-2xl text-blue-400 mek-text-shadow">MY REQUESTS</h2>
-                <p className="mek-label-uppercase text-blue-400/60 mt-1">YOUR ACTIVE PURCHASE REQUESTS</p>
+                <h2 className="mek-text-industrial text-2xl text-blue-400 mek-text-shadow">MY BOUNTIES</h2>
+                <p className="mek-label-uppercase text-blue-400/60 mt-1">YOUR ACTIVE BOUNTIES</p>
               </div>
 
-              {/* My Requests Grid */}
+              {/* My Bountys Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Placeholder card - will be replaced with real data */}
                 <div className="mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
@@ -1060,7 +1827,7 @@ export default function EssenceMarketPage() {
                     <div className="mb-3">
                       <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">Cameras & Film</div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                        <span>Requesting: <span className="text-yellow-400 font-bold">5.0</span></span>
+                        <span>Buying: <span className="text-yellow-400 font-bold">5.0</span></span>
                       </div>
                     </div>
                     <div className="mb-3 p-2 bg-black/60 border border-yellow-500/20 rounded">
@@ -1068,14 +1835,834 @@ export default function EssenceMarketPage() {
                       <div className="text-lg font-bold text-yellow-400">2,500g</div>
                     </div>
                     <button className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg">
-                      ⊗ CANCEL REQUEST
+                      ⊗ CANCEL BOUNTY
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </>
+            )}
+
+            {/* BOUNTIES LAYOUT 2: All Cards (More Visual) */}
+            {buyOrderLayout === 2 && (
+              <>
+            {/* Open Bountys Card Grid */}
+            <div className="mb-8">
+              <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
+                <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">OPEN BOUNTIES</h2>
+                <p className="mek-label-uppercase text-yellow-400/60 mt-1">OTHER PLAYERS WANT TO BUY</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Placeholder cards */}
+                <div className="mek-card-industrial mek-border-sharp-gray p-4 rounded-lg hover:border-yellow-500/50 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-30" />
+                  <div className="relative">
+                    <div className="mb-3">
+                      <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm mb-2">Cameras & Film</div>
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                        <span>They want:</span>
+                        <span className="text-yellow-400 font-bold text-base">5.0</span>
+                      </div>
+                    </div>
+                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-yellow-400/70 uppercase">Offering:</span>
+                        <span className="text-lg font-bold text-yellow-400">2,500g</span>
+                      </div>
+                      <div className="text-[10px] text-yellow-400/50 mt-1 text-right">500g per unit</div>
+                    </div>
+                    <button className="w-full px-4 py-2 bg-yellow-400/10 border border-yellow-400/40 hover:bg-yellow-400/20 hover:border-yellow-400/60 text-yellow-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg">
+                      ◆ FILL BOUNTY
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mek-card-industrial mek-border-sharp-gray p-4 rounded-lg hover:border-yellow-500/50 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-30" />
+                  <div className="relative">
+                    <div className="mb-3">
+                      <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm mb-2">Musical</div>
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                        <span>They want:</span>
+                        <span className="text-yellow-400 font-bold text-base">10.0</span>
+                      </div>
+                    </div>
+                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-yellow-400/70 uppercase">Offering:</span>
+                        <span className="text-lg font-bold text-yellow-400">7,000g</span>
+                      </div>
+                      <div className="text-[10px] text-yellow-400/50 mt-1 text-right">700g per unit</div>
+                    </div>
+                    <button className="w-full px-4 py-2 bg-yellow-400/10 border border-yellow-400/40 hover:bg-yellow-400/20 hover:border-yellow-400/60 text-yellow-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg">
+                      ◆ FILL BOUNTY
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Create Request Modal - Industrial Sci-Fi Design */}
+            {/* My Bountys Section */}
+            <div>
+              <div className="mb-4 p-3 bg-black/60 border-l-4 border-blue-500 mek-overlay-diagonal-stripes">
+                <h2 className="mek-text-industrial text-2xl text-blue-400 mek-text-shadow">MY BOUNTIES</h2>
+                <p className="mek-label-uppercase text-blue-400/60 mt-1">YOUR ACTIVE BOUNTIES</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                  <div className="relative">
+                    <div className="mb-3">
+                      <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">Cameras & Film</div>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                        <span>Buying: <span className="text-yellow-400 font-bold">5.0</span></span>
+                      </div>
+                    </div>
+                    <div className="mb-3 p-2 bg-black/60 border border-yellow-500/20 rounded">
+                      <div className="text-xs text-gray-400">Locked Gold:</div>
+                      <div className="text-lg font-bold text-yellow-400">2,500g</div>
+                    </div>
+                    <button className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg">
+                      ⊗ CANCEL BOUNTY
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </>
+            )}
+
+            {/* BOUNTIES LAYOUT 3: Side-by-Side (Clearer Separation) */}
+            {buyOrderLayout === 3 && (
+              <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column: Open Bountys */}
+              <div>
+                <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
+                  <h2 className="mek-text-industrial text-xl text-yellow-400 mek-text-shadow">OPEN BOUNTIES</h2>
+                  <p className="mek-label-uppercase text-yellow-400/60 mt-1 text-xs">FILL BOUNTIES TO EARN GOLD</p>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Placeholder cards */}
+                  <div className="mek-card-industrial mek-border-sharp-gray p-4 rounded-lg hover:border-yellow-500/50 transition-all">
+                    <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                    <div className="relative flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 text-sm mb-1">Cameras & Film</div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-gray-400">Qty: <span className="text-yellow-400 font-semibold">5.0</span></span>
+                          <span className="text-gray-600">•</span>
+                          <span className="text-gray-400">Total: <span className="text-yellow-400 font-semibold">2,500g</span></span>
+                        </div>
+                      </div>
+                      <button className="px-4 py-2 bg-yellow-400/10 border border-yellow-400/40 hover:bg-yellow-400/20 text-yellow-400 font-bold text-xs uppercase rounded whitespace-nowrap">
+                        FILL
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mek-card-industrial mek-border-sharp-gray p-4 rounded-lg hover:border-yellow-500/50 transition-all">
+                    <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                    <div className="relative flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 text-sm mb-1">Musical</div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-gray-400">Qty: <span className="text-yellow-400 font-semibold">10.0</span></span>
+                          <span className="text-gray-600">•</span>
+                          <span className="text-gray-400">Total: <span className="text-yellow-400 font-semibold">7,000g</span></span>
+                        </div>
+                      </div>
+                      <button className="px-4 py-2 bg-yellow-400/10 border border-yellow-400/40 hover:bg-yellow-400/20 text-yellow-400 font-bold text-xs uppercase rounded whitespace-nowrap">
+                        FILL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: My Bountys */}
+              <div>
+                <div className="mb-4 p-3 bg-black/60 border-l-4 border-blue-500 mek-overlay-diagonal-stripes">
+                  <h2 className="mek-text-industrial text-xl text-blue-400 mek-text-shadow">MY BOUNTIES</h2>
+                  <p className="mek-label-uppercase text-blue-400/60 mt-1 text-xs">YOUR ACTIVE BOUNTIES</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
+                    <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                    <div className="relative">
+                      <div className="mb-3">
+                        <div className="font-bold text-yellow-400 text-sm mb-1">Cameras & Film</div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span>Buying: <span className="text-yellow-400 font-semibold">5.0</span></span>
+                          <span className="text-gray-600">•</span>
+                          <span>Locked: <span className="text-red-400 font-semibold">2,500g</span></span>
+                        </div>
+                      </div>
+                      <button className="w-full px-3 py-1.5 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 text-red-400 font-bold text-xs uppercase rounded">
+                        ⊗ CANCEL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </>
+            )}
+
+            {/* BOUNTIES LAYOUT 4: Mobile-Friendly Toggle with Earnings Emphasis */}
+            {buyOrderLayout === 4 && (
+              <>
+            {/* Toggle Buttons */}
+            <div className="mb-6 flex gap-3">
+              <button
+                onClick={() => setBuyOrderSection("open")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "open"
+                    ? "bg-yellow-500/20 border-2 border-yellow-500/60 text-yellow-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "open" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>OPEN BOUNTIES</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setBuyOrderSection("mine")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "mine"
+                    ? "bg-blue-500/20 border-2 border-blue-500/60 text-blue-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "mine" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>MY BOUNTIES</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Open Bountys Section */}
+            {buyOrderSection === "open" && (
+              <div className="space-y-3">
+                {/* Placeholder cards - clean design with earnings emphasis */}
+                <div className="mek-card-industrial mek-border-sharp-gray rounded-lg overflow-hidden hover:border-yellow-500/50 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                  <div className="relative p-5">
+                    <div className="flex items-stretch gap-4">
+                      {/* Left: What they want */}
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 uppercase tracking-wide text-base mb-2">
+                          Cameras & Film
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs text-gray-400 uppercase">Quantity:</span>
+                          <span className="text-2xl font-bold text-yellow-400">5.0</span>
+                        </div>
+                      </div>
+
+                      {/* Right: What you earn + action */}
+                      <div className="flex flex-col items-end justify-between gap-3">
+                        <div className="text-right">
+                          <div className="text-[10px] text-yellow-400/60 uppercase tracking-wider mb-1">
+                            YOUR PAYMENT
+                          </div>
+                          <div className="text-3xl font-bold text-yellow-400 mek-glow-yellow">
+                            2,500g
+                          </div>
+                          <div className="text-xs text-yellow-400/50 mt-0.5">
+                            500g per unit
+                          </div>
+                        </div>
+                        <button className="px-6 py-2 bg-yellow-400/10 border-2 border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-sm uppercase tracking-wider rounded-lg transition-all whitespace-nowrap">
+                          FILL BOUNTY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mek-card-industrial mek-border-sharp-gray rounded-lg overflow-hidden hover:border-yellow-500/50 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                  <div className="relative p-5">
+                    <div className="flex items-stretch gap-4">
+                      {/* Left: What they want */}
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 uppercase tracking-wide text-base mb-2">
+                          Musical
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs text-gray-400 uppercase">Quantity:</span>
+                          <span className="text-2xl font-bold text-yellow-400">10.0</span>
+                        </div>
+                      </div>
+
+                      {/* Right: What you earn + action */}
+                      <div className="flex flex-col items-end justify-between gap-3">
+                        <div className="text-right">
+                          <div className="text-[10px] text-yellow-400/60 uppercase tracking-wider mb-1">
+                            YOUR PAYMENT
+                          </div>
+                          <div className="text-3xl font-bold text-yellow-400 mek-glow-yellow">
+                            7,000g
+                          </div>
+                          <div className="text-xs text-yellow-400/50 mt-0.5">
+                            700g per unit
+                          </div>
+                        </div>
+                        <button className="px-6 py-2 bg-yellow-400/10 border-2 border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-sm uppercase tracking-wider rounded-lg transition-all whitespace-nowrap">
+                          FILL BOUNTY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mek-card-industrial mek-border-sharp-gray rounded-lg overflow-hidden hover:border-yellow-500/50 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                  <div className="relative p-5">
+                    <div className="flex items-stretch gap-4">
+                      {/* Left: What they want */}
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 uppercase tracking-wide text-base mb-2">
+                          Materials
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs text-gray-400 uppercase">Quantity:</span>
+                          <span className="text-2xl font-bold text-yellow-400">3.0</span>
+                        </div>
+                      </div>
+
+                      {/* Right: What you earn + action */}
+                      <div className="flex flex-col items-end justify-between gap-3">
+                        <div className="text-right">
+                          <div className="text-[10px] text-yellow-400/60 uppercase tracking-wider mb-1">
+                            YOUR PAYMENT
+                          </div>
+                          <div className="text-3xl font-bold text-yellow-400 mek-glow-yellow">
+                            1,800g
+                          </div>
+                          <div className="text-xs text-yellow-400/50 mt-0.5">
+                            600g per unit
+                          </div>
+                        </div>
+                        <button className="px-6 py-2 bg-yellow-400/10 border-2 border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-sm uppercase tracking-wider rounded-lg transition-all whitespace-nowrap">
+                          FILL BOUNTY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* My Bountys Section */}
+            {buyOrderSection === "mine" && (
+              <div className="space-y-3">
+                {/* Placeholder card for user's orders */}
+                <div className="mek-card-industrial mek-border-sharp-gold rounded-lg overflow-hidden">
+                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-20" />
+                  <div className="relative p-5">
+                    <div className="flex items-stretch gap-4">
+                      {/* Left: What you're buying */}
+                      <div className="flex-1">
+                        <div className="font-bold text-yellow-400 uppercase tracking-wide text-base mb-2">
+                          Cameras & Film
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs text-gray-400 uppercase">Buying:</span>
+                          <span className="text-2xl font-bold text-yellow-400">5.0</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Locked gold + cancel */}
+                      <div className="flex flex-col items-end justify-between gap-3">
+                        <div className="text-right">
+                          <div className="text-[10px] text-red-400/60 uppercase tracking-wider mb-1">
+                            LOCKED GOLD
+                          </div>
+                          <div className="text-3xl font-bold text-red-400">
+                            2,500g
+                          </div>
+                          <div className="text-xs text-red-400/50 mt-0.5">
+                            500g per unit
+                          </div>
+                        </div>
+                        <button className="px-6 py-2 bg-red-900/30 border-2 border-red-500/50 hover:bg-red-900/50 hover:border-red-400/70 text-red-400 font-bold text-sm uppercase tracking-wider rounded-lg transition-all whitespace-nowrap">
+                          ⊗ CANCEL BOUNTY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            </>
+            )}
+
+            {/* BOUNTIES LAYOUT 5: Slim Horizontal Card Design */}
+            {buyOrderLayout === 5 && (
+              <>
+            {/* Toggle Buttons */}
+            <div className="mb-6 flex gap-3">
+              <button
+                onClick={() => setBuyOrderSection("open")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "open"
+                    ? "bg-yellow-500/20 border-2 border-yellow-500/60 text-yellow-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "open" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>OPEN BOUNTIES</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setBuyOrderSection("mine")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "mine"
+                    ? "bg-blue-500/20 border-2 border-blue-500/60 text-blue-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "mine" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>MY BOUNTIES</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Open Bountys Section - Slim Card Style */}
+            {buyOrderSection === "open" && (
+              <div className="space-y-2">
+                <div className="relative mek-card-industrial rounded overflow-hidden border border-yellow-500/30 hover:border-yellow-500/60 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none opacity-5" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-500/80 to-yellow-500/20" />
+                  <div className="relative flex items-center justify-between gap-4 px-4 py-2">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                      <div className="font-bold text-yellow-400 uppercase text-sm tracking-wider">Cameras & Film</div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] text-gray-500 uppercase">Qty:</span>
+                        <span className="text-base font-bold text-yellow-400">5.0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-yellow-400 mek-glow-yellow">2,500g</div>
+                        <div className="text-[9px] text-yellow-400/40 uppercase tracking-wide">500g/unit</div>
+                      </div>
+                      <button className="px-4 py-1.5 bg-yellow-400/10 border border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-xs uppercase tracking-wider rounded transition-all">
+                        FILL BOUNTY
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative mek-card-industrial rounded overflow-hidden border border-yellow-500/30 hover:border-yellow-500/60 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none opacity-5" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-500/80 to-yellow-500/20" />
+                  <div className="relative flex items-center justify-between gap-4 px-4 py-2">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                      <div className="font-bold text-yellow-400 uppercase text-sm tracking-wider">Musical</div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] text-gray-500 uppercase">Qty:</span>
+                        <span className="text-base font-bold text-yellow-400">10.0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-yellow-400 mek-glow-yellow">7,000g</div>
+                        <div className="text-[9px] text-yellow-400/40 uppercase tracking-wide">700g/unit</div>
+                      </div>
+                      <button className="px-4 py-1.5 bg-yellow-400/10 border border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-xs uppercase tracking-wider rounded transition-all">
+                        FILL BOUNTY
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative mek-card-industrial rounded overflow-hidden border border-yellow-500/30 hover:border-yellow-500/60 transition-all group">
+                  <div className="absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none opacity-5" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-500/80 to-yellow-500/20" />
+                  <div className="relative flex items-center justify-between gap-4 px-4 py-2">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                      <div className="font-bold text-yellow-400 uppercase text-sm tracking-wider">Materials</div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] text-gray-500 uppercase">Qty:</span>
+                        <span className="text-base font-bold text-yellow-400">3.0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-yellow-400 mek-glow-yellow">1,800g</div>
+                        <div className="text-[9px] text-yellow-400/40 uppercase tracking-wide">600g/unit</div>
+                      </div>
+                      <button className="px-4 py-1.5 bg-yellow-400/10 border border-yellow-400/50 hover:bg-yellow-400/20 hover:border-yellow-400/70 text-yellow-400 font-bold text-xs uppercase tracking-wider rounded transition-all">
+                        FILL BOUNTY
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* My Bountys Section - Slim Card Style */}
+            {buyOrderSection === "mine" && (
+              <div className="space-y-2">
+                <div className="relative mek-card-industrial rounded overflow-hidden border border-blue-500/40 hover:border-blue-400/70 transition-all">
+                  <div className="absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none opacity-5" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500/80 to-blue-500/20" />
+                  <div className="relative flex items-center justify-between gap-4 px-4 py-2">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                      <div className="font-bold text-yellow-400 uppercase text-sm tracking-wider">Cameras & Film</div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[10px] text-gray-500 uppercase">Buying:</span>
+                        <span className="text-base font-bold text-yellow-400">5.0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-red-400">2,500g</div>
+                        <div className="text-[9px] text-red-400/40 uppercase tracking-wide">Locked</div>
+                      </div>
+                      <button className="px-4 py-1.5 bg-red-900/30 border border-red-500/50 hover:bg-red-900/50 hover:border-red-400/70 text-red-400 font-bold text-xs uppercase tracking-wider rounded transition-all">
+                        ⊗ CANCEL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            </>
+            )}
+
+            {/* BOUNTIES LAYOUT 6: Ultra-Compact List with Dividers */}
+            {buyOrderLayout === 6 && (
+              <>
+            {/* Toggle Buttons */}
+            <div className="mb-6 flex gap-3">
+              <button
+                onClick={() => setBuyOrderSection("open")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "open"
+                    ? "bg-yellow-500/20 border-2 border-yellow-500/60 text-yellow-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "open" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>OPEN BOUNTIES</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setBuyOrderSection("mine")}
+                className={`flex-1 px-6 py-4 font-bold uppercase tracking-wider text-sm transition-all rounded-lg relative overflow-hidden group ${
+                  buyOrderSection === "mine"
+                    ? "bg-blue-500/20 border-2 border-blue-500/60 text-blue-400"
+                    : "bg-black/40 border-2 border-gray-700/40 text-gray-500 hover:border-gray-600/60 hover:text-gray-400"
+                }`}
+              >
+                <div className={`absolute inset-0 mek-overlay-diagonal-stripes pointer-events-none ${
+                  buyOrderSection === "mine" ? "opacity-20" : "opacity-5"
+                }`} />
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">◆</span>
+                  <span>MY BOUNTIES</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Open Bountys Section - Ultra-Compact List */}
+            {buyOrderSection === "open" && (
+              <div className="mek-card-industrial rounded-lg overflow-hidden border border-yellow-500/40">
+                <div className="absolute inset-0 mek-overlay-metal-texture pointer-events-none opacity-5" />
+
+                {/* Header */}
+                <div className="relative bg-black/80 border-b-2 border-yellow-500/50 px-4 py-1.5">
+                  <div className="absolute inset-0 mek-overlay-hazard-stripes opacity-10" />
+                  <div className="relative text-[10px] text-yellow-400 uppercase tracking-widest font-bold">
+                    Available Orders
+                  </div>
+                </div>
+
+                {/* Column Headers */}
+                <div className="relative bg-black/60 border-b border-gray-700/50 px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    {/* Essence name column header */}
+                    <div className="flex-1 min-w-0"></div>
+
+                    {/* Units column header */}
+                    <div className="min-w-[60px] text-right">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Units</div>
+                    </div>
+
+                    <div className="w-px" />
+
+                    {/* Gold per essence column header */}
+                    <div className="text-right min-w-[75px]">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">G/Essence</div>
+                    </div>
+
+                    <div className="w-px" />
+
+                    {/* Total column header */}
+                    <div className="text-right min-w-[70px]">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Total</div>
+                    </div>
+
+                    {/* Button column spacer */}
+                    <div className="ml-2" style={{ width: '78px' }}></div>
+                  </div>
+                </div>
+
+                {/* Order List */}
+                <div className="relative divide-y divide-gray-700/50">
+                  {/* Order 1 - User HAS enough essence (blue units) */}
+                  <div className="group hover:bg-yellow-500/5 transition-all">
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      {/* Essence thumbnail + name */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <img
+                          src="/essence-images/named-100px/1011-fm.png"
+                          alt="Cameras & Film"
+                          className="w-6 h-6 rounded"
+                        />
+                        <div className="font-bold text-yellow-400 uppercase text-xs tracking-wider truncate">Cameras & Film</div>
+                      </div>
+
+                      {/* Units needed */}
+                      <div className="min-w-[60px] text-right">
+                        <div className="text-base font-bold text-blue-400" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.8)' }}>5.0</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Gold per unit */}
+                      <div className="text-right min-w-[75px]">
+                        <div className="text-sm text-white">500g/unit</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Total gold */}
+                      <div className="text-right min-w-[70px]">
+                        <div className="text-base font-bold text-yellow-400">2,500g</div>
+                      </div>
+
+                      {/* Fulfill button - BLUE GLOW when has enough */}
+                      <button
+                        className="ml-2 px-3 py-1 bg-blue-500/20 border border-blue-400/60 hover:bg-blue-500/30 text-blue-400 font-bold text-[10px] uppercase tracking-widest rounded transition-all"
+                        style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' }}
+                      >
+                        FULFILL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Order 2 - User does NOT have enough essence (dull red units) */}
+                  <div className="group hover:bg-yellow-500/5 transition-all">
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      {/* Essence thumbnail + name */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <img
+                          src="/essence-images/named-100px/arcade.png"
+                          alt="Musical"
+                          className="w-6 h-6 rounded"
+                        />
+                        <div className="font-bold text-yellow-400 uppercase text-xs tracking-wider truncate">Musical</div>
+                      </div>
+
+                      {/* Units needed - DULL RED when not enough */}
+                      <div className="min-w-[60px] text-right">
+                        <div className="text-base font-bold text-red-400/70">10.0</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Gold per unit */}
+                      <div className="text-right min-w-[75px]">
+                        <div className="text-sm text-white">700g/unit</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Total gold */}
+                      <div className="text-right min-w-[70px]">
+                        <div className="text-base font-bold text-yellow-400">7,000g</div>
+                      </div>
+
+                      {/* Fulfill button - GRAYED OUT when not enough */}
+                      <button
+                        disabled
+                        className="ml-2 px-3 py-1 bg-gray-800/30 border border-gray-600/30 text-gray-500 font-bold text-[10px] uppercase tracking-widest rounded cursor-not-allowed"
+                      >
+                        FULFILL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Order 3 - User HAS enough essence (blue units) */}
+                  <div className="group hover:bg-yellow-500/5 transition-all">
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      {/* Essence thumbnail + name */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <img
+                          src="/essence-images/named-100px/concrete.png"
+                          alt="Materials"
+                          className="w-6 h-6 rounded"
+                        />
+                        <div className="font-bold text-yellow-400 uppercase text-xs tracking-wider truncate">Materials</div>
+                      </div>
+
+                      {/* Units needed */}
+                      <div className="min-w-[60px] text-right">
+                        <div className="text-base font-bold text-blue-400" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.8)' }}>3.0</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Gold per unit */}
+                      <div className="text-right min-w-[75px]">
+                        <div className="text-sm text-white">600g/unit</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Total gold */}
+                      <div className="text-right min-w-[70px]">
+                        <div className="text-base font-bold text-yellow-400">1,800g</div>
+                      </div>
+
+                      {/* Fulfill button - BLUE GLOW when has enough */}
+                      <button
+                        className="ml-2 px-3 py-1 bg-blue-500/20 border border-blue-400/60 hover:bg-blue-500/30 text-blue-400 font-bold text-[10px] uppercase tracking-widest rounded transition-all"
+                        style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' }}
+                      >
+                        FULFILL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* My Bountys Section - Ultra-Compact List */}
+            {buyOrderSection === "mine" && (
+              <div className="mek-card-industrial rounded-lg overflow-hidden border border-blue-500/40">
+                <div className="absolute inset-0 mek-overlay-metal-texture pointer-events-none opacity-5" />
+
+                {/* Header */}
+                <div className="relative bg-black/80 border-b-2 border-blue-500/50 px-4 py-1.5">
+                  <div className="absolute inset-0 mek-overlay-diagonal-stripes opacity-10" />
+                  <div className="relative text-[10px] text-blue-400 uppercase tracking-widest font-bold">
+                    Your Active Orders
+                  </div>
+                </div>
+
+                {/* Column Headers */}
+                <div className="relative bg-black/60 border-b border-gray-700/50 px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    {/* Essence name column header */}
+                    <div className="flex-1 min-w-0"></div>
+
+                    {/* Units column header */}
+                    <div className="min-w-[60px] text-right">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Units</div>
+                    </div>
+
+                    <div className="w-px" />
+
+                    {/* Gold per essence column header */}
+                    <div className="text-right min-w-[75px]">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">G/Essence</div>
+                    </div>
+
+                    <div className="w-px" />
+
+                    {/* Total column header */}
+                    <div className="text-right min-w-[70px]">
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Total</div>
+                    </div>
+
+                    {/* Button column spacer */}
+                    <div className="ml-2" style={{ width: '74px' }}></div>
+                  </div>
+                </div>
+
+                {/* Order List */}
+                <div className="relative divide-y divide-gray-700/50">
+                  <div className="group hover:bg-blue-500/5 transition-all">
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      {/* Essence thumbnail + name */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <img
+                          src="/essence-images/named-100px/1011-fm.png"
+                          alt="Cameras & Film"
+                          className="w-6 h-6 rounded"
+                        />
+                        <div className="font-bold text-yellow-400 uppercase text-xs tracking-wider truncate">Cameras & Film</div>
+                      </div>
+
+                      {/* Units buying */}
+                      <div className="min-w-[60px] text-right">
+                        <div className="text-base font-bold text-blue-400">5.0</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Gold per unit */}
+                      <div className="text-right min-w-[75px]">
+                        <div className="text-sm text-white">500g/unit</div>
+                      </div>
+
+                      <div className="w-px h-4 bg-gray-700/50" />
+
+                      {/* Total locked gold */}
+                      <div className="text-right min-w-[70px]">
+                        <div className="text-base font-bold text-red-400">2,500g</div>
+                      </div>
+
+                      {/* Cancel button */}
+                      <button className="ml-2 px-3 py-1 bg-red-900/30 border border-red-500/50 hover:bg-red-900/50 text-red-400 font-bold text-[10px] uppercase tracking-widest rounded transition-all">
+                        CANCEL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            </>
+            )}
+
+            {/* Create Bounty Modal - Industrial Sci-Fi Design */}
             {showCreateRequest && (
               <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                 {/* Backdrop with scan lines */}
@@ -1110,12 +2697,12 @@ export default function EssenceMarketPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
                         <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
-                          CREATE REQUEST
+                          CREATE BOUNTY
                         </h2>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                        <span className="mek-label-uppercase text-blue-400/70">PURCHASE REQUEST PROTOCOL</span>
+                        <span className="mek-label-uppercase text-blue-400/70">BOUNTY PROTOCOL</span>
                       </div>
                     </div>
 
@@ -1261,7 +2848,7 @@ export default function EssenceMarketPage() {
                           <div className="relative space-y-3">
                             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-yellow-500/20">
                               <div className="w-2 h-2 bg-yellow-400 rotate-45" />
-                              <span className="mek-label-uppercase text-yellow-400 font-bold">REQUEST SUMMARY</span>
+                              <span className="mek-label-uppercase text-yellow-400 font-bold">ORDER SUMMARY</span>
                             </div>
 
                             <div className="flex justify-between items-center">
@@ -1290,7 +2877,7 @@ export default function EssenceMarketPage() {
                               <div className="flex items-start gap-2">
                                 <span className="text-yellow-400 text-xs">⚠</span>
                                 <span className="text-yellow-400/80 text-[10px] leading-tight">
-                                  This gold will be locked until the request is fulfilled or cancelled
+                                  This gold will be locked until the order is filled or cancelled
                                 </span>
                               </div>
                             </div>
@@ -1307,7 +2894,7 @@ export default function EssenceMarketPage() {
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer pointer-events-none" />
                           <span className="relative flex items-center justify-center gap-2">
                             <span className="text-xl">◆</span>
-                            DEPLOY REQUEST
+                            DEPLOY BOUNTY
                           </span>
                         </button>
 
@@ -1335,13 +2922,51 @@ export default function EssenceMarketPage() {
         {/* REGULAR MARKET VIEW */}
         {!showOffersView && (
           <>
-        {/* Search and Filters */}
+        {/* Search and Filters - Combined on One Card */}
         <div className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="flex gap-3 flex-wrap items-center p-3 bg-black/40 border border-gray-800 rounded-lg mek-overlay-metal-texture mb-3">
+            {/* Category Dropdown */}
+            <div className="relative category-dropdown-container">
+              <button
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className={getHeaderMyListingsButtonClasses(headerButtonStyle, selectedRarity !== "all")}
+              >
+                <span>{RARITY_CATEGORIES.find(c => c.id === selectedRarity)?.name || "All Essence"}</span>
+                <svg
+                  className={`w-4 h-4 ml-2 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {categoryDropdownOpen && (
+                <div
+                  className={getDropdownMenuClasses(dropdownMenuStyle).container}
+                  style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
+                >
+                  {RARITY_CATEGORIES.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedRarity(category.id);
+                        setCategoryDropdownOpen(false);
+                      }}
+                      className={getDropdownMenuClasses(dropdownMenuStyle).item(selectedRarity === category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Search with Autocomplete */}
-            <div className="flex-1 relative">
+            <div className="relative w-80">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500/50">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -1352,9 +2977,9 @@ export default function EssenceMarketPage() {
                 onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 placeholder="SEARCH ESSENCE BY VARIATION NAME..."
-                className="w-full pl-10 pr-4 py-3 bg-black/60 border-2 border-gray-700/50 text-yellow-400 placeholder-gray-600 font-mono text-sm uppercase tracking-wider focus:border-yellow-500/50 focus:outline-none transition-all rounded-lg"
+                className="w-full pl-9 pr-3 py-2 bg-black/60 border border-gray-700/50 text-yellow-400 placeholder-gray-600 text-xs uppercase tracking-wider focus:border-yellow-500/50 focus:outline-none transition-all rounded"
                 style={{
-                  boxShadow: searchTerm ? "0 0 20px rgba(250, 182, 23, 0.2), inset 0 0 10px rgba(250, 182, 23, 0.1)" : "none",
+                  boxShadow: searchTerm ? "0 0 15px rgba(250, 182, 23, 0.15), inset 0 0 8px rgba(250, 182, 23, 0.08)" : "none",
                 }}
               />
 
@@ -1377,43 +3002,26 @@ export default function EssenceMarketPage() {
               )}
             </div>
 
-          </div>
-
-          {/* Rarity Filters and Sort Dropdown */}
-          <div className="flex gap-2 flex-wrap items-center justify-between p-3 bg-black/40 border border-gray-800 rounded-lg mek-overlay-metal-texture mb-3">
-            {/* Rarity Filter Buttons */}
-            <div className="flex gap-2 flex-wrap items-center">
-              {RARITY_CATEGORIES.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedRarity(category.id)}
-                  className={`relative px-4 py-2 text-sm font-medium uppercase tracking-wide transition-all rounded-lg ${
-                    selectedRarity === category.id
-                      ? "bg-yellow-400 text-black shadow-lg shadow-yellow-500/30"
-                      : "bg-black/60 text-gray-400 hover:text-yellow-400 border-2 border-gray-700/50 hover:border-yellow-500/50"
-                  }`}
-                >
-                  <span className="relative z-10">{category.name}</span>
-                  {selectedRarity === category.id && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent pointer-events-none" />
-                  )}
-                </button>
-              ))}
-            </div>
-
             {/* Sort Dropdown */}
-            <div className="relative sort-dropdown-container">
+            <div className="relative sort-dropdown-container ml-auto">
               <button
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className="relative px-5 py-3 bg-white/5 border-b-2 border-white/20 text-white hover:border-white/40 hover:bg-white/10 focus:outline-none backdrop-blur-sm transition-all duration-500 ease-out group text-sm font-medium uppercase tracking-wide"
+                className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
               >
-                <span>Sort: {SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
-                <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white/60 to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                <span>{SORT_OPTIONS.find(o => o.id === sortBy)?.name}</span>
+                <svg
+                  className={`w-4 h-4 ml-2 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
               {sortDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-1 z-50 min-w-[200px] bg-black/90 backdrop-blur-md border border-white/20 overflow-hidden"
+                  className={getDropdownMenuClasses(dropdownMenuStyle).container.replace('left-0', 'right-0')}
                   style={{ willChange: 'opacity, transform', transform: 'translate3d(0,0,0)' }}
                 >
                   {SORT_OPTIONS.map((option) => (
@@ -1423,9 +3031,7 @@ export default function EssenceMarketPage() {
                         setSortBy(option.id);
                         setSortDropdownOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-sm font-medium uppercase tracking-wide hover:bg-white/10 transition-colors duration-200 ${
-                        sortBy === option.id ? 'text-yellow-400' : 'text-white'
-                      }`}
+                      className={getDropdownMenuClasses(dropdownMenuStyle).item(sortBy === option.id)}
                     >
                       {option.name}
                     </button>
@@ -1449,13 +3055,30 @@ export default function EssenceMarketPage() {
               const isOwn = listing.sellerId === userId;
               const canAfford = userProfile && userProfile.gold >= listing.pricePerUnit * listing.quantity;
 
+              const cardStyles = getListingCardStyles(listingCardStyle);
               return (
                 <div
                   key={listing._id}
-                  className="relative mek-card-industrial mek-border-sharp-gray p-4 hover:border-yellow-500/50 transition-all group rounded-lg"
+                  className={cardStyles.className}
+                  style={cardStyles.style}
                 >
-                  <div className="absolute inset-0 mek-overlay-metal-texture opacity-5 pointer-events-none" />
-                  <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
+                  {/* Crosshatch pattern */}
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-40"
+                    style={{
+                      backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+                                        repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
+                    }}
+                  />
+                  {/* Radial gradient accents */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
+                                   radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
+                                   radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
+                    }}
+                  />
 
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent animate-shimmer" />
@@ -1468,11 +3091,11 @@ export default function EssenceMarketPage() {
                   )}
 
                   {/* Essence Image */}
-                  <div className="flex justify-center items-center mb-3 h-20">
+                  <div className="flex justify-center items-center mb-3 h-24">
                     <img
-                      src={`/essence-images/75px/webp/${listing.itemVariation?.toLowerCase().replace(/\s+/g, ' ')}_tn1.webp`}
+                      src={`/essence-images/named-100px/${sanitizeVariationName(listing.itemVariation || '')}.png`}
                       alt={listing.itemVariation || "Essence"}
-                      className="max-w-[75px] max-h-[75px] w-auto h-auto object-contain"
+                      className="max-w-[100px] max-h-[100px] w-auto h-auto object-contain"
                       onError={(e) => {
                         // Fallback to placeholder if image not found
                         const target = e.target as HTMLImageElement;
@@ -1486,17 +3109,13 @@ export default function EssenceMarketPage() {
                     <div className="font-bold text-yellow-400 uppercase tracking-wide text-center text-sm">
                       {listing.itemVariation || "Unknown Essence"}
                     </div>
-                    <div className="flex items-center gap-2 mt-2 justify-center">
-                      <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
-                      <span className="text-yellow-400 font-bold">{listing.quantity}</span>
-                    </div>
                   </div>
 
                   {/* Price Display */}
-                  {renderPriceDisplay(listing.pricePerUnit, listing.quantity, priceLayoutStyle)}
+                  {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
 
                   {/* Time Left - Countdown Timer */}
-                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt, timeRemainingStyle)}
+                  {listing.expiresAt && renderTimeRemaining(listing.expiresAt)}
 
                   {/* Action Button */}
                   {isOwn ? (
@@ -1508,7 +3127,7 @@ export default function EssenceMarketPage() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => handlePurchase(listing._id, listing.quantity)}
+                      onClick={() => handleOpenPurchaseModal(listing)}
                       disabled={!canAfford}
                       className={`${getButtonStyle(buttonStyle)} ${
                         canAfford
@@ -1528,7 +3147,7 @@ export default function EssenceMarketPage() {
                         </>
                       )}
                       <span className="relative z-10">
-                        {canAfford ? "◆ PURCHASE" : "⊗ INSUFFICIENT FUNDS"}
+                        {canAfford ? "◆ TAP ESSENCE" : "⊗ INSUFFICIENT FUNDS"}
                       </span>
                     </button>
                   )}
@@ -1538,54 +3157,8 @@ export default function EssenceMarketPage() {
           )}
         </div>
 
-        {/* My Listings Section */}
-        {myListings && myListings.filter(l => l.itemType === "essence").length > 0 && (
-          <div className="mt-8">
-            <div className="mb-4 p-3 bg-black/60 border-l-4 border-yellow-500 mek-overlay-diagonal-stripes">
-              <h2 className="mek-text-industrial text-2xl text-yellow-400 mek-text-shadow">ACTIVE DEPLOYMENTS</h2>
-              <p className="mek-label-uppercase text-yellow-400/60 mt-1">
-                {myListings.filter(l => l.itemType === "essence").length} ESSENCE LISTINGS
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myListings
-                .filter(l => l.itemType === "essence")
-                .map((listing) => (
-                  <div key={listing._id} className="relative mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
-                    <div className="absolute inset-0 mek-overlay-scratches pointer-events-none" />
-                    <div className="relative">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">
-                            {listing.itemVariation || listing.itemType}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
-                            <span className="text-yellow-400">{listing.quantity}</span>
-                            <span className="text-gray-600">×</span>
-                            <span className="text-yellow-400">{listing.pricePerUnit}g</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
-                          <div className="text-xs text-yellow-400/60">{new Date(listing.listedAt).toLocaleDateString()}</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleCancelListing(listing._id)}
-                        className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
-                      >
-                        ⊗ RECALL
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Create Listing Modal - Industrial Sci-Fi Design */}
-        {showCreateListing && (
+        {/* Create Listing Modal - Industrial Sci-Fi Design - REPLACED WITH V5 LIGHTBOX */}
+        {false && showCreateListing && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             {/* Backdrop with scan lines */}
             <div className="absolute inset-0 pointer-events-none">
@@ -1865,6 +3438,263 @@ export default function EssenceMarketPage() {
 
               {/* Bottom hazard stripe */}
               <div className="absolute bottom-0 left-0 right-0 h-2 mek-overlay-hazard-stripes opacity-50" />
+            </div>
+          </div>
+        )}
+
+        {/* NEW V5 Yellow Gradient Lightbox */}
+        <EssenceListingLightboxV5YellowGradient
+          show={showCreateListing}
+          onClose={() => setShowCreateListing(false)}
+          onSubmit={async (data) => {
+            if (!userId) {
+              alert("Please wait for user initialization...");
+              return;
+            }
+
+            const amount = parseFloat(data.amount);
+            const price = parseInt(data.price);
+            const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
+
+            if (!durationOption) return;
+
+            // Check if user can afford listing fee
+            if (userProfile && userProfile.gold < durationOption.cost) {
+              alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+              return;
+            }
+
+            try {
+              await createListing({
+                sellerId: userId,
+                itemType: "essence",
+                itemVariation: data.variation,
+                quantity: amount,
+                pricePerUnit: price,
+                durationDays: data.duration,
+                listingFee: durationOption.cost,
+              });
+
+              setShowCreateListing(false);
+              setSelectedVariation("");
+              setEssenceAmount("1");
+              setPricePerUnit("");
+              alert("Listing created successfully!");
+            } catch (error) {
+              alert(error instanceof Error ? error.message : "An error occurred");
+            }
+          }}
+          ownedEssenceVariations={ownedEssenceVariations}
+          durationOptions={DURATION_OPTIONS}
+        />
+
+        {/* Purchase Modal with Slider */}
+        {showPurchaseModal && selectedListing && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-md w-full mek-card-industrial mek-border-sharp-gold p-6 rounded-lg">
+              {/* Close button */}
+              <button
+                onClick={() => setShowPurchaseModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">TAP ESSENCE</h2>
+
+              {/* Essence Name */}
+              <div className="mb-4">
+                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">ESSENCE TYPE</div>
+                <div className="text-yellow-400 font-bold text-lg">{selectedListing.essenceType}</div>
+              </div>
+
+              {/* Remaining Amount */}
+              <div className="mb-4">
+                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">AVAILABLE</div>
+                <div className="text-blue-400 font-bold">{selectedListing.quantity.toFixed(1)} essence</div>
+              </div>
+
+              {/* Slider */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="mek-label-uppercase text-gray-500 text-xs">PURCHASE AMOUNT</div>
+                  <div className="text-yellow-400 font-bold">{purchaseAmount.toFixed(1)}</div>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max={selectedListing.quantity}
+                  step="0.1"
+                  value={purchaseAmount}
+                  onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-yellow"
+                />
+                <div className="flex justify-between mt-2">
+                  <button
+                    onClick={() => setPurchaseAmount(0.1)}
+                    className="text-gray-400 hover:text-yellow-400 text-xs font-bold uppercase tracking-wider"
+                  >
+                    MIN
+                  </button>
+                  <button
+                    onClick={() => setPurchaseAmount(selectedListing.quantity)}
+                    className="text-yellow-400 hover:text-yellow-300 text-xs font-bold uppercase tracking-wider"
+                  >
+                    MAX
+                  </button>
+                </div>
+              </div>
+
+              {/* Cost Display */}
+              <div className="mb-6 p-4 bg-black/80 border border-yellow-500/30 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="mek-label-uppercase text-gray-500 text-xs">PRICE PER ESSENCE</div>
+                  <div className="text-yellow-400 font-bold">{selectedListing.pricePerUnit.toLocaleString()}g</div>
+                </div>
+                <div className="h-px bg-yellow-500/20 my-2" />
+                <div className="flex items-center justify-between">
+                  <div className="mek-label-uppercase text-yellow-400/80 text-sm">TOTAL COST</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {(purchaseAmount * selectedListing.pricePerUnit).toLocaleString()}g
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Button */}
+              <button
+                onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                disabled={!userProfile || userProfile.gold < (purchaseAmount * selectedListing.pricePerUnit)}
+                className={`w-full py-3 rounded-lg font-bold uppercase tracking-wider transition-all ${
+                  userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
+                    ? "mek-button-primary"
+                    : "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed"
+                }`}
+              >
+                {userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
+                  ? "◆ CONFIRM PURCHASE"
+                  : "⊗ INSUFFICIENT FUNDS"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Purchase History Modal */}
+        {showHistoryModal && historyListingId && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-2xl w-full mek-card-industrial mek-border-sharp-gold p-6 rounded-lg max-h-[80vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">PURCHASE HISTORY</h2>
+
+              {/* History list would go here - requires query implementation */}
+              <div className="text-gray-400">
+                <p>Purchase history tracking will be available once backend queries are implemented.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Listings Modal */}
+        {showMyListingsModal && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-6xl w-full rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                onClick={() => setShowMyListingsModal(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold z-10"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
+                  <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
+                    MY LISTINGS
+                  </h2>
+                </div>
+                <p className="mek-label-uppercase text-yellow-400/60 ml-4">
+                  {myListings?.filter(l => l.itemType === "essence").length || 0} ACTIVE ESSENCE DEPLOYMENTS
+                </p>
+              </div>
+
+              {/* Active Deployments Content */}
+              {myListings && myListings.filter(l => l.itemType === "essence").length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {myListings
+                    .filter(l => l.itemType === "essence")
+                    .map((listing) => (
+                      <div key={listing._id} className="relative p-4 rounded-lg overflow-hidden hover:border-yellow-400/10 transition-all duration-500"
+                        style={{
+                          background: `linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)`,
+                          backdropFilter: 'blur(3px) brightness(1.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                        }}
+                      >
+                        {/* Crosshatch pattern */}
+                        <div
+                          className="absolute inset-0 pointer-events-none opacity-40"
+                          style={{
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+                                              repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
+                          }}
+                        />
+                        {/* Radial gradient accents */}
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
+                                         radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
+                                         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
+                          }}
+                        />
+                        <div className="relative">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="font-bold text-yellow-400 uppercase tracking-wide text-sm">
+                                {listing.itemVariation || listing.itemType}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="mek-label-uppercase text-gray-500 text-xs">QTY:</span>
+                                <span className="text-yellow-400">{listing.quantity}</span>
+                                <span className="text-gray-600">×</span>
+                                <span className="text-yellow-400">{listing.pricePerUnit}g</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="mek-label-uppercase text-gray-600 text-[10px]">DEPLOYED</div>
+                              <div className="text-xs text-yellow-400/60">{new Date(listing.listedAt).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleCancelListing(listing._id)}
+                            className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
+                          >
+                            ⊗ RECALL
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-lg">
+                    No active listings found.
+                  </div>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Click "LIST ITEM" to create a new essence listing.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
