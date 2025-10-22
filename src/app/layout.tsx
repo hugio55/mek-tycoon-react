@@ -1,6 +1,7 @@
 // Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import "@/styles/special-buttons.css";
 import "@/styles/typography-system.css";
@@ -66,6 +67,15 @@ export default function RootLayout({
           </DemoModeWrapper>
         </div>
         <SpeedInsights />
+
+        {/* NMKR Payment Widget Script */}
+        <Script
+          src="https://pay.nmkr.io/sdk/v2/latest.js"
+          strategy="lazyOnload"
+          onLoad={() => {
+            console.log('NMKR SDK loaded successfully');
+          }}
+        />
       </body>
     </html>
   );

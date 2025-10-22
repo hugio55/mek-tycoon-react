@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 
 // ==========================================
 // QUERIES
@@ -63,9 +64,10 @@ export const getAllSubmissions = query({
     let submissions;
 
     if (args.campaignName) {
+      const campaignName = args.campaignName; // Type narrowing
       submissions = await ctx.db
         .query("airdropSubmissions")
-        .withIndex("by_campaign", (q) => q.eq("campaignName", args.campaignName))
+        .withIndex("by_campaign", (q) => q.eq("campaignName", campaignName))
         .collect();
     } else {
       submissions = await ctx.db
@@ -81,14 +83,13 @@ export const getAllSubmissions = query({
     // Get user details for each submission
     const submissionsWithUsers = await Promise.all(
       submissions.map(async (submission) => {
-        const user = await ctx.db.get(submission.userId);
+        const user = await ctx.db.get(submission.userId) as Doc<"users"> | null;
         return {
           ...submission,
-          user: {
-            walletAddress: user?.walletAddress,
-            username: user?.username,
-            gold: user?.gold,
-          }
+          user: user ? {
+            walletAddress: user.walletAddress,
+            username: user.username,
+          } : null
         };
       })
     );

@@ -1950,7 +1950,20 @@ export default function MekRateLoggingPage() {
 
       // Don't override error if it was already set (e.g., from signature error)
       if (!walletError) {
-        const errorMsg = error.message || "Failed to connect wallet";
+        let errorMsg = error.message || "Failed to connect wallet";
+
+        // Special handling for account changed error
+        if (error.message && error.message.toLowerCase().includes('account changed')) {
+          errorMsg = "Wallet account was changed. Please disconnect and reconnect your wallet.";
+          console.log('[Wallet Connect] Account change detected - user needs to reconnect');
+
+          // Clear wallet state to force full reconnection
+          setWalletAddress(null);
+          setStakeAddress(null);
+          setConnectedWallet(null);
+          setOwnedMeks([]);
+        }
+
         setWalletError(errorMsg);
       }
     } finally {

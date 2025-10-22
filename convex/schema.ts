@@ -2592,4 +2592,47 @@ export default defineSchema({
     .index("by_campaign", ["campaignName"])
     .index("by_submitted_date", ["submittedAt"])
     .index("by_receive_address", ["receiveAddress"]),
+
+  // Commemorative NFT Purchases - Track paid NFT purchases via NMKR
+  commemorativePurchases: defineTable({
+    // User identification
+    userId: v.id("users"),
+    walletAddress: v.string(), // Stake address
+    paymentAddress: v.string(), // Payment address (addr1...)
+
+    // Campaign details
+    campaignName: v.string(), // e.g., "commemorative-token-1"
+    nmkrProjectId: v.string(), // NMKR project UID
+
+    // Purchase status
+    status: v.union(
+      v.literal("pending"),    // Payment initiated
+      v.literal("completed"),  // Payment confirmed, NFT sent
+      v.literal("failed"),     // Payment failed
+      v.literal("refunded")    // Payment refunded
+    ),
+
+    // Blockchain data
+    transactionHash: v.optional(v.string()), // Payment tx hash
+    nftTokenId: v.optional(v.string()),      // NFT token ID after minting
+    paymentAmount: v.optional(v.string()),   // Amount paid in lovelace
+
+    // Eligibility snapshot (at time of purchase)
+    goldSnapshot: v.number(),
+    mekCountSnapshot: v.number(),
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    failedAt: v.optional(v.number()),
+
+    // Admin notes
+    adminNotes: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_campaign", ["campaignName"])
+    .index("by_status", ["status"])
+    .index("by_transaction", ["transactionHash"]),
 });
