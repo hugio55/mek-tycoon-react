@@ -39,8 +39,19 @@ export const getActiveListings = query({
     // Apply pagination
     const paginated = filtered.slice(offset, offset + limit);
 
+    // Get seller info for each listing
+    const listingsWithSellers = await Promise.all(
+      paginated.map(async (listing) => {
+        const seller = await ctx.db.get(listing.sellerId);
+        return {
+          ...listing,
+          sellerCompanyName: seller?.companyName || seller?.username || seller?.walletAddress?.slice(0, 8) || "Unknown Corp",
+        };
+      })
+    );
+
     return {
-      listings: paginated,
+      listings: listingsWithSellers,
       total: filtered.length,
       hasMore: filtered.length > offset + limit,
     };
@@ -128,13 +139,37 @@ async function processPurchase(ctx: any, args: {
   });
   
   // Transfer items
-  if (listing.itemType === "essence" && listing.essenceType) {
-    // Transfer essence
-    const buyerEssence = { ...buyer.totalEssence };
-    const essenceKey = listing.essenceType as keyof typeof buyerEssence;
-    buyerEssence[essenceKey] += purchaseQuantity;
-    await ctx.db.patch(args.buyerId, { totalEssence: buyerEssence });
-    
+  if (listing.itemType === "essence" && listing.itemVariation) {
+    // Transfer essence using essenceBalances table
+    const variationName = listing.itemVariation;
+
+    // Find existing balance
+    const existingBalance = await ctx.db
+      .query("essenceBalances")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", buyer.walletAddress))
+      .collect();
+
+    const balance = existingBalance.find(b => b.variationName === variationName);
+    const now = Date.now();
+
+    if (balance) {
+      // Update existing balance
+      await ctx.db.patch(balance._id, {
+        accumulatedAmount: balance.accumulatedAmount + purchaseQuantity,
+        lastUpdated: now,
+      });
+    } else {
+      // Create new balance (sparse storage - only when they have essence)
+      await ctx.db.insert("essenceBalances", {
+        walletAddress: buyer.walletAddress,
+        variationId: 0, // Placeholder - marketplace doesn't need this
+        variationName: variationName,
+        variationType: "item" as const, // Placeholder - marketplace doesn't need accurate type
+        accumulatedAmount: purchaseQuantity,
+        lastUpdated: now,
+      });
+    }
+
   } else if (listing.itemType === "mek" && listing.mekId) {
     // Transfer Mek ownership
     await ctx.db.patch(listing.mekId, {
@@ -329,23 +364,33 @@ export const createListing = mutation({
     
     // Validate the listing based on type
     if (args.itemType === "essence") {
-      // For essence, itemVariation is the essence type
-      const essenceType = args.itemVariation;
-      if (!essenceType) {
-        throw new Error("Essence type required");
+      // For essence, itemVariation is the variation name
+      const variationName = args.itemVariation;
+      if (!variationName) {
+        throw new Error("Essence variation required");
       }
-      
-      // Check if user has enough essence
-      const essenceKey = essenceType as keyof typeof seller.totalEssence;
-      if (seller.totalEssence[essenceKey] < args.quantity) {
-        throw new Error(`Not enough ${essenceType} essence to list. Have ${seller.totalEssence[essenceKey]}, need ${args.quantity}`);
+
+      // Check if user has enough essence using essenceBalances
+      const existingBalances = await ctx.db
+        .query("essenceBalances")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+        .collect();
+
+      const balance = existingBalances.find(b => b.variationName === variationName);
+      const currentAmount = balance?.accumulatedAmount || 0;
+
+      if (currentAmount < args.quantity) {
+        throw new Error(`Not enough ${variationName} essence to list. Have ${currentAmount}, need ${args.quantity}`);
       }
-      
+
       // Deduct essence from user (held in escrow)
-      const updatedEssence = { ...seller.totalEssence };
-      updatedEssence[essenceKey] -= args.quantity;
-      await ctx.db.patch(args.sellerId, { totalEssence: updatedEssence });
-      
+      if (balance) {
+        await ctx.db.patch(balance._id, {
+          accumulatedAmount: balance.accumulatedAmount - args.quantity,
+          lastUpdated: Date.now(),
+        });
+      }
+
     } else if (args.itemType === "mek") {
       if (!args.mekId) {
         throw new Error("Mek ID required");
@@ -471,13 +516,37 @@ export const purchaseListing = mutation({
     });
     
     // Transfer items
-    if (listing.itemType === "essence" && listing.essenceType) {
-      // Transfer essence
-      const buyerEssence = { ...buyer.totalEssence };
-      const essenceKey = listing.essenceType as keyof typeof buyerEssence;
-      buyerEssence[essenceKey] += purchaseQuantity;
-      await ctx.db.patch(args.buyerId, { totalEssence: buyerEssence });
-      
+    if (listing.itemType === "essence" && listing.itemVariation) {
+      // Transfer essence using essenceBalances table
+      const variationName = listing.itemVariation;
+
+      // Find existing balance
+      const existingBalance = await ctx.db
+        .query("essenceBalances")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", buyer.walletAddress))
+        .collect();
+
+      const balance = existingBalance.find(b => b.variationName === variationName);
+      const now = Date.now();
+
+      if (balance) {
+        // Update existing balance
+        await ctx.db.patch(balance._id, {
+          accumulatedAmount: balance.accumulatedAmount + purchaseQuantity,
+          lastUpdated: now,
+        });
+      } else {
+        // Create new balance (sparse storage)
+        await ctx.db.insert("essenceBalances", {
+          walletAddress: buyer.walletAddress,
+          variationId: 0,
+          variationName: variationName,
+          variationType: "item" as const,
+          accumulatedAmount: purchaseQuantity,
+          lastUpdated: now,
+        });
+      }
+
     } else if ((listing.itemType as string) === "mek" && listing.mekId) {
       // Transfer Mek ownership
       await ctx.db.patch(listing.mekId, {
@@ -667,13 +736,37 @@ export const cancelListing = mutation({
     }
     
     // Return items to seller
-    if (listing.itemType === "essence" && listing.essenceType) {
-      // Return essence
-      const sellerEssence = { ...seller.totalEssence };
-      const essenceKey = listing.essenceType as keyof typeof sellerEssence;
-      sellerEssence[essenceKey] += listing.quantity;
-      await ctx.db.patch(listing.sellerId, { totalEssence: sellerEssence });
-      
+    if (listing.itemType === "essence" && listing.itemVariation) {
+      // Return essence using essenceBalances
+      const variationName = listing.itemVariation;
+
+      // Find existing balance
+      const existingBalances = await ctx.db
+        .query("essenceBalances")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+        .collect();
+
+      const balance = existingBalances.find(b => b.variationName === variationName);
+      const now = Date.now();
+
+      if (balance) {
+        // Update existing balance
+        await ctx.db.patch(balance._id, {
+          accumulatedAmount: balance.accumulatedAmount + listing.quantity,
+          lastUpdated: now,
+        });
+      } else {
+        // Create new balance (sparse storage)
+        await ctx.db.insert("essenceBalances", {
+          walletAddress: seller.walletAddress,
+          variationId: 0,
+          variationName: variationName,
+          variationType: "item" as const,
+          accumulatedAmount: listing.quantity,
+          lastUpdated: now,
+        });
+      }
+
     } else if ((listing.itemType as string) !== "mek" && listing.itemVariation) {
       // Return to inventory
       const existingItem = await ctx.db

@@ -2630,4 +2630,237 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_date", ["purchaseDate"])
     .index("by_status", ["status"]),
+
+  // ==========================================
+  // Story Climb Event NFT System
+  // ==========================================
+
+  // NFT Events - Story Climb event definitions
+  nftEvents: defineTable({
+    // Event Identity
+    eventNumber: v.number(), // Unique event number (e.g., 1, 2, 3...)
+    eventName: v.string(), // Display name (e.g., "Microphone Challenge")
+    eventSlug: v.string(), // URL-safe identifier (e.g., "microphone-challenge")
+
+    // Story Integration
+    storyNodeId: v.optional(v.string()), // Link to story climb node (if applicable)
+    storyContext: v.optional(v.string()), // Description of the story event
+
+    // Status
+    status: v.union(
+      v.literal("draft"),
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("archived")
+    ),
+    isActive: v.boolean(), // Can users mint from this event?
+
+    // NMKR Integration
+    nmkrProjectId: v.optional(v.string()), // NMKR project ID (if created)
+    nmkrProjectName: v.optional(v.string()), // NMKR project name
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdBy: v.optional(v.string()), // Admin user who created
+  })
+    .index("by_eventNumber", ["eventNumber"])
+    .index("by_status", ["status"])
+    .index("by_slug", ["eventSlug"])
+    .index("by_active", ["isActive"]),
+
+  // NFT Variations - 3 difficulty variations per event
+  nftVariations: defineTable({
+    // Event Relationship
+    eventId: v.id("nftEvents"), // Parent event
+
+    // Variation Identity
+    difficulty: v.union(v.literal("easy"), v.literal("medium"), v.literal("hard")),
+    nftName: v.string(), // Full display name
+    displayOrder: v.number(), // 1, 2, 3 for easy/medium/hard
+
+    // Supply Management
+    supplyTotal: v.number(), // Total mintable (e.g., 100, 50, 10)
+    supplyMinted: v.number(), // Current minted count
+    supplyRemaining: v.number(), // Calculated: total - minted
+    supplyReserved: v.optional(v.number()), // Pre-allocated/held back
+
+    // Art Assets
+    mainArtUrl: v.optional(v.string()), // IPFS URL for main art (GIF/PNG/MP4)
+    thumbnailUrl: v.optional(v.string()), // 500x500 thumbnail
+    thumbnailSmallUrl: v.optional(v.string()), // 150x150 thumbnail
+    subAssets: v.optional(v.array(v.string())), // Additional asset URLs
+
+    // File Metadata
+    mainArtFormat: v.optional(v.union(
+      v.literal("gif"),
+      v.literal("png"),
+      v.literal("jpg"),
+      v.literal("webp"),
+      v.literal("mp4")
+    )),
+    mainArtFileSize: v.optional(v.number()), // Bytes
+    mainArtDimensions: v.optional(v.string()), // "2000x2000"
+
+    // NMKR Integration
+    nmkrAssetId: v.optional(v.string()), // NMKR asset identifier
+    nmkrTokenName: v.optional(v.string()), // Token name in NMKR
+    policyId: v.optional(v.string()), // Cardano policy ID
+
+    // Pricing (if applicable)
+    priceAda: v.optional(v.number()), // Price in ADA (null = free/airdrop)
+    priceLovelace: v.optional(v.number()), // Price in lovelace
+
+    // CIP-25 Metadata
+    metadata: v.optional(v.object({
+      name: v.string(),
+      image: v.string(),
+      description: v.optional(v.string()),
+      eventNumber: v.number(),
+      difficulty: v.string(),
+      attributes: v.optional(v.any()),
+    })),
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_event", ["eventId"])
+    .index("by_difficulty", ["difficulty"])
+    .index("by_eventAndDifficulty", ["eventId", "difficulty"])
+    .index("by_nmkrAssetId", ["nmkrAssetId"]),
+
+  // NFT Purchases - Track every NFT purchase/mint
+  nftPurchases: defineTable({
+    // Variation & Event
+    variationId: v.id("nftVariations"),
+    eventId: v.id("nftEvents"),
+
+    // User/Wallet Information
+    userId: v.optional(v.id("users")), // Mek Tycoon user (if logged in)
+    walletAddress: v.string(), // Buyer's stake address
+    paymentAddress: v.string(), // Payment address used
+    companyName: v.optional(v.string()), // Company name from goldMining table
+
+    // Transaction Details
+    transactionHash: v.string(), // Cardano blockchain tx hash
+    transactionUrl: v.optional(v.string()), // CardanoScan URL
+    blockNumber: v.optional(v.number()), // Block height
+
+    // Pricing & Payment
+    priceAda: v.number(), // Amount paid in ADA
+    priceLovelace: v.number(), // Amount paid in lovelace
+    currency: v.union(v.literal("ADA"), v.literal("tADA")), // Mainnet vs testnet
+
+    // NFT Details
+    tokenName: v.string(), // Actual minted token name
+    assetId: v.string(), // Full asset ID (policy + asset name)
+    mintingSlot: v.optional(v.number()), // Cardano slot number
+
+    // NMKR Data
+    nmkrSaleId: v.optional(v.string()), // NMKR sale identifier
+    nmkrOrderId: v.optional(v.string()), // NMKR order number
+    nmkrPaymentMethod: v.optional(v.string()), // Payment method used
+
+    // Status Tracking
+    status: v.union(
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("refunded")
+    ),
+    statusMessage: v.optional(v.string()), // Error message or notes
+
+    // Webhook Data (raw NMKR payload)
+    webhookData: v.optional(v.any()),
+
+    // Timestamps
+    purchasedAt: v.number(), // When user initiated purchase
+    confirmedAt: v.optional(v.number()), // When blockchain confirmed
+    webhookReceivedAt: v.optional(v.number()), // When we received NMKR webhook
+    createdAt: v.number(),
+    updatedAt: v.number(),
+
+    // Admin notes
+    adminNotes: v.optional(v.string()),
+  })
+    .index("by_variation", ["variationId"])
+    .index("by_event", ["eventId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_user", ["userId"])
+    .index("by_txHash", ["transactionHash"])
+    .index("by_status", ["status"])
+    .index("by_date", ["purchasedAt"])
+    .index("by_company", ["companyName"]),
+
+  // NFT Art Assets - Centralized art asset library
+  nftArtAssets: defineTable({
+    // Asset Identity
+    assetName: v.string(), // File name
+    assetType: v.union(
+      v.literal("main"),
+      v.literal("thumbnail"),
+      v.literal("thumbnail_small"),
+      v.literal("sub_asset")
+    ),
+    category: v.optional(v.string()), // "event_art", "variation_art", "template"
+
+    // Storage
+    ipfsUrl: v.string(), // IPFS storage URL
+    cdnUrl: v.optional(v.string()), // CDN mirror URL
+    localPath: v.optional(v.string()), // Local backup path
+
+    // File Details
+    format: v.union(
+      v.literal("gif"),
+      v.literal("png"),
+      v.literal("jpg"),
+      v.literal("webp"),
+      v.literal("mp4")
+    ),
+    fileSize: v.number(), // Bytes
+    dimensions: v.optional(v.string()), // "2000x2000"
+    isAnimated: v.optional(v.boolean()),
+
+    // Usage Tracking
+    usedByVariations: v.optional(v.array(v.id("nftVariations"))),
+    usedByEvents: v.optional(v.array(v.id("nftEvents"))),
+
+    // Metadata
+    uploadedBy: v.optional(v.string()), // Admin user
+    uploadedAt: v.number(),
+    tags: v.optional(v.array(v.string())), // Searchable tags
+
+    // Timestamps
+    createdAt: v.number(),
+  })
+    .index("by_type", ["assetType"])
+    .index("by_category", ["category"])
+    .index("by_uploadedAt", ["uploadedAt"]),
+
+  // NMKR Sync Log - Track synchronization with NMKR API
+  nmkrSyncLog: defineTable({
+    syncType: v.union(
+      v.literal("webhook"),
+      v.literal("api_pull"),
+      v.literal("manual_sync")
+    ),
+    nmkrProjectId: v.string(),
+
+    // Sync Results
+    status: v.union(v.literal("success"), v.literal("partial"), v.literal("failed")),
+    recordsSynced: v.number(),
+    errors: v.optional(v.array(v.string())),
+
+    // Data
+    syncedData: v.optional(v.any()), // Raw data from NMKR
+
+    // Timestamps
+    syncStartedAt: v.number(),
+    syncCompletedAt: v.number(),
+  })
+    .index("by_project", ["nmkrProjectId"])
+    .index("by_status", ["status"])
+    .index("by_date", ["syncStartedAt"]),
 });

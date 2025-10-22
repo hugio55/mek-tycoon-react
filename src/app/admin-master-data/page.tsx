@@ -17,6 +17,12 @@ import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import VariationSearchTable from '@/components/VariationSearchTable';
+import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
+import EventManager from '@/components/admin/nft/EventManager';
+import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
+import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
+import SimpleNFTMinter from '@/components/admin/nft/SimpleNFTMinter';
+import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -56,7 +62,8 @@ const DATA_SYSTEMS = [
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Wallet Management', icon: '👛', implemented: true },
   { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
-  { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false }
+  { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
+  { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -1727,6 +1734,12 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Essence Market Management */}
+                <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                  <h4 className="text-sm font-bold text-purple-400 mb-3">Essence Market Management</h4>
+                  <EssenceMarketAdmin />
+                </div>
               </div>
             )}
           </div>
@@ -2622,6 +2635,20 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* NFT Admin */}
+          {activeTab === 'nft-admin' && (
+          <div id="section-nft-admin" className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Manage NFT campaigns, eligibility, and distribution for commemorative tokens and event-based NFTs.
+                </p>
+
+                {/* NFT Sub-Tabs */}
+                <NFTAdminTabs />
+              </div>
+          </div>
+          )}
+
         </div>
       </div>
 
@@ -2630,6 +2657,76 @@ export default function AdminMasterDataPage() {
         isOpen={showGameDataLightbox}
         onClose={() => setShowGameDataLightbox(false)}
       />
+    </div>
+  );
+}
+
+// NFT Admin Sub-Tabs Component
+function NFTAdminTabs() {
+  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative'>('simple-minter');
+
+  return (
+    <div className="space-y-6">
+      {/* Sub-Tab Navigation */}
+      <div className="flex flex-wrap gap-2 border-b-2 border-yellow-500/30 pb-2">
+        <button
+          onClick={() => setNftSubTab('simple-minter')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'simple-minter'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          🧪 Test Minter
+        </button>
+        <button
+          onClick={() => setNftSubTab('events')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'events'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          📅 Events
+        </button>
+        <button
+          onClick={() => setNftSubTab('purchases')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'purchases'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          💳 Purchases
+        </button>
+        <button
+          onClick={() => setNftSubTab('analytics')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'analytics'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          📊 Analytics
+        </button>
+        <button
+          onClick={() => setNftSubTab('commemorative')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'commemorative'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          🏆 Commemorative
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {nftSubTab === 'simple-minter' && <SimpleNFTMinter />}
+      {nftSubTab === 'events' && <EventManager />}
+      {nftSubTab === 'purchases' && <PurchaseDashboard />}
+      {nftSubTab === 'analytics' && <RevenueAnalytics />}
+      {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
     </div>
   );
 }

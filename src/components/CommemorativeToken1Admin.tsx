@@ -15,6 +15,12 @@ export default function CommemorativeToken1Admin() {
   const stats = useQuery(api.airdrop.getSubmissionStats, { campaignName: CAMPAIGN_NAME });
   const eligibleCount = useQuery(api.airdrop.getEligibleUsersCount, { minimumGold: 0 });
   const allSubmissions = useQuery(api.airdrop.getAllSubmissions, { campaignName: CAMPAIGN_NAME });
+  const companyNames = useQuery(
+    api.airdrop.getWalletCompanyNames,
+    config?.testWallets && config.testWallets.length > 0
+      ? { walletAddresses: config.testWallets }
+      : "skip"
+  );
 
   // Mutations
   const upsertConfig = useMutation(api.airdrop.upsertConfig);
@@ -261,22 +267,32 @@ export default function CommemorativeToken1Admin() {
               </h4>
               {config.testWallets && config.testWallets.length > 0 ? (
                 <div className="space-y-2">
-                  {config.testWallets.map((wallet, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-gray-900/50 border border-gray-700/50 rounded p-3"
-                    >
-                      <span className="font-mono text-xs text-gray-300">
-                        {wallet.slice(0, 30)}...{wallet.slice(-10)}
-                      </span>
-                      <button
-                        onClick={() => handleRemoveTestWallet(wallet)}
-                        className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold rounded transition-all"
+                  {config.testWallets.map((wallet, index) => {
+                    const companyName = companyNames?.[wallet];
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gray-900/50 border border-gray-700/50 rounded p-3"
                       >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex flex-col gap-1">
+                          {companyName && (
+                            <span className="text-sm font-bold text-yellow-400">
+                              {companyName}
+                            </span>
+                          )}
+                          <span className="font-mono text-xs text-gray-300">
+                            {wallet.slice(0, 30)}...{wallet.slice(-10)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveTestWallet(wallet)}
+                          className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold rounded transition-all"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-4 text-gray-500 text-sm">
