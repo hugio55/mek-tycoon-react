@@ -1,3 +1,4 @@
+// Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import Script from "next/script";
@@ -8,6 +9,8 @@ import { Providers } from "./providers";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import EnvironmentIndicator from "@/components/EnvironmentIndicator";
+import EnvironmentDebugPanel from "@/components/EnvironmentDebugPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,7 +65,11 @@ export default function RootLayout({
         {/* Content layer */}
         <div className="relative z-10">
           <DemoModeWrapper>
-            <Providers>{children}</Providers>
+            <Providers>
+              <EnvironmentIndicator />
+              <EnvironmentDebugPanel />
+              {children}
+            </Providers>
           </DemoModeWrapper>
         </div>
         <SpeedInsights />
