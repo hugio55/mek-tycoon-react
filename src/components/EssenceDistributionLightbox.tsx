@@ -12,6 +12,92 @@ interface EssenceDistributionLightboxProps {
   walletAddress?: string;
 }
 
+// Store essence accumulation state globally (persists across component unmounts)
+const essenceAccumulationState = new Map<string, { startTime: number; startAmount: number }>();
+
+// Real-time accumulation component showing high-precision decimals
+function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: { currentAmount: number; ratePerDay: number; isFull: boolean; essenceId: string }) {
+  const [displayAmount, setDisplayAmount] = useState(() => {
+    // Initialize with existing state or current amount
+    const existing = essenceAccumulationState.get(essenceId);
+    if (existing) {
+      const elapsedMs = Date.now() - existing.startTime;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      return existing.startAmount + (ratePerDay * elapsedDays);
+    }
+    return currentAmount;
+  });
+
+  // Initialize state for this essence if it doesn't exist
+  useEffect(() => {
+    if (!essenceAccumulationState.has(essenceId)) {
+      essenceAccumulationState.set(essenceId, {
+        startTime: Date.now(),
+        startAmount: currentAmount
+      });
+    }
+  }, [essenceId, currentAmount]);
+
+  // Check if backend value changed significantly (indicates a mutation like slotting/unslotting)
+  useEffect(() => {
+    const state = essenceAccumulationState.get(essenceId);
+    if (state) {
+      const elapsedMs = Date.now() - state.startTime;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      const expectedAmount = state.startAmount + (ratePerDay * elapsedDays);
+      const difference = Math.abs(currentAmount - expectedAmount);
+
+      // If difference is more than 0.1 essence, it's likely a real backend change
+      if (difference > 0.1) {
+        essenceAccumulationState.set(essenceId, {
+          startTime: Date.now(),
+          startAmount: currentAmount
+        });
+        setDisplayAmount(currentAmount);
+      }
+    }
+  }, [currentAmount, ratePerDay, essenceId]);
+
+  useEffect(() => {
+    if (isFull) {
+      setDisplayAmount(currentAmount);
+      return;
+    }
+
+    // Update every 50ms for smooth animation
+    const interval = setInterval(() => {
+      const state = essenceAccumulationState.get(essenceId);
+      if (state) {
+        const elapsedMs = Date.now() - state.startTime;
+        const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+        const accumulated = state.startAmount + (ratePerDay * elapsedDays);
+        setDisplayAmount(accumulated);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [ratePerDay, essenceId, isFull]);
+
+  return (
+    <div className="mt-3 pt-3 border-t border-yellow-500/20">
+      <div className="text-center">
+        <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-1 font-bold">
+          Real-Time Accumulation
+        </div>
+        <div
+          className="text-xl font-mono text-cyan-400 tracking-tight tabular-nums"
+          style={{
+            textShadow: '0 0 10px rgba(34, 211, 238, 0.5)',
+            fontVariantNumeric: 'tabular-nums'
+          }}
+        >
+          {displayAmount.toFixed(12)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress = "demo_wallet_123" }: EssenceDistributionLightboxProps) {
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
   const [chartSize, setChartSize] = useState(525);
@@ -66,6 +152,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       const baseRate = essenceConfig?.essenceRate || 0.1;
       const essenceCap = essenceConfig?.essenceCap || 10;
 
+      // Use variation name to construct image path (lowercase, replace spaces with hyphens)
+      const imageName = balance.variationName.toLowerCase().replace(/\s+/g, '-');
+
       return {
         id: balance.variationName.toLowerCase().replace(/\s+/g, '-'),
         name: balance.variationName,
@@ -74,7 +163,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
         maxAmount: essenceCap,
         maxAmountBuffed: undefined, // TODO: Get from buffs
         icon: essenceIcons[index % essenceIcons.length],
-        image: `/essence-images/bumblebee ${(index % 3) + 1}.png`, // TODO: Map to actual variation images
+        image: `/essence-images/${imageName}.png`, // Map to variation-specific images
         baseRate,
         bonusRate: 0 // TODO: Get from buffs
       };
@@ -91,6 +180,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       setMaxSliceFilter(newMax);
     }
   }, [essenceData]);
+
+  // Clear selection when lightbox reopens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedSlice(null);
+      setHoveredSlice(null);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -161,12 +258,25 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   const handleSliceClick = (essenceId: string) => {
     setIsSlotting(true);
     setTimeout(() => setIsSlotting(false), 300);
-    setSelectedSlice(essenceId);
+    // Toggle selection: if clicking same slice, deselect it
+    if (selectedSlice === essenceId) {
+      setSelectedSlice(null);
+      setHoveredSlice(null);
+    } else {
+      setSelectedSlice(essenceId);
+    }
   };
 
   const handleClearSelection = () => {
     setSelectedSlice(null);
     setHoveredSlice(null);
+  };
+
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    // Only clear selection if clicking directly on the background (not on children)
+    if (e.target === e.currentTarget) {
+      handleClearSelection();
+    }
   };
 
   if (!isOpen) return null;
@@ -202,7 +312,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
         </button>
 
         {/* Scrollable Content */}
-        <div className="w-full h-full overflow-y-auto">
+        <div className="w-full h-full overflow-y-auto" onClick={handleBackgroundClick}>
           <div className="relative text-white">
             {/* Industrial Header */}
             <div className="w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
@@ -253,8 +363,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       <div className="relative group">
                         <div className="relative bg-gradient-to-br from-yellow-900/20 to-black/60 border border-yellow-500/40 px-6 py-3">
                           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">ESSENCE</div>
-                          <div className="relative">
+                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">ESSENCE</div>
+                          <div className="relative text-center">
                             <div className="text-3xl font-bold font-mono text-yellow-400 tracking-tight" style={{
                               textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
                             }}>
@@ -272,9 +382,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       <div className="relative group">
                         <div className="relative bg-gradient-to-br from-green-900/20 to-black/60 border border-green-500/40 px-6 py-3">
                           <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">VALUE</div>
-                          <div className="relative">
-                            <div className="text-3xl font-bold font-mono text-green-400 tracking-tight flex items-baseline" style={{
+                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">VALUE</div>
+                          <div className="relative text-center">
+                            <div className="text-3xl font-bold font-mono text-green-400 tracking-tight inline-flex items-baseline" style={{
                               textShadow: '0 0 20px rgba(74, 222, 128, 0.5), 0 0 40px rgba(74, 222, 128, 0.3)'
                             }}>
                               {Math.round(totalStats.totalValue).toLocaleString()}
@@ -292,8 +402,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       <div className="relative group">
                         <div className="relative bg-gradient-to-br from-cyan-900/20 to-black/60 border border-cyan-500/40 px-6 py-3">
                           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1">TYPES</div>
-                          <div className="relative">
+                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">TYPES</div>
+                          <div className="relative text-center">
                             <div className="text-3xl font-bold font-mono text-cyan-400 tracking-tight" style={{
                               textShadow: '0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.3)'
                             }}>
@@ -386,8 +496,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                   className="w-full px-4 py-3 text-left hover:bg-yellow-500/20 transition-colors border-b border-gray-800/50 last:border-b-0"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-lg">{essence.icon}</span>
+                                    <div className="flex items-center">
                                       <span className="text-white font-medium">{essence.name}</span>
                                     </div>
                                     <div className="text-right">
@@ -455,13 +564,21 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                           <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
 
                           {/* Essence Bottle Image */}
-                          <div className="relative mb-4 mek-slot-empty rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30" style={{ minHeight: '200px' }}>
+                          <div className="relative mb-4 bg-black/40 rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30 mx-auto" style={{
+                            width: '240px',
+                            height: '240px',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.02) 10px, rgba(255, 255, 255, 0.02) 20px)'
+                          }}>
                             <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
                             <img
-                              src={`/essence-images/bumblebee ${(sliceIndex % 3) + 1}.png`}
+                              src={slice.image || '/essence-images/bumble0000.png'}
                               alt={`${slice.name} essence`}
                               className="relative z-10 w-full h-full object-contain"
-                              style={{ maxHeight: '180px' }}
+                              style={{ maxHeight: '200px' }}
+                              onError={(e) => {
+                                // Fallback to generic essence bottle if specific image not found
+                                (e.target as HTMLImageElement).src = '/essence-images/bumble0000.png';
+                              }}
                             />
                           </div>
 
@@ -501,6 +618,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                 }}
                               />
                             </div>
+
+                            {/* High-Precision Real-Time Accumulation Display */}
+                            <RealTimeAccumulation
+                              currentAmount={slice.amount}
+                              ratePerDay={totalRate}
+                              isFull={isFull}
+                              essenceId={slice.id}
+                            />
                           </div>
 
                           {/* Stats Grid */}
@@ -517,7 +642,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                               <div>
                                 <p className="mek-label-uppercase mb-1">BASE RATE</p>
                                 <p className="text-lg text-cyan-400">
-                                  <span className="font-semibold">{baseRate.toFixed(2)}</span>
+                                  <span className="font-semibold">{baseRate % 1 === 0 ? baseRate.toFixed(0) : parseFloat(baseRate.toFixed(2)).toString()}</span>
                                   <span className="font-light">/d</span>
                                 </p>
                               </div>
@@ -531,7 +656,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                               <div>
                                 <p className="mek-label-uppercase mb-1">BONUS RATE</p>
                                 <p className="text-lg text-green-400">
-                                  <span className="font-semibold">{bonusRate > 0 ? `+${bonusRate.toFixed(2)}` : '+0.00'}</span>
+                                  <span className="font-semibold">{bonusRate > 0 ? `+${bonusRate % 1 === 0 ? bonusRate.toFixed(0) : parseFloat(bonusRate.toFixed(2)).toString()}` : '+0'}</span>
                                   <span className="font-light">/d</span>
                                 </p>
                               </div>
@@ -540,10 +665,108 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                         </div>
                       );
                     })() : (
-                      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative opacity-60">
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-500/40 rounded-lg px-5 py-3 shadow-2xl">
-                            <p className="text-yellow-400 text-sm font-semibold uppercase tracking-wider">Hover Chart for Details</p>
+                      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative opacity-40">
+                        <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
+
+                        {/* Essence Bottle Placeholder */}
+                        <div className="relative mb-4 bg-black/40 rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30 mx-auto" style={{
+                          width: '240px',
+                          height: '240px',
+                          background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.02) 10px, rgba(255, 255, 255, 0.02) 20px)'
+                        }}>
+                          <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
+                          <img
+                            src="/essence-images/bumble0000.png"
+                            alt="Essence placeholder"
+                            className="relative z-10 w-full h-full object-contain opacity-30"
+                            style={{ maxHeight: '200px' }}
+                          />
+                        </div>
+
+                        {/* Placeholder Name */}
+                        <div className="text-center mb-4">
+                          <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">-- ESSENCE --</h2>
+                        </div>
+
+                        {/* Ownership Section Placeholder */}
+                        <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
+                          <div className="flex justify-between items-center mb-2 relative z-10">
+                            <span className="text-xs text-gray-600 uppercase tracking-widest">OWNERSHIP</span>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl font-bold text-gray-600">--</span>
+                              <span className="text-xl font-normal text-gray-600">/10</span>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar Placeholder */}
+                          <div className="relative h-6 bg-black/80 rounded overflow-hidden border border-yellow-500/30">
+                            <div className="absolute inset-y-0 left-0" style={{
+                              width: '0%',
+                              background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))'
+                            }} />
+                          </div>
+
+                          {/* Real-Time Accumulation Placeholder */}
+                          <div className="mt-3 pt-3 border-t border-yellow-500/20">
+                            <div className="text-center">
+                              <div className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-1 font-bold">
+                                Real-Time Accumulation
+                              </div>
+                              <div className="text-xl font-mono text-gray-600 tracking-tight">
+                                --.------------
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stats Grid Placeholder */}
+                        <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-3 relative overflow-hidden">
+                          <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10">
+                            <div>
+                              <p className="mek-label-uppercase mb-1 text-gray-600">MARKET PRICE</p>
+                              <p className="text-lg text-gray-600">
+                                <span className="font-semibold">--</span>
+                                <span className="font-light">g/ea</span>
+                              </p>
+                            </div>
+                            <div>
+                              <p className="mek-label-uppercase mb-1 text-gray-600">BASE RATE</p>
+                              <p className="text-lg text-gray-600">
+                                <span className="font-semibold">--</span>
+                                <span className="font-light">/d</span>
+                              </p>
+                            </div>
+                            <div>
+                              <p className="mek-label-uppercase mb-1 text-gray-600">TOTAL VALUE</p>
+                              <p className="text-lg text-gray-600">
+                                <span className="font-semibold">--</span>
+                                <span className="font-light">g</span>
+                              </p>
+                            </div>
+                            <div>
+                              <p className="mek-label-uppercase mb-1 text-gray-600">BONUS RATE</p>
+                              <p className="text-lg text-gray-600">
+                                <span className="font-semibold">--</span>
+                                <span className="font-light">/d</span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Overlay Message - absolutely positioned to not affect layout */}
+                        <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none z-50" style={{
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          margin: 0,
+                          padding: 0
+                        }}>
+                          <div className="bg-black/95 backdrop-blur-xl border-3 border-yellow-500/70 rounded-lg px-8 py-5 shadow-2xl" style={{
+                            boxShadow: '0 0 30px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4), inset 0 0 20px rgba(250, 182, 23, 0.2)'
+                          }}>
+                            <p className="text-yellow-400 text-lg font-bold uppercase tracking-[0.3em] animate-pulse" style={{
+                              textShadow: '0 0 20px rgba(250, 182, 23, 0.9), 0 0 40px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4)'
+                            }}>Hover Chart for Details</p>
                           </div>
                         </div>
                       </div>

@@ -90,7 +90,7 @@ export default function EssenceDonutChart({
       const startAngle = currentAngle;
       const endAngle = currentAngle + angleSpan;
       const color = item.color || ESSENCE_COLORS[index % ESSENCE_COLORS.length];
-      
+
       currentAngle = endAngle;
 
       return {
@@ -268,6 +268,11 @@ export default function EssenceDonutChart({
                 <rect width="3" height="10" fill="rgba(59, 130, 246, 0.3)" />
                 <rect x="5" width="3" height="10" fill="rgba(96, 165, 250, 0.3)" />
               </pattern>
+
+              {/* Darken Texture: Hexagon Pattern */}
+              <pattern id="darken-hex" x="0" y="0" width="12" height="10.39" patternUnits="userSpaceOnUse">
+                <polygon points="6,0 12,5.2 6,10.4 0,5.2" fill="transparent" stroke="rgba(0, 0, 0, 0.4)" strokeWidth="1" />
+              </pattern>
             </defs>
 
             {/* Background ring */}
@@ -298,13 +303,15 @@ export default function EssenceDonutChart({
               {processedData.map((slice, index) => {
                 const isHovered = hoveredSlice === slice.id;
                 const isSelected = selectedSlice === slice.id;
+                const hasSelection = selectedSlice !== null;
+                const shouldDarken = hasSelection && !isSelected;
                 const opacity = (hoveredSlice || selectedSlice) && !isHovered && !isSelected ? 0.6 : 1;
-                
+
                 // Determine hover effect based on selection
                 let hoverFilter = 'none';
                 let fillUrl = `url(#slice-gradient-${slice.id})`;
                 let additionalStyle = {};
-                
+
                 if (isHovered || isSelected) {
                   switch(hoverEffect) {
                     case 1: // Inner Glow
@@ -328,21 +335,21 @@ export default function EssenceDonutChart({
                 return (
                   <g key={slice.id}>
                     {/* Hover highlight layer (for effect 1 & 2) */}
-                    {(isHovered || isSelected) && (hoverEffect === 1 || hoverEffect === 2) && (
+                    {(isHovered || isSelected) && (hoverEffect === 1 || hoverEffect === 2) && !shouldDarken && (
                       <path
                         d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
                         fill={slice.color}
                         opacity={0.3}
                         filter={hoverFilter}
                         pointerEvents="none"
-                        style={{ transition: 'opacity 0.3s ease' }}
+                        style={{ transition: 'opacity 0.3s ease, filter 0.2s ease' }}
                       />
                     )}
                     
                     {/* Main slice */}
                     <path
                       d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
-                      fill={fillUrl}
+                      fill={shouldDarken ? '#1a1a1a' : fillUrl}
                       stroke={isHovered || isSelected ? theme.colors.primary.yellow : 'rgba(0, 0, 0, 0.5)'}
                       strokeWidth={isHovered || isSelected ? 2 : 1}
                       opacity={opacity}
@@ -364,22 +371,37 @@ export default function EssenceDonutChart({
                       }}
                     />
 
-                    {/* Texture overlay */}
-                    <path
-                      d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
-                      fill="url(#metal-texture)"
-                      opacity={0.3}
-                      pointerEvents="none"
-                    />
-                    
-                    {/* Striped overlay for full essences */}
-                    {slice.isFull && (
+                    {/* Texture overlay - only show when not darkened */}
+                    {!shouldDarken && (
+                      <path
+                        d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
+                        fill="url(#metal-texture)"
+                        opacity={0.3}
+                        pointerEvents="none"
+                        style={{ transition: 'opacity 0.2s ease' }}
+                      />
+                    )}
+
+                    {/* Striped overlay for full essences - only show when not darkened */}
+                    {slice.isFull && !shouldDarken && (
                       <path
                         d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
                         fill="url(#full-stripes)"
                         opacity={1}
                         pointerEvents="none"
                         className="animate-pulse"
+                        style={{ transition: 'opacity 0.2s ease' }}
+                      />
+                    )}
+
+                    {/* Darken texture overlay - hexagon pattern */}
+                    {shouldDarken && (
+                      <path
+                        d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
+                        fill="url(#darken-hex)"
+                        opacity={0.8}
+                        pointerEvents="none"
+                        style={{ transition: 'opacity 0.2s ease' }}
                       />
                     )}
 

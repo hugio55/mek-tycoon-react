@@ -48,11 +48,6 @@ export default function SimpleNFTMinter() {
   const [imageBase64, setImageBase64] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageMimetype, setImageMimetype] = useState<string>('image/png'); // Auto-detected
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailStorageId, setThumbnailStorageId] = useState('');
-  const [thumbnailBase64, setThumbnailBase64] = useState('');
-  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
-  const [thumbnailMimetype, setThumbnailMimetype] = useState<string>('image/png');
   const [useTimestamp, setUseTimestamp] = useState(false); // Add timestamp to tokenname (default: off)
   const [metadataFields, setMetadataFields] = useState<MetadataField[]>([]); // Custom metadata
   const [receiverAddress, setReceiverAddress] = useState('');
@@ -126,11 +121,18 @@ export default function SimpleNFTMinter() {
             "image": "<ipfs_link>",
             "mediaType": "<mime_type>",
             "description": "<description>",
+            "files": [
+              {
+                "name": "<display_name>",
+                "mediaType": "<mime_type>",
+                "src": "<ipfs_link>"
+              }
+            ],
             ...customFields
           }
-        }
-      },
-      "version": "1.0"
+        },
+        "version": "1.0"
+      }
     };
 
     return JSON.stringify(template);
@@ -205,57 +207,6 @@ export default function SimpleNFTMinter() {
       setImageFile(null);
     } finally {
       setUploadingImage(false);
-    }
-  };
-
-  const handleThumbnailUpload = async (file: File) => {
-    setUploadingThumbnail(true);
-    setError(null);
-    setThumbnailFile(file);
-
-    try {
-      // Auto-detect media type from file
-      const detectedType = file.type || 'image/png';
-      setThumbnailMimetype(detectedType);
-      console.log('🖼️ Detected thumbnail type:', detectedType);
-
-      // Convert to base64 in frontend
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const base64Data = await base64Promise;
-      console.log('🖼️ Converted to base64, size:', (base64Data.length / 1024).toFixed(0), 'KB');
-
-      // Store base64 STRING in Convex storage
-      const uploadUrl = await generateUploadUrl();
-      const base64Blob = new Blob([base64Data], { type: 'text/plain' });
-      const uploadResult = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: base64Blob,
-      });
-
-      if (!uploadResult.ok) {
-        throw new Error('Failed to upload thumbnail');
-      }
-
-      const { storageId } = await uploadResult.json();
-      setThumbnailStorageId(storageId);
-      console.log('🖼️ Thumbnail base64 uploaded to storage:', storageId);
-    } catch (err: any) {
-      console.error('Error processing thumbnail:', err);
-      setError(err.message || 'Failed to process thumbnail');
-      setThumbnailFile(null);
-    } finally {
-      setUploadingThumbnail(false);
     }
   };
 
@@ -477,8 +428,6 @@ export default function SimpleNFTMinter() {
         description: description || undefined,
         imageStorageId: imageStorageId, // Pass storage ID instead of base64
         imageMimetype: imageMimetype,
-        thumbnailStorageId: thumbnailStorageId || undefined, // Pass storage ID instead of base64
-        thumbnailMimetype: thumbnailStorageId ? thumbnailMimetype : undefined,
         receiverAddress,
         subassets: subassetData.length > 0 ? subassetData : undefined,
         metadata: Object.keys(customMetadata).length > 0 ? customMetadata : undefined,
@@ -938,11 +887,12 @@ export default function SimpleNFTMinter() {
                   htmlFor="nft-image-upload"
                   className="block w-full px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider transition-all text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {uploadingImage ? '⏳ Uploading Media...' : '📁 Upload Artwork/Video'}
+                  {uploadingImage ? '⏳ Uploading Media...' : '📁 Upload Main Artwork'}
                 </label>
                 <p className="text-xs text-gray-500">
-                  Upload your NFT media (PNG, JPG, GIF, WebP, MP4, MOV, WebM)<br/>
-                  <span className="text-blue-400">NMKR will automatically upload this to IPFS when minting</span>
+                  This will be your NFT's primary display image on marketplaces (JPG.store, pool.pm, etc.)<br/>
+                  <span className="text-blue-400">Supports: PNG, JPG, GIF, WebP, MP4, MOV, WebM</span><br/>
+                  <span className="text-yellow-400">GIF recommended: Animated GIFs display correctly on most Cardano marketplaces</span>
                 </p>
               </div>
             )}
@@ -1007,64 +957,6 @@ export default function SimpleNFTMinter() {
                 <div className="bg-green-900/20 border border-green-500/50 rounded p-2">
                   <p className="text-xs text-green-400 font-mono">
                     ✓ Image ready for minting ({imageFile ? (imageFile.size / 1024).toFixed(0) : '0'} KB)
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Thumbnail Upload Section */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-bold">
-              Thumbnail / Preview Image (Optional)
-            </label>
-            <p className="text-xs text-gray-500 mb-3">
-              Upload a smaller preview image (recommended: 350x350px). If not provided, NMKR will use the main artwork.
-            </p>
-
-            {!thumbnailFile ? (
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleThumbnailUpload(file);
-                    }
-                  }}
-                  disabled={loading || uploadingThumbnail}
-                  className="hidden"
-                  id="nft-thumbnail-upload"
-                />
-                <label
-                  htmlFor="nft-thumbnail-upload"
-                  className="block w-full px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider transition-all text-center cursor-pointer disabled:opacity-50"
-                >
-                  {uploadingThumbnail ? '⏳ Processing...' : '🖼️ Upload Thumbnail'}
-                </label>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="relative bg-black/70 border-2 border-purple-500 rounded p-3">
-                  <img
-                    src={URL.createObjectURL(thumbnailFile)}
-                    alt="Thumbnail Preview"
-                    className="w-32 h-32 object-cover mx-auto rounded"
-                  />
-                  <button
-                    onClick={() => {
-                      setThumbnailFile(null);
-                      setThumbnailBase64('');
-                    }}
-                    className="absolute top-1 right-1 px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase rounded"
-                  >
-                    Remove
-                  </button>
-                </div>
-                <div className="bg-purple-900/20 border border-purple-500/50 rounded p-2">
-                  <p className="text-xs text-purple-400">
-                    ✓ Thumbnail ready
                   </p>
                 </div>
               </div>

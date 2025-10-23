@@ -211,20 +211,165 @@ export const getPlayerEssenceState = query({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
 
-    // Get essence balances
+    // Get essence balances with REAL-TIME ACCUMULATION (like gold mining)
     const balances = await ctx.db
       .query("essenceBalances")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
 
+    // Calculate real-time accumulated essence for each balance
+    const balancesWithRealTime = await calculateRealTimeEssenceBalances(
+      ctx,
+      walletAddress,
+      balances,
+      tracking
+    );
+
     return {
       tracking,
       slots: slots.sort((a, b) => a.slotNumber - b.slotNumber),
       requirements: requirements.sort((a, b) => a.slotNumber - b.slotNumber),
-      balances,
+      balances: balancesWithRealTime,
     };
   },
 });
+
+// Calculate real-time essence accumulation (like calculateCurrentGold for gold mining)
+async function calculateRealTimeEssenceBalances(
+  ctx: any,
+  walletAddress: string,
+  balances: any[],
+  tracking: any
+) {
+  // If tracking doesn't exist or isn't active, return balances as-is
+  if (!tracking || !tracking.isActive) {
+    return balances;
+  }
+
+  const now = Date.now();
+  const config = await ctx.db
+    .query("essenceConfig")
+    .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+    .first();
+
+  if (!config) {
+    return balances;
+  }
+
+  // Get all slotted Meks to calculate current production rates
+  const slots = await ctx.db
+    .query("essenceSlots")
+    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .collect();
+
+  const slottedMeks = slots.filter((s) => s.mekAssetId);
+
+  // Count variations from slotted Meks
+  const variationCounts = new Map<number, { name: string; type: string; count: number }>();
+
+  for (const slot of slottedMeks) {
+    if (slot.headVariationId && slot.headVariationName) {
+      const existing = variationCounts.get(slot.headVariationId);
+      variationCounts.set(slot.headVariationId, {
+        name: slot.headVariationName,
+        type: "head",
+        count: (existing?.count || 0) + 1,
+      });
+    }
+    if (slot.bodyVariationId && slot.bodyVariationName) {
+      const existing = variationCounts.get(slot.bodyVariationId);
+      variationCounts.set(slot.bodyVariationId, {
+        name: slot.bodyVariationName,
+        type: "body",
+        count: (existing?.count || 0) + 1,
+      });
+    }
+    if (slot.itemVariationId && slot.itemVariationName) {
+      const existing = variationCounts.get(slot.itemVariationId);
+      variationCounts.set(slot.itemVariationId, {
+        name: slot.itemVariationName,
+        type: "item",
+        count: (existing?.count || 0) + 1,
+      });
+    }
+  }
+
+  // Calculate time elapsed since last calculation
+  const daysElapsed = (now - tracking.lastCalculationTime) / (1000 * 60 * 60 * 24);
+
+  // Update each balance with real-time accumulation
+  const updatedBalances = await Promise.all(
+    balances.map(async (balance) => {
+      const variationData = variationCounts.get(balance.variationId);
+
+      // If this variation is no longer slotted, return existing balance
+      if (!variationData) {
+        return balance;
+      }
+
+      // Check for player buffs
+      const buff = await ctx.db
+        .query("essencePlayerBuffs")
+        .withIndex("by_wallet_and_variation", (q) =>
+          q.eq("walletAddress", walletAddress).eq("variationId", balance.variationId)
+        )
+        .first();
+
+      const rateMultiplier = buff?.rateMultiplier || 1.0;
+      const capBonus = buff?.capBonus || 0;
+
+      const effectiveRate = config.essenceRate * rateMultiplier;
+      const effectiveCap = config.essenceCap + capBonus;
+
+      // Calculate essence earned since last update
+      const essenceEarned = daysElapsed * effectiveRate * variationData.count;
+      const newAmount = Math.min(balance.accumulatedAmount + essenceEarned, effectiveCap);
+
+      return {
+        ...balance,
+        accumulatedAmount: newAmount,
+      };
+    })
+  );
+
+  // Also check if there are any variations being produced that don't have balance records yet
+  for (const [variationId, data] of Array.from(variationCounts.entries())) {
+    const existingBalance = balances.find(b => b.variationId === variationId);
+    if (!existingBalance) {
+      // This variation is being produced but has no balance record
+      // Calculate its accumulated amount
+      const buff = await ctx.db
+        .query("essencePlayerBuffs")
+        .withIndex("by_wallet_and_variation", (q) =>
+          q.eq("walletAddress", walletAddress).eq("variationId", variationId)
+        )
+        .first();
+
+      const rateMultiplier = buff?.rateMultiplier || 1.0;
+      const capBonus = buff?.capBonus || 0;
+
+      const effectiveRate = config.essenceRate * rateMultiplier;
+      const effectiveCap = config.essenceCap + capBonus;
+
+      const essenceEarned = daysElapsed * effectiveRate * data.count;
+      const newAmount = Math.min(essenceEarned, effectiveCap);
+
+      // Add this as a new balance entry (in-memory only, not persisted)
+      updatedBalances.push({
+        _id: `temp_${variationId}`, // Temporary ID for frontend
+        _creationTime: now,
+        walletAddress,
+        variationId,
+        variationName: data.name,
+        variationType: data.type as "head" | "body" | "item",
+        accumulatedAmount: newAmount,
+        lastUpdated: now,
+      });
+    }
+  }
+
+  return updatedBalances;
+}
 
 // Slot a Mek into a slot
 export const slotMek = mutation({
@@ -832,5 +977,75 @@ export const dailyEssenceCheckpoint = internalMutation({
     );
 
     return { success: true, playersUpdated: updatedCount };
+  },
+});
+
+/**
+ * Get all buffs for a specific player
+ */
+export const getPlayerBuffs = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const buffs = await ctx.db
+      .query("essencePlayerBuffs")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+
+    return buffs;
+  },
+});
+
+/**
+ * Add a cap bonus buff for a specific variation
+ */
+export const addCapBuff = mutation({
+  args: {
+    walletAddress: v.string(),
+    variationId: v.number(),
+    capBonus: v.number(),
+    source: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if buff already exists for this variation
+    const existing = await ctx.db
+      .query("essencePlayerBuffs")
+      .withIndex("by_wallet_variation", (q) =>
+        q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
+      )
+      .first();
+
+    if (existing) {
+      // Update existing buff
+      await ctx.db.patch(existing._id, {
+        capBonus: args.capBonus,
+        source: args.source,
+        appliedAt: Date.now(),
+      });
+      return { success: true, mode: "updated", buffId: existing._id };
+    } else {
+      // Create new buff
+      const buffId = await ctx.db.insert("essencePlayerBuffs", {
+        walletAddress: args.walletAddress,
+        variationId: args.variationId,
+        rateMultiplier: 1.0, // Default rate multiplier
+        capBonus: args.capBonus,
+        source: args.source,
+        appliedAt: Date.now(),
+      });
+      return { success: true, mode: "created", buffId };
+    }
+  },
+});
+
+/**
+ * Remove a cap bonus buff
+ */
+export const removeCapBuff = mutation({
+  args: {
+    buffId: v.id("essencePlayerBuffs"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.buffId);
+    return { success: true };
   },
 });

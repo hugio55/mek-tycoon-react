@@ -496,12 +496,14 @@ const earnedEssence = daysElapsed × essencePerDay;
 
 **Implementation Progress:**
 
-**Phase 1: Database Schema** - PENDING
-- Define Convex schema tables for:
-  - Essence slots (per user)
-  - Essence upgrades (per Mekanism)
-  - System config (slot unlock costs, base rates, swap caps)
-- Implement hybrid tracking (individual upgrades + cached totals)
+**Phase 1: Database Schema** - ✅ COMPLETED
+- ✅ Convex schema tables defined (convex/schema.ts lines 2358-2454):
+  - ✅ `essenceSlots` - Tracks slotted Meks and their variations
+  - ✅ `essenceTracking` - Per-player generation tracking
+  - ✅ `essenceBalances` - Accumulated essence per variation
+  - ✅ `essencePlayerBuffs` - Rate multipliers and cap bonuses
+  - ✅ `essenceSlotRequirements` - Per-player slot unlock costs
+  - ✅ `essenceConfig` - Global system configuration
 
 **Phase 2: Admin Interface** - ✅ COMPLETED
 - ✅ Renamed "Market" tab to "Essence" in Admin Master Data page
@@ -516,23 +518,36 @@ const earnedEssence = daysElapsed × essencePerDay;
   - ✅ Swap counter max cap control (default: 50 swaps)
   - ✅ Player-specific management tools placeholder (to be implemented)
 
-**Phase 3: Backend Functions**
-- `unlockSlot(slotNumber)` - Check costs, deduct, unlock slot
-- `swapMekanism(slotNumber, mekId)` - Calculate cost, swap Mekanism
-- `removeMekanism(slotNumber)` - Free removal, increment counter
-- `calculateEssence()` - Offline + real-time accumulation
-- Update existing `levelUpMekanism()` - (essence upgrade logic deferred)
+**Phase 3: Backend Functions** - ✅ COMPLETED
+- ✅ `initializeEssenceSystem()` - Creates essence tables for new players (convex/essence.ts)
+- ✅ `unlockSlot(slotNumber)` - Check costs, deduct, unlock slot
+- ✅ `swapMek(slotNumber, mekId)` - Calculate cost, swap Mekanism
+- ✅ `slotMek()` - Slot a Mek, extract variations
+- ✅ `unslotMek()` - Remove Mek from slot
+- ✅ `calculateAndUpdateEssence()` - Offline + accumulation with buff support
+- ✅ `getPlayerEssenceState()` - Get all essence data for player
+- ✅ `adminAddEssence()` - Admin function for testing
+- ✅ Variation tracking working - counts all head/body/item variations from slotted Meks
+- ✅ Stacking works - multiple copies of same variation accumulate faster
+- ⏳ Update existing `levelUpMekanism()` - (essence upgrade logic deferred)
 
-**Phase 4: Real-Time Integration**
-- Hook essence generation into existing real-time system (like gold)
-- Display essence balance with 3 decimal precision
-- Show per-second essence accumulation
+**Phase 4: Real-Time Integration** - 🔄 IN PROGRESS
+- ✅ Essence Distribution Lightbox created (src/components/EssenceDistributionLightbox.tsx)
+- ✅ Accessible via "Essence" button in header (all pages)
+- ✅ Shows total essence, value, type count
+- ✅ Donut chart visualization
+- ✅ Individual essence details panel (image, ownership count, market price, rates)
+- ⏳ **NEXT:** Add high-precision accumulation display (10+ decimals) below progress bar
+  - Show real number like "3.0001566245" updating rapidly
+  - Similar to gold accumulation display
+  - Makes it visible that essence is actually accumulating at 0.1/day rate
 
-**Phase 5: Frontend UI**
-- Design slot management interface
-- Mekanism assignment/removal UI
-- Cost displays and confirmations
-- Upgrade visibility in Mekanism details
+**Phase 5: Frontend UI - Slot Management** - ⏳ PENDING
+- Design slot management interface (where players slot/unslot Meks)
+- Mekanism picker/assignment UI
+- Swap cost displays and confirmations
+- Unlock slot UI with cost preview
+- Upgrade visibility in Mekanism details (future)
 
 **Phase 6: Testing**
 - Offline earnings calculation accuracy
@@ -544,6 +559,40 @@ const earnedEssence = daysElapsed × essencePerDay;
 - Essence upgrade assignment logic (which levels give bonuses)
 - Time-based leveling system (vs gold-cost leveling)
 
+**Phase 7: Admin Buff Management** - ⏳ NEXT PRIORITY
+- **Goal:** Allow admins to manually add/modify essence buffs for players
+- **Location:** Player management section (likely /admin-master-data)
+- **Features Needed:**
+  - Search/select player by wallet address
+  - View all current buffs for that player
+  - Add new buff:
+    - Variation selector (searchable dropdown of 288 variations)
+    - Global buff option (affects all variations)
+    - Rate multiplier input (e.g., 2.0 = double rate, 0.1 = bonus +0.1/day)
+    - Cap bonus input (e.g., +10 increases cap from 10 to 20)
+    - Notes field
+  - Remove/edit existing buffs
+- **Backend Already Exists:**
+  - `essencePlayerBuffs` table ready to use
+  - Buffs already apply in `calculateAndUpdateEssence()`
+  - Just need admin UI + mutation functions
+
+**Current Session Progress (2025-10-22 - Session 2):**
+- ✅ Reviewed existing essence system implementation
+- ✅ Confirmed backend is fully functional
+- ✅ Identified UX issue: 0.1/day rate too slow to see accumulation
+- ✅ Proposed solution: High-precision decimal display (10+ decimals)
+- ✅ Updated documentation with implementation status
+- ⏳ **NEXT TASK:** Implement high-precision accumulation display in details panel
+- ⏳ **AFTER THAT:** Build admin buff management UI
+
+**Key Insights:**
+- Essence system backend is MORE complete than expected
+- Variation tracking works correctly (extracts from slotted Meks)
+- Stacking already implemented
+- Buff system exists and is integrated
+- Main gaps: Real-time UI display + Admin buff management tools
+
 ---
 
-*Last Updated: 2025-10-22 (Session 1)*
+*Last Updated: 2025-10-22 (Session 2)*
