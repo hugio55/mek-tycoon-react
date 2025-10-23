@@ -374,10 +374,44 @@ export const adminCreateCompanyListing = mutation({
       expiresAt: expiresAt,
     });
 
+    // Save to persistent listing history
+    await ctx.db.insert("marketplaceListingHistory", {
+      timestamp: now,
+      variationName: variationName,
+      quantity: quantity,
+      pricePerUnit: pricePerUnit,
+      durationDays: durationDays,
+      totalValue: quantity * pricePerUnit,
+      createdBy: "admin",
+    });
+
     return {
       success: true,
       listingId: listingId,
       message: `Created listing: ${quantity} ${variationName} at ${pricePerUnit}G/unit (expires in ${durationDays} days)`,
     };
+  },
+});
+
+// Get all marketplace listing history (persistent, never deleted)
+export const getMarketplaceListingHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const history = await ctx.db
+      .query("marketplaceListingHistory")
+      .withIndex("by_timestamp")
+      .order("desc") // Newest first
+      .collect();
+
+    return history.map(item => ({
+      _id: item._id,
+      timestamp: item.timestamp,
+      variation: item.variationName,
+      quantity: item.quantity,
+      price: item.pricePerUnit,
+      duration: item.durationDays,
+      totalValue: item.totalValue,
+      createdBy: item.createdBy,
+    }));
   },
 });

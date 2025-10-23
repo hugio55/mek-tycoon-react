@@ -142,29 +142,12 @@ export default function EssenceDonutPage() {
   const [isDistributionOpen, setIsDistributionOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Header-related state
-  const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
-  const demoWalletAddress = "demo_wallet_123";
-  
   // Calculate the actual maximum essence amount first
   const defaultMaxAmount = Math.max(...generateEssenceData().map(e => e.amount));
   const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount); // Default to max (show all)
-  
+
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
-
-  // Header queries
-  const companyNameData = useQuery(api.goldMining.getCompanyName,
-    demoWalletAddress ? { walletAddress: demoWalletAddress } : 'skip'
-  );
-
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
-    demoWalletAddress ? { walletAddress: demoWalletAddress } : "skip"
-  );
-
-  // Get owned Meks count from gold mining data
-  const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
 
   useEffect(() => {
     const initUser = async () => {
@@ -189,25 +172,6 @@ export default function EssenceDonutPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Click outside handler for wallet dropdown
-  useEffect(() => {
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.wallet-dropdown')) {
-        setWalletDropdownOpen(false);
-      }
-    };
-
-    if (walletDropdownOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [walletDropdownOpen]);
   
   // Get user profile
   const userProfile = useQuery(
@@ -293,91 +257,6 @@ export default function EssenceDonutPage() {
   return (
     <div className="min-h-screen relative">
       <div className="relative z-10 text-white">
-        {/* Production Site Header */}
-        <div className="max-w-7xl mx-auto relative px-4 sm:px-8 pt-4">
-          {/* Wallet dropdown and company name in top left corner */}
-          <div className="absolute top-0 left-0 z-20 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-            <div className="relative wallet-dropdown">
-              <button
-                onClick={() => setWalletDropdownOpen(!walletDropdownOpen)}
-                className="flex items-center gap-2 bg-black/60 border border-yellow-500/30 px-3 sm:px-4 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all min-h-[44px] sm:min-h-0 touch-manipulation"
-              >
-                <span className="text-yellow-400 font-bold text-base sm:text-lg font-sans uppercase">
-                  {ownedMeksCount} MEKS
-                </span>
-                <span className="text-yellow-400 text-sm">▼</span>
-              </button>
-
-              {walletDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-64 sm:w-72 bg-black/95 sm:bg-black/90 border border-yellow-500/30 backdrop-blur-sm rounded-sm shadow-lg max-h-[80vh] overflow-y-auto scale-75 origin-top-left" style={{ willChange: 'opacity, transform' }}>
-                  {/* 1. Company name */}
-                  <div className="px-4 py-4 border-b border-yellow-500/20 touch-manipulation">
-                    {companyNameData?.companyName ? (
-                      <div
-                        className="text-yellow-400 font-bold text-xl sm:text-xl min-h-[44px] flex items-center touch-manipulation"
-                        title="Company name"
-                      >
-                        {companyNameData.companyName}
-                      </div>
-                    ) : (
-                      <div className="text-yellow-400/60 text-xl sm:text-xl italic min-h-[44px] touch-manipulation">
-                        No company name set
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 2. Total Cumulative Gold */}
-                  <div className="px-4 py-4 border-b border-yellow-500/20">
-                    <div className="text-gray-400 text-base sm:text-base uppercase tracking-wider mb-1">Total Cumulative Gold</div>
-                    <div className="text-yellow-400 font-bold text-2xl sm:text-2xl font-mono">
-                      {goldMiningData?.totalCumulativeGold?.toLocaleString() || '0'}
-                    </div>
-                  </div>
-
-                  {/* 3. Demo Mode Indicator */}
-                  <div className="px-4 py-4">
-                    <div className="text-gray-500 text-sm italic">
-                      Demo Mode - Connect wallet for full features
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Corporation name display - hidden on mobile (already in dropdown) */}
-            {companyNameData?.companyName && (
-              <div
-                className="hidden sm:flex items-center gap-2 touch-manipulation"
-                title="Corporation name"
-              >
-                <div className="flex flex-col">
-                  <span className="text-yellow-400 text-xs uppercase tracking-wider font-['Orbitron']">
-                    Corporation:
-                  </span>
-                  <span className="text-white text-base sm:text-lg font-['Orbitron'] font-bold tracking-wide">
-                    {companyNameData.companyName}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Logo in top right corner */}
-          <div className="absolute right-0 z-20" style={{ top: '-20px' }}>
-            <a
-              href="https://overexposed.io"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="/random-images/OE logo.png"
-                alt="OE Logo"
-                className="h-10 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
-              />
-            </a>
-          </div>
-        </div>
-
         {/* Controls Bar - Redesigned Sci-Fi Stats Display */}
         <div className="w-full sticky top-0 z-20 mt-16">
           {/* Main container with industrial frame */}
@@ -585,6 +464,7 @@ export default function EssenceDonutPage() {
       <EssenceDistributionLightbox
         isOpen={isDistributionOpen}
         onClose={() => setIsDistributionOpen(false)}
+        walletAddress="demo_wallet_123"
       />
 
       {/* OLD CONTENT - KEEPING FOR REFERENCE BUT HIDDEN */}

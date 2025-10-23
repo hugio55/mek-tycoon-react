@@ -28,6 +28,7 @@ import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
+import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
@@ -303,6 +304,7 @@ export default function MekRateLoggingPage() {
   // Company name states
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
+  const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // Search functionality
 
   // Add Wallet modal states
@@ -3454,19 +3456,14 @@ export default function MekRateLoggingPage() {
               )}
             </div>
 
-            {/* Gold text style dropdown - hidden since we're using fixed style */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 hidden">
-              <select
-                value={goldTextStyle}
-                onChange={(e) => setGoldTextStyle(Number(e.target.value))}
-                className="bg-black/60 border border-yellow-500/30 text-yellow-400 px-3 py-2 text-xs font-['Orbitron'] uppercase tracking-wider focus:outline-none focus:border-yellow-500/50 backdrop-blur-sm"
+            {/* Essence button at top center */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20">
+              <button
+                onClick={() => setShowEssenceLightbox(true)}
+                className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
               >
-                <option value="0">Style 1: Bold Number</option>
-                <option value="1">Style 2: Spaced</option>
-                <option value="2">Style 3: Highlighted</option>
-                <option value="3">Style 4: Minimal</option>
-                <option value="4">Style 5: Classic</option>
-              </select>
+                Essence
+              </button>
             </div>
 
             {/* Logo in top right corner */}
@@ -4555,6 +4552,13 @@ export default function MekRateLoggingPage() {
           }}
         />
       )}
+
+      {/* Essence Distribution Lightbox */}
+      <EssenceDistributionLightbox
+        isOpen={showEssenceLightbox}
+        onClose={() => setShowEssenceLightbox(false)}
+        walletAddress={walletAddress || "demo_wallet_123"}
+      />
 
       {/* Add Wallet Modal - Multi-Step with Signature Verification */}
       {addWalletModalOpen && (

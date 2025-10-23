@@ -9,8 +9,6 @@ import { Providers } from "./providers";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import EnvironmentIndicator from "@/components/EnvironmentIndicator";
-import EnvironmentDebugPanel from "@/components/EnvironmentDebugPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,8 +64,6 @@ export default function RootLayout({
         <div className="relative z-10">
           <DemoModeWrapper>
             <Providers>
-              <EnvironmentIndicator />
-              <EnvironmentDebugPanel />
               {children}
             </Providers>
           </DemoModeWrapper>

@@ -11,8 +11,6 @@ import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
 import MekBaseConfig from '@/components/MekBaseConfig';
 import MekTalentTreeConfig from '@/components/MekTalentTreeConfig';
 import MekDetailViewer from '@/components/MekDetailViewer';
-import MekRateExperiment from '@/components/MekRateExperiment';
-import MekRateAdmin from '@/components/MekRateAdmin';
 import GoldBackupAdmin from '@/components/GoldBackupAdmin';
 import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
@@ -59,10 +57,8 @@ const DATA_SYSTEMS = [
   { id: 'market-system', name: 'Market', icon: '🏪', implemented: true },
   { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true },
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
-  { id: 'mek-rate-experiment', name: 'Mek Rate Experiment', icon: '💎', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
-  { id: 'bot-testing', name: 'Bot Testing System', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true }
@@ -75,8 +71,7 @@ export default function AdminMasterDataPage() {
   const [storyClimbSubTab, setStoryClimbSubTab] = useState<string>('difficulty-subsystem');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
-  const [menuHeaderCollapsed, setMenuHeaderCollapsed] = useState(true); // Default to collapsed
-  const [masterRangeCollapsed, setMasterRangeCollapsed] = useState(true); // Default to collapsed
+  const [minimizedTabs, setMinimizedTabs] = useState<Set<string>>(new Set());
 
   // Save system state
   const [isSaving, setIsSaving] = useState(false);
@@ -172,8 +167,6 @@ export default function AdminMasterDataPage() {
     loadMostRecentConfig();
   }, [durationConfigsList, durationConfigAutoLoaded, convex]);
 
-  // Menu Header UI State
-  const [menuHeaderStyle, setMenuHeaderStyle] = useState('standard-balanced');
 
   // Load variations folder path from localStorage on mount
   useEffect(() => {
@@ -182,10 +175,15 @@ export default function AdminMasterDataPage() {
       setVariationsImageFolder(savedPath);
     }
 
-    // Load menu header style
-    const savedHeaderStyle = localStorage.getItem('menuHeaderStyle');
-    if (savedHeaderStyle) {
-      setMenuHeaderStyle(savedHeaderStyle);
+    // Load minimized tabs
+    const savedMinimized = localStorage.getItem('adminMinimizedTabs');
+    if (savedMinimized) {
+      try {
+        const parsed = JSON.parse(savedMinimized);
+        setMinimizedTabs(new Set(parsed));
+      } catch (e) {
+        console.error('Failed to parse minimized tabs:', e);
+      }
     }
   }, []);
 
@@ -195,14 +193,30 @@ export default function AdminMasterDataPage() {
     localStorage.setItem('variationsImageFolder', path);
   };
 
-  // Save menu header style when it changes
-  const handleMenuHeaderStyleChange = (style: string) => {
-    console.log('Admin: Changing menu header style to:', style);
-    setMenuHeaderStyle(style);
-    localStorage.setItem('menuHeaderStyle', style);
-    // Trigger a custom event to notify Navigation component
-    window.dispatchEvent(new CustomEvent('menuHeaderStyleChanged', { detail: style }));
-    console.log('Admin: Saved to localStorage and dispatched event');
+  // Minimize/Restore tab handlers
+  const handleMinimizeTab = (tabId: string) => {
+    const newMinimized = new Set(minimizedTabs);
+    newMinimized.add(tabId);
+    setMinimizedTabs(newMinimized);
+    localStorage.setItem('adminMinimizedTabs', JSON.stringify(Array.from(newMinimized)));
+
+    // If we're minimizing the active tab, switch to the first non-minimized tab
+    if (activeTab === tabId) {
+      const firstVisibleTab = DATA_SYSTEMS.find(sys => !newMinimized.has(sys.id));
+      if (firstVisibleTab) {
+        setActiveTab(firstVisibleTab.id);
+      }
+    }
+  };
+
+  const handleRestoreTab = (tabId: string) => {
+    const newMinimized = new Set(minimizedTabs);
+    newMinimized.delete(tabId);
+    setMinimizedTabs(newMinimized);
+    localStorage.setItem('adminMinimizedTabs', JSON.stringify(Array.from(newMinimized)));
+
+    // Switch to the restored tab
+    setActiveTab(tabId);
   };
 
   // Handle creating a new save
@@ -273,11 +287,6 @@ export default function AdminMasterDataPage() {
     }
   }, [message]);
 
-  // Master Range Controls
-  const [globalMultiplier, setGlobalMultiplier] = useState(1);
-  const [minRange, setMinRange] = useState(1);
-  const [maxRange, setMaxRange] = useState(100);
-  const [scalingFactor, setScalingFactor] = useState(1.5);
 
   // Duration Configuration State
   const [selectedNodeType, setSelectedNodeType] = useState<'normal' | 'challenger' | 'miniboss' | 'event' | 'finalboss'>('normal');
@@ -396,9 +405,6 @@ export default function AdminMasterDataPage() {
     });
   };
 
-  const applyGlobalScaling = (baseValue: number, level: number = 1): number => {
-    return Math.round(baseValue * globalMultiplier * Math.pow(scalingFactor, level - 1));
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
@@ -474,202 +480,10 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* Menu Header UI Control System */}
-        <div className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg mb-8">
-          <button
-            onClick={() => setMenuHeaderCollapsed(!menuHeaderCollapsed)}
-            className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🎨</span>
-              <h3 className="text-lg font-bold text-yellow-400">Menu Header UI Styles</h3>
-            </div>
-            <span className="text-gray-400">{menuHeaderCollapsed ? '▶' : '▼'}</span>
-          </button>
-          {!menuHeaderCollapsed && (
-            <div className="p-4 border-t border-gray-700/50">
-              <p className="text-gray-400 mb-4">Configure logo size, spacing, and overall header layout style</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[
-              {
-                id: 'ultra-minimal',
-                name: 'Ultra Minimal',
-                description: 'Tiny logo, ultra-tight spacing, minimal header height',
-                specs: 'Logo: 200x50px | Padding: 2px | Height: 60px'
-              },
-              {
-                id: 'compact-professional',
-                name: 'Compact Professional',
-                description: 'Small logo with minimal spacing for space efficiency',
-                specs: 'Logo: 250x65px | Padding: 3px | Height: 75px'
-              },
-              {
-                id: 'standard-balanced',
-                name: 'Standard Balanced',
-                description: 'Current default size with balanced proportions',
-                specs: 'Logo: 400x100px | Padding: 5px | Height: 110px'
-              },
-              {
-                id: 'bold-statement',
-                name: 'Bold Statement',
-                description: 'Large logo with generous spacing for impact',
-                specs: 'Logo: 500x125px | Padding: 8px | Height: 140px'
-              },
-              {
-                id: 'cinematic-wide',
-                name: 'Cinematic Wide',
-                description: 'Extra large logo with spacious layout',
-                specs: 'Logo: 600x150px | Padding: 10px | Height: 170px'
-              },
-              {
-                id: 'dynamic-responsive',
-                name: 'Dynamic Responsive',
-                description: 'Adapts more dramatically to screen size changes',
-                specs: 'Logo: Variable | Padding: Adaptive | Height: Responsive'
-              },
-              {
-                id: 'logo-left-corner',
-                name: 'Logo Left Corner',
-                description: 'Logo positioned in upper left corner with menu items at top',
-                specs: 'Logo: 250x65px | Position: Left | Menu: Top Bar'
-              },
-              {
-                id: 'logo-left-small',
-                name: 'Logo Left Small',
-                description: 'Smaller logo in upper left with compact top navigation',
-                specs: 'Logo: 200x50px | Position: Left | Compact Nav'
-              },
-              {
-                id: 'logo-left-medium',
-                name: 'Logo Left Medium',
-                description: 'Medium logo in upper left with balanced navigation',
-                specs: 'Logo: 280x70px | Position: Left | Balanced Nav'
-              },
-              {
-                id: 'logo-left-large',
-                name: 'Logo Left Large',
-                description: 'Larger logo in upper left with spacious navigation',
-                specs: 'Logo: 320x80px | Position: Left | Spacious Nav'
-              }
-            ].map((style) => (
-              <div
-                key={style.id}
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  menuHeaderStyle === style.id
-                    ? 'border-purple-400 bg-purple-900/30 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
-                    : 'border-gray-600 bg-gray-800/30 hover:border-purple-500/50 hover:bg-purple-900/20'
-                }`}
-                onClick={() => handleMenuHeaderStyleChange(style.id)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className={`font-bold text-sm ${
-                    menuHeaderStyle === style.id ? 'text-purple-300' : 'text-gray-300'
-                  }`}>
-                    {style.name}
-                  </h3>
-                  {menuHeaderStyle === style.id && (
-                    <div className="w-3 h-3 bg-purple-400 rounded-full shadow-[0_0_8px_rgba(147,51,234,0.6)]"></div>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mb-3">{style.description}</p>
-                <div className="text-[10px] text-gray-500 font-mono bg-black/30 p-2 rounded">
-                  {style.specs}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 p-4 bg-purple-900/20 rounded border border-purple-500/20">
-            <p className="text-sm text-purple-300">
-              <strong>Current Style:</strong> {
-                menuHeaderStyle === 'ultra-minimal' ? 'Ultra Minimal' :
-                menuHeaderStyle === 'compact-professional' ? 'Compact Professional' :
-                menuHeaderStyle === 'standard-balanced' ? 'Standard Balanced' :
-                menuHeaderStyle === 'bold-statement' ? 'Bold Statement' :
-                menuHeaderStyle === 'cinematic-wide' ? 'Cinematic Wide' :
-                menuHeaderStyle === 'dynamic-responsive' ? 'Dynamic Responsive' :
-                menuHeaderStyle === 'logo-left-corner' ? 'Logo Left Corner' :
-                menuHeaderStyle === 'logo-left-small' ? 'Logo Left Small' :
-                menuHeaderStyle === 'logo-left-medium' ? 'Logo Left Medium' :
-                menuHeaderStyle === 'logo-left-large' ? 'Logo Left Large' :
-                'Unknown'
-              }
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              Changes are applied immediately to the navigation header. Refresh the page to see the full effect.
-            </p>
-          </div>
-            </div>
-          )}
-        </div>
-
-        {/* Master Range Control System */}
-        <div className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg mb-8">
-          <button
-            onClick={() => setMasterRangeCollapsed(!masterRangeCollapsed)}
-            className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-          >
-            <h2 className="text-xl font-bold text-blue-400">Master Range Controls</h2>
-            <span className="text-gray-400">{masterRangeCollapsed ? '▶' : '▼'}</span>
-          </button>
-          {!masterRangeCollapsed && (
-            <div className="p-6 pt-0">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider">Global Multiplier</label>
-                  <input
-                    type="number"
-                    value={globalMultiplier}
-                    onChange={(e) => setGlobalMultiplier(parseFloat(e.target.value) || 1)}
-                    step="0.1"
-                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-blue-500/30 rounded text-blue-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider">Min Range</label>
-                  <input
-                    type="number"
-                    value={minRange}
-                    onChange={(e) => setMinRange(parseInt(e.target.value) || 1)}
-                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-blue-500/30 rounded text-blue-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider">Max Range</label>
-                  <input
-                    type="number"
-                    value={maxRange}
-                    onChange={(e) => setMaxRange(parseInt(e.target.value) || 100)}
-                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-blue-500/30 rounded text-blue-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider">Scaling Factor</label>
-                  <input
-                    type="number"
-                    value={scalingFactor}
-                    onChange={(e) => setScalingFactor(parseFloat(e.target.value) || 1.5)}
-                    step="0.1"
-                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-blue-500/30 rounded text-blue-400"
-                  />
-                </div>
-              </div>
-              <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-500/20">
-                <p className="text-sm text-blue-300">
-                  Formula: <code className="bg-black/50 px-2 py-1 rounded">baseValue × {globalMultiplier} × {scalingFactor}^(level-1)</code>
-                </p>
-                <p className="text-xs text-gray-400 mt-2">
-                  Example: Base 10 at Level 5 = {applyGlobalScaling(10, 5)}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Tab Navigation for All Systems */}
         <div className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg p-4 mb-4">
           <div className="flex flex-wrap gap-2">
-            {DATA_SYSTEMS.map((system) => (
+            {DATA_SYSTEMS.filter(system => !minimizedTabs.has(system.id)).map((system) => (
               <button
                 key={system.id}
                 onClick={() => {
@@ -690,7 +504,7 @@ export default function AdminMasterDataPage() {
                   const sectionsToExpand = [system.id, ...(subsections[system.id as keyof typeof subsections] || [])];
                   setExpandedSections(new Set(sectionsToExpand));
                 }}
-                className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold ${
+                className={`group relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold ${
                   activeTab === system.id
                     ? 'border-yellow-400 bg-yellow-900/30 text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.3)]'
                     : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-yellow-500/50 hover:bg-yellow-900/20'
@@ -698,9 +512,48 @@ export default function AdminMasterDataPage() {
               >
                 <span className="mr-2">{system.icon}</span>
                 {system.name}
+
+                {/* Minimize button - appears on hover */}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMinimizeTab(system.id);
+                  }}
+                  className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 rounded-full bg-gray-700 hover:bg-red-500 flex items-center justify-center text-[10px] text-white cursor-pointer"
+                  title="Minimize tab"
+                >
+                  ×
+                </span>
               </button>
             ))}
           </div>
+
+          {/* Minimized Tabs Section */}
+          {minimizedTabs.size > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-700/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-500 uppercase tracking-wider">Minimized:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {DATA_SYSTEMS.filter(system => minimizedTabs.has(system.id)).map((system) => (
+                  <button
+                    key={system.id}
+                    onClick={() => handleRestoreTab(system.id)}
+                    className="group relative w-6 h-6 rounded-full bg-gray-800/50 border border-gray-600/50 hover:border-yellow-500/50 hover:bg-yellow-900/20 transition-all flex items-center justify-center"
+                    title={`Restore: ${system.name}`}
+                  >
+                    <span className="text-xs opacity-60 group-hover:opacity-100">{system.icon}</span>
+
+                    {/* Tooltip on hover */}
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 border border-yellow-500/30 rounded text-xs text-yellow-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+                      {system.name}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-yellow-500/30"></div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Data Systems Sections */}
@@ -2403,50 +2256,6 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
-          {/* Mek Rate Experiment */}
-          {activeTab === 'mek-rate-experiment' && (
-          <>
-          <div id="section-mek-rate-experiment" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
-            <button
-              onClick={() => toggleSection('mek-rate-experiment')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">💎</span>
-                <h3 className="text-xl font-bold text-yellow-400">Mek Rate Experiment</h3>
-                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('mek-rate-experiment') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('mek-rate-experiment') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <MekRateExperiment />
-              </div>
-            )}
-          </div>
-
-          {/* NFT Rate Admin Control Panel */}
-          <div id="section-mek-rate-admin" className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg shadow-lg shadow-black/50 mt-4">
-            <button
-              onClick={() => toggleSection('mek-rate-admin')}
-              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🎛️</span>
-                <h3 className="text-xl font-bold text-purple-400">NFT Rate Admin Control Panel</h3>
-                <span className="px-2 py-1 bg-purple-600/30 text-purple-400 text-xs font-bold rounded">NEW</span>
-              </div>
-              <span className="text-gray-400">{expandedSections.has('mek-rate-admin') ? '▼' : '▶'}</span>
-            </button>
-            {expandedSections.has('mek-rate-admin') && (
-              <div className="p-4 border-t border-gray-700/50">
-                <MekRateAdmin />
-              </div>
-            )}
-          </div>
-          </>
-          )}
-
           {/* Gold Backup System */}
           {activeTab === 'gold-backup-system' && (
           <div id="section-gold-backup-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
@@ -2484,17 +2293,6 @@ export default function AdminMasterDataPage() {
                 <WalletManagementAdmin />
               </div>
           </div>
-          )}
-
-          {/* Bot Testing System - DISABLED */}
-          {activeTab === 'bot-testing' && (
-            <div id="section-bot-testing" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
-              <div className="p-4">
-                <p className="text-gray-400 mb-4">
-                  Bot testing system has been disabled to reduce Blockfrost API usage.
-                </p>
-              </div>
-            </div>
           )}
 
           {/* Notification System */}
@@ -2535,6 +2333,19 @@ export default function AdminMasterDataPage() {
 
                 {/* NFT Sub-Tabs */}
                 <NFTAdminTabs />
+              </div>
+          </div>
+          )}
+
+          {/* Overlay Editor */}
+          {activeTab === 'overlay-editor' && (
+          <div id="section-overlay-editor" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Create and edit interactive zones and sprite positions on game images.
+                </p>
+
+                <OverlayEditor />
               </div>
           </div>
           )}

@@ -2,48 +2,122 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
+import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
+
+type EditorMode = "zone" | "sprite";
 
 type Zone = {
   id: string;
+  mode: "zone" | "sprite";
   type: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   label?: string;
+  overlayImage?: string;
   metadata?: any;
 };
 
 type DragState = {
   isDrawing: boolean;
+  isDraggingSprite: boolean;
   startX: number;
   startY: number;
   currentZone: Zone | null;
+  spriteX: number;
+  spriteY: number;
+};
+
+type OverlayPaletteItem = {
+  id: string;
+  name: string;
+  path: string;
+  color?: string;
 };
 
 export default function OverlayEditor() {
-  const [imageKey, setImageKey] = useState("mechanism-slots");
-  const [imagePath, setImagePath] = useState("/images/mechanism-slots.png");
+  // Project settings
+  const [imageKey, setImageKey] = useState("variation-triangle");
+  const [imagePath, setImagePath] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [recentBasePaths, setRecentBasePaths] = useState<string[]>([]);
+
+  // Editor mode
+  const [editorMode, setEditorMode] = useState<EditorMode>("sprite");
+
+  // Zones and sprites
   const [zones, setZones] = useState<Zone[]>([]);
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+
+  // Zone drawing
+  const [zoneType, setZoneType] = useState("mechanism-slot");
   const [dragState, setDragState] = useState<DragState>({
     isDrawing: false,
+    isDraggingSprite: false,
     startX: 0,
     startY: 0,
     currentZone: null,
+    spriteX: 0,
+    spriteY: 0,
   });
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
-  const [zoneType, setZoneType] = useState("mechanism-slot");
+
+  // Dragging existing committed sprites
+  const [isDraggingExisting, setIsDraggingExisting] = useState(false);
+  const [draggingOffset, setDraggingOffset] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const isMouseDownRef = useRef(false);
+
+  // Sprite positioning
+  const [overlayImagePath, setOverlayImagePath] = useState("");
+  const [overlayImageLoaded, setOverlayImageLoaded] = useState(false);
+  const [overlayDimensions, setOverlayDimensions] = useState({ width: 0, height: 0 });
+  const [variationSearch, setVariationSearch] = useState("");
+  const [selectedVariation, setSelectedVariation] = useState<any>(null);
+  const [spriteScale, setSpriteScale] = useState(1);
+  const [usedVariations, setUsedVariations] = useState<Set<string>>(new Set());
+  const [checklistExpanded, setChecklistExpanded] = useState(true);
+  const [checklistTypeExpanded, setChecklistTypeExpanded] = useState({
+    head: false,
+    body: false,
+    trait: false,
+  });
+  const [checklistSearch, setChecklistSearch] = useState({
+    head: "",
+    body: "",
+    trait: "",
+  });
+
+  // Middle mouse button panning
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // Overlay palette
+  const [overlayPalette, setOverlayPalette] = useState<OverlayPaletteItem[]>([]);
+  const [activeOverlayId, setActiveOverlayId] = useState<string | null>(null);
+  const [newOverlayName, setNewOverlayName] = useState("");
+  const [newOverlayPath, setNewOverlayPath] = useState("");
+  const [folderPath, setFolderPath] = useState("");
+  const [isLoadingFolder, setIsLoadingFolder] = useState(false);
+
+  // Autosave history
+  const [showAutosaveHistory, setShowAutosaveHistory] = useState(false);
+
+  // Canvas controls
   const [scale, setScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const overlayImageRef = useRef<HTMLImageElement>(null);
 
   const saveOverlay = useMutation(api.overlays.saveOverlay);
+  const saveAutosave = useMutation(api.overlays.saveAutosave);
   const overlayData = useQuery(api.overlays.getOverlay, { imageKey });
   const allOverlays = useQuery(api.overlays.listOverlays);
+  const autosaveHistoryFromDb = useQuery(api.overlays.getAutosaveHistory, { imageKey });
 
   // Load overlay data when it arrives from Convex
   useEffect(() => {
@@ -54,10 +128,174 @@ export default function OverlayEditor() {
         width: overlayData.imageWidth,
         height: overlayData.imageHeight,
       });
+
+      // Extract used variations from existing sprites
+      const used = new Set<string>();
+      overlayData.zones.forEach((zone: any) => {
+        if (zone.mode === "sprite" && zone.metadata) {
+          // Use variationName + variationType for new format (name-based uniqueness)
+          if (zone.metadata.variationName && zone.metadata.variationType) {
+            const uniqueId = `${zone.metadata.variationType}-${zone.metadata.variationName}`;
+            used.add(uniqueId);
+          }
+          // Fallback to old variationId format for backwards compatibility
+          else if (zone.metadata.variationId) {
+            used.add(zone.metadata.variationId);
+          }
+        }
+      });
+      console.log('[Overlay Editor] Loaded used variations:', Array.from(used));
+      console.log('[Overlay Editor] Total sprites loaded:', overlayData.zones.filter((z: any) => z.mode === "sprite").length);
+      setUsedVariations(used);
     }
   }, [overlayData]);
 
-  // Handle image load
+  // Load recent paths from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("overlay-editor-recent-paths");
+    if (stored) {
+      const paths = JSON.parse(stored);
+      setRecentBasePaths(paths);
+      // Auto-load the most recent path
+      if (paths.length > 0 && !imagePath) {
+        setImagePath(paths[0]);
+      }
+    }
+    const storedPalette = localStorage.getItem("overlay-editor-palette");
+    if (storedPalette) {
+      setOverlayPalette(JSON.parse(storedPalette));
+    }
+  }, []);
+
+  // Smart path converter - extract web path from Windows file path
+  const extractWebPath = (input: string): string => {
+    if (!input) return input;
+
+    // Remove leading and trailing quotes (from Windows "Copy as path")
+    let cleanInput = input.trim();
+    if ((cleanInput.startsWith('"') && cleanInput.endsWith('"')) ||
+        (cleanInput.startsWith("'") && cleanInput.endsWith("'"))) {
+      cleanInput = cleanInput.slice(1, -1);
+    }
+
+    // If it already looks like a web path (starts with /), return as-is
+    if (cleanInput.startsWith('/')) return cleanInput;
+
+    // Look for "public\" or "public/" in the path
+    const publicIndex = cleanInput.lastIndexOf('public\\');
+    const publicIndexForward = cleanInput.lastIndexOf('public/');
+
+    let startIndex = -1;
+    if (publicIndex !== -1) startIndex = publicIndex + 7; // length of "public\"
+    else if (publicIndexForward !== -1) startIndex = publicIndexForward + 7; // length of "public/"
+
+    if (startIndex !== -1) {
+      // Extract everything after "public\"
+      let webPath = cleanInput.substring(startIndex);
+      // Convert backslashes to forward slashes
+      webPath = webPath.replace(/\\/g, '/');
+      // Ensure it starts with /
+      if (!webPath.startsWith('/')) webPath = '/' + webPath;
+      return webPath;
+    }
+
+    // If no "public" found, return as-is
+    return cleanInput;
+  };
+
+  // Save recent path when base image path changes
+  const addRecentBasePath = (path: string) => {
+    if (!path) return;
+    const webPath = extractWebPath(path);
+    const updated = [webPath, ...recentBasePaths.filter(p => p !== webPath)].slice(0, 10);
+    setRecentBasePaths(updated);
+    localStorage.setItem("overlay-editor-recent-paths", JSON.stringify(updated));
+  };
+
+  // Add overlay to palette
+  const addOverlayToPalette = () => {
+    if (!newOverlayPath || !newOverlayName) {
+      alert("Please enter both name and path");
+      return;
+    }
+    const webPath = extractWebPath(newOverlayPath);
+    const newItem: OverlayPaletteItem = {
+      id: `overlay-${Date.now()}`,
+      name: newOverlayName,
+      path: webPath,
+    };
+    const updated = [...overlayPalette, newItem];
+    setOverlayPalette(updated);
+    localStorage.setItem("overlay-editor-palette", JSON.stringify(updated));
+    setNewOverlayName("");
+    setNewOverlayPath("");
+  };
+
+  // Select overlay from palette
+  const selectPaletteOverlay = (item: OverlayPaletteItem) => {
+    setOverlayImagePath(item.path);
+    setActiveOverlayId(item.id);
+  };
+
+  // Remove from palette
+  const removeFromPalette = (id: string) => {
+    const updated = overlayPalette.filter(item => item.id !== id);
+    setOverlayPalette(updated);
+    localStorage.setItem("overlay-editor-palette", JSON.stringify(updated));
+    if (activeOverlayId === id) {
+      setActiveOverlayId(null);
+    }
+  };
+
+  // Load all images from a folder
+  const loadImagesFromFolder = async () => {
+    if (!folderPath) {
+      alert("Please enter a folder path");
+      return;
+    }
+
+    setIsLoadingFolder(true);
+    try {
+      // Remove quotes if present
+      let cleanPath = folderPath.trim();
+      if ((cleanPath.startsWith('"') && cleanPath.endsWith('"')) ||
+          (cleanPath.startsWith("'") && cleanPath.endsWith("'"))) {
+        cleanPath = cleanPath.slice(1, -1);
+      }
+
+      const response = await fetch('/api/list-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderPath: cleanPath }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to load folder: ${error.error}`);
+        return;
+      }
+
+      const data = await response.json();
+      const newItems: OverlayPaletteItem[] = data.images.map((img: any) => ({
+        id: `overlay-${Date.now()}-${Math.random()}`,
+        name: img.name,
+        path: img.path,
+      }));
+
+      const updated = [...overlayPalette, ...newItems];
+      setOverlayPalette(updated);
+      localStorage.setItem("overlay-editor-palette", JSON.stringify(updated));
+      alert(`Added ${newItems.length} images to palette`);
+      setFolderPath("");
+    } catch (error) {
+      console.error("Error loading folder:", error);
+      alert("Failed to load images from folder");
+    } finally {
+      setIsLoadingFolder(false);
+    }
+  };
+
+  // Handle base image load
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setImageDimensions({
@@ -66,16 +304,48 @@ export default function OverlayEditor() {
     });
     setImageLoaded(true);
 
-    // Calculate scale to fit on screen
-    const maxWidth = 1000;
+    // Auto-scale to fit
+    const maxWidth = 1200;
     if (img.naturalWidth > maxWidth) {
       setScale(maxWidth / img.naturalWidth);
     }
   };
 
-  // Mouse down - start drawing a zone
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageLoaded) return;
+  // Handle overlay image load
+  const handleOverlayImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setOverlayDimensions({
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+    });
+    setOverlayImageLoaded(true);
+  };
+
+  // Middle mouse button panning handlers
+  const handlePanStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button === 1) { // Middle mouse button
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  const handlePanMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      setPanOffset({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      });
+    }
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
+
+  // ZONE MODE: Mouse down - start drawing a zone
+  const handleZoneMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageLoaded || editorMode !== "zone") return;
 
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -84,6 +354,7 @@ export default function OverlayEditor() {
     const y = (e.clientY - rect.top) / scale;
 
     setDragState({
+      ...dragState,
       isDrawing: true,
       startX: x,
       startY: y,
@@ -91,9 +362,9 @@ export default function OverlayEditor() {
     });
   };
 
-  // Mouse move - update zone being drawn
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragState.isDrawing) return;
+  // ZONE MODE: Mouse move - update zone being drawn
+  const handleZoneMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragState.isDrawing || editorMode !== "zone") return;
 
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -110,6 +381,7 @@ export default function OverlayEditor() {
       ...dragState,
       currentZone: {
         id: `temp-${Date.now()}`,
+        mode: "zone",
         type: zoneType,
         x,
         y,
@@ -119,9 +391,12 @@ export default function OverlayEditor() {
     });
   };
 
-  // Mouse up - finalize zone
-  const handleMouseUp = () => {
-    if (dragState.currentZone && dragState.currentZone.width > 10 && dragState.currentZone.height > 10) {
+  // ZONE MODE: Mouse up - finalize zone
+  const handleZoneMouseUp = () => {
+    if (editorMode !== "zone") return;
+
+    if (dragState.currentZone && dragState.currentZone.width && dragState.currentZone.height &&
+        dragState.currentZone.width > 10 && dragState.currentZone.height > 10) {
       const newZone: Zone = {
         ...dragState.currentZone,
         id: `zone-${Date.now()}`,
@@ -131,17 +406,223 @@ export default function OverlayEditor() {
     }
 
     setDragState({
+      ...dragState,
       isDrawing: false,
-      startX: 0,
-      startY: 0,
       currentZone: null,
     });
+  };
+
+  // SPRITE MODE: Mouse down - start dragging sprite
+  const handleSpriteMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageLoaded || editorMode !== "sprite") return;
+
+    // Ignore middle mouse button (used for panning)
+    if (e.button === 1) return;
+
+    isMouseDownRef.current = true;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
+
+    // Check if clicking on an existing sprite
+    const clickedSprite = zones.filter(z => z.mode === "sprite").find((sprite) => {
+      const spriteScaleValue = sprite.metadata?.spriteScale || 1;
+      // Get the actual dimensions from sprite metadata (if available) or use reasonable defaults
+      // Default to 100x100 if dimensions aren't stored (for old sprites before this fix)
+      const imageWidth = sprite.metadata?.imageWidth || overlayDimensions.width || 100;
+      const imageHeight = sprite.metadata?.imageHeight || overlayDimensions.height || 100;
+      const spriteWidth = imageWidth * spriteScaleValue;
+      const spriteHeight = imageHeight * spriteScaleValue;
+
+      return (
+        x >= sprite.x &&
+        x <= sprite.x + spriteWidth &&
+        y >= sprite.y &&
+        y <= sprite.y + spriteHeight
+      );
+    });
+
+    if (clickedSprite) {
+      // Track start position for detecting click vs drag
+      setDragStartPos({ x: e.clientX, y: e.clientY });
+
+      // If clicking on already selected sprite, prepare to drag it
+      if (selectedZoneId === clickedSprite.id) {
+        setIsDraggingExisting(true);
+        setDraggingOffset({
+          x: x - clickedSprite.x,
+          y: y - clickedSprite.y,
+        });
+        return;
+      }
+      // Otherwise select the clicked sprite
+      setSelectedZoneId(clickedSprite.id);
+      return;
+    }
+
+    // Only allow creating new sprite if overlay image is loaded
+    if (!overlayImageLoaded) return;
+
+    setDragState({
+      ...dragState,
+      isDraggingSprite: true,
+      spriteX: x - overlayDimensions.width / 2,
+      spriteY: y - overlayDimensions.height / 2,
+    });
+  };
+
+  // SPRITE MODE: Mouse move - update sprite position
+  const handleSpriteMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (editorMode !== "sprite") return;
+
+    // Don't update position if mouse button is not pressed
+    if (!isMouseDownRef.current) return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
+
+    // Handle dragging existing sprite
+    if (isDraggingExisting && selectedZoneId) {
+      const updatedZones = zones.map((z) =>
+        z.id === selectedZoneId
+          ? { ...z, x: x - draggingOffset.x, y: y - draggingOffset.y }
+          : z
+      );
+      setZones(updatedZones);
+      return;
+    }
+
+    // Handle dragging new sprite
+    if (dragState.isDraggingSprite) {
+      setDragState({
+        ...dragState,
+        spriteX: x - overlayDimensions.width / 2,
+        spriteY: y - overlayDimensions.height / 2,
+      });
+    }
+  };
+
+  // SPRITE MODE: Mouse up - prepare to commit sprite position
+  const handleSpriteMouseUp = async (e: React.MouseEvent<HTMLDivElement>) => {
+    if (editorMode !== "sprite") return;
+
+    isMouseDownRef.current = false;
+
+    // Handle finishing drag of existing sprite
+    if (isDraggingExisting) {
+      setIsDraggingExisting(false);
+
+      // Check if this was a click (no movement) or a drag
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - dragStartPos.x, 2) + Math.pow(e.clientY - dragStartPos.y, 2)
+      );
+
+      // If movement was less than 5 pixels, treat as click and deselect
+      if (distance < 5) {
+        setSelectedZoneId(null);
+        return;
+      }
+
+      // Otherwise it was a drag, so autosave the new position
+      try {
+        await saveOverlay({
+          imageKey,
+          imagePath,
+          imageWidth: imageDimensions.width,
+          imageHeight: imageDimensions.height,
+          zones,
+        });
+        await saveAutosave({
+          imageKey,
+          zones,
+        });
+      } catch (error) {
+        console.error("Autosave after repositioning failed:", error);
+      }
+      return;
+    }
+
+    // Handle finishing drag of new sprite
+    setDragState({
+      ...dragState,
+      isDraggingSprite: false,
+    });
+  };
+
+  // SPRITE MODE: Commit sprite position with variation
+  const commitSpritePosition = async () => {
+    if (!selectedVariation) {
+      alert("Please select a variation first");
+      return;
+    }
+
+    // Check if variation is already used (type + name for uniqueness)
+    const uniqueId = `${selectedVariation.type}-${selectedVariation.name}`;
+    if (usedVariations.has(uniqueId)) {
+      const confirmDuplicate = window.confirm(
+        `"${selectedVariation.name}" has already been placed. Are you sure you want to place it again?`
+      );
+      if (!confirmDuplicate) return;
+    }
+
+    const newSprite: Zone = {
+      id: `sprite-${Date.now()}`,
+      mode: "sprite",
+      type: "variation-bulb",
+      x: dragState.spriteX,
+      y: dragState.spriteY,
+      overlayImage: overlayImagePath,
+      label: selectedVariation.name,
+      metadata: {
+        variationId: uniqueId,
+        variationName: selectedVariation.name,
+        variationType: selectedVariation.type,
+        sourceKey: selectedVariation.sourceKey,
+        spriteScale,
+        imageWidth: overlayDimensions.width,
+        imageHeight: overlayDimensions.height,
+      },
+    };
+
+    const updatedZones = [...zones, newSprite];
+    setZones(updatedZones);
+    setSelectedZoneId(newSprite.id);
+
+    // Mark variation as used
+    setUsedVariations(new Set([...usedVariations, uniqueId]));
+
+    setSelectedVariation(null);
+    setVariationSearch("");
+
+    // Autosave after committing sprite
+    try {
+      await saveOverlay({
+        imageKey,
+        imagePath,
+        imageWidth: imageDimensions.width,
+        imageHeight: imageDimensions.height,
+        zones: updatedZones,
+      });
+      // Record autosave in database history (keeps last 20 automatically)
+      await saveAutosave({
+        imageKey,
+        zones: updatedZones,
+      });
+    } catch (error) {
+      console.error("Autosave failed:", error);
+    }
   };
 
   // Save to Convex
   const handleSave = async () => {
     if (!imageLoaded) {
-      alert("Please load an image first");
+      alert("Please load a base image first");
       return;
     }
 
@@ -160,15 +641,34 @@ export default function OverlayEditor() {
     }
   };
 
-  // Delete selected zone
-  const handleDeleteZone = () => {
+  // Delete selected zone/sprite
+  const handleDelete = async () => {
     if (selectedZoneId) {
-      setZones(zones.filter((z) => z.id !== selectedZoneId));
+      const updatedZones = zones.filter((z) => z.id !== selectedZoneId);
+      setZones(updatedZones);
       setSelectedZoneId(null);
+
+      // Autosave after deleting
+      try {
+        await saveOverlay({
+          imageKey,
+          imagePath,
+          imageWidth: imageDimensions.width,
+          imageHeight: imageDimensions.height,
+          zones: updatedZones,
+        });
+        // Record autosave in database history (keeps last 20 automatically)
+        await saveAutosave({
+          imageKey,
+          zones: updatedZones,
+        });
+      } catch (error) {
+        console.error("Autosave after delete failed:", error);
+      }
     }
   };
 
-  // Update zone label
+  // Update zone/sprite label
   const handleUpdateLabel = (label: string) => {
     if (selectedZoneId) {
       setZones(
@@ -179,84 +679,281 @@ export default function OverlayEditor() {
     }
   };
 
+  // Restore from autosave history
+  const restoreFromHistory = async (historyItem: any) => {
+    if (!window.confirm(`Restore to state from ${new Date(historyItem.timestamp).toLocaleString()}? This will replace your current work.`)) {
+      return;
+    }
+
+    setZones(historyItem.zones);
+    setShowAutosaveHistory(false);
+
+    // Save restored state to database
+    try {
+      await saveOverlay({
+        imageKey,
+        imagePath,
+        imageWidth: imageDimensions.width,
+        imageHeight: imageDimensions.height,
+        zones: historyItem.zones,
+      });
+    } catch (error) {
+      console.error("Failed to save restored state:", error);
+      alert("Restored locally but failed to save to database");
+    }
+  };
+
+  // Filter variations by search
+  const filteredVariations = COMPLETE_VARIATION_RARITY.filter((v) =>
+    v.name.toLowerCase().includes(variationSearch.toLowerCase())
+  );
+
+  // Group variations by type for checklist (sorted from least rare to most rare)
+  const variationsByType = {
+    head: COMPLETE_VARIATION_RARITY.filter(v => v.type === "head").sort((a, b) => b.rank - a.rank),
+    body: COMPLETE_VARIATION_RARITY.filter(v => v.type === "body").sort((a, b) => b.rank - a.rank),
+    trait: COMPLETE_VARIATION_RARITY.filter(v => v.type === "trait").sort((a, b) => b.rank - a.rank),
+  };
+
+  const usedCountByType = {
+    head: variationsByType.head.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
+    body: variationsByType.body.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
+    trait: variationsByType.trait.filter(v => usedVariations.has(`${v.type}-${v.name}`)).length,
+  };
+
+  // Debug logging
+  useEffect(() => {
+    if (usedVariations.size > 0) {
+      console.log('[Debug] Used variations set:', Array.from(usedVariations));
+      console.log('[Debug] Count by type:', usedCountByType);
+    }
+  }, [usedVariations, usedCountByType]);
+
   const selectedZone = zones.find((z) => z.id === selectedZoneId);
-  const allZones = [...zones, dragState.currentZone].filter((z): z is Zone => z !== null);
+  const allZones = editorMode === "zone" && dragState.currentZone
+    ? [...zones, dragState.currentZone]
+    : zones;
 
   return (
-    <div className="mek-card-industrial p-6 space-y-6">
-      <div className="flex gap-6">
-        {/* Left Panel - Editor */}
-        <div className="flex-1">
-          <h2 className="mek-text-industrial text-2xl mb-4">Overlay Editor</h2>
+    <div className="space-y-4">
+      {/* Mode Toggle */}
+      <div className="flex gap-4 items-center">
+        <div className="flex border-2 border-yellow-500/50 rounded overflow-hidden">
+          <button
+            onClick={() => setEditorMode("sprite")}
+            className={`px-6 py-2 font-bold transition-colors ${
+              editorMode === "sprite"
+                ? "bg-yellow-500 text-black"
+                : "bg-black/50 text-yellow-400 hover:bg-yellow-500/20"
+            }`}
+          >
+            Position Sprites
+          </button>
+          <button
+            onClick={() => setEditorMode("zone")}
+            className={`px-6 py-2 font-bold transition-colors ${
+              editorMode === "zone"
+                ? "bg-yellow-500 text-black"
+                : "bg-black/50 text-yellow-400 hover:bg-yellow-500/20"
+            }`}
+          >
+            Draw Zones
+          </button>
+        </div>
+        <div className="text-gray-400 text-sm">
+          {editorMode === "zone" ? "Draw rectangles for hit zones" : "Drag overlay images to position"}
+        </div>
+      </div>
 
-          {/* Image Selection */}
-          <div className="mb-4 space-y-3">
+      <div className="flex gap-6">
+        {/* Left Panel - Canvas */}
+        <div className="flex-1 max-w-[calc(100%-24rem-1.5rem)]">
+          <h2 className="mek-text-industrial text-2xl mb-4">Canvas</h2>
+
+          {/* Project Settings */}
+          <div className="mb-4 space-y-3 bg-black/50 border border-yellow-500/30 rounded p-4">
             <div>
-              <label className="mek-label-uppercase block mb-2">Image Key</label>
+              <label className="mek-label-uppercase block mb-2">Project Name</label>
               <input
                 type="text"
                 value={imageKey}
                 onChange={(e) => setImageKey(e.target.value)}
                 className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
-                placeholder="mechanism-slots"
+                placeholder="variation-triangle"
               />
             </div>
             <div>
-              <label className="mek-label-uppercase block mb-2">Image Path</label>
-              <input
-                type="text"
-                value={imagePath}
-                onChange={(e) => setImagePath(e.target.value)}
-                className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
-                placeholder="/images/mechanism-slots.png"
-              />
+              <label className="mek-label-uppercase block mb-2">Base Image Path</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={imagePath}
+                  onChange={(e) => setImagePath(e.target.value)}
+                  onBlur={(e) => {
+                    const converted = extractWebPath(e.target.value);
+                    if (converted !== e.target.value) {
+                      setImagePath(converted);
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
+                  placeholder="/triangle/backplate_2.webp"
+                />
+                <button
+                  onClick={() => addRecentBasePath(imagePath)}
+                  className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 whitespace-nowrap"
+                >
+                  Load
+                </button>
+              </div>
+              {recentBasePaths.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-400 mb-1">Recent:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {recentBasePaths.map((path, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setImagePath(path)}
+                        className="px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-xs text-yellow-400 hover:border-yellow-500/50"
+                        title={path}
+                      >
+                        {path.split('/').pop() || path}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div>
-              <label className="mek-label-uppercase block mb-2">Zone Type</label>
-              <select
-                value={zoneType}
-                onChange={(e) => setZoneType(e.target.value)}
-                className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
+          </div>
+
+          {/* Canvas Controls */}
+          <div className="mb-4 bg-black/50 border border-yellow-500/30 rounded p-3 space-y-3">
+            {/* Zoom Controls */}
+            <div className="flex gap-2 items-center">
+              <span className="mek-label-uppercase">Zoom:</span>
+              <button
+                onClick={() => setScale(Math.max(0.25, scale - 0.25))}
+                className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
               >
-                <option value="mechanism-slot">Mechanism Slot</option>
-                <option value="button">Button</option>
-                <option value="clickable">Clickable Area</option>
-                <option value="display">Display Zone</option>
-              </select>
+                -
+              </button>
+              <span className="text-yellow-400 font-bold min-w-[60px] text-center">
+                {Math.round(scale * 100)}%
+              </span>
+              <button
+                onClick={() => setScale(Math.min(3, scale + 0.25))}
+                className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+              >
+                +
+              </button>
+              <button
+                onClick={() => {
+                  setScale(1);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+                className="ml-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Pan Controls */}
+            <div className="flex gap-2 items-center">
+              <span className="mek-label-uppercase">Pan:</span>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => setPanOffset(prev => ({ ...prev, y: prev.y + 50 }))}
+                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                  title="Pan Up"
+                >
+                  ▲
+                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setPanOffset(prev => ({ ...prev, x: prev.x + 50 }))}
+                    className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                    title="Pan Left"
+                  >
+                    ◀
+                  </button>
+                  <button
+                    onClick={() => setPanOffset({ x: 0, y: 0 })}
+                    className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-xs"
+                    title="Reset Pan"
+                  >
+                    ⊙
+                  </button>
+                  <button
+                    onClick={() => setPanOffset(prev => ({ ...prev, x: prev.x - 50 }))}
+                    className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                    title="Pan Right"
+                  >
+                    ▶
+                  </button>
+                </div>
+                <button
+                  onClick={() => setPanOffset(prev => ({ ...prev, y: prev.y - 50 }))}
+                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                  title="Pan Down"
+                >
+                  ▼
+                </button>
+              </div>
+              <span className="text-xs text-gray-400 ml-2">
+                {panOffset.x !== 0 || panOffset.y !== 0 ? `(${panOffset.x}, ${panOffset.y})` : 'Centered'}
+              </span>
             </div>
           </div>
 
           {/* Canvas */}
-          <div className="relative border-2 border-yellow-500/50 bg-black/80 overflow-hidden">
+          <div
+            className="relative border-2 border-yellow-500/50 bg-black/80 overflow-auto w-full h-[800px]"
+            onMouseDown={handlePanStart}
+            onMouseMove={handlePanMove}
+            onMouseUp={handlePanEnd}
+            onMouseLeave={handlePanEnd}
+            style={{ cursor: isPanning ? 'grabbing' : 'default' }}
+          >
             {imagePath && (
-              <>
+              <div
+                style={{
+                  position: "relative",
+                  width: imageDimensions.width * scale,
+                  height: imageDimensions.height * scale,
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+                }}
+              >
                 <img
                   ref={imageRef}
                   src={imagePath}
-                  alt="Overlay Base"
+                  alt="Base Image"
                   onLoad={handleImageLoad}
+                  onError={() => alert("Failed to load base image. Check the path.")}
                   style={{
                     width: imageDimensions.width * scale,
                     height: imageDimensions.height * scale,
+                    objectFit: "contain",
+                    maxWidth: "none",
+                    maxHeight: "none",
                   }}
                   className="block"
                 />
                 <div
                   ref={canvasRef}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
+                  onMouseDown={editorMode === "zone" ? handleZoneMouseDown : handleSpriteMouseDown}
+                  onMouseMove={editorMode === "zone" ? handleZoneMouseMove : handleSpriteMouseMove}
+                  onMouseUp={editorMode === "zone" ? handleZoneMouseUp : handleSpriteMouseUp}
+                  onMouseLeave={editorMode === "zone" ? handleZoneMouseUp : handleSpriteMouseUp}
                   style={{
                     position: "absolute",
                     top: 0,
                     left: 0,
                     width: imageDimensions.width * scale,
                     height: imageDimensions.height * scale,
-                    cursor: "crosshair",
+                    cursor: editorMode === "zone" ? "crosshair" : "move",
                   }}
                 >
-                  {allZones.map((zone) => (
+                  {/* Render zones */}
+                  {allZones.filter(z => z.mode === "zone").map((zone) => (
                     <div
                       key={zone.id}
                       onClick={(e) => {
@@ -267,8 +964,8 @@ export default function OverlayEditor() {
                         position: "absolute",
                         left: zone.x * scale,
                         top: zone.y * scale,
-                        width: zone.width * scale,
-                        height: zone.height * scale,
+                        width: (zone.width || 0) * scale,
+                        height: (zone.height || 0) * scale,
                         border: selectedZoneId === zone.id ? "3px solid #fab617" : "2px solid rgba(250, 182, 23, 0.5)",
                         backgroundColor: "rgba(250, 182, 23, 0.2)",
                         pointerEvents: dragState.isDrawing ? "none" : "auto",
@@ -280,50 +977,591 @@ export default function OverlayEditor() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Render sprites */}
+                  {allZones.filter(z => z.mode === "sprite").map((sprite) => {
+                    const spriteScaleValue = sprite.metadata?.spriteScale || 1;
+                    return (
+                      <div
+                        key={sprite.id}
+                        style={{
+                          position: "absolute",
+                          left: sprite.x * scale,
+                          top: sprite.y * scale,
+                          border: (dragState.isDraggingSprite || isDraggingExisting) ? "none" : (selectedZoneId === sprite.id ? "2px solid #fab617" : "1px solid rgba(250, 182, 23, 0.3)"),
+                          pointerEvents: dragState.isDraggingSprite ? "none" : "auto",
+                          cursor: selectedZoneId === sprite.id ? "move" : "pointer",
+                          // CRITICAL: DO NOT MODIFY THIS TRANSFORM!
+                          // spriteScaleValue = user's chosen sprite size (0.25-3.0)
+                          // scale = canvas zoom level (0.25-3.0)
+                          // Both must be multiplied to maintain correct sprite size at all zoom levels
+                          transform: `scale(${spriteScaleValue * scale})`,
+                          transformOrigin: "top left",
+                        }}
+                      >
+                        {sprite.overlayImage && (
+                          <img src={sprite.overlayImage} alt={sprite.label} style={{ display: "block" }} />
+                        )}
+                        {sprite.label && !dragState.isDraggingSprite && !isDraggingExisting && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/90 px-1 py-0.5 text-[8px] text-yellow-400 text-center font-bold leading-tight border-t border-yellow-500/50">
+                            {sprite.label}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Dragging sprite preview */}
+                  {editorMode === "sprite" && overlayImageLoaded && (dragState.spriteX !== 0 || dragState.spriteY !== 0) && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: dragState.spriteX * scale,
+                        top: dragState.spriteY * scale,
+                        opacity: dragState.isDraggingSprite ? 0.3 : 0.9,
+                        pointerEvents: "none",
+                        border: dragState.isDraggingSprite ? "2px dashed rgba(250, 182, 23, 0.5)" : "2px solid rgba(250, 182, 23, 0.8)",
+                        // CRITICAL: DO NOT MODIFY THIS TRANSFORM!
+                        // spriteScale = user's chosen sprite size (0.25-3.0)
+                        // scale = canvas zoom level (0.25-3.0)
+                        // Both must be multiplied to maintain correct sprite size at all zoom levels
+                        transform: `scale(${spriteScale * scale})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      <img src={overlayImagePath} alt="Overlay" style={{ display: "block" }} />
+                    </div>
+                  )}
                 </div>
-              </>
+              </div>
+            )}
+            {!imagePath && (
+              <div className="p-12 text-center text-gray-500">
+                Enter base image path above to start
+              </div>
             )}
           </div>
 
-          {/* Instructions */}
-          <div className="mt-4 text-sm text-gray-400">
-            <p>• Click and drag to create zones</p>
-            <p>• Click a zone to select it</p>
-            <p>• Use the right panel to edit zone properties</p>
-            <p>• Save to persist to database</p>
-          </div>
+          {/* Hidden overlay image loader */}
+          {overlayImagePath && (
+            <img
+              ref={overlayImageRef}
+              src={overlayImagePath}
+              alt="Overlay"
+              onLoad={handleOverlayImageLoad}
+              onError={() => alert("Failed to load overlay image")}
+              style={{ display: "none" }}
+            />
+          )}
         </div>
 
-        {/* Right Panel - Zone Editor */}
-        <div className="w-80 space-y-4">
-          <h3 className="mek-text-industrial text-xl">Zones</h3>
+        {/* Right Panel - Tools */}
+        <div className="w-96 space-y-4">
+          <h3 className="mek-text-industrial text-xl">Tools</h3>
 
-          {/* Zone List */}
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {zones.map((zone) => (
-              <div
-                key={zone.id}
-                onClick={() => setSelectedZoneId(zone.id)}
-                className={`p-3 border rounded cursor-pointer transition-colors ${
-                  selectedZoneId === zone.id
-                    ? "border-yellow-500 bg-yellow-500/20"
-                    : "border-yellow-500/30 bg-black/50"
-                }`}
-              >
-                <div className="text-sm font-bold text-yellow-400">
-                  {zone.label || `${zone.type} #${zone.id.slice(-4)}`}
-                </div>
-                <div className="text-xs text-gray-400">
-                  {Math.round(zone.x)}, {Math.round(zone.y)} • {Math.round(zone.width)}×{Math.round(zone.height)}
-                </div>
+          {/* Zone Mode Tools */}
+          {editorMode === "zone" && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
+              <h4 className="mek-label-uppercase text-yellow-400">Zone Settings</h4>
+              <div>
+                <label className="mek-label-uppercase block mb-2">Zone Type</label>
+                <select
+                  value={zoneType}
+                  onChange={(e) => setZoneType(e.target.value)}
+                  className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
+                >
+                  <option value="mechanism-slot">Mechanism Slot</option>
+                  <option value="button">Button</option>
+                  <option value="clickable">Clickable Area</option>
+                  <option value="display">Display Zone</option>
+                  <option value="custom">Custom</option>
+                </select>
               </div>
-            ))}
+              <div className="text-sm text-gray-400">
+                Click and drag on the canvas to create a rectangular zone.
+              </div>
+            </div>
+          )}
+
+          {/* Sprite Mode Tools */}
+          {editorMode === "sprite" && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
+              <h4 className="mek-label-uppercase text-yellow-400">Overlay Palette</h4>
+
+              {/* Load from Folder */}
+              <div className="border border-yellow-500/20 rounded p-3 space-y-2">
+                <div className="text-xs text-gray-400 font-bold">Load from Folder</div>
+                <input
+                  type="text"
+                  value={folderPath}
+                  onChange={(e) => setFolderPath(e.target.value)}
+                  className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-sm"
+                  placeholder="Folder path (e.g., C:\...\public\triangle\bulbs)"
+                  disabled={isLoadingFolder}
+                />
+                <button
+                  onClick={loadImagesFromFolder}
+                  disabled={isLoadingFolder}
+                  className="w-full px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoadingFolder ? "Loading..." : "Load All Images"}
+                </button>
+              </div>
+
+              {/* Add New Overlay */}
+              <div className="border border-yellow-500/20 rounded p-3 space-y-2">
+                <div className="text-xs text-gray-400 font-bold">Add Single Overlay</div>
+                <input
+                  type="text"
+                  value={newOverlayName}
+                  onChange={(e) => setNewOverlayName(e.target.value)}
+                  className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-sm"
+                  placeholder="Name (e.g., Green Bulb)"
+                />
+                <input
+                  type="text"
+                  value={newOverlayPath}
+                  onChange={(e) => setNewOverlayPath(e.target.value)}
+                  onBlur={(e) => {
+                    const converted = extractWebPath(e.target.value);
+                    if (converted !== e.target.value) {
+                      setNewOverlayPath(converted);
+                    }
+                  }}
+                  className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-sm"
+                  placeholder="Path (e.g., /triangle/bulbs/green.png)"
+                />
+                <button
+                  onClick={addOverlayToPalette}
+                  className="w-full px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm"
+                >
+                  Add to Palette
+                </button>
+              </div>
+
+              {/* Palette Grid */}
+              {overlayPalette.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-400 font-bold">Quick Select</div>
+                  <div className="grid grid-cols-6 gap-1">
+                    {overlayPalette.map((item) => (
+                      <div key={item.id} className="relative">
+                        <button
+                          onClick={() => selectPaletteOverlay(item)}
+                          className={`w-full aspect-square border rounded overflow-hidden transition-all ${
+                            activeOverlayId === item.id
+                              ? "border-yellow-500 bg-yellow-500/20"
+                              : "border-yellow-500/30 bg-black/50 hover:border-yellow-500/50"
+                          }`}
+                          title={item.name}
+                        >
+                          <img
+                            src={item.path}
+                            alt={item.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = `<div class="text-[8px] text-gray-500 p-1">${item.name}</div>`;
+                            }}
+                          />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromPalette(item.id);
+                          }}
+                          className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-600 rounded-full text-white text-[8px] leading-none hover:bg-red-700"
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sprite Scale Controls */}
+          {editorMode === "sprite" && overlayImageLoaded && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
+              <h4 className="mek-label-uppercase text-yellow-400">Sprite Size</h4>
+              <div className="flex gap-2 items-center">
+                <button
+                  onClick={() => setSpriteScale(Math.max(0.25, spriteScale - 0.1))}
+                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                >
+                  −
+                </button>
+                <span className="text-yellow-400 font-bold min-w-[60px] text-center">
+                  {Math.round(spriteScale * 100)}%
+                </span>
+                <button
+                  onClick={() => setSpriteScale(Math.min(3, spriteScale + 0.1))}
+                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => setSpriteScale(1)}
+                  className="ml-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Variation Search (only when overlay is selected) */}
+          {editorMode === "sprite" && overlayImageLoaded && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
+              <h4 className="mek-label-uppercase text-yellow-400">Assign Variation</h4>
+
+              {overlayImageLoaded && (
+                <>
+                  <div>
+                    <label className="mek-label-uppercase block mb-2">Search Variation</label>
+                    <input
+                      type="text"
+                      value={variationSearch}
+                      onChange={(e) => setVariationSearch(e.target.value)}
+                      className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
+                      placeholder="Type to search..."
+                    />
+                  </div>
+
+                  {variationSearch && (
+                    <div className="max-h-48 overflow-y-auto space-y-1">
+                      {filteredVariations.slice(0, 10).map((variation) => {
+                        const uniqueId = `${variation.type}-${variation.name}`;
+                        const isUsed = usedVariations.has(uniqueId);
+                        return (
+                          <div
+                            key={uniqueId}
+                            onClick={() => setSelectedVariation(variation)}
+                            className={`p-2 border rounded cursor-pointer transition-colors text-sm ${
+                              isUsed
+                                ? "border-gray-600 bg-gray-900/50"
+                                : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                ? "border-yellow-500 bg-yellow-500/20"
+                                : "border-yellow-500/30 bg-black/50 hover:border-yellow-500/50"
+                            }`}
+                          >
+                            <div className={`font-bold flex justify-between items-center ${
+                              isUsed ? "line-through text-gray-600" : "text-yellow-400"
+                            }`}>
+                              <span>{variation.name}</span>
+                              {isUsed && <span className="text-xs text-red-400 ml-2">Already placed</span>}
+                            </div>
+                            <div className={`text-xs ${isUsed ? "text-gray-600" : "text-gray-400"}`}>
+                              {variation.type} • {variation.sourceKey} • Rank {variation.rank}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedVariation && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/50 rounded p-3">
+                      <div className="text-sm font-bold text-yellow-400 mb-1">Selected:</div>
+                      <div className="text-white">{selectedVariation.name}</div>
+                      <div className="text-xs text-gray-400">
+                        {selectedVariation.type} • {selectedVariation.sourceKey}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={commitSpritePosition}
+                      disabled={!selectedVariation}
+                      className="flex-1 mek-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Commit Position
+                    </button>
+                    {(dragState.spriteX !== 0 || dragState.spriteY !== 0) && (
+                      <button
+                        onClick={() => {
+                          setDragState({
+                            ...dragState,
+                            spriteX: 0,
+                            spriteY: 0,
+                            isDraggingSprite: false,
+                          });
+                          setSelectedVariation(null);
+                          setVariationSearch("");
+                        }}
+                        className="px-3 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm"
+                        title="Clear sprite position"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <div className="text-sm text-gray-400">
+                1. Add overlay images to palette<br />
+                2. Click a bulb to select it<br />
+                3. Drag it to position on canvas<br />
+                4. Search and select variation<br />
+                5. Click Commit Position<br />
+                <br />
+                <span className="text-red-400">To delete:</span><br />
+                • Uncommitted sprite: Click "Clear" button<br />
+                • Committed sprite: Click it in Items list below, then click Delete
+              </div>
+            </div>
+          )}
+
+          {/* Master Variation Checklist */}
+          {editorMode === "sprite" && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded overflow-hidden">
+              <button
+                onClick={() => setChecklistExpanded(!checklistExpanded)}
+                className="w-full p-4 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+              >
+                <div className="flex gap-3 items-center">
+                  <h4 className="mek-label-uppercase text-yellow-400">Variation Checklist</h4>
+                  <div className="text-xs text-gray-400">
+                    {usedVariations.size}/288 placed
+                  </div>
+                </div>
+                <span className="text-yellow-400">{checklistExpanded ? "▼" : "▶"}</span>
+              </button>
+
+              {checklistExpanded && (
+                <div className="p-4 pt-0 space-y-2">
+                  {/* Heads Section */}
+                  <div className="border border-yellow-500/20 rounded overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setChecklistTypeExpanded({
+                          ...checklistTypeExpanded,
+                          head: !checklistTypeExpanded.head,
+                        })
+                      }
+                      className="w-full p-2 bg-black/30 flex justify-between items-center hover:bg-yellow-500/10"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <span className="text-sm font-bold text-yellow-400">Heads</span>
+                        <span className="text-xs text-gray-400">
+                          {usedCountByType.head}/{variationsByType.head.length}
+                        </span>
+                      </div>
+                      <span className="text-yellow-400 text-xs">
+                        {checklistTypeExpanded.head ? "▼" : "▶"}
+                      </span>
+                    </button>
+                    {checklistTypeExpanded.head && (
+                      <div className="p-2 space-y-2">
+                        <input
+                          type="text"
+                          value={checklistSearch.head}
+                          onChange={(e) => setChecklistSearch({ ...checklistSearch, head: e.target.value })}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-xs"
+                          placeholder="Search heads..."
+                        />
+                        <div className="max-h-64 overflow-y-auto space-y-1">
+                          {variationsByType.head
+                            .filter(v => v.name.toLowerCase().includes(checklistSearch.head.toLowerCase()))
+                            .map((variation) => {
+                              const uniqueId = `${variation.type}-${variation.name}`;
+                              const isUsed = usedVariations.has(uniqueId);
+                              return (
+                                <div
+                                  key={uniqueId}
+                                  onClick={() => !isUsed && setSelectedVariation(variation)}
+                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
+                                    isUsed
+                                      ? "line-through text-gray-600 bg-gray-900/50"
+                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
+                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  }`}
+                                >
+                                  <div className="flex justify-between">
+                                    <span>{variation.name}</span>
+                                    <span className="text-gray-500">#{variation.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bodies Section */}
+                  <div className="border border-yellow-500/20 rounded overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setChecklistTypeExpanded({
+                          ...checklistTypeExpanded,
+                          body: !checklistTypeExpanded.body,
+                        })
+                      }
+                      className="w-full p-2 bg-black/30 flex justify-between items-center hover:bg-yellow-500/10"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <span className="text-sm font-bold text-yellow-400">Bodies</span>
+                        <span className="text-xs text-gray-400">
+                          {usedCountByType.body}/{variationsByType.body.length}
+                        </span>
+                      </div>
+                      <span className="text-yellow-400 text-xs">
+                        {checklistTypeExpanded.body ? "▼" : "▶"}
+                      </span>
+                    </button>
+                    {checklistTypeExpanded.body && (
+                      <div className="p-2 space-y-2">
+                        <input
+                          type="text"
+                          value={checklistSearch.body}
+                          onChange={(e) => setChecklistSearch({ ...checklistSearch, body: e.target.value })}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-xs"
+                          placeholder="Search bodies..."
+                        />
+                        <div className="max-h-64 overflow-y-auto space-y-1">
+                          {variationsByType.body
+                            .filter(v => v.name.toLowerCase().includes(checklistSearch.body.toLowerCase()))
+                            .map((variation) => {
+                              const uniqueId = `${variation.type}-${variation.name}`;
+                              const isUsed = usedVariations.has(uniqueId);
+                              return (
+                                <div
+                                  key={uniqueId}
+                                  onClick={() => !isUsed && setSelectedVariation(variation)}
+                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
+                                    isUsed
+                                      ? "line-through text-gray-600 bg-gray-900/50"
+                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
+                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  }`}
+                                >
+                                  <div className="flex justify-between">
+                                    <span>{variation.name}</span>
+                                    <span className="text-gray-500">#{variation.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Traits Section */}
+                  <div className="border border-yellow-500/20 rounded overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setChecklistTypeExpanded({
+                          ...checklistTypeExpanded,
+                          trait: !checklistTypeExpanded.trait,
+                        })
+                      }
+                      className="w-full p-2 bg-black/30 flex justify-between items-center hover:bg-yellow-500/10"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <span className="text-sm font-bold text-yellow-400">Traits</span>
+                        <span className="text-xs text-gray-400">
+                          {usedCountByType.trait}/{variationsByType.trait.length}
+                        </span>
+                      </div>
+                      <span className="text-yellow-400 text-xs">
+                        {checklistTypeExpanded.trait ? "▼" : "▶"}
+                      </span>
+                    </button>
+                    {checklistTypeExpanded.trait && (
+                      <div className="p-2 space-y-2">
+                        <input
+                          type="text"
+                          value={checklistSearch.trait}
+                          onChange={(e) => setChecklistSearch({ ...checklistSearch, trait: e.target.value })}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-white text-xs"
+                          placeholder="Search traits..."
+                        />
+                        <div className="max-h-64 overflow-y-auto space-y-1">
+                          {variationsByType.trait
+                            .filter(v => v.name.toLowerCase().includes(checklistSearch.trait.toLowerCase()))
+                            .map((variation) => {
+                              const uniqueId = `${variation.type}-${variation.name}`;
+                              const isUsed = usedVariations.has(uniqueId);
+                              return (
+                                <div
+                                  key={uniqueId}
+                                  onClick={() => !isUsed && setSelectedVariation(variation)}
+                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
+                                    isUsed
+                                      ? "line-through text-gray-600 bg-gray-900/50"
+                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
+                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  }`}
+                                >
+                                  <div className="flex justify-between">
+                                    <span>{variation.name}</span>
+                                    <span className="text-gray-500">#{variation.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Items List */}
+          <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="mek-label-uppercase text-yellow-400">
+                Items ({zones.length})
+              </h4>
+              <span className="text-xs text-gray-500">Click to select</span>
+            </div>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {zones.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedZoneId(item.id)}
+                  className={`p-3 border rounded cursor-pointer transition-colors ${
+                    selectedZoneId === item.id
+                      ? "border-yellow-500 bg-yellow-500/20"
+                      : "border-yellow-500/30 bg-black/50"
+                  }`}
+                >
+                  <div className="text-sm font-bold text-yellow-400">
+                    {item.mode === "zone" ? "🔲" : "📌"} {item.label || `${item.type} #${item.id.slice(-4)}`}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {Math.round(item.x)}, {Math.round(item.y)}
+                    {item.mode === "zone" && item.width && item.height && ` • ${Math.round(item.width)}×${Math.round(item.height)}`}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Selected Zone Editor */}
+          {/* Selected Item Editor */}
           {selectedZone && (
-            <div className="border border-yellow-500/50 p-4 rounded space-y-3">
-              <h4 className="mek-label-uppercase">Edit Zone</h4>
+            <div className="bg-black/50 border border-yellow-500/50 rounded p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="mek-label-uppercase">Edit Selected</h4>
+                <button
+                  onClick={handleDelete}
+                  className="px-3 py-1 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-xs font-bold"
+                >
+                  DELETE
+                </button>
+              </div>
               <div>
                 <label className="text-xs text-gray-400 block mb-1">Label</label>
                 <input
@@ -334,17 +1572,20 @@ export default function OverlayEditor() {
                   placeholder="Enter label..."
                 />
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 space-y-1">
+                <div>Mode: {selectedZone.mode}</div>
                 <div>Type: {selectedZone.type}</div>
                 <div>Position: {Math.round(selectedZone.x)}, {Math.round(selectedZone.y)}</div>
-                <div>Size: {Math.round(selectedZone.width)}×{Math.round(selectedZone.height)}</div>
+                {selectedZone.mode === "zone" && selectedZone.width && selectedZone.height && (
+                  <div>Size: {Math.round(selectedZone.width)}×{Math.round(selectedZone.height)}</div>
+                )}
+                {selectedZone.metadata && (
+                  <div className="mt-2 pt-2 border-t border-yellow-500/30">
+                    <div className="font-bold">Metadata:</div>
+                    <pre className="text-xs">{JSON.stringify(selectedZone.metadata, null, 2)}</pre>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleDeleteZone}
-                className="w-full px-3 py-2 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-sm"
-              >
-                Delete Zone
-              </button>
             </div>
           )}
 
@@ -354,20 +1595,26 @@ export default function OverlayEditor() {
               onClick={handleSave}
               className="mek-button-primary w-full"
             >
-              Save Overlay
+              Save Project
+            </button>
+            <button
+              onClick={() => setShowAutosaveHistory(true)}
+              className="w-full px-4 py-2 bg-blue-600/20 border border-blue-500/50 rounded text-blue-400 hover:bg-blue-600/30 transition-colors"
+            >
+              Autosave History ({autosaveHistoryFromDb?.length || 0})
             </button>
             <button
               onClick={() => setZones([])}
               className="w-full px-4 py-2 bg-black/50 border border-yellow-500/50 rounded text-white hover:bg-yellow-500/20 transition-colors"
             >
-              Clear All Zones
+              Clear All
             </button>
           </div>
 
-          {/* Saved Overlays */}
+          {/* Saved Projects */}
           {allOverlays && allOverlays.length > 0 && (
-            <div className="border-t border-yellow-500/30 pt-4">
-              <h4 className="mek-label-uppercase mb-2">Saved Overlays</h4>
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4">
+              <h4 className="mek-label-uppercase mb-2">Saved Projects</h4>
               <div className="space-y-1 text-sm">
                 {allOverlays.map((overlay) => (
                   <div
@@ -384,7 +1631,7 @@ export default function OverlayEditor() {
                     className="p-2 bg-black/50 border border-yellow-500/30 rounded cursor-pointer hover:border-yellow-500/50"
                   >
                     <div className="text-yellow-400">{overlay.imageKey}</div>
-                    <div className="text-xs text-gray-400">{overlay.zones.length} zones</div>
+                    <div className="text-xs text-gray-400">{overlay.zones.length} items</div>
                   </div>
                 ))}
               </div>
@@ -392,6 +1639,65 @@ export default function OverlayEditor() {
           )}
         </div>
       </div>
+
+      {/* Autosave History Modal */}
+      {showAutosaveHistory && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setShowAutosaveHistory(false)}
+        >
+          <div
+            className="bg-black border-2 border-blue-500/50 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="mek-text-industrial text-2xl text-blue-400">Autosave History</h2>
+              <button
+                onClick={() => setShowAutosaveHistory(false)}
+                className="px-3 py-1 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="text-sm text-gray-400 mb-4">
+              Last {autosaveHistoryFromDb?.length || 0} autosaves (most recent first). Click to restore.
+              <br />
+              <span className="text-green-400">✓ Permanent - survives page refresh</span>
+            </div>
+
+            {!autosaveHistoryFromDb || autosaveHistoryFromDb.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No autosave history yet. Autosaves happen when you commit or delete sprites.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {autosaveHistoryFromDb.map((item, index) => (
+                  <div
+                    key={item._id}
+                    onClick={() => restoreFromHistory(item)}
+                    className="p-4 bg-black/50 border border-blue-500/30 rounded cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/10 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-blue-400">
+                          {new Date(item.timestamp).toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {item.spriteCount} sprite{item.spriteCount !== 1 ? 's' : ''} placed
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {index === 0 ? 'Most recent' : `${index} save${index !== 1 ? 's' : ''} ago`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -23,13 +23,6 @@ export default function EssenceMarketAdmin() {
   const [listingDuration, setListingDuration] = useState<number>(30);
   const [variationSearchTerm, setVariationSearchTerm] = useState('');
   const [showVariationDropdown, setShowVariationDropdown] = useState(false);
-  const [listingHistory, setListingHistory] = useState<Array<{
-    timestamp: number;
-    variation: string;
-    quantity: number;
-    price: number;
-    duration: number;
-  }>>([]);
 
   // Add to Player form state
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
@@ -46,6 +39,7 @@ export default function EssenceMarketAdmin() {
     selectedVariation ? { variationFilter: selectedVariation } : {}
   );
   const allPlayers = useQuery(api.adminEssence.getAllPlayers);
+  const listingHistory = useQuery(api.adminMarketplace.getMarketplaceListingHistory);
 
   // Mutations
   const deleteListing = useMutation(api.adminMarketplace.adminDeleteListing);
@@ -81,14 +75,7 @@ export default function EssenceMarketAdmin() {
         durationDays: listingDuration,
       });
 
-      // Add to history
-      setListingHistory(prev => [{
-        timestamp: Date.now(),
-        variation: listingVariation,
-        quantity: listingQuantity,
-        price: listingPrice,
-        duration: listingDuration,
-      }, ...prev]);
+      // Listing history is now automatically saved to the database in the mutation
 
       // Reset form
       setListingVariation('');
@@ -739,23 +726,13 @@ export default function EssenceMarketAdmin() {
           </div>
 
           {/* Listing History Log - Only for Market mode */}
-          {createMode === 'market' && listingHistory.length > 0 && (
+          {createMode === 'market' && listingHistory && listingHistory.length > 0 && (
             <div className="bg-blue-900/20 border border-blue-500/30 rounded p-4 mt-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h4 className="text-sm font-bold text-blue-400">📊 Listing History</h4>
-                  <p className="text-xs text-gray-400 mt-1">Track all essence listings created in this session</p>
+                  <p className="text-xs text-gray-400 mt-1">Complete history of all essence listings ever created (stored permanently)</p>
                 </div>
-                <button
-                  onClick={() => {
-                    if (confirm('Clear all history? This cannot be undone.')) {
-                      setListingHistory([]);
-                    }
-                  }}
-                  className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 rounded text-red-300 text-xs font-bold"
-                >
-                  Clear Log
-                </button>
               </div>
 
               {/* Summary Stats */}
@@ -793,10 +770,10 @@ export default function EssenceMarketAdmin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {listingHistory.map((item, index) => (
-                      <tr key={index} className="hover:bg-blue-900/20 transition-colors">
+                    {listingHistory.map((item) => (
+                      <tr key={item._id} className="hover:bg-blue-900/20 transition-colors">
                         <td className="p-2 border-b border-gray-800 text-gray-400">
-                          {new Date(item.timestamp).toLocaleTimeString()}
+                          {new Date(item.timestamp).toLocaleString()}
                         </td>
                         <td className="p-2 border-b border-gray-800 text-purple-300 font-medium">
                           {item.variation}

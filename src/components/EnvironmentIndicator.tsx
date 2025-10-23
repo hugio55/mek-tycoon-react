@@ -15,26 +15,39 @@ type Environment = {
   warning: boolean;
 };
 
-const ENVIRONMENTS: Record<string, Environment> = {
-  "wry-trout-962": {
+// Both production and staging use the same database (Trout)
+// Environment is determined by port number
+const PORT_ENVIRONMENTS: Record<number, Omit<Environment, 'port'>> = {
+  3100: {
+    name: "PRODUCTION",
+    database: "Trout DB",
+    color: "text-red-400",
+    bgColor: "from-red-900/20 to-red-950/40",
+    borderColor: "border-red-500/50",
+    glowColor: "rgba(248, 113, 113, 0.3)",
+    warning: true,
+  },
+  3200: {
     name: "STAGING",
-    database: "Trout DB (Safe)",
-    port: 3200,
+    database: "Trout DB",
     color: "text-green-400",
     bgColor: "from-green-900/20 to-green-950/40",
     borderColor: "border-green-500/50",
     glowColor: "rgba(74, 222, 128, 0.3)",
     warning: false,
   },
-  "fabulous-sturgeon-691": {
-    name: "PRODUCTION",
-    database: "Sturgeon DB (LIVE)",
-    port: 3100,
-    color: "text-red-400",
-    bgColor: "from-red-900/20 to-red-950/40",
-    borderColor: "border-red-500/50",
-    glowColor: "rgba(248, 113, 113, 0.3)",
-    warning: true,
+};
+
+const ENVIRONMENTS: Record<string, Environment> = {
+  "wry-trout-962": {
+    name: "TROUT DB",
+    database: "Shared Database",
+    port: 0,
+    color: "text-blue-400",
+    bgColor: "from-blue-900/20 to-blue-950/40",
+    borderColor: "border-blue-500/50",
+    glowColor: "rgba(59, 130, 246, 0.3)",
+    warning: false,
   },
 };
 
@@ -92,16 +105,20 @@ export default function EnvironmentIndicator() {
     });
   }, [convexUrl, deploymentName, detectedPort]);
 
-  const environment = ENVIRONMENTS[deploymentName] || {
-    name: "UNKNOWN",
-    database: "Unknown DB",
-    port: detectedPort || 3000,
-    color: "text-yellow-400",
-    bgColor: "from-yellow-900/20 to-yellow-950/40",
-    borderColor: "border-yellow-500/50",
-    glowColor: "rgba(250, 182, 23, 0.3)",
-    warning: true,
-  };
+  // Determine environment based on port (both use same DB)
+  const portEnv = detectedPort && PORT_ENVIRONMENTS[detectedPort];
+  const environment: Environment = portEnv
+    ? { ...portEnv, port: detectedPort }
+    : {
+        name: "UNKNOWN",
+        database: "Unknown DB",
+        port: detectedPort || 3000,
+        color: "text-yellow-400",
+        bgColor: "from-yellow-900/20 to-yellow-950/40",
+        borderColor: "border-yellow-500/50",
+        glowColor: "rgba(250, 182, 23, 0.3)",
+        warning: true,
+      };
 
   // Mobile: Compact badge always visible, tap to expand full details
   // Desktop: Condensed pill, tap to expand
