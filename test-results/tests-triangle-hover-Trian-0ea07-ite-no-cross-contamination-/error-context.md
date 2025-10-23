@@ -1,0 +1,65 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - button "0 MEKS ▼" [ref=e9] [cursor=pointer]:
+      - generic [ref=e10] [cursor=pointer]: 0 MEKS
+      - generic [ref=e11] [cursor=pointer]: ▼
+    - generic [ref=e12]:
+      - button "Essence" [ref=e13] [cursor=pointer]
+      - button "Meks" [ref=e14] [cursor=pointer]
+    - link "OE Logo" [ref=e16] [cursor=pointer]:
+      - /url: https://overexposed.io
+      - img "OE Logo" [ref=e17] [cursor=pointer]
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e24]:
+          - generic [ref=e25]: NET GOLD
+          - generic [ref=e26]: 10,000
+          - generic [ref=e29]: G
+        - generic [ref=e30]:
+          - img "Mek Variations Triangle" [ref=e31]
+          - img "Mahogany" [ref=e33]
+          - img "Vanished" [ref=e35]
+          - img "Heatwave Ultimate" [ref=e37]
+          - img "Maps" [ref=e39]
+          - img "Grate" [ref=e41]
+          - img "Seafoam" [ref=e43]
+      - generic [ref=e44]:
+        - heading "MEKANISM SLOTS" [level=2] [ref=e46]
+        - generic [ref=e48]:
+          - generic [ref=e51] [cursor=pointer]:
+            - generic [ref=e52] [cursor=pointer]: SLOT 1
+            - img [ref=e54] [cursor=pointer]
+            - generic [ref=e56] [cursor=pointer]: Empty Slot
+            - generic [ref=e57] [cursor=pointer]: Assign Mekanism
+          - generic [ref=e60] [cursor=pointer]:
+            - generic [ref=e61] [cursor=pointer]: SLOT 2
+            - img [ref=e63] [cursor=pointer]
+            - generic [ref=e65] [cursor=pointer]: Empty Slot
+            - generic [ref=e66] [cursor=pointer]: Assign Mekanism
+          - generic [ref=e69] [cursor=pointer]:
+            - generic [ref=e70] [cursor=pointer]: SLOT 3
+            - img [ref=e72] [cursor=pointer]
+            - generic [ref=e74] [cursor=pointer]: Empty Slot
+            - generic [ref=e75] [cursor=pointer]: Assign Mekanism
+          - generic [ref=e78] [cursor=pointer]:
+            - generic [ref=e79] [cursor=pointer]: SLOT 4
+            - img [ref=e81] [cursor=pointer]
+            - generic [ref=e83] [cursor=pointer]: Empty Slot
+            - generic [ref=e84] [cursor=pointer]: Assign Mekanism
+          - generic [ref=e87] [cursor=pointer]:
+            - generic [ref=e88] [cursor=pointer]: SLOT 5
+            - img [ref=e90] [cursor=pointer]
+            - generic [ref=e92] [cursor=pointer]: Empty Slot
+            - generic [ref=e93] [cursor=pointer]: Assign Mekanism
+          - generic [ref=e96] [cursor=pointer]:
+            - generic [ref=e97] [cursor=pointer]: SLOT 6
+            - img [ref=e99] [cursor=pointer]
+            - generic [ref=e101] [cursor=pointer]: Empty Slot
+            - generic [ref=e102] [cursor=pointer]: Assign Mekanism
+  - button "Open Next.js Dev Tools" [ref=e108] [cursor=pointer]:
+    - img [ref=e109] [cursor=pointer]
+  - alert [ref=e112]
+```

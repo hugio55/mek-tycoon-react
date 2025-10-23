@@ -200,6 +200,10 @@ export function OverlayRenderer({
         const ownedCount = getOwnedCount ? getOwnedCount(variationName, variationType) : 0;
         const totalCount = getTotalCount ? getTotalCount(variationName, variationType) : 0;
 
+        // Calculate actual sprite dimensions using absolute metadata
+        const spriteWidth = (sprite.metadata?.imageWidth || 100) * finalScale;
+        const spriteHeight = (sprite.metadata?.imageHeight || 100) * finalScale;
+
         return (
           <div
             key={sprite.id}
@@ -207,15 +211,23 @@ export function OverlayRenderer({
             style={{
               left: `${xPercent}%`,
               top: `${yPercent}%`,
+              // CRITICAL: Set explicit dimensions to match scaled sprite for accurate hit box
+              width: `${spriteWidth}px`,
+              height: `${spriteHeight}px`,
               // CRITICAL: Position by top-left corner to match overlay editor
               // DO NOT add translate(-50%, -50%) here
+              overflow: 'visible', // Allow scaled image to render at full size
               transition: 'all 0.3s ease',
             }}
             onMouseEnter={(e) => {
               setHoveredSprite(sprite.id);
-              // Use the div's bounding box for tooltip positioning
+              // Calculate tooltip position from container rect (now correctly sized)
               const rect = e.currentTarget.getBoundingClientRect();
-              setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top - 10 });
+              // Position tooltip at horizontal center, above sprite
+              setTooltipPos({
+                x: rect.left + spriteWidth / 2,
+                y: rect.top - 10
+              });
             }}
             onMouseLeave={() => setHoveredSprite(null)}
           >
@@ -226,8 +238,6 @@ export function OverlayRenderer({
                   src={sprite.overlayImage}
                   alt={sprite.label || "sprite"}
                   style={{
-                    maxWidth: '100%',
-                    height: 'auto',
                     transform: `scale(${finalScale})`,
                     transformOrigin: 'top left',
                     display: 'block',

@@ -318,9 +318,11 @@ export default function EssenceMarketPage() {
   }, [searchTerm]);
 
   // Initialize displayGold from goldMiningData.accumulatedGold (matches hub page)
+  // This is the NET GOLD (pending accumulated gold)
   useEffect(() => {
     if (goldMiningData?.accumulatedGold !== undefined) {
-      console.log('[Essence Market] Setting displayGold from goldMiningData.accumulatedGold:', goldMiningData.accumulatedGold);
+      console.log('[Essence Market] Setting displayGold to NET GOLD:', goldMiningData.accumulatedGold);
+      console.log('[Essence Market] goldMiningData full:', goldMiningData);
       setDisplayGold(goldMiningData.accumulatedGold);
     }
   }, [goldMiningData?.accumulatedGold]);
@@ -4472,7 +4474,9 @@ export default function EssenceMarketPage() {
           ) : (
             sortedListings.map((listing) => {
               const isOwn = listing.sellerId === userId;
-              const canAfford = userProfile && userProfile.gold >= listing.pricePerUnit * listing.quantity;
+              // Check affordability based on minimum purchase (0.1 essence), not full listing quantity
+              const minPurchase = 0.1;
+              const canAfford = displayGold >= listing.pricePerUnit * minPurchase;
 
               const cardStyles = getListingCardStyles(listingCardStyle);
               return (
