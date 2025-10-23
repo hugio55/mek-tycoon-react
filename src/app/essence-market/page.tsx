@@ -55,7 +55,7 @@ export default function EssenceMarketPage() {
   const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
   const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
   const timerDisplayVariation = 5; // Locked to Variation 5: Clock + Text w/ Background
-  const [pricingInfoLayout, setPricingInfoLayout] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35>(34); // Default to Option 34: Vertical v4 - Bold Labels
+  const pricingInfoLayout = 34; // LOCKED to Option 34: Vertical v4 - Bold Labels
   const bottleImageSize = 130; // Locked to 130px
   const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
   const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
@@ -65,9 +65,12 @@ export default function EssenceMarketPage() {
   const [showExpiredListings, setShowExpiredListings] = useState(false);
   const essenceLabelFont = 'exo'; // Locked to Exo 2
   const essenceLabelFontSize = 24; // Locked to 24px base size
-  const [stockNumberFontSize, setStockNumberFontSize] = useState<number>(36); // Font size for stock number
-  const [priceNumberFontSize, setPriceNumberFontSize] = useState<number>(36); // Font size for price number
+  const stockNumberFontSize = 30; // LOCKED at 30px
+  const priceNumberFontSize = 29; // LOCKED at 29px
   const [listingScale, setListingScale] = useState<number>(100); // Listing card scale: 50 (small/more cols) to 150 (large/fewer cols)
+  const cardScale = 95; // Overall card scale: LOCKED at 95%
+  const essenceTitleColor = 'white'; // LOCKED to white
+  const [essenceTitleCase, setEssenceTitleCase] = useState<'uppercase' | 'titlecase'>('uppercase'); // Toggle between uppercase and title case
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -83,9 +86,6 @@ export default function EssenceMarketPage() {
 
   // My Listings modal state
   const [showMyListingsModal, setShowMyListingsModal] = useState(false);
-
-  // Meks Triangle lightbox state
-  const [showMeksTriangle, setShowMeksTriangle] = useState(false);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -579,28 +579,28 @@ export default function EssenceMarketPage() {
   const getEssenceLabelFontSize = (essenceName: string, baseFontSize: number): { fontSize: number, lineClamp: number } => {
     const nameLength = essenceName.length;
 
-    // Very short names (≤8 chars): use full base size
+    // Very short names (≤8 chars): use full base size, single line
     if (nameLength <= 8) {
       return { fontSize: baseFontSize, lineClamp: 1 };
     }
 
-    // Short names (9-12 chars): slight reduction
-    if (nameLength <= 12) {
-      return { fontSize: Math.round(baseFontSize * 0.95), lineClamp: 1 };
+    // Short names (9-11 chars): keep same size, single line
+    if (nameLength <= 11) {
+      return { fontSize: baseFontSize, lineClamp: 1 };
     }
 
-    // Medium names (13-16 chars): more aggressive reduction for wrapping
+    // Medium names (12-16 chars): wrap to 2 lines, keep readable size
     if (nameLength <= 16) {
-      return { fontSize: Math.round(baseFontSize * 0.65), lineClamp: 2 };
+      return { fontSize: Math.round(baseFontSize * 0.85), lineClamp: 2 };
     }
 
-    // Long names (17-20 chars): significant reduction, allow 2 lines
-    if (nameLength <= 20) {
-      return { fontSize: Math.round(baseFontSize * 0.6), lineClamp: 2 };
+    // Long names (17-21 chars): wrap to 2 lines, reduce slightly more
+    if (nameLength <= 21) {
+      return { fontSize: Math.round(baseFontSize * 0.75), lineClamp: 2 };
     }
 
-    // Very long names (21+ chars): maximum reduction, 2 lines
-    return { fontSize: Math.round(baseFontSize * 0.55), lineClamp: 2 };
+    // Very long names (22+ chars): wrap to 2 lines, more compact
+    return { fontSize: Math.round(baseFontSize * 0.65), lineClamp: 2 };
   };
 
   // Price layout variations - Total-focused with glowing quantity boxes
@@ -2316,7 +2316,7 @@ export default function EssenceMarketPage() {
                     }}
                   >
                     <span>{pricePerUnit.toLocaleString()}</span>
-                    <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
+                    <span className="font-thin ml-0.5" style={{ fontSize: `${Math.round(priceNumberFontSize * 0.45)}px` }}>G</span>
                   </div>
                   <div className="text-xs text-yellow-400/40 uppercase font-light">each</div>
                 </div>
@@ -2474,17 +2474,20 @@ export default function EssenceMarketPage() {
     return (
       <div className="mb-3 text-center">
         <button
-          className="inline-flex items-center gap-2 text-[10px] transition-all duration-300 cursor-pointer hover:scale-105"
+          className="inline-flex items-center gap-2 text-[10px] cursor-pointer hover:scale-105"
+          style={{
+            transition: 'transform 0.033s ease-out, color 0.15s ease-out' // 30fps = 33ms
+          }}
           onClick={() => {
             // TODO: Navigate to corporation page
             console.log('Navigate to corporation:', companyName);
           }}
         >
-          <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 hover:to-yellow-400 transition-all duration-300" />
-          <span className="text-gray-500 uppercase tracking-wide hover:text-yellow-400 hover:tracking-widest transition-all duration-300">
+          <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 hover:to-yellow-400" style={{ transition: 'background-image 0.15s ease-out' }} />
+          <span className="text-gray-500 uppercase tracking-wide hover:text-yellow-400 hover:tracking-widest" style={{ transition: 'color 0.15s ease-out, letter-spacing 0.15s ease-out' }}>
             {companyName}
           </span>
-          <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 hover:to-yellow-400 transition-all duration-300" />
+          <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 hover:to-yellow-400" style={{ transition: 'background-image 0.15s ease-out' }} />
         </button>
       </div>
     );
@@ -2785,90 +2788,6 @@ export default function EssenceMarketPage() {
             </div>
 
 
-            {/* Pricing Info Layout Selector */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Pricing Info Layout</label>
-              <select
-                value={pricingInfoLayout}
-                onChange={(e) => setPricingInfoLayout(Number(e.target.value) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35)}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Option 1: Horizontal Split Panel</option>
-                <option value={2}>Option 2: Stat Cards (Gaming)</option>
-                <option value={3}>Option 3: Compact Single Row</option>
-                <option value={4}>Option 4: Emphasized Price</option>
-                <option value={5}>Option 5: Data Table Style</option>
-                <option value={6}>Option 6: HUD Tactical Display</option>
-                <option value={7}>Option 7: Holographic Data Panel</option>
-                <option value={8}>Option 8: Industrial Warning Panel</option>
-                <option value={9}>Option 9: Sleek Hexagonal Tech</option>
-                <option value={10}>Option 10: Compact Terminal Readout</option>
-                <option value={11}>Option 11: Holographic Compact</option>
-                <option value={12}>Option 12: Holographic Tight</option>
-                <option value={13}>Option 13: Holographic Maximized</option>
-                <option value={14}>Option 14: Holographic Edge-to-Edge</option>
-                <option value={15}>Option 15: Holographic Ultra-Compact</option>
-                <option value={16}>Option 16: Holo Tight v2 (More Padding)</option>
-                <option value={17}>Option 17: Holo Tight v3 (Condensed)</option>
-                <option value={18}>Option 18: Holo Tight v4 (Wide Tracking)</option>
-                <option value={19}>Option 19: Holo Tight v5 (Rounded)</option>
-                <option value={20}>Option 20: Holo Tight v6 (Mono Numbers)</option>
-                <option value={21}>Option 21: Mixed - Thin Font</option>
-                <option value={22}>Option 22: Mixed - Extralight Font</option>
-                <option value={23}>Option 23: Mixed - Light Font</option>
-                <option value={24}>Option 24: Mixed - Normal Font</option>
-                <option value={25}>Option 25: Mixed - Light Alt</option>
-                <option value={26}>Option 26: Refined - Smaller Base</option>
-                <option value={27}>Option 27: Refined - Aggressive Responsive</option>
-                <option value={28}>Option 28: Refined - Tight Tracking</option>
-                <option value={29}>Option 29: Refined - Reduced + Tight</option>
-                <option value={30}>Option 30: Refined - Ultra Compact</option>
-                <option value={31}>Option 31: Vertical v1 - Standard</option>
-                <option value={32}>Option 32: Vertical v2 - Compact</option>
-                <option value={33}>Option 33: Vertical v3 - Large Numbers</option>
-                <option value={34}>Option 34: Vertical v4 - Bold Labels</option>
-                <option value={35}>Option 35: Vertical v5 - Spacious</option>
-              </select>
-            </div>
-
-            {/* Stock Number Font Size */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
-                Stock Number Size: {stockNumberFontSize}px
-              </label>
-              <input
-                type="range"
-                min="18"
-                max="72"
-                step="1"
-                value={stockNumberFontSize}
-                onChange={(e) => setStockNumberFontSize(Number(e.target.value))}
-                className="w-full debug-slider"
-                style={{
-                  background: `linear-gradient(to right, #fab617 0%, #fab617 ${((stockNumberFontSize - 18) / 54) * 100}%, #374151 ${((stockNumberFontSize - 18) / 54) * 100}%, #374151 100%)`
-                }}
-              />
-            </div>
-
-            {/* Price Number Font Size */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
-                Price Number Size: {priceNumberFontSize}px
-              </label>
-              <input
-                type="range"
-                min="18"
-                max="72"
-                step="1"
-                value={priceNumberFontSize}
-                onChange={(e) => setPriceNumberFontSize(Number(e.target.value))}
-                className="w-full debug-slider"
-                style={{
-                  background: `linear-gradient(to right, #fab617 0%, #fab617 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 100%)`
-                }}
-              />
-            </div>
-
             {/* Listing Scale Control */}
             <div>
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
@@ -2889,6 +2808,33 @@ export default function EssenceMarketPage() {
               <div className="flex justify-between text-[9px] text-gray-500 mt-1">
                 <span>More Columns</span>
                 <span>Fewer Columns</span>
+              </div>
+            </div>
+
+            {/* Essence Title Case Toggle */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Essence Title Case</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEssenceTitleCase('uppercase')}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    essenceTitleCase === 'uppercase'
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  UPPERCASE
+                </button>
+                <button
+                  onClick={() => setEssenceTitleCase('titlecase')}
+                  className={`flex-1 px-3 py-2 text-xs font-bold rounded transition-all ${
+                    essenceTitleCase === 'titlecase'
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  Title Case
+                </button>
               </div>
             </div>
 
@@ -3107,16 +3053,6 @@ export default function EssenceMarketPage() {
                     showOnlyMyListings,
                     listingCount: debugListingCount
                   })}
-
-                  {/* Meks Triangle Button */}
-                  <button
-                    onClick={() => setShowMeksTriangle(true)}
-                    className="relative px-4 py-2 bg-gradient-to-b from-yellow-600/80 to-yellow-700/90 border-2 border-yellow-500/60 hover:border-yellow-400 text-black font-extrabold uppercase tracking-wider transition-none rounded mek-text-shadow"
-                  >
-                    <div className="absolute inset-0 mek-overlay-scratches opacity-20 pointer-events-none" />
-                    <span className="relative z-10">MEKS</span>
-                  </button>
-
                   <div className="h-16 w-px bg-yellow-500/30" />
 
                   {/* Gold Display Variations */}
@@ -4468,9 +4404,10 @@ export default function EssenceMarketPage() {
 
         {/* Listings Grid */}
         <div
-          className="grid gap-4 mt-6"
+          className="grid mt-6"
           style={{
-            gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(200, 250 * (listingScale / 100))}px, 1fr))`
+            gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(200, 250 * (listingScale / 100)) * (cardScale / 100)}px, 1fr))`,
+            gap: '5px'
           }}
         >
           {sortedListings.length === 0 ? (
@@ -4489,7 +4426,11 @@ export default function EssenceMarketPage() {
                 <div
                   key={listing._id}
                   className={cardStyles.className}
-                  style={cardStyles.style}
+                  style={{
+                    ...cardStyles.style,
+                    transform: `scale(${cardScale / 100})`,
+                    transformOrigin: 'top center'
+                  }}
                 >
                   {/* Crosshatch pattern */}
                   <div
@@ -4549,9 +4490,20 @@ export default function EssenceMarketPage() {
                       const essenceName = listing.itemVariation || "Unknown Essence";
                       const { fontSize, lineClamp } = getEssenceLabelFontSize(essenceName, essenceLabelFontSize);
 
+                      // Convert to title case if needed
+                      const displayName = essenceTitleCase === 'titlecase'
+                        ? essenceName.split(' ').map(word =>
+                            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                          ).join(' ')
+                        : essenceName;
+
                       return (
                         <div
-                          className={`font-bold text-yellow-400 uppercase tracking-wide text-center ${
+                          className={`font-bold tracking-wide text-center ${
+                            essenceTitleColor === 'yellow' ? 'text-yellow-400' : 'text-white'
+                          } ${
+                            essenceTitleCase === 'uppercase' ? 'uppercase' : ''
+                          } ${
                             essenceLabelFont === 'geist' ? 'font-sans' :
                             essenceLabelFont === 'orbitron' ? 'font-orbitron' :
                             essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
@@ -4564,16 +4516,20 @@ export default function EssenceMarketPage() {
                             essenceLabelFont === 'russo' ? 'font-russo' :
                             essenceLabelFont === 'exo' ? 'font-exo' :
                             'font-orbitron'
-                          }`}
+                          } ${lineClamp === 2 ? 'line-clamp-2' : 'line-clamp-1'} px-1`}
                           style={{
                             fontSize: `${fontSize}px`,
-                            lineHeight: '1.3',
+                            lineHeight: '1.2',
                             wordWrap: 'break-word',
                             overflowWrap: 'break-word',
-                            hyphens: 'auto'
+                            hyphens: 'auto',
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: lineClamp,
+                            overflow: 'hidden'
                           }}
                         >
-                          {essenceName}
+                          {displayName}
                         </div>
                       );
                     })()}
@@ -5178,52 +5134,6 @@ export default function EssenceMarketPage() {
                   </p>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Meks Triangle Lightbox */}
-        {showMeksTriangle && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-7xl w-full rounded-xl overflow-hidden">
-              {/* Close button */}
-              <button
-                onClick={() => setShowMeksTriangle(false)}
-                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-3xl font-bold z-10 w-10 h-10 flex items-center justify-center hover:bg-yellow-500/10 rounded transition-colors"
-              >
-                ×
-              </button>
-
-              {/* Title */}
-              <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
-                  <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
-                    MEK VARIATIONS
-                  </h2>
-                </div>
-              </div>
-
-              {/* Triangle Canvas */}
-              <div className="relative flex items-center justify-center bg-black/40 rounded-lg p-8">
-                <div className="relative">
-                  {/* Background Triangle Image */}
-                  <img
-                    src="/triangle/backplate_2.webp"
-                    alt="Mek Variations Triangle"
-                    className="w-full h-auto max-w-4xl"
-                  />
-
-                  {/* Positioned sprites will go here in the future */}
-                </div>
-              </div>
-
-              {/* Info Text */}
-              <div className="mt-4 text-center">
-                <p className="mek-label-uppercase text-yellow-400/60 text-sm">
-                  288 TOTAL VARIATIONS • 102 HEADS • 112 BODIES • 74 TRAITS
-                </p>
-              </div>
             </div>
           </div>
         )}

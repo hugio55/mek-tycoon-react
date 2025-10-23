@@ -409,6 +409,71 @@ Example transformation:
 - `text-2xl font-bold` → `.mek-value-primary` or `.mek-text-industrial`
 - `bg-blue-500 text-white px-4 py-2` → `.mek-button-primary`
 
+## 🔧 Common UI Patterns & Fixes
+
+### Modal/Lightbox Positioning Fix
+**CRITICAL PATTERN**: When modals/lightboxes appear in the wrong location (centered in parent container instead of browser viewport), use React portals.
+
+**Problem**: Lightbox appears in center of table/container content instead of center of browser window, requiring scrolling to find it.
+
+**Solution**: Use `createPortal` to render modal at document.body root instead of within component tree.
+
+**Working Implementation Pattern**:
+```typescript
+import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
+
+export default function YourLightbox({ onClose, ...props }) {
+  const [mounted, setMounted] = useState(false);
+
+  // Mount portal and lock body scroll
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  // Only render on client-side after mount
+  if (!mounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal container - stopPropagation prevents backdrop click-through */}
+      <div
+        className="relative w-[1200px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Your modal content here */}
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+}
+```
+
+**Components Using This Pattern** (reference these for examples):
+- `src/components/MekLevelsViewer.tsx`
+- `src/components/ActivityLogViewer.tsx`
+- `src/components/EssenceBalancesViewer.tsx`
+- `src/components/EssenceBuffManagement.tsx`
+- `src/components/EssenceDistributionLightbox.tsx`
+
+**Key Requirements**:
+1. Import `createPortal` from `react-dom`
+2. Add `mounted` state with `useEffect` to manage client-side rendering
+3. Lock body scroll when modal is open
+4. Use `createPortal(modalContent, document.body)` to render at DOM root
+5. Add `onClick={(e) => e.stopPropagation()}` to modal content to prevent backdrop click-through
+6. Use `fixed inset-0` positioning and `z-[9999]` for proper layering
+
+**When to Apply**: Any time a modal/lightbox appears in the wrong position relative to the viewport, or when user reports having to scroll to find a modal.
+
 ## Notes for Claude
 - **FIRST THING TO CHECK**: If styles look broken, verify Tailwind is v3 not v4 in package.json
 - Always check existing file conventions before making changes

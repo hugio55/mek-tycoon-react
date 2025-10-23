@@ -13,6 +13,7 @@ import ActivityLogViewer from '@/components/ActivityLogViewer';
 import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
+import EssenceBuffManagement from '@/components/EssenceBuffManagement';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -63,6 +64,7 @@ export default function WalletManagementAdmin() {
   const [editingGold, setEditingGold] = useState<{ walletAddress: string; value: string } | null>(null);
   const [viewingMekLevels, setViewingMekLevels] = useState<string | null>(null);
   const [viewingEssence, setViewingEssence] = useState<string | null>(null);
+  const [viewingBuffs, setViewingBuffs] = useState<string | null>(null);
   const [viewingActivityLog, setViewingActivityLog] = useState<string | null>(null);
   const [diagnosticWallet, setDiagnosticWallet] = useState<string | null>(null);
   const [goldDiagnosticResults, setGoldDiagnosticResults] = useState<any>(null);
@@ -1102,6 +1104,13 @@ Check console for full timeline.
                                 View Essence
                               </button>
                               <button
+                                onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
+                                title="Manage essence buffs (generation rate & max cap)"
+                              >
+                                ⚡ Buffs
+                              </button>
+                              <button
                                 onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
                                 title="View activity log (upgrades, connections, etc.)"
@@ -1230,6 +1239,13 @@ Check console for full timeline.
         <EssenceBalancesViewer
           walletAddress={viewingEssence}
           onClose={() => setViewingEssence(null)}
+        />
+      )}
+
+      {viewingBuffs && (
+        <EssenceBuffManagement
+          walletAddress={viewingBuffs}
+          onClose={() => setViewingBuffs(null)}
         />
       )}
 

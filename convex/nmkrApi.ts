@@ -177,9 +177,6 @@ export const uploadNFT = action({
     imageBase64: v.optional(v.string()), // Or Base64 encoded image
     imageStorageId: v.optional(v.string()), // Or Convex storage ID for base64
     imageMimetype: v.optional(v.string()), // Media type (image/gif, video/mp4, etc.)
-    thumbnailBase64: v.optional(v.string()), // Optional thumbnail preview
-    thumbnailStorageId: v.optional(v.string()), // Or Convex storage ID for thumbnail base64
-    thumbnailMimetype: v.optional(v.string()), // Thumbnail media type
     assetName: v.optional(v.string()), // Display name (what users see in wallets)
     metadata: v.optional(v.any()), // Custom metadata attributes
     rarityScore: v.optional(v.number()),
@@ -205,15 +202,6 @@ export const uploadNFT = action({
       if (blob) {
         imageBase64 = await blob.text();
         console.log("[NMKR] Fetched image base64 from storage, size:", imageBase64.length);
-      }
-    }
-
-    let thumbnailBase64 = args.thumbnailBase64;
-    if (!thumbnailBase64 && args.thumbnailStorageId) {
-      const blob = await ctx.storage.get(args.thumbnailStorageId);
-      if (blob) {
-        thumbnailBase64 = await blob.text();
-        console.log("[NMKR] Fetched thumbnail base64 from storage, size:", thumbnailBase64.length);
       }
     }
 
@@ -280,17 +268,6 @@ export const uploadNFT = action({
       };
     }
 
-    // Build thumbnail data if provided
-    let thumbnailData: any = undefined;
-    if (thumbnailBase64) {
-      const thumbnailMimetype = args.thumbnailMimetype || "image/png";
-      thumbnailData = {
-        mimetype: thumbnailMimetype,
-        fileFromBase64: thumbnailBase64,
-      };
-      console.log("[NMKR] Including thumbnail, length:", thumbnailBase64.length, "type:", thumbnailMimetype);
-    }
-
     // Generate tokenname (optionally add timestamp to avoid duplicates)
     const baseTokenName = args.nftName.replace(/[^a-zA-Z0-9]/g, '');
     const shouldUseTimestamp = args.useTimestamp === true; // Default to false
@@ -305,7 +282,6 @@ export const uploadNFT = action({
       displayname: args.assetName || args.nftName, // Display name (what users see)
       description: args.nftDescription || "", // Description for CIP-25 metadata
       previewImageNft: imageData,
-      previewImageThumbnail: thumbnailData, // Add thumbnail if provided
       metadataPlaceholder: metadataPlaceholder.length > 0 ? metadataPlaceholder : undefined, // Custom metadata as array [{name, value}]
       rarityNum: args.rarityScore,
       subfiles: subfiles, // Add subassets in correct NMKR format
@@ -338,7 +314,6 @@ export const uploadNFT = action({
     const requestPreview = {
       ...requestBody,
       previewImageNft: requestBody.previewImageNft ? { ...requestBody.previewImageNft, fileFromBase64: '[BASE64_DATA]' } : undefined,
-      previewImageThumbnail: requestBody.previewImageThumbnail ? { ...requestBody.previewImageThumbnail, fileFromBase64: '[BASE64_DATA]' } : undefined,
       subfiles: requestBody.subfiles?.map(sf => ({
         ...sf,
         subfile: { ...sf.subfile, fileFromBase64: sf.subfile.fileFromBase64 ? '[BASE64_DATA]' : undefined }
@@ -626,8 +601,6 @@ export const mintTestNFT = action({
     description: v.optional(v.string()), // NFT description
     imageStorageId: v.string(), // Convex storage ID instead of base64
     imageMimetype: v.optional(v.string()),
-    thumbnailStorageId: v.optional(v.string()), // Convex storage ID instead of base64
-    thumbnailMimetype: v.optional(v.string()),
     receiverAddress: v.string(),
     subassets: v.optional(v.array(v.object({
       storageId: v.optional(v.string()), // Convex storage ID for large files
@@ -658,8 +631,6 @@ export const mintTestNFT = action({
       assetName: args.displayName || args.nftName, // Use displayName for asset name
       imageStorageId: args.imageStorageId, // Pass storage ID, uploadNFT will fetch base64
       imageMimetype: args.imageMimetype,
-      thumbnailStorageId: args.thumbnailStorageId, // Pass storage ID, uploadNFT will fetch base64
-      thumbnailMimetype: args.thumbnailMimetype,
       nftDescription: args.description || "",
       subassets: args.subassets, // Pass storage IDs directly, uploadNFT will fetch base64
       metadata: args.metadata,
