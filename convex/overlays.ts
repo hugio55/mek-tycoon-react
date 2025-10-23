@@ -4,12 +4,14 @@ import { mutation, query } from "./_generated/server";
 // Zone type for interactive areas on images
 const zoneValidator = v.object({
   id: v.string(),
+  mode: v.optional(v.string()), // "zone" or "sprite"
   type: v.string(), // "mechanism-slot", "button", "clickable", etc.
   x: v.number(),
   y: v.number(),
-  width: v.number(),
-  height: v.number(),
+  width: v.optional(v.number()),
+  height: v.optional(v.number()),
   label: v.optional(v.string()),
+  overlayImage: v.optional(v.string()),
   metadata: v.optional(v.any()),
 });
 
@@ -87,5 +89,66 @@ export const deleteOverlay = mutation({
       return true;
     }
     return false;
+  },
+});
+
+// Save autosave history entry
+export const saveAutosave = mutation({
+  args: {
+    imageKey: v.string(),
+    zones: v.array(
+      v.object({
+        id: v.string(),
+        mode: v.optional(v.string()),
+        type: v.string(),
+        x: v.number(),
+        y: v.number(),
+        width: v.optional(v.number()),
+        height: v.optional(v.number()),
+        label: v.optional(v.string()),
+        overlayImage: v.optional(v.string()),
+        metadata: v.optional(v.any()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const spriteCount = args.zones.filter(z => z.mode === "sprite").length;
+
+    // Save the autosave entry
+    const autosaveId = await ctx.db.insert("overlayAutosaves", {
+      imageKey: args.imageKey,
+      zones: args.zones,
+      spriteCount,
+      timestamp: Date.now(),
+    });
+
+    // Keep only the last 20 autosaves for this imageKey
+    const allAutosaves = await ctx.db
+      .query("overlayAutosaves")
+      .withIndex("by_imageKey_and_timestamp", (q) => q.eq("imageKey", args.imageKey))
+      .order("desc")
+      .collect();
+
+    // Delete old autosaves beyond the 20 most recent
+    if (allAutosaves.length > 20) {
+      const toDelete = allAutosaves.slice(20);
+      for (const old of toDelete) {
+        await ctx.db.delete(old._id);
+      }
+    }
+
+    return autosaveId;
+  },
+});
+
+// Get autosave history for an imageKey
+export const getAutosaveHistory = query({
+  args: { imageKey: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("overlayAutosaves")
+      .withIndex("by_imageKey_and_timestamp", (q) => q.eq("imageKey", args.imageKey))
+      .order("desc")
+      .take(20);
   },
 });

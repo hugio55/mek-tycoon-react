@@ -450,15 +450,8 @@ export const getAllWallets = query({
     const now = Date.now();
     const allMiners = await ctx.db.query("goldMining").collect();
 
-    // Get all wallet group memberships for adding group info
-    const allMemberships = await ctx.db.query("walletGroupMemberships").collect();
-    const walletToGroupMap = new Map<string, string>();
-    for (const membership of allMemberships) {
-      walletToGroupMap.set(membership.walletAddress, membership.groupId);
-    }
-
     // Return ALL wallets without deduplication
-    // Each wallet is a unique user, even if they have the same MEK count
+    // Each wallet is a unique user/corporation (1 wallet = 1 corp)
     return allMiners.map(miner => {
       // Calculate current gold (respecting verification status)
       let currentGold = miner.accumulatedGold || 0;
@@ -503,7 +496,6 @@ export const getAllWallets = query({
         walletAddress: miner.walletAddress,
         walletType: miner.walletType || "Unknown",
         companyName: miner.companyName || null,
-        groupId: walletToGroupMap.get(miner.walletAddress) || null,
         mekCount: miner.ownedMeks.length,
         totalGoldPerHour: miner.totalGoldPerHour,
         currentGold: Math.floor(currentGold * 100) / 100,

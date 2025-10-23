@@ -338,22 +338,14 @@ export const leaveFederation = mutation({
 
 // Helper function to update federation variation collection
 async function updateFederationVariations(ctx: any, federationId: string) {
-  // Get all members of the federation
+  // Get all members of the federation (now each membership IS a wallet/corporation)
   const memberships = await ctx.db
     .query("federationMemberships")
     .withIndex("by_federation", (q) => q.eq("federationId", federationId))
     .collect();
 
-  // Get all wallets in all member groups
-  const allWallets: string[] = [];
-  for (const membership of memberships) {
-    const groupMemberships = await ctx.db
-      .query("walletGroupMemberships")
-      .withIndex("by_group", (q) => q.eq("groupId", membership.groupId))
-      .collect();
-
-    allWallets.push(...groupMemberships.map((gm: any) => gm.walletAddress));
-  }
+  // Get all wallet addresses directly from memberships (1 wallet = 1 corp)
+  const allWallets: string[] = memberships.map(m => m.walletAddress);
 
   // Get all Meks owned by these wallets
   const allMeks = await ctx.db
@@ -364,7 +356,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
     .collect();
 
   // Aggregate variations
-  const variationMap = new Map<number, { count: number; groups: Set<string> }>();
+  const variationMap = new Map<number, { count: number; wallets: Set<string> }>();
 
   for (const mek of allMeks) {
     // Get variationIds from Mek
@@ -375,20 +367,13 @@ async function updateFederationVariations(ctx: any, federationId: string) {
 
     for (const varId of variationIds) {
       if (!variationMap.has(varId)) {
-        variationMap.set(varId, { count: 0, groups: new Set() });
+        variationMap.set(varId, { count: 0, wallets: new Set() });
       }
       const data = variationMap.get(varId)!;
       data.count++;
 
-      // Find which group owns this Mek
-      const groupMembership = await ctx.db
-        .query("walletGroupMemberships")
-        .withIndex("by_wallet", (q: any) => q.eq("walletAddress", mek.owner))
-        .first();
-
-      if (groupMembership) {
-        data.groups.add(groupMembership.groupId);
-      }
+      // Track which wallet owns this variation
+      data.wallets.add(mek.owner);
     }
   }
 
@@ -409,7 +394,7 @@ async function updateFederationVariations(ctx: any, federationId: string) {
       federationId,
       variationId,
       count: data.count,
-      contributingGroups: Array.from(data.groups),
+      contributingWallets: Array.from(data.wallets),
       lastUpdated: now,
     });
   }

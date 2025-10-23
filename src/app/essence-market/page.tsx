@@ -59,7 +59,6 @@ export default function EssenceMarketPage() {
   const bottleImageSize = 130; // Locked to 130px
   const priceLayoutStyle = 8; // Locked to Style 8: Tapping Mode
   const listingCardStyle = 1; // Locked to Style 1: Ultra Bright Glass
-  const [siphonHoverEffect, setSiphonHoverEffect] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [buyOrderSection, setBuyOrderSection] = useState<"open" | "mine">("open");
   const buttonVariation = 3; // Locked to Style 3: Minimal Modern
   const [debugListingCount, setDebugListingCount] = useState<number>(0);
@@ -68,6 +67,7 @@ export default function EssenceMarketPage() {
   const essenceLabelFontSize = 24; // Locked to 24px base size
   const [stockNumberFontSize, setStockNumberFontSize] = useState<number>(36); // Font size for stock number
   const [priceNumberFontSize, setPriceNumberFontSize] = useState<number>(36); // Font size for price number
+  const [listingScale, setListingScale] = useState<number>(100); // Listing card scale: 50 (small/more cols) to 150 (large/fewer cols)
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -83,6 +83,9 @@ export default function EssenceMarketPage() {
 
   // My Listings modal state
   const [showMyListingsModal, setShowMyListingsModal] = useState(false);
+
+  // Meks Triangle lightbox state
+  const [showMeksTriangle, setShowMeksTriangle] = useState(false);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -528,10 +531,10 @@ export default function EssenceMarketPage() {
     // Style 19: Solid Cyan with constant white glow (no animation)
     return (
       <>
-        <div className="absolute inset-0 opacity-20" style={{
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px), repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.15) 3px, rgba(255, 255, 255, 0.15) 4px)'
         }} />
-        <div className="absolute inset-0" style={{
+        <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%)'
         }} />
       </>
@@ -547,22 +550,9 @@ export default function EssenceMarketPage() {
     return "bg-cyan-500 border border-cyan-400/30 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] [text-shadow:0_0_7px_rgba(255,255,255,0.6),0_0_14px_rgba(255,255,255,0.4)]";
   };
 
-  // Siphon button hover effects
+  // Siphon button hover effect - locked to intense glow with reduced zoom
   const getSiphonHoverEffect = () => {
-    switch (siphonHoverEffect) {
-      case 1: // Zoom/Scale
-        return "hover:scale-110";
-      case 2: // Intense Glow + Small Zoom
-        return "hover:scale-105 hover:shadow-[0_0_30px_rgba(34,211,238,0.8),0_0_60px_rgba(34,211,238,0.5)]";
-      case 3: // Rotate & Scale
-        return "hover:scale-105 hover:rotate-1";
-      case 4: // Slide Up
-        return "hover:-translate-y-1";
-      case 5: // Pulse & Glow
-        return "hover:animate-pulse hover:shadow-[0_0_25px_rgba(34,211,238,0.7)]";
-      default:
-        return "hover:scale-110";
-    }
+    return "hover:scale-[1.0425] hover:shadow-[0_0_30px_rgba(34,211,238,0.8),0_0_60px_rgba(34,211,238,0.5)]";
   };
 
   // Helper to sanitize variation name to match bottle filenames
@@ -2794,21 +2784,6 @@ export default function EssenceMarketPage() {
               </select>
             </div>
 
-            {/* Siphon Button Hover Effect */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Siphon Button Hover</label>
-              <select
-                value={siphonHoverEffect}
-                onChange={(e) => setSiphonHoverEffect(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-                className="w-full px-3 py-2 bg-black border border-yellow-500/30 text-yellow-400 text-sm rounded focus:outline-none focus:border-yellow-500"
-              >
-                <option value={1}>Effect 1: Zoom/Scale (110%)</option>
-                <option value={2}>Effect 2: Intense Glow</option>
-                <option value={3}>Effect 3: Rotate & Scale</option>
-                <option value={4}>Effect 4: Slide Up</option>
-                <option value={5}>Effect 5: Pulse & Glow</option>
-              </select>
-            </div>
 
             {/* Pricing Info Layout Selector */}
             <div>
@@ -2892,6 +2867,29 @@ export default function EssenceMarketPage() {
                   background: `linear-gradient(to right, #fab617 0%, #fab617 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 ${((priceNumberFontSize - 18) / 54) * 100}%, #374151 100%)`
                 }}
               />
+            </div>
+
+            {/* Listing Scale Control */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">
+                Listing Scale: {listingScale}% {listingScale <= 60 && "(5 cols)"} {listingScale > 60 && listingScale <= 80 && "(4 cols)"} {listingScale > 80 && listingScale <= 110 && "(3 cols)"} {listingScale > 110 && listingScale <= 140 && "(2 cols)"} {listingScale > 140 && "(1 col)"}
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                step="5"
+                value={listingScale}
+                onChange={(e) => setListingScale(Number(e.target.value))}
+                className="w-full debug-slider"
+                style={{
+                  background: `linear-gradient(to right, #fab617 0%, #fab617 ${((listingScale - 50) / 100) * 100}%, #374151 ${((listingScale - 50) / 100) * 100}%, #374151 100%)`
+                }}
+              />
+              <div className="flex justify-between text-[9px] text-gray-500 mt-1">
+                <span>More Columns</span>
+                <span>Fewer Columns</span>
+              </div>
             </div>
 
             {/* Gold Management */}
@@ -3109,6 +3107,16 @@ export default function EssenceMarketPage() {
                     showOnlyMyListings,
                     listingCount: debugListingCount
                   })}
+
+                  {/* Meks Triangle Button */}
+                  <button
+                    onClick={() => setShowMeksTriangle(true)}
+                    className="relative px-4 py-2 bg-gradient-to-b from-yellow-600/80 to-yellow-700/90 border-2 border-yellow-500/60 hover:border-yellow-400 text-black font-extrabold uppercase tracking-wider transition-none rounded mek-text-shadow"
+                  >
+                    <div className="absolute inset-0 mek-overlay-scratches opacity-20 pointer-events-none" />
+                    <span className="relative z-10">MEKS</span>
+                  </button>
+
                   <div className="h-16 w-px bg-yellow-500/30" />
 
                   {/* Gold Display Variations */}
@@ -4459,7 +4467,12 @@ export default function EssenceMarketPage() {
         </div>
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
+        <div
+          className="grid gap-4 mt-6"
+          style={{
+            gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(200, 250 * (listingScale / 100))}px, 1fr))`
+          }}
+        >
           {sortedListings.length === 0 ? (
             <div className="col-span-full text-center py-12 mek-card-industrial mek-border-sharp-gray">
               <div className="text-6xl mb-4 text-yellow-500/20">⊗</div>
@@ -4596,11 +4609,11 @@ export default function EssenceMarketPage() {
                           getSiphonButtonTextures()
                         ) : (
                           <>
-                            <div className="absolute inset-0 mek-overlay-scratches opacity-15" />
-                            <div className="absolute inset-0 mek-overlay-rust opacity-10" />
+                            <div className="absolute inset-0 mek-overlay-scratches opacity-15 pointer-events-none" />
+                            <div className="absolute inset-0 mek-overlay-rust opacity-10 pointer-events-none" />
                           </>
                         )}
-                        <span className="relative z-10">
+                        <span className="relative z-10 pointer-events-none">
                           SIPHON
                         </span>
                       </button>
@@ -5165,6 +5178,52 @@ export default function EssenceMarketPage() {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Meks Triangle Lightbox */}
+        {showMeksTriangle && (
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-7xl w-full rounded-xl overflow-hidden">
+              {/* Close button */}
+              <button
+                onClick={() => setShowMeksTriangle(false)}
+                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-3xl font-bold z-10 w-10 h-10 flex items-center justify-center hover:bg-yellow-500/10 rounded transition-colors"
+              >
+                ×
+              </button>
+
+              {/* Title */}
+              <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
+                  <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
+                    MEK VARIATIONS
+                  </h2>
+                </div>
+              </div>
+
+              {/* Triangle Canvas */}
+              <div className="relative flex items-center justify-center bg-black/40 rounded-lg p-8">
+                <div className="relative">
+                  {/* Background Triangle Image */}
+                  <img
+                    src="/triangle/backplate_2.webp"
+                    alt="Mek Variations Triangle"
+                    className="w-full h-auto max-w-4xl"
+                  />
+
+                  {/* Positioned sprites will go here in the future */}
+                </div>
+              </div>
+
+              {/* Info Text */}
+              <div className="mt-4 text-center">
+                <p className="mek-label-uppercase text-yellow-400/60 text-sm">
+                  288 TOTAL VARIATIONS • 102 HEADS • 112 BODIES • 74 TRAITS
+                </p>
+              </div>
             </div>
           </div>
         )}

@@ -16,22 +16,14 @@ export const getAllUsersWithDiscordEmojis = query({
     const usersWithEmojis = [];
 
     for (const connection of connections) {
-      // Get all wallets in this group
-      const wallets = await ctx.db
-        .query("walletGroupMemberships")
-        .withIndex("by_group", (q) => q.eq("groupId", connection.groupId))
-        .collect();
+      // In the new model: 1 wallet = 1 corp
+      // Get gold directly from the wallet
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", connection.walletAddress))
+        .first();
 
-      // Aggregate gold across all wallets
-      let totalGold = 0;
-      for (const wallet of wallets) {
-        const goldMining = await ctx.db
-          .query("goldMining")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", wallet.walletAddress))
-          .first();
-
-        totalGold += goldMining?.accumulatedGold || 0;
-      }
+      const totalGold = goldMining?.accumulatedGold || 0;
 
       const tiers = await ctx.db
         .query("discordGoldTiers")
@@ -56,7 +48,7 @@ export const getAllUsersWithDiscordEmojis = query({
       usersWithEmojis.push({
         discordUserId: connection.discordUserId,
         discordUsername: connection.discordUsername,
-        groupId: connection.groupId,
+        walletAddress: connection.walletAddress,
         gold: totalGold,
         emoji,
         tierName,

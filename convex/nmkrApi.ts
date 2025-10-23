@@ -32,6 +32,7 @@ export const createProject = action({
     policyExpires: v.optional(v.boolean()), // If true, policy locks after minting completes
     policyLocksDateTime: v.optional(v.string()), // ISO datetime string for when policy locks
     maxNftCount: v.optional(v.number()), // Maximum NFTs that can be minted in this project
+    metadataTemplate: v.optional(v.string()), // CIP-25 metadata template JSON (escaped)
     apiKey: v.string(), // NMKR API key (passed from client)
     payoutWallet: v.string(), // Cardano payout wallet address
   },
@@ -44,7 +45,7 @@ export const createProject = action({
     const policyLocksDateTime = args.policyLocksDateTime ||
       (policyExpires ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined);
 
-    const requestBody = {
+    const requestBody: any = {
       projectname: args.projectName,
       description: args.description || args.projectName,
       policyExpires,
@@ -55,6 +56,12 @@ export const createProject = action({
       enableFiatPayments: false, // We handle our own payments
       activatePayin: false,
     };
+
+    // Add metadata template if provided (must be escaped JSON string)
+    if (args.metadataTemplate) {
+      requestBody.metadataTemplate = args.metadataTemplate;
+      console.log("[NMKR] Including custom metadata template");
+    }
 
     console.log("[NMKR] Creating project:", args.projectName);
     console.log("[NMKR] Request body:", JSON.stringify(requestBody, null, 2));
@@ -166,41 +173,185 @@ export const uploadNFT = action({
     nftName: v.string(),
     nftDescription: v.optional(v.string()),
     ipfsImageHash: v.optional(v.string()), // IPFS hash of image (ipfs://...)
-    imageUrl: v.optional(v.string()), // Or direct URL to image
-    assetName: v.optional(v.string()), // On-chain asset name (if not provided, auto-generated)
+    imageUrl: v.optional(v.string()), // Public URL to image
+    imageBase64: v.optional(v.string()), // Or Base64 encoded image
+    imageStorageId: v.optional(v.string()), // Or Convex storage ID for base64
+    imageMimetype: v.optional(v.string()), // Media type (image/gif, video/mp4, etc.)
+    thumbnailBase64: v.optional(v.string()), // Optional thumbnail preview
+    thumbnailStorageId: v.optional(v.string()), // Or Convex storage ID for thumbnail base64
+    thumbnailMimetype: v.optional(v.string()), // Thumbnail media type
+    assetName: v.optional(v.string()), // Display name (what users see in wallets)
     metadata: v.optional(v.any()), // Custom metadata attributes
     rarityScore: v.optional(v.number()),
+    useTimestamp: v.optional(v.boolean()), // Add timestamp suffix to tokenname
+    subassets: v.optional(v.array(v.object({
+      url: v.optional(v.string()),
+      base64: v.optional(v.string()),
+      storageId: v.optional(v.string()), // Convex storage ID for base64
+      ipfsHash: v.optional(v.string()),
+      name: v.string(),
+      description: v.optional(v.string()),
+      mimetype: v.optional(v.string()),
+    }))),
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
     const apiKey = args.apiKey;
 
-    // Build metadata attributes
-    const metadataAttributes: Record<string, string> = {};
+    // Fetch base64 from storage if needed
+    let imageBase64 = args.imageBase64;
+    if (!imageBase64 && args.imageStorageId) {
+      const blob = await ctx.storage.get(args.imageStorageId);
+      if (blob) {
+        imageBase64 = await blob.text();
+        console.log("[NMKR] Fetched image base64 from storage, size:", imageBase64.length);
+      }
+    }
+
+    let thumbnailBase64 = args.thumbnailBase64;
+    if (!thumbnailBase64 && args.thumbnailStorageId) {
+      const blob = await ctx.storage.get(args.thumbnailStorageId);
+      if (blob) {
+        thumbnailBase64 = await blob.text();
+        console.log("[NMKR] Fetched thumbnail base64 from storage, size:", thumbnailBase64.length);
+      }
+    }
+
+    // Build metadata attributes as array for NMKR's metadataPlaceholder format
+    const metadataPlaceholder: Array<{ name: string; value: string }> = [];
     if (args.metadata) {
       Object.entries(args.metadata).forEach(([key, value]) => {
-        metadataAttributes[key] = String(value);
+        metadataPlaceholder.push({
+          name: key,
+          value: String(value),
+        });
       });
     }
+
+    // Build subassets array for NMKR (must use "subfiles" format)
+    const subfiles = await Promise.all((args.subassets || []).map(async (subasset) => {
+      // Build file data object with appropriate source
+      const fileData: any = {
+        mimetype: subasset.mimetype || "application/octet-stream",
+      };
+
+      // Fetch base64 from storage if storageId provided
+      let base64Data = subasset.base64;
+      if (!base64Data && subasset.storageId) {
+        const blob = await ctx.storage.get(subasset.storageId);
+        if (blob) {
+          base64Data = await blob.text();
+          console.log("[NMKR] Fetched subasset base64 from storage:", subasset.name, "size:", base64Data.length);
+        }
+      }
+
+      if (base64Data) {
+        fileData.fileFromBase64 = base64Data;
+      } else if (subasset.ipfsHash) {
+        fileData.fileFromIPFS = subasset.ipfsHash;
+      } else if (subasset.url) {
+        fileData.fileFromUrl = subasset.url;
+      }
+
+      return {
+        subfile: fileData,
+        description: subasset.description || "",
+      };
+    }));
+
+    // Build main NFT image data
+    let imageData: any = {};
+    const imageMimetype = args.imageMimetype || "image/png";
+    if (imageBase64) {
+      imageData = {
+        mimetype: imageMimetype,
+        fileFromBase64: imageBase64,
+      };
+      console.log("[NMKR] Using Base64 image, length:", imageBase64.length, "type:", imageMimetype);
+    } else if (args.ipfsImageHash) {
+      imageData = {
+        mimetype: imageMimetype,
+        fileFromIpfs: args.ipfsImageHash,
+      };
+    } else if (args.imageUrl) {
+      imageData = {
+        mimetype: imageMimetype,
+        fileFromUrl: args.imageUrl,
+      };
+    }
+
+    // Build thumbnail data if provided
+    let thumbnailData: any = undefined;
+    if (thumbnailBase64) {
+      const thumbnailMimetype = args.thumbnailMimetype || "image/png";
+      thumbnailData = {
+        mimetype: thumbnailMimetype,
+        fileFromBase64: thumbnailBase64,
+      };
+      console.log("[NMKR] Including thumbnail, length:", thumbnailBase64.length, "type:", thumbnailMimetype);
+    }
+
+    // Generate tokenname (optionally add timestamp to avoid duplicates)
+    const baseTokenName = args.nftName.replace(/[^a-zA-Z0-9]/g, '');
+    const shouldUseTimestamp = args.useTimestamp === true; // Default to false
+    const uniqueTokenName = shouldUseTimestamp
+      ? `${baseTokenName}${Date.now().toString().slice(-6)}` // Add timestamp
+      : baseTokenName; // Use as-is
 
     const requestBody = {
       nftUid: "", // Empty for new NFT
       nftProjectUid: args.projectUid,
-      nftName: args.nftName,
-      nftDescription: args.nftDescription || "",
-      assetName: args.assetName || "", // Empty = auto-generate
-      previewImageNft: {
-        mimetype: "image/png",
-        fileFromIpfs: args.ipfsImageHash || "",
-        fileFromUrl: args.imageUrl || "",
-      },
-      nftmetadatav2: metadataAttributes,
+      tokenname: uniqueTokenName, // Unique on-chain asset name
+      displayname: args.assetName || args.nftName, // Display name (what users see)
+      description: args.nftDescription || "", // Description for CIP-25 metadata
+      previewImageNft: imageData,
+      previewImageThumbnail: thumbnailData, // Add thumbnail if provided
+      metadataPlaceholder: metadataPlaceholder.length > 0 ? metadataPlaceholder : undefined, // Custom metadata as array [{name, value}]
       rarityNum: args.rarityScore,
+      subfiles: subfiles, // Add subassets in correct NMKR format
     };
 
-    console.log("[NMKR] Uploading NFT:", args.nftName);
+    console.log("[NMKR] Display name:", args.assetName || args.nftName);
+    console.log("[NMKR] On-chain tokenname:", uniqueTokenName, shouldUseTimestamp ? "(with timestamp)" : "(without timestamp)");
+    if (args.nftDescription) {
+      console.log("[NMKR] Description:", args.nftDescription.substring(0, 50) + (args.nftDescription.length > 50 ? "..." : ""));
+    }
+    if (metadataPlaceholder.length > 0) {
+      console.log("[NMKR] Custom metadata fields:", metadataPlaceholder.length);
+      metadataPlaceholder.forEach(field => {
+        console.log(`  - ${field.name}: ${field.value}`);
+      });
+    }
 
-    const response = await fetch(`${NMKR_API_BASE}/v2/UploadNft`, {
+    console.log("[NMKR] Uploading NFT:", args.assetName || args.nftName);
+    if (subfiles.length > 0) {
+      console.log(`[NMKR] Including ${subfiles.length} subasset(s)`);
+      subfiles.forEach((sf, idx) => {
+        const hasBase64 = sf.subfile.fileFromBase64 ? `${(sf.subfile.fileFromBase64.length / 1024).toFixed(0)} KB` : 'no';
+        const hasUrl = sf.subfile.fileFromUrl ? 'yes' : 'no';
+        const hasIPFS = sf.subfile.fileFromIPFS ? 'yes' : 'no';
+        console.log(`  [${idx + 1}] Base64: ${hasBase64}, URL: ${hasUrl}, IPFS: ${hasIPFS}, Type: ${sf.subfile.mimetype}`);
+      });
+    }
+
+    // Log the request structure (without huge base64 strings)
+    const requestPreview = {
+      ...requestBody,
+      previewImageNft: requestBody.previewImageNft ? { ...requestBody.previewImageNft, fileFromBase64: '[BASE64_DATA]' } : undefined,
+      previewImageThumbnail: requestBody.previewImageThumbnail ? { ...requestBody.previewImageThumbnail, fileFromBase64: '[BASE64_DATA]' } : undefined,
+      subfiles: requestBody.subfiles?.map(sf => ({
+        ...sf,
+        subfile: { ...sf.subfile, fileFromBase64: sf.subfile.fileFromBase64 ? '[BASE64_DATA]' : undefined }
+      })),
+    };
+    console.log("[NMKR] Request body structure:", JSON.stringify(requestPreview, null, 2));
+
+    // Explicitly log metadataPlaceholder to verify it's being sent
+    if (requestBody.metadataPlaceholder) {
+      console.log("[NMKR] ⚠️ IMPORTANT: metadataPlaceholder field in request:", JSON.stringify(requestBody.metadataPlaceholder, null, 2));
+    }
+
+    const response = await fetch(`${NMKR_API_BASE}/v2/UploadNft/${args.projectUid}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,9 +369,31 @@ export const uploadNFT = action({
     const result = await response.json();
     console.log("[NMKR] NFT uploaded successfully:", result);
 
+    // Extract policyId from metadata if available
+    let policyId = result.policyId;
+    if (!policyId && result.metadata) {
+      try {
+        const metadata = JSON.parse(result.metadata);
+        // Policy ID is the key under "721" in CIP-25 metadata
+        const cip25 = metadata["721"];
+        if (cip25) {
+          const policyIds = Object.keys(cip25).filter(key => key !== "version");
+          if (policyIds.length > 0) {
+            policyId = policyIds[0];
+            console.log("[NMKR] Extracted policyId from metadata:", policyId);
+          }
+        }
+      } catch (err) {
+        console.error("[NMKR] Failed to parse metadata for policyId:", err);
+      }
+    }
+
     return {
       nftUid: result.nftUid,
       assetId: result.assetId,
+      ipfsHash: result.ipfsHashMainnft,
+      tokenname: uniqueTokenName, // Return the generated tokenname
+      policyId: policyId, // Extracted from metadata or null
     };
   },
 });
@@ -243,22 +416,21 @@ export const mintAndSendNFT = action({
   handler: async (ctx, args) => {
     const apiKey = args.apiKey;
 
-    const requestBody = {
-      nftProjectUid: args.projectUid,
+    const endpoint = `${NMKR_API_BASE}/v2/MintAndSendSpecific/${args.projectUid}/${args.nftUid}/1/${args.receiverAddress}`;
+
+    console.log("[NMKR] Minting NFT with request:", {
+      endpoint,
+      projectUid: args.projectUid,
       nftUid: args.nftUid,
       receiverAddress: args.receiverAddress,
-      metadata: args.metadata || {},
-    };
+    });
 
-    console.log("[NMKR] Minting NFT to:", args.receiverAddress);
-
-    const response = await fetch(`${NMKR_API_BASE}/v2/MintAndSendSpecific`, {
-      method: "POST",
+    const response = await fetch(endpoint, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
+        "accept": "text/plain",
         "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -274,6 +446,7 @@ export const mintAndSendNFT = action({
       txHash: result.txHash,
       tokenname: result.tokenname,
       assetId: result.assetId,
+      mintAndSendId: result.mintAndSendId, // Batch mint ID from NMKR
     };
   },
 });
@@ -448,20 +621,49 @@ export const uploadEventVariations = action({
 export const mintTestNFT = action({
   args: {
     projectUid: v.string(),
-    nftName: v.string(),
-    imageUrl: v.string(),
+    nftName: v.string(), // On-chain tokenname base
+    displayName: v.optional(v.string()), // Display name for wallets
+    description: v.optional(v.string()), // NFT description
+    imageStorageId: v.string(), // Convex storage ID instead of base64
+    imageMimetype: v.optional(v.string()),
+    thumbnailStorageId: v.optional(v.string()), // Convex storage ID instead of base64
+    thumbnailMimetype: v.optional(v.string()),
     receiverAddress: v.string(),
+    subassets: v.optional(v.array(v.object({
+      storageId: v.optional(v.string()), // Convex storage ID for large files
+      url: v.optional(v.string()),
+      base64: v.optional(v.string()),
+      ipfsHash: v.optional(v.string()),
+      name: v.string(),
+      description: v.optional(v.string()),
+      mimetype: v.optional(v.string()),
+    }))),
+    metadata: v.optional(v.any()), // Custom metadata key-value pairs
+    useTimestamp: v.optional(v.boolean()), // Add timestamp suffix to tokenname
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
     console.log("[NMKR] Starting test NFT mint workflow");
 
-    // Step 1: Upload NFT metadata
+    // Validate storage IDs exist
+    if (!args.imageStorageId) {
+      throw new Error("Image storage ID is required");
+    }
+
+    // Step 1: Upload NFT metadata (with subassets if provided)
+    // Pass storage IDs instead of base64 to avoid 16MB action argument limit
     const uploadResult = await ctx.runAction(internal.nmkrApi.uploadNFT, {
       projectUid: args.projectUid,
       nftName: args.nftName,
-      imageUrl: args.imageUrl,
-      nftDescription: "Test NFT",
+      assetName: args.displayName || args.nftName, // Use displayName for asset name
+      imageStorageId: args.imageStorageId, // Pass storage ID, uploadNFT will fetch base64
+      imageMimetype: args.imageMimetype,
+      thumbnailStorageId: args.thumbnailStorageId, // Pass storage ID, uploadNFT will fetch base64
+      thumbnailMimetype: args.thumbnailMimetype,
+      nftDescription: args.description || "",
+      subassets: args.subassets, // Pass storage IDs directly, uploadNFT will fetch base64
+      metadata: args.metadata,
+      useTimestamp: args.useTimestamp, // Pass through (defaults to false in uploadNFT)
       apiKey: args.apiKey,
     });
 
@@ -475,6 +677,29 @@ export const mintTestNFT = action({
       apiKey: args.apiKey,
     });
 
+    // Step 3: Save to mint history
+    try {
+      await ctx.runMutation(api.mintHistory.saveMintRecord, {
+        nftUid: uploadResult.nftUid,
+        tokenname: uploadResult.tokenname || args.nftName,
+        displayName: args.displayName || args.nftName,
+        projectUid: args.projectUid,
+        description: args.description,
+        mediaType: args.imageMimetype || "image/png",
+        ipfsHash: uploadResult.ipfsHash,
+        customMetadata: args.metadata,
+        receiverAddress: args.receiverAddress,
+        mintStatus: "minted", // Mint completed successfully (txHash received)
+        mintAndSendId: mintResult.mintAndSendId,
+        policyId: uploadResult.policyId,
+        assetId: uploadResult.assetId,
+      });
+      console.log("[NMKR] Mint record saved to history");
+    } catch (err) {
+      console.error("[NMKR] Failed to save mint history:", err);
+      // Don't fail the whole mint if history saving fails
+    }
+
     return {
       success: true,
       nftUid: uploadResult.nftUid,
@@ -482,5 +707,68 @@ export const mintTestNFT = action({
       assetId: mintResult.assetId,
       message: `NFT minted successfully! TX: ${mintResult.txHash}`,
     };
+  },
+});
+
+/**
+ * Refresh policy ID for a minted NFT
+ * Extracts policyId from existing assetId in the database
+ */
+export const refreshPolicyId = action({
+  args: {
+    projectUid: v.string(),
+    nftUid: v.string(),
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log("[NMKR] Refreshing policy ID for:", args.nftUid);
+
+    // Get the mint record from database
+    const record = await ctx.runQuery(api.mintHistory.getMintByNftUid, {
+      nftUid: args.nftUid,
+    });
+
+    if (!record) {
+      throw new Error("Mint record not found in database");
+    }
+
+    // If we already have a policyId, no need to refresh
+    if (record.policyId) {
+      console.log("[NMKR] Policy ID already exists:", record.policyId);
+      return {
+        success: true,
+        policyId: record.policyId,
+        message: "Policy ID already available",
+      };
+    }
+
+    // Extract policyId from assetId (first 56 characters)
+    // Cardano asset format: policyId (56 chars) + assetName (hex)
+    let policyId: string | null = null;
+    if (record.assetId && record.assetId.length >= 56) {
+      policyId = record.assetId.substring(0, 56);
+      console.log("[NMKR] Extracted policyId from assetId:", policyId);
+    }
+
+    if (policyId) {
+      await ctx.runMutation(api.mintHistory.updatePolicyId, {
+        nftUid: args.nftUid,
+        policyId: policyId,
+        tokenname: record.tokenname,
+      });
+
+      console.log("[NMKR] Policy ID updated:", policyId);
+
+      return {
+        success: true,
+        policyId: policyId,
+        tokenname: record.tokenname,
+      };
+    } else {
+      return {
+        success: false,
+        message: "AssetId not available yet. NFT may still be processing.",
+      };
+    }
   },
 });

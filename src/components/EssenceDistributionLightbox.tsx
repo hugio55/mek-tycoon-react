@@ -1,89 +1,19 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
-
-// Generate essence data
-const generateEssenceData = () => {
-  const essenceNames = [
-    "Stone", "Disco", "Paul", "Cartoon", "Candy", "Tiles", "Moss", "Bullish",
-    "Journalist", "Laser", "Flashbulb", "Accordion", "Turret", "Drill", "Security",
-    "Bumblebee", "Camera", "Metal", "Crystal", "Flame", "Ice", "Nature", "Thunder",
-    "Shadow", "Light", "Water", "Earth", "Wind", "Void", "Chaos", "Order",
-    "Digital", "Analog", "Neon", "Retro", "Future", "Past", "Present", "Quantum",
-    "Plasma", "Energy", "Matter", "Space", "Time", "Reality", "Dream", "Nightmare",
-    "Joy", "Sorrow", "Rage", "Peace", "War", "Love", "Hate", "Fear",
-    "Courage", "Wisdom", "Power", "Mind", "Soul", "Body", "Spirit", "Heart",
-    "Gold", "Silver", "Bronze", "Platinum", "Diamond", "Ruby", "Emerald", "Sapphire",
-    "Amethyst", "Topaz", "Opal", "Pearl", "Coral", "Jade", "Obsidian", "Quartz",
-    "Marble", "Granite", "Sandstone", "Limestone", "Basalt", "Shale", "Coal", "Iron",
-    "Copper", "Tin", "Lead", "Zinc", "Nickel", "Aluminum", "Titanium", "Mercury",
-    "Uranium", "Plutonium", "Radium", "Helium", "Krypton", "Argon", "Xenon", "Radon"
-  ];
-
-  return essenceNames.map((name, index) => {
-    const hasBonus = index % 4 === 0;
-
-    let amount;
-    if (index === 0) amount = 0.1;
-    else if (index === 1) amount = 2.5;
-    else if (index === 2) amount = 9.8;
-    else if (index === 3) amount = 0.05;
-    else if (index === 4) amount = 1.2;
-    else if (index === 5) amount = 7.3;
-    else if (index === 6) amount = 0.8;
-    else if (index === 7) amount = 13.5;
-    else if (index === 8) amount = 3.4;
-    else if (index === 9) amount = 0.3;
-    else if (index === 10) amount = 5.6;
-    else if (index === 11) amount = 0.15;
-    else if (index === 12) amount = 4.2;
-    else if (index === 13) amount = 1.8;
-    else if (index === 14) amount = 8.2;
-    else if (index < 25) {
-      amount = 0.05 + ((index * 7) % 20) * 0.0975;
-    } else {
-      amount = 0.1 + ((index * 11) % 30) * 0.0967;
-    }
-
-    let maxAmount = 10;
-    let maxAmountBuffed = undefined;
-
-    if (index === 7) {
-      maxAmountBuffed = 14;
-    } else if (index === 14) {
-      maxAmountBuffed = 11.5;
-    } else if (index === 20) {
-      maxAmountBuffed = 12;
-    }
-
-    const effectiveMax = maxAmountBuffed || maxAmount;
-    amount = Math.min(amount, effectiveMax);
-
-    return {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name,
-      amount: parseFloat(amount.toFixed(2)),
-      currentValue: Math.floor(100 + ((index * 13 + 7) % 900)),
-      maxAmount,
-      maxAmountBuffed,
-      icon: ["🔮", "💎", "⚡", "🌟", "🔥", "❄️", "🌿", "💫", "✨", "🌊"][index % 10],
-      image: `/essence-images/bumblebee ${(index % 3) + 1}.png`,
-      baseRate: 0.1,
-      bonusRate: hasBonus ? 0.05 + (index % 5) * 0.01 : 0
-    };
-  });
-};
 
 interface EssenceDistributionLightboxProps {
   isOpen: boolean;
   onClose: () => void;
+  walletAddress?: string;
 }
 
-export default function EssenceDistributionLightbox({ isOpen, onClose }: EssenceDistributionLightboxProps) {
+export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress = "demo_wallet_123" }: EssenceDistributionLightboxProps) {
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
-  const [essenceData] = useState(generateEssenceData());
   const [chartSize, setChartSize] = useState(525);
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
@@ -94,8 +24,73 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const defaultMaxAmount = Math.max(...generateEssenceData().map(e => e.amount));
+  // Query player's essence data from Convex
+  const playerEssenceState = useQuery(
+    api.essence.getPlayerEssenceState,
+    { walletAddress }
+  );
+
+  // Query marketplace listings to get current prices
+  const marketListings = useQuery(
+    api.marketplace.getActiveListings,
+    { itemType: "essence", limit: 1000 }
+  );
+
+  // Query essence config for base rates
+  const essenceConfig = useQuery(api.essence.getEssenceConfig);
+
+  // Transform player essence balances into chart-ready data
+  const essenceData = useMemo(() => {
+    if (!playerEssenceState?.balances) return [];
+
+    // Calculate average market price for each essence type
+    const marketPrices: Record<string, number> = {};
+    if (marketListings?.listings) {
+      marketListings.listings.forEach((listing: any) => {
+        const essType = listing.itemVariation || listing.essenceType;
+        if (essType && listing.pricePerUnit) {
+          if (!marketPrices[essType]) {
+            marketPrices[essType] = listing.pricePerUnit;
+          } else {
+            // Average if multiple listings
+            marketPrices[essType] = (marketPrices[essType] + listing.pricePerUnit) / 2;
+          }
+        }
+      });
+    }
+
+    const essenceIcons = ["🔮", "💎", "⚡", "🌟", "🔥", "❄️", "🌿", "💫", "✨", "🌊"];
+
+    return playerEssenceState.balances.map((balance: any, index: number) => {
+      const currentValue = marketPrices[balance.variationName] || 100;
+      const baseRate = essenceConfig?.essenceRate || 0.1;
+      const essenceCap = essenceConfig?.essenceCap || 10;
+
+      return {
+        id: balance.variationName.toLowerCase().replace(/\s+/g, '-'),
+        name: balance.variationName,
+        amount: parseFloat(balance.accumulatedAmount.toFixed(2)),
+        currentValue: Math.floor(currentValue),
+        maxAmount: essenceCap,
+        maxAmountBuffed: undefined, // TODO: Get from buffs
+        icon: essenceIcons[index % essenceIcons.length],
+        image: `/essence-images/bumblebee ${(index % 3) + 1}.png`, // TODO: Map to actual variation images
+        baseRate,
+        bonusRate: 0 // TODO: Get from buffs
+      };
+    });
+  }, [playerEssenceState, marketListings, essenceConfig]);
+
+  const defaultMaxAmount = Math.max(...(essenceData.length > 0 ? essenceData.map(e => e.amount) : [10]));
   const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount);
+
+  // Update max filter when data changes
+  useEffect(() => {
+    if (essenceData.length > 0) {
+      const newMax = Math.max(...essenceData.map(e => e.amount));
+      setMaxSliceFilter(newMax);
+    }
+  }, [essenceData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -176,6 +171,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
   if (!isOpen) return null;
 
+  // Show loading state while data is being fetched (but only for a reasonable time)
+  const isLoading = playerEssenceState === undefined || marketListings === undefined || essenceConfig === undefined;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
@@ -185,7 +183,16 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
       />
 
       {/* Lightbox Container */}
-      <div className="relative w-[1280px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl">
+      <div className="relative w-[960px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl">
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-yellow-400 text-lg uppercase tracking-wider">Loading Essence Data...</p>
+            </div>
+          </div>
+        )}
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -396,22 +403,32 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                       </div>
                     </div>
 
-                    {/* Donut Chart */}
+                    {/* Donut Chart or Empty State */}
                     <div className="flex justify-center">
-                      <EssenceDonutChart
-                        data={displayedEssences.map(e => ({
-                          ...e,
-                          amount: e.amount,
-                          isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
-                        }))}
-                        size={chartSize}
-                        showCenterStats={true}
-                        animationDuration={600}
-                        onSliceHover={setHoveredSlice}
-                        onSliceClick={handleSliceClick}
-                        selectedSlice={selectedSlice}
-                        hoverEffect={hoverEffect}
-                      />
+                      {displayedEssences.length > 0 ? (
+                        <EssenceDonutChart
+                          data={displayedEssences.map(e => ({
+                            ...e,
+                            amount: e.amount,
+                            isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
+                          }))}
+                          size={chartSize}
+                          showCenterStats={true}
+                          animationDuration={600}
+                          onSliceHover={setHoveredSlice}
+                          onSliceClick={handleSliceClick}
+                          selectedSlice={selectedSlice}
+                          hoverEffect={hoverEffect}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-[525px]">
+                          <div className="text-center mek-card-industrial p-12 mek-border-sharp-gold">
+                            <div className="text-gray-500 text-6xl mb-4">⚗️</div>
+                            <h3 className="text-yellow-400 text-2xl font-bold mb-2 uppercase tracking-wider">No Essence Yet</h3>
+                            <p className="text-gray-400 text-sm">Slot Meks to start generating essence</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

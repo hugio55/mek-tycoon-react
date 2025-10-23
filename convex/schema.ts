@@ -1964,42 +1964,40 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_timestamp", ["timestamp"]),
 
-  // Wallet Groups - allows users to link multiple wallets into a single corporation
-  walletGroups: defineTable({
-    groupId: v.string(), // UUID for this wallet group
-    primaryWallet: v.string(), // First wallet added (cosmetic, for UI defaults)
-    createdAt: v.number(),
-  })
-    .index("by_groupId", ["groupId"])
-    .index("by_primaryWallet", ["primaryWallet"]),
-
-  // Wallet Group Memberships - tracks which wallets belong to which groups
-  walletGroupMemberships: defineTable({
-    groupId: v.string(), // Reference to walletGroups
-    walletAddress: v.string(), // Stake address
-    addedAt: v.number(),
-    nickname: v.optional(v.string()), // User-defined nickname (e.g., "Main Wallet", "Trading Wallet")
-    originalCompanyName: v.optional(v.string()), // Original corporation name before joining group (for restoration on removal)
-  })
-    .index("by_wallet", ["walletAddress"]) // CRITICAL: Find group from ANY wallet
-    .index("by_group", ["groupId"]), // Get all wallets in a group
-
-  // Discord connections - links wallet GROUPS to Discord accounts
+  // Discord connections - links wallets to Discord accounts (1 wallet = 1 corp)
   discordConnections: defineTable({
-    groupId: v.optional(v.string()), // Reference to walletGroups (changed from walletAddress) - optional for backward compatibility
-    walletAddress: v.optional(v.string()), // Legacy field - kept for backward compatibility
+    walletAddress: v.optional(v.string()), // Wallet address (1 wallet = 1 corp) - optional for legacy entries
     discordUserId: v.string(), // Discord snowflake ID
     discordUsername: v.string(), // For display
     guildId: v.string(), // Discord server ID
+    groupId: v.optional(v.string()), // Legacy field for old connections
     linkedAt: v.number(),
     active: v.boolean(),
     lastNicknameUpdate: v.optional(v.number()),
     currentEmoji: v.optional(v.string()),
   })
-    .index("by_group", ["groupId", "guildId"])
+    .index("by_wallet", ["walletAddress", "guildId"])
     .index("by_discord_user", ["discordUserId", "guildId"])
     .index("by_guild", ["guildId"])
     .index("by_active", ["active"]),
+
+  // Wallet groups - corporations that can have multiple wallets
+  walletGroups: defineTable({
+    groupId: v.string(),
+    primaryWallet: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_groupId", ["groupId"]),
+
+  // Wallet group memberships - tracks which wallets belong to which groups
+  walletGroupMemberships: defineTable({
+    groupId: v.string(),
+    walletAddress: v.string(),
+    addedAt: v.number(),
+    originalCompanyName: v.union(v.string(), v.null()),
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_group", ["groupId"]),
 
   // Discord gold tier configuration
   discordGoldTiers: defineTable({
@@ -2187,24 +2185,6 @@ export default defineSchema({
     updatedAt: v.number(), // Last update timestamp
   })
     .index("by_key", ["key"]),
-
-  // Wallet Group Audit Trail - security and fraud detection
-  walletGroupAudit: defineTable({
-    groupId: v.string(), // Reference to walletGroups
-    action: v.string(), // "add_wallet", "remove_wallet", "transfer_primary", "create_group"
-    performedBy: v.string(), // Wallet address that initiated the action
-    targetWallet: v.optional(v.string()), // Wallet being added/removed (if applicable)
-    signature: v.optional(v.string()), // Cryptographic proof (for add_wallet actions)
-    nonce: v.optional(v.string()), // Nonce used for signature verification
-    timestamp: v.number(),
-    ipAddress: v.optional(v.string()), // For advanced security tracking
-    success: v.boolean(), // Did the action succeed?
-    errorMessage: v.optional(v.string()), // If failed, why?
-  })
-    .index("by_group", ["groupId"])
-    .index("by_performer", ["performedBy"])
-    .index("by_timestamp", ["timestamp"])
-    .index("by_action", ["action"]),
 
   // Activity Logs - comprehensive user action tracking
   activityLogs: defineTable({
@@ -2878,13 +2858,15 @@ export default defineSchema({
     zones: v.array(
       v.object({
         id: v.string(), // Unique zone ID
-        type: v.string(), // "mechanism-slot", "button", "clickable", etc.
+        mode: v.string(), // "zone" for rectangles, "sprite" for positioned overlays
+        type: v.string(), // "mechanism-slot", "button", "clickable", "variation-bulb", etc.
         x: v.number(), // X position (pixels)
         y: v.number(), // Y position (pixels)
-        width: v.number(), // Zone width (pixels)
-        height: v.number(), // Zone height (pixels)
+        width: v.optional(v.number()), // Zone width (pixels) - for "zone" mode
+        height: v.optional(v.number()), // Zone height (pixels) - for "zone" mode
         label: v.optional(v.string()), // Display label
-        metadata: v.optional(v.any()), // Additional data
+        overlayImage: v.optional(v.string()), // Path to overlay sprite - for "sprite" mode
+        metadata: v.optional(v.any()), // Additional data (variation info, etc.)
       })
     ),
 
@@ -2892,4 +2874,77 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_imageKey", ["imageKey"]),
+
+  // Overlay Autosave History - Permanent backup history for overlay editor
+  overlayAutosaves: defineTable({
+    imageKey: v.string(), // Which overlay project this autosave belongs to
+    zones: v.array(
+      v.object({
+        id: v.string(),
+        mode: v.string(),
+        type: v.string(),
+        x: v.number(),
+        y: v.number(),
+        width: v.optional(v.number()),
+        height: v.optional(v.number()),
+        label: v.optional(v.string()),
+        overlayImage: v.optional(v.string()),
+        metadata: v.optional(v.any()),
+      })
+    ),
+    spriteCount: v.number(), // How many sprites were placed at this point
+    timestamp: v.number(), // When this autosave was created
+  })
+    .index("by_imageKey", ["imageKey"])
+    .index("by_imageKey_and_timestamp", ["imageKey", "timestamp"]),
+
+  // Mint History - Track NFTs minted through SimpleNFTMinter
+  mintHistory: defineTable({
+    // NFT identifiers
+    nftUid: v.string(), // NMKR NFT UID
+    tokenname: v.string(), // On-chain tokenname
+    displayName: v.string(), // Display name
+    policyId: v.optional(v.string()), // Policy ID (available after minting)
+    assetId: v.optional(v.string()), // Full asset ID (policyId.tokenname)
+
+    // Project info
+    projectUid: v.string(), // NMKR project UID
+    projectName: v.optional(v.string()),
+
+    // Metadata
+    description: v.optional(v.string()),
+    mediaType: v.string(), // image/gif, video/mp4, etc.
+    ipfsHash: v.optional(v.string()), // Main image IPFS hash
+    thumbnailIpfsHash: v.optional(v.string()),
+    customMetadata: v.optional(v.any()), // Custom key-value pairs
+
+    // Recipient
+    receiverAddress: v.string(),
+
+    // Minting status
+    mintStatus: v.string(), // "queued", "minted", "failed"
+    mintAndSendId: v.optional(v.number()), // NMKR mint batch ID
+    txHash: v.optional(v.string()), // Blockchain transaction hash
+
+    // Timestamps
+    createdAt: v.number(),
+    mintedAt: v.optional(v.number()), // When actually minted on blockchain
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_nft_uid", ["nftUid"])
+    .index("by_policy_id", ["policyId"])
+    .index("by_receiver", ["receiverAddress"]),
+
+  // Marketplace Listing History - persistent log of all admin-created marketplace listings
+  marketplaceListingHistory: defineTable({
+    timestamp: v.number(),
+    variationName: v.string(),
+    quantity: v.number(),
+    pricePerUnit: v.number(),
+    durationDays: v.number(),
+    totalValue: v.number(), // quantity * pricePerUnit
+    createdBy: v.string(), // "admin" or wallet address
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_variation", ["variationName"]),
 });

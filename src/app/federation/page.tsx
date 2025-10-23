@@ -10,20 +10,20 @@ export default function FederationPage() {
   const [createMode, setCreateMode] = useState(false);
   const [federationName, setFederationName] = useState('');
   const [federationDesc, setFederationDesc] = useState('');
-  const [inviteGroupId, setInviteGroupId] = useState('');
+  const [inviteWalletAddress, setInviteWalletAddress] = useState('');
   const [showVariationGrid, setShowVariationGrid] = useState(false);
   const [variationFilter, setVariationFilter] = useState<'all' | 'heads' | 'bodies' | 'items'>('all');
 
-  // TODO: Get current user's groupId from authentication
+  // TODO: Get current user's wallet address from authentication
   // For now, using a placeholder - this should come from user context
-  const currentGroupId = 'user-group-id-placeholder';
+  const currentWalletAddress = 'user-wallet-address-placeholder';
 
-  const currentFederation = useQuery(api.federations.getFederationByGroup, { groupId: currentGroupId });
+  const currentFederation = useQuery(api.federations.getFederationByWallet, { walletAddress: currentWalletAddress });
   const federationDetails = useQuery(
     api.federations.getFederation,
     currentFederation ? { federationId: currentFederation.federationId } : "skip"
   );
-  const pendingInvites = useQuery(api.federations.getPendingInvites, { groupId: currentGroupId });
+  const pendingInvites = useQuery(api.federations.getPendingInvites, { walletAddress: currentWalletAddress });
   const federationVariations = useQuery(
     api.federations.getFederationVariations,
     currentFederation ? { federationId: currentFederation.federationId } : "skip"
@@ -48,7 +48,7 @@ export default function FederationPage() {
       await createFederation({
         name: federationName,
         description: federationDesc,
-        leaderGroupId: currentGroupId,
+        leaderWalletAddress: currentWalletAddress,
       });
       setCreateMode(false);
       setFederationName('');
@@ -60,7 +60,7 @@ export default function FederationPage() {
 
   const handleAcceptInvite = async (inviteId: any) => {
     try {
-      await acceptInvite({ inviteId, groupId: currentGroupId });
+      await acceptInvite({ inviteId, walletAddress: currentWalletAddress });
     } catch (error) {
       alert(`Failed to accept invite: ${error}`);
     }
@@ -68,22 +68,22 @@ export default function FederationPage() {
 
   const handleRejectInvite = async (inviteId: any) => {
     try {
-      await rejectInvite({ inviteId, groupId: currentGroupId });
+      await rejectInvite({ inviteId, walletAddress: currentWalletAddress });
     } catch (error) {
       alert(`Failed to reject invite: ${error}`);
     }
   };
 
   const handleInviteMember = async () => {
-    if (!inviteGroupId.trim() || !currentFederation) return;
+    if (!inviteWalletAddress.trim() || !currentFederation) return;
 
     try {
       await inviteToFederation({
         federationId: currentFederation.federationId,
-        invitedGroupId: inviteGroupId,
-        invitedByGroupId: currentGroupId,
+        invitedWalletAddress: inviteWalletAddress,
+        invitedByWalletAddress: currentWalletAddress,
       });
-      setInviteGroupId('');
+      setInviteWalletAddress('');
       alert('Invite sent successfully');
     } catch (error) {
       alert(`Failed to send invite: ${error}`);
@@ -98,7 +98,7 @@ export default function FederationPage() {
     try {
       await leaveFederation({
         federationId: currentFederation.federationId,
-        groupId: currentGroupId,
+        walletAddress: currentWalletAddress,
       });
     } catch (error) {
       alert(`Failed to leave federation: ${error}`);
@@ -224,10 +224,10 @@ export default function FederationPage() {
 
   // In a federation
   const isLeader = federationDetails?.members?.some(
-    (m) => m.groupId === currentGroupId && m.role === 'leader'
+    (m) => m.walletAddress === currentWalletAddress && m.role === 'leader'
   );
   const isOfficer = federationDetails?.members?.some(
-    (m) => m.groupId === currentGroupId && m.role === 'officer'
+    (m) => m.walletAddress === currentWalletAddress && m.role === 'officer'
   );
 
   return (
@@ -283,7 +283,9 @@ export default function FederationPage() {
                   className="bg-black/40 border border-yellow-500/20 p-3 rounded flex items-center justify-between"
                 >
                   <div>
-                    <div className="text-yellow-500 font-mono">{member.groupId}</div>
+                    <div className="text-yellow-500 font-mono">
+                      {member.walletAddress.slice(0, 8)}...{member.walletAddress.slice(-6)}
+                    </div>
                     <div className="text-gray-500 text-xs mt-1">
                       {member.variationsContributed || 0} unique variations
                     </div>
@@ -307,13 +309,13 @@ export default function FederationPage() {
               <h2 className="mek-text-industrial text-2xl mb-4">INVITE MEMBERS</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="mek-label-uppercase block mb-2">Corporation Group ID</label>
+                  <label className="mek-label-uppercase block mb-2">Corporation Wallet Address</label>
                   <input
                     type="text"
-                    value={inviteGroupId}
-                    onChange={(e) => setInviteGroupId(e.target.value)}
+                    value={inviteWalletAddress}
+                    onChange={(e) => setInviteWalletAddress(e.target.value)}
                     className="w-full bg-black/50 border-2 border-yellow-500/30 px-4 py-2 text-yellow-500 rounded focus:border-yellow-500 focus:outline-none"
-                    placeholder="Enter group ID..."
+                    placeholder="Enter wallet address..."
                   />
                 </div>
                 <button

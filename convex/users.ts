@@ -344,13 +344,32 @@ export const getTransactionHistory = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
-    
+
     const transactions = await ctx.db
       .query("transactions")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
       .take(limit);
-    
+
     return transactions;
+  },
+});
+
+// Simple test query for checking Convex connection (no auth needed)
+export const getUserGold = query({
+  args: {},
+  handler: async () => {
+    // Just return success - this is used by EnvironmentIndicator to test connection
+    return { connected: true };
+  },
+});
+
+// Get all users (for admin/debug purposes)
+export const getAllUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    // Return all users from database
+    const users = await ctx.db.query("users").collect();
+    return users;
   },
 });
