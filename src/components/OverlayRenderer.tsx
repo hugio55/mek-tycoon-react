@@ -18,7 +18,7 @@
  * ```
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 type Sprite = {
   id: string;
@@ -63,43 +63,49 @@ type OverlayRendererProps = {
 
   /** Use color-based glow from sprite image filename */
   useColorGlow?: boolean;
+
+  /** Function to get owned count for a variation */
+  getOwnedCount?: (variationName: string, variationType: string) => number;
+
+  /** Function to get total count for a variation in collection */
+  getTotalCount?: (variationName: string, variationType: string) => number;
 };
 
-// Extract color from sprite image path
+// Extract color from sprite image path - matches exact bulb colors
 function getSpriteColor(imagePath: string): string {
   const filename = imagePath.toLowerCase();
 
-  // Map filename colors to CSS colors
-  if (filename.includes('yellow') || filename.includes('gold')) {
-    return '250, 182, 23'; // Yellow/gold
+  // Map filename colors to exact bulb center colors
+  if (filename.includes('white') || filename.includes('silver')) {
+    return '240, 245, 250'; // Bright white with slight blue tint
   }
-  if (filename.includes('blue')) {
-    return '59, 130, 246'; // Blue
+  if (filename.includes('blue') || filename.includes('true-blue')) {
+    return '100, 180, 255'; // Cyan-blue bulb color
+  }
+  if (filename.includes('yellow') || filename.includes('gold')) {
+    return '255, 230, 100'; // Warm yellow bulb
   }
   if (filename.includes('purp') || filename.includes('purple') || filename.includes('violet')) {
-    return '168, 85, 247'; // Purple
+    return '200, 120, 255'; // Purple/violet bulb
   }
   if (filename.includes('red') || filename.includes('crimson')) {
-    return '239, 68, 68'; // Red
+    return '255, 100, 100'; // Red
   }
   if (filename.includes('green') || filename.includes('emerald')) {
-    return '34, 197, 94'; // Green
+    return '120, 255, 150'; // Green
   }
   if (filename.includes('orange') || filename.includes('amber')) {
-    return '251, 146, 60'; // Orange
+    return '255, 180, 100'; // Orange
   }
   if (filename.includes('pink') || filename.includes('rose')) {
-    return '236, 72, 153'; // Pink
+    return '255, 150, 200'; // Pink
   }
   if (filename.includes('cyan') || filename.includes('teal')) {
-    return '20, 184, 166'; // Cyan
-  }
-  if (filename.includes('white') || filename.includes('silver')) {
-    return '226, 232, 240'; // White/silver
+    return '100, 230, 230'; // Cyan
   }
 
-  // Default to yellow if unknown
-  return '250, 182, 23';
+  // Default to warm yellow if unknown
+  return '255, 230, 100';
 }
 
 export function OverlayRenderer({
@@ -110,7 +116,12 @@ export function OverlayRenderer({
   highlightStyle,
   highlightAnimation = 'animate-pulse',
   useColorGlow = false,
+  getOwnedCount,
+  getTotalCount,
 }: OverlayRendererProps) {
+  const [hoveredSprite, setHoveredSprite] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
   if (!overlayData) return null;
 
   const { imageWidth, imageHeight, zones } = overlayData;
@@ -123,8 +134,47 @@ export function OverlayRenderer({
     sprites = sprites.filter(filterSprites);
   }
 
+  // Generate a pseudo-random delay based on sprite ID (0-5s to spread across full cycle)
+  const getAnimationDelay = (spriteId: string): number => {
+    let hash = 0;
+    for (let i = 0; i < spriteId.length; i++) {
+      hash = ((hash << 5) - hash) + spriteId.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash % 5000) / 1000; // Returns 0-4.999s
+  };
+
   return (
     <>
+      <style>{`
+        @keyframes bulb-flicker {
+          /* Mostly off (0-15%) */
+          0%, 15% { opacity: 0; }
+          /* Quick fade up (15-18%) */
+          18% { opacity: 1; }
+          /* Bright period with flickers (18-40%) */
+          20.0% { opacity: 1; }
+          20.1% { opacity: 0.2; }
+          20.3% { opacity: 0.2; }
+          20.4% { opacity: 1; }
+          25.0% { opacity: 1; }
+          25.1% { opacity: 0.3; }
+          25.3% { opacity: 0.3; }
+          25.4% { opacity: 1; }
+          25.6% { opacity: 0.25; }
+          25.9% { opacity: 0.25; }
+          26.0% { opacity: 1; }
+          30.0% { opacity: 1; }
+          30.1% { opacity: 0.35; }
+          30.4% { opacity: 0.35; }
+          30.5% { opacity: 1; }
+          /* Slow fade down (40-50%) */
+          40% { opacity: 1; }
+          50% { opacity: 0; }
+          /* Stay off until next cycle (50-100%) */
+          100% { opacity: 0; }
+        }
+      `}</style>
       {sprites.map((sprite) => {
         const isHighlighted = highlightFilter ? highlightFilter(sprite) : false;
 
@@ -142,6 +192,14 @@ export function OverlayRenderer({
           glowColor = getSpriteColor(sprite.overlayImage);
         }
 
+        // Get unique animation delay for this sprite
+        const animationDelay = getAnimationDelay(sprite.id);
+
+        const variationName = sprite.metadata?.variationName || sprite.label || 'Unknown';
+        const variationType = sprite.metadata?.variationType || 'unknown';
+        const ownedCount = getOwnedCount ? getOwnedCount(variationName, variationType) : 0;
+        const totalCount = getTotalCount ? getTotalCount(variationName, variationType) : 0;
+
         return (
           <div
             key={sprite.id}
@@ -153,45 +211,103 @@ export function OverlayRenderer({
               // DO NOT add translate(-50%, -50%) here
               transition: 'all 0.3s ease',
             }}
-            title={sprite.label || sprite.metadata?.variationName}
+            onMouseEnter={(e) => {
+              setHoveredSprite(sprite.id);
+              // Use the div's bounding box for tooltip positioning
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top - 10 });
+            }}
+            onMouseLeave={() => setHoveredSprite(null)}
           >
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              {sprite.overlayImage && (
-                <>
-                  <img
-                    src={sprite.overlayImage}
-                    alt={sprite.label || "sprite"}
-                    className={isHighlighted ? highlightAnimation : ''}
+            {sprite.overlayImage && (
+              <>
+                {/* Sprite image - NO animation, stays at 100% opacity */}
+                <img
+                  src={sprite.overlayImage}
+                  alt={sprite.label || "sprite"}
+                  style={{
+                    maxWidth: '100%',
+                    height: 'auto',
+                    transform: `scale(${finalScale})`,
+                    transformOrigin: 'top left',
+                    display: 'block',
+                  }}
+                />
+                {/* Circular glow overlay - positioned exactly like sprite */}
+                {isHighlighted && (
+                  <div
                     style={{
-                      animationDuration: isHighlighted ? '1s' : undefined,
-                      maxWidth: '100%',
-                      height: 'auto',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      background: `radial-gradient(circle at center, rgba(${glowColor}, 1) 0%, rgba(${glowColor}, 0.7) 15%, transparent 40%)`,
+                      mixBlendMode: 'normal',
+                      pointerEvents: 'none',
+                      filter: 'brightness(1.5) saturate(2)',
+                      animation: `bulb-flicker 5s ease-in-out infinite`,
+                      animationDelay: `${animationDelay}s`,
                       transform: `scale(${finalScale})`,
                       transformOrigin: 'top left',
-                      display: 'block',
                     }}
                   />
-                  {/* Centered glow overlay on top of sprite */}
-                  {isHighlighted && (
-                    <div
-                      className={highlightAnimation}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: `radial-gradient(circle at center, rgba(${glowColor}, 0.9) 0%, rgba(${glowColor}, 0.6) 30%, transparent 60%)`,
-                        mixBlendMode: 'screen',
-                        pointerEvents: 'none',
-                        filter: 'brightness(1.8) saturate(1.5)',
-                        animationDuration: '1s',
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </>
+            )}
           </div>
         );
       })}
+
+      {/* Custom Tooltip */}
+      {hoveredSprite && (() => {
+        const sprite = sprites.find(s => s.id === hoveredSprite);
+        if (!sprite) return null;
+
+        const variationName = sprite.metadata?.variationName || sprite.label || 'Unknown';
+        const variationType = sprite.metadata?.variationType || 'unknown';
+        const ownedCount = getOwnedCount ? getOwnedCount(variationName, variationType) : 0;
+        const totalCount = getTotalCount ? getTotalCount(variationName, variationType) : 0;
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltipPos.x,
+              top: tooltipPos.y,
+              transform: 'translate(-50%, -100%)',
+              zIndex: 10000,
+              pointerEvents: 'none',
+            }}
+          >
+            <div className="bg-black/95 border-2 border-yellow-500/70 rounded-lg px-4 py-3 shadow-2xl">
+              <div className="text-yellow-400 font-bold text-sm uppercase tracking-wide mb-1">
+                {variationName}
+              </div>
+              <div className="text-gray-300 text-xs">
+                <span className="text-yellow-400 font-bold">{ownedCount}</span> owned
+              </div>
+              <div className="text-gray-400 text-xs">
+                {totalCount} in collection
+              </div>
+            </div>
+            {/* Arrow pointing down */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: -6,
+                transform: 'translateX(-50%)',
+                width: 0,
+                height: 0,
+                borderLeft: '6px solid transparent',
+                borderRight: '6px solid transparent',
+                borderTop: '6px solid rgba(250, 182, 23, 0.7)',
+              }}
+            />
+          </div>
+        );
+      })()}
     </>
   );
 }

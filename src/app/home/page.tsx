@@ -60,6 +60,34 @@ export default function HomePage() {
   // Sprite rendering now handled by OverlayRenderer component
   // (Old sprite filtering code removed - component handles it internally)
 
+  // Count how many of each variation the user owns
+  const getOwnedCount = (variationName: string, variationType: string) => {
+    let count = 0;
+    ownedMeks.forEach((mek: any) => {
+      const sourceKey = mek.sourceKeyBase || mek.sourceKey;
+      if (sourceKey) {
+        const parts = sourceKey.split('-');
+        parts.forEach((sourceKeyCode: string) => {
+          const variation = COMPLETE_VARIATION_RARITY.find(
+            v => v.sourceKey.toUpperCase() === sourceKeyCode.toUpperCase() &&
+                 v.name.toUpperCase() === variationName.toUpperCase() &&
+                 v.type === variationType
+          );
+          if (variation) count++;
+        });
+      }
+    });
+    return count;
+  };
+
+  // Get total count of a variation in the collection
+  const getTotalCount = (variationName: string, variationType: string) => {
+    const variation = COMPLETE_VARIATION_RARITY.find(
+      v => v.name.toUpperCase() === variationName.toUpperCase() && v.type === variationType
+    );
+    return variation ? variation.count : 0;
+  };
+
   // Ref to get actual triangle image size
   const triangleRef = useRef<HTMLImageElement>(null);
   const [triangleSize, setTriangleSize] = useState({ width: 768, height: 666 });
@@ -131,6 +159,8 @@ export default function HomePage() {
               // TEMP: Show all sprites for positioning verification (no filter)
               highlightFilter={() => true} // All sprites glow with their color
               useColorGlow={true}
+              getOwnedCount={getOwnedCount}
+              getTotalCount={getTotalCount}
             />
             {/* TODO: Re-enable ownership filter once positioning verified:
               filterSprites={(sprite) => {
