@@ -7,6 +7,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { ALL_VARIATIONS_FLAT } from "@/lib/variationsReferenceData";
 import EssenceListingLightboxV5YellowGradient from "@/components/EssenceListingLightbox-V5-YellowGradient";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 // Variation type categories for essence filtering
 const RARITY_CATEGORIES = [
@@ -208,8 +209,10 @@ export default function EssenceMarketPage() {
 
   useEffect(() => {
     const initUser = async () => {
-      // Get wallet from localStorage (same as hub page)
-      const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+      // Restore wallet from encrypted session (same as root page)
+      const session = await restoreWalletSession();
+      const storedWallet = session?.stakeAddress || "demo_wallet_123";
+
       console.log('[Essence Market] Using wallet address:', storedWallet);
       setWalletAddress(storedWallet);
 
