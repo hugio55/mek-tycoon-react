@@ -23,9 +23,7 @@ import { BrowserWallet } from '@meshsdk/core';
  * - Fee calculation: https://docs.cardano.org/explore-cardano/protocol-parameters/
  * - Min UTXO: https://docs.cardano.org/native-tokens/minimum-ada-value-requirement/
  */
-export function estimateM
-
-intCosts(metadataSizeBytes: number = 1000): {
+export function estimateMintCosts(metadataSizeBytes: number = 1000): {
   txFee: number; // lovelace
   minAda: number; // lovelace
   totalCost: number; // lovelace
@@ -83,13 +81,19 @@ export async function buildMintTransaction(params: {
   // Create ForgeScript from native script
   const forgeScript = ForgeScript.fromNativeScript(policyScript);
 
+  // Extract the NFT-specific metadata from CIP-25 structure
+  // MeshSDK's mintAsset expects just the NFT metadata, not the full {721: {...}} wrapper
+  const nftMetadata = metadata?.["721"]?.[policyId]?.[assetName] || metadata;
+
+  console.log('NFT Metadata for minting:', nftMetadata);
+
   // Mint the NFT
   tx.mintAsset(
     forgeScript,
     {
       assetName: assetName,
       assetQuantity: '1', // NFTs are always quantity 1
-      metadata: metadata,
+      metadata: nftMetadata,
       label: '721', // CIP-25 metadata label
       recipient: recipientAddress
     }

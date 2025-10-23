@@ -16,10 +16,11 @@ import WalletManagementAdmin from '@/components/WalletManagementAdmin';
 import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import VariationSearchTable from '@/components/VariationSearchTable';
 import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
+import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
 import EventManager from '@/components/admin/nft/EventManager';
 import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
 import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
-import SimpleNFTMinter from '@/components/admin/nft/SimpleNFTMinter';
+import CustomTestMinter from '@/components/admin/nft/CustomTestMinter';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
@@ -59,6 +60,7 @@ const DATA_SYSTEMS = [
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
+  { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true }
@@ -2295,6 +2297,19 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* SourceKey Migration */}
+          {activeTab === 'sourcekey-migration' && (
+          <div id="section-sourcekey-migration" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  Fix missing sourceKey fields in goldMining records. This enables Mek images to load correctly in the selector.
+                </p>
+
+                <SourceKeyMigrationAdmin />
+              </div>
+          </div>
+          )}
+
           {/* Notification System */}
           {activeTab === 'notification-system' && (
           <div id="section-notification-system" className="bg-black/50 backdrop-blur border-2 border-orange-500/30 rounded-lg shadow-lg shadow-black/50">
@@ -2378,7 +2393,7 @@ function NFTAdminTabs() {
               : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
           }`}
         >
-          🧪 Test Minter
+          🧪 Custom Test Minter (Testnet)
         </button>
         <button
           onClick={() => setNftSubTab('events')}
@@ -2423,7 +2438,7 @@ function NFTAdminTabs() {
       </div>
 
       {/* Tab Content */}
-      {nftSubTab === 'simple-minter' && <SimpleNFTMinter />}
+      {nftSubTab === 'simple-minter' && <CustomTestMinter />}
       {nftSubTab === 'events' && <EventManager />}
       {nftSubTab === 'purchases' && <PurchaseDashboard />}
       {nftSubTab === 'analytics' && <RevenueAnalytics />}

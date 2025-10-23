@@ -30,6 +30,8 @@ interface DonutChartProps {
   onSliceClick?: (sliceId: string) => void;
   selectedSlice?: string | null;
   hoverEffect?: 1 | 2 | 3 | 4;
+  liveAccumulation?: boolean;
+  essenceConfig?: any;
 }
 
 // Industrial color palette for essence types
@@ -58,13 +60,20 @@ export default function EssenceDonutChart({
   onSliceClick,
   selectedSlice,
   hoverEffect = 1,
+  liveAccumulation = false,
+  essenceConfig,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [centerDisplay, setCenterDisplay] = useState({ value: 0, label: "TOTAL ESSENCE" });
+  const [liveDisplayValue, setLiveDisplayValue] = useState(0);
   const [showMarketTooltip, setShowMarketTooltip] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Refs for live accumulation
+  const mountTimeRef = useRef(Date.now());
+  const baseValueRef = useRef(0);
   
   // Ensure component only renders on client
   useEffect(() => {
@@ -139,6 +148,8 @@ export default function EssenceDonutChart({
           value: slice.amount,
           label: slice.name.toUpperCase()
         });
+        baseValueRef.current = slice.amount;
+        mountTimeRef.current = Date.now();
       }
     } else {
       const total = processedData.reduce((sum, item) => sum + item.amount, 0);
@@ -146,8 +157,32 @@ export default function EssenceDonutChart({
         value: total,
         label: "TOTAL ESSENCE"
       });
+      baseValueRef.current = total;
+      mountTimeRef.current = Date.now();
     }
   }, [hoveredSlice, processedData]);
+
+  // Live accumulation animation
+  useEffect(() => {
+    if (!liveAccumulation || !isClient) {
+      setLiveDisplayValue(centerDisplay.value);
+      return;
+    }
+
+    // Calculate total rate per day
+    const totalRate = hoveredSlice
+      ? (processedData.find(d => d.id === hoveredSlice)?.baseRate || 0.1)
+      : processedData.reduce((sum, item) => sum + (item.baseRate || 0.1), 0);
+
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - mountTimeRef.current;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      const accumulated = baseValueRef.current + (totalRate * elapsedDays);
+      setLiveDisplayValue(accumulated);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [liveAccumulation, centerDisplay.value, hoveredSlice, processedData, isClient]);
 
   // Create SVG path for donut slice with fixed precision
   const createSlicePath = (startAngle: number, endAngle: number, animProgress: number = 1) => {
@@ -420,12 +455,12 @@ export default function EssenceDonutChart({
             {/* Center display */}
             {showCenterStats && (
               <g>
-                {/* Center background */}
+                {/* Center background - now transparent */}
                 <circle
                   cx={center}
                   cy={center}
                   r={innerRadius - 10}
-                  fill="rgba(0, 0, 0, 0.8)"
+                  fill="transparent"
                   stroke="rgba(250, 182, 23, 0.3)"
                   strokeWidth="2"
                 />
@@ -437,9 +472,15 @@ export default function EssenceDonutChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                   className="mek-value-primary"
-                  style={{ fontSize: '2rem', fill: theme.colors.primary.yellow }}
+                  style={{
+                    fontSize: liveAccumulation ? '1.5rem' : '2rem',
+                    fill: liveAccumulation ? theme.colors.accent.cyan : theme.colors.primary.yellow,
+                    textShadow: liveAccumulation ? '0 0 10px rgba(34, 211, 238, 0.5)' : undefined
+                  }}
                 >
-                  {centerDisplay.value.toLocaleString()}
+                  {liveAccumulation
+                    ? liveDisplayValue.toFixed(5)
+                    : centerDisplay.value.toLocaleString()}
                 </text>
                 
                 {/* Center label */}

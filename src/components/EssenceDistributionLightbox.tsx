@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
@@ -98,6 +99,7 @@ function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: 
 }
 
 export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress = "demo_wallet_123" }: EssenceDistributionLightboxProps) {
+  const [mounted, setMounted] = useState(false);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
   const [chartSize, setChartSize] = useState(525);
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
@@ -110,6 +112,17 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   const [viewMode, setViewMode] = useState<'donut' | 'table'>('donut');
   const [mobileDataColumn, setMobileDataColumn] = useState<'amount' | 'growth' | 'maxCap' | 'totalValue'>('amount');
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Mount portal and lock body scroll
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   // Query player's essence data from Convex
   const playerEssenceState = useQuery(
@@ -285,21 +298,24 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Show loading state while data is being fetched (but only for a reasonable time)
   const isLoading = playerEssenceState === undefined || marketListings === undefined || essenceConfig === undefined;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Lightbox Container */}
-      <div className="relative w-[960px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl">
+      <div
+        className="relative w-[960px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Loading Overlay */}
         {isLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
@@ -958,4 +974,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

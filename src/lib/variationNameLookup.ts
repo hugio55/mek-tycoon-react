@@ -62,25 +62,22 @@ function getRarityColor(count: number): string {
 /**
  * Get variation info from the FULL Mek sourceKey
  * @param fullSourceKey - The complete sourceKey (e.g., "AA1-DM1-AP1-B")
+ * @param fallbackData - Optional fallback data if sourceKey lookup fails (for backwards compatibility)
  * @returns Object with head, body, and trait variation info
  */
-export function getVariationInfoFromFullKey(fullSourceKey: string): {
+export function getVariationInfoFromFullKey(
+  fullSourceKey: string | null | undefined,
+  fallbackData?: { head?: string; body?: string; trait?: string }
+): {
   head: VariationInfo;
   body: VariationInfo;
   trait: VariationInfo;
 } {
-  const upperKey = fullSourceKey.toUpperCase().replace(/-B$/i, '');
-  const mekData = fullSourceKeyLookup.get(upperKey);
-
-  if (!mekData) {
-    return {
-      head: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
-      body: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
-      trait: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' }
-    };
-  }
-
-  const getInfoForVariation = (name: string, type: 'head' | 'body' | 'trait'): VariationInfo => {
+  // Helper function to create VariationInfo from a name
+  const getInfoForVariation = (name: string | undefined, type: 'head' | 'body' | 'trait'): VariationInfo => {
+    if (!name) {
+      return { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' };
+    }
     const rarityKey = `${type}-${name.toLowerCase()}`;
     const rarity = rarityLookup.get(rarityKey);
 
@@ -92,9 +89,33 @@ export function getVariationInfoFromFullKey(fullSourceKey: string): {
     };
   };
 
+  // Try to use sourceKey first
+  if (fullSourceKey) {
+    const upperKey = fullSourceKey.toUpperCase().replace(/-[A-Z]$/i, ''); // Remove any suffix (-B, -C, etc.)
+    const mekData = fullSourceKeyLookup.get(upperKey);
+
+    if (mekData) {
+      return {
+        head: getInfoForVariation(mekData.head, 'head'),
+        body: getInfoForVariation(mekData.body, 'body'),
+        trait: getInfoForVariation(mekData.trait, 'trait')
+      };
+    }
+  }
+
+  // Fallback to individual variation fields if provided
+  if (fallbackData) {
+    return {
+      head: getInfoForVariation(fallbackData.head, 'head'),
+      body: getInfoForVariation(fallbackData.body, 'body'),
+      trait: getInfoForVariation(fallbackData.trait, 'trait')
+    };
+  }
+
+  // No data available
   return {
-    head: getInfoForVariation(mekData.head, 'head'),
-    body: getInfoForVariation(mekData.body, 'body'),
-    trait: getInfoForVariation(mekData.trait, 'trait')
+    head: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
+    body: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
+    trait: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' }
   };
 }

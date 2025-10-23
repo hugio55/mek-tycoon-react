@@ -200,71 +200,74 @@ export function OverlayRenderer({
         const ownedCount = getOwnedCount ? getOwnedCount(variationName, variationType) : 0;
         const totalCount = getTotalCount ? getTotalCount(variationName, variationType) : 0;
 
-        // Calculate actual sprite dimensions using absolute metadata
-        const spriteWidth = (sprite.metadata?.imageWidth || 100) * finalScale;
-        const spriteHeight = (sprite.metadata?.imageHeight || 100) * finalScale;
+        // Normalize all sprites to consistent base size (64x64) then apply scaling
+        // This prevents inconsistent metadata dimensions from causing size variations
+        const BASE_SPRITE_SIZE = 64;
+        const spriteWidth = BASE_SPRITE_SIZE * finalScale;
+        const spriteHeight = BASE_SPRITE_SIZE * finalScale;
 
         return (
           <div
             key={sprite.id}
-            className="absolute"
+            className="absolute pointer-events-none"
             style={{
               left: `${xPercent}%`,
               top: `${yPercent}%`,
-              // CRITICAL: Set explicit dimensions to match scaled sprite for accurate hit box
-              width: `${spriteWidth}px`,
-              height: `${spriteHeight}px`,
               // CRITICAL: Position by top-left corner to match overlay editor
               // DO NOT add translate(-50%, -50%) here
-              overflow: 'visible', // Allow scaled image to render at full size
               transition: 'all 0.3s ease',
             }}
-            onMouseEnter={(e) => {
-              setHoveredSprite(sprite.id);
-              // Calculate tooltip position from container rect (now correctly sized)
-              const rect = e.currentTarget.getBoundingClientRect();
-              // Position tooltip at horizontal center, above sprite
-              setTooltipPos({
-                x: rect.left + spriteWidth / 2,
-                y: rect.top - 10
-              });
-            }}
-            onMouseLeave={() => setHoveredSprite(null)}
           >
-            {sprite.overlayImage && (
-              <>
-                {/* Sprite image - NO animation, stays at 100% opacity */}
-                <img
-                  src={sprite.overlayImage}
-                  alt={sprite.label || "sprite"}
-                  style={{
-                    transform: `scale(${finalScale})`,
-                    transformOrigin: 'top left',
-                    display: 'block',
-                  }}
-                />
-                {/* Circular glow overlay - positioned exactly like sprite */}
-                {isHighlighted && (
-                  <div
+            <div
+              className="relative pointer-events-auto"
+              style={{
+                width: `${spriteWidth}px`,
+                height: `${spriteHeight}px`,
+              }}
+              onMouseEnter={(e) => {
+                setHoveredSprite(sprite.id);
+                const rect = e.currentTarget.getBoundingClientRect();
+                setTooltipPos({
+                  x: rect.left + rect.width / 2,
+                  y: rect.top - 10
+                });
+              }}
+              onMouseLeave={() => setHoveredSprite(null)}
+            >
+              {sprite.overlayImage && (
+                <>
+                  {/* Sprite image - NO animation, stays at 100% opacity */}
+                  <img
+                    src={sprite.overlayImage}
+                    alt={sprite.label || "sprite"}
                     style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
                       width: '100%',
                       height: '100%',
-                      background: `radial-gradient(circle at center, rgba(${glowColor}, 1) 0%, rgba(${glowColor}, 0.7) 15%, transparent 40%)`,
-                      mixBlendMode: 'normal',
-                      pointerEvents: 'none',
-                      filter: 'brightness(1.5) saturate(2)',
-                      animation: `bulb-flicker 5s ease-in-out infinite`,
-                      animationDelay: `${animationDelay}s`,
-                      transform: `scale(${finalScale})`,
-                      transformOrigin: 'top left',
+                      objectFit: 'contain',
+                      display: 'block',
                     }}
                   />
-                )}
-              </>
-            )}
+                  {/* Circular glow overlay - positioned exactly like sprite */}
+                  {isHighlighted && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        background: `radial-gradient(circle at center, rgba(${glowColor}, 1) 0%, rgba(${glowColor}, 0.7) 15%, transparent 40%)`,
+                        mixBlendMode: 'normal',
+                        pointerEvents: 'none',
+                        filter: 'brightness(1.5) saturate(2)',
+                        animation: `bulb-flicker 5s ease-in-out infinite`,
+                        animationDelay: `${animationDelay}s`,
+                      }}
+                    />
+                  )}
+                </>
+              )}
+            </div>
           </div>
         );
       })}
@@ -294,11 +297,11 @@ export function OverlayRenderer({
               <div className="text-yellow-400 font-bold text-sm uppercase tracking-wide mb-1">
                 {variationName}
               </div>
-              <div className="text-gray-300 text-xs">
-                <span className="text-yellow-400 font-bold">{ownedCount}</span> owned
-              </div>
-              <div className="text-gray-400 text-xs">
-                {totalCount} in collection
+              <div className="text-xs font-mono">
+                <span className="text-yellow-400 font-bold">{ownedCount}</span>
+                <span className="text-gray-400">/</span>
+                <span className="text-gray-500">{totalCount}</span>
+                <span className="text-gray-400 ml-1">owned</span>
               </div>
             </div>
             {/* Arrow pointing down */}

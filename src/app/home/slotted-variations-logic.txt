@@ -1,0 +1,18 @@
+CHANGES NEEDED FOR HOME PAGE - ONLY SHOW SLOTTED MEK VARIATIONS:
+
+1. Change ownedVariationNames (line ~154-183):
+   - OLD: Loops through ALL ownedMeks
+   - NEW: Loop through essenceState.slots filtered by mekAssetId
+   - Use slot.headVariationName, slot.bodyVariationName, slot.itemVariationName directly
+
+2. Change getOwnedCount function (line ~189-214):
+   - OLD: Counts from ALL ownedMeks
+   - NEW: Count from slotted Meks only
+
+3. Change variationBreakdown (line ~281-334):
+   - OLD: Counts from ALL ownedMeks
+   - NEW: Count from slotted Meks only
+
+4. Update debug panel title (line ~322):
+   - Change from "42 Meks × 3 = 126 total variations"
+   - To: "1 Slotted Mek × 3 = 3 active variations"

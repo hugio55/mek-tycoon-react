@@ -48,6 +48,39 @@ export const initializeEssenceSystem = mutation({
       return { success: false, message: "Already initialized" };
     }
 
+    // Ensure global config exists - create default if missing
+    let config = await ctx.db
+      .query("essenceConfig")
+      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .first();
+
+    if (!config) {
+      console.log('[Initialize] Creating default essence config');
+      await ctx.db.insert("essenceConfig", {
+        configType: "global",
+        slot2GoldCost: 10000,
+        slot3GoldCost: 50000,
+        slot4GoldCost: 150000,
+        slot5GoldCost: 500000,
+        slot6GoldCost: 1000000,
+        slot2EssenceCount: 2,
+        slot3EssenceCount: 3,
+        slot4EssenceCount: 4,
+        slot5EssenceCount: 5,
+        slot6EssenceCount: 6,
+        rarityGroup1: [],
+        rarityGroup2: [],
+        rarityGroup3: [],
+        rarityGroup4: [],
+        swapBaseCost: 1000,
+        swapCostIncrement: 500,
+        swapCostMax: 10000,
+        essenceRate: 0.1,
+        essenceCap: 10,
+        lastUpdated: Date.now(),
+      });
+    }
+
     const now = Date.now();
 
     // Create tracking record
@@ -187,6 +220,68 @@ async function generateSlotRequirements(ctx: any, walletAddress: string) {
   });
 }
 
+// Calculate metadata for frontend accumulation
+// Returns rates, counts, and caps for each variation being generated
+async function calculateEssenceMetadata(
+  ctx: any,
+  walletAddress: string,
+  slots: any[],
+  config: any
+) {
+  const slottedMeks = slots.filter((s) => s.mekAssetId);
+
+  // Count variations from slotted Meks
+  const variationCounts = new Map<number, number>();
+
+  for (const slot of slottedMeks) {
+    if (slot.headVariationId) {
+      variationCounts.set(
+        slot.headVariationId,
+        (variationCounts.get(slot.headVariationId) || 0) + 1
+      );
+    }
+    if (slot.bodyVariationId) {
+      variationCounts.set(
+        slot.bodyVariationId,
+        (variationCounts.get(slot.bodyVariationId) || 0) + 1
+      );
+    }
+    if (slot.itemVariationId) {
+      variationCounts.set(
+        slot.itemVariationId,
+        (variationCounts.get(slot.itemVariationId) || 0) + 1
+      );
+    }
+  }
+
+  const rates: { [variationId: number]: number } = {};
+  const counts: { [variationId: number]: number } = {};
+  const caps: { [variationId: number]: number } = {};
+
+  // Calculate rates for each variation
+  for (const [variationId, count] of Array.from(variationCounts.entries())) {
+    // Check for player buffs
+    const buff = await ctx.db
+      .query("essencePlayerBuffs")
+      .withIndex("by_wallet_and_variation", (q) =>
+        q.eq("walletAddress", walletAddress).eq("variationId", variationId)
+      )
+      .first();
+
+    const rateMultiplier = buff?.rateMultiplier || 1.0;
+    const capBonus = buff?.capBonus || 0;
+
+    const effectiveRate = (config?.essenceRate || 0.1) * rateMultiplier;
+    const effectiveCap = (config?.essenceCap || 10) + capBonus;
+
+    rates[variationId] = effectiveRate;
+    counts[variationId] = count;
+    caps[variationId] = effectiveCap;
+  }
+
+  return { rates, counts, caps };
+}
+
 // Get player's essence state (slots, balances, tracking)
 export const getPlayerEssenceState = query({
   args: { walletAddress: v.string() },
@@ -211,25 +306,38 @@ export const getPlayerEssenceState = query({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
 
-    // Get essence balances with REAL-TIME ACCUMULATION (like gold mining)
+    // Get essence balances (raw DB values - frontend will handle accumulation)
     const balances = await ctx.db
       .query("essenceBalances")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
 
-    // Calculate real-time accumulated essence for each balance
-    const balancesWithRealTime = await calculateRealTimeEssenceBalances(
+    // Get config
+    const config = await ctx.db
+      .query("essenceConfig")
+      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .first();
+
+    // Calculate metadata for frontend accumulation
+    const metadata = await calculateEssenceMetadata(
       ctx,
       walletAddress,
-      balances,
-      tracking
+      slots,
+      config
     );
 
     return {
       tracking,
       slots: slots.sort((a, b) => a.slotNumber - b.slotNumber),
       requirements: requirements.sort((a, b) => a.slotNumber - b.slotNumber),
-      balances: balancesWithRealTime,
+      balances, // Raw DB values
+
+      // Metadata for frontend accumulation
+      lastCalculationTime: tracking?.lastCalculationTime || Date.now(),
+      isActive: tracking?.isActive || false,
+      essenceRates: metadata.rates,
+      slottedCounts: metadata.counts,
+      caps: metadata.caps,
     };
   },
 });
@@ -410,21 +518,54 @@ export const slotMek = mutation({
     walletAddress: v.string(),
     slotNumber: v.number(),
     mekAssetId: v.string(),
+    // Accept Mek data directly since Meks might be in goldMining.ownedMeks
+    mekNumber: v.optional(v.number()),
+    sourceKey: v.optional(v.string()),
+    headVariationId: v.optional(v.number()),
+    headVariationName: v.optional(v.string()),
+    bodyVariationId: v.optional(v.number()),
+    bodyVariationName: v.optional(v.string()),
+    itemVariationId: v.optional(v.number()),
+    itemVariationName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { walletAddress, slotNumber, mekAssetId } = args;
+    const {
+      walletAddress,
+      slotNumber,
+      mekAssetId,
+      headVariationName: passedHeadName,
+      bodyVariationName: passedBodyName,
+      itemVariationName: passedItemName
+    } = args;
 
-    // Get the Mek
-    const mek = await ctx.db
+    // Try to get Mek from meks table first
+    let mek = await ctx.db
       .query("meks")
       .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
       .first();
 
+    // If not in meks table, check goldMining.ownedMeks
     if (!mek) {
-      throw new Error("Mek not found");
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
+
+      if (goldMining) {
+        const ownedMek = goldMining.ownedMeks?.find((m: any) => m.assetId === mekAssetId);
+        if (ownedMek) {
+          // Use the data from goldMining.ownedMeks
+          mek = ownedMek as any;
+        }
+      }
     }
 
-    if (mek.owner !== walletAddress) {
+    if (!mek) {
+      throw new Error("Mek not found in database or goldMining records");
+    }
+
+    // Verify ownership (check both owner field and walletAddress match)
+    if (mek.owner && mek.owner !== walletAddress) {
       throw new Error("You don't own this Mek");
     }
 
@@ -459,17 +600,54 @@ export const slotMek = mutation({
     // Calculate accumulated essence before slotting
     await calculateAndUpdateEssence(ctx, walletAddress);
 
+    // Use passed-in variation names (from frontend lookup) or fall back to Mek data
+    const headVariationName = passedHeadName || mek.headVariation;
+    const bodyVariationName = passedBodyName || mek.bodyVariation;
+    const itemVariationName = passedItemName || mek.itemVariation;
+
+    // Look up variation IDs if not present (goldMining.ownedMeks doesn't have them)
+    let headVariationId = mek.headVariationId;
+    let bodyVariationId = mek.bodyVariationId;
+    let itemVariationId = mek.itemVariationId;
+
+    if (!headVariationId && headVariationName) {
+      const headVar = await ctx.db
+        .query("variationsReference")
+        .withIndex("by_name", (q) => q.eq("name", headVariationName))
+        .filter((q) => q.eq(q.field("type"), "head"))
+        .first();
+      headVariationId = headVar?.variationId;
+    }
+
+    if (!bodyVariationId && bodyVariationName) {
+      const bodyVar = await ctx.db
+        .query("variationsReference")
+        .withIndex("by_name", (q) => q.eq("name", bodyVariationName))
+        .filter((q) => q.eq(q.field("type"), "body"))
+        .first();
+      bodyVariationId = bodyVar?.variationId;
+    }
+
+    if (!itemVariationId && itemVariationName) {
+      const itemVar = await ctx.db
+        .query("variationsReference")
+        .withIndex("by_name", (q) => q.eq("name", itemVariationName))
+        .filter((q) => q.eq(q.field("type"), "item"))
+        .first();
+      itemVariationId = itemVar?.variationId;
+    }
+
     // Update slot
     await ctx.db.patch(slot._id, {
       mekAssetId,
       mekNumber: parseInt(mek.assetName.replace("Mek #", "")),
       mekSourceKey: mek.sourceKey,
-      headVariationId: mek.headVariationId,
-      headVariationName: mek.headVariation,
-      bodyVariationId: mek.bodyVariationId,
-      bodyVariationName: mek.bodyVariation,
-      itemVariationId: mek.itemVariationId,
-      itemVariationName: mek.itemVariation,
+      headVariationId,
+      headVariationName,
+      bodyVariationId,
+      bodyVariationName,
+      itemVariationId,
+      itemVariationName,
       slottedAt: now,
       lastModified: now,
     });

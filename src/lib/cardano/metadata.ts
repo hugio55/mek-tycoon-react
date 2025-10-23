@@ -165,6 +165,7 @@ export function buildCollectibleMetadata(
  * Build metadata for Test NFTs (Phase 1 testing)
  *
  * Simplified metadata for quick testing
+ * Note: Cardano metadata only supports strings, numbers, and arrays
  */
 export function buildTestNFTMetadata(
   policyId: string,
@@ -184,14 +185,77 @@ export function buildTestNFTMetadata(
         [assetName]: {
           "name": params.name,
           "image": params.imageUrl,
+          "description": params.description
+        }
+      }
+    }
+  };
+}
+
+/**
+ * Build metadata for Commemorative Tokens (Beta Tester Rewards)
+ *
+ * Creates sequential edition NFTs with royalties for jpg.store compatibility
+ * Note: Only strings and numbers allowed (no booleans, no complex objects)
+ *
+ * @param policyId - Shared commemorative policy ID
+ * @param assetName - Hex-encoded asset name
+ * @param params - Token parameters
+ * @returns CIP-25 + CIP-27 compliant metadata
+ */
+export function buildCommemorativeMetadata(
+  policyId: string,
+  assetName: string,
+  params: {
+    editionNumber: number;
+    tokenType: string; // "phase_1_beta"
+    displayName: string; // "Phase 1: I Was There"
+    imageUrl: string; // IPFS URL
+    walletAddress: string;
+  }
+) {
+  const network = process.env.NEXT_PUBLIC_CARDANO_NETWORK || 'preprod';
+  const royaltyAddress = network === 'mainnet'
+    ? process.env.NEXT_PUBLIC_ROYALTY_ADDRESS_MAINNET
+    : process.env.NEXT_PUBLIC_ROYALTY_ADDRESS_TESTNET;
+  const royaltyRate = process.env.NEXT_PUBLIC_ROYALTY_RATE || '0.05';
+
+  return {
+    "721": {
+      [policyId]: {
+        [assetName]: {
+          // Required CIP-25 fields
+          "name": `${params.displayName} #${params.editionNumber}`,
+          "image": params.imageUrl,
           "mediaType": inferMediaType(params.imageUrl),
-          "description": params.description,
+
+          // CIP-27 Royalty fields (required for jpg.store)
+          "royalty_addr": royaltyAddress,
+          "royalty_rate": royaltyRate,
+
+          // Commemorative metadata
+          "description": `Awarded to Phase 1 beta testers of Mek Tycoon. Edition ${params.editionNumber} of unlimited.`,
+          "edition": params.editionNumber,
+          "series": "Commemorative Tokens",
+          "tokenType": params.tokenType,
+
+          // Provenance
           "mintedBy": params.walletAddress,
           "mintTimestamp": Date.now(),
-          "network": network,
-          "testNFT": true,
+
+          // Marketplace tags (for jpg.store searchability)
+          "tags": [
+            "Mek Tycoon",
+            "Commemorative",
+            "Phase 1",
+            "Beta Tester",
+            `Edition ${params.editionNumber}`
+          ],
+
+          // Project info
           "project": "Mek Tycoon",
-          "category": "Test NFT"
+          "category": "Commemorative Token",
+          "website": "https://mek.overexposed.io"
         }
       }
     }

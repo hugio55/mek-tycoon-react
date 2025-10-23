@@ -1,140 +1,268 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import { buildCommemorativeMetadata } from '@/lib/cardano/metadata';
+import { mintNFT } from '@/lib/cardano/mintingTx';
 
 interface AirdropClaimBannerProps {
   userId: Id<"users"> | null;
   walletAddress: string | null;
 }
 
+type MintStatus =
+  | "idle"
+  | "checking"
+  | "eligible"
+  | "ineligible"
+  | "reserving"
+  | "building_tx"
+  | "signing"
+  | "submitting"
+  | "confirming"
+  | "success"
+  | "error";
+
 export default function AirdropClaimBanner({ userId, walletAddress }: AirdropClaimBannerProps) {
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [receiveAddress, setReceiveAddress] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [mintStatus, setMintStatus] = useState<MintStatus>("idle");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [reservationId, setReservationId] = useState<Id<"commemorativeTokens"> | null>(null);
+  const [editionNumber, setEditionNumber] = useState<number | null>(null);
+  const [txHash, setTxHash] = useState<string>("");
 
-  // Mutation
-  const submitAddress = useMutation(api.airdrop.submitAddress);
+  const TOKEN_TYPE = "phase_1_beta";
+  const PRICE_ADA = 10;
 
-  // Get active airdrop config
-  const activeConfig = useQuery(api.airdrop.getActiveConfig, {});
-
-  // Check if user has already submitted
-  const userSubmission = useQuery(
-    api.airdrop.getUserSubmission,
-    userId && activeConfig ? { userId, campaignName: activeConfig.campaignName } : "skip"
+  // Query eligibility
+  const eligibility = useQuery(
+    api.commemorativeTokens.checkBetaTesterEligibility,
+    walletAddress ? { walletAddress, tokenType: TOKEN_TYPE } : "skip"
   );
 
-  // Check if user is eligible (wallet connected + verified + gold > 0)
-  const verificationStatus = useQuery(
-    api.goldMining.isWalletVerified,
-    walletAddress && walletAddress !== "demo_wallet_123" ? { walletAddress } : "skip"
+  // Query token type info (shows next edition)
+  const tokenInfo = useQuery(
+    api.commemorativeTokens.getTokenTypeInfo,
+    { tokenType: TOKEN_TYPE }
   );
 
-  const goldMiningData = useQuery(
-    api.goldMining.getGoldMiningData,
-    walletAddress ? { walletAddress } : "skip"
-  );
+  // Mutations
+  const reserveEdition = useMutation(api.commemorativeTokens.reserveEdition);
+  const confirmMint = useMutation(api.commemorativeTokens.confirmMint);
+  const markFailed = useMutation(api.commemorativeTokens.markMintFailed);
 
-  // Don't show banner if:
-  // - No active campaign
-  // - User already submitted
-  // - User not eligible
-  // - Loading states
-  if (!activeConfig || activeConfig === null) return null;
-  if (!activeConfig.isActive) return null;
-
-  // TEST MODE: If enabled, only show to whitelisted wallets
-  if (activeConfig.testMode && walletAddress) {
-    const testWallets = activeConfig.testWallets || [];
-    if (!testWallets.includes(walletAddress)) {
-      return null; // Not in whitelist, hide banner
-    }
-  }
-
-  if (userSubmission && userSubmission !== null) return null;
-  if (!verificationStatus || !verificationStatus.isVerified) return null;
-  if (!goldMiningData) return null;
-
-  // Calculate cumulative gold (total earned over all time)
-  const now = Date.now();
-  let cumulativeGold = goldMiningData.totalCumulativeGold || 0;
-  if (goldMiningData.isBlockchainVerified) {
-    const lastUpdateTime = goldMiningData.lastSnapshotTime || goldMiningData.updatedAt || goldMiningData.createdAt;
-    const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
-    const goldSinceLastUpdate = goldMiningData.totalGoldPerHour * hoursSinceLastUpdate;
-    cumulativeGold = (goldMiningData.totalCumulativeGold || 0) + goldSinceLastUpdate;
-  }
-
-  // Check if user has enough gold
-  if (cumulativeGold <= (activeConfig.minimumGold || 0)) return null;
-
-  // Validate Cardano address
-  const validateAddress = (addr: string): { valid: boolean; message?: string } => {
-    if (!addr) return { valid: false, message: 'Address is required' };
-
-    const trimmed = addr.trim();
-
-    if (!trimmed.startsWith('addr1') && !trimmed.startsWith('addr_test1')) {
-      return { valid: false, message: 'Must start with addr1 or addr_test1' };
-    }
-
-    if (trimmed.length < 58 || trimmed.length > 108) {
-      return { valid: false, message: 'Invalid address length (58-108 characters)' };
-    }
-
-    return { valid: true };
-  };
-
-  const handleSubmit = async () => {
-    if (!userId || !activeConfig) return;
-
-    const validation = validateAddress(receiveAddress);
-    if (!validation.valid) {
-      setSubmitError(validation.message || 'Invalid address');
+  // Update status based on eligibility
+  useEffect(() => {
+    if (!walletAddress) {
+      setMintStatus("idle");
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
+    if (eligibility === undefined) {
+      setMintStatus("checking");
+      return;
+    }
+
+    if (eligibility.eligible) {
+      setMintStatus("eligible");
+    } else {
+      setMintStatus("ineligible");
+      setErrorMessage(eligibility.reason);
+    }
+  }, [walletAddress, eligibility]);
+
+  const handleMint = async () => {
+    if (!walletAddress || !eligibility?.eligible) return;
 
     try {
-      await submitAddress({
-        userId,
-        receiveAddress: receiveAddress.trim(),
-        campaignName: activeConfig.campaignName,
+      // Step 1: Reserve edition number
+      setMintStatus("reserving");
+      const reservation = await reserveEdition({
+        tokenType: TOKEN_TYPE,
+        walletAddress: walletAddress,
+        userId: eligibility.userId,
       });
 
-      setSubmitSuccess(true);
-      setTimeout(() => {
-        setShowAddressModal(false);
-        setSubmitSuccess(false);
-        setReceiveAddress('');
-      }, 2000);
+      setReservationId(reservation.reservationId);
+      setEditionNumber(reservation.editionNumber);
+
+      // Step 2: Build metadata
+      setMintStatus("building_tx");
+
+      const assetName = `Phase1IWasThere${reservation.editionNumber.toString().padStart(4, '0')}`;
+      const policyId = process.env.NEXT_PUBLIC_COMMEMORATIVE_POLICY_ID || "";
+
+      if (!policyId) {
+        throw new Error("Commemorative policy ID not configured");
+      }
+
+      const metadata = buildCommemorativeMetadata(
+        policyId,
+        assetName,
+        {
+          editionNumber: reservation.editionNumber,
+          tokenType: TOKEN_TYPE,
+          displayName: reservation.displayName,
+          imageUrl: reservation.imageUrl,
+          walletAddress: walletAddress,
+        }
+      );
+
+      // Step 3: Build and submit transaction
+      setMintStatus("signing");
+
+      const treasuryAddress = process.env.NEXT_PUBLIC_CARDANO_NETWORK === "mainnet"
+        ? process.env.NEXT_PUBLIC_TREASURY_ADDRESS_MAINNET
+        : process.env.NEXT_PUBLIC_TREASURY_ADDRESS_TESTNET;
+
+      if (!treasuryAddress) {
+        throw new Error("Treasury address not configured");
+      }
+
+      const result = await mintNFT({
+        recipientAddress: walletAddress,
+        assetName,
+        metadata,
+        paymentLovelace: PRICE_ADA * 1_000_000,
+        treasuryAddress,
+      });
+
+      setMintStatus("submitting");
+      setTxHash(result.txHash);
+
+      // Step 4: Confirm mint in database
+      setMintStatus("confirming");
+      await confirmMint({
+        reservationId: reservation.reservationId,
+        txHash: result.txHash,
+        policyId,
+        assetName,
+        explorerUrl: result.explorerUrl,
+      });
+
+      setMintStatus("success");
+
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Failed to submit address');
-    } finally {
-      setIsSubmitting(false);
+      console.error("[CommemorativeMint] Error:", error);
+      setMintStatus("error");
+
+      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      setErrorMessage(errorMsg);
+
+      if (reservationId) {
+        try {
+          await markFailed({
+            reservationId,
+            errorMessage: errorMsg,
+          });
+        } catch (markFailedError) {
+          console.error("[CommemorativeMint] Failed to mark as failed:", markFailedError);
+        }
+      }
     }
   };
 
-  const handleCloseModal = () => {
-    setShowAddressModal(false);
-    setReceiveAddress('');
-    setSubmitError(null);
-    setSubmitSuccess(false);
-  };
+  // Don't show banner if not eligible or already minted
+  if (mintStatus === "idle" || mintStatus === "checking") return null;
+  if (mintStatus === "ineligible") return null;
 
-  const addressValidation = receiveAddress ? validateAddress(receiveAddress) : { valid: false };
+  // Success state
+  if (mintStatus === "success") {
+    return (
+      <div
+        className="mb-6 p-6 rounded-xl border-4"
+        style={{
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.35) 0%, rgba(74, 222, 128, 0.4) 100%)',
+          borderColor: '#22c55e',
+          boxShadow: '0 0 40px rgba(34, 197, 94, 0.8), inset 0 0 30px rgba(74, 222, 128, 0.3)'
+        }}
+      >
+        <div className="text-center">
+          <div className="text-6xl mb-4">✓</div>
+          <h3
+            className="text-2xl font-bold mb-2"
+            style={{
+              fontFamily: "'Orbitron', sans-serif",
+              color: '#dcfce7',
+              textShadow: '0 0 15px rgba(34, 197, 94, 0.8)',
+              letterSpacing: '0.05em'
+            }}
+          >
+            Minted Successfully!
+          </h3>
+          <p className="text-green-200 mb-2">
+            Phase 1: I Was There - Edition #{editionNumber}
+          </p>
+          {txHash && (
+            <a
+              href={`https://${process.env.NEXT_PUBLIC_CARDANO_NETWORK === 'mainnet' ? '' : 'preprod.'}cardanoscan.io/transaction/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all mt-4"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              View on Explorer
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-  return (
-    <>
-      {/* Airdrop Claim Banner */}
+  // Error state
+  if (mintStatus === "error") {
+    return (
+      <div
+        className="mb-6 p-6 rounded-xl border-4"
+        style={{
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.4) 100%)',
+          borderColor: '#ef4444',
+          boxShadow: '0 0 40px rgba(239, 68, 68, 0.8), inset 0 0 30px rgba(220, 38, 38, 0.3)'
+        }}
+      >
+        <div className="text-center">
+          <h3
+            className="text-2xl font-bold mb-2 text-red-200"
+            style={{
+              fontFamily: "'Orbitron', sans-serif",
+              textShadow: '0 0 15px rgba(239, 68, 68, 0.8)',
+              letterSpacing: '0.05em'
+            }}
+          >
+            Minting Failed
+          </h3>
+          <p className="text-red-200 mb-4 text-sm">{errorMessage}</p>
+          <button
+            onClick={() => {
+              setMintStatus("eligible");
+              setErrorMessage("");
+              setReservationId(null);
+              setEditionNumber(null);
+              setTxHash("");
+            }}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all"
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Processing states
+  if (["reserving", "building_tx", "signing", "submitting", "confirming"].includes(mintStatus)) {
+    const statusMessages: Record<string, string> = {
+      reserving: "Reserving your edition...",
+      building_tx: `Building transaction for Edition #${editionNumber}...`,
+      signing: "Please sign the transaction in your wallet...",
+      submitting: "Submitting transaction to blockchain...",
+      confirming: "Confirming mint...",
+    };
+
+    return (
       <div
         className="mb-6 p-6 rounded-xl border-4"
         style={{
@@ -144,6 +272,9 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
         }}
       >
         <div className="text-center">
+          <div className="mb-4 inline-block">
+            <div className="animate-spin h-12 w-12 border-4 border-cyan-400 border-t-transparent rounded-full"></div>
+          </div>
           <h3
             className="text-xl font-bold mb-2"
             style={{
@@ -153,18 +284,51 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
               letterSpacing: '0.05em'
             }}
           >
-            Phase 1: Commemorative NFT
+            Processing...
           </h3>
-          <p
-            className="text-sm mb-2"
-            style={{
-              color: '#bae6fd',
-              lineHeight: '1.5',
-              fontSize: '0.875rem'
-            }}
-          >
-            {activeConfig.nftDescription || 'Claim your commemorative NFT as an early supporter!'}
-          </p>
+          <p className="text-cyan-200 text-sm">{statusMessages[mintStatus]}</p>
+          {editionNumber && (
+            <p className="text-cyan-300 text-xs mt-2">Edition #{editionNumber}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Eligible - show mint button
+  return (
+    <div
+      className="mb-6 p-6 rounded-xl border-4"
+      style={{
+        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.4) 100%)',
+        borderColor: '#06b6d4',
+        boxShadow: '0 0 40px rgba(6, 182, 212, 0.8), inset 0 0 30px rgba(59, 130, 246, 0.3)'
+      }}
+    >
+      <div className="text-center">
+        <h3
+          className="text-xl font-bold mb-2"
+          style={{
+            fontFamily: "'Orbitron', sans-serif",
+            color: '#e0f2fe',
+            textShadow: '0 0 15px rgba(6, 182, 212, 0.8)',
+            letterSpacing: '0.05em'
+          }}
+        >
+          Phase 1: Commemorative NFT
+        </h3>
+        <p
+          className="text-sm mb-2"
+          style={{
+            color: '#bae6fd',
+            lineHeight: '1.5',
+            fontSize: '0.875rem'
+          }}
+        >
+          Awarded to early supporters who connected their wallet and accumulated gold
+        </p>
+
+        {tokenInfo?.exists && (
           <p
             className="text-sm mb-4"
             style={{
@@ -172,186 +336,31 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
               lineHeight: '1.6'
             }}
           >
-            You have accumulated a total of {Math.floor(cumulativeGold).toLocaleString()}g and are eligible to claim.
+            Next Edition: <span className="font-bold text-yellow-400">#{tokenInfo.nextEdition}</span>
           </p>
-          <div className="w-full max-w-xs mx-auto">
-            <HolographicButton
-              text="Claim Your NFT"
-              onClick={() => setShowAddressModal(true)}
-              isActive={true}
-              variant="yellow"
-              alwaysOn={true}
-              hideIcon={true}
-              className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
-            />
-          </div>
+        )}
+
+        <p
+          className="text-xs mb-4 text-cyan-300/80"
+          style={{
+            lineHeight: '1.6'
+          }}
+        >
+          Price: {PRICE_ADA} ₳ • Sequential Edition • jpg.store Compatible
+        </p>
+
+        <div className="w-full max-w-xs mx-auto">
+          <HolographicButton
+            text="Claim Your NFT"
+            onClick={handleMint}
+            isActive={true}
+            variant="yellow"
+            alwaysOn={true}
+            hideIcon={true}
+            className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+          />
         </div>
       </div>
-
-      {/* Address Submission Modal */}
-      {showAddressModal && (
-        <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={handleCloseModal}
-        >
-          <div
-            className="bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden"
-            style={{
-              boxShadow: '0 0 60px rgba(6, 182, 212, 0.4), inset 0 0 30px rgba(6, 182, 212, 0.08)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Corner brackets */}
-            <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-cyan-400/70" />
-            <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-cyan-400/70" />
-            <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-cyan-400/70" />
-            <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-cyan-400/70" />
-
-            {/* Grid pattern overlay */}
-            <div
-              className="absolute inset-0 opacity-[0.03] pointer-events-none"
-              style={{
-                backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent 19px, #06b6d4 19px, #06b6d4 20px),
-                  repeating-linear-gradient(90deg, transparent, transparent 19px, #06b6d4 19px, #06b6d4 20px)
-                `
-              }}
-            />
-
-            <div className="p-6 sm:p-8 relative z-10">
-              {/* Header */}
-              <div className="mb-6">
-                <h3
-                  className="text-2xl sm:text-3xl font-bold mb-2"
-                  style={{
-                    fontFamily: "'Orbitron', sans-serif",
-                    color: '#e0f2fe',
-                    textShadow: '0 0 15px rgba(6, 182, 212, 0.8)',
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  Submit Receive Address
-                </h3>
-                <p className="text-sm text-cyan-300/80">
-                  Enter your Cardano wallet address to receive your NFT
-                </p>
-              </div>
-
-              {/* Success State */}
-              {submitSuccess ? (
-                <div className="text-center py-8">
-                  <div className="text-6xl mb-4">✓</div>
-                  <h4 className="text-2xl font-bold text-green-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                    Submission Successful!
-                  </h4>
-                  <p className="text-gray-400">
-                    Your address has been registered. We'll send your NFT soon.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Address Input */}
-                  <div className="mb-6">
-                    <label className="block text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">
-                      Cardano Receive Address
-                    </label>
-                    <input
-                      type="text"
-                      value={receiveAddress}
-                      onChange={(e) => {
-                        setReceiveAddress(e.target.value);
-                        setSubmitError(null);
-                      }}
-                      placeholder="addr1..."
-                      disabled={isSubmitting}
-                      className="w-full bg-black/50 border-2 rounded-lg px-4 py-3 font-mono text-sm transition-all focus:outline-none"
-                      style={{
-                        borderColor: receiveAddress
-                          ? addressValidation.valid
-                            ? '#22c55e'
-                            : '#ef4444'
-                          : '#6b7280',
-                        boxShadow: receiveAddress
-                          ? addressValidation.valid
-                            ? '0 0 10px rgba(34, 197, 94, 0.3)'
-                            : '0 0 10px rgba(239, 68, 68, 0.3)'
-                          : 'none'
-                      }}
-                    />
-
-                    {/* Validation Feedback */}
-                    {receiveAddress && !addressValidation.valid && addressValidation.message && (
-                      <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
-                        <span>⚠</span>
-                        <span>{addressValidation.message}</span>
-                      </p>
-                    )}
-
-                    {receiveAddress && addressValidation.valid && (
-                      <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
-                        <span>✓</span>
-                        <span>Valid Cardano address</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Error Message */}
-                  {submitError && (
-                    <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
-                      <p className="text-sm text-red-400">
-                        <strong>Error:</strong> {submitError}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Info Box */}
-                  <div className="mb-6 p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-lg">
-                    <p className="text-xs text-cyan-200">
-                      <strong>Important:</strong> Make sure this is a Cardano mainnet address you control. NFTs will be sent to this address after processing.
-                    </p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleCloseModal}
-                      disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg font-bold transition-all uppercase text-sm"
-                      style={{ fontFamily: "'Orbitron', sans-serif" }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting || !addressValidation.valid}
-                      className="flex-1 px-6 py-3 rounded-lg font-bold transition-all uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: addressValidation.valid && !isSubmitting
-                          ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                          : '#374151',
-                        color: addressValidation.valid && !isSubmitting ? '#ffffff' : '#6b7280',
-                        fontFamily: "'Orbitron', sans-serif",
-                        boxShadow: addressValidation.valid && !isSubmitting
-                          ? '0 4px 12px rgba(6, 182, 212, 0.5)'
-                          : 'none'
-                      }}
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-cyan-200 border-t-transparent rounded-full animate-spin" />
-                          Submitting...
-                        </span>
-                      ) : (
-                        'Submit Address'
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
