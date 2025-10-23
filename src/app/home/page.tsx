@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
+import { OverlayRenderer } from '@/components/OverlayRenderer';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -13,12 +15,80 @@ export default function HomePage() {
     userId ? { walletAddress: userId } : "skip"
   );
 
+  // Get user's owned Meks
+  const ownedMeks = useQuery(
+    api.meks.getMeksByOwner,
+    userId ? { owner: userId } : "skip"
+  ) || [];
+
+  // Load triangle overlay data from database
+  const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
+
   // Mock userId for now - replace with actual wallet connection later
   useEffect(() => {
     setUserId("demo_wallet_123");
   }, []);
 
   const netGold = userProfile?.gold || 0;
+
+  // Extract owned variation names from user's Meks
+  const ownedVariationNames = useMemo(() => {
+    const variationSet = new Set<string>();
+
+    ownedMeks.forEach((mek: any) => {
+      const sourceKey = mek.sourceKeyBase || mek.sourceKey;
+      if (sourceKey) {
+        const parts = sourceKey.split('-');
+        if (parts.length === 3) {
+          parts.forEach((sourceKeyCode: string) => {
+            if (sourceKeyCode) {
+              const variation = COMPLETE_VARIATION_RARITY.find(
+                v => v.sourceKey.toUpperCase() === sourceKeyCode.toUpperCase()
+              );
+              if (variation) {
+                variationSet.add(variation.name.toUpperCase());
+              }
+            }
+          });
+        }
+      }
+    });
+
+    return variationSet;
+  }, [ownedMeks]);
+
+  // Sprite rendering now handled by OverlayRenderer component
+  // (Old sprite filtering code removed - component handles it internally)
+
+  // Ref to get actual triangle image size
+  const triangleRef = useRef<HTMLImageElement>(null);
+  const [triangleSize, setTriangleSize] = useState({ width: 768, height: 666 });
+
+  // Update triangle size when image loads or window resizes
+  useEffect(() => {
+    const updateSize = () => {
+      if (triangleRef.current) {
+        setTriangleSize({
+          width: triangleRef.current.offsetWidth,
+          height: triangleRef.current.offsetHeight
+        });
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [triangleOverlayData]);
+
+  // DEBUG: Log data flow
+  useEffect(() => {
+    console.log('=== TRIANGLE OVERLAY DEBUG ===');
+    console.log('triangleOverlayData:', triangleOverlayData);
+    console.log('zones count:', triangleOverlayData?.zones?.length);
+    console.log('ownedVariationNames:', Array.from(ownedVariationNames));
+    console.log('ownedMeks count:', ownedMeks.length);
+    console.log('triangle display size:', triangleSize);
+  }, [triangleOverlayData, ownedVariationNames, ownedMeks, triangleSize]);
 
   return (
     <div className="min-h-screen text-white relative">
@@ -46,12 +116,28 @@ export default function HomePage() {
           </div>
 
           {/* Triangle Image - Center - Floating on space */}
-          <div className="relative">
+          <div className="relative" style={{ maxWidth: '48rem' }}>
             <img
+              ref={triangleRef}
               src="/triangle/backplate_2.webp"
               alt="Mek Variations Triangle"
-              className="w-full h-auto max-w-3xl"
+              className="w-full h-auto"
             />
+
+            {/* Positioned sprites from database - using OverlayRenderer */}
+            <OverlayRenderer
+              overlayData={triangleOverlayData}
+              displayWidth={triangleSize.width}
+              // TEMP: Show all sprites for positioning verification (no filter)
+              highlightFilter={() => true} // All sprites glow with their color
+              useColorGlow={true}
+            />
+            {/* TODO: Re-enable ownership filter once positioning verified:
+              filterSprites={(sprite) => {
+                const variationName = sprite.metadata?.variationName?.toUpperCase();
+                return variationName ? ownedVariationNames.has(variationName) : false;
+              }}
+            */}
           </div>
         </div>
 

@@ -34,12 +34,13 @@ const DURATION_OPTIONS = [
 
 export default function EssenceMarketPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string>("demo_wallet_123");
   const [selectedRarity, setSelectedRarity] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const dropdownMenuStyle = 3; // Locked to Style 3: Black Gloss
-  const [debugPanelCollapsed, setDebugPanelCollapsed] = useState(false);
+  const [debugPanelCollapsed, setDebugPanelCollapsed] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyMyListings, setShowOnlyMyListings] = useState(false);
   const [showCreateListing, setShowCreateListing] = useState(false);
@@ -207,7 +208,12 @@ export default function EssenceMarketPage() {
 
   useEffect(() => {
     const initUser = async () => {
-      const user = await getOrCreateUser({ walletAddress: "demo_wallet_123" });
+      // Get wallet from localStorage (same as hub page)
+      const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
+      console.log('[Essence Market] Using wallet address:', storedWallet);
+      setWalletAddress(storedWallet);
+
+      const user = await getOrCreateUser({ walletAddress: storedWallet });
       if (user) {
         setUserId(user._id as Id<"users">);
       }
@@ -218,8 +224,22 @@ export default function EssenceMarketPage() {
   // Get user profile
   const userProfile = useQuery(
     api.users.getUserProfile,
-    userId ? { walletAddress: "demo_wallet_123" } : "skip"
+    userId && walletAddress ? { walletAddress } : "skip"
   );
+
+  // Get gold mining data for real-time updates
+  const goldMiningData = useQuery(
+    api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // State for real-time gold display
+  const [displayGold, setDisplayGold] = useState(0);
+
+  // Debug: Log goldMiningData when it changes
+  useEffect(() => {
+    console.log('[Essence Market DEBUG] goldMiningData:', goldMiningData);
+  }, [goldMiningData]);
 
   // Get essence listings
   const listingsData = useQuery(
@@ -243,7 +263,7 @@ export default function EssenceMarketPage() {
   // Get user's essence balances
   const essenceState = useQuery(
     api.essence.getPlayerEssenceState,
-    { walletAddress: "demo_wallet_123" }
+    walletAddress ? { walletAddress } : "skip"
   );
 
   // Mutations
@@ -293,6 +313,36 @@ export default function EssenceMarketPage() {
       setShowSuggestions(false);
     }
   }, [searchTerm]);
+
+  // Initialize displayGold from goldMiningData.accumulatedGold (matches hub page)
+  useEffect(() => {
+    if (goldMiningData?.accumulatedGold !== undefined) {
+      console.log('[Essence Market] Setting displayGold from goldMiningData.accumulatedGold:', goldMiningData.accumulatedGold);
+      setDisplayGold(goldMiningData.accumulatedGold);
+    }
+  }, [goldMiningData?.accumulatedGold]);
+
+  // Real-time gold increment animation (matches hub page)
+  useEffect(() => {
+    if (!goldMiningData?.totalGoldPerHour) return;
+
+    const goldPerSecond = goldMiningData.totalGoldPerHour / 3600;
+    console.log('[Essence Market] Starting gold animation with rate:', goldMiningData.totalGoldPerHour, 'gold/hr');
+    let lastTimestamp = performance.now();
+    let animationFrameId: number;
+
+    const animate = (timestamp: number) => {
+      const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+      lastTimestamp = timestamp;
+
+      setDisplayGold(prev => prev + (goldPerSecond * deltaTime));
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [goldMiningData?.totalGoldPerHour]);
 
   // Filter and sort listings
   const filteredListings = listings.filter(listing => {
@@ -2922,7 +2972,7 @@ export default function EssenceMarketPage() {
                   <div className="relative">
                     <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
                     <div className="mek-value-primary text-3xl">
-                      {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                      {Math.floor(displayGold).toLocaleString()}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-8 h-1 bg-yellow-500/50" />
@@ -2958,7 +3008,7 @@ export default function EssenceMarketPage() {
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
                     <div className="relative flex items-center gap-2">
                       <div className="mek-value-primary text-2xl">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                       <span className="text-yellow-400/70 font-bold text-xl">G</span>
                     </div>
@@ -2993,7 +3043,7 @@ export default function EssenceMarketPage() {
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
                     <div className="relative flex items-center gap-2">
                       <div className="mek-value-primary text-2xl">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                       <span className="text-yellow-400/70 font-bold text-xl">G</span>
                     </div>
@@ -3029,7 +3079,7 @@ export default function EssenceMarketPage() {
                   <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
                     <div className="relative flex items-center gap-2">
                       <div className="mek-value-primary text-2xl">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                       <span className="text-yellow-400/70 font-bold text-xl">G</span>
                     </div>
@@ -3060,7 +3110,7 @@ export default function EssenceMarketPage() {
                     /* Variation 1: Stacked - Number over GOLD */
                     <div className="relative flex flex-col items-center">
                       <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                       <span className="text-yellow-400/70 text-xs tracking-widest mt-1 uppercase">GOLD</span>
                     </div>
@@ -3070,7 +3120,7 @@ export default function EssenceMarketPage() {
                     /* Variation 2: Inline - Number + G */
                     <div className="relative flex items-baseline gap-1">
                       <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                       <span className="text-yellow-400/80 text-2xl font-light">G</span>
                     </div>
@@ -3080,7 +3130,7 @@ export default function EssenceMarketPage() {
                     /* Variation 3: Minimal - Just Number */
                     <div className="relative">
                       <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                     </div>
                   )}
@@ -3090,7 +3140,7 @@ export default function EssenceMarketPage() {
                     <div className="relative flex items-start gap-1">
                       <span className="text-yellow-400/70 text-[10px] tracking-wider uppercase mt-1">GOLD</span>
                       <div className="gold-display-medium text-3xl leading-none">
-                        {Math.floor(userProfile?.gold || 0).toLocaleString()}
+                        {Math.floor(displayGold).toLocaleString()}
                       </div>
                     </div>
                   )}

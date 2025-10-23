@@ -12,71 +12,70 @@ interface EssenceDistributionLightboxProps {
   walletAddress?: string;
 }
 
-// Store essence accumulation state globally (persists across component unmounts)
-const essenceAccumulationState = new Map<string, { startTime: number; startAmount: number }>();
-
 // Real-time accumulation component showing high-precision decimals
+// CRITICAL FIX: Use client-side time calculation like gold system
+// Backend gives us a snapshot at query time, but we continue accumulating client-side
 function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: { currentAmount: number; ratePerDay: number; isFull: boolean; essenceId: string }) {
-  const [displayAmount, setDisplayAmount] = useState(() => {
-    // Initialize with existing state or current amount
-    const existing = essenceAccumulationState.get(essenceId);
-    if (existing) {
-      const elapsedMs = Date.now() - existing.startTime;
-      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
-      return existing.startAmount + (ratePerDay * elapsedDays);
-    }
-    return currentAmount;
-  });
+  const [displayAmount, setDisplayAmount] = useState(currentAmount);
 
-  // Initialize state for this essence if it doesn't exist
+  // CRITICAL: Only reset when component MOUNTS or when hovering to a DIFFERENT essence
+  // Don't reset just because backend re-calculated the same essence
+  const mountTimeRef = useRef(Date.now());
+  const mountAmountRef = useRef(currentAmount);
+  const isInitialMountRef = useRef(true);
+
+  // Only update baseline when we first render THIS essence or when the essence ID changes
   useEffect(() => {
-    if (!essenceAccumulationState.has(essenceId)) {
-      essenceAccumulationState.set(essenceId, {
-        startTime: Date.now(),
-        startAmount: currentAmount
+    if (isInitialMountRef.current) {
+      // First render of this component
+      console.log(`🎯 [FRONTEND MOUNT] ${essenceId} - Initial mount:`, {
+        currentAmount: currentAmount.toFixed(12),
+        timestamp: new Date().toISOString()
       });
+      mountTimeRef.current = Date.now();
+      mountAmountRef.current = currentAmount;
+      setDisplayAmount(currentAmount);
+      isInitialMountRef.current = false;
+    } else {
+      // essenceId changed - we're hovering to a different essence
+      console.log(`🎯 [FRONTEND SWITCH] ${essenceId} - Essence changed:`, {
+        newCurrentAmount: currentAmount.toFixed(12),
+        timestamp: new Date().toISOString(),
+        resetToNewEssence: true
+      });
+      mountTimeRef.current = Date.now();
+      mountAmountRef.current = currentAmount;
+      setDisplayAmount(currentAmount);
     }
-  }, [essenceId, currentAmount]);
+  }, [essenceId]); // ONLY reset when essenceId changes, NOT when currentAmount changes
 
-  // Check if backend value changed significantly (indicates a mutation like slotting/unslotting)
-  useEffect(() => {
-    const state = essenceAccumulationState.get(essenceId);
-    if (state) {
-      const elapsedMs = Date.now() - state.startTime;
-      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
-      const expectedAmount = state.startAmount + (ratePerDay * elapsedDays);
-      const difference = Math.abs(currentAmount - expectedAmount);
-
-      // If difference is more than 0.1 essence, it's likely a real backend change
-      if (difference > 0.1) {
-        essenceAccumulationState.set(essenceId, {
-          startTime: Date.now(),
-          startAmount: currentAmount
-        });
-        setDisplayAmount(currentAmount);
-      }
-    }
-  }, [currentAmount, ratePerDay, essenceId]);
-
+  // Separate effect for animation - runs continuously without resetting
   useEffect(() => {
     if (isFull) {
       setDisplayAmount(currentAmount);
       return;
     }
 
+    console.log(`⏱️ [FRONTEND ANIMATION] ${essenceId} - Starting animation interval:`, {
+      mountAmount: mountAmountRef.current.toFixed(12),
+      ratePerDay,
+      mountTime: new Date(mountTimeRef.current).toISOString()
+    });
+
     // Update every 50ms for smooth animation
+    // CRITICAL: Use mountTimeRef and mountAmountRef which only update when essence changes
     const interval = setInterval(() => {
-      const state = essenceAccumulationState.get(essenceId);
-      if (state) {
-        const elapsedMs = Date.now() - state.startTime;
-        const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
-        const accumulated = state.startAmount + (ratePerDay * elapsedDays);
-        setDisplayAmount(accumulated);
-      }
+      const elapsedMs = Date.now() - mountTimeRef.current;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      const accumulated = mountAmountRef.current + (ratePerDay * elapsedDays);
+      setDisplayAmount(accumulated);
     }, 50);
 
-    return () => clearInterval(interval);
-  }, [ratePerDay, essenceId, isFull]);
+    return () => {
+      console.log(`🛑 [FRONTEND ANIMATION] ${essenceId} - Cleaning up interval`);
+      clearInterval(interval);
+    };
+  }, [ratePerDay, isFull, essenceId]); // Removed currentAmount from dependencies
 
   return (
     <div className="mt-3 pt-3 border-t border-yellow-500/20">
@@ -128,6 +127,15 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   // Transform player essence balances into chart-ready data
   const essenceData = useMemo(() => {
     if (!playerEssenceState?.balances) return [];
+
+    // DEBUG: Log raw backend values to prove they're real
+    console.log('📦 [FRONTEND USEMEMO] Received backend essence values:',
+      playerEssenceState.balances.map((b: any) => ({
+        name: b.variationName,
+        amount: b.accumulatedAmount.toFixed(12),
+        timestamp: new Date().toISOString()
+      }))
+    );
 
     // Calculate average market price for each essence type
     const marketPrices: Record<string, number> = {};
@@ -247,8 +255,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   }, [searchQuery, essenceData]);
 
   const handleSearchSelect = (essenceId: string) => {
-    setIsSlotting(true);
-    setTimeout(() => setIsSlotting(false), 300);
     setSelectedSlice(essenceId);
     setHoveredSlice(essenceId);
     setSearchQuery("");
@@ -256,8 +262,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   };
 
   const handleSliceClick = (essenceId: string) => {
-    setIsSlotting(true);
-    setTimeout(() => setIsSlotting(false), 300);
     // Toggle selection: if clicking same slice, deselect it
     if (selectedSlice === essenceId) {
       setSelectedSlice(null);
@@ -312,7 +316,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
         </button>
 
         {/* Scrollable Content */}
-        <div className="w-full h-full overflow-y-auto" onClick={handleBackgroundClick}>
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide" onClick={handleBackgroundClick}>
           <div className="relative text-white">
             {/* Industrial Header */}
             <div className="w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
@@ -331,8 +335,13 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                     <span className="text-yellow-400">ESSENCE</span>{" "}
                     <span className="text-gray-400">DISTRIBUTION</span>
                   </h1>
-                  <p className="text-center text-gray-500 uppercase tracking-[0.3em] text-sm">
+                  <p className="text-center text-gray-500 uppercase tracking-[0.3em] text-sm mb-1">
                     View Your Essence Inventory
+                  </p>
+                  <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
+                    lineHeight: '1.6'
+                  }}>
+                    Your slotted Mek variations generate unique essence daily. Track all accumulated essence types and their current market values.
                   </p>
                 </div>
               </div>
@@ -463,11 +472,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-8 pb-16" onClick={handleBackgroundClick}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Chart Container */}
-                <div className="lg:col-span-2">
-                  <div className="relative">
+                <div className="lg:col-span-2" onClick={handleBackgroundClick}>
+                  <div className="relative" onClick={handleBackgroundClick}>
                     {/* Search Bar */}
                     <div className="mb-8">
                       <div className="flex justify-center">
@@ -513,22 +522,24 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                     </div>
 
                     {/* Donut Chart or Empty State */}
-                    <div className="flex justify-center">
+                    <div className="flex justify-center" onClick={handleBackgroundClick}>
                       {displayedEssences.length > 0 ? (
-                        <EssenceDonutChart
-                          data={displayedEssences.map(e => ({
-                            ...e,
-                            amount: e.amount,
-                            isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
-                          }))}
-                          size={chartSize}
-                          showCenterStats={true}
-                          animationDuration={600}
-                          onSliceHover={setHoveredSlice}
-                          onSliceClick={handleSliceClick}
-                          selectedSlice={selectedSlice}
-                          hoverEffect={hoverEffect}
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <EssenceDonutChart
+                            data={displayedEssences.map(e => ({
+                              ...e,
+                              amount: e.amount,
+                              isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
+                            }))}
+                            size={chartSize}
+                            showCenterStats={true}
+                            animationDuration={600}
+                            onSliceHover={setHoveredSlice}
+                            onSliceClick={handleSliceClick}
+                            selectedSlice={selectedSlice}
+                            hoverEffect={hoverEffect}
+                          />
+                        </div>
                       ) : (
                         <div className="flex items-center justify-center h-[525px]">
                           <div className="text-center mek-card-industrial p-12 mek-border-sharp-gold">
@@ -544,7 +555,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
 
                 {/* Details Panel */}
                 <div className="lg:col-span-1">
-                  <div className="sticky top-24">
+                  <div className="sticky top-24" style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
                     {(hoveredSlice || selectedSlice) ? (() => {
                       const activeSlice = hoveredSlice || selectedSlice;
                       const slice = essenceData.find(e => e.id === activeSlice);
@@ -560,7 +571,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       const theoreticalIncome = totalRate * slice.currentValue;
 
                       return (
-                        <div className={`mek-card-industrial mek-border-sharp-gold p-4 relative ${isSlotting ? 'animate-pulse' : ''}`}>
+                        <div className="mek-card-industrial mek-border-sharp-gold p-4 relative">
                           <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
 
                           {/* Essence Bottle Image */}
@@ -685,7 +696,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
 
                         {/* Placeholder Name */}
                         <div className="text-center mb-4">
-                          <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">-- ESSENCE --</h2>
+                          <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">ESSENCE</h2>
                         </div>
 
                         {/* Ownership Section Placeholder */}
@@ -712,7 +723,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                               <div className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-1 font-bold">
                                 Real-Time Accumulation
                               </div>
-                              <div className="text-xl font-mono text-gray-600 tracking-tight">
+                              <div className="text-xl font-mono text-gray-600 tracking-tight tabular-nums" style={{
+                                fontVariantNumeric: 'tabular-nums'
+                              }}>
                                 --.------------
                               </div>
                             </div>
@@ -754,19 +767,23 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                           </div>
                         </div>
 
-                        {/* Overlay Message - absolutely positioned to not affect layout */}
-                        <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none z-50" style={{
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          margin: 0,
-                          padding: 0
-                        }}>
-                          <div className="bg-black/95 backdrop-blur-xl border-3 border-yellow-500/70 rounded-lg px-8 py-5 shadow-2xl" style={{
+                        {/* Overlay Message - fixed position to not affect parent layout */}
+                        <div
+                          className="pointer-events-none z-50"
+                          style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            maxWidth: '100%'
+                          }}
+                        >
+                          <div className="bg-black/95 backdrop-blur-xl border-3 border-yellow-500/70 rounded-lg px-6 py-4 shadow-2xl" style={{
                             boxShadow: '0 0 30px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4), inset 0 0 20px rgba(250, 182, 23, 0.2)'
                           }}>
-                            <p className="text-yellow-400 text-lg font-bold uppercase tracking-[0.3em] animate-pulse" style={{
+                            <p className="text-yellow-400 text-base font-bold uppercase tracking-[0.2em] animate-pulse text-center" style={{
                               textShadow: '0 0 20px rgba(250, 182, 23, 0.9), 0 0 40px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4)'
-                            }}>Hover Chart for Details</p>
+                            }}>Hover Chart<br />for Details</p>
                           </div>
                         </div>
                       </div>
