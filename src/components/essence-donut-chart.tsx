@@ -350,8 +350,14 @@ export default function EssenceDonutChart({
                     <path
                       d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
                       fill={shouldDarken ? '#1a1a1a' : fillUrl}
-                      stroke={isHovered || isSelected ? theme.colors.primary.yellow : 'rgba(0, 0, 0, 0.5)'}
-                      strokeWidth={isHovered || isSelected ? 2 : 1}
+                      stroke={
+                        isHovered || isSelected
+                          ? theme.colors.primary.yellow
+                          : shouldDarken
+                            ? 'rgba(255, 255, 255, 0.15)'
+                            : 'rgba(0, 0, 0, 0.5)'
+                      }
+                      strokeWidth={isHovered || isSelected ? 2 : shouldDarken ? 1.5 : 1}
                       opacity={opacity}
                       style={{
                         transition: 'opacity 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease, fill 0.2s ease',

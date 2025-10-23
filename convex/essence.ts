@@ -247,6 +247,15 @@ async function calculateRealTimeEssenceBalances(
   }
 
   const now = Date.now();
+
+  // DEBUG: Log calculation timing details
+  console.log('🔍 [BACKEND CALC] calculateRealTimeEssenceBalances called:', {
+    timestamp: new Date(now).toISOString(),
+    lastCalculationTime: new Date(tracking.lastCalculationTime).toISOString(),
+    elapsedMs: now - tracking.lastCalculationTime,
+    elapsedSeconds: ((now - tracking.lastCalculationTime) / 1000).toFixed(2)
+  });
+
   const config = await ctx.db
     .query("essenceConfig")
     .withIndex("by_config_type", (q) => q.eq("configType", "global"))
@@ -294,8 +303,19 @@ async function calculateRealTimeEssenceBalances(
     }
   }
 
-  // Calculate time elapsed since last calculation
-  const daysElapsed = (now - tracking.lastCalculationTime) / (1000 * 60 * 60 * 24);
+  // CRITICAL FIX: Calculate time elapsed since STORED lastCalculationTime
+  // This gives us the BASE amount that was accumulated up to the last mutation
+  // We store the BASE in balance.accumulatedAmount during mutations
+  // Then we ADD real-time accumulation from lastCalculationTime to NOW
+  const daysElapsedSinceLastSave = (now - tracking.lastCalculationTime) / (1000 * 60 * 60 * 24);
+
+  // DEBUG: Log time calculation
+  console.log('🔍 [BACKEND CALC] Time calculation:', {
+    daysElapsedSinceLastSave: daysElapsedSinceLastSave.toFixed(8),
+    hoursElapsed: (daysElapsedSinceLastSave * 24).toFixed(4),
+    minutesElapsed: (daysElapsedSinceLastSave * 24 * 60).toFixed(2),
+    secondsElapsed: (daysElapsedSinceLastSave * 24 * 60 * 60).toFixed(2)
+  });
 
   // Update each balance with real-time accumulation
   const updatedBalances = await Promise.all(
@@ -321,13 +341,26 @@ async function calculateRealTimeEssenceBalances(
       const effectiveRate = config.essenceRate * rateMultiplier;
       const effectiveCap = config.essenceCap + capBonus;
 
-      // Calculate essence earned since last update
-      const essenceEarned = daysElapsed * effectiveRate * variationData.count;
-      const newAmount = Math.min(balance.accumulatedAmount + essenceEarned, effectiveCap);
+      // CRITICAL FIX: Calculate essence earned since lastCalculationTime (stored in tracking)
+      // balance.accumulatedAmount contains the BASE amount as of lastCalculationTime
+      // We calculate additional accumulation from lastCalculationTime to NOW
+      const essenceEarnedSinceLastSave = daysElapsedSinceLastSave * effectiveRate * variationData.count;
+      const currentRealTimeAmount = Math.min(balance.accumulatedAmount + essenceEarnedSinceLastSave, effectiveCap);
+
+      // DEBUG: Log calculation for this variation
+      console.log(`🔍 [BACKEND CALC] ${balance.variationName}:`, {
+        storedBaseAmount: balance.accumulatedAmount.toFixed(12),
+        essenceEarnedSinceLastSave: essenceEarnedSinceLastSave.toFixed(12),
+        currentRealTimeAmount: currentRealTimeAmount.toFixed(12),
+        rate: effectiveRate,
+        count: variationData.count,
+        daysElapsedSinceLastSave: daysElapsedSinceLastSave.toFixed(8),
+        lastSaveTime: new Date(tracking.lastCalculationTime).toISOString()
+      });
 
       return {
         ...balance,
-        accumulatedAmount: newAmount,
+        accumulatedAmount: currentRealTimeAmount,
       };
     })
   );

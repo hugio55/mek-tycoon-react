@@ -29,6 +29,7 @@ import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
 import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
+import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 
 // Animated Number Component with smooth counting animation
@@ -131,127 +132,6 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-// Triangle Visualization Component - Embedded on home page
-function TriangleVisualization({ ownedMeks }: { ownedMeks: MekAsset[] }) {
-  console.log('[Triangle] Component rendering, ownedMeks count:', ownedMeks.length);
-
-  const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
-
-  console.log('[Triangle] Overlay data:', triangleOverlayData ? 'loaded' : 'null/undefined',
-    triangleOverlayData ? `zones: ${triangleOverlayData.zones?.length || 0}` : '');
-
-  // Extract owned variation names from the user's Meks
-  const ownedVariationNames = useMemo(() => {
-    console.log('[Triangle] Building owned variations from', ownedMeks.length, 'Meks');
-    console.log('[Triangle] First Mek example:', ownedMeks[0]);
-
-    const variationSet = new Set<string>();
-
-    ownedMeks.forEach((mek, index) => {
-      // Extract individual variations from sourceKey (format: "head-body-item")
-      if (mek.sourceKey) {
-        console.log(`[Triangle] Mek ${index} sourceKey:`, mek.sourceKey);
-        const parts = mek.sourceKey.split('-');
-        if (parts.length === 3) {
-          // Map each sourceKey code to its variation name
-          parts.forEach(sourceKeyCode => {
-            if (sourceKeyCode) {
-              // Find the variation in COMPLETE_VARIATION_RARITY by sourceKey
-              const variation = COMPLETE_VARIATION_RARITY.find(
-                v => v.sourceKey.toUpperCase() === sourceKeyCode.toUpperCase()
-              );
-              if (variation) {
-                console.log(`[Triangle] Mapped ${sourceKeyCode} -> ${variation.name}`);
-                variationSet.add(variation.name.toUpperCase());
-              } else {
-                console.log(`[Triangle] No match found for sourceKey: ${sourceKeyCode}`);
-              }
-            }
-          });
-        }
-      } else {
-        console.log(`[Triangle] Mek ${index} has no sourceKey`);
-      }
-      // Also add the variation groups if available
-      if (mek.headGroup) variationSet.add(mek.headGroup.toUpperCase());
-      if (mek.bodyGroup) variationSet.add(mek.bodyGroup.toUpperCase());
-      if (mek.itemGroup) variationSet.add(mek.itemGroup.toUpperCase());
-    });
-
-    console.log('[Triangle] Total owned variation names:', variationSet.size, Array.from(variationSet));
-    return variationSet;
-  }, [ownedMeks]);
-
-  // Get sprites from overlay data
-  const sprites = triangleOverlayData?.zones?.filter(zone => zone.mode === "sprite") || [];
-
-  // Debug logging
-  useEffect(() => {
-    if (sprites.length > 0) {
-      console.log('[Triangle] Total sprites loaded:', sprites.length);
-      console.log('[Triangle] First sprite example:', sprites[0]);
-      const spriteVariationNames = sprites.map(s => s.metadata?.variationName).filter(Boolean);
-      console.log('[Triangle] Sprite variation names:', spriteVariationNames);
-    }
-  }, [sprites]);
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
-      {/* Debug indicator */}
-      <div className="absolute top-0 left-0 bg-red-500 text-white p-2 text-xs" style={{ pointerEvents: 'auto', zIndex: 9999 }}>
-        Triangle Component Active - Sprites: {sprites.length} - Owned: {ownedVariationNames.size}
-      </div>
-
-      <div className="relative max-w-4xl w-full">
-        {/* Background Triangle Image */}
-        <img
-          src="/triangle/backplate_2.webp"
-          alt="Mek Variations Triangle"
-          className="w-full h-auto opacity-30"
-        />
-
-        {/* Positioned sprites from database */}
-        {sprites.map((sprite) => {
-          const variationName = sprite.metadata?.variationName?.toUpperCase();
-          const isOwned = variationName && ownedVariationNames.has(variationName);
-
-          // Debug each sprite
-          if (isOwned) {
-            console.log('[Triangle] OWNED sprite found:', variationName);
-          }
-
-          return (
-            <div
-              key={sprite.id}
-              className="absolute"
-              style={{
-                left: `${sprite.x}px`,
-                top: `${sprite.y}px`,
-                transform: 'translate(-50%, -50%)',
-                filter: isOwned
-                  ? 'drop-shadow(0 0 12px rgba(250, 182, 23, 0.9)) brightness(1.3)'
-                  : 'brightness(0.3) grayscale(0.6)',
-                transition: 'all 0.3s ease',
-              }}
-              title={sprite.label || sprite.metadata?.variationName}
-            >
-              {sprite.overlayImage && (
-                <img
-                  src={sprite.overlayImage}
-                  alt={sprite.label || "sprite"}
-                  className={isOwned ? 'animate-pulse' : ''}
-                  style={{
-                    animationDuration: isOwned ? '2s' : undefined,
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // Meks Triangle Lightbox Component
 function MeksTriangleLightbox({ onClose, ownedMeks }: { onClose: () => void; ownedMeks: MekAsset[] }) {
@@ -554,6 +434,7 @@ export default function MekRateLoggingPage() {
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
+  const [showMechanismGridLightbox, setShowMechanismGridLightbox] = useState(false);
   const [showMeksTriangle, setShowMeksTriangle] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // Search functionality
 
@@ -3588,10 +3469,6 @@ export default function MekRateLoggingPage() {
         ) : (
           // Gold Mining Dashboard
           <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
-            {/* Triangle Visualization - Background Element */}
-            {console.log('[PAGE] About to render TriangleVisualization with', ownedMeks.length, 'meks')}
-            <TriangleVisualization ownedMeks={ownedMeks} />
-
             {/* Wallet dropdown and company name in top left corner */}
             <div className="absolute top-0 left-0 z-20 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <div className="relative wallet-dropdown">
@@ -3719,7 +3596,7 @@ export default function MekRateLoggingPage() {
                 Essence
               </button>
               <button
-                onClick={() => setShowMeksTriangle(true)}
+                onClick={() => setShowMechanismGridLightbox(true)}
                 className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
               >
                 Meks
@@ -4160,6 +4037,25 @@ export default function MekRateLoggingPage() {
                     }
                   }}
                 />
+            </div>
+
+            {/* Mechanism Grid Lightbox Button */}
+            <div className="mb-6 flex justify-center">
+              <button
+                onClick={() => setShowMechanismGridLightbox(true)}
+                className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold uppercase tracking-wider hover:from-yellow-500 hover:to-yellow-400 transition-all duration-300 border-2 border-yellow-400/50 shadow-lg shadow-yellow-500/50"
+                style={{
+                  clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                  fontFamily: 'Orbitron, monospace'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <span>View Full Mechanism Grid</span>
+                </div>
+              </button>
             </div>
 
             {/* Meks Grid - 4 columns wide */}
@@ -4819,6 +4715,71 @@ export default function MekRateLoggingPage() {
         onClose={() => setShowEssenceLightbox(false)}
         walletAddress={walletAddress || "demo_wallet_123"}
       />
+
+      {/* Mechanism Grid Lightbox */}
+      {showMechanismGridLightbox && (
+        <MechanismGridLightbox
+          ownedMeks={ownedMeks}
+          currentGold={currentGold}
+          walletAddress={walletAddress}
+          getMekImageUrl={getMekImageUrl}
+          animatedMekValues={animatedMekValues}
+          upgradingMeks={upgradingMeks}
+          onClose={() => setShowMechanismGridLightbox(false)}
+          onMekClick={(mek) => setSelectedMek(mek)}
+          onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
+            setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
+
+            setAnimatedMekValues(prev => ({
+              ...prev,
+              [mek.assetId]: {
+                level: newLevel,
+                goldRate: newTotalRate,
+                bonusRate: newBonusRate
+              }
+            }));
+
+            try {
+              const result = await upgradeMek({
+                walletAddress: walletAddress!,
+                assetId: mek.assetId,
+                mekNumber: mek.mekNumber,
+              });
+
+              setTimeout(() => {
+                setUpgradingMeks(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(mek.assetId);
+                  return newSet;
+                });
+                setAnimatedMekValues(prev => {
+                  const newValues = { ...prev };
+                  delete newValues[mek.assetId];
+                  return newValues;
+                });
+              }, 1000);
+            } catch (error) {
+              console.error('Upgrade failed:', error);
+              setUpgradingMeks(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(mek.assetId);
+                return newSet;
+              });
+              setAnimatedMekValues(prev => {
+                const newValues = { ...prev };
+                delete newValues[mek.assetId];
+                return newValues;
+              });
+            }
+          }}
+          onGoldSpentAnimation={(animationId, amount) => {
+            setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
+            setTimeout(() => {
+              setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
+            }, 2000);
+          }}
+        />
+      )}
 
       {/* Meks Triangle Lightbox */}
       {showMeksTriangle && <MeksTriangleLightbox onClose={() => setShowMeksTriangle(false)} ownedMeks={ownedMeks} />}

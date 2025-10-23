@@ -6,6 +6,16 @@
 
 /* Global deployment slot enhancements */
 @layer utilities {
+  /* Hide scrollbar for all browsers */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+
   /* Target any dashed yellow border elements - add glow */
   [class*="border-dashed"][class*="border-yellow"],
   [class*="border-yellow"][class*="border-dashed"],
