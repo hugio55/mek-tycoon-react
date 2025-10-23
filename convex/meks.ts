@@ -34,6 +34,8 @@ export const getMeksByOwner = query({
       assetName: mek.assetName,
       headVariation: mek.headVariation,
       bodyVariation: mek.bodyVariation,
+      itemVariation: mek.itemVariation,
+      traitVariation: mek.traitVariation,
       level: mek.level || 1,
       rarityRank: mek.rarityRank || mek.gameRank || 9999,
       gameRank: mek.gameRank || mek.rarityRank || 9999,

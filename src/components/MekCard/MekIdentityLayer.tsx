@@ -38,7 +38,9 @@ export const MekIdentityLayer = ({ mek, levelColors }: MekIdentityLayerProps) =>
                 opacity: 0.7,
               }}
             >
-              MEK #{mek.mekNumber ? mek.mekNumber.toString().padStart(4, '0') : '????'}
+              {mek.mekNumber
+                ? `MEK #${mek.mekNumber.toString().padStart(4, '0')}`
+                : mek.assetName || 'MEK #????'}
             </div>
             {mek.rarityRank && (
               <div

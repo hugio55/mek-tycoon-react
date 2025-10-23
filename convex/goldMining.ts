@@ -24,6 +24,8 @@ export const initializeGoldMining = mutation({
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),
+      sourceKey: v.optional(v.string()),
+      sourceKeyBase: v.optional(v.string()),
       // Level boost fields (optional to preserve backward compatibility)
       baseGoldPerHour: v.optional(v.number()),
       currentLevel: v.optional(v.number()),
@@ -760,6 +762,8 @@ export const initializeWithBlockfrost = action({
         headVariation: m.headVariation,
         bodyVariation: m.bodyVariation,
         itemVariation: m.itemVariation,
+        sourceKey: m.sourceKey,
+        sourceKeyBase: m.sourceKey ? m.sourceKey.replace(/-[A-Z]$/, '').toLowerCase() : undefined,
         // CRITICAL: Include level boost fields to preserve upgrade data
         baseGoldPerHour: m.baseGoldPerHour,
         currentLevel: m.currentLevel,

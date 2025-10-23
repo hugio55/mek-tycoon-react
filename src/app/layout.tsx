@@ -50,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', overflowX: 'hidden' }}>
+    <html lang="en" style={{ margin: 0, padding: 0, width: '100vw', overflowX: 'hidden' }} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased min-h-screen overflow-x-hidden`}
         style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}

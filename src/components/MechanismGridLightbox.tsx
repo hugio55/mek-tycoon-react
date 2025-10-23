@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { MekCard } from './MekCard';
 import { MekAsset, AnimatedMekValues } from './MekCard/types';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
+import { getMekDataByNumber } from '@/lib/mekNumberToVariation';
 
 export interface MechanismGridLightboxProps {
   ownedMeks: MekAsset[];
@@ -35,7 +36,7 @@ export default function MechanismGridLightbox({
   onGoldSpentAnimation
 }: MechanismGridLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('expanded');
+  const [viewMode, setViewMode] = useState<ViewMode>('condensed');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortType, setSortType] = useState<SortType>('rate');
 
@@ -52,31 +53,101 @@ export default function MechanismGridLightbox({
   const filteredAndSortedMeks = useMemo(() => {
     console.log('[MechanismGridLightbox] ownedMeks:', ownedMeks);
     console.log('[MechanismGridLightbox] Sample mek:', ownedMeks[0]);
-    return [...ownedMeks]
+    console.log('[MechanismGridLightbox] All mekNumbers:', ownedMeks.map(m => ({ assetId: m.assetId, mekNumber: m.mekNumber, assetName: m.assetName })));
+    console.log('[MechanismGridLightbox] Unique mekNumbers:', new Set(ownedMeks.map(m => m.mekNumber)).size, 'out of', ownedMeks.length, 'total');
+
+    const filtered = [...ownedMeks]
       .filter(mek => {
         if (!searchTerm) return true;
-        const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase().trim();
 
-        // Check Mek number
-        if (mek.mekNumber && mek.mekNumber.toString().includes(term)) return true;
-        if (mek.assetName.toLowerCase().includes(term)) return true;
+        // Parse mek number from assetName if mekNumber field is missing
+        let mekNum = mek.mekNumber;
+        if (!mekNum && mek.assetName) {
+          const match = mek.assetName.match(/#?(\d+)/);
+          if (match) {
+            mekNum = parseInt(match[1], 10);
+          }
+        }
 
-        // Check variation names if sourceKey exists
-        if (mek.sourceKey) {
-          const variations = getVariationInfoFromFullKey(mek.sourceKey);
-          if (variations.head.name.toLowerCase().includes(term)) return true;
-          if (variations.body.name.toLowerCase().includes(term)) return true;
-          if (variations.trait.name.toLowerCase().includes(term)) return true;
+        console.log('[Search Debug] Searching for:', term, 'in mek:', {
+          mekNumber: mekNum,
+          assetName: mek.assetName,
+          sourceKey: mek.sourceKey,
+          headGroup: mek.headGroup,
+          bodyGroup: mek.bodyGroup,
+          itemGroup: mek.itemGroup
+        });
+
+        // Check Mek number (with or without padding)
+        if (mekNum) {
+          const mekNumStr = mekNum.toString();
+          const mekNumPadded = mekNumStr.padStart(4, '0');
+          if (mekNumStr.includes(term) || mekNumPadded.includes(term)) {
+            console.log('[Search] MATCH on mekNumber:', mekNum);
+            return true;
+          }
+        }
+
+        // Check asset name
+        if (mek.assetName && mek.assetName.toLowerCase().includes(term)) {
+          console.log('[Search] MATCH on assetName:', mek.assetName);
+          return true;
+        }
+
+        // Check variation names - try sourceKey first, then look up by mekNumber
+        let sourceKeyToUse = mek.sourceKey;
+
+        // If no sourceKey but we have mekNumber, look it up
+        if (!sourceKeyToUse && mekNum) {
+          const mekData = getMekDataByNumber(mekNum);
+          if (mekData && mekData.sourceKey) {
+            sourceKeyToUse = mekData.sourceKey;
+            console.log('[Search] Looked up sourceKey from mekNumber:', mekNum, '→', sourceKeyToUse);
+          }
+        }
+
+        if (sourceKeyToUse) {
+          try {
+            const variations = getVariationInfoFromFullKey(sourceKeyToUse);
+            if (variations.head && variations.head.name && variations.head.name.toLowerCase().includes(term)) {
+              console.log('[Search] MATCH on head variation:', variations.head.name);
+              return true;
+            }
+            if (variations.body && variations.body.name && variations.body.name.toLowerCase().includes(term)) {
+              console.log('[Search] MATCH on body variation:', variations.body.name);
+              return true;
+            }
+            if (variations.trait && variations.trait.name && variations.trait.name.toLowerCase().includes(term)) {
+              console.log('[Search] MATCH on trait variation:', variations.trait.name);
+              return true;
+            }
+          } catch (error) {
+            console.warn('[Search] Failed to parse sourceKey:', sourceKeyToUse, error);
+          }
         }
 
         // Check head, body, item groups directly
-        if (mek.headGroup?.toLowerCase().includes(term)) return true;
-        if (mek.bodyGroup?.toLowerCase().includes(term)) return true;
-        if (mek.itemGroup?.toLowerCase().includes(term)) return true;
+        if (mek.headGroup && mek.headGroup.toLowerCase().includes(term)) {
+          console.log('[Search] MATCH on headGroup:', mek.headGroup);
+          return true;
+        }
+        if (mek.bodyGroup && mek.bodyGroup.toLowerCase().includes(term)) {
+          console.log('[Search] MATCH on bodyGroup:', mek.bodyGroup);
+          return true;
+        }
+        if (mek.itemGroup && mek.itemGroup.toLowerCase().includes(term)) {
+          console.log('[Search] MATCH on itemGroup:', mek.itemGroup);
+          return true;
+        }
 
+        console.log('[Search] NO MATCH for term:', term);
         return false;
-      })
-      .sort((a, b) => {
+      });
+
+    console.log('[Search] Filtered results:', filtered.length, 'out of', ownedMeks.length);
+
+    return filtered.sort((a, b) => {
         if (sortType === 'rate') {
           return b.goldPerHour - a.goldPerHour;  // Highest rate first
         } else {
@@ -235,9 +306,35 @@ export default function MechanismGridLightbox({
           {viewMode === 'condensed' ? (
             // Condensed view - thumbnails only
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 relative z-10">
-              {filteredAndSortedMeks.map(mek => {
+              {filteredAndSortedMeks.map((mek, index) => {
                 const level = animatedMekValues[mek.assetId]?.level || mek.currentLevel || 1;
-                const imagePath = getMekImageUrl(mek.mekNumber, '150px');
+
+                // Generate image path - prefer sourceKey over mekNumber for accuracy
+                let imagePath: string;
+                if (mek.mekNumber) {
+                  imagePath = getMekImageUrl(mek.mekNumber, '150px');
+                } else if (mek.sourceKey) {
+                  // Construct image path directly from sourceKey
+                  const cleanKey = mek.sourceKey.replace(/-[A-Z]$/, '').toLowerCase();
+                  imagePath = `/mek-images/150px/${cleanKey}.webp`;
+                } else if (mek.imageUrl) {
+                  // Fallback to imageUrl if available
+                  imagePath = mek.imageUrl;
+                } else {
+                  // Last resort: placeholder
+                  imagePath = '/mek-images/150px/000-000-000.webp';
+                }
+
+                // Log first few meks to debug image path generation
+                if (index < 3) {
+                  console.log(`[MechanismGridLightbox] Condensed Mek ${index}:`, {
+                    assetId: mek.assetId,
+                    mekNumber: mek.mekNumber,
+                    sourceKey: mek.sourceKey,
+                    imageUrl: mek.imageUrl,
+                    imagePath
+                  });
+                }
 
                 return (
                   <div
@@ -254,7 +351,9 @@ export default function MechanismGridLightbox({
 
                     {/* Overlay info */}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2">
-                      <div className="text-xs font-bold text-yellow-400 uppercase">Mek #{mek.mekNumber}</div>
+                      <div className="text-xs font-bold text-yellow-400 uppercase">
+                        {mek.mekNumber ? `Mek #${mek.mekNumber.toString().padStart(4, '0')}` : mek.assetName || 'Mek'}
+                      </div>
                       <div className="text-xs text-gray-400">Lvl {level}</div>
                     </div>
 

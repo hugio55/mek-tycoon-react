@@ -189,6 +189,16 @@ export function validatePolicyScript(script: any): boolean {
 }
 
 /**
+ * Extract payment key hash from a Cardano address
+ *
+ * @param address - Bech32 Cardano address (addr1... or addr_test1...)
+ * @returns Payment key hash
+ */
+export function extractPaymentKeyHash(address: string): string {
+  return resolvePaymentKeyHash(address);
+}
+
+/**
  * Example policy script for reference
  *
  * This is what a complete policy looks like:

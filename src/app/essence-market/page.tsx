@@ -73,6 +73,7 @@ export default function EssenceMarketPage() {
   const cardScale = 95; // Overall card scale: LOCKED at 95%
   const essenceTitleColor = 'white'; // LOCKED to white
   const [essenceTitleCase, setEssenceTitleCase] = useState<'uppercase' | 'titlecase'>('uppercase'); // Toggle between uppercase and title case
+  const [siphonLayoutChoice, setSiphonLayoutChoice] = useState<1 | 2 | 3 | 4 | 5>(5); // Siphon modal layout style
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -2893,6 +2894,33 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
+            {/* Siphon Modal Layout */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Siphon Modal Layout</label>
+              <div className="grid grid-cols-5 gap-1">
+                {[1, 2, 3, 4, 5].map((layout) => (
+                  <button
+                    key={layout}
+                    onClick={() => setSiphonLayoutChoice(layout as 1 | 2 | 3 | 4 | 5)}
+                    className={`px-2 py-2 text-xs font-bold rounded transition-all ${
+                      siphonLayoutChoice === layout
+                        ? 'bg-cyan-500 text-black'
+                        : 'bg-black border border-cyan-500/30 text-cyan-400 hover:border-cyan-500'
+                    }`}
+                  >
+                    {layout}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-1 text-[9px] text-gray-500">
+                {siphonLayoutChoice === 1 && "Vertical Bars"}
+                {siphonLayoutChoice === 2 && "Horizontal Bars"}
+                {siphonLayoutChoice === 3 && "Stacked Progress"}
+                {siphonLayoutChoice === 4 && "Triple Bars"}
+                {siphonLayoutChoice === 5 && "Circular Progress"}
+              </div>
+            </div>
+
             {/* Gold Management */}
             <div className="pt-4 border-t border-yellow-500/30">
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold</label>
@@ -4984,96 +5012,474 @@ export default function EssenceMarketPage() {
           durationOptions={DURATION_OPTIONS}
         />
 
-        {/* Purchase Modal with Slider */}
-        {showPurchaseModal && selectedListing && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="relative max-w-md w-full mek-card-industrial mek-border-sharp-gold p-6 rounded-lg">
-              {/* Close button */}
-              <button
-                onClick={() => setShowPurchaseModal(false)}
-                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-2xl font-bold"
-              >
-                ×
-              </button>
+        {/* Purchase Modal with Slider - LAYOUT OPTIONS */}
+        {showPurchaseModal && selectedListing && (() => {
+          const remainingStock = selectedListing.quantity - purchaseAmount;
+          const totalCost = purchaseAmount * selectedListing.pricePerUnit;
+          const canAffordPurchase = userProfile && userProfile.gold >= totalCost;
 
-              {/* Title */}
-              <h2 className="mek-text-industrial text-2xl text-yellow-400 mb-4">SIPHON ESSENCE</h2>
+          return (
+            <div
+              className="fixed inset-0 bg-black/90 backdrop-blur flex items-center justify-center z-50 p-4"
+              onClick={() => setShowPurchaseModal(false)}
+            >
 
-              {/* Essence Name */}
-              <div className="mb-4">
-                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">ESSENCE TYPE</div>
-                <div className="text-yellow-400 font-bold text-lg">{selectedListing.essenceType}</div>
-              </div>
+              {/* LAYOUT 1: VERTICAL BARS - Side-by-side animated bars */}
+              {siphonLayoutChoice === 1 && (
+                <div
+                  className="relative bg-gray-900/95 border border-gray-700/50 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => setShowPurchaseModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold z-10">×</button>
 
-              {/* Remaining Amount */}
-              <div className="mb-4">
-                <div className="mek-label-uppercase text-gray-500 text-xs mb-1">AVAILABLE</div>
-                <div className="text-blue-400 font-bold">{selectedListing.quantity.toFixed(1)} essence</div>
-              </div>
+                  <div className="p-6">
+                    <h2 className="text-center text-white font-bold text-xl uppercase mb-6">
+                      {selectedListing.itemVariation || selectedListing.variation || "Unknown"}
+                    </h2>
 
-              {/* Slider */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="mek-label-uppercase text-gray-500 text-xs">PURCHASE AMOUNT</div>
-                  <div className="text-yellow-400 font-bold">{purchaseAmount.toFixed(1)}</div>
-                </div>
-                <input
-                  type="range"
-                  min="0.1"
-                  max={selectedListing.quantity}
-                  step="0.1"
-                  value={purchaseAmount}
-                  onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-yellow"
-                />
-                <div className="flex justify-between mt-2">
-                  <button
-                    onClick={() => setPurchaseAmount(0.1)}
-                    className="text-gray-400 hover:text-yellow-400 text-xs font-bold uppercase tracking-wider"
-                  >
-                    MIN
-                  </button>
-                  <button
-                    onClick={() => setPurchaseAmount(selectedListing.quantity)}
-                    className="text-yellow-400 hover:text-yellow-300 text-xs font-bold uppercase tracking-wider"
-                  >
-                    MAX
-                  </button>
-                </div>
-              </div>
+                    <div className="flex gap-4 mb-6 h-64">
+                      {/* Remaining Bar */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="text-xs text-cyan-400 font-bold mb-2 text-center">REMAINING</div>
+                        <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end">
+                          <div
+                            className="bg-gradient-to-t from-cyan-500 to-cyan-400 transition-all duration-300"
+                            style={{ height: `${(remainingStock / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-2xl font-bold text-cyan-400 text-center mt-2">{remainingStock.toFixed(1)}</div>
+                      </div>
 
-              {/* Cost Display */}
-              <div className="mb-6 p-4 bg-black/80 border border-yellow-500/30 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="mek-label-uppercase text-gray-500 text-xs">PRICE PER ESSENCE</div>
-                  <div className="text-yellow-400 font-bold">{selectedListing.pricePerUnit.toLocaleString()}g</div>
-                </div>
-                <div className="h-px bg-yellow-500/20 my-2" />
-                <div className="flex items-center justify-between">
-                  <div className="mek-label-uppercase text-yellow-400/80 text-sm">TOTAL COST</div>
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {(purchaseAmount * selectedListing.pricePerUnit).toLocaleString()}g
+                      {/* Purchase Bar */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="text-xs text-yellow-400 font-bold mb-2 text-center">SIPHONING</div>
+                        <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end">
+                          <div
+                            className="bg-gradient-to-t from-yellow-500 to-yellow-400 transition-all duration-300"
+                            style={{ height: `${(purchaseAmount / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-2xl font-bold text-yellow-400 text-center mt-2">{purchaseAmount.toFixed(1)}</div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={selectedListing.quantity}
+                        step="0.1"
+                        value={purchaseAmount}
+                        onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <button onClick={() => setPurchaseAmount(0.1)} className="text-xs text-gray-400 hover:text-cyan-400">MIN</button>
+                        <button onClick={() => setPurchaseAmount(selectedListing.quantity)} className="text-xs text-gray-400 hover:text-cyan-400">MAX</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                        <span className="text-gray-400 text-sm">PRICE PER ESSENCE</span>
+                        <span className="text-lg font-bold text-yellow-400">{selectedListing.pricePerUnit.toLocaleString()}G</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-black/60 rounded-lg">
+                        <span className="text-gray-400 text-sm">TOTAL COST</span>
+                        <span className="text-xl font-bold text-yellow-400">{totalCost.toLocaleString()}G</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                      disabled={!canAffordPurchase}
+                      className={`w-full py-3 rounded-lg font-bold uppercase tracking-[0.3em] ${canAffordPurchase ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-600 cursor-not-allowed"}`}
+                    >
+                      {canAffordPurchase ? "SIPHON" : "INSUFFICIENT FUNDS"}
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Purchase Button */}
-              <button
-                onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
-                disabled={!userProfile || userProfile.gold < (purchaseAmount * selectedListing.pricePerUnit)}
-                className={`w-full py-3 rounded-lg font-bold uppercase tracking-wider transition-all ${
-                  userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
-                    ? "mek-button-primary"
-                    : "bg-gray-900/60 border-2 border-gray-700/50 text-gray-600 cursor-not-allowed"
-                }`}
-              >
-                {userProfile && userProfile.gold >= (purchaseAmount * selectedListing.pricePerUnit)
-                  ? "◆ CONFIRM PURCHASE"
-                  : "⊗ INSUFFICIENT FUNDS"}
-              </button>
+              {/* LAYOUT 2: HORIZONTAL BARS - Left to right progress bars */}
+              {siphonLayoutChoice === 2 && (
+                <div
+                  className="relative bg-gray-900/95 border border-gray-700/50 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => setShowPurchaseModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold z-10">×</button>
+
+                  <div className="p-6">
+                    <h2 className="text-center text-white font-bold text-xl uppercase mb-6">
+                      {selectedListing.itemVariation || selectedListing.variation || "Unknown"}
+                    </h2>
+
+                    <div className="space-y-6 mb-6">
+                      {/* Remaining Bar */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-cyan-400 font-bold">REMAINING</span>
+                          <span className="text-xl font-bold text-cyan-400">{remainingStock.toFixed(1)}</span>
+                        </div>
+                        <div className="h-12 bg-gray-800 rounded-lg overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
+                            style={{ width: `${(remainingStock / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Siphoning Bar */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-yellow-400 font-bold">SIPHONING</span>
+                          <span className="text-xl font-bold text-yellow-400">{purchaseAmount.toFixed(1)}</span>
+                        </div>
+                        <div className="h-12 bg-gray-800 rounded-lg overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 transition-all duration-300"
+                            style={{ width: `${(purchaseAmount / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={selectedListing.quantity}
+                        step="0.1"
+                        value={purchaseAmount}
+                        onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <button onClick={() => setPurchaseAmount(0.1)} className="text-xs text-gray-400 hover:text-cyan-400">MIN</button>
+                        <button onClick={() => setPurchaseAmount(selectedListing.quantity)} className="text-xs text-gray-400 hover:text-cyan-400">MAX</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                        <span className="text-gray-400 text-sm">PRICE PER ESSENCE</span>
+                        <span className="text-lg font-bold text-yellow-400">{selectedListing.pricePerUnit.toLocaleString()}G</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-black/60 rounded-lg">
+                        <span className="text-gray-400 text-sm">TOTAL COST</span>
+                        <span className="text-xl font-bold text-yellow-400">{totalCost.toLocaleString()}G</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                      disabled={!canAffordPurchase}
+                      className={`w-full py-3 rounded-lg font-bold uppercase tracking-[0.3em] ${canAffordPurchase ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-600 cursor-not-allowed"}`}
+                    >
+                      {canAffordPurchase ? "SIPHON" : "INSUFFICIENT FUNDS"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* LAYOUT 3: STACKED PROGRESS - Single bar showing both portions */}
+              {siphonLayoutChoice === 3 && (
+                <div
+                  className="relative bg-gray-900/95 border border-gray-700/50 rounded-xl shadow-2xl max-w-xl w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => setShowPurchaseModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold z-10">×</button>
+
+                  <div className="p-6">
+                    <h2 className="text-center text-white font-bold text-xl uppercase mb-6">
+                      {selectedListing.itemVariation || selectedListing.variation || "Unknown"}
+                    </h2>
+
+                    {/* Stacked Bar */}
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-gray-400 font-bold">TOTAL STOCK</span>
+                        <span className="text-lg text-gray-300">{selectedListing.quantity.toFixed(1)}</span>
+                      </div>
+                      <div className="h-32 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end relative">
+                        {/* Remaining portion (cyan) */}
+                        <div
+                          className="bg-gradient-to-t from-cyan-500 to-cyan-400 transition-all duration-300 flex items-center justify-center relative"
+                          style={{ height: `${(remainingStock / selectedListing.quantity) * 100}%` }}
+                        >
+                          {remainingStock > 1 && <span className="text-white font-bold text-sm">REMAINING: {remainingStock.toFixed(1)}</span>}
+                        </div>
+                        {/* Siphoning portion (yellow) - overlayed at bottom */}
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-yellow-500 to-yellow-400 transition-all duration-300 flex items-center justify-center"
+                          style={{ height: `${(purchaseAmount / selectedListing.quantity) * 100}%` }}
+                        >
+                          {purchaseAmount > 1 && <span className="text-black font-bold text-sm">SIPHONING: {purchaseAmount.toFixed(1)}</span>}
+                        </div>
+                      </div>
+                      <div className="flex justify-between mt-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded bg-cyan-400"></div>
+                          <span className="text-xs text-cyan-400">Remaining: {remainingStock.toFixed(1)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded bg-yellow-400"></div>
+                          <span className="text-xs text-yellow-400">Siphoning: {purchaseAmount.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={selectedListing.quantity}
+                        step="0.1"
+                        value={purchaseAmount}
+                        onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <button onClick={() => setPurchaseAmount(0.1)} className="text-xs text-gray-400 hover:text-cyan-400">MIN</button>
+                        <button onClick={() => setPurchaseAmount(selectedListing.quantity)} className="text-xs text-gray-400 hover:text-cyan-400">MAX</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                        <span className="text-gray-400 text-sm">PRICE PER ESSENCE</span>
+                        <span className="text-lg font-bold text-yellow-400">{selectedListing.pricePerUnit.toLocaleString()}G</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-black/60 rounded-lg">
+                        <span className="text-gray-400 text-sm">TOTAL COST</span>
+                        <span className="text-xl font-bold text-yellow-400">{totalCost.toLocaleString()}G</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                      disabled={!canAffordPurchase}
+                      className={`w-full py-3 rounded-lg font-bold uppercase tracking-[0.3em] ${canAffordPurchase ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-600 cursor-not-allowed"}`}
+                    >
+                      {canAffordPurchase ? "SIPHON" : "INSUFFICIENT FUNDS"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* LAYOUT 4: TRIPLE BARS - Three bars showing total, remaining, and siphoning */}
+              {siphonLayoutChoice === 4 && (
+                <div
+                  className="relative bg-gray-900/95 border border-gray-700/50 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => setShowPurchaseModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold z-10">×</button>
+
+                  <div className="p-6">
+                    <h2 className="text-center text-white font-bold text-xl uppercase mb-6">
+                      {selectedListing.itemVariation || selectedListing.variation || "Unknown"}
+                    </h2>
+
+                    <div className="flex gap-3 mb-6 h-64">
+                      {/* Total Stock Bar */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="text-xs text-gray-400 font-bold mb-2 text-center">TOTAL STOCK</div>
+                        <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end">
+                          <div
+                            className="bg-gradient-to-t from-gray-500 to-gray-400 transition-all duration-300"
+                            style={{ height: '100%' }}
+                          />
+                        </div>
+                        <div className="text-2xl font-bold text-gray-400 text-center mt-2">{selectedListing.quantity.toFixed(1)}</div>
+                      </div>
+
+                      {/* Remaining Bar */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="text-xs text-cyan-400 font-bold mb-2 text-center">REMAINING</div>
+                        <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end">
+                          <div
+                            className="bg-gradient-to-t from-cyan-500 to-cyan-400 transition-all duration-300"
+                            style={{ height: `${(remainingStock / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-2xl font-bold text-cyan-400 text-center mt-2">{remainingStock.toFixed(1)}</div>
+                      </div>
+
+                      {/* Siphoning Bar */}
+                      <div className="flex-1 flex flex-col">
+                        <div className="text-xs text-yellow-400 font-bold mb-2 text-center">SIPHONING</div>
+                        <div className="flex-1 bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-end">
+                          <div
+                            className="bg-gradient-to-t from-yellow-500 to-yellow-400 transition-all duration-300"
+                            style={{ height: `${(purchaseAmount / selectedListing.quantity) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-2xl font-bold text-yellow-400 text-center mt-2">{purchaseAmount.toFixed(1)}</div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={selectedListing.quantity}
+                        step="0.1"
+                        value={purchaseAmount}
+                        onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <button onClick={() => setPurchaseAmount(0.1)} className="text-xs text-gray-400 hover:text-cyan-400">MIN</button>
+                        <button onClick={() => setPurchaseAmount(selectedListing.quantity)} className="text-xs text-gray-400 hover:text-cyan-400">MAX</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                        <span className="text-gray-400 text-sm">PRICE PER ESSENCE</span>
+                        <span className="text-lg font-bold text-yellow-400">{selectedListing.pricePerUnit.toLocaleString()}G</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-black/60 rounded-lg">
+                        <span className="text-gray-400 text-sm">TOTAL COST</span>
+                        <span className="text-xl font-bold text-yellow-400">{totalCost.toLocaleString()}G</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                      disabled={!canAffordPurchase}
+                      className={`w-full py-3 rounded-lg font-bold uppercase tracking-[0.3em] ${canAffordPurchase ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-600 cursor-not-allowed"}`}
+                    >
+                      {canAffordPurchase ? "SIPHON" : "INSUFFICIENT FUNDS"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* LAYOUT 5: CIRCULAR PROGRESS - Ring progress indicators */}
+              {siphonLayoutChoice === 5 && (
+                <div
+                  className="relative bg-gray-900/95 border border-gray-700/50 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => setShowPurchaseModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold z-10">×</button>
+
+                  <div className="p-6">
+                    <h2 className="text-center text-white font-bold text-xl uppercase mb-6">
+                      {selectedListing.itemVariation || selectedListing.variation || "Unknown"}
+                    </h2>
+
+                    <div className="flex justify-center gap-12 mb-8">
+                      {/* Remaining Circle */}
+                      <div className="relative">
+                        <div className="text-xs text-cyan-400 font-bold mb-3 text-center">REMAINING</div>
+                        <svg className="w-32 h-32 transform -rotate-90">
+                          {/* Background circle */}
+                          <circle cx="64" cy="64" r="56" stroke="#1f2937" strokeWidth="12" fill="none" />
+                          {/* Progress circle */}
+                          <circle
+                            cx="64"
+                            cy="64"
+                            r="56"
+                            stroke="url(#cyanGradient)"
+                            strokeWidth="12"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 56}`}
+                            strokeDashoffset={`${2 * Math.PI * 56 * (1 - remainingStock / selectedListing.quantity)}`}
+                            className="transition-all duration-300"
+                            strokeLinecap="round"
+                          />
+                          <defs>
+                            <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#06b6d4" />
+                              <stop offset="100%" stopColor="#22d3ee" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-cyan-400">{remainingStock.toFixed(1)}</div>
+                            <div className="text-xs text-cyan-600">{((remainingStock / selectedListing.quantity) * 100).toFixed(0)}%</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Siphoning Circle */}
+                      <div className="relative">
+                        <div className="text-xs text-yellow-400 font-bold mb-3 text-center">SIPHONING</div>
+                        <svg className="w-32 h-32 transform -rotate-90">
+                          {/* Background circle */}
+                          <circle cx="64" cy="64" r="56" stroke="#1f2937" strokeWidth="12" fill="none" />
+                          {/* Progress circle */}
+                          <circle
+                            cx="64"
+                            cy="64"
+                            r="56"
+                            stroke="url(#yellowGradient)"
+                            strokeWidth="12"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 56}`}
+                            strokeDashoffset={`${2 * Math.PI * 56 * (1 - purchaseAmount / selectedListing.quantity)}`}
+                            className="transition-all duration-300"
+                            strokeLinecap="round"
+                          />
+                          <defs>
+                            <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#eab308" />
+                              <stop offset="100%" stopColor="#fbbf24" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-yellow-400">{purchaseAmount.toFixed(1)}</div>
+                            <div className="text-xs text-yellow-600">{((purchaseAmount / selectedListing.quantity) * 100).toFixed(0)}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max={selectedListing.quantity}
+                        step="0.1"
+                        value={purchaseAmount}
+                        onChange={(e) => setPurchaseAmount(parseFloat(e.target.value))}
+                        className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <button onClick={() => setPurchaseAmount(0.1)} className="text-xs text-gray-400 hover:text-cyan-400">MIN</button>
+                        <button onClick={() => setPurchaseAmount(selectedListing.quantity)} className="text-xs text-gray-400 hover:text-cyan-400">MAX</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg">
+                        <span className="text-gray-400 text-sm">PRICE PER ESSENCE</span>
+                        <span className="text-lg font-bold text-yellow-400">{selectedListing.pricePerUnit.toLocaleString()}G</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-black/60 rounded-lg">
+                        <span className="text-gray-400 text-sm">TOTAL COST</span>
+                        <span className="text-xl font-bold text-yellow-400">{totalCost.toLocaleString()}G</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePurchase(selectedListing._id, purchaseAmount)}
+                      disabled={!canAffordPurchase}
+                      className={`w-full py-3 rounded-lg font-bold uppercase tracking-[0.3em] ${canAffordPurchase ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-600 cursor-not-allowed"}`}
+                    >
+                      {canAffordPurchase ? "SIPHON" : "INSUFFICIENT FUNDS"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Purchase History Modal */}
         {showHistoryModal && historyListingId && (

@@ -1422,6 +1422,8 @@ export default defineSchema({
       headVariation: v.optional(v.string()),
       bodyVariation: v.optional(v.string()),
       itemVariation: v.optional(v.string()),
+      sourceKey: v.optional(v.string()), // Full source key from metadata (e.g., "AA1-DM1-AP1-B")
+      sourceKeyBase: v.optional(v.string()), // Source key without suffix for image lookup (e.g., "aa1-dm1-ap1")
       // New fields for level boost tracking
       baseGoldPerHour: v.optional(v.number()), // Original rate from rarity (immutable)
       currentLevel: v.optional(v.number()), // Current level (1-10)
@@ -2947,4 +2949,145 @@ export default defineSchema({
   })
     .index("by_timestamp", ["timestamp"])
     .index("by_variation", ["variationName"]),
+
+  // ===== CUSTOM MINTING SYSTEM =====
+
+  // Minting Policies - Store generated Cardano native script policies
+  mintingPolicies: defineTable({
+    policyId: v.string(), // Unique policy ID (hash of the script)
+    policyName: v.string(), // Human-readable name (e.g., "Event NFTs", "Collectibles")
+    policyScript: v.any(), // Native script JSON structure
+    keyHash: v.string(), // Payment key hash used for signature verification
+    expirySlot: v.optional(v.number()), // Blockchain slot when policy expires (if time-limited)
+    expiryDate: v.optional(v.number()), // JavaScript timestamp for display
+    network: v.union(v.literal("mainnet"), v.literal("preprod"), v.literal("preview")),
+    createdAt: v.number(),
+    isActive: v.boolean(), // Whether this policy is currently in use
+    notes: v.optional(v.string()), // Admin notes about this policy
+  })
+    .index("by_policy_id", ["policyId"])
+    .index("by_network", ["network"])
+    .index("by_active", ["isActive"])
+    .index("by_created_at", ["createdAt"]),
+
+  // Test Mints - Track test NFT mints during development (Phase 1)
+  testMints: defineTable({
+    txHash: v.string(), // Blockchain transaction hash
+    policyId: v.string(), // Which policy was used
+    assetName: v.string(), // Hex-encoded asset name
+    assetId: v.string(), // Full asset ID (policyId + assetName)
+
+    // NFT details
+    nftName: v.string(), // Display name
+    description: v.optional(v.string()),
+    imageUrl: v.string(),
+
+    // Wallet info
+    walletAddress: v.string(), // Who minted it
+
+    // Network
+    network: v.string(), // "preprod", "preview", or "mainnet"
+
+    // Status
+    confirmed: v.boolean(), // Whether transaction confirmed on blockchain
+    mintedAt: v.number(), // Timestamp when mint was initiated
+    confirmedAt: v.optional(v.number()), // When blockchain confirmed
+
+    // Explorer
+    explorerUrl: v.string(), // Link to view on Cardano explorer
+
+    // Optional metadata for analysis
+    metadata: v.optional(v.any()),
+  })
+    .index("by_tx_hash", ["txHash"])
+    .index("by_policy_id", ["policyId"])
+    .index("by_wallet", ["walletAddress"])
+    .index("by_network", ["network"])
+    .index("by_minted_at", ["mintedAt"])
+    .index("by_confirmed", ["confirmed"]),
+
+  // ===== COMMEMORATIVE TOKENS SYSTEM =====
+
+  // Commemorative Token Designs - NFT Design Templates (Phase 1, Phase 2, etc.)
+  // This is the "master list" of NFT designs that can be minted
+  commemorativeTokenCounters: defineTable({
+    tokenType: v.string(), // "phase_1_beta", "phase_2_launch", "anniversary_2026", etc.
+
+    // Design Info
+    displayName: v.string(), // "Commemorative Token #1 - Early Miner"
+    description: v.optional(v.string()),
+
+    // IPFS Assets
+    imageUrl: v.string(), // IPFS URL for image
+    metadataUrl: v.string(), // IPFS URL for metadata JSON
+
+    // Blockchain Info
+    policyId: v.string(), // Which minting policy this design uses
+    assetNameHex: v.string(), // Hex-encoded asset name for sub-assets (e.g., "436f6d6d656d6f726174697665546f6b656e31")
+
+    // Minting Stats
+    currentEdition: v.number(), // Current highest edition number minted
+    totalMinted: v.number(), // Total successfully minted (confirmed only)
+    maxEditions: v.optional(v.number()), // Optional limit (null = unlimited)
+
+    // Status
+    isActive: v.boolean(), // Whether this design is currently available for minting
+    price: v.optional(v.number()), // Price in ADA (if selling, otherwise free for airdrops)
+
+    // Timestamps
+    createdAt: v.number(),
+  })
+    .index("by_type", ["tokenType"])
+    .index("by_policy_id", ["policyId"])
+    .index("by_active", ["isActive"]),
+
+  // Commemorative Tokens - Individual mints with sequential editions
+  commemorativeTokens: defineTable({
+    // Token Info
+    tokenType: v.string(), // Links to commemorativeTokenCounters
+    editionNumber: v.number(), // Sequential: 1, 2, 3, etc.
+    policyId: v.string(), // Shared commemorative policy
+    assetName: v.string(), // Hex-encoded name
+    assetId: v.string(), // policyId.assetName
+
+    // User Info
+    walletAddress: v.string(),
+    userId: v.optional(v.id("users")),
+
+    // Minting Status
+    status: v.union(
+      v.literal("reserved"),    // Edition reserved, awaiting mint
+      v.literal("minting"),     // Transaction submitted
+      v.literal("confirmed"),   // NFT minted successfully
+      v.literal("failed"),      // Minting failed
+      v.literal("cancelled")    // Reservation cancelled
+    ),
+
+    // Blockchain Data
+    txHash: v.optional(v.string()),
+    explorerUrl: v.optional(v.string()),
+    network: v.string(), // "preprod" or "mainnet"
+
+    // Metadata
+    nftName: v.string(), // "Phase 1: I Was There #42"
+    imageUrl: v.string(), // IPFS URL
+
+    // Timestamps
+    reservedAt: v.number(),
+    mintedAt: v.optional(v.number()),
+    confirmedAt: v.optional(v.number()),
+
+    // Payment
+    paymentAmount: v.number(), // 10 (ADA)
+    treasuryAddress: v.string(), // Where payment went
+
+    // Error tracking
+    errorMessage: v.optional(v.string()),
+  })
+    .index("by_wallet_type", ["walletAddress", "tokenType"])
+    .index("by_edition", ["tokenType", "editionNumber"])
+    .index("by_status", ["status"])
+    .index("by_tx_hash", ["txHash"])
+    .index("by_minted_at", ["mintedAt"])
+    .index("by_user", ["userId"]),
 });

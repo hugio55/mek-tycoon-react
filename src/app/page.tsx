@@ -2025,7 +2025,8 @@ export default function MekRateLoggingPage() {
               rarityRank: mek.rarityRank,
               headVariation: mek.headGroup,
               bodyVariation: mek.bodyGroup,
-              itemVariation: mek.itemGroup
+              itemVariation: mek.itemGroup,
+              sourceKey: mek.sourceKey
             }))
           });
         }

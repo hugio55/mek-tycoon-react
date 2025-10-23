@@ -864,6 +864,601 @@ npm install @emurgo/cardano-serialization-lib-browser
 
 ---
 
+---
+
+# PHASE 1 BETA COMMEMORATIVE TOKEN (CUSTOM MINTING)
+
+## Overview - NEW IMPLEMENTATION (2025-10-23)
+
+**IMPORTANT:** This is a DIFFERENT system from the NMKR-based commemorative token above. This uses our custom minting system with sequential editions.
+
+**Purpose:** Reward Phase 1 beta testers with a commemorative NFT minted on-demand
+
+**Business Model:** Pay-to-mint (10 ADA) using custom minting system
+
+**Target Users:** Beta testers (anyone with activity in the Convex database)
+
+**Key Features:**
+- Sequential edition numbering: "Phase 1: I Was There #1", "#2", "#3", etc.
+- Shared policy ID (can be reused for future commemorative drops)
+- jpg.store compatible (CIP-25 + CIP-27 metadata with royalties)
+- Mint on demand (not pre-minted)
+- Atomic edition reservation (no race conditions)
+
+---
+
+## Technical Architecture
+
+### Shared Minting Policy
+
+**Challenge:** Need a policy that can be reused for multiple commemorative tokens over time.
+
+**Solution:** Signature-based policy with NO time lock
+```typescript
+// Create long-lived policy (signature-based only)
+const commemorativePolicy = {
+  type: "sig",
+  keyHash: TREASURY_KEY_HASH, // Controlled by project treasury
+};
+
+// This policy can mint multiple commemorative tokens:
+// - "Phase 1: I Was There" (launch)
+// - "Phase 2: First 1000 Players" (future)
+// - "Anniversary Edition" (future)
+// All share same policy ID for jpg.store collection
+```
+
+**Policy Management:**
+- Treasury wallet holds signing key
+- Backend signs minting transactions
+- Policy never expires (no time lock)
+- Can mint new commemorative tokens anytime
+
+### Sequential Edition System
+
+**Race Condition Prevention:**
+```typescript
+// convex/commemorativeTokens.ts
+
+export const reserveEdition = mutation({
+  args: {
+    tokenType: v.string(), // "phase_1_beta"
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 1. Check if user already minted this token
+    const existing = await ctx.db
+      .query("commemorativeTokens")
+      .withIndex("by_wallet_type", q =>
+        q.eq("walletAddress", args.walletAddress)
+         .eq("tokenType", args.tokenType)
+      )
+      .first();
+
+    if (existing) {
+      throw new Error("Already minted this commemorative token");
+    }
+
+    // 2. Get current edition counter
+    const counter = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", q => q.eq("tokenType", args.tokenType))
+      .first();
+
+    let nextEdition = 1;
+    if (counter) {
+      nextEdition = counter.currentEdition + 1;
+      // Atomic increment
+      await ctx.db.patch(counter._id, {
+        currentEdition: nextEdition,
+      });
+    } else {
+      // First mint - create counter
+      await ctx.db.insert("commemorativeTokenCounters", {
+        tokenType: args.tokenType,
+        currentEdition: 1,
+      });
+    }
+
+    // 3. Reserve this edition for the user
+    const reservationId = await ctx.db.insert("commemorativeTokens", {
+      tokenType: args.tokenType,
+      editionNumber: nextEdition,
+      walletAddress: args.walletAddress,
+      status: "reserved",
+      reservedAt: Date.now(),
+    });
+
+    return {
+      reservationId,
+      editionNumber: nextEdition,
+    };
+  },
+});
+```
+
+### Minting Flow
+
+**Step-by-Step Process:**
+```
+1. User clicks "Mint Commemorative Token" button
+   ↓
+2. Frontend checks eligibility (beta tester?)
+   ↓
+3. Frontend checks if already minted (query Convex)
+   ↓
+4. Reserve edition number (Convex mutation - atomic)
+   ↓
+5. Build transaction:
+   - Mint NFT: "Phase 1: I Was There #42"
+   - Metadata: CIP-25 + CIP-27 (royalties)
+   - Payment: 10 ADA to treasury address
+   ↓
+6. User signs transaction in wallet
+   ↓
+7. Submit to blockchain
+   ↓
+8. Wait for confirmation
+   ↓
+9. Update Convex:
+   - Mark reservation as "minted"
+   - Store txHash
+   - Record timestamp
+   ↓
+10. NFT appears in user's wallet!
+```
+
+**Important:** Edition is reserved BEFORE minting to prevent race conditions. If minting fails, reservation can be cancelled or retried.
+
+---
+
+## Database Schema
+
+### New Tables
+
+```typescript
+// Commemorative Token Counters (one row per token type)
+commemorativeTokenCounters: defineTable({
+  tokenType: v.string(), // "phase_1_beta", "phase_2_1000", etc.
+  currentEdition: v.number(), // Auto-increments
+  totalMinted: v.number(), // Confirmed mints only
+  maxEditions: v.optional(v.number()), // Optional limit (null = unlimited)
+})
+  .index("by_type", ["tokenType"]),
+
+// Commemorative Token Mints (one row per mint)
+commemorativeTokens: defineTable({
+  // Token Info
+  tokenType: v.string(), // "phase_1_beta"
+  editionNumber: v.number(), // 1, 2, 3, etc.
+  policyId: v.string(), // Shared commemorative policy
+  assetName: v.string(), // Hex-encoded name
+  assetId: v.string(), // policyId.assetName
+
+  // User Info
+  walletAddress: v.string(),
+  userId: v.optional(v.id("users")),
+
+  // Minting Status
+  status: v.union(
+    v.literal("reserved"),    // Edition reserved, awaiting mint
+    v.literal("minting"),     // Transaction submitted
+    v.literal("confirmed"),   // NFT minted successfully
+    v.literal("failed"),      // Minting failed
+    v.literal("cancelled")    // Reservation cancelled
+  ),
+
+  // Blockchain Data
+  txHash: v.optional(v.string()),
+  explorerUrl: v.optional(v.string()),
+
+  // Metadata
+  nftName: v.string(), // "Phase 1: I Was There #42"
+  imageUrl: v.string(), // IPFS URL
+
+  // Timestamps
+  reservedAt: v.number(),
+  mintedAt: v.optional(v.number()),
+  confirmedAt: v.optional(v.number()),
+
+  // Payment
+  paymentAmount: v.number(), // 10 (ADA)
+  treasuryAddress: v.string(), // Where payment went
+})
+  .index("by_wallet_type", ["walletAddress", "tokenType"])
+  .index("by_edition", ["tokenType", "editionNumber"])
+  .index("by_status", ["status"])
+  .index("by_tx_hash", ["txHash"])
+  .index("by_minted_at", ["mintedAt"]),
+```
+
+---
+
+## Eligibility Requirements
+
+### Beta Tester Definition
+
+**Who Qualifies:**
+- Anyone who participated in Phase 1 beta testing
+- Evidence in database:
+  - Has user record
+  - Has Mek ownership records
+  - Has gold mining activity
+  - Has wallet verification
+  - Has any gameplay activity (story climb, achievements, etc.)
+
+**Eligibility Check:**
+```typescript
+export const checkBetaTesterEligibility = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    // 1. Find user by wallet
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", q => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!user) {
+      return {
+        eligible: false,
+        reason: "Not a registered user",
+      };
+    }
+
+    // 2. Check if already minted
+    const existingMint = await ctx.db
+      .query("commemorativeTokens")
+      .withIndex("by_wallet_type", q =>
+        q.eq("walletAddress", args.walletAddress)
+         .eq("tokenType", "phase_1_beta")
+      )
+      .first();
+
+    if (existingMint) {
+      return {
+        eligible: false,
+        reason: "Already minted this commemorative token",
+        editionNumber: existingMint.editionNumber,
+      };
+    }
+
+    // 3. Check beta participation (any activity qualifies)
+    const goldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", q => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (goldMining) {
+      return {
+        eligible: true,
+        reason: "Beta tester - has gold mining activity",
+        userId: user._id,
+      };
+    }
+
+    // Add more checks as needed (achievements, story climb, etc.)
+
+    return {
+      eligible: false,
+      reason: "No beta participation found",
+    };
+  },
+});
+```
+
+---
+
+## Metadata Format
+
+### CIP-25 + CIP-27 Compliant
+
+```typescript
+export function buildCommemorativeMetadata(
+  policyId: string,
+  assetName: string,
+  params: {
+    editionNumber: number;
+    tokenType: string; // "phase_1_beta"
+    displayName: string; // "Phase 1: I Was There"
+    imageUrl: string; // IPFS URL
+    walletAddress: string;
+  }
+) {
+  const network = process.env.NEXT_PUBLIC_CARDANO_NETWORK || 'preprod';
+  const royaltyAddress = network === 'mainnet'
+    ? process.env.NEXT_PUBLIC_ROYALTY_ADDRESS_MAINNET
+    : process.env.NEXT_PUBLIC_ROYALTY_ADDRESS_TESTNET;
+  const royaltyRate = process.env.NEXT_PUBLIC_ROYALTY_RATE || '0.05';
+
+  return {
+    "721": {
+      [policyId]: {
+        [assetName]: {
+          // Required CIP-25 fields
+          "name": `${params.displayName} #${params.editionNumber}`,
+          "image": params.imageUrl,
+          "mediaType": "image/gif",
+
+          // CIP-27 Royalty fields
+          "royalty_addr": royaltyAddress,
+          "royalty_rate": royaltyRate,
+
+          // Commemorative metadata
+          "description": `Awarded to Phase 1 beta testers of Mek Tycoon. Edition ${params.editionNumber} of unlimited.`,
+          "edition": params.editionNumber,
+          "series": "Commemorative Tokens",
+          "tokenType": params.tokenType,
+
+          // Provenance
+          "mintedBy": params.walletAddress,
+          "mintTimestamp": Date.now(),
+
+          // Marketplace tags
+          "tags": [
+            "Mek Tycoon",
+            "Commemorative",
+            "Phase 1",
+            "Beta Tester",
+            `Edition ${params.editionNumber}`
+          ],
+
+          // Project info
+          "project": "Mek Tycoon",
+          "category": "Commemorative Token",
+          "website": "https://mek.overexposed.io"
+        }
+      }
+    }
+  };
+}
+```
+
+---
+
+## Implementation Plan
+
+### Phase 1: Database Setup ✅ COMPLETED
+- [x] Add `commemorativeTokenCounters` table to schema
+- [x] Add `commemorativeTokens` table to schema
+- [x] Deploy schema to Convex (deployed at 14:45:47)
+- [ ] Create seed data for "phase_1_beta" counter (needs initializeTokenType mutation)
+
+### Phase 2: Backend Logic ✅ COMPLETED
+- [x] Create `checkBetaTesterEligibility` query
+- [x] Create `reserveEdition` mutation
+- [x] Create `confirmMint` mutation
+- [x] Create `getCommemorativeTokens` query (admin: `getAllCommemorativeTokens`)
+- [x] Create `getMyCommemorativeTokens` query (user)
+- [x] Create `markMintFailed` mutation (error handling)
+- [x] Create `cancelReservation` mutation (allow edition reuse)
+- [x] Create `getTokenTypeInfo` query (shows next edition)
+- [x] Create `getTokenTypeStats` query (statistics dashboard)
+- [x] Create `initializeTokenType` mutation (admin setup)
+- [x] Create `updateTokenType` mutation (admin configuration)
+- [x] All functions deployed to Convex successfully
+
+### Phase 3: Metadata Builder ✅ COMPLETED
+- [x] Create `buildCommemorativeMetadata` function
+- [x] Add to `/src/lib/cardano/metadata.ts` (line 205-263)
+- [x] CIP-25 + CIP-27 compliant (royalty fields included)
+- [ ] Test metadata validation (pending actual mint)
+
+### Phase 4: Frontend UI ✅ COMPLETED
+- [x] Create `CommemorativeMintButton.tsx` component (464 lines)
+- [x] Add eligibility check on page load (uses `checkBetaTesterEligibility` query)
+- [x] Show edition count: "Next Edition: #42" (uses `getTokenTypeInfo` query)
+- [x] Implement mint flow with progress steps (5 states: reserving → building_tx → signing → submitting → confirming)
+- [x] Add success confirmation with explorer link (links to Cardanoscan)
+- [x] Integrated into profile page (`/profile`) - visible when user is viewing own profile
+- [x] Error handling with retry functionality
+- [ ] Test in browser (needs environment variables configured)
+
+### Phase 5: Minting Transaction
+- [ ] Generate/load shared commemorative policy
+- [ ] Build transaction with:
+  - NFT minting
+  - 10 ADA payment to treasury
+  - Metadata attachment
+- [ ] Sign and submit
+- [ ] Wait for confirmation
+
+### Phase 6: Testing
+- [ ] Test on preprod testnet
+- [ ] Verify sequential editions work
+- [ ] Test race condition prevention (multiple simultaneous mints)
+- [ ] Verify jpg.store compatibility
+- [ ] Confirm royalties work
+
+### Phase 7: Admin Dashboard
+- [ ] Display minted tokens table
+- [ ] Show edition counter
+- [ ] Statistics (total minted, latest edition, etc.)
+- [ ] Manual controls (cancel reservation, refund, etc.)
+
+---
+
+## Payment Flow
+
+### 10 ADA Payment
+
+**Transaction Structure:**
+```typescript
+const tx = new Transaction({ initiator: wallet });
+
+// 1. Mint NFT
+tx.mintAsset(forgeScript, {
+  assetName: assetName,
+  assetQuantity: '1',
+  metadata: commemorativeMetadata,
+  label: '721',
+  recipient: walletAddress,
+});
+
+// 2. Add 10 ADA payment to treasury
+tx.sendLovelace(
+  TREASURY_ADDRESS, // Your treasury wallet
+  '10000000' // 10 ADA in lovelace
+);
+
+// User signs (pays tx fee + 10 ADA payment)
+const unsignedTx = await tx.build();
+const signedTx = await wallet.signTx(unsignedTx);
+const txHash = await wallet.submitTx(signedTx);
+```
+
+**Treasury Address:**
+- Set in environment variables
+- Receives 10 ADA per mint
+- Can be mainnet or testnet address
+
+---
+
+## jpg.store Compatibility
+
+### Requirements for jpg.store
+
+**CIP-25 Compliance:**
+- ✅ Policy ID (shared commemorative policy)
+- ✅ Asset name (hex-encoded)
+- ✅ Name, image, mediaType
+- ✅ Description
+
+**CIP-27 Royalties:**
+- ✅ `royalty_addr` (your royalty wallet)
+- ✅ `royalty_rate` (0.05 = 5%)
+
+**Collection Setup:**
+- All commemorative tokens share same policy ID
+- jpg.store auto-detects collection
+- Tokens appear together in collection view
+- Editions visible: "Phase 1: I Was There #1", "#2", etc.
+
+---
+
+## Race Condition Prevention
+
+### The Problem
+
+**Scenario:**
+- User A clicks mint (edition 42 available)
+- User B clicks mint simultaneously
+- Both build transactions with edition 42
+- One mint succeeds, other is duplicate
+
+### The Solution
+
+**Atomic Reservation:**
+```typescript
+// 1. Reserve edition FIRST (atomic mutation)
+const { editionNumber } = await reserveEdition({
+  tokenType: "phase_1_beta",
+  walletAddress: userAddress,
+});
+
+// 2. Build transaction with reserved edition
+const metadata = buildCommemorativeMetadata(
+  policyId,
+  assetName,
+  {
+    editionNumber: editionNumber, // Guaranteed unique
+    // ...
+  }
+);
+
+// 3. Mint with reserved edition
+// If minting fails, reservation can be cancelled
+```
+
+**Benefits:**
+- Edition reserved before wallet interaction
+- No possibility of duplicate editions
+- Failed mints can retry with same edition
+- Cancelled reservations free up the edition
+
+---
+
+## Environment Variables
+
+### Required
+
+```bash
+# Commemorative Token Policy
+NEXT_PUBLIC_COMMEMORATIVE_POLICY_ID=
+COMMEMORATIVE_POLICY_SCRIPT= # Server-side only
+
+# Treasury Address (receives 10 ADA payments)
+NEXT_PUBLIC_TREASURY_ADDRESS_TESTNET=
+NEXT_PUBLIC_TREASURY_ADDRESS_MAINNET=
+
+# Royalty Configuration (for jpg.store)
+NEXT_PUBLIC_ROYALTY_ADDRESS_TESTNET=
+NEXT_PUBLIC_ROYALTY_ADDRESS_MAINNET=
+NEXT_PUBLIC_ROYALTY_RATE=0.05
+
+# Token Images (IPFS)
+NEXT_PUBLIC_PHASE_1_BETA_IMAGE_URL=ipfs://QmXxxx...
+```
+
+---
+
+## Testing Checklist
+
+### Preprod Testnet
+- [ ] Create commemorative policy
+- [ ] Set up treasury wallet
+- [ ] Upload token image to IPFS
+- [ ] Configure environment variables
+- [ ] Test eligibility check
+- [ ] Test edition reservation
+- [ ] Mint first token (edition #1)
+- [ ] Verify sequential numbering
+- [ ] Test simultaneous mints (race condition)
+- [ ] Verify payment to treasury
+- [ ] Check metadata on Cardanoscan
+- [ ] Verify jpg.store compatibility (if testnet supported)
+
+### Mainnet Launch
+- [ ] Create mainnet commemorative policy
+- [ ] Update treasury address to mainnet
+- [ ] Update royalty address to mainnet
+- [ ] Switch to mainnet in environment
+- [ ] Test with own wallet first (edition #1)
+- [ ] Verify NFT appears in wallet
+- [ ] Check jpg.store listing
+- [ ] Announce to beta testers
+- [ ] Monitor first 10 mints
+
+---
+
+## Changelog
+
+### 2025-10-23 (Phase 4: UI Implementation)
+- **Frontend Complete:** Created `CommemorativeMintButton.tsx` component (464 lines)
+- **Profile Integration:** Added commemorative mint button to profile page (visible on own profile only)
+- **Full Mint Flow:** Implemented complete mint flow with 5 progress states:
+  - `reserving` - Atomic edition reservation
+  - `building_tx` - Transaction construction with metadata
+  - `signing` - Wallet signature request
+  - `submitting` - Blockchain submission
+  - `confirming` - Database confirmation
+- **Error Handling:** Added retry functionality and failed mint tracking
+- **Success State:** Shows edition number with Cardanoscan explorer link
+- **Real-time Updates:** Component uses Convex queries for eligibility and edition count
+- **Next Steps:** Environment variables setup, policy generation, IPFS upload
+
+### 2025-10-23 (Phase 1-3: Backend & Schema)
+- **New Implementation:** Added "Phase 1 Beta Commemorative Token" section
+- **Custom Minting:** Using Phase 1 custom minting system (not NMKR)
+- **Sequential Editions:** Atomic reservation system to prevent race conditions
+- **Shared Policy:** Long-lived policy for multiple commemorative tokens
+- **10 ADA Payment:** Treasury payment integrated into mint transaction
+- **jpg.store Ready:** CIP-25 + CIP-27 compliant metadata
+- **Database Schema:** Added 2 tables (`commemorativeTokenCounters`, `commemorativeTokens`)
+- **Backend Functions:** Created 11 Convex functions (queries, mutations, admin)
+- **Metadata Builder:** Added `buildCommemorativeMetadata()` function
+
+---
+
 ## Notes for Future Claude Sessions
 
 **START HERE when resuming:**
