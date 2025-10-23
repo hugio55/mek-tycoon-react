@@ -107,6 +107,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   const [isSlotting, setIsSlotting] = useState(false);
   const [filterDesign, setFilterDesign] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1);
+  const [viewMode, setViewMode] = useState<'donut' | 'table'>('donut');
+  const [mobileDataColumn, setMobileDataColumn] = useState<'amount' | 'growth' | 'maxCap' | 'totalValue'>('amount');
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Query player's essence data from Convex
@@ -521,33 +523,176 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       </div>
                     </div>
 
-                    {/* Donut Chart or Empty State */}
-                    <div className="flex justify-center" onClick={handleBackgroundClick}>
-                      {displayedEssences.length > 0 ? (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <EssenceDonutChart
-                            data={displayedEssences.map(e => ({
-                              ...e,
-                              amount: e.amount,
-                              isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
-                            }))}
-                            size={chartSize}
-                            showCenterStats={true}
-                            animationDuration={600}
-                            onSliceHover={setHoveredSlice}
-                            onSliceClick={handleSliceClick}
-                            selectedSlice={selectedSlice}
-                            hoverEffect={hoverEffect}
-                          />
-                        </div>
+                    {/* Donut Chart or Table View */}
+                    <div className="flex flex-col items-center" onClick={handleBackgroundClick}>
+                      {viewMode === 'donut' ? (
+                        <>
+                          {displayedEssences.length > 0 ? (
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <EssenceDonutChart
+                                data={displayedEssences.map(e => ({
+                                  ...e,
+                                  amount: e.amount,
+                                  isFull: e.amount >= (e.maxAmountBuffed || e.maxAmount || 10)
+                                }))}
+                                size={chartSize}
+                                showCenterStats={true}
+                                animationDuration={600}
+                                onSliceHover={setHoveredSlice}
+                                onSliceClick={handleSliceClick}
+                                selectedSlice={selectedSlice}
+                                hoverEffect={hoverEffect}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-[525px]">
+                              <div className="text-center mek-card-industrial p-12 mek-border-sharp-gold">
+                                <div className="text-gray-500 text-6xl mb-4">⚗️</div>
+                                <h3 className="text-yellow-400 text-2xl font-bold mb-2 uppercase tracking-wider">No Essence Yet</h3>
+                                <p className="text-gray-400 text-sm">Slot Meks to start generating essence</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* View Toggle Button */}
+                          {displayedEssences.length > 0 && (
+                            <button
+                              onClick={() => setViewMode('table')}
+                              className="mt-6 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
+                            >
+                              Table View
+                            </button>
+                          )}
+                        </>
                       ) : (
-                        <div className="flex items-center justify-center h-[525px]">
-                          <div className="text-center mek-card-industrial p-12 mek-border-sharp-gold">
-                            <div className="text-gray-500 text-6xl mb-4">⚗️</div>
-                            <h3 className="text-yellow-400 text-2xl font-bold mb-2 uppercase tracking-wider">No Essence Yet</h3>
-                            <p className="text-gray-400 text-sm">Slot Meks to start generating essence</p>
+                        <>
+                          {/* Table View */}
+                          <div className="w-full max-w-5xl">
+                            {/* Mobile Data Column Selector */}
+                            <div className="md:hidden mb-4 flex justify-center">
+                              <div className="relative inline-block">
+                                <select
+                                  value={mobileDataColumn}
+                                  onChange={(e) => setMobileDataColumn(e.target.value as typeof mobileDataColumn)}
+                                  className="bg-black/80 border-2 border-yellow-500/50 text-yellow-400 px-4 py-2 pr-10 rounded appearance-none cursor-pointer uppercase text-xs font-bold tracking-wider"
+                                >
+                                  <option value="amount">Amount Owned</option>
+                                  <option value="growth">Growth Rate</option>
+                                  <option value="maxCap">Max Cap</option>
+                                  <option value="totalValue">Total Value</option>
+                                </select>
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                  <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Excel-like Table */}
+                            <div className="bg-black/60 border-2 border-yellow-500/50 rounded-lg overflow-hidden">
+                              {/* Table Header - Desktop */}
+                              <div className="hidden md:grid md:grid-cols-5 bg-black/80 border-b-2 border-yellow-500/50">
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30">
+                                  Essence Name
+                                </div>
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
+                                  Growth Rate
+                                </div>
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
+                                  Max Cap
+                                </div>
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
+                                  Total Value
+                                </div>
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider text-center">
+                                  Amount Owned
+                                </div>
+                              </div>
+
+                              {/* Table Header - Mobile */}
+                              <div className="md:hidden grid grid-cols-2 bg-black/80 border-b-2 border-yellow-500/50">
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30">
+                                  Essence Name
+                                </div>
+                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider text-center">
+                                  {mobileDataColumn === 'amount' && 'Amount Owned'}
+                                  {mobileDataColumn === 'growth' && 'Growth Rate'}
+                                  {mobileDataColumn === 'maxCap' && 'Max Cap'}
+                                  {mobileDataColumn === 'totalValue' && 'Total Value'}
+                                </div>
+                              </div>
+
+                              {/* Table Body - Scrollable */}
+                              <div className="max-h-[500px] overflow-y-auto">
+                                {displayedEssences.map((essence, index) => {
+                                  const baseRate = essence.baseRate || 0.1;
+                                  const bonusRate = essence.bonusRate || 0;
+                                  const totalRate = baseRate + bonusRate;
+                                  const effectiveMax = essence.maxAmountBuffed || essence.maxAmount || 10;
+                                  const totalValue = essence.amount * essence.currentValue;
+
+                                  return (
+                                    <div
+                                      key={essence.id}
+                                      className={`${
+                                        index % 2 === 0 ? 'bg-black/40' : 'bg-black/20'
+                                      } hover:bg-yellow-500/10 transition-colors border-b border-yellow-500/20 last:border-b-0`}
+                                    >
+                                      {/* Desktop View - All Columns */}
+                                      <div className="hidden md:grid md:grid-cols-5">
+                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 font-medium">
+                                          {essence.name}
+                                        </div>
+                                        <div className="px-4 py-3 text-sm text-cyan-400 border-r border-yellow-500/20 text-center font-mono">
+                                          {totalRate.toFixed(2)}/d
+                                        </div>
+                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 text-center font-mono">
+                                          {effectiveMax}
+                                        </div>
+                                        <div className="px-4 py-3 text-sm text-yellow-400 border-r border-yellow-500/20 text-center font-mono">
+                                          {Math.round(totalValue).toLocaleString()}g
+                                        </div>
+                                        <div className="px-4 py-3 text-sm text-yellow-400 text-center font-mono font-bold">
+                                          {essence.amount.toFixed(2)}
+                                        </div>
+                                      </div>
+
+                                      {/* Mobile View - 2 Columns */}
+                                      <div className="md:hidden grid grid-cols-2">
+                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 font-medium">
+                                          {essence.name}
+                                        </div>
+                                        <div className="px-4 py-3 text-sm text-center font-mono">
+                                          {mobileDataColumn === 'amount' && (
+                                            <span className="text-yellow-400 font-bold">{essence.amount.toFixed(2)}</span>
+                                          )}
+                                          {mobileDataColumn === 'growth' && (
+                                            <span className="text-cyan-400">{totalRate.toFixed(2)}/d</span>
+                                          )}
+                                          {mobileDataColumn === 'maxCap' && (
+                                            <span className="text-white">{effectiveMax}</span>
+                                          )}
+                                          {mobileDataColumn === 'totalValue' && (
+                                            <span className="text-yellow-400">{Math.round(totalValue).toLocaleString()}g</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+
+                          {/* Back to Donut Button */}
+                          <button
+                            onClick={() => setViewMode('donut')}
+                            className="mt-6 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
+                          >
+                            Donut View
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -555,7 +700,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
 
                 {/* Details Panel */}
                 <div className="lg:col-span-1">
-                  <div className="sticky top-24" style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
+                  <div className="sticky top-24 relative" style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
                     {(hoveredSlice || selectedSlice) ? (() => {
                       const activeSlice = hoveredSlice || selectedSlice;
                       const slice = essenceData.find(e => e.id === activeSlice);
@@ -676,119 +821,135 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                         </div>
                       );
                     })() : (
-                      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative opacity-40">
-                        <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
+                      <div className="mek-card-industrial mek-border-sharp-gold p-4 relative">
+                        {/* Placeholder content with opacity */}
+                        <div className="opacity-40">
+                          <div className="absolute inset-0 pointer-events-none mek-scan-effect opacity-30"></div>
 
-                        {/* Essence Bottle Placeholder */}
-                        <div className="relative mb-4 bg-black/40 rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30 mx-auto" style={{
-                          width: '240px',
-                          height: '240px',
-                          background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.02) 10px, rgba(255, 255, 255, 0.02) 20px)'
-                        }}>
-                          <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
-                          <img
-                            src="/essence-images/bumble0000.png"
-                            alt="Essence placeholder"
-                            className="relative z-10 w-full h-full object-contain opacity-30"
-                            style={{ maxHeight: '200px' }}
-                          />
-                        </div>
-
-                        {/* Placeholder Name */}
-                        <div className="text-center mb-4">
-                          <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">ESSENCE</h2>
-                        </div>
-
-                        {/* Ownership Section Placeholder */}
-                        <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
-                          <div className="flex justify-between items-center mb-2 relative z-10">
-                            <span className="text-xs text-gray-600 uppercase tracking-widest">OWNERSHIP</span>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl font-bold text-gray-600">--</span>
-                              <span className="text-xl font-normal text-gray-600">/10</span>
-                            </div>
-                          </div>
-
-                          {/* Progress Bar Placeholder */}
-                          <div className="relative h-6 bg-black/80 rounded overflow-hidden border border-yellow-500/30">
-                            <div className="absolute inset-y-0 left-0" style={{
-                              width: '0%',
-                              background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))'
-                            }} />
-                          </div>
-
-                          {/* Real-Time Accumulation Placeholder */}
-                          <div className="mt-3 pt-3 border-t border-yellow-500/20">
-                            <div className="text-center">
-                              <div className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-1 font-bold">
-                                Real-Time Accumulation
-                              </div>
-                              <div className="text-xl font-mono text-gray-600 tracking-tight tabular-nums" style={{
-                                fontVariantNumeric: 'tabular-nums'
-                              }}>
-                                --.------------
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Stats Grid Placeholder */}
-                        <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-3 relative overflow-hidden">
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10">
-                            <div>
-                              <p className="mek-label-uppercase mb-1 text-gray-600">MARKET PRICE</p>
-                              <p className="text-lg text-gray-600">
-                                <span className="font-semibold">--</span>
-                                <span className="font-light">g/ea</span>
-                              </p>
-                            </div>
-                            <div>
-                              <p className="mek-label-uppercase mb-1 text-gray-600">BASE RATE</p>
-                              <p className="text-lg text-gray-600">
-                                <span className="font-semibold">--</span>
-                                <span className="font-light">/d</span>
-                              </p>
-                            </div>
-                            <div>
-                              <p className="mek-label-uppercase mb-1 text-gray-600">TOTAL VALUE</p>
-                              <p className="text-lg text-gray-600">
-                                <span className="font-semibold">--</span>
-                                <span className="font-light">g</span>
-                              </p>
-                            </div>
-                            <div>
-                              <p className="mek-label-uppercase mb-1 text-gray-600">BONUS RATE</p>
-                              <p className="text-lg text-gray-600">
-                                <span className="font-semibold">--</span>
-                                <span className="font-light">/d</span>
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Overlay Message - fixed position to not affect parent layout */}
-                        <div
-                          className="pointer-events-none z-50"
-                          style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            maxWidth: '100%'
-                          }}
-                        >
-                          <div className="bg-black/95 backdrop-blur-xl border-3 border-yellow-500/70 rounded-lg px-6 py-4 shadow-2xl" style={{
-                            boxShadow: '0 0 30px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4), inset 0 0 20px rgba(250, 182, 23, 0.2)'
+                          {/* Essence Bottle Placeholder */}
+                          <div className="relative mb-4 bg-black/40 rounded-lg p-4 flex items-center justify-center border-2 border-yellow-500/30 mx-auto" style={{
+                            width: '240px',
+                            height: '240px',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.02) 10px, rgba(255, 255, 255, 0.02) 20px)'
                           }}>
-                            <p className="text-yellow-400 text-base font-bold uppercase tracking-[0.2em] animate-pulse text-center" style={{
-                              textShadow: '0 0 20px rgba(250, 182, 23, 0.9), 0 0 40px rgba(250, 182, 23, 0.6), 0 0 60px rgba(250, 182, 23, 0.4)'
-                            }}>Hover Chart<br />for Details</p>
+                            <div className="absolute inset-0 mek-overlay-glass opacity-50 pointer-events-none"></div>
+                            <img
+                              src="/essence-images/bumble0000.png"
+                              alt="Essence placeholder"
+                              className="relative z-10 w-full h-full object-contain opacity-30"
+                              style={{ maxHeight: '200px' }}
+                            />
+                          </div>
+
+                          {/* Placeholder Name */}
+                          <div className="text-center mb-4">
+                            <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">ESSENCE</h2>
+                          </div>
+
+                          {/* Ownership Section Placeholder */}
+                          <div className="mek-header-industrial rounded-lg p-3 mb-4 relative overflow-hidden border-2 border-yellow-500/40">
+                            <div className="flex justify-between items-center mb-2 relative z-10">
+                              <span className="text-xs text-gray-600 uppercase tracking-widest">OWNERSHIP</span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-gray-600">--</span>
+                                <span className="text-xl font-normal text-gray-600">/10</span>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar Placeholder */}
+                            <div className="relative h-6 bg-black/80 rounded overflow-hidden border border-yellow-500/30">
+                              <div className="absolute inset-y-0 left-0" style={{
+                                width: '0%',
+                                background: 'linear-gradient(90deg, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 1), rgba(14, 165, 233, 0.9))'
+                              }} />
+                            </div>
+
+                            {/* Real-Time Accumulation Placeholder */}
+                            <div className="mt-3 pt-3 border-t border-yellow-500/20">
+                              <div className="text-center">
+                                <div className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-1 font-bold">
+                                  Real-Time Accumulation
+                                </div>
+                                <div className="text-xl font-mono text-gray-600 tracking-tight tabular-nums" style={{
+                                  fontVariantNumeric: 'tabular-nums'
+                                }}>
+                                  --.------------
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stats Grid Placeholder */}
+                          <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-3 relative overflow-hidden">
+                            <div className="absolute inset-0 mek-overlay-scratches opacity-10 pointer-events-none"></div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative z-10">
+                              <div>
+                                <p className="mek-label-uppercase mb-1 text-gray-600">MARKET PRICE</p>
+                                <p className="text-lg text-gray-600">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">g/ea</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="mek-label-uppercase mb-1 text-gray-600">BASE RATE</p>
+                                <p className="text-lg text-gray-600">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">/d</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="mek-label-uppercase mb-1 text-gray-600">TOTAL VALUE</p>
+                                <p className="text-lg text-gray-600">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">g</span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="mek-label-uppercase mb-1 text-gray-600">BONUS RATE</p>
+                                <p className="text-lg text-gray-600">
+                                  <span className="font-semibold">--</span>
+                                  <span className="font-light">/d</span>
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
+
+                  {/* "Hover Chart for Details" Message - Isolated for full brightness */}
+                  {!(hoveredSlice || selectedSlice) && (
+                    <div
+                      className="pointer-events-none absolute"
+                      style={{
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 99999,
+                        isolation: 'isolate'
+                      }}
+                    >
+                      <div
+                        className="relative border-3 border-yellow-500 rounded-lg px-6 py-4 shadow-2xl"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.98)',
+                          boxShadow: '0 0 30px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(250, 182, 23, 0.3)',
+                          backdropFilter: 'blur(20px)'
+                        }}
+                      >
+                        <p
+                          className="text-yellow-400 text-base font-bold uppercase tracking-[0.2em] animate-pulse text-center"
+                          style={{
+                            textShadow: '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.6)',
+                            color: 'rgb(250, 182, 23)'
+                          }}
+                        >
+                          Hover Chart<br />for Details
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
