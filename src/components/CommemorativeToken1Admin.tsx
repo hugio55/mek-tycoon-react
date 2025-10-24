@@ -97,6 +97,10 @@ export default function CommemorativeToken1Admin() {
   } | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
 
+  // Whitelist Manager Integration
+  const [selectedWhitelistId, setSelectedWhitelistId] = useState<string | null>(null);
+  const [isImportingWhitelist, setIsImportingWhitelist] = useState(false);
+
   // Queries
   const config = useQuery(api.airdrop.getConfigByCampaign, { campaignName: CAMPAIGN_NAME });
   const stats = useQuery(api.airdrop.getSubmissionStats, { campaignName: CAMPAIGN_NAME });
@@ -113,6 +117,7 @@ export default function CommemorativeToken1Admin() {
   const existingPolicies = useQuery(api.minting.getMintingPolicies, { network });
   const allDesigns = useQuery(api.commemorativeTokens.getAllDesigns, {});
   const allMints = useQuery(api.commemorativeTokens.getAllCommemorativeTokens, { limit: 100 });
+  const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
 
   // Mutations
   const upsertConfig = useMutation(api.airdrop.upsertConfig);
@@ -122,6 +127,7 @@ export default function CommemorativeToken1Admin() {
   const initializeTokenType = useMutation(api.commemorativeTokens.initializeTokenType);
   const deleteTokenType = useMutation(api.commemorativeTokens.deleteTokenType);
   const takeEligibilitySnapshot = useMutation(api.commemorativeTokens.takeEligibilitySnapshot);
+  const importWhitelistToDesign = useMutation(api.commemorativeTokens.importWhitelistToDesign);
 
   // Initialize campaign if it doesn't exist
   useEffect(() => {
@@ -1692,6 +1698,87 @@ export default function CommemorativeToken1Admin() {
             </div>
           )}
         </div>
+
+        {/* Whitelist Import from Whitelist Manager */}
+        {selectedDesignForMinting && allWhitelists && allWhitelists.length > 0 && (
+          <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 mb-6">
+            <h4 className="text-sm font-bold text-purple-300 mb-3 uppercase">Import Saved Whitelist</h4>
+            <p className="text-xs text-gray-400 mb-3">
+              Select a whitelist from the Whitelist Manager to import eligible users.
+            </p>
+
+            <div className="flex gap-3">
+              <select
+                value={selectedWhitelistId || ''}
+                onChange={(e) => setSelectedWhitelistId(e.target.value || null)}
+                className="flex-1 bg-black/50 border border-purple-500/30 rounded px-3 py-2 text-sm text-white"
+              >
+                <option value="">-- Select a whitelist --</option>
+                {allWhitelists.map((whitelist) => (
+                  <option key={whitelist._id} value={whitelist._id}>
+                    {whitelist.name} - {whitelist.userCount} eligible users
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={async () => {
+                  if (!selectedWhitelistId) {
+                    alert('Please select a whitelist first');
+                    return;
+                  }
+                  if (!selectedDesignForMinting) return;
+
+                  setIsImportingWhitelist(true);
+                  try {
+                    const result = await importWhitelistToDesign({
+                      tokenType: selectedDesignForMinting,
+                      whitelistId: selectedWhitelistId as any,
+                    });
+                    alert(`Whitelist "${result.whitelistName}" imported! ${result.eligibleCount} users are now eligible.`);
+                    setSelectedWhitelistId(null);
+                  } catch (error: any) {
+                    alert(`Error importing whitelist: ${error.message}`);
+                  } finally {
+                    setIsImportingWhitelist(false);
+                  }
+                }}
+                disabled={!selectedWhitelistId || isImportingWhitelist}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded transition-all"
+              >
+                {isImportingWhitelist ? 'Importing...' : '📥 Import'}
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center gap-2 text-xs text-purple-300">
+              <span>💡</span>
+              <span>Or manually take a snapshot based on gold balance below</span>
+            </div>
+          </div>
+        )}
+
+        {/* Link to Whitelist Manager */}
+        {selectedDesignForMinting && (!allWhitelists || allWhitelists.length === 0) && (
+          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">📋</div>
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-blue-300 mb-1">No Saved Whitelists Found</h4>
+                <p className="text-xs text-gray-400">
+                  Create whitelists in the Whitelist Manager to easily import eligible users.
+                </p>
+              </div>
+              <a
+                href="/admin-whitelist-manager"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded transition-all"
+              >
+                Open Whitelist Manager
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Snapshot Management */}
         {selectedDesignForMinting && allDesigns && (

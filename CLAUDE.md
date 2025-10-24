@@ -7,11 +7,72 @@ Local documentation is available in the `claude-code-docs/` directory:
 - **Enterprise**: Bedrock, Vertex AI, proxy config, LLM gateways
 
 ## Quick Start Command
+**CRITICAL: We are ONLY working in the STAGING directory now.**
+
 When user says "start it up" or similar, run:
 ```bash
-cd "C:\Users\Ben Meyers\Documents\Mek Tycoon\mek-tycoon-react" && npm run dev:all
+npm run dev:all
 ```
 This starts both Next.js (port 3200) and Convex in one terminal.
+
+**Current Working Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
+**Database**: `wry-trout-962.convex.cloud` (staging database - isolated from production)
+**Port**: localhost:3200
+**DO NOT use the main `mek-tycoon-react` directory - ONLY use staging!**
+
+## 🚨🚨🚨 CRITICAL: GIT CHECKOUT DESTROYS UNCOMMITTED WORK 🚨🚨🚨
+**NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
+
+### THE MOST DANGEROUS GIT COMMAND
+```bash
+git checkout src/components/SomeFile.tsx  # ❌❌❌ DESTROYS UNCOMMITTED WORK PERMANENTLY
+```
+
+**What this command does:**
+- **PERMANENTLY DELETES** all uncommitted changes in the specified file
+- Restores file to last committed version
+- **NO UNDO** - changes are gone forever
+- **NO WARNING** - Git doesn't ask for confirmation
+- **NO BACKUP** - Uncommitted work has zero protection
+
+**Real incident that happened in this project:**
+- Previous Claude session: User spent hours making UI improvements to EssenceDistributionLightbox
+- Changes included: removing debug panels, resizing elements, fixing positioning (~250 lines of work)
+- Those changes were never committed (still just in working file)
+- Current session: File had syntax error, I ran `git checkout` to "fix" it
+- **RESULT**: All uncommitted work from hours ago was PERMANENTLY DELETED
+- User had to re-do all the work by reading session logs and manually re-implementing
+
+### ABSOLUTE RULES FOR GIT CHECKOUT:
+1. **NEVER use `git checkout <file>` to fix errors** - Use Edit tool instead
+2. **NEVER use it as a "reset" or "undo"** - Fix issues directly
+3. **ALWAYS ask user first** if you think checkout is needed
+4. **WARN user TWICE** about what will be lost
+5. **Check `git status`** first to see if there are uncommitted changes
+6. **If there ARE uncommitted changes**: STOP and ask user to commit them first
+
+### Safe Alternatives:
+- **To fix syntax errors**: Use Edit tool to fix the specific lines
+- **To undo recent changes**: Ask user if they want to lose uncommitted work first
+- **To see differences**: Use `git diff <file>` (safe, read-only)
+- **To create backup**: Ask user to commit their work first
+
+### The Only Time It's Safe:
+- User explicitly says "discard my uncommitted changes"
+- User confirms they don't care about losing work
+- You've warned them TWICE about what will be lost
+- `git status` shows the file has changes and user approves deletion
+
+### Red Flag Scenarios (DO NOT USE CHECKOUT):
+- ❌ File has syntax errors → Fix with Edit tool
+- ❌ File seems corrupted → Ask user, don't checkout
+- ❌ Want to "reset" to clean state → Ask user first
+- ❌ Testing if old version works → Ask user to commit first
+- ❌ Any uncertainty about uncommitted work → DON'T RISK IT
+
+**REMEMBER**: This project has had HOURS of work destroyed by this command. Treat `git checkout <file>` like `rm -rf /` - assume it will destroy important work unless proven otherwise.
+
+---
 
 ## 🚨 CRITICAL: SESSION PROTECTION 🚨
 **NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**
@@ -567,6 +628,7 @@ export default function YourLightbox({ onClose, ...props }) {
 - Direct, honest communication about technical decisions
 - Open to better solutions and alternative approaches
 - **BRIEF TASK COMPLETION SUMMARIES**: Keep explanations 35% shorter - just bullet points of what was done. User will ask for details if needed
+- **NO CODE DUMPS**: User does not understand raw code snippets, code blocks, diffs, or technical syntax examples. Describe changes conversationally instead of showing code. Example: Say "I updated the slider to go from 5% to 100%" instead of showing the code block
 
 ## Session History & Important Updates
 

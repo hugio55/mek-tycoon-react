@@ -669,6 +669,54 @@ export const takeEligibilitySnapshot = mutation({
 });
 
 /**
+ * Import a whitelist from the Whitelist Manager into a design's eligibility snapshot
+ */
+export const importWhitelistToDesign = mutation({
+  args: {
+    tokenType: v.string(),
+    whitelistId: v.id("whitelists"),
+  },
+  handler: async (ctx, args) => {
+    const design = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", args.tokenType))
+      .first();
+
+    if (!design) {
+      throw new Error("Design not found");
+    }
+
+    if (design.saleMode !== "whitelist") {
+      throw new Error("Can only import whitelists for whitelist mode designs");
+    }
+
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    // Extract wallet addresses from eligible users
+    const eligibleWallets = whitelist.eligibleUsers.map(user => user.walletAddress);
+
+    // Update design with whitelist data
+    await ctx.db.patch(design._id, {
+      eligibilitySnapshot: eligibleWallets,
+      snapshotTakenAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[Whitelist] Imported whitelist "${whitelist.name}" to ${args.tokenType}: ${eligibleWallets.length} eligible wallets`);
+
+    return {
+      success: true,
+      eligibleCount: eligibleWallets.length,
+      whitelistName: whitelist.name,
+      snapshotTakenAt: Date.now(),
+    };
+  },
+});
+
+/**
  * Get all designs for a specific policy (admin view)
  */
 export const getDesignsByPolicy = query({

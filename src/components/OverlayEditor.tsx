@@ -39,7 +39,7 @@ type OverlayPaletteItem = {
 
 export default function OverlayEditor() {
   // Project settings
-  const [imageKey, setImageKey] = useState("variation-triangle");
+  const [imageKey, setImageKey] = useState("");
   const [imagePath, setImagePath] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
@@ -156,10 +156,6 @@ export default function OverlayEditor() {
     if (stored) {
       const paths = JSON.parse(stored);
       setRecentBasePaths(paths);
-      // Auto-load the most recent path
-      if (paths.length > 0 && !imagePath) {
-        setImagePath(paths[0]);
-      }
     }
     const storedPalette = localStorage.getItem("overlay-editor-palette");
     if (storedPalette) {
@@ -167,7 +163,7 @@ export default function OverlayEditor() {
     }
   }, []);
 
-  // Smart path converter - extract web path from Windows file path
+  // Smart path converter - detect if external file or web path
   const extractWebPath = (input: string): string => {
     if (!input) return input;
 
@@ -181,26 +177,52 @@ export default function OverlayEditor() {
     // If it already looks like a web path (starts with /), return as-is
     if (cleanInput.startsWith('/')) return cleanInput;
 
-    // Look for "public\" or "public/" in the path
-    const publicIndex = cleanInput.lastIndexOf('public\\');
-    const publicIndexForward = cleanInput.lastIndexOf('public/');
+    // Check if this is a full Windows path (contains drive letter like C:\)
+    const isWindowsPath = /^[A-Za-z]:\\/.test(cleanInput);
 
-    let startIndex = -1;
-    if (publicIndex !== -1) startIndex = publicIndex + 7; // length of "public\"
-    else if (publicIndexForward !== -1) startIndex = publicIndexForward + 7; // length of "public/"
+    if (isWindowsPath) {
+      // Check if it's in the public directory
+      const publicIndex = cleanInput.lastIndexOf('public\\');
+      const publicIndexForward = cleanInput.lastIndexOf('public/');
 
-    if (startIndex !== -1) {
-      // Extract everything after "public\"
-      let webPath = cleanInput.substring(startIndex);
-      // Convert backslashes to forward slashes
+      if (publicIndex !== -1 || publicIndexForward !== -1) {
+        // It's in public, convert to web path
+        let startIndex = publicIndex !== -1 ? publicIndex + 7 : publicIndexForward + 7;
+        let webPath = cleanInput.substring(startIndex);
+        webPath = webPath.replace(/\\/g, '/');
+        if (!webPath.startsWith('/')) webPath = '/' + webPath;
+        return webPath;
+      } else {
+        // It's external (like TYCOON UNIVERSALS), use API endpoint
+        return `/api/serve-image?path=${encodeURIComponent(cleanInput)}`;
+      }
+    }
+
+    // If no drive letter found, try to extract relative path
+    const imagesIndex = cleanInput.lastIndexOf('images\\');
+    const imagesIndexForward = cleanInput.lastIndexOf('images/');
+
+    if (imagesIndex !== -1) {
+      let webPath = cleanInput.substring(imagesIndex);
       webPath = webPath.replace(/\\/g, '/');
-      // Ensure it starts with /
+      if (!webPath.startsWith('/')) webPath = '/' + webPath;
+      return webPath;
+    } else if (imagesIndexForward !== -1) {
+      let webPath = cleanInput.substring(imagesIndexForward);
+      webPath = webPath.replace(/\\/g, '/');
       if (!webPath.startsWith('/')) webPath = '/' + webPath;
       return webPath;
     }
 
-    // If no "public" found, return as-is
+    // Return as-is if nothing matches
     return cleanInput;
+  };
+
+  // Delete a recent base path
+  const deleteRecentBasePath = (pathToDelete: string) => {
+    const updated = recentBasePaths.filter(p => p !== pathToDelete);
+    setRecentBasePaths(updated);
+    localStorage.setItem("overlay-editor-recent-paths", JSON.stringify(updated));
   };
 
   // Save recent path when base image path changes
@@ -634,10 +656,9 @@ export default function OverlayEditor() {
         imageHeight: imageDimensions.height,
         zones,
       });
-      alert("Overlay saved successfully!");
+      // Silent save - no popup confirmation
     } catch (error) {
       console.error("Error saving overlay:", error);
-      alert("Failed to save overlay");
     }
   };
 
@@ -783,12 +804,24 @@ export default function OverlayEditor() {
               />
             </div>
             <div>
-              <label className="mek-label-uppercase block mb-2">Base Image Path</label>
+              <label className="mek-label-uppercase block mb-2">
+                Base Image Path
+                <span className="text-xs text-gray-400 ml-2 normal-case">(Right-click file → Copy as path → Paste here)</span>
+              </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={imagePath}
                   onChange={(e) => setImagePath(e.target.value)}
+                  onPaste={(e) => {
+                    // Immediately convert pasted paths
+                    setTimeout(() => {
+                      const converted = extractWebPath(e.currentTarget.value);
+                      if (converted !== e.currentTarget.value) {
+                        setImagePath(converted);
+                      }
+                    }, 0);
+                  }}
                   onBlur={(e) => {
                     const converted = extractWebPath(e.target.value);
                     if (converted !== e.target.value) {
@@ -796,7 +829,7 @@ export default function OverlayEditor() {
                     }
                   }}
                   className="flex-1 px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-white"
-                  placeholder="/triangle/backplate_2.webp"
+                  placeholder="Paste full Windows path here (auto-converts)"
                 />
                 <button
                   onClick={() => addRecentBasePath(imagePath)}
@@ -810,14 +843,28 @@ export default function OverlayEditor() {
                   <div className="text-xs text-gray-400 mb-1">Recent:</div>
                   <div className="flex flex-wrap gap-1">
                     {recentBasePaths.map((path, idx) => (
-                      <button
+                      <div
                         key={idx}
-                        onClick={() => setImagePath(path)}
-                        className="px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-xs text-yellow-400 hover:border-yellow-500/50"
-                        title={path}
+                        className="flex items-center gap-1 bg-black/50 border border-yellow-500/30 rounded hover:border-yellow-500/50"
                       >
-                        {path.split('/').pop() || path}
-                      </button>
+                        <button
+                          onClick={() => setImagePath(path)}
+                          className="px-2 py-1 text-xs text-yellow-400"
+                          title={path}
+                        >
+                          {path.split('/').pop() || path}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteRecentBasePath(path);
+                          }}
+                          className="px-1 text-xs text-red-400 hover:text-red-300"
+                          title="Delete"
+                        >
+                          ×
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -927,7 +974,10 @@ export default function OverlayEditor() {
                   src={imagePath}
                   alt="Base Image"
                   onLoad={handleImageLoad}
-                  onError={() => alert("Failed to load base image. Check the path.")}
+                  onError={(e) => {
+                    console.error("Failed to load base image:", imagePath);
+                    setImageLoaded(false);
+                  }}
                   style={{
                     width: imageDimensions.width * scale,
                     height: imageDimensions.height * scale,
@@ -953,30 +1003,114 @@ export default function OverlayEditor() {
                   }}
                 >
                   {/* Render zones */}
-                  {allZones.filter(z => z.mode === "zone").map((zone) => (
-                    <div
-                      key={zone.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedZoneId(zone.id);
-                      }}
-                      style={{
-                        position: "absolute",
+                  {allZones.filter(z => z.mode === "zone").map((zone) => {
+                    const buttonStyle = zone.metadata?.buttonStyle || "none";
+                    const isCustomImage = buttonStyle === "custom-image";
+
+                    // Get button styling
+                    const getPreviewStyle = () => {
+                      const baseStyle = {
+                        position: "absolute" as const,
                         left: zone.x * scale,
                         top: zone.y * scale,
                         width: (zone.width || 0) * scale,
                         height: (zone.height || 0) * scale,
-                        border: selectedZoneId === zone.id ? "3px solid #fab617" : "2px solid rgba(250, 182, 23, 0.5)",
-                        backgroundColor: "rgba(250, 182, 23, 0.2)",
-                        pointerEvents: dragState.isDrawing ? "none" : "auto",
-                      }}
-                      className="hover:bg-yellow-500/30 transition-colors"
-                    >
-                      <div className="text-xs text-yellow-400 font-bold p-1">
-                        {zone.label || zone.type}
+                        pointerEvents: dragState.isDrawing ? "none" : ("auto" as const),
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                      };
+
+                      const selectionBorder = selectedZoneId === zone.id ? "3px solid #fab617" : "2px solid rgba(250, 182, 23, 0.5)";
+
+                      switch (buttonStyle) {
+                        case "industrial-yellow":
+                          return {
+                            ...baseStyle,
+                            background: "linear-gradient(135deg, #fab617 0%, #d19912 100%)",
+                            border: selectionBorder,
+                            boxShadow: "0 0 20px rgba(250, 182, 23, 0.5)",
+                            color: "#000",
+                            fontWeight: "bold",
+                            textTransform: "uppercase" as const,
+                          };
+                        case "glowing-blue":
+                          return {
+                            ...baseStyle,
+                            background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                            border: selectionBorder,
+                            boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
+                            color: "#fff",
+                            fontWeight: "bold",
+                          };
+                        case "transparent-outline":
+                          return {
+                            ...baseStyle,
+                            background: "rgba(0, 0, 0, 0.3)",
+                            border: selectionBorder,
+                            backdropFilter: "blur(5px)",
+                            color: "#fab617",
+                            fontWeight: "bold",
+                          };
+                        case "metal-plate":
+                          return {
+                            ...baseStyle,
+                            background: "linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%)",
+                            border: selectionBorder,
+                            boxShadow: "inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5)",
+                            color: "#fab617",
+                            fontWeight: "bold",
+                          };
+                        default:
+                          return {
+                            ...baseStyle,
+                            border: selectionBorder,
+                            backgroundColor: "rgba(250, 182, 23, 0.2)",
+                          };
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={zone.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedZoneId(zone.id);
+                        }}
+                        style={getPreviewStyle()}
+                        className="hover:brightness-110 transition-all"
+                      >
+                        {/* Custom image button */}
+                        {isCustomImage && zone.metadata?.buttonImageUrl && (
+                          <img
+                            src={zone.metadata.buttonImageUrl}
+                            alt={zone.label || "Button"}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                              transform: `scale(${zone.metadata?.buttonImageScale || 1})`,
+                            }}
+                          />
+                        )}
+
+                        {/* Text button */}
+                        {!isCustomImage && buttonStyle !== "none" && zone.metadata?.buttonText && (
+                          <span style={{ fontSize: `${Math.max(10, (zone.width || 100) * scale * 0.08)}px` }}>
+                            {zone.metadata.buttonText}
+                          </span>
+                        )}
+
+                        {/* Default zone label */}
+                        {buttonStyle === "none" && (
+                          <div className="text-xs text-yellow-400 font-bold p-1">
+                            {zone.label || zone.type}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Render sprites */}
                   {allZones.filter(z => z.mode === "sprite").map((sprite) => {
@@ -1049,7 +1183,10 @@ export default function OverlayEditor() {
               src={overlayImagePath}
               alt="Overlay"
               onLoad={handleOverlayImageLoad}
-              onError={() => alert("Failed to load overlay image")}
+              onError={() => {
+                console.error("Failed to load overlay image:", overlayImagePath);
+                setOverlayImageLoaded(false);
+              }}
               style={{ display: "none" }}
             />
           )}
@@ -1058,6 +1195,33 @@ export default function OverlayEditor() {
         {/* Right Panel - Tools */}
         <div className="w-96 space-y-4">
           <h3 className="mek-text-industrial text-xl">Tools</h3>
+
+          {/* Saved Projects */}
+          {allOverlays && allOverlays.length > 0 && (
+            <div className="bg-black/50 border border-yellow-500/30 rounded p-4">
+              <h4 className="mek-label-uppercase mb-3 text-yellow-400">Saved Projects</h4>
+              <div className="space-y-1 text-sm max-h-64 overflow-y-auto">
+                {allOverlays.map((overlay) => (
+                  <div
+                    key={overlay._id}
+                    onClick={() => {
+                      setImageKey(overlay.imageKey);
+                      setImagePath(overlay.imagePath);
+                      setZones(overlay.zones);
+                      setImageDimensions({
+                        width: overlay.imageWidth,
+                        height: overlay.imageHeight,
+                      });
+                    }}
+                    className="p-2 bg-black/50 border border-yellow-500/30 rounded cursor-pointer hover:border-yellow-500/50 transition-colors"
+                  >
+                    <div className="text-yellow-400 font-bold">{overlay.imageKey}</div>
+                    <div className="text-xs text-gray-400">{overlay.zones.length} items</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Zone Mode Tools */}
           {editorMode === "zone" && (
@@ -1572,6 +1736,302 @@ export default function OverlayEditor() {
                   placeholder="Enter label..."
                 />
               </div>
+
+              {/* Button Configuration Panel - Only for zones */}
+              {selectedZone.mode === "zone" && (
+                <div className="border-t border-yellow-500/30 pt-3 mt-3 space-y-3">
+                  <div className="text-sm font-bold text-yellow-400">Button Configuration</div>
+
+                  {/* Button Style Selector */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Button Style</label>
+                    <select
+                      value={selectedZone.metadata?.buttonStyle || "none"}
+                      onChange={(e) => {
+                        const newStyle = e.target.value;
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: {
+                            ...z.metadata,
+                            buttonStyle: newStyle,
+                            // Clear image fields if switching away from custom-image
+                            ...(newStyle !== "custom-image" && { buttonImageUrl: undefined, buttonImageScale: undefined })
+                          }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    >
+                      <option value="none">No Button</option>
+                      <option value="industrial-yellow">Industrial Yellow</option>
+                      <option value="glowing-blue">Glowing Blue</option>
+                      <option value="transparent-outline">Transparent Outline</option>
+                      <option value="metal-plate">Metal Plate</option>
+                      <option value="custom-image">Custom Image Upload</option>
+                    </select>
+                  </div>
+
+                  {/* Show text/font/hover options for predefined styles */}
+                  {selectedZone.metadata?.buttonStyle && selectedZone.metadata?.buttonStyle !== "none" && selectedZone.metadata?.buttonStyle !== "custom-image" && (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Button Text</label>
+                        <input
+                          type="text"
+                          value={selectedZone.metadata?.buttonText || ""}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: { ...z.metadata, buttonText: e.target.value }
+                            } : z));
+                          }}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                          placeholder="Enter button text..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Font</label>
+                        <select
+                          value={selectedZone.metadata?.buttonFont || "orbitron"}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: { ...z.metadata, buttonFont: e.target.value }
+                            } : z));
+                          }}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                        >
+                          <option value="orbitron">Orbitron</option>
+                          <option value="geist-sans">Geist Sans</option>
+                          <option value="geist-mono">Geist Mono</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Hover Effect</label>
+                        <select
+                          value={selectedZone.metadata?.buttonHoverEffect || "glow"}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: { ...z.metadata, buttonHoverEffect: e.target.value }
+                            } : z));
+                          }}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                        >
+                          <option value="glow">Glow Brighter</option>
+                          <option value="brighten">Brighten</option>
+                          <option value="pulse">Pulse</option>
+                          <option value="lift">Lift Up</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Show upload and scale options for custom-image */}
+                  {selectedZone.metadata?.buttonStyle === "custom-image" && (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Hover Effect</label>
+                        <select
+                          value={selectedZone.metadata?.buttonHoverEffect || "glow"}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: { ...z.metadata, buttonHoverEffect: e.target.value }
+                            } : z));
+                          }}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                        >
+                          <option value="glow">Glow</option>
+                          <option value="brighten">Brighten</option>
+                          <option value="pulse">Pulse</option>
+                          <option value="lift">Lift Up</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Upload Button Image</label>
+                        <div
+                          className="border-2 border-dashed border-yellow-500/30 rounded p-4 bg-black/50 hover:border-yellow-500/50 transition-colors"
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.add('border-yellow-500');
+                          }}
+                          onDragLeave={(e) => {
+                            e.currentTarget.classList.remove('border-yellow-500');
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove('border-yellow-500');
+                            const file = e.dataTransfer.files[0];
+                            if (file && file.type.startsWith('image/')) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const dataUrl = event.target?.result as string;
+                                setZones(zones.map(z => z.id === selectedZoneId ? {
+                                  ...z,
+                                  metadata: { ...z.metadata, buttonImageUrl: dataUrl }
+                                } : z));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        >
+                          <div className="text-center space-y-2">
+                            {selectedZone.metadata?.buttonImageUrl ? (
+                              <div className="space-y-2">
+                                <img
+                                  src={selectedZone.metadata.buttonImageUrl}
+                                  alt="Button preview"
+                                  className="max-h-20 mx-auto"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setZones(zones.map(z => z.id === selectedZoneId ? {
+                                      ...z,
+                                      metadata: { ...z.metadata, buttonImageUrl: undefined }
+                                    } : z));
+                                  }}
+                                  className="text-xs text-red-400 hover:text-red-300"
+                                >
+                                  Remove Image
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="text-xs text-gray-400">
+                                  Drag & drop image here
+                                </div>
+                                <div className="text-xs text-gray-500">or</div>
+                                <label className="inline-block px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 transition-colors cursor-pointer text-sm font-bold">
+                                  LOAD
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                          const dataUrl = event.target?.result as string;
+                                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                                            ...z,
+                                            metadata: { ...z.metadata, buttonImageUrl: dataUrl }
+                                          } : z));
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">
+                          Button Image Scale: {Math.round((selectedZone.metadata?.buttonImageScale || 1) * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0.1"
+                          max="3"
+                          step="0.05"
+                          value={selectedZone.metadata?.buttonImageScale || 1}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: { ...z.metadata, buttonImageScale: parseFloat(e.target.value) }
+                            } : z));
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Button Action Configuration */}
+                  {selectedZone.metadata?.buttonStyle && selectedZone.metadata?.buttonStyle !== "none" && (
+                    <div className="border-t border-yellow-500/30 pt-3 mt-3 space-y-3">
+                      <div className="text-sm font-bold text-yellow-400">Button Action</div>
+
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">When Clicked</label>
+                        <select
+                          value={selectedZone.metadata?.buttonAction || "none"}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: {
+                                ...z.metadata,
+                                buttonAction: e.target.value,
+                                // Clear action data when switching types
+                                ...(e.target.value === "none" && { buttonActionData: undefined })
+                              }
+                            } : z));
+                          }}
+                          className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                        >
+                          <option value="none">No Action</option>
+                          <option value="lightbox">Open Lightbox</option>
+                          <option value="url">Navigate to URL</option>
+                        </select>
+                      </div>
+
+                      {/* Lightbox selector */}
+                      {selectedZone.metadata?.buttonAction === "lightbox" && (
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">Select Lightbox</label>
+                          <select
+                            value={selectedZone.metadata?.buttonActionData || ""}
+                            onChange={(e) => {
+                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                                ...z,
+                                metadata: { ...z.metadata, buttonActionData: e.target.value }
+                              } : z));
+                            }}
+                            className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                          >
+                            <option value="">Choose lightbox...</option>
+                            <option value="mek-levels">Mek Levels Viewer</option>
+                            <option value="activity-log">Activity Log</option>
+                            <option value="essence-balances">Essence Balances</option>
+                            <option value="essence-buffs">Essence Buff Management</option>
+                            <option value="essence-distribution">Essence Distribution</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* URL input */}
+                      {selectedZone.metadata?.buttonAction === "url" && (
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">Destination URL</label>
+                          <input
+                            type="text"
+                            value={selectedZone.metadata?.buttonActionData || ""}
+                            onChange={(e) => {
+                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                                ...z,
+                                metadata: { ...z.metadata, buttonActionData: e.target.value }
+                              } : z));
+                            }}
+                            className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                            placeholder="/essence-market"
+                          />
+                          <div className="text-xs text-gray-500 mt-1">
+                            Enter page path (e.g., /essence-market) or full URL
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="text-xs text-gray-400 space-y-1">
                 <div>Mode: {selectedZone.mode}</div>
                 <div>Type: {selectedZone.type}</div>
@@ -1604,39 +2064,41 @@ export default function OverlayEditor() {
               Autosave History ({autosaveHistoryFromDb?.length || 0})
             </button>
             <button
-              onClick={() => setZones([])}
+              onClick={async () => {
+                // Auto-save current state before clearing
+                if (zones.length > 0) {
+                  try {
+                    await saveOverlay({
+                      imageKey,
+                      imagePath,
+                      imageWidth: imageDimensions.width,
+                      imageHeight: imageDimensions.height,
+                      zones,
+                    });
+                  } catch (error) {
+                    console.error("Failed to save before clearing:", error);
+                    const confirmClear = window.confirm("Failed to save project. Clear anyway?");
+                    if (!confirmClear) return;
+                  }
+                }
+
+                // Clear all fields and canvas with unique project name to avoid reloading
+                const uniqueKey = `new-project-${Date.now()}`;
+                setImageKey(uniqueKey);
+                setImagePath("");
+                setZones([]);
+                setSelectedZoneId(null);
+                setImageLoaded(false);
+                setImageDimensions({ width: 0, height: 0 });
+                setScale(1);
+                setPanOffset({ x: 0, y: 0 });
+                setUsedVariations(new Set());
+              }}
               className="w-full px-4 py-2 bg-black/50 border border-yellow-500/50 rounded text-white hover:bg-yellow-500/20 transition-colors"
             >
               Clear All
             </button>
           </div>
-
-          {/* Saved Projects */}
-          {allOverlays && allOverlays.length > 0 && (
-            <div className="bg-black/50 border border-yellow-500/30 rounded p-4">
-              <h4 className="mek-label-uppercase mb-2">Saved Projects</h4>
-              <div className="space-y-1 text-sm">
-                {allOverlays.map((overlay) => (
-                  <div
-                    key={overlay._id}
-                    onClick={() => {
-                      setImageKey(overlay.imageKey);
-                      setImagePath(overlay.imagePath);
-                      setZones(overlay.zones);
-                      setImageDimensions({
-                        width: overlay.imageWidth,
-                        height: overlay.imageHeight,
-                      });
-                    }}
-                    className="p-2 bg-black/50 border border-yellow-500/30 rounded cursor-pointer hover:border-yellow-500/50"
-                  >
-                    <div className="text-yellow-400">{overlay.imageKey}</div>
-                    <div className="text-xs text-gray-400">{overlay.zones.length} items</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

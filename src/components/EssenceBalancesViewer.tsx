@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -10,8 +10,58 @@ interface EssenceBalancesViewerProps {
   onClose: () => void;
 }
 
-type SortColumn = 'name' | 'type' | 'amount' | 'growthRate' | 'cap';
+type SortColumn = 'name' | 'type' | 'generating' | 'amount' | 'growthRate' | 'cap' | 'lastUpdated';
 type SortDirection = 'asc' | 'desc';
+
+// Animated essence amount component - updates in real-time based on growth rate
+function AnimatedEssenceAmount({
+  baseAmount,
+  ratePerDay,
+  cap,
+  variationId,
+  backendCalculationTime
+}: {
+  baseAmount: number;
+  ratePerDay: number;
+  cap: number;
+  variationId: number;
+  backendCalculationTime: number;
+}) {
+  const [displayAmount, setDisplayAmount] = useState(baseAmount);
+  const baseAmountRef = useRef(baseAmount);
+  const backendTimeRef = useRef(backendCalculationTime);
+
+  // Update baseline when backend sends new values
+  useEffect(() => {
+    baseAmountRef.current = baseAmount;
+    backendTimeRef.current = backendCalculationTime;
+    setDisplayAmount(baseAmount);
+  }, [baseAmount, backendCalculationTime]);
+
+  // Animate if generating
+  useEffect(() => {
+    if (ratePerDay <= 0 || displayAmount >= cap) {
+      setDisplayAmount(Math.min(baseAmount, cap));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - backendTimeRef.current;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      const accumulated = ratePerDay * elapsedDays;
+      const newAmount = Math.min(baseAmountRef.current + accumulated, cap);
+      setDisplayAmount(newAmount);
+    }, 50); // Update every 50ms for smooth animation
+
+    return () => clearInterval(interval);
+  }, [ratePerDay, cap, baseAmount]);
+
+  return (
+    <span className="text-lg font-bold text-yellow-400 tabular-nums">
+      {displayAmount.toFixed(7)}
+    </span>
+  );
+}
 
 export default function EssenceBalancesViewer({ walletAddress, onClose }: EssenceBalancesViewerProps) {
   const [mounted, setMounted] = useState(false);
@@ -64,18 +114,33 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
       case 'type':
         compareValue = a.variationType.localeCompare(b.variationType);
         break;
+      case 'generating':
+        const rateA = essenceState?.essenceRates?.[a.variationId] || 0;
+        const rateB = essenceState?.essenceRates?.[b.variationId] || 0;
+        // Sort by whether it's generating (rate > 0), then by rate value
+        const genA = rateA > 0 ? 1 : 0;
+        const genB = rateB > 0 ? 1 : 0;
+        if (genA !== genB) {
+          compareValue = genA - genB;
+        } else {
+          compareValue = rateA - rateB;
+        }
+        break;
       case 'amount':
         compareValue = a.accumulatedAmount - b.accumulatedAmount;
         break;
       case 'growthRate':
-        const rateA = essenceState?.essenceRates?.[a.variationId] || 0;
-        const rateB = essenceState?.essenceRates?.[b.variationId] || 0;
-        compareValue = rateA - rateB;
+        const growthRateA = essenceState?.essenceRates?.[a.variationId] || 0;
+        const growthRateB = essenceState?.essenceRates?.[b.variationId] || 0;
+        compareValue = growthRateA - growthRateB;
         break;
       case 'cap':
         const capA = essenceState?.caps?.[a.variationId] || 0;
         const capB = essenceState?.caps?.[b.variationId] || 0;
         compareValue = capA - capB;
+        break;
+      case 'lastUpdated':
+        compareValue = new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime();
         break;
     }
 
@@ -148,6 +213,12 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                     Type {getSortIcon('type')}
                   </th>
                   <th
+                    className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
+                    onClick={() => handleSort('generating')}
+                  >
+                    Generating {getSortIcon('generating')}
+                  </th>
+                  <th
                     className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
                     onClick={() => handleSort('amount')}
                   >
@@ -165,8 +236,11 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                   >
                     Cap {getSortIcon('cap')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
-                    Last Updated
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
+                    onClick={() => handleSort('lastUpdated')}
+                  >
+                    Last Updated {getSortIcon('lastUpdated')}
                   </th>
                 </tr>
               </thead>
@@ -195,10 +269,25 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                           {balance.variationType === 'item' ? 'trait' : balance.variationType}
                         </span>
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        {(essenceState?.essenceRates?.[balance.variationId] || 0) > 0 ? (
+                          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-900/30 border border-green-700 text-green-400">
+                            ACTIVE
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold uppercase bg-gray-900/30 border border-gray-700 text-gray-500">
+                            IDLE
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-lg font-bold text-yellow-400">
-                          {balance.accumulatedAmount.toFixed(2)}
-                        </span>
+                        <AnimatedEssenceAmount
+                          baseAmount={balance.accumulatedAmount}
+                          ratePerDay={essenceState?.essenceRates?.[balance.variationId] || 0}
+                          cap={essenceState?.caps?.[balance.variationId] || 10}
+                          variationId={balance.variationId}
+                          backendCalculationTime={essenceState?.lastCalculationTime || Date.now()}
+                        />
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm text-green-400">
@@ -232,12 +321,12 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                   <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">Total Variations</div>
                 </div>
                 <div className="bg-black/40 rounded p-3 text-center border border-yellow-500/30">
-                  <div className="text-2xl font-bold text-yellow-400">{totalEssence.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-yellow-400">{totalEssence.toFixed(7)}</div>
                   <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">Total Essence</div>
                 </div>
                 <div className="bg-black/40 rounded p-3 text-center border border-gray-700">
                   <div className="text-2xl font-bold text-gray-300">
-                    {balances.length > 0 ? (totalEssence / balances.length).toFixed(2) : '0.00'}
+                    {balances.length > 0 ? (totalEssence / balances.length).toFixed(7) : '0.0000000'}
                   </div>
                   <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">Avg per Type</div>
                 </div>

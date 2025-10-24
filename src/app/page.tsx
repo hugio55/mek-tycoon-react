@@ -1185,6 +1185,37 @@ export default function MekRateLoggingPage() {
     }
   }, [walletConnected, companyNameData]);
 
+  // Listen for navigation button lightbox open events
+  useEffect(() => {
+    const handleOpenLightbox = (event: CustomEvent) => {
+      const lightboxId = event.detail?.lightboxId;
+      console.log('[Lightbox Event] Opening lightbox:', lightboxId);
+
+      switch (lightboxId) {
+        case 'essence-distribution':
+          setShowEssenceLightbox(true);
+          break;
+        case 'mek-levels':
+          // Add state for this when needed
+          break;
+        case 'activity-log':
+          // Add state for this when needed
+          break;
+        case 'essence-balances':
+          // Add state for this when needed
+          break;
+        case 'essence-buffs':
+          // Add state for this when needed
+          break;
+        default:
+          console.warn('[Lightbox Event] Unknown lightbox ID:', lightboxId);
+      }
+    };
+
+    window.addEventListener('openLightbox', handleOpenLightbox as EventListener);
+    return () => window.removeEventListener('openLightbox', handleOpenLightbox as EventListener);
+  }, []);
+
   // Initialize app on mount
   useEffect(() => {
     // Guard against SSR

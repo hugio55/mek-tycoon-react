@@ -2902,6 +2902,17 @@ export default defineSchema({
     .index("by_imageKey", ["imageKey"])
     .index("by_imageKey_and_timestamp", ["imageKey", "timestamp"]),
 
+  // Navigation Configuration - Stores active navigation overlay settings
+  navigationConfig: defineTable({
+    overlayImageKey: v.string(), // Which overlay project to use for navigation
+    scale: v.number(), // Scale factor (0.25 to 2.0)
+    isActive: v.boolean(), // Whether this navigation is currently deployed
+    deployedAt: v.optional(v.number()), // When it was deployed
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_active", ["isActive"]),
+
   // Mint History - Track NFTs minted through SimpleNFTMinter
   mintHistory: defineTable({
     // NFT identifiers
@@ -3141,4 +3152,71 @@ export default defineSchema({
     ttl: v.number(), // Time-to-live in milliseconds (e.g., 30000 = 30 seconds)
   })
     .index("by_key", ["cacheKey"]),
+
+  // WHITELIST SYSTEM: Extensible criteria definitions
+  // Allows admin to add new criteria types at any time (gold, experience, achievements, etc.)
+  whitelistCriteria: defineTable({
+    field: v.string(), // Database field name (e.g., "goldBalance", "experience", "mekCount")
+    displayName: v.string(), // Human-readable name (e.g., "Gold Balance", "Experience Points")
+    dataType: v.union(
+      v.literal("number"),
+      v.literal("boolean"),
+      v.literal("string"),
+      v.literal("date")
+    ),
+    description: v.string(), // Help text for admin
+    category: v.optional(v.string()), // Grouping (e.g., "Resources", "Progress", "NFTs")
+
+    // Timestamps
+    createdAt: v.number(),
+  })
+    .index("by_field", ["field"])
+    .index("by_category", ["category"]),
+
+  // WHITELIST SYSTEM: Saved whitelists
+  // Stores whitelist definitions with rules and cached eligible users
+  whitelists: defineTable({
+    name: v.string(), // Whitelist name (e.g., "Gold Miners Tier 1", "Genesis Holders")
+    description: v.optional(v.string()), // Optional description
+
+    // Rules defining eligibility
+    rules: v.array(v.object({
+      criteriaField: v.string(), // References whitelistCriteria.field
+      operator: v.union(
+        v.literal("greater_than"),
+        v.literal("less_than"),
+        v.literal("equals"),
+        v.literal("not_equals"),
+        v.literal("greater_or_equal"),
+        v.literal("less_or_equal"),
+        v.literal("contains")
+      ),
+      value: v.any(), // Threshold value
+    })),
+
+    // Logical operator between rules
+    ruleLogic: v.union(
+      v.literal("AND"), // All rules must match
+      v.literal("OR")   // Any rule must match
+    ),
+
+    // Cached eligible users (regenerated when rules change)
+    eligibleUsers: v.array(v.object({
+      userId: v.optional(v.id("players")), // Reference to player
+      walletAddress: v.string(), // Cardano wallet address
+      displayName: v.optional(v.string()), // User's name if available
+    })),
+    userCount: v.number(), // Quick count without loading array
+
+    // Generation tracking
+    lastGenerated: v.number(), // When eligibleUsers was last calculated
+    autoRefresh: v.boolean(), // Whether to auto-regenerate on rule change
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_lastGenerated", ["lastGenerated"]),
 });

@@ -116,7 +116,7 @@ export default function MekImage({
   }
 
   return (
-    <div ref={imgRef} className={`relative ${className}`}>
+    <div ref={imgRef} className={`relative ${className}`} style={{ backgroundImage: 'none', boxShadow: 'none' }}>
       {loading && shouldLoad && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-700 animate-pulse z-10">
           <div className="text-4xl">⏳</div>
@@ -130,7 +130,7 @@ export default function MekImage({
           src={imageSrc}
           alt={alt}
           className={`w-full h-full object-cover ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-          style={{ display: error ? 'none' : 'block' }}
+          style={{ display: error ? 'none' : 'block', boxShadow: 'none', filter: 'none' }}
         />
       )}
       {error && (

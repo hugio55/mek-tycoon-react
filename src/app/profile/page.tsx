@@ -543,7 +543,7 @@ export default function ProfilePage() {
                           onClick={() => window.location.href = `/mek/${mek.id}`}
                         >
                           {/* Mek Frame */}
-                          <div className="relative overflow-hidden bg-gray-900 border border-gray-700 bg-opacity-50">
+                          <div className="relative overflow-hidden bg-gray-900 border border-gray-700 bg-opacity-50 mek-thumbnail-container" style={{ boxShadow: 'none', backgroundImage: 'none' }}>
                             <MekImage
                               src={mek.sourceKey}
                               size={200}

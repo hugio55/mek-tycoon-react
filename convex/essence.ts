@@ -227,7 +227,8 @@ async function calculateEssenceMetadata(
   ctx: any,
   walletAddress: string,
   slots: any[],
-  config: any
+  config: any,
+  balances: any[]
 ) {
   const slottedMeks = slots.filter((s) => s.mekAssetId);
 
@@ -259,8 +260,17 @@ async function calculateEssenceMetadata(
   const counts: { [variationId: number]: number } = {};
   const caps: { [variationId: number]: number } = {};
 
-  // Calculate rates for each variation
-  for (const [variationId, count] of Array.from(variationCounts.entries())) {
+  // Get all unique variation IDs (from both slotted Meks and existing balances)
+  const safeBalances = balances ?? [];
+  const allVariationIds = new Set<number>([
+    ...Array.from(variationCounts.keys()),
+    ...safeBalances.map(b => b.variationId)
+  ]);
+
+  // Calculate rates and caps for all variations
+  for (const variationId of allVariationIds) {
+    const count = variationCounts.get(variationId) || 0;
+
     // Check for player buffs
     const buff = await ctx.db
       .query("essencePlayerBuffs")
@@ -272,11 +282,16 @@ async function calculateEssenceMetadata(
     const rateMultiplier = buff?.rateMultiplier || 1.0;
     const capBonus = buff?.capBonus || 0;
 
-    const effectiveRate = (config?.essenceRate || 0.1) * rateMultiplier;
-    const effectiveCap = (config?.essenceCap || 10) + capBonus;
+    const effectiveRate = ((config?.essenceRate ?? 0.1) * rateMultiplier);
+    const effectiveCap = ((config?.essenceCap ?? 10) + capBonus);
 
-    rates[variationId] = effectiveRate;
-    counts[variationId] = count;
+    // Only set rate if variation is currently slotted (count > 0)
+    if (count > 0) {
+      rates[variationId] = effectiveRate;
+      counts[variationId] = count;
+    }
+
+    // Set cap for ALL variations (even if not currently slotted)
     caps[variationId] = effectiveCap;
   }
 
@@ -307,8 +322,8 @@ export const getPlayerEssenceState = query({
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
 
-    // Get essence balances (raw DB values - frontend will handle accumulation)
-    const balances = await ctx.db
+    // Get essence balances (RAW snapshots from DB)
+    const rawBalances = await ctx.db
       .query("essenceBalances")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .collect();
@@ -319,21 +334,26 @@ export const getPlayerEssenceState = query({
       .withIndex("by_config_type", (q) => q.eq("configType", "global"))
       .first();
 
-    // Calculate metadata for frontend accumulation
+    // CRITICAL FIX: Return RAW balances as snapshots (like gold system)
+    // Client-side will handle all time-based calculations using the STORED lastCalculationTime
+    // This ensures ALL queries return IDENTICAL values at the same moment
+
+    // Calculate metadata for frontend (rates, caps, counts)
     const metadata = await calculateEssenceMetadata(
       ctx,
       walletAddress,
       slots,
-      config
+      config,
+      rawBalances
     );
 
     return {
       tracking,
       slots: slots.sort((a, b) => a.slotNumber - b.slotNumber),
       requirements: requirements.sort((a, b) => a.slotNumber - b.slotNumber),
-      balances, // Raw DB values
+      balances: rawBalances, // ✅ RETURN RAW SNAPSHOTS (not recalculated)
 
-      // Metadata for frontend accumulation
+      // Metadata for frontend animation
       lastCalculationTime: tracking?.lastCalculationTime || Date.now(),
       isActive: tracking?.isActive || false,
       essenceRates: metadata.rates,
@@ -428,7 +448,7 @@ async function calculateRealTimeEssenceBalances(
 
   // Update each balance with real-time accumulation
   const updatedBalances = await Promise.all(
-    balances.map(async (balance) => {
+    (balances || []).map(async (balance) => {
       const variationData = variationCounts.get(balance.variationId);
 
       // If this variation is no longer slotted, return existing balance
@@ -916,6 +936,16 @@ export const unlockSlot = mutation({
   },
 });
 
+// Manual checkpoint trigger for testing (can be called from frontend)
+export const triggerManualEssenceCheckpoint = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, { walletAddress }) => {
+    console.log('🔧 [MANUAL CHECKPOINT] Manually triggered checkpoint for', walletAddress);
+    await calculateAndUpdateEssence(ctx, walletAddress);
+    return { success: true, timestamp: Date.now() };
+  },
+});
+
 // Calculate and update accumulated essence
 async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
   const tracking = await ctx.db
@@ -977,6 +1007,13 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
   const now = Date.now();
   const daysElapsed = (now - tracking.lastCalculationTime) / (1000 * 60 * 60 * 24);
 
+  console.log('🔄 [CHECKPOINT MUTATION] Running checkpoint for', walletAddress, {
+    lastCalculationTime: new Date(tracking.lastCalculationTime).toISOString(),
+    now: new Date(now).toISOString(),
+    daysElapsed: daysElapsed.toFixed(6),
+    variationsToUpdate: variationCounts.size
+  });
+
   // Calculate new balances
   for (const [variationId, data] of variationCounts.entries()) {
     // Get current balance - query by NAME to prevent duplicates with different IDs
@@ -1006,6 +1043,14 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
     // Calculate essence earned
     const essenceEarned = daysElapsed * effectiveRate * data.count;
     const newAmount = Math.min(currentAmount + essenceEarned, effectiveCap);
+
+    console.log(`💾 [CHECKPOINT MUTATION] Saving ${data.name}:`, {
+      oldAmount: currentAmount.toFixed(12),
+      essenceEarned: essenceEarned.toFixed(12),
+      newAmount: newAmount.toFixed(12),
+      rate: effectiveRate,
+      count: data.count
+    });
 
     // Use helper to safely update/create balance (prevents duplicates)
     await setEssenceBalance(ctx, {
