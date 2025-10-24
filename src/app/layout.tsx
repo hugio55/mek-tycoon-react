@@ -8,6 +8,7 @@ import "@/styles/typography-system.css";
 import { Providers } from "./providers";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
+import NavigationBar from "@/components/NavigationBar";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
@@ -64,6 +65,7 @@ export default function RootLayout({
         <div className="relative z-10">
           <DemoModeWrapper>
             <Providers>
+              <NavigationBar />
               {children}
             </Providers>
           </DemoModeWrapper>

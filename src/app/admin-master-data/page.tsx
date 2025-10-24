@@ -21,6 +21,7 @@ import EventManager from '@/components/admin/nft/EventManager';
 import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
 import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
 import CustomTestMinter from '@/components/admin/nft/CustomTestMinter';
+import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
@@ -63,17 +64,20 @@ const DATA_SYSTEMS = [
   { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
-  { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true }
+  { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
+  { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
   const convex = useConvex();
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('mek-systems');
+  const [activeTab, setActiveTab] = useState<string>('wallet-management');
   const [storyClimbSubTab, setStoryClimbSubTab] = useState<string>('difficulty-subsystem');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
   const [minimizedTabs, setMinimizedTabs] = useState<Set<string>>(new Set());
+  const [tabOrder, setTabOrder] = useState<string[]>(DATA_SYSTEMS.map(sys => sys.id));
+  const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
 
   // Save system state
   const [isSaving, setIsSaving] = useState(false);
@@ -100,6 +104,11 @@ export default function AdminMasterDataPage() {
   const buffConfig = useQuery(api.variationBuffs.getBuffConfiguration);
   const variationBuffs = useQuery(api.variationBuffs.getVariationBuffs);
 
+  // Navigation Preview State (must be declared before useQuery that uses it)
+  const [selectedNavigationOverlay, setSelectedNavigationOverlay] = useState<string>('');
+  const [navigationScale, setNavigationScale] = useState<number>(1);
+  const [navigationStatusMessage, setNavigationStatusMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
+
   // Duration configuration queries and mutations
   const saveDurationConfig = useMutation(api.durationConfigs.saveDurationConfig);
   const updateDurationConfig = useMutation(api.durationConfigs.updateDurationConfig);
@@ -107,6 +116,16 @@ export default function AdminMasterDataPage() {
   const deleteDurationConfig = useMutation(api.durationConfigs.deleteDurationConfig);
   const durationConfigsList = useQuery(api.durationConfigs.listDurationConfigs);
   const activeDurationConfig = useQuery(api.durationConfigs.getActiveDurationConfig);
+  const allOverlays = useQuery(api.overlays.listOverlays);
+  const selectedOverlayData = useQuery(
+    api.overlays.getOverlay,
+    selectedNavigationOverlay ? { imageKey: selectedNavigationOverlay } : "skip"
+  );
+  const saveNavigationConfig = useMutation(api.navigation.saveNavigationConfig);
+  const deployNavigation = useMutation(api.navigation.deployNavigation);
+  const deactivateNavigation = useMutation(api.navigation.deactivateNavigation);
+  const navigationConfig = useQuery(api.navigation.getNavigationConfig);
+  const activeNavigationConfig = useQuery(api.navigation.getActiveNavigationConfig);
   const [selectedConfigName, setSelectedConfigName] = useState<string>('');
   const [configNameInput, setConfigNameInput] = useState<string>('');
   const [durationConfigAutoLoaded, setDurationConfigAutoLoaded] = useState(false);
@@ -122,6 +141,13 @@ export default function AdminMasterDataPage() {
   });
   const [variationSearch, setVariationSearch] = useState('');
   const [selectedVariation, setSelectedVariation] = useState<{ name: string; rank: number; category: string } | null>(null);
+
+  // Create ordered DATA_SYSTEMS array based on saved order
+  const orderedDataSystems = useMemo(() => {
+    return tabOrder
+      .map(id => DATA_SYSTEMS.find(sys => sys.id === id))
+      .filter((sys): sys is typeof DATA_SYSTEMS[0] => sys !== undefined);
+  }, [tabOrder]);
 
   // Update buff percentages from database when loaded
   useEffect(() => {
@@ -187,6 +213,22 @@ export default function AdminMasterDataPage() {
         console.error('Failed to parse minimized tabs:', e);
       }
     }
+
+    // Load tab order
+    const savedOrder = localStorage.getItem('adminTabOrder');
+    if (savedOrder) {
+      try {
+        const parsed = JSON.parse(savedOrder);
+        // Validate that all current tabs are in the saved order
+        const currentTabIds = DATA_SYSTEMS.map(sys => sys.id);
+        const validOrder = parsed.filter((id: string) => currentTabIds.includes(id));
+        // Add any new tabs that weren't in the saved order
+        const missingTabs = currentTabIds.filter(id => !validOrder.includes(id));
+        setTabOrder([...validOrder, ...missingTabs]);
+      } catch (e) {
+        console.error('Failed to parse tab order:', e);
+      }
+    }
   }, []);
 
   // Save variations folder path when it changes
@@ -204,7 +246,7 @@ export default function AdminMasterDataPage() {
 
     // If we're minimizing the active tab, switch to the first non-minimized tab
     if (activeTab === tabId) {
-      const firstVisibleTab = DATA_SYSTEMS.find(sys => !newMinimized.has(sys.id));
+      const firstVisibleTab = orderedDataSystems.find(sys => !newMinimized.has(sys.id));
       if (firstVisibleTab) {
         setActiveTab(firstVisibleTab.id);
       }
@@ -219,6 +261,97 @@ export default function AdminMasterDataPage() {
 
     // Switch to the restored tab
     setActiveTab(tabId);
+  };
+
+  // Drag-and-drop handlers for tab reordering
+  const handleDragStart = (e: React.DragEvent, tabId: string) => {
+    setDraggedTabId(tabId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetTabId: string) => {
+    e.preventDefault();
+
+    if (!draggedTabId || draggedTabId === targetTabId) {
+      setDraggedTabId(null);
+      return;
+    }
+
+    const newOrder = [...tabOrder];
+    const draggedIndex = newOrder.indexOf(draggedTabId);
+    const targetIndex = newOrder.indexOf(targetTabId);
+
+    // Remove dragged item and insert at new position
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedTabId);
+
+    setTabOrder(newOrder);
+    localStorage.setItem('adminTabOrder', JSON.stringify(newOrder));
+    setDraggedTabId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTabId(null);
+  };
+
+  // Navigation configuration handlers
+  const handleSaveNavigationConfig = async () => {
+    if (!selectedNavigationOverlay) {
+      setNavigationStatusMessage({ type: 'error', text: 'Please select an overlay first' });
+      setTimeout(() => setNavigationStatusMessage(null), 3000);
+      return;
+    }
+
+    try {
+      setNavigationStatusMessage({ type: 'info', text: 'Saving configuration...' });
+      const result = await saveNavigationConfig({
+        overlayImageKey: selectedNavigationOverlay,
+        scale: navigationScale,
+      });
+      setNavigationStatusMessage({
+        type: 'success',
+        text: `Configuration ${result.action}! Click "Deploy to Site" to make it active.`
+      });
+      setTimeout(() => setNavigationStatusMessage(null), 5000);
+    } catch (error) {
+      console.error('Failed to save navigation config:', error);
+      setNavigationStatusMessage({ type: 'error', text: 'Failed to save configuration' });
+      setTimeout(() => setNavigationStatusMessage(null), 3000);
+    }
+  };
+
+  const handleDeployNavigation = async () => {
+    try {
+      setNavigationStatusMessage({ type: 'info', text: 'Deploying navigation...' });
+      const result = await deployNavigation({});
+      setNavigationStatusMessage({ type: 'success', text: result.message });
+      setTimeout(() => setNavigationStatusMessage(null), 5000);
+    } catch (error: any) {
+      console.error('Failed to deploy navigation:', error);
+      setNavigationStatusMessage({
+        type: 'error',
+        text: error.message || 'Failed to deploy navigation'
+      });
+      setTimeout(() => setNavigationStatusMessage(null), 3000);
+    }
+  };
+
+  const handleDeactivateNavigation = async () => {
+    try {
+      setNavigationStatusMessage({ type: 'info', text: 'Deactivating navigation...' });
+      const result = await deactivateNavigation({});
+      setNavigationStatusMessage({ type: 'success', text: result.message });
+      setTimeout(() => setNavigationStatusMessage(null), 5000);
+    } catch (error) {
+      console.error('Failed to deactivate navigation:', error);
+      setNavigationStatusMessage({ type: 'error', text: 'Failed to deactivate navigation' });
+      setTimeout(() => setNavigationStatusMessage(null), 3000);
+    }
   };
 
   // Handle creating a new save
@@ -485,9 +618,14 @@ export default function AdminMasterDataPage() {
         {/* Tab Navigation for All Systems */}
         <div className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg p-4 mb-4">
           <div className="flex flex-wrap gap-2">
-            {DATA_SYSTEMS.filter(system => !minimizedTabs.has(system.id)).map((system) => (
+            {orderedDataSystems.filter(system => !minimizedTabs.has(system.id)).map((system) => (
               <button
                 key={system.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, system.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, system.id)}
+                onDragEnd={handleDragEnd}
                 onClick={() => {
                   setActiveTab(system.id);
                   // Reset story climb sub-tab to default when switching to Story Climb Mechanics
@@ -506,8 +644,10 @@ export default function AdminMasterDataPage() {
                   const sectionsToExpand = [system.id, ...(subsections[system.id as keyof typeof subsections] || [])];
                   setExpandedSections(new Set(sectionsToExpand));
                 }}
-                className={`group relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold ${
-                  activeTab === system.id
+                className={`group relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-semibold cursor-move ${
+                  draggedTabId === system.id
+                    ? 'opacity-50 scale-95'
+                    : activeTab === system.id
                     ? 'border-yellow-400 bg-yellow-900/30 text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.3)]'
                     : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-yellow-500/50 hover:bg-yellow-900/20'
                 }`}
@@ -537,7 +677,7 @@ export default function AdminMasterDataPage() {
                 <span className="text-xs text-gray-500 uppercase tracking-wider">Minimized:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {DATA_SYSTEMS.filter(system => minimizedTabs.has(system.id)).map((system) => (
+                {orderedDataSystems.filter(system => minimizedTabs.has(system.id)).map((system) => (
                   <button
                     key={system.id}
                     onClick={() => handleRestoreTab(system.id)}
@@ -2365,6 +2505,258 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* Navigation Preview */}
+          {activeTab === 'navigation-preview' && (
+          <div id="section-navigation-preview" className="bg-black/50 backdrop-blur border-2 border-blue-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4 space-y-6">
+                <p className="text-gray-400 mb-4">
+                  Preview and test navigation overlays with interactive zones. Select a saved overlay from the Overlay Editor to display it as a sticky navigation bar.
+                </p>
+
+                {/* Controls */}
+                <div className="space-y-4">
+                  {/* Overlay Selector */}
+                  <div>
+                    <label className="mek-label-uppercase block mb-2">Select Navigation Overlay</label>
+                    <select
+                      value={selectedNavigationOverlay}
+                      onChange={(e) => setSelectedNavigationOverlay(e.target.value)}
+                      className="w-full px-3 py-2 bg-black/50 border border-blue-500/50 rounded text-white"
+                    >
+                      <option value="">-- Select an overlay --</option>
+                      {allOverlays?.map((overlay) => (
+                        <option key={overlay._id} value={overlay.imageKey}>
+                          {overlay.imageKey} ({overlay.zones.length} zones)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Scale Slider */}
+                  {selectedNavigationOverlay && selectedOverlayData && (
+                    <div>
+                      <label className="mek-label-uppercase block mb-2">
+                        Navigation Scale: {Math.round(navigationScale * 100)}%
+                      </label>
+                      <div className="flex gap-4 items-center">
+                        <input
+                          type="range"
+                          min="0.05"
+                          max="1"
+                          step="0.01"
+                          value={navigationScale}
+                          onChange={(e) => setNavigationScale(parseFloat(e.target.value))}
+                          className="flex-1"
+                        />
+                        <button
+                          onClick={() => setNavigationScale(1)}
+                          className="px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded text-blue-400 hover:bg-blue-500/30 text-sm"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Original size: {selectedOverlayData.imageWidth} × {selectedOverlayData.imageHeight}px
+                        <br />
+                        Scaled size: {Math.round(selectedOverlayData.imageWidth * navigationScale)} × {Math.round(selectedOverlayData.imageHeight * navigationScale)}px
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Save and Deploy Buttons */}
+                  {selectedNavigationOverlay && selectedOverlayData && (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSaveNavigationConfig}
+                        className="flex-1 px-4 py-3 bg-blue-600/20 border-2 border-blue-500/50 rounded text-blue-400 font-bold hover:bg-blue-600/30 transition-colors"
+                      >
+                        💾 Save Configuration
+                      </button>
+                      <button
+                        onClick={handleDeployNavigation}
+                        disabled={!navigationConfig}
+                        className="flex-1 px-4 py-3 bg-green-600/20 border-2 border-green-500/50 rounded text-green-400 font-bold hover:bg-green-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        🚀 Deploy to Site
+                      </button>
+                      {activeNavigationConfig && (
+                        <button
+                          onClick={handleDeactivateNavigation}
+                          className="px-4 py-3 bg-red-600/20 border-2 border-red-500/50 rounded text-red-400 font-bold hover:bg-red-600/30 transition-colors"
+                        >
+                          ⏸️ Deactivate
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Status Message */}
+                  {navigationStatusMessage && (
+                    <div className={`p-3 rounded border-2 ${
+                      navigationStatusMessage.type === 'success' ? 'bg-green-900/30 border-green-500/50 text-green-400' :
+                      navigationStatusMessage.type === 'error' ? 'bg-red-900/30 border-red-500/50 text-red-400' :
+                      'bg-blue-900/30 border-blue-500/50 text-blue-400'
+                    }`}>
+                      {navigationStatusMessage.text}
+                    </div>
+                  )}
+
+                  {/* Deployment Status Indicator */}
+                  {activeNavigationConfig && (
+                    <div className="bg-green-900/20 border-2 border-green-500/50 rounded p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <div>
+                          <div className="font-bold text-green-400">Navigation Active</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            Overlay: {activeNavigationConfig.overlayImageKey} •
+                            Scale: {Math.round(activeNavigationConfig.scale * 100)}% •
+                            Deployed: {new Date(activeNavigationConfig.deployedAt || 0).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {navigationConfig && !activeNavigationConfig && (
+                    <div className="bg-yellow-900/20 border-2 border-yellow-500/50 rounded p-3 text-yellow-400 text-sm">
+                      ℹ️ Configuration saved but not deployed. Click "Deploy to Site" to make it active.
+                    </div>
+                  )}
+                </div>
+
+                {/* Preview Area */}
+                {selectedNavigationOverlay && selectedOverlayData ? (
+                  <div className="space-y-4">
+                    <div className="mek-label-uppercase text-blue-400">Sticky Navigation Preview</div>
+
+                    {/* Sticky Navigation Container */}
+                    <div
+                      className="relative border-2 border-blue-500/50 rounded bg-black/80"
+                      style={{
+                        position: 'sticky',
+                        top: '20px',
+                        zIndex: 100
+                      }}
+                    >
+                      {/* Base Image */}
+                      <div
+                        className="relative"
+                        style={{
+                          width: selectedOverlayData.imageWidth * navigationScale,
+                          height: selectedOverlayData.imageHeight * navigationScale,
+                        }}
+                      >
+                        <img
+                          src={selectedOverlayData.imagePath}
+                          alt="Navigation Backplate"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'block',
+                          }}
+                        />
+
+                        {/* Render Zones */}
+                        {selectedOverlayData.zones
+                          .filter((zone: any) => zone.mode === "zone")
+                          .map((zone: any) => (
+                            <div
+                              key={zone.id}
+                              style={{
+                                position: 'absolute',
+                                left: zone.x * navigationScale,
+                                top: zone.y * navigationScale,
+                                width: (zone.width || 0) * navigationScale,
+                                height: (zone.height || 0) * navigationScale,
+                                border: '2px solid rgba(59, 130, 246, 0.5)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                cursor: 'pointer',
+                              }}
+                              className="hover:bg-blue-500/30 transition-colors"
+                              title={zone.label || zone.type}
+                            >
+                              <div className="text-xs text-blue-400 font-bold p-1 bg-black/50">
+                                {zone.label || zone.type}
+                              </div>
+                            </div>
+                          ))}
+
+                        {/* Render Sprites */}
+                        {selectedOverlayData.zones
+                          .filter((zone: any) => zone.mode === "sprite")
+                          .map((sprite: any) => {
+                            const spriteScaleValue = sprite.metadata?.spriteScale || 1;
+                            return (
+                              <div
+                                key={sprite.id}
+                                style={{
+                                  position: 'absolute',
+                                  left: sprite.x * navigationScale,
+                                  top: sprite.y * navigationScale,
+                                  transform: `scale(${spriteScaleValue * navigationScale})`,
+                                  transformOrigin: 'top left',
+                                  border: '1px solid rgba(250, 182, 23, 0.3)',
+                                  pointerEvents: 'none',
+                                }}
+                              >
+                                {sprite.overlayImage && (
+                                  <img src={sprite.overlayImage} alt={sprite.label} style={{ display: 'block' }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+
+                    {/* Zone List */}
+                    <div className="bg-black/50 border border-blue-500/30 rounded p-4">
+                      <h4 className="mek-label-uppercase text-blue-400 mb-3">
+                        Interactive Zones ({selectedOverlayData.zones.filter((z: any) => z.mode === "zone").length})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {selectedOverlayData.zones
+                          .filter((zone: any) => zone.mode === "zone")
+                          .map((zone: any) => (
+                            <div
+                              key={zone.id}
+                              className="p-3 bg-black/50 border border-blue-500/30 rounded"
+                            >
+                              <div className="text-sm font-bold text-blue-400">
+                                {zone.label || zone.type}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                Position: ({Math.round(zone.x * navigationScale)}, {Math.round(zone.y * navigationScale)})
+                                <br />
+                                Size: {Math.round((zone.width || 0) * navigationScale)} × {Math.round((zone.height || 0) * navigationScale)}px
+                                <br />
+                                Type: {zone.type}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Scroll Test Area */}
+                    <div className="bg-black/30 border border-gray-700 rounded p-4">
+                      <div className="mek-label-uppercase text-gray-400 mb-2">Scroll Test Area</div>
+                      <div className="text-sm text-gray-500 space-y-2">
+                        <p>Scroll down to see the sticky navigation stay at the top of the page.</p>
+                        {Array.from({ length: 20 }).map((_, i) => (
+                          <p key={i}>Test content line {i + 1}...</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-12 border border-gray-700 rounded">
+                    Select an overlay from the dropdown above to preview it as a sticky navigation bar.
+                  </div>
+                )}
+              </div>
+          </div>
+          )}
+
         </div>
       </div>
 
@@ -2379,7 +2771,7 @@ export default function AdminMasterDataPage() {
 
 // NFT Admin Sub-Tabs Component
 function NFTAdminTabs() {
-  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative'>('commemorative');
+  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative' | 'whitelist-manager'>('commemorative');
 
   return (
     <div className="space-y-6">
@@ -2435,6 +2827,16 @@ function NFTAdminTabs() {
         >
           🏆 Commemorative
         </button>
+        <button
+          onClick={() => setNftSubTab('whitelist-manager')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'whitelist-manager'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          📋 Whitelist Manager
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -2443,6 +2845,7 @@ function NFTAdminTabs() {
       {nftSubTab === 'purchases' && <PurchaseDashboard />}
       {nftSubTab === 'analytics' && <RevenueAnalytics />}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
+      {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
     </div>
   );
 }

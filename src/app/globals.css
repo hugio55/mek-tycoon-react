@@ -2032,6 +2032,41 @@ body {
   50% { box-shadow: 0 0 50px rgba(250, 182, 23, 0.7); }
 }
 
+/* No vignette effect class - prevents any darkening overlays */
+.no-vignette,
+.no-vignette * {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.no-vignette::before,
+.no-vignette::after,
+.no-vignette *::before,
+.no-vignette *::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove dark bottom gradient from Mek thumbnails */
+.mek-thumbnail-container {
+  position: relative;
+}
+
+.mek-thumbnail-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: linear-gradient(to top, rgba(17, 24, 39, 0.6), transparent);
+  pointer-events: none;
+  mix-blend-mode: lighten;
+}
+
 /* Slider styling for yellow theme */
 .slider-yellow::-webkit-slider-thumb {
   appearance: none;

@@ -73,9 +73,12 @@ import type * as diagnosticCorruptedGold from "../diagnosticCorruptedGold.js";
 import type * as diagnosticDiscordConnections from "../diagnosticDiscordConnections.js";
 import type * as diagnosticDiscordData from "../diagnosticDiscordData.js";
 import type * as diagnosticEssenceStorage from "../diagnosticEssenceStorage.js";
+import type * as diagnosticEssenceWallets from "../diagnosticEssenceWallets.js";
 import type * as diagnosticMekBoosts from "../diagnosticMekBoosts.js";
+import type * as diagnosticMySlots from "../diagnosticMySlots.js";
 import type * as diagnosticNothingDuplicates from "../diagnosticNothingDuplicates.js";
 import type * as diagnosticRequestAnalysis from "../diagnosticRequestAnalysis.js";
+import type * as diagnosticSlottedMeks from "../diagnosticSlottedMeks.js";
 import type * as diagnosticSourceKeys from "../diagnosticSourceKeys.js";
 import type * as diagnosticWalletCheck from "../diagnosticWalletCheck.js";
 import type * as diagnosticWalletHistory from "../diagnosticWalletHistory.js";
@@ -159,6 +162,7 @@ import type * as minting from "../minting.js";
 import type * as monitoring from "../monitoring.js";
 import type * as monitoringSummaryGenerator from "../monitoringSummaryGenerator.js";
 import type * as multiWalletAggregation from "../multiWalletAggregation.js";
+import type * as navigation from "../navigation.js";
 import type * as nftArtAssets from "../nftArtAssets.js";
 import type * as nftEvents from "../nftEvents.js";
 import type * as nftPurchases from "../nftPurchases.js";
@@ -211,6 +215,7 @@ import type * as walletAuth from "../walletAuth.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
 import type * as walletGroups from "../walletGroups.js";
 import type * as walletSession from "../walletSession.js";
+import type * as whitelists from "../whitelists.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -281,9 +286,12 @@ declare const fullApi: ApiFromModules<{
   diagnosticDiscordConnections: typeof diagnosticDiscordConnections;
   diagnosticDiscordData: typeof diagnosticDiscordData;
   diagnosticEssenceStorage: typeof diagnosticEssenceStorage;
+  diagnosticEssenceWallets: typeof diagnosticEssenceWallets;
   diagnosticMekBoosts: typeof diagnosticMekBoosts;
+  diagnosticMySlots: typeof diagnosticMySlots;
   diagnosticNothingDuplicates: typeof diagnosticNothingDuplicates;
   diagnosticRequestAnalysis: typeof diagnosticRequestAnalysis;
+  diagnosticSlottedMeks: typeof diagnosticSlottedMeks;
   diagnosticSourceKeys: typeof diagnosticSourceKeys;
   diagnosticWalletCheck: typeof diagnosticWalletCheck;
   diagnosticWalletHistory: typeof diagnosticWalletHistory;
@@ -367,6 +375,7 @@ declare const fullApi: ApiFromModules<{
   monitoring: typeof monitoring;
   monitoringSummaryGenerator: typeof monitoringSummaryGenerator;
   multiWalletAggregation: typeof multiWalletAggregation;
+  navigation: typeof navigation;
   nftArtAssets: typeof nftArtAssets;
   nftEvents: typeof nftEvents;
   nftPurchases: typeof nftPurchases;
@@ -419,6 +428,7 @@ declare const fullApi: ApiFromModules<{
   walletAuthentication: typeof walletAuthentication;
   walletGroups: typeof walletGroups;
   walletSession: typeof walletSession;
+  whitelists: typeof whitelists;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

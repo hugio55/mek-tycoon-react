@@ -13,6 +13,53 @@ interface EssenceDistributionLightboxProps {
   walletAddress?: string;
 }
 
+// Animated essence amount component - client-side accumulation for table view
+// Uses identical logic to EssenceBalancesViewer's AnimatedEssenceAmount for consistency
+function AnimatedEssenceTableCell({
+  baseAmount,
+  ratePerDay,
+  cap,
+  backendCalculationTime,
+  decimals = 10
+}: {
+  baseAmount: number;
+  ratePerDay: number;
+  cap: number;
+  backendCalculationTime: number;
+  decimals?: number;
+}) {
+  const [displayAmount, setDisplayAmount] = useState(baseAmount);
+  const baseAmountRef = useRef(baseAmount);
+  const backendTimeRef = useRef(backendCalculationTime);
+
+  // Update baseline when backend sends new values (matches EssenceBalancesViewer)
+  useEffect(() => {
+    baseAmountRef.current = baseAmount;
+    backendTimeRef.current = backendCalculationTime;
+    setDisplayAmount(baseAmount);
+  }, [baseAmount, backendCalculationTime]);
+
+  // Animate if generating (matches EssenceBalancesViewer)
+  useEffect(() => {
+    if (ratePerDay <= 0 || displayAmount >= cap) {
+      setDisplayAmount(Math.min(baseAmount, cap));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - backendTimeRef.current;
+      const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+      const accumulated = ratePerDay * elapsedDays;
+      const newAmount = Math.min(baseAmountRef.current + accumulated, cap);
+      setDisplayAmount(newAmount);
+    }, 50); // Update every 50ms for smooth animation
+
+    return () => clearInterval(interval);
+  }, [ratePerDay, cap, baseAmount]);
+
+  return <span>{displayAmount.toFixed(decimals)}</span>;
+}
+
 // Real-time accumulation component showing high-precision decimals
 // CRITICAL FIX: Use client-side time calculation like gold system
 // Backend gives us a snapshot at query time, but we continue accumulating client-side
@@ -98,7 +145,12 @@ function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: 
   );
 }
 
-export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress = "demo_wallet_123" }: EssenceDistributionLightboxProps) {
+export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress }: EssenceDistributionLightboxProps) {
+  // VERSION MARKER - Check browser console to see if this appears
+  useEffect(() => {
+    console.log('🔥🔥🔥 [FILE VERSION CHECK] EssenceDistributionLightbox.tsx - RESTORED UI CHANGES - Stat boxes 25% smaller 🔥🔥🔥');
+  }, []);
+
   const [mounted, setMounted] = useState(false);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
   const [chartSize, setChartSize] = useState(525);
@@ -111,6 +163,24 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1);
   const [viewMode, setViewMode] = useState<'donut' | 'table'>('donut');
   const [mobileDataColumn, setMobileDataColumn] = useState<'amount' | 'growth' | 'maxCap' | 'totalValue'>('amount');
+  const [tableStyle, setTableStyle] = useState<1 | 2 | 3>(2);
+  const [sortColumn, setSortColumn] = useState<'name' | 'growth' | 'maxCap' | 'totalValue' | 'amount'>('amount');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Debug controls
+  const [backdropDarkness, setBackdropDarkness] = useState<10 | 20 | 40 | 60 | 80>(10);
+  const [backdropBlur, setBackdropBlur] = useState<0 | 1 | 2 | 3 | 4>(1);
+  const [cardDarkness, setCardDarkness] = useState<20 | 30 | 40 | 50 | 70>(20);
+  const [cardBlur, setCardBlur] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl'>('md');
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Generation animation controls
+  const [showAnimationDebug, setShowAnimationDebug] = useState(false);
+  const [animDirection, setAnimDirection] = useState<'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'radial-out' | 'radial-in'>('top-right');
+  const [animDensity, setAnimDensity] = useState<'low' | 'medium' | 'high'>('medium');
+  const [animBlendMode, setAnimBlendMode] = useState<'normal' | 'screen' | 'overlay' | 'lighten'>('normal');
+  const [animOpacity, setAnimOpacity] = useState(70);
+
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Mount portal and lock body scroll
@@ -172,8 +242,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
 
     return playerEssenceState.balances.map((balance: any, index: number) => {
       const currentValue = marketPrices[balance.variationName] || 100;
-      const baseRate = essenceConfig?.essenceRate || 0.1;
-      const essenceCap = essenceConfig?.essenceCap || 10;
+      // Use actual generation rate from essenceRates (will be 0 if not generating)
+      const actualRate = playerEssenceState.essenceRates?.[balance.variationId] || 0;
+      const essenceCap = playerEssenceState.caps?.[balance.variationId] || 10;
 
       // Use variation name to construct image path (lowercase, replace spaces with hyphens)
       const imageName = balance.variationName.toLowerCase().replace(/\s+/g, '-');
@@ -181,13 +252,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       return {
         id: balance.variationName.toLowerCase().replace(/\s+/g, '-'),
         name: balance.variationName,
-        amount: parseFloat(balance.accumulatedAmount.toFixed(2)),
+        variationId: balance.variationId, // Include variationId for rate lookups
+        amount: balance.accumulatedAmount, // Use raw amount, don't round
         currentValue: Math.floor(currentValue),
         maxAmount: essenceCap,
         maxAmountBuffed: undefined, // TODO: Get from buffs
         icon: essenceIcons[index % essenceIcons.length],
         image: `/essence-images/${imageName}.png`, // Map to variation-specific images
-        baseRate,
+        baseRate: actualRate, // Use actual rate (0 if not generating)
         bonusRate: 0 // TODO: Get from buffs
       };
     });
@@ -298,22 +370,312 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
     }
   };
 
-  if (!isOpen || !mounted) return null;
-
   // Show loading state while data is being fetched (but only for a reasonable time)
   const isLoading = playerEssenceState === undefined || marketListings === undefined || essenceConfig === undefined;
+
+  // Handle column sorting
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to descending
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  // Sort displayed essences
+  const sortedEssences = useMemo(() => {
+    const sorted = [...displayedEssences].sort((a, b) => {
+      let aValue: number | string;
+      let bValue: number | string;
+
+      switch (sortColumn) {
+        case 'name':
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case 'growth':
+          aValue = (a.baseRate || 0) + (a.bonusRate || 0);
+          bValue = (b.baseRate || 0) + (b.bonusRate || 0);
+          break;
+        case 'maxCap':
+          aValue = a.maxAmountBuffed || a.maxAmount || 10;
+          bValue = b.maxAmountBuffed || b.maxAmount || 10;
+          break;
+        case 'totalValue':
+          aValue = a.amount * a.currentValue;
+          bValue = b.amount * b.currentValue;
+          break;
+        case 'amount':
+        default:
+          aValue = a.amount;
+          bValue = b.amount;
+          break;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      return sortDirection === 'asc'
+        ? (aValue as number) - (bValue as number)
+        : (bValue as number) - (aValue as number);
+    });
+
+    return sorted;
+  }, [displayedEssences, sortColumn, sortDirection]);
+
+  // Helper functions to get proper Tailwind classes
+  const getBackdropDarknessClass = () => {
+    switch (backdropDarkness) {
+      case 10: return 'bg-black/10';
+      case 20: return 'bg-black/20';
+      case 40: return 'bg-black/40';
+      case 60: return 'bg-black/60';
+      case 80: return 'bg-black/80';
+      default: return 'bg-black/40';
+    }
+  };
+
+  const getBackdropBlurStyle = () => {
+    if (backdropBlur === 0) return {};
+    return { backdropFilter: `blur(${backdropBlur}px)` };
+  };
+
+  const getCardDarknessClass = () => {
+    switch (cardDarkness) {
+      case 20: return 'bg-black/20';
+      case 30: return 'bg-black/30';
+      case 40: return 'bg-black/40';
+      case 50: return 'bg-black/50';
+      case 70: return 'bg-black/70';
+      default: return 'bg-black/70';
+    }
+  };
+
+  const getCardBlurClass = () => {
+    switch (cardBlur) {
+      case 'none': return '';
+      case 'sm': return 'backdrop-blur-sm';
+      case 'md': return 'backdrop-blur-md';
+      case 'lg': return 'backdrop-blur-lg';
+      case 'xl': return 'backdrop-blur-xl';
+      default: return '';
+    }
+  };
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        className={`fixed inset-0 ${getBackdropDarknessClass()}`}
+        style={getBackdropBlurStyle()}
         onClick={onClose}
       />
 
+      {/* Generation Animation Debug Menu - FAR LEFT SIDE - COMPACT */}
+      <div className="fixed left-0 top-1/2 -translate-y-1/2 z-[10000]">
+        {/* Toggle Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowAnimationDebug(!showAnimationDebug);
+          }}
+          className="bg-black/90 border-2 border-yellow-500/50 px-2 py-2 flex items-center justify-center hover:bg-yellow-500/20 hover:border-yellow-500 transition-all"
+          style={{
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed'
+          }}
+        >
+          <span className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider">ANIM</span>
+        </button>
+
+        {/* Compact Animation Debug Panel */}
+        {showAnimationDebug && (
+          <div className="absolute left-full top-0 ml-2 w-56 bg-black/95 border-2 border-yellow-500/50 rounded p-3 shadow-2xl text-xs" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider mb-2 pb-1 border-b border-yellow-500/30">
+              Generation Energy
+            </h3>
+
+            {/* Direction */}
+            <div className="mb-2">
+              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Direction</label>
+              <select
+                value={animDirection}
+                onChange={(e) => setAnimDirection(e.target.value as typeof animDirection)}
+                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
+              >
+                <option value="top-left">↖ Top-Left</option>
+                <option value="top-right">↗ Top-Right</option>
+                <option value="bottom-right">↘ Bottom-Right</option>
+                <option value="bottom-left">↙ Bottom-Left</option>
+                <option value="radial-out">⊙ Radial Outward</option>
+                <option value="radial-in">⊗ Radial Inward</option>
+              </select>
+            </div>
+
+            {/* Density */}
+            <div className="mb-2">
+              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Density</label>
+              <select
+                value={animDensity}
+                onChange={(e) => setAnimDensity(e.target.value as typeof animDensity)}
+                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
+              >
+                <option value="low">Low (Sparse)</option>
+                <option value="medium">Medium</option>
+                <option value="high">High (Dense)</option>
+              </select>
+            </div>
+
+            {/* Blend Mode */}
+            <div className="mb-2">
+              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Blend Mode</label>
+              <select
+                value={animBlendMode}
+                onChange={(e) => setAnimBlendMode(e.target.value as typeof animBlendMode)}
+                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
+              >
+                <option value="normal">Normal</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="lighten">Lighten</option>
+              </select>
+            </div>
+
+            {/* Opacity Slider */}
+            <div>
+              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">
+                Opacity: {animOpacity}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={animOpacity}
+                onChange={(e) => setAnimOpacity(parseInt(e.target.value))}
+                className="w-full h-1 bg-black/80 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                style={{
+                  background: `linear-gradient(to right, rgb(234, 179, 8) 0%, rgb(234, 179, 8) ${animOpacity}%, rgba(0,0,0,0.8) ${animOpacity}%, rgba(0,0,0,0.8) 100%)`
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Debug Toggle Button - Fixed to viewport */}
+      <button
+        onClick={() => setShowDebugPanel(!showDebugPanel)}
+        className="fixed top-4 right-4 z-[10000] px-3 py-2 flex items-center justify-center bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
+      >
+        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Debug</span>
+      </button>
+
+      {/* Debug Panel - Fixed to viewport */}
+      {showDebugPanel && (
+        <div className="fixed top-16 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-4 shadow-2xl">
+            <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
+              Visual Debug Controls
+            </h3>
+
+            {/* Backdrop Darkness */}
+            <div className="mb-4">
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                Backdrop Darkness (Main Page)
+              </label>
+              <div className="flex gap-1">
+                {[10, 20, 40, 60, 80].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => setBackdropDarkness(value as typeof backdropDarkness)}
+                    className={`flex-1 px-2 py-1 text-xs font-bold transition-all ${
+                      backdropDarkness === value
+                        ? 'bg-cyan-500 text-black border border-cyan-400'
+                        : 'bg-black/60 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20'
+                    }`}
+                  >
+                    {value}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Backdrop Blur */}
+            <div className="mb-4">
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                Backdrop Blur Amount
+              </label>
+              <div className="flex gap-1">
+                {[0, 1, 2, 3, 4].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => setBackdropBlur(value as typeof backdropBlur)}
+                    className={`flex-1 px-2 py-1 text-xs font-bold transition-all ${
+                      backdropBlur === value
+                        ? 'bg-cyan-500 text-black border border-cyan-400'
+                        : 'bg-black/60 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20'
+                    }`}
+                  >
+                    {value}px
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Darkness */}
+            <div className="mb-4">
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                Lightbox Card Darkness
+              </label>
+              <div className="flex gap-1">
+                {[20, 30, 40, 50, 70].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => setCardDarkness(value as typeof cardDarkness)}
+                    className={`flex-1 px-2 py-1 text-xs font-bold transition-all ${
+                      cardDarkness === value
+                        ? 'bg-yellow-500 text-black border border-yellow-400'
+                        : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                    }`}
+                  >
+                    {value}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Blur */}
+            <div>
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+                Lightbox Card Blur
+              </label>
+              <div className="flex gap-1">
+                {(['none', 'sm', 'md', 'lg', 'xl'] as const).map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => setCardBlur(value)}
+                    className={`flex-1 px-2 py-1 text-xs font-bold uppercase transition-all ${
+                      cardBlur === value
+                        ? 'bg-yellow-500 text-black border border-yellow-400'
+                        : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* Lightbox Container */}
       <div
-        className="relative w-[960px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
+        className={`relative w-[960px] max-w-[95vw] h-[90vh] ${getCardDarknessClass()} ${getCardBlurClass()} border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Loading Overlay */}
@@ -325,12 +687,13 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
             </div>
           </div>
         )}
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-black/80 border-2 border-yellow-500/50 rounded hover:bg-yellow-500/20 hover:border-yellow-500 transition-all"
+          className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
         >
-          <span className="text-yellow-400 text-2xl font-bold">×</span>
+          <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
         </button>
 
         {/* Scrollable Content */}
@@ -345,17 +708,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                   }} />
                 </div>
 
-                <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-yellow-500/50"></div>
-                <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-yellow-500/50"></div>
-
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                  <h1 className="text-5xl font-bold font-orbitron tracking-wider text-center mb-2">
+                <div className="max-w-7xl mx-auto px-4 py-[15px]">
+                  <h1 className="text-5xl font-bold font-orbitron tracking-wider text-center mb-1">
                     <span className="text-yellow-400">ESSENCE</span>{" "}
                     <span className="text-gray-400">DISTRIBUTION</span>
                   </h1>
-                  <p className="text-center text-gray-500 uppercase tracking-[0.3em] text-sm mb-1">
-                    View Your Essence Inventory
-                  </p>
                   <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
                     lineHeight: '1.6'
                   }}>
@@ -382,17 +739,17 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                   backgroundSize: '40px 40px'
                 }} />
 
-                <div className="max-w-7xl mx-auto px-4 py-4">
+                <div className="max-w-7xl mx-auto px-4 py-2">
                   <div className="flex items-center justify-between gap-8">
                     {/* Stats Section */}
                     <div className="flex items-center gap-2">
                       {/* Total Essence */}
                       <div className="relative group">
-                        <div className="relative bg-gradient-to-br from-yellow-900/20 to-black/60 border border-yellow-500/40 px-6 py-3">
+                        <div className="relative bg-gradient-to-br from-yellow-900/20 to-black/60 border border-yellow-500/40 px-[18px] py-[5px]">
                           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">ESSENCE</div>
+                          <div className="text-[7.5px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-[2px] text-center">ESSENCE</div>
                           <div className="relative text-center">
-                            <div className="text-3xl font-bold font-mono text-yellow-400 tracking-tight" style={{
+                            <div className="text-[22.5px] font-bold font-mono text-yellow-400 tracking-tight leading-none" style={{
                               textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
                             }}>
                               {totalStats.totalAmount.toFixed(1)}
@@ -403,19 +760,19 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                         <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-yellow-400/60" />
                       </div>
 
-                      <div className="h-12 w-px bg-gradient-to-b from-transparent via-yellow-500/30 to-transparent" />
+                      <div className="h-10 w-px bg-gradient-to-b from-transparent via-yellow-500/30 to-transparent" />
 
                       {/* Total Value */}
                       <div className="relative group">
-                        <div className="relative bg-gradient-to-br from-green-900/20 to-black/60 border border-green-500/40 px-6 py-3">
+                        <div className="relative bg-gradient-to-br from-green-900/20 to-black/60 border border-green-500/40 px-[18px] py-[5px]">
                           <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">VALUE</div>
+                          <div className="text-[7.5px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-[2px] text-center">APPROX. VALUE</div>
                           <div className="relative text-center">
-                            <div className="text-3xl font-bold font-mono text-green-400 tracking-tight inline-flex items-baseline" style={{
+                            <div className="text-[22.5px] font-bold font-mono text-green-400 tracking-tight inline-flex items-baseline leading-none" style={{
                               textShadow: '0 0 20px rgba(74, 222, 128, 0.5), 0 0 40px rgba(74, 222, 128, 0.3)'
                             }}>
                               {Math.round(totalStats.totalValue).toLocaleString()}
-                              <span className="text-lg ml-1 text-green-400/80">g</span>
+                              <span className="text-[14px] ml-1 text-green-400/80">g</span>
                             </div>
                           </div>
                         </div>
@@ -423,15 +780,15 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                         <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-green-400/60" />
                       </div>
 
-                      <div className="h-12 w-px bg-gradient-to-b from-transparent via-cyan-500/30 to-transparent" />
+                      <div className="h-10 w-px bg-gradient-to-b from-transparent via-cyan-500/30 to-transparent" />
 
                       {/* Types */}
                       <div className="relative group">
-                        <div className="relative bg-gradient-to-br from-cyan-900/20 to-black/60 border border-cyan-500/40 px-6 py-3">
+                        <div className="relative bg-gradient-to-br from-cyan-900/20 to-black/60 border border-cyan-500/40 px-[18px] py-[5px]">
                           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-1 text-center">TYPES</div>
+                          <div className="text-[7.5px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-[2px] text-center">TYPES</div>
                           <div className="relative text-center">
-                            <div className="text-3xl font-bold font-mono text-cyan-400 tracking-tight" style={{
+                            <div className="text-[22.5px] font-bold font-mono text-cyan-400 tracking-tight leading-none" style={{
                               textShadow: '0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.3)'
                             }}>
                               {totalStats.uniqueTypes}
@@ -558,6 +915,10 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                 onSliceClick={handleSliceClick}
                                 selectedSlice={selectedSlice}
                                 hoverEffect={hoverEffect}
+                                animDirection={animDirection}
+                                animDensity={animDensity}
+                                animBlendMode={animBlendMode}
+                                animOpacity={animOpacity}
                               />
                             </div>
                           ) : (
@@ -605,100 +966,161 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                               </div>
                             </div>
 
-                            {/* Excel-like Table */}
-                            <div className="bg-black/60 border-2 border-yellow-500/50 rounded-lg overflow-hidden">
-                              {/* Table Header - Desktop */}
-                              <div className="hidden md:grid md:grid-cols-5 bg-black/80 border-b-2 border-yellow-500/50">
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30">
-                                  Essence Name
-                                </div>
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
-                                  Growth Rate
-                                </div>
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
-                                  Max Cap
-                                </div>
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30 text-center">
-                                  Total Value
-                                </div>
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider text-center">
-                                  Amount Owned
+                            {/* Amber Vintage Terminal - Locked Style */}
+                            <div className="relative bg-black/90 border-2 border-amber-500/50 overflow-hidden" style={{
+                              boxShadow: '0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 40px rgba(245, 158, 11, 0.05)'
+                            }}>
+                              {/* Scan line effect */}
+                              <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+                                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(245, 158, 11, 0.1) 2px, rgba(245, 158, 11, 0.1) 4px)'
+                              }} />
+
+                              {/* Terminal Header */}
+                              <div className="hidden md:grid md:grid-cols-5 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] text-amber-400 uppercase tracking-widest">
+                                <button
+                                  onClick={() => handleSort('name')}
+                                  className="text-left hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  NAME
+                                  {sortColumn === 'name' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleSort('growth')}
+                                  className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  GROWTH/d
+                                  {sortColumn === 'growth' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleSort('maxCap')}
+                                  className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  MAX CAP
+                                  {sortColumn === 'maxCap' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleSort('totalValue')}
+                                  className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  APPROX. VALUE
+                                  {sortColumn === 'totalValue' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleSort('amount')}
+                                  className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  OWNED
+                                  {sortColumn === 'amount' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                              </div>
+
+                              {/* Mobile Header */}
+                              <div className="md:hidden grid grid-cols-2 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] text-amber-400 uppercase tracking-widest">
+                                <div>NAME</div>
+                                <div className="text-center">
+                                  {mobileDataColumn === 'amount' && 'OWNED'}
+                                  {mobileDataColumn === 'growth' && 'GROWTH/d'}
+                                  {mobileDataColumn === 'maxCap' && 'MAX CAP'}
+                                  {mobileDataColumn === 'totalValue' && 'APPROX. VALUE'}
                                 </div>
                               </div>
 
-                              {/* Table Header - Mobile */}
-                              <div className="md:hidden grid grid-cols-2 bg-black/80 border-b-2 border-yellow-500/50">
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider border-r border-yellow-500/30">
-                                  Essence Name
-                                </div>
-                                <div className="px-4 py-3 text-xs font-bold text-yellow-400 uppercase tracking-wider text-center">
-                                  {mobileDataColumn === 'amount' && 'Amount Owned'}
-                                  {mobileDataColumn === 'growth' && 'Growth Rate'}
-                                  {mobileDataColumn === 'maxCap' && 'Max Cap'}
-                                  {mobileDataColumn === 'totalValue' && 'Total Value'}
-                                </div>
-                              </div>
-
-                              {/* Table Body - Scrollable */}
-                              <div className="max-h-[500px] overflow-y-auto">
-                                {displayedEssences.map((essence, index) => {
-                                  const baseRate = essence.baseRate || 0.1;
+                              {/* Terminal Body */}
+                              <div className="max-h-[500px] overflow-y-auto font-mono text-[13px] custom-scrollbar">
+                                {sortedEssences.map((essence, index) => {
+                                  const baseRate = essence.baseRate || 0; // Don't default to 0.1, keep 0 for non-generating
                                   const bonusRate = essence.bonusRate || 0;
                                   const totalRate = baseRate + bonusRate;
                                   const effectiveMax = essence.maxAmountBuffed || essence.maxAmount || 10;
                                   const totalValue = essence.amount * essence.currentValue;
+                                  const isGenerating = totalRate > 0;
+                                  const hasGrowthBuff = bonusRate > 0;
+                                  const hasCapBuff = essence.maxAmountBuffed && essence.maxAmountBuffed > (essence.maxAmount || 10);
 
                                   return (
                                     <div
                                       key={essence.id}
-                                      className={`${
-                                        index % 2 === 0 ? 'bg-black/40' : 'bg-black/20'
-                                      } hover:bg-yellow-500/10 transition-colors border-b border-yellow-500/20 last:border-b-0`}
+                                      onMouseEnter={() => setHoveredSlice(essence.id)}
+                                      onMouseLeave={() => { if (selectedSlice !== essence.id) setHoveredSlice(null); }}
+                                      onClick={() => {
+                                        if (selectedSlice === essence.id) {
+                                          setSelectedSlice(null);
+                                          setHoveredSlice(null);
+                                        } else {
+                                          setSelectedSlice(essence.id);
+                                        }
+                                      }}
+                                      className={`relative hidden md:grid md:grid-cols-5 items-center px-4 py-3 border-b ${
+                                        selectedSlice === essence.id
+                                          ? 'border-amber-400 bg-amber-400/20'
+                                          : hoveredSlice === essence.id
+                                          ? 'border-amber-400/40 bg-amber-400/15'
+                                          : 'border-amber-400/20'
+                                      } hover:bg-amber-400/10 transition-all cursor-pointer`}
                                     >
-                                      {/* Desktop View - All Columns */}
-                                      <div className="hidden md:grid md:grid-cols-5">
-                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 font-medium">
-                                          {essence.name}
-                                        </div>
-                                        <div className="px-4 py-3 text-sm text-cyan-400 border-r border-yellow-500/20 text-center font-mono">
-                                          {totalRate.toFixed(2)}/d
-                                        </div>
-                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 text-center font-mono">
-                                          {effectiveMax}
-                                        </div>
-                                        <div className="px-4 py-3 text-sm text-yellow-400 border-r border-yellow-500/20 text-center font-mono">
-                                          {Math.round(totalValue).toLocaleString()}g
-                                        </div>
-                                        <div className="px-4 py-3 text-sm text-yellow-400 text-center font-mono font-bold">
-                                          {essence.amount.toFixed(2)}
-                                        </div>
+                                      {/* Full height amber bar */}
+                                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/30" />
+
+                                      <div className="text-white font-semibold">{essence.name.toUpperCase()}</div>
+
+                                      {/* Growth Rate Column */}
+                                      <div className={`text-center tabular-nums ${
+                                        totalRate === 0
+                                          ? 'text-gray-500'
+                                          : hasGrowthBuff
+                                          ? 'text-green-400 font-bold'
+                                          : 'text-cyan-400'
+                                      }`}
+                                      style={hasGrowthBuff ? {
+                                        textShadow: '0 0 10px rgba(34, 197, 94, 0.6)'
+                                      } : isGenerating ? {
+                                        textShadow: '0 0 8px rgba(34, 211, 238, 0.5)'
+                                      } : undefined}
+                                      >
+                                        {totalRate === 0 ? '—' : totalRate.toFixed(2)}
                                       </div>
 
-                                      {/* Mobile View - 2 Columns */}
-                                      <div className="md:hidden grid grid-cols-2">
-                                        <div className="px-4 py-3 text-sm text-white border-r border-yellow-500/20 font-medium">
-                                          {essence.name}
-                                        </div>
-                                        <div className="px-4 py-3 text-sm text-center font-mono">
-                                          {mobileDataColumn === 'amount' && (
-                                            <span className="text-yellow-400 font-bold">{essence.amount.toFixed(2)}</span>
-                                          )}
-                                          {mobileDataColumn === 'growth' && (
-                                            <span className="text-cyan-400">{totalRate.toFixed(2)}/d</span>
-                                          )}
-                                          {mobileDataColumn === 'maxCap' && (
-                                            <span className="text-white">{effectiveMax}</span>
-                                          )}
-                                          {mobileDataColumn === 'totalValue' && (
-                                            <span className="text-yellow-400">{Math.round(totalValue).toLocaleString()}g</span>
-                                          )}
-                                        </div>
+                                      {/* Max Cap Column */}
+                                      <div className={`text-center tabular-nums ${
+                                        hasCapBuff
+                                          ? 'text-green-400 font-bold'
+                                          : 'text-amber-300'
+                                      }`}
+                                      style={hasCapBuff ? {
+                                        textShadow: '0 0 10px rgba(34, 197, 94, 0.6)'
+                                      } : undefined}
+                                      >
+                                        {effectiveMax}
+                                      </div>
+
+                                      <div className="text-center text-yellow-300 tabular-nums">
+                                        {Math.round(totalValue).toLocaleString()}g
+                                      </div>
+                                      <div className="text-center text-yellow-400 font-bold tabular-nums">
+                                        <AnimatedEssenceTableCell
+                                          baseAmount={essence.amount}
+                                          ratePerDay={totalRate}
+                                          cap={effectiveMax}
+                                          backendCalculationTime={playerEssenceState?.lastCalculationTime || Date.now()}
+                                          decimals={7}
+                                        />
                                       </div>
                                     </div>
                                   );
                                 })}
                               </div>
                             </div>
+
                           </div>
 
                           {/* Back to Donut Button */}
@@ -725,7 +1147,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                       const sliceIndex = essenceData.indexOf(slice);
                       const effectiveMax = slice.maxAmountBuffed || slice.maxAmount || 10;
                       const isFull = slice.amount >= effectiveMax;
-                      const baseRate = slice.baseRate || 0.1;
+                      const baseRate = slice.baseRate || 0; // Don't default to 0.1, keep 0 for non-generating
                       const bonusRate = slice.bonusRate || 0;
                       const totalRate = baseRate + bonusRate;
                       const totalValue = slice.amount * slice.currentValue;
@@ -930,42 +1352,19 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                             </div>
                           </div>
                         </div>
+
+                        {/* "Hover Chart for Details" Message - Centered inside placeholder */}
+                        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 20 }}>
+                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/80 border border-yellow-500/40 rounded-lg">
+                            <svg className="w-4 h-4 text-yellow-400/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                            </svg>
+                            <span className="text-sm text-gray-300 font-medium whitespace-nowrap">Hover chart for details</span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
-
-                  {/* "Hover Chart for Details" Message - Isolated for full brightness */}
-                  {!(hoveredSlice || selectedSlice) && (
-                    <div
-                      className="pointer-events-none absolute"
-                      style={{
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 99999,
-                        isolation: 'isolate'
-                      }}
-                    >
-                      <div
-                        className="relative border-3 border-yellow-500 rounded-lg px-6 py-4 shadow-2xl"
-                        style={{
-                          background: 'rgba(0, 0, 0, 0.98)',
-                          boxShadow: '0 0 30px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.6), inset 0 0 20px rgba(250, 182, 23, 0.3)',
-                          backdropFilter: 'blur(20px)'
-                        }}
-                      >
-                        <p
-                          className="text-yellow-400 text-base font-bold uppercase tracking-[0.2em] animate-pulse text-center"
-                          style={{
-                            textShadow: '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.8), 0 0 60px rgba(250, 182, 23, 0.6)',
-                            color: 'rgb(250, 182, 23)'
-                          }}
-                        >
-                          Hover Chart<br />for Details
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -974,6 +1373,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       </div>
     </div>
   );
+
+  if (!isOpen || !mounted) return null;
 
   return createPortal(modalContent, document.body);
 }
