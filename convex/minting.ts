@@ -21,6 +21,24 @@ export const storeMintingPolicy = mutation({
     expiryDate: v.optional(v.number()),
     network: v.union(v.literal("mainnet"), v.literal("preprod"), v.literal("preview")),
     notes: v.optional(v.string()),
+
+    // Wallet Configuration
+    adminWallet: v.string(),
+    payoutWallet: v.optional(v.string()),
+
+    // Royalty Configuration
+    royaltiesEnabled: v.optional(v.boolean()),
+    royaltyPercentage: v.optional(v.number()),
+    royaltyAddress: v.optional(v.string()),
+
+    // Metadata Template
+    metadataTemplate: v.optional(v.object({
+      customFields: v.array(v.object({
+        fieldName: v.string(),
+        fieldType: v.union(v.literal("fixed"), v.literal("placeholder")),
+        fixedValue: v.optional(v.string()),
+      })),
+    })),
   },
   handler: async (ctx, args) => {
     // Check if policy already exists
@@ -44,6 +62,18 @@ export const storeMintingPolicy = mutation({
       createdAt: Date.now(),
       isActive: true,
       notes: args.notes,
+
+      // Wallet Configuration
+      adminWallet: args.adminWallet,
+      payoutWallet: args.payoutWallet,
+
+      // Royalty Configuration
+      royaltiesEnabled: args.royaltiesEnabled,
+      royaltyPercentage: args.royaltyPercentage,
+      royaltyAddress: args.royaltyAddress,
+
+      // Metadata Template
+      metadataTemplate: args.metadataTemplate,
     });
 
     return policyId;

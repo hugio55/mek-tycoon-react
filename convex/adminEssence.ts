@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { addEssenceToBalance } from "./lib/essenceHelpers";
 
 // Get all players for admin dropdown
 export const getAllPlayers = query({
@@ -32,42 +34,45 @@ export const adminAddEssenceToPlayer = mutation({
     // Find the variation by name to get its ID
     const now = Date.now();
 
-    // Try to find existing balance
-    const existingBalance = await ctx.db
+    // Use helper to safely add essence (prevents duplicates)
+    await addEssenceToBalance(ctx, {
+      walletAddress,
+      variationId: 0, // Admin doesn't need specific variation IDs
+      variationName,
+      variationType: "item" as const,
+      amountToAdd: amount,
+    });
+
+    // Get updated balance to show in response
+    const updatedBalance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
-      .collect();
+      .withIndex("by_wallet_and_name", (q) =>
+        q.eq("walletAddress", walletAddress).eq("variationName", variationName)
+      )
+      .first();
 
-    const balance = existingBalance.find(b => b.variationName === variationName);
+    const newAmount = updatedBalance?.accumulatedAmount || amount;
 
-    if (balance) {
-      // Update existing balance
-      await ctx.db.patch(balance._id, {
-        accumulatedAmount: balance.accumulatedAmount + amount,
-        lastUpdated: now,
-      });
-
-      return {
-        success: true,
-        newAmount: balance.accumulatedAmount + amount,
-        message: `Added ${amount} ${variationName} essence. New balance: ${(balance.accumulatedAmount + amount).toFixed(2)}`
-      };
-    } else {
-      // Create new balance
-      await ctx.db.insert("essenceBalances", {
-        walletAddress,
-        variationId: 0, // Placeholder - doesn't matter for admin addition
-        variationName,
-        variationType: "item" as const,
-        accumulatedAmount: amount,
-        lastUpdated: now,
-      });
-
-      return {
-        success: true,
-        newAmount: amount,
-        message: `Created new ${variationName} essence balance: ${amount.toFixed(2)}`
-      };
-    }
+    return {
+      success: true,
+      newAmount,
+      message: `Added ${amount} ${variationName} essence. New balance: ${newAmount.toFixed(2)}`
+    };
   },
+});
+
+// Admin action to run migration: delete all test essence balances
+// This calls the internal migration function for clean slate
+// Safe to run - balances will recreate when players slot Meks with proper lastSnapshotTime
+export const runEssenceBalanceMigration = action({
+  args: {},
+  handler: async (ctx): Promise<{ success: boolean; deleted: number; message: string }> => {
+    console.log('[Admin] Running essence balance migration (delete all test data)...');
+
+    const result = await ctx.runMutation(internal.essence.deleteTestEssenceBalances);
+
+    console.log('[Admin] Migration complete:', result);
+
+    return result;
+  }
 });

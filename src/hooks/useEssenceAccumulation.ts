@@ -1,131 +1,113 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useState, useEffect, useRef } from 'react';
+import { calculateCurrentEssence } from '@/convex/lib/essenceCalculations';
 
-export interface EssenceBalance {
-  variationId: number;
-  variationName: string;
-  variationType: "head" | "body" | "item";
-  // Display amount - continuously updating
-  displayAmount: number;
-  // Rate per day (already includes count × base rate)
-  ratePerDay: number;
-  // How many slotted
-  slottedCount: number;
-  // Max cap
-  maxCap: number;
-  // Is at cap?
-  isFull: boolean;
+interface UseEssenceAccumulationProps {
+  baseAmount: number;          // Backend snapshot value (accumulatedAmount)
+  lastSnapshotTime: number;    // When snapshot was taken (timestamp)
+  ratePerDay: number;          // Essence generation rate per day
+  essenceCap: number;          // Maximum capacity
+  variationId: number;         // Unique ID (prevents resets when switching variations)
 }
 
 /**
- * Unified essence accumulation hook
- * Matches the gold system pattern - single animation loop updating all 288 essence types
+ * Real-time essence accumulation hook
+ *
+ * Mirrors gold system's requestAnimationFrame pattern for smooth, accurate display.
+ *
+ * Uses a stable ref to store backend data, preventing resets when:
+ * - User hovers over different essence types
+ * - Convex query re-runs
+ * - Component re-renders
+ *
+ * Only resets calculation when variationId changes (switching to different essence type).
+ *
+ * @example
+ * ```tsx
+ * const { currentAmount } = useEssenceAccumulation({
+ *   baseAmount: backendBalance.accumulatedAmount,
+ *   lastSnapshotTime: backendBalance.lastSnapshotTime,
+ *   ratePerDay: effectiveRate * variationCount,
+ *   essenceCap: config.essenceCap + buffs,
+ *   variationId: backendBalance.variationId
+ * });
+ *
+ * // Display with high precision
+ * <div>{currentAmount.toFixed(12)}</div>
+ * ```
  */
-export function useEssenceAccumulation(walletAddress?: string) {
-  const [essenceBalances, setEssenceBalances] = useState<EssenceBalance[]>([]);
+export function useEssenceAccumulation({
+  baseAmount,
+  lastSnapshotTime,
+  ratePerDay,
+  essenceCap,
+  variationId
+}: UseEssenceAccumulationProps) {
+  const [currentAmount, setCurrentAmount] = useState(baseAmount);
 
-  // Query player essence state
-  const playerEssenceState = useQuery(
-    api.essence.getPlayerEssenceState,
-    walletAddress ? { walletAddress } : "skip"
-  );
+  // Store backend data in ref (stable, doesn't reset on re-render)
+  // This is CRITICAL - prevents resets when Convex query re-runs
+  const dataRef = useRef({ baseAmount, lastSnapshotTime, ratePerDay, essenceCap });
 
-  // Use ref to track latest data without restarting animation loop
-  // This is CRITICAL - prevents loop from restarting on every query update
-  const essenceStateRef = useRef(playerEssenceState);
+  // Update ref when backend data changes (but don't reset animation)
   useEffect(() => {
-    essenceStateRef.current = playerEssenceState;
-  }, [playerEssenceState]);
+    dataRef.current = { baseAmount, lastSnapshotTime, ratePerDay, essenceCap };
+  }, [baseAmount, lastSnapshotTime, ratePerDay, essenceCap]);
 
-  // Unified animation loop - updates ALL essence types every frame
-  // Only restarts when wallet connection changes, NOT when query updates
+  // Animation loop - only depends on variationId
   useEffect(() => {
-    // Only run if we have a wallet connected and essence is active
-    if (!walletAddress || !playerEssenceState?.isActive) {
-      setEssenceBalances([]);
-      return;
-    }
-
-    console.log('[Essence Animation] Starting unified accumulation loop', {
-      walletAddress,
-      balanceCount: playerEssenceState?.balances?.length || 0,
-      isActive: playerEssenceState?.isActive,
-      lastCalculationTime: new Date(playerEssenceState?.lastCalculationTime || 0).toISOString()
-    });
-
     let animationFrameId: number;
-    let lastStateUpdateTime = Date.now();
+    let lastUpdateTime = Date.now();
 
-    // Animation loop - 60 FPS calculation, 30 FPS state updates (matches gold system)
-    const animateEssence = () => {
+    const animate = () => {
       const now = Date.now();
-      const timeSinceLastStateUpdate = now - lastStateUpdateTime;
+      const timeSinceUpdate = now - lastUpdateTime;
 
-      // Get latest data from ref (doesn't cause re-render)
-      const latestData = essenceStateRef.current;
+      // Update state every 33ms (30 FPS - smooth without excessive renders)
+      // Mirrors gold system's throttled update pattern
+      if (timeSinceUpdate >= 33) {
+        const data = dataRef.current;
 
-      // Update state every 33ms for smooth 30 FPS
-      if (latestData && latestData.balances && timeSinceLastStateUpdate >= 33) {
-        const { balances, lastCalculationTime, essenceRates, slottedCounts, caps } = latestData;
-
-        // Calculate time elapsed since backend last saved to DB
-        const timeSinceBackend = now - lastCalculationTime;
-        const daysElapsed = timeSinceBackend / (1000 * 60 * 60 * 24);
-
-        // Update ALL essence balances at once (all 288 variations)
-        const updatedBalances: EssenceBalance[] = balances.map((balance: any) => {
-          const variationId = balance.variationId;
-          const ratePerDay = essenceRates[variationId] || 0;
-          const count = slottedCounts[variationId] || 0;
-          const maxCap = caps[variationId] || 10;
-
-          // Calculate total rate (base rate × count)
-          const totalRatePerDay = ratePerDay * count;
-
-          // Calculate accumulated amount
-          // Base amount from DB + time-based accumulation since backend saved
-          const accumulatedSinceBackend = totalRatePerDay * daysElapsed;
-          const displayAmount = Math.min(
-            balance.accumulatedAmount + accumulatedSinceBackend,
-            maxCap
-          );
-
-          return {
-            variationId: balance.variationId,
-            variationName: balance.variationName,
-            variationType: balance.variationType,
-            displayAmount,
-            ratePerDay: totalRatePerDay,
-            slottedCount: count,
-            maxCap,
-            isFull: displayAmount >= maxCap
-          };
+        // Use shared calculation utility (same formula as backend)
+        const calculated = calculateCurrentEssence({
+          accumulatedAmount: data.baseAmount,
+          ratePerDay: data.ratePerDay,
+          lastSnapshotTime: data.lastSnapshotTime,
+          essenceCap: data.essenceCap
         });
 
-        setEssenceBalances(updatedBalances);
-        lastStateUpdateTime = now;
+        setCurrentAmount(calculated);
+        lastUpdateTime = now;
       }
 
-      animationFrameId = requestAnimationFrame(animateEssence);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    // Start animation loop (only restarts when wallet connection changes)
-    animationFrameId = requestAnimationFrame(animateEssence);
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(animate);
 
-    return () => {
-      console.log('[Essence Animation] Cleaning up animation loop');
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [walletAddress, playerEssenceState?.isActive]); // Only restart on wallet/active changes
+    // Cleanup on unmount or variationId change
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [variationId]); // Only restart when variationId changes (switching essence type)
 
-  return {
-    essenceBalances,
-    isActive: playerEssenceState?.isActive || false,
-    isLoading: playerEssenceState === undefined,
-  };
+  return { currentAmount };
+}
+
+/**
+ * Simplified hook for when you just need the current calculated amount
+ * without animation (for displays that don't need 60 FPS updates)
+ */
+export function useEssenceAmount({
+  baseAmount,
+  lastSnapshotTime,
+  ratePerDay,
+  essenceCap
+}: Omit<UseEssenceAccumulationProps, 'variationId'>) {
+  return calculateCurrentEssence({
+    accumulatedAmount: baseAmount,
+    ratePerDay,
+    lastSnapshotTime,
+    essenceCap
+  });
 }

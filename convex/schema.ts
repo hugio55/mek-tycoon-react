@@ -2433,10 +2433,12 @@ export default defineSchema({
     variationType: v.union(v.literal("head"), v.literal("body"), v.literal("item")),
 
     accumulatedAmount: v.number(), // Current essence amount (capped at essenceCap)
+    lastSnapshotTime: v.optional(v.number()), // When accumulatedAmount was last calculated (anchor for real-time calculation)
     lastUpdated: v.number(),
   })
     .index("by_wallet", ["walletAddress"])
     .index("by_wallet_and_variation", ["walletAddress", "variationId"])
+    .index("by_wallet_and_name", ["walletAddress", "variationName"])
     .index("by_variation", ["variationId"]),
 
   // Essence Player Buffs - per-player rate multipliers and cap bonuses
@@ -2964,6 +2966,25 @@ export default defineSchema({
     createdAt: v.number(),
     isActive: v.boolean(), // Whether this policy is currently in use
     notes: v.optional(v.string()), // Admin notes about this policy
+
+    // Wallet Configuration
+    adminWallet: v.string(), // Wallet that signs minting transactions
+    payoutWallet: v.optional(v.string()), // Wallet that receives sales revenue
+
+    // Royalty Configuration (CIP-0027)
+    royaltiesEnabled: v.optional(v.boolean()), // Whether royalties are enabled
+    royaltyPercentage: v.optional(v.number()), // Royalty percentage (0-100)
+    royaltyAddress: v.optional(v.string()), // Address that receives royalties
+
+    // Metadata Template (CIP-25 compliant)
+    metadataTemplate: v.optional(v.object({
+      // Custom fields defined by admin
+      customFields: v.array(v.object({
+        fieldName: v.string(), // e.g., "phase", "rarity", "edition"
+        fieldType: v.union(v.literal("fixed"), v.literal("placeholder")), // Fixed = same for all, Placeholder = token-specific
+        fixedValue: v.optional(v.string()), // If fieldType is "fixed", this is the value
+      })),
+    })),
   })
     .index("by_policy_id", ["policyId"])
     .index("by_network", ["network"])
@@ -3008,10 +3029,10 @@ export default defineSchema({
 
   // ===== COMMEMORATIVE TOKENS SYSTEM =====
 
-  // Commemorative Token Designs - NFT Design Templates (Phase 1, Phase 2, etc.)
+  // NFT Designs - Universal Minting Engine (Commemorative, Events, Airdrops, etc.)
   // This is the "master list" of NFT designs that can be minted
   commemorativeTokenCounters: defineTable({
-    tokenType: v.string(), // "phase_1_beta", "phase_2_launch", "anniversary_2026", etc.
+    tokenType: v.string(), // "phase_1_beta", "event_easy_001", "anniversary_2026", etc.
 
     // Design Info
     displayName: v.string(), // "Commemorative Token #1 - Early Miner"
@@ -3025,6 +3046,24 @@ export default defineSchema({
     policyId: v.string(), // Which minting policy this design uses
     assetNameHex: v.string(), // Hex-encoded asset name for sub-assets (e.g., "436f6d6d656d6f726174697665546f6b656e31")
 
+    // Sale Mode Configuration
+    saleMode: v.optional(v.union(
+      v.literal("whitelist"),    // Snapshot-based, one-per-wallet (commemorative tokens)
+      v.literal("public_sale"),  // Open to anyone, multiple allowed (event NFTs)
+      v.literal("free_claim")    // Free airdrop to eligible users
+    )),
+
+    // Whitelist Mode Settings
+    eligibilitySnapshot: v.optional(v.array(v.string())), // Wallet addresses allowed to claim
+    snapshotTakenAt: v.optional(v.number()), // When snapshot was created
+    minimumGold: v.optional(v.number()), // Gold requirement for eligibility
+    onePerWallet: v.optional(v.boolean()), // Limit one per wallet (default true for whitelist)
+
+    // Public Sale Mode Settings (future)
+    maxPerWallet: v.optional(v.number()), // Max quantity per wallet
+    publicSaleStart: v.optional(v.number()), // When public sale begins
+    publicSaleEnd: v.optional(v.number()), // When public sale ends
+
     // Minting Stats
     currentEdition: v.number(), // Current highest edition number minted
     totalMinted: v.number(), // Total successfully minted (confirmed only)
@@ -3036,10 +3075,12 @@ export default defineSchema({
 
     // Timestamps
     createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
   })
     .index("by_type", ["tokenType"])
     .index("by_policy_id", ["policyId"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_sale_mode", ["saleMode"]),
 
   // Commemorative Tokens - Individual mints with sequential editions
   commemorativeTokens: defineTable({
@@ -3090,4 +3131,14 @@ export default defineSchema({
     .index("by_tx_hash", ["txHash"])
     .index("by_minted_at", ["mintedAt"])
     .index("by_user", ["userId"]),
+
+  // BANDWIDTH OPTIMIZATION: Query result cache
+  // Caches expensive query results to reduce bandwidth from repeated calls
+  queryCache: defineTable({
+    cacheKey: v.string(), // Unique key for the cached query (e.g., "getAllWallets", "getAllPlayers")
+    data: v.any(), // Cached query result
+    timestamp: v.number(), // When this was cached
+    ttl: v.number(), // Time-to-live in milliseconds (e.g., 30000 = 30 seconds)
+  })
+    .index("by_key", ["cacheKey"]),
 });

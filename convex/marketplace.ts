@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { addEssenceToBalance } from "./lib/essenceHelpers";
 
 // Get all active marketplace listings (alias for shop page) - OPTIMIZED
 export const getActiveListings = query({
@@ -143,32 +144,14 @@ async function processPurchase(ctx: any, args: {
     // Transfer essence using essenceBalances table
     const variationName = listing.itemVariation;
 
-    // Find existing balance
-    const existingBalance = await ctx.db
-      .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", buyer.walletAddress))
-      .collect();
-
-    const balance = existingBalance.find(b => b.variationName === variationName);
-    const now = Date.now();
-
-    if (balance) {
-      // Update existing balance
-      await ctx.db.patch(balance._id, {
-        accumulatedAmount: balance.accumulatedAmount + purchaseQuantity,
-        lastUpdated: now,
-      });
-    } else {
-      // Create new balance (sparse storage - only when they have essence)
-      await ctx.db.insert("essenceBalances", {
-        walletAddress: buyer.walletAddress,
-        variationId: 0, // Placeholder - marketplace doesn't need this
-        variationName: variationName,
-        variationType: "item" as const, // Placeholder - marketplace doesn't need accurate type
-        accumulatedAmount: purchaseQuantity,
-        lastUpdated: now,
-      });
-    }
+    // Use helper to safely add essence (prevents duplicates)
+    await addEssenceToBalance(ctx, {
+      walletAddress: buyer.walletAddress,
+      variationId: 0, // Placeholder - marketplace doesn't track IDs
+      variationName: variationName,
+      variationType: "item" as const,
+      amountToAdd: purchaseQuantity,
+    });
 
   } else if (listing.itemType === "mek" && listing.mekId) {
     // Transfer Mek ownership
@@ -385,9 +368,11 @@ export const createListing = mutation({
 
       // Deduct essence from user (held in escrow)
       if (balance) {
+        const now = Date.now();
         await ctx.db.patch(balance._id, {
           accumulatedAmount: balance.accumulatedAmount - args.quantity,
-          lastUpdated: Date.now(),
+          lastSnapshotTime: now, // Update snapshot when listing essence
+          lastUpdated: now,
         });
       }
 
@@ -520,32 +505,14 @@ export const purchaseListing = mutation({
       // Transfer essence using essenceBalances table
       const variationName = listing.itemVariation;
 
-      // Find existing balance
-      const existingBalance = await ctx.db
-        .query("essenceBalances")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", buyer.walletAddress))
-        .collect();
-
-      const balance = existingBalance.find(b => b.variationName === variationName);
-      const now = Date.now();
-
-      if (balance) {
-        // Update existing balance
-        await ctx.db.patch(balance._id, {
-          accumulatedAmount: balance.accumulatedAmount + purchaseQuantity,
-          lastUpdated: now,
-        });
-      } else {
-        // Create new balance (sparse storage)
-        await ctx.db.insert("essenceBalances", {
-          walletAddress: buyer.walletAddress,
-          variationId: 0,
-          variationName: variationName,
-          variationType: "item" as const,
-          accumulatedAmount: purchaseQuantity,
-          lastUpdated: now,
-        });
-      }
+      // Use helper to safely add essence (prevents duplicates)
+      await addEssenceToBalance(ctx, {
+        walletAddress: buyer.walletAddress,
+        variationId: 0,
+        variationName: variationName,
+        variationType: "item" as const,
+        amountToAdd: purchaseQuantity,
+      });
 
     } else if ((listing.itemType as string) === "mek" && listing.mekId) {
       // Transfer Mek ownership
@@ -740,32 +707,14 @@ export const cancelListing = mutation({
       // Return essence using essenceBalances
       const variationName = listing.itemVariation;
 
-      // Find existing balance
-      const existingBalances = await ctx.db
-        .query("essenceBalances")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
-        .collect();
-
-      const balance = existingBalances.find(b => b.variationName === variationName);
-      const now = Date.now();
-
-      if (balance) {
-        // Update existing balance
-        await ctx.db.patch(balance._id, {
-          accumulatedAmount: balance.accumulatedAmount + listing.quantity,
-          lastUpdated: now,
-        });
-      } else {
-        // Create new balance (sparse storage)
-        await ctx.db.insert("essenceBalances", {
-          walletAddress: seller.walletAddress,
-          variationId: 0,
-          variationName: variationName,
-          variationType: "item" as const,
-          accumulatedAmount: listing.quantity,
-          lastUpdated: now,
-        });
-      }
+      // Use helper to safely add essence (prevents duplicates)
+      await addEssenceToBalance(ctx, {
+        walletAddress: seller.walletAddress,
+        variationId: 0,
+        variationName: variationName,
+        variationType: "item" as const,
+        amountToAdd: listing.quantity,
+      });
 
     } else if ((listing.itemType as string) !== "mek" && listing.itemVariation) {
       // Return to inventory

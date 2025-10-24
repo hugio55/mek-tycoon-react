@@ -2379,7 +2379,7 @@ export default function AdminMasterDataPage() {
 
 // NFT Admin Sub-Tabs Component
 function NFTAdminTabs() {
-  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative'>('simple-minter');
+  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative'>('commemorative');
 
   return (
     <div className="space-y-6">

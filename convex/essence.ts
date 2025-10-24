@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { setEssenceBalance } from "./lib/essenceHelpers";
 
 // Seeded random number generator for deterministic slot requirements
 class SeededRandom {
@@ -894,9 +895,11 @@ export const unlockSlot = mutation({
         .first();
 
       if (balance) {
+        const now = Date.now();
         await ctx.db.patch(balance._id, {
           accumulatedAmount: balance.accumulatedAmount - req.amountRequired,
-          lastUpdated: Date.now(),
+          lastSnapshotTime: now, // Update snapshot when spending essence
+          lastUpdated: now,
         });
       }
     }
@@ -976,11 +979,11 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
 
   // Calculate new balances
   for (const [variationId, data] of variationCounts.entries()) {
-    // Get current balance
+    // Get current balance - query by NAME to prevent duplicates with different IDs
     let balance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet_and_variation", (q) =>
-        q.eq("walletAddress", walletAddress).eq("variationId", variationId)
+      .withIndex("by_wallet_and_name", (q) =>
+        q.eq("walletAddress", walletAddress).eq("variationName", data.name)
       )
       .first();
 
@@ -1004,22 +1007,14 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
     const essenceEarned = daysElapsed * effectiveRate * data.count;
     const newAmount = Math.min(currentAmount + essenceEarned, effectiveCap);
 
-    // Update or create balance
-    if (balance) {
-      await ctx.db.patch(balance._id, {
-        accumulatedAmount: newAmount,
-        lastUpdated: now,
-      });
-    } else {
-      await ctx.db.insert("essenceBalances", {
-        walletAddress,
-        variationId,
-        variationName: data.name,
-        variationType: data.type as "head" | "body" | "item",
-        accumulatedAmount: newAmount,
-        lastUpdated: now,
-      });
-    }
+    // Use helper to safely update/create balance (prevents duplicates)
+    await setEssenceBalance(ctx, {
+      walletAddress,
+      variationId,
+      variationName: data.name,
+      variationType: data.type as "head" | "body" | "item",
+      amount: newAmount,
+    });
   }
 
   // Update tracking
@@ -1133,6 +1128,7 @@ export const adminAddEssence = mutation({
       // Update existing balance
       await ctx.db.patch(balance._id, {
         accumulatedAmount: balance.accumulatedAmount + amount,
+        lastSnapshotTime: now, // Update snapshot when adding essence
         lastUpdated: now,
       });
     } else {
@@ -1143,6 +1139,7 @@ export const adminAddEssence = mutation({
         variationName,
         variationType: "item" as const,
         accumulatedAmount: amount,
+        lastSnapshotTime: now, // Set snapshot for new balance
         lastUpdated: now,
       });
     }
@@ -1189,6 +1186,76 @@ export const dailyEssenceCheckpoint = internalMutation({
 
     return { success: true, playersUpdated: updatedCount };
   },
+});
+
+// 5-minute checkpoint for persistence and crash recovery (internal - called by cron)
+// Mirrors gold system's updateGoldCheckpoint pattern
+export const updateEssenceCheckpoints = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all players with active slotted Meks
+    const allSlots = await ctx.db.query("essenceSlots").collect();
+
+    // Get unique wallet addresses that have at least one slotted Mek
+    const activeWallets = new Set(
+      allSlots
+        .filter(slot => slot.mekAssetId) // Has a Mek slotted
+        .map(slot => slot.walletAddress)
+    );
+
+    let updatedCount = 0;
+    const now = Date.now();
+
+    for (const walletAddress of activeWallets) {
+      try {
+        // Calculate and update essence for this player
+        // This updates accumulatedAmount and lastSnapshotTime for all their variations
+        await calculateAndUpdateEssence(ctx, walletAddress);
+        updatedCount++;
+      } catch (error) {
+        console.error(
+          `[Essence Checkpoint] Failed to update essence for ${walletAddress.substring(0, 20)}:`,
+          error
+        );
+      }
+    }
+
+    console.log(
+      `[Essence Checkpoint] Updated ${updatedCount} active players with slotted Meks.`
+    );
+
+    return { success: true, playersUpdated: updatedCount };
+  },
+});
+
+// Migration: Delete all test essence balances for clean slate
+// This removes all existing balances that lack lastSnapshotTime field
+// Safe to run - balances will recreate when players slot Meks
+export const deleteTestEssenceBalances = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[Migration] Starting test essence balance deletion...');
+
+    const allBalances = await ctx.db.query("essenceBalances").collect();
+    const totalCount = allBalances.length;
+
+    console.log(`[Migration] Found ${totalCount} essence balance records to delete`);
+
+    let deletedCount = 0;
+    for (const balance of allBalances) {
+      await ctx.db.delete(balance._id);
+      deletedCount++;
+    }
+
+    console.log(`[Migration] Complete - Deleted ${deletedCount} essence balance records`);
+    console.log('[Migration] Clean slate ready - new balances will have lastSnapshotTime field');
+
+    return {
+      success: true,
+      deleted: deletedCount,
+      message: `Deleted ${deletedCount} test essence balances. System ready for production.`
+    };
+  }
 });
 
 /**

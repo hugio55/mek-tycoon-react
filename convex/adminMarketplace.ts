@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { addEssenceToBalance } from "./lib/essenceHelpers";
 
 // Get aggregated summary of all essence in the marketplace
 export const getEssenceMarketSummary = query({
@@ -106,44 +107,30 @@ export const adminAddEssenceToPlayer = mutation({
       throw new Error("Amount must be positive");
     }
 
-    // Find existing balance
-    const existingBalances = await ctx.db
+    // Use helper to safely add essence (prevents duplicates)
+    await addEssenceToBalance(ctx, {
+      walletAddress,
+      variationId: 0,
+      variationName: variationName,
+      variationType: "item" as const,
+      amountToAdd: amount,
+    });
+
+    // Get updated balance for response
+    const updatedBalance = await ctx.db
       .query("essenceBalances")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
-      .collect();
+      .withIndex("by_wallet_and_name", (q) =>
+        q.eq("walletAddress", walletAddress).eq("variationName", variationName)
+      )
+      .first();
 
-    const balance = existingBalances.find(b => b.variationName === variationName);
-    const now = Date.now();
+    const newAmount = updatedBalance?.accumulatedAmount || amount;
 
-    if (balance) {
-      // Update existing balance
-      await ctx.db.patch(balance._id, {
-        accumulatedAmount: balance.accumulatedAmount + amount,
-        lastUpdated: now,
-      });
-
-      return {
-        success: true,
-        newAmount: balance.accumulatedAmount + amount,
-        message: `Added ${amount} ${variationName} to ${walletAddress}. New total: ${balance.accumulatedAmount + amount}`,
-      };
-    } else {
-      // Create new balance (sparse storage)
-      await ctx.db.insert("essenceBalances", {
-        walletAddress,
-        variationId: 0, // Admin additions don't need accurate variationId
-        variationName: variationName,
-        variationType: "item" as const, // Placeholder
-        accumulatedAmount: amount,
-        lastUpdated: now,
-      });
-
-      return {
-        success: true,
-        newAmount: amount,
-        message: `Created new balance: ${amount} ${variationName} for ${walletAddress}`,
-      };
-    }
+    return {
+      success: true,
+      newAmount,
+      message: `Added ${amount} ${variationName} to ${walletAddress}. New total: ${newAmount}`,
+    };
   },
 });
 
@@ -166,29 +153,15 @@ export const adminDeleteListing = mutation({
 
       if (seller) {
         const variationName = listing.itemVariation;
-        const existingBalances = await ctx.db
-          .query("essenceBalances")
-          .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
-          .collect();
 
-        const balance = existingBalances.find(b => b.variationName === variationName);
-        const now = Date.now();
-
-        if (balance) {
-          await ctx.db.patch(balance._id, {
-            accumulatedAmount: balance.accumulatedAmount + listing.quantity,
-            lastUpdated: now,
-          });
-        } else {
-          await ctx.db.insert("essenceBalances", {
-            walletAddress: seller.walletAddress,
-            variationId: 0,
-            variationName: variationName,
-            variationType: "item" as const,
-            accumulatedAmount: listing.quantity,
-            lastUpdated: now,
-          });
-        }
+        // Use helper to safely add essence (prevents duplicates)
+        await addEssenceToBalance(ctx, {
+          walletAddress: seller.walletAddress,
+          variationId: 0,
+          variationName: variationName,
+          variationType: "item" as const,
+          amountToAdd: listing.quantity,
+        });
       }
     }
 

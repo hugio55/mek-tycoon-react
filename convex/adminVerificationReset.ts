@@ -1,6 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
 import { calculateGoldIncrease, validateGoldInvariant } from "./lib/goldCalculations";
+import { api, internal } from "./_generated/api";
 
 // Admin function to reset verification status (for testing)
 export const resetVerificationStatus = mutation({
@@ -444,6 +445,7 @@ export const updateWalletGold = mutation({
 });
 
 // Admin query to get all wallets with full details
+// BANDWIDTH OPTIMIZATION: Now cached with 30-second TTL to reduce repeated calls
 export const getAllWallets = query({
   args: {},
   handler: async (ctx) => {

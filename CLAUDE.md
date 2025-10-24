@@ -11,7 +11,7 @@ When user says "start it up" or similar, run:
 ```bash
 cd "C:\Users\Ben Meyers\Documents\Mek Tycoon\mek-tycoon-react" && npm run dev:all
 ```
-This starts both Next.js (port 3100) and Convex in one terminal.
+This starts both Next.js (port 3200) and Convex in one terminal.
 
 ## 🚨 CRITICAL: SESSION PROTECTION 🚨
 **NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**

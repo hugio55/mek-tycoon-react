@@ -68,6 +68,15 @@ crons.daily(
   internal.essence.dailyEssenceCheckpoint
 );
 
+// 5-minute essence checkpoints for persistence and crash recovery (mirrors gold system)
+crons.interval(
+  "update essence checkpoints",
+  {
+    minutes: 5
+  },
+  internal.essence.updateEssenceCheckpoints
+);
+
 // Generate monitoring summaries every 15 minutes
 crons.interval(
   "generate monitoring summary",
