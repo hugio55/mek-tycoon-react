@@ -198,7 +198,6 @@ export default function HomePage() {
       return false;
     });
   }, [ownedMeks, mekSearchTerm]);
-  };
 
   // DEBUG: Force unlock a slot
   const handleDebugUnlockSlot = async (slotNumber: number) => {
@@ -625,24 +624,46 @@ export default function HomePage() {
         {/* Mek Selector Modal */}
         {showMekSelector && selectedSlot && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-black/95 border-4 border-yellow-500/50 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-yellow-400">
-                  SELECT MEKANISM FOR SLOT {selectedSlot}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowMekSelector(false);
-                    setSelectedSlot(null);
-                  }}
-                  className="text-yellow-400 hover:text-yellow-300 text-3xl font-bold"
-                >
-                  ×
-                </button>
+            <div className="bg-black/95 border-4 border-yellow-500/50 rounded-lg p-6 max-w-4xl w-full h-[80vh] flex flex-col overflow-hidden">
+              {/* Header - Fixed */}
+              <div className="flex-shrink-0">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-yellow-400">
+                    SELECT MEKANISM FOR SLOT {selectedSlot}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowMekSelector(false);
+                      setSelectedSlot(null);
+                      setMekSearchTerm(''); // Clear search when closing
+                    }}
+                    className="text-yellow-400 hover:text-yellow-300 text-3xl font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Search Bar */}
+                <div className="mb-6">
+                  <input
+                    type="text"
+                    placeholder="Search by Mek # or variation name (e.g., bumblebee, 2268)..."
+                    value={mekSearchTerm}
+                    onChange={(e) => setMekSearchTerm(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/60 border-2 border-yellow-500/30 text-white placeholder-gray-500 focus:border-yellow-500/60 focus:outline-none transition-colors rounded"
+                  />
+                  {mekSearchTerm && (
+                    <div className="mt-2 text-sm text-gray-400">
+                      Showing {filteredMeks.length} of {ownedMeks.length} Mekanisms
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {ownedMeks.map((mek: any, index: number) => {
+              {/* Scrollable Grid Area */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredMeks.map((mek: any, index: number) => {
                   // Get proper variation names using the lookup function
                   const sourceKey = mek.sourceKey || mek.sourceKeyBase;
                   const fallback = {
@@ -710,14 +731,17 @@ export default function HomePage() {
                       </div>
                     </div>
                   );
-                })}
-              </div>
-
-              {ownedMeks.length === 0 && (
-                <div className="text-center text-gray-500 py-12">
-                  No Mekanisms available to slot
+                  })}
                 </div>
-              )}
+
+                {filteredMeks.length === 0 && (
+                  <div className="text-center text-gray-500 py-12">
+                    {mekSearchTerm
+                      ? `No Mekanisms found matching "${mekSearchTerm}"`
+                      : 'No Mekanisms available to slot'}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

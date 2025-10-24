@@ -10,12 +10,21 @@ export const updateGoldLeaderboard = internalMutation({
   handler: async (ctx) => {
     try {
       const now = Date.now();
+      const INACTIVE_THRESHOLD_DAYS = 15;
+      const inactiveThreshold = now - (INACTIVE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
 
-      // Get all gold miners with their current gold calculations
-      const miners = await ctx.db.query("goldMining").collect();
+      // BANDWIDTH OPTIMIZATION: Get all gold miners, but skip inactive ones
+      const allMiners = await ctx.db.query("goldMining").collect();
+
+      // Skip wallets inactive for 15+ days to reduce bandwidth
+      const miners = allMiners.filter(miner =>
+        (miner.lastActiveTime || miner.lastLogin || 0) > inactiveThreshold
+      );
+
+      console.log(`Leaderboard update: ${miners.length} active wallets (${allMiners.length - miners.length} inactive skipped)`);
 
       if (miners.length === 0) {
-        console.log("No miners found for leaderboard update");
+        console.log("No active miners found for leaderboard update");
         return { success: true, entriesUpdated: 0, timestamp: now };
       }
 

@@ -88,28 +88,52 @@ export default function EssenceDonutChart({
   const innerRadius = outerRadius * innerRadiusRatio;
   const middleRadius = (outerRadius + innerRadius) / 2;
 
-  // Process data and calculate angles
+  // Process data and calculate angles with minimum slice width
   const processedData = useMemo(() => {
     const total = data.reduce((sum, item) => sum + item.amount, 0);
-    let currentAngle = -90; // Start from top
+    const MIN_SLICE_ANGLE = 1.6; // Minimum 1.6 degrees for hoverable slices (1/5 of original 8°)
 
-    return data.map((item, index) => {
+    // Calculate natural angles first
+    const naturalSlices = data.map((item, index) => {
       const percentage = (item.amount / total) * 100;
-      const angleSpan = (percentage / 100) * 360;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + angleSpan;
-      const color = item.color || ESSENCE_COLORS[index % ESSENCE_COLORS.length];
-
-      currentAngle = endAngle;
-
+      const naturalAngle = (percentage / 100) * 360;
       return {
         ...item,
         percentage,
+        naturalAngle,
+        color: item.color || ESSENCE_COLORS[index % ESSENCE_COLORS.length],
+        total
+      };
+    });
+
+    // Identify tiny slices that need minimum angle
+    const tinySlices = naturalSlices.filter(s => s.naturalAngle < MIN_SLICE_ANGLE);
+    const normalSlices = naturalSlices.filter(s => s.naturalAngle >= MIN_SLICE_ANGLE);
+
+    // Reserve space for tiny slices
+    const reservedAngle = tinySlices.length * MIN_SLICE_ANGLE;
+    const availableAngle = 360 - reservedAngle;
+
+    // Calculate adjustment factor for normal slices
+    const normalTotalAngle = normalSlices.reduce((sum, s) => sum + s.naturalAngle, 0);
+    const scaleFactor = normalTotalAngle > 0 ? availableAngle / normalTotalAngle : 1;
+
+    // Assign final angles
+    let currentAngle = -90; // Start from top
+    return naturalSlices.map(slice => {
+      const angleSpan = slice.naturalAngle < MIN_SLICE_ANGLE
+        ? MIN_SLICE_ANGLE
+        : slice.naturalAngle * scaleFactor;
+
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angleSpan;
+      currentAngle = endAngle;
+
+      return {
+        ...slice,
         startAngle,
         endAngle,
-        angleSpan,
-        color,
-        total
+        angleSpan
       };
     });
   }, [data]);
@@ -266,8 +290,8 @@ export default function EssenceDonutChart({
               </filter>
               
               {/* Hover Effect 3: Radial Gradient Overlay */}
-              {processedData.map((slice) => (
-                <radialGradient key={`radial-${slice.id}`} id={`radial-gradient-${slice.id}`}>
+              {processedData.map((slice, index) => (
+                <radialGradient key={`radial-${index}`} id={`radial-gradient-${slice.id}`}>
                   <stop offset="0%" stopColor={slice.color} stopOpacity="1"/>
                   <stop offset="50%" stopColor={slice.color} stopOpacity="0.9"/>
                   <stop offset="100%" stopColor={slice.color} stopOpacity="0.6"/>
@@ -277,7 +301,7 @@ export default function EssenceDonutChart({
               {/* Create gradients for each slice */}
               {processedData.map((slice, index) => (
                 <linearGradient
-                  key={`gradient-${slice.id}`}
+                  key={`gradient-${index}`}
                   id={`slice-gradient-${slice.id}`}
                   x1="0%"
                   y1="0%"
@@ -366,9 +390,9 @@ export default function EssenceDonutChart({
                       break;
                   }
                 }
-                
+
                 return (
-                  <g key={slice.id}>
+                  <g key={index}>
                     {/* Hover highlight layer (for effect 1 & 2) */}
                     {(isHovered || isSelected) && (hoverEffect === 1 || hoverEffect === 2) && !shouldDarken && (
                       <path

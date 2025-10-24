@@ -10,7 +10,7 @@ interface EssenceBalancesViewerProps {
   onClose: () => void;
 }
 
-type SortColumn = 'name' | 'type' | 'amount';
+type SortColumn = 'name' | 'type' | 'amount' | 'growthRate' | 'cap';
 type SortDirection = 'asc' | 'desc';
 
 export default function EssenceBalancesViewer({ walletAddress, onClose }: EssenceBalancesViewerProps) {
@@ -66,6 +66,16 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
         break;
       case 'amount':
         compareValue = a.accumulatedAmount - b.accumulatedAmount;
+        break;
+      case 'growthRate':
+        const rateA = essenceState?.essenceRates?.[a.variationId] || 0;
+        const rateB = essenceState?.essenceRates?.[b.variationId] || 0;
+        compareValue = rateA - rateB;
+        break;
+      case 'cap':
+        const capA = essenceState?.caps?.[a.variationId] || 0;
+        const capB = essenceState?.caps?.[b.variationId] || 0;
+        compareValue = capA - capB;
         break;
     }
 
@@ -143,6 +153,18 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                   >
                     Amount {getSortIcon('amount')}
                   </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
+                    onClick={() => handleSort('growthRate')}
+                  >
+                    Growth Rate {getSortIcon('growthRate')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
+                    onClick={() => handleSort('cap')}
+                  >
+                    Cap {getSortIcon('cap')}
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
                     Last Updated
                   </th>
@@ -176,6 +198,16 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                       <td className="px-4 py-3 text-right">
                         <span className="text-lg font-bold text-yellow-400">
                           {balance.accumulatedAmount.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm text-green-400">
+                          {essenceState?.essenceRates?.[balance.variationId]?.toFixed(2) || '0.00'}/s
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm text-blue-400">
+                          {essenceState?.caps?.[balance.variationId]?.toFixed(0) || '0'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

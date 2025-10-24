@@ -8,7 +8,7 @@
     "dev:convex": "convex dev --typecheck=disable --url https://wry-trout-962.convex.cloud",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:convex\"",
     "dev:stable": "next dev -p 3200",
-    "tunnel": "cloudflared tunnel --url http://localhost:3100",
+    "tunnel": "cloudflared tunnel --url http://localhost:3200",
     "preview": "next build && next start",
     "build": "next build",
     "start": "next start",

@@ -149,6 +149,56 @@ export const getEligibleUsersCount = query({
   },
 });
 
+// Get list of eligible users with details (for minting interface)
+export const getEligibleUsersList = query({
+  args: { minimumGold: v.number() },
+  handler: async (ctx, args) => {
+    const miners = await ctx.db
+      .query("goldMining")
+      .collect();
+
+    const now = Date.now();
+    const eligible = miners.filter(miner => {
+      // Calculate current gold (including ongoing accumulation if verified)
+      let currentGold = miner.accumulatedGold || 0;
+
+      if (miner.isBlockchainVerified === true) {
+        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
+      }
+
+      return (
+        currentGold > args.minimumGold &&  // Strictly greater than (not >=)
+        miner.walletAddress &&
+        miner.isBlockchainVerified === true  // Must be blockchain verified
+      );
+    });
+
+    // Return with calculated current gold
+    return eligible.map(miner => {
+      let currentGold = miner.accumulatedGold || 0;
+
+      if (miner.isBlockchainVerified === true) {
+        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
+      }
+
+      return {
+        _id: miner._id,
+        walletAddress: miner.walletAddress,
+        companyName: miner.companyName,
+        currentGold: Math.round(currentGold * 100) / 100,
+        totalGoldPerHour: miner.totalGoldPerHour,
+        isBlockchainVerified: miner.isBlockchainVerified,
+      };
+    });
+  },
+});
+
 // Get company names for wallet addresses
 export const getWalletCompanyNames = query({
   args: { walletAddresses: v.array(v.string()) },

@@ -159,7 +159,7 @@ export const reserveEdition = mutation({
       nextEdition = counter.currentEdition + 1;
       imageUrl = counter.imageUrl;
       displayName = counter.displayName;
-      price = counter.price;
+      price = counter.price ?? 10; // Default to 10 ADA if not set
 
       // Atomic increment
       await ctx.db.patch(counter._id, {
@@ -352,14 +352,16 @@ export const getAllCommemorativeTokens = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("commemorativeTokens");
-
-    // Filter by status if provided
+    // Filter by status if provided, otherwise get all
+    let tokens: any[];
     if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status));
+      tokens = await ctx.db
+        .query("commemorativeTokens")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .collect();
+    } else {
+      tokens = await ctx.db.query("commemorativeTokens").collect();
     }
-
-    let tokens = await query.collect();
 
     // Filter by token type if provided
     if (args.tokenType) {
@@ -439,8 +441,8 @@ export const getTokenTypeStats = query({
 // ===== ADMIN FUNCTIONS =====
 
 /**
- * Initialize a new token design (admin only)
- * Creates a new NFT design that can be minted multiple times
+ * Initialize a new NFT design (admin only) - Universal Minting Engine
+ * Supports: Whitelist Mode, Public Sale, Free Claim
  */
 export const initializeTokenType = mutation({
   args: {
@@ -448,12 +450,20 @@ export const initializeTokenType = mutation({
     displayName: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.string(),
-    metadataUrl: v.string(), // NEW: IPFS URL for metadata JSON
-    policyId: v.string(), // NEW: Which minting policy to use
-    assetNameHex: v.string(), // NEW: Hex-encoded asset name for sub-assets
+    metadataUrl: v.string(),
+    policyId: v.string(),
+    assetNameHex: v.string(),
+    isActive: v.boolean(),
+
+    // Distribution Settings (optional - configured in Step 3)
+    saleMode: v.optional(v.union(v.literal("whitelist"), v.literal("public_sale"), v.literal("free_claim"))),
     price: v.optional(v.number()),
     maxEditions: v.optional(v.number()),
-    isActive: v.boolean(),
+    minimumGold: v.optional(v.number()),
+    onePerWallet: v.optional(v.boolean()),
+    maxPerWallet: v.optional(v.number()),
+    publicSaleStart: v.optional(v.number()),
+    publicSaleEnd: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // Check if already exists
@@ -474,15 +484,36 @@ export const initializeTokenType = mutation({
       metadataUrl: args.metadataUrl,
       policyId: args.policyId,
       assetNameHex: args.assetNameHex,
+
+      // Sale Mode (will be configured later if not provided)
+      saleMode: args.saleMode,
+
+      // Whitelist Settings
+      minimumGold: args.minimumGold,
+      onePerWallet: args.onePerWallet,
+      eligibilitySnapshot: undefined, // Will be set when snapshot is taken
+      snapshotTakenAt: undefined,
+
+      // Public Sale Settings
+      maxPerWallet: args.maxPerWallet,
+      publicSaleStart: args.publicSaleStart,
+      publicSaleEnd: args.publicSaleEnd,
+
+      // Minting Stats
       currentEdition: 0,
       totalMinted: 0,
       maxEditions: args.maxEditions,
+
+      // Status
       price: args.price,
       isActive: args.isActive,
+
+      // Timestamps
       createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
-    console.log(`[Commemorative] Initialized token design: ${args.tokenType} (Policy: ${args.policyId}, Asset: ${args.assetNameHex})`);
+    console.log(`[NFT Design] Created design: ${args.tokenType} (Policy: ${args.policyId})${args.saleMode ? ` - ${args.saleMode} mode` : ' - distribution settings pending'}`);
 
     return { counterId };
   },
@@ -566,6 +597,74 @@ export const deleteTokenType = mutation({
     console.log(`[Commemorative] Deleted token design: ${args.tokenType}`);
 
     return { success: true };
+  },
+});
+
+/**
+ * Take eligibility snapshot for whitelist mode (admin only)
+ * Captures wallet addresses of eligible users at this moment in time
+ */
+export const takeEligibilitySnapshot = mutation({
+  args: {
+    tokenType: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const design = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", args.tokenType))
+      .first();
+
+    if (!design) {
+      throw new Error("Design not found");
+    }
+
+    if (design.saleMode !== "whitelist") {
+      throw new Error("Can only take snapshots for whitelist mode designs");
+    }
+
+    // Query eligible users based on minimumGold requirement
+    const miners = await ctx.db.query("goldMining").collect();
+    const now = Date.now();
+
+    const eligibleWallets: string[] = [];
+
+    for (const miner of miners) {
+      // Calculate current gold
+      let currentGold = miner.accumulatedGold || 0;
+
+      if (miner.isBlockchainVerified === true) {
+        const lastUpdateTime = miner.lastSnapshotTime || miner.updatedAt || miner.createdAt;
+        const hoursSinceLastUpdate = (now - lastUpdateTime) / (1000 * 60 * 60);
+        const goldSinceLastUpdate = miner.totalGoldPerHour * hoursSinceLastUpdate;
+        currentGold = (miner.accumulatedGold || 0) + goldSinceLastUpdate;
+      }
+
+      const minimumGold = design.minimumGold ?? 0;
+
+      // Check eligibility
+      if (
+        currentGold > minimumGold &&
+        miner.walletAddress &&
+        miner.isBlockchainVerified === true
+      ) {
+        eligibleWallets.push(miner.walletAddress);
+      }
+    }
+
+    // Update design with snapshot
+    await ctx.db.patch(design._id, {
+      eligibilitySnapshot: eligibleWallets,
+      snapshotTakenAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[Whitelist] Snapshot taken for ${args.tokenType}: ${eligibleWallets.length} eligible wallets`);
+
+    return {
+      success: true,
+      eligibleCount: eligibleWallets.length,
+      snapshotTakenAt: Date.now(),
+    };
   },
 });
 
