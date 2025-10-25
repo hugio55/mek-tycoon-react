@@ -13,6 +13,13 @@ interface EssenceDistributionLightboxProps {
   walletAddress?: string;
 }
 
+// Helper function: Round DOWN essence amounts to nearest 0.1
+// Examples: 0.09999 → 0.0, 0.19999 → 0.1, 0.99999 → 0.9, 1.0 → 1.0
+function roundDownToTenth(value: number): string {
+  const rounded = Math.floor(value * 10) / 10;
+  return rounded.toFixed(1);
+}
+
 // Animated essence amount component - client-side accumulation for table view
 // Uses identical logic to EssenceBalancesViewer's AnimatedEssenceAmount for consistency
 function AnimatedEssenceTableCell({
@@ -34,6 +41,14 @@ function AnimatedEssenceTableCell({
 
   // Update baseline when backend sends new values (matches EssenceBalancesViewer)
   useEffect(() => {
+    console.log('🔵 [DISTRIBUTION LIGHTBOX] Baseline update:', {
+      component: 'AnimatedEssenceTableCell',
+      baseAmount: baseAmount.toFixed(12),
+      backendTime: new Date(backendCalculationTime).toISOString(),
+      backendTimeMs: backendCalculationTime,
+      ratePerDay: ratePerDay.toFixed(12),
+      cap
+    });
     baseAmountRef.current = baseAmount;
     backendTimeRef.current = backendCalculationTime;
     setDisplayAmount(baseAmount);
@@ -47,10 +62,27 @@ function AnimatedEssenceTableCell({
     }
 
     const interval = setInterval(() => {
-      const elapsedMs = Date.now() - backendTimeRef.current;
+      const now = Date.now();
+      const elapsedMs = now - backendTimeRef.current;
       const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
       const accumulated = ratePerDay * elapsedDays;
       const newAmount = Math.min(baseAmountRef.current + accumulated, cap);
+
+      // Log every 5 seconds (100 intervals at 50ms)
+      const intervalCount = Math.floor(elapsedMs / 50);
+      if (intervalCount % 100 === 0) {
+        console.log('🔵 [DISTRIBUTION LIGHTBOX] Animation tick:', {
+          component: 'AnimatedEssenceTableCell',
+          now: new Date(now).toISOString(),
+          elapsedMs,
+          elapsedDays: elapsedDays.toFixed(12),
+          baseAmount: baseAmountRef.current.toFixed(12),
+          ratePerDay: ratePerDay.toFixed(12),
+          accumulated: accumulated.toFixed(12),
+          newAmount: newAmount.toFixed(12)
+        });
+      }
+
       setDisplayAmount(newAmount);
     }, 50); // Update every 50ms for smooth animation
 
@@ -138,7 +170,7 @@ function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: 
             fontVariantNumeric: 'tabular-nums'
           }}
         >
-          {displayAmount.toFixed(12)}
+          {displayAmount.toFixed(8)}
         </div>
       </div>
     </div>
@@ -149,7 +181,13 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   // VERSION MARKER - Check browser console to see if this appears
   useEffect(() => {
     console.log('🔥🔥🔥 [FILE VERSION CHECK] EssenceDistributionLightbox.tsx - RESTORED UI CHANGES - Stat boxes 25% smaller 🔥🔥🔥');
+    console.log('[EssenceDistributionLightbox] Component mounted with props:', { isOpen, walletAddress: walletAddress || 'undefined' });
   }, []);
+
+  // Log when isOpen changes
+  useEffect(() => {
+    console.log('[EssenceDistributionLightbox] isOpen changed to:', isOpen, 'walletAddress:', walletAddress || 'undefined');
+  }, [isOpen, walletAddress]);
 
   const [mounted, setMounted] = useState(false);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
@@ -176,20 +214,23 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
 
   // Generation animation controls
   const [showAnimationDebug, setShowAnimationDebug] = useState(false);
-  const [animDirection, setAnimDirection] = useState<'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'radial-out' | 'radial-in'>('top-right');
-  const [animDensity, setAnimDensity] = useState<'low' | 'medium' | 'high'>('medium');
-  const [animBlendMode, setAnimBlendMode] = useState<'normal' | 'screen' | 'overlay' | 'lighten'>('normal');
-  const [animOpacity, setAnimOpacity] = useState(70);
+  const [animDirection, setAnimDirection] = useState<'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'radial-out' | 'radial-in'>('top-left');
+  const [animDensity, setAnimDensity] = useState<'low' | 'medium' | 'high'>('high');
+  const [animBlendMode, setAnimBlendMode] = useState<'normal' | 'screen' | 'overlay' | 'lighten'>('overlay');
+  const [animOpacity, setAnimOpacity] = useState(19);
 
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Mount portal and lock body scroll
   useEffect(() => {
+    console.log('[EssenceDistributionLightbox] Mount effect running, setting mounted=true, isOpen:', isOpen);
     setMounted(true);
     if (isOpen) {
+      console.log('[EssenceDistributionLightbox] Locking body scroll');
       document.body.style.overflow = 'hidden';
     }
     return () => {
+      console.log('[EssenceDistributionLightbox] Cleanup: unlocking body scroll');
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
@@ -197,7 +238,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   // Query player's essence data from Convex
   const playerEssenceState = useQuery(
     api.essence.getPlayerEssenceState,
-    { walletAddress }
+    { walletAddress: walletAddress || "demo_wallet_123" }
   );
 
   // Query marketplace listings to get current prices
@@ -309,21 +350,25 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
       filtered = filtered.filter(e => e.amount <= maxSliceFilter);
     }
 
-    return filtered;
+    // VISUAL FLIP: Reverse array so donut goes smallest → largest clockwise from 12 o'clock
+    return filtered.reverse();
   }, [essenceData, viewCount, maxSliceFilter, maxEssenceAmount]);
 
   const totalStats = useMemo(() => {
-    const total = displayedEssences.reduce((sum, e) => sum + e.amount, 0);
-    const totalValue = displayedEssences.reduce((sum, e) => sum + (e.amount * e.currentValue), 0);
+    // GLOBAL STATS: Calculate from ALL essences, not just displayed/filtered ones
+    const total = essenceData.reduce((sum, e) => sum + e.amount, 0);
+    const totalValue = essenceData.reduce((sum, e) => sum + (e.amount * e.currentValue), 0);
     const averageValue = totalValue / total || 0;
+    const totalPerDay = essenceData.reduce((sum, e) => sum + ((e.baseRate || 0) + (e.bonusRate || 0)), 0);
 
     return {
       totalAmount: total,
       totalValue,
       averageValue,
-      uniqueTypes: displayedEssences.length
+      uniqueTypes: essenceData.length,
+      totalPerDay
     };
-  }, [displayedEssences]);
+  }, [essenceData]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -752,7 +797,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                             <div className="text-[22.5px] font-bold font-mono text-yellow-400 tracking-tight leading-none" style={{
                               textShadow: '0 0 20px rgba(250, 182, 23, 0.5), 0 0 40px rgba(250, 182, 23, 0.3)'
                             }}>
-                              {totalStats.totalAmount.toFixed(1)}
+                              {roundDownToTenth(totalStats.totalAmount)}
                             </div>
                           </div>
                         </div>
@@ -797,6 +842,25 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                         </div>
                         <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-cyan-400/60" />
                         <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-cyan-400/60" />
+                      </div>
+
+                      <div className="h-10 w-px bg-gradient-to-b from-transparent via-blue-500/30 to-transparent" />
+
+                      {/* Essence Per Day */}
+                      <div className="relative group">
+                        <div className="relative bg-gradient-to-br from-blue-900/20 to-black/60 border border-blue-500/40 px-[18px] py-[5px]">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="text-[7.5px] text-gray-500 uppercase tracking-[0.2em] font-medium mb-[2px] text-center">ESSENCE/DAY</div>
+                          <div className="relative text-center">
+                            <div className="text-[22.5px] font-bold font-mono text-blue-400 tracking-tight leading-none" style={{
+                              textShadow: '0 0 20px rgba(96, 165, 250, 0.5), 0 0 40px rgba(96, 165, 250, 0.3)'
+                            }}>
+                              {totalStats.totalPerDay.toFixed(1)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-blue-400/60" />
+                        <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-blue-400/60" />
                       </div>
                     </div>
 
@@ -884,7 +948,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                       <span className="text-white font-medium">{essence.name}</span>
                                     </div>
                                     <div className="text-right">
-                                      <div className="text-yellow-400 font-bold">{essence.amount.toFixed(1)}</div>
+                                      <div className="text-yellow-400 font-bold">{roundDownToTenth(essence.amount)}</div>
                                       <div className="text-gray-400 text-xs">{essence.currentValue}g/ea</div>
                                     </div>
                                   </div>
@@ -1189,7 +1253,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                 <span className="text-3xl font-bold text-yellow-400" style={{
                                   textShadow: '0 0 20px rgba(250, 182, 23, 0.8), 0 0 40px rgba(250, 182, 23, 0.4)'
                                 }}>
-                                  {slice.amount.toFixed(1)}
+                                  {roundDownToTenth(slice.amount)}
                                 </span>
                                 <span className="text-xl font-normal">
                                   <span className="text-gray-400">/</span>

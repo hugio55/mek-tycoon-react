@@ -33,10 +33,19 @@ function AnimatedEssenceAmount({
 
   // Update baseline when backend sends new values
   useEffect(() => {
+    console.log('🟢 [ADMIN BALANCES] Baseline update:', {
+      component: 'AnimatedEssenceAmount',
+      variationId,
+      baseAmount: baseAmount.toFixed(12),
+      backendTime: new Date(backendCalculationTime).toISOString(),
+      backendTimeMs: backendCalculationTime,
+      ratePerDay: ratePerDay.toFixed(12),
+      cap
+    });
     baseAmountRef.current = baseAmount;
     backendTimeRef.current = backendCalculationTime;
     setDisplayAmount(baseAmount);
-  }, [baseAmount, backendCalculationTime]);
+  }, [baseAmount, backendCalculationTime, variationId]);
 
   // Animate if generating
   useEffect(() => {
@@ -46,15 +55,33 @@ function AnimatedEssenceAmount({
     }
 
     const interval = setInterval(() => {
-      const elapsedMs = Date.now() - backendTimeRef.current;
+      const now = Date.now();
+      const elapsedMs = now - backendTimeRef.current;
       const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
       const accumulated = ratePerDay * elapsedDays;
       const newAmount = Math.min(baseAmountRef.current + accumulated, cap);
+
+      // Log every 5 seconds (100 intervals at 50ms)
+      const intervalCount = Math.floor(elapsedMs / 50);
+      if (intervalCount % 100 === 0) {
+        console.log('🟢 [ADMIN BALANCES] Animation tick:', {
+          component: 'AnimatedEssenceAmount',
+          variationId,
+          now: new Date(now).toISOString(),
+          elapsedMs,
+          elapsedDays: elapsedDays.toFixed(12),
+          baseAmount: baseAmountRef.current.toFixed(12),
+          ratePerDay: ratePerDay.toFixed(12),
+          accumulated: accumulated.toFixed(12),
+          newAmount: newAmount.toFixed(12)
+        });
+      }
+
       setDisplayAmount(newAmount);
     }, 50); // Update every 50ms for smooth animation
 
     return () => clearInterval(interval);
-  }, [ratePerDay, cap, baseAmount]);
+  }, [ratePerDay, cap, baseAmount, variationId]);
 
   return (
     <span className="text-lg font-bold text-yellow-400 tabular-nums">
@@ -291,7 +318,7 @@ export default function EssenceBalancesViewer({ walletAddress, onClose }: Essenc
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm text-green-400">
-                          {essenceState?.essenceRates?.[balance.variationId]?.toFixed(2) || '0.00'}/s
+                          {essenceState?.essenceRates?.[balance.variationId]?.toFixed(2) || '0.00'}/d
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

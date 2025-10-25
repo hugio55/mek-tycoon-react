@@ -3219,4 +3219,35 @@ export default defineSchema({
     .index("by_name", ["name"])
     .index("by_createdAt", ["createdAt"])
     .index("by_lastGenerated", ["lastGenerated"]),
+
+  // WHITELIST SNAPSHOTS: Frozen point-in-time captures of whitelist eligibility
+  // Multiple snapshots can be taken from the same whitelist over time
+  whitelistSnapshots: defineTable({
+    whitelistId: v.id("whitelists"), // Parent whitelist this snapshot came from
+    whitelistName: v.string(), // Cached whitelist name for display
+    snapshotName: v.string(), // User-provided name (e.g., "Early Bird - Oct 24", "Phase 1 Launch")
+    description: v.optional(v.string()), // Optional notes about this snapshot
+
+    // Frozen eligibility list (never changes after creation)
+    eligibleUsers: v.array(v.object({
+      walletAddress: v.string(),
+      displayName: v.optional(v.string()),
+    })),
+    userCount: v.number(), // Count of eligible users
+
+    // Rules that were active when snapshot was taken (for reference)
+    rulesSnapshot: v.array(v.object({
+      criteriaField: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+    ruleLogic: v.union(v.literal("AND"), v.literal("OR")),
+
+    // Timestamps
+    takenAt: v.number(), // When this snapshot was captured
+    createdBy: v.optional(v.string()), // Admin who created it
+  })
+    .index("by_whitelist", ["whitelistId"])
+    .index("by_takenAt", ["takenAt"])
+    .index("by_whitelist_and_date", ["whitelistId", "takenAt"]),
 });

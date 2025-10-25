@@ -10,6 +10,9 @@ export default function WhitelistManagerAdmin() {
   const [editingWhitelist, setEditingWhitelist] = useState<any | null>(null);
   const [selectedWhitelist, setSelectedWhitelist] = useState<Id<"whitelists"> | null>(null);
   const [viewingWhitelistTable, setViewingWhitelistTable] = useState<any | null>(null);
+  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
+  const [snapshotName, setSnapshotName] = useState('');
+  const [snapshotDescription, setSnapshotDescription] = useState('');
 
   // Queries
   const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
@@ -18,11 +21,19 @@ export default function WhitelistManagerAdmin() {
     api.whitelists.getWhitelistById,
     selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
   );
+  const snapshots = useQuery(
+    api.whitelists.getSnapshotsByWhitelist,
+    selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
+  );
 
   // Mutations
   const initializeCriteria = useMutation(api.whitelists.initializeDefaultCriteria);
   const deleteWhitelist = useMutation(api.whitelists.deleteWhitelist);
   const generateWhitelist = useMutation(api.whitelists.generateWhitelist);
+  const removeUserFromWhitelist = useMutation(api.whitelists.removeUserFromWhitelist);
+  const addUserToWhitelistByCompanyName = useMutation(api.whitelists.addUserToWhitelistByCompanyName);
+  const createSnapshot = useMutation(api.whitelists.createSnapshot);
+  const deleteSnapshot = useMutation(api.whitelists.deleteSnapshot);
 
   // Initialize default criteria on mount
   useEffect(() => {
@@ -73,6 +84,39 @@ export default function WhitelistManagerAdmin() {
     a.download = `whitelist_${whitelist.name.replace(/\s+/g, '_')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleTakeSnapshot = async () => {
+    if (!selectedWhitelist || !selectedWhitelistData) return;
+
+    if (!snapshotName.trim()) {
+      alert('Please enter a snapshot name');
+      return;
+    }
+
+    try {
+      const result = await createSnapshot({
+        whitelistId: selectedWhitelist,
+        snapshotName: snapshotName.trim(),
+        description: snapshotDescription.trim() || undefined,
+      });
+      alert(`Snapshot created! ${result.userCount} users captured.`);
+      setShowSnapshotModal(false);
+      setSnapshotName('');
+      setSnapshotDescription('');
+    } catch (error: any) {
+      alert(`Error creating snapshot: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSnapshot = async (snapshotId: Id<"whitelistSnapshots">) => {
+    if (!confirm('Are you sure you want to delete this snapshot? This cannot be undone.')) return;
+
+    try {
+      await deleteSnapshot({ snapshotId });
+    } catch (error: any) {
+      alert(`Error deleting snapshot: ${error.message}`);
+    }
   };
 
   return (
@@ -247,16 +291,25 @@ export default function WhitelistManagerAdmin() {
               </div>
 
               {/* Eligible Users */}
-              <div className="bg-black/50 rounded-lg p-4">
+              <div className="bg-black/50 rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="text-sm font-bold text-cyan-400">
                     Eligible Users ({selectedWhitelistData.userCount})
                   </h4>
-                  {selectedWhitelistData.lastGenerated > 0 && (
-                    <div className="text-xs text-gray-500">
-                      Updated: {new Date(selectedWhitelistData.lastGenerated).toLocaleString()}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {selectedWhitelistData.lastGenerated > 0 && (
+                      <div className="text-xs text-gray-500">
+                        Updated: {new Date(selectedWhitelistData.lastGenerated).toLocaleString()}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setShowSnapshotModal(true)}
+                      disabled={selectedWhitelistData.userCount === 0}
+                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-bold rounded transition-all"
+                    >
+                      📸 Take Snapshot
+                    </button>
+                  </div>
                 </div>
 
                 {selectedWhitelistData.userCount === 0 ? (
@@ -285,6 +338,53 @@ export default function WhitelistManagerAdmin() {
                   </div>
                 )}
               </div>
+
+              {/* Snapshots */}
+              <div className="bg-black/50 rounded-lg p-4">
+                <h4 className="text-sm font-bold text-purple-400 mb-3">
+                  Snapshots ({snapshots?.length || 0})
+                </h4>
+
+                {snapshots && snapshots.length > 0 ? (
+                  <div className="space-y-2">
+                    {snapshots.map((snapshot) => (
+                      <div
+                        key={snapshot._id}
+                        className="bg-purple-900/20 border border-purple-500/30 rounded p-3"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-bold text-white text-sm">{snapshot.snapshotName}</div>
+                            {snapshot.description && (
+                              <div className="text-xs text-gray-400 mt-1">{snapshot.description}</div>
+                            )}
+                          </div>
+                          <div className="bg-purple-600/30 text-purple-300 text-xs px-2 py-1 rounded">
+                            {snapshot.userCount} users
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="text-xs text-gray-500">
+                            Taken: {new Date(snapshot.takenAt).toLocaleString()}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSnapshot(snapshot._id)}
+                            className="px-2 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-400 text-xs font-bold rounded transition-all"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    <div className="text-3xl mb-2">📸</div>
+                    <div>No snapshots yet.</div>
+                    <div className="text-xs mt-1">Click "Take Snapshot" to freeze the current eligible users list.</div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -304,93 +404,68 @@ export default function WhitelistManagerAdmin() {
 
       {/* View Table Modal */}
       {viewingWhitelistTable && (
+        <WhitelistTableModal
+          whitelist={viewingWhitelistTable}
+          onClose={() => setViewingWhitelistTable(null)}
+          onExportCSV={handleExportCSV}
+          removeUserFromWhitelist={removeUserFromWhitelist}
+          addUserToWhitelistByCompanyName={addUserToWhitelistByCompanyName}
+        />
+      )}
+
+      {/* Snapshot Creation Modal */}
+      {showSnapshotModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-cyan-500/50 rounded-lg w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex justify-between items-center p-6 border-b border-cyan-500/30">
-              <div>
-                <h2 className="text-2xl font-bold text-cyan-400">{viewingWhitelistTable.name}</h2>
-                {viewingWhitelistTable.description && (
-                  <p className="text-gray-400 text-sm mt-1">{viewingWhitelistTable.description}</p>
-                )}
-                <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                  <span>{viewingWhitelistTable.userCount} eligible users</span>
-                  <span>•</span>
-                  <span>{viewingWhitelistTable.rules.length} rules ({viewingWhitelistTable.ruleLogic})</span>
-                  {viewingWhitelistTable.lastGenerated > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>Last generated: {new Date(viewingWhitelistTable.lastGenerated).toLocaleString()}</span>
-                    </>
-                  )}
-                </div>
+          <div className="bg-gray-900 border border-purple-500/50 rounded-lg w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-purple-400">📸 Take Snapshot</h2>
+              <button onClick={() => setShowSnapshotModal(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm text-purple-300 mb-2">Snapshot Name</label>
+              <input
+                type="text"
+                value={snapshotName}
+                onChange={(e) => setSnapshotName(e.target.value)}
+                placeholder="e.g., Early Bird - Oct 24, Launch Day Snapshot"
+                className="w-full bg-black/50 border border-purple-500/30 rounded px-3 py-2 text-white"
+                autoFocus
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm text-purple-300 mb-2">Description (Optional)</label>
+              <textarea
+                value={snapshotDescription}
+                onChange={(e) => setSnapshotDescription(e.target.value)}
+                placeholder="Add notes about this snapshot..."
+                className="w-full bg-black/50 border border-purple-500/30 rounded px-3 py-2 text-white h-20"
+              />
+            </div>
+
+            <div className="bg-purple-900/20 border border-purple-500/30 rounded p-3 mb-4 text-sm text-purple-300">
+              <div className="font-bold mb-1">📋 Snapshot Info:</div>
+              <div className="text-gray-400">
+                <div>• Whitelist: {selectedWhitelistData?.name}</div>
+                <div>• Users to capture: {selectedWhitelistData?.userCount}</div>
+                <div>• This snapshot will be frozen and never change</div>
               </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
               <button
-                onClick={() => setViewingWhitelistTable(null)}
-                className="text-gray-400 hover:text-white text-3xl"
+                onClick={() => setShowSnapshotModal(false)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded"
               >
-                ×
+                Cancel
               </button>
-            </div>
-
-            {/* Table */}
-            <div className="flex-1 overflow-auto p-6">
-              {viewingWhitelistTable.userCount === 0 ? (
-                <div className="text-center py-20 text-gray-400">
-                  <div className="text-6xl mb-4">📋</div>
-                  <div className="text-xl">No eligible users yet</div>
-                  <div className="text-sm mt-2">Click "Regenerate" to populate this whitelist</div>
-                </div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-gray-900">
-                    <tr className="border-b-2 border-cyan-500/30">
-                      <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">#</th>
-                      <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Wallet Address</th>
-                      <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Display Name</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {viewingWhitelistTable.eligibleUsers.map((user: any, index: number) => (
-                      <tr
-                        key={index}
-                        className="border-b border-gray-700/30 hover:bg-cyan-900/10 transition-colors"
-                      >
-                        <td className="py-3 px-4 text-gray-400">{index + 1}</td>
-                        <td className="py-3 px-4 text-white font-mono text-xs">
-                          {user.walletAddress}
-                        </td>
-                        <td className="py-3 px-4 text-gray-300">
-                          {user.displayName || <span className="text-gray-600 italic">No name</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-cyan-500/30 flex justify-between items-center">
-              <div className="text-sm text-gray-400">
-                Total: <span className="text-cyan-400 font-bold">{viewingWhitelistTable.userCount}</span> eligible users
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    handleExportCSV(viewingWhitelistTable);
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-                >
-                  Export CSV
-                </button>
-                <button
-                  onClick={() => setViewingWhitelistTable(null)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                >
-                  Close
-                </button>
-              </div>
+              <button
+                onClick={handleTakeSnapshot}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-bold"
+              >
+                Take Snapshot
+              </button>
             </div>
           </div>
         </div>
@@ -629,6 +704,233 @@ function WhitelistCreateModal({
           >
             {isSaving ? 'Saving...' : editingWhitelist ? 'Update Whitelist' : 'Create Whitelist'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Whitelist Table Modal with Add/Delete Functionality
+function WhitelistTableModal({
+  whitelist,
+  onClose,
+  onExportCSV,
+  removeUserFromWhitelist,
+  addUserToWhitelistByCompanyName,
+}: {
+  whitelist: any;
+  onClose: () => void;
+  onExportCSV: (whitelist: any) => void;
+  removeUserFromWhitelist: any;
+  addUserToWhitelistByCompanyName: any;
+}) {
+  const [companyNameInput, setCompanyNameInput] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Search for matching company names
+  const searchResults = useQuery(
+    api.whitelists.searchCompanyNames,
+    companyNameInput.length >= 2 ? { searchTerm: companyNameInput } : "skip"
+  );
+
+  const handleRemoveUser = async (walletAddress: string, displayName?: string) => {
+    if (!confirm(`Remove "${displayName || walletAddress}" from this whitelist?`)) return;
+
+    try {
+      await removeUserFromWhitelist({
+        whitelistId: whitelist._id,
+        walletAddress,
+      });
+      alert('User removed successfully!');
+    } catch (error: any) {
+      alert(`Error removing user: ${error.message}`);
+    }
+  };
+
+  const handleSelectCompany = (companyName: string) => {
+    setCompanyNameInput(companyName);
+    setShowDropdown(false);
+  };
+
+  const handleAddUser = async () => {
+    if (!companyNameInput.trim()) {
+      alert('Please enter a corporation name');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await addUserToWhitelistByCompanyName({
+        whitelistId: whitelist._id,
+        companyName: companyNameInput.trim(),
+      });
+      alert(`User "${companyNameInput}" added successfully!`);
+      setCompanyNameInput('');
+      setShowDropdown(false);
+    } catch (error: any) {
+      alert(`Error adding user: ${error.message}`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  // Show dropdown when there are search results
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [searchResults]);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-cyan-500/50 rounded-lg w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-cyan-500/30">
+          <div>
+            <h2 className="text-2xl font-bold text-cyan-400">{whitelist.name}</h2>
+            {whitelist.description && (
+              <p className="text-gray-400 text-sm mt-1">{whitelist.description}</p>
+            )}
+            <div className="flex gap-4 mt-2 text-xs text-gray-500">
+              <span>{whitelist.userCount} eligible users</span>
+              <span>•</span>
+              <span>{whitelist.rules.length} rules ({whitelist.ruleLogic})</span>
+              {whitelist.lastGenerated > 0 && (
+                <>
+                  <span>•</span>
+                  <span>Last generated: {new Date(whitelist.lastGenerated).toLocaleString()}</span>
+                </>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-3xl"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Add User Section */}
+        <div className="p-6 border-b border-cyan-500/30 bg-black/30">
+          <div className="flex items-end gap-3">
+            <div className="flex-1 relative">
+              <label className="block text-sm text-cyan-300 mb-2">Add User Manually</label>
+              <input
+                type="text"
+                value={companyNameInput}
+                onChange={(e) => {
+                  setCompanyNameInput(e.target.value);
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !showDropdown) handleAddUser();
+                }}
+                onFocus={() => {
+                  if (searchResults && searchResults.length > 0) {
+                    setShowDropdown(true);
+                  }
+                }}
+                placeholder="Enter corporation name..."
+                className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white"
+                disabled={isAdding}
+              />
+
+              {/* Autocomplete Dropdown */}
+              {showDropdown && searchResults && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-cyan-500/50 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                  {searchResults.map((result, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSelectCompany(result.companyName)}
+                      className="px-4 py-3 hover:bg-cyan-900/30 cursor-pointer border-b border-gray-700 last:border-0 transition-colors"
+                    >
+                      <div className="text-white font-medium">{result.companyName}</div>
+                      <div className="text-xs text-gray-400 font-mono truncate mt-1">
+                        {result.walletAddress}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleAddUser}
+              disabled={isAdding}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAdding ? 'Adding...' : '+ Add User'}
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-auto p-6">
+          {whitelist.userCount === 0 ? (
+            <div className="text-center py-20 text-gray-400">
+              <div className="text-6xl mb-4">📋</div>
+              <div className="text-xl">No eligible users yet</div>
+              <div className="text-sm mt-2">Click "Regenerate" to populate this whitelist or add users manually</div>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-gray-900">
+                <tr className="border-b-2 border-cyan-500/30">
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">#</th>
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Wallet Address</th>
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Display Name</th>
+                  <th className="text-right py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {whitelist.eligibleUsers.map((user: any, index: number) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-700/30 hover:bg-cyan-900/10 transition-colors"
+                  >
+                    <td className="py-3 px-4 text-gray-400">{index + 1}</td>
+                    <td className="py-3 px-4 text-white font-mono text-xs">
+                      {user.walletAddress}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300">
+                      {user.displayName || <span className="text-gray-600 italic">No name</span>}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => handleRemoveUser(user.walletAddress, user.displayName)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-cyan-500/30 flex justify-between items-center">
+          <div className="text-sm text-gray-400">
+            Total: <span className="text-cyan-400 font-bold">{whitelist.userCount}</span> eligible users
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => onExportCSV(whitelist)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            >
+              Export CSV
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -28,7 +28,6 @@ import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
-import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
 import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 
@@ -433,7 +432,6 @@ export default function MekRateLoggingPage() {
   // Company name states
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
-  const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
   const [showMechanismGridLightbox, setShowMechanismGridLightbox] = useState(false);
   const [showMeksTriangle, setShowMeksTriangle] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // Search functionality
@@ -1185,36 +1183,7 @@ export default function MekRateLoggingPage() {
     }
   }, [walletConnected, companyNameData]);
 
-  // Listen for navigation button lightbox open events
-  useEffect(() => {
-    const handleOpenLightbox = (event: CustomEvent) => {
-      const lightboxId = event.detail?.lightboxId;
-      console.log('[Lightbox Event] Opening lightbox:', lightboxId);
-
-      switch (lightboxId) {
-        case 'essence-distribution':
-          setShowEssenceLightbox(true);
-          break;
-        case 'mek-levels':
-          // Add state for this when needed
-          break;
-        case 'activity-log':
-          // Add state for this when needed
-          break;
-        case 'essence-balances':
-          // Add state for this when needed
-          break;
-        case 'essence-buffs':
-          // Add state for this when needed
-          break;
-        default:
-          console.warn('[Lightbox Event] Unknown lightbox ID:', lightboxId);
-      }
-    };
-
-    window.addEventListener('openLightbox', handleOpenLightbox as EventListener);
-    return () => window.removeEventListener('openLightbox', handleOpenLightbox as EventListener);
-  }, []);
+  // Lightbox events now handled by GlobalLightboxHandler in layout.tsx
 
   // Initialize app on mount
   useEffect(() => {
@@ -3622,7 +3591,10 @@ export default function MekRateLoggingPage() {
             {/* Essence and Meks buttons at top center */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
               <button
-                onClick={() => setShowEssenceLightbox(true)}
+                onClick={() => {
+                  console.log('[page.tsx] Essence button clicked, dispatching openLightbox event');
+                  window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'essence-distribution' } }));
+                }}
                 className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
               >
                 Essence
@@ -4741,12 +4713,7 @@ export default function MekRateLoggingPage() {
         />
       )}
 
-      {/* Essence Distribution Lightbox */}
-      <EssenceDistributionLightbox
-        isOpen={showEssenceLightbox}
-        onClose={() => setShowEssenceLightbox(false)}
-        walletAddress={walletAddress || "demo_wallet_123"}
-      />
+      {/* Essence Distribution Lightbox - now handled by GlobalLightboxHandler in layout.tsx */}
 
       {/* Mechanism Grid Lightbox */}
       {showMechanismGridLightbox && (

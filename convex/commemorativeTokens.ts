@@ -532,6 +532,10 @@ export const updateTokenType = mutation({
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     metadataUrl: v.optional(v.string()),
+    saleMode: v.optional(v.union(v.literal("whitelist"), v.literal("public_sale"), v.literal("free_claim"))),
+    minimumGold: v.optional(v.number()),
+    onePerWallet: v.optional(v.boolean()),
+    maxPerWallet: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const counter = await ctx.db
@@ -551,6 +555,10 @@ export const updateTokenType = mutation({
     if (args.description !== undefined) updates.description = args.description;
     if (args.imageUrl !== undefined) updates.imageUrl = args.imageUrl;
     if (args.metadataUrl !== undefined) updates.metadataUrl = args.metadataUrl;
+    if (args.saleMode !== undefined) updates.saleMode = args.saleMode;
+    if (args.minimumGold !== undefined) updates.minimumGold = args.minimumGold;
+    if (args.onePerWallet !== undefined) updates.onePerWallet = args.onePerWallet;
+    if (args.maxPerWallet !== undefined) updates.maxPerWallet = args.maxPerWallet;
 
     await ctx.db.patch(counter._id, updates);
 
@@ -669,7 +677,57 @@ export const takeEligibilitySnapshot = mutation({
 });
 
 /**
+ * Import a whitelist snapshot into an NFT's eligibility snapshot
+ */
+export const importSnapshotToNFT = mutation({
+  args: {
+    tokenType: v.string(),
+    snapshotId: v.id("whitelistSnapshots"),
+  },
+  handler: async (ctx, args) => {
+    const design = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", args.tokenType))
+      .first();
+
+    if (!design) {
+      throw new Error("NFT not found");
+    }
+
+    if (design.saleMode !== "whitelist") {
+      throw new Error("Can only import snapshots for whitelist mode NFTs");
+    }
+
+    const snapshot = await ctx.db.get(args.snapshotId);
+    if (!snapshot) {
+      throw new Error("Snapshot not found");
+    }
+
+    // Extract wallet addresses from snapshot's eligible users
+    const eligibleWallets = snapshot.eligibleUsers.map(user => user.walletAddress);
+
+    // Update NFT with snapshot data
+    await ctx.db.patch(design._id, {
+      eligibilitySnapshot: eligibleWallets,
+      snapshotTakenAt: snapshot.takenAt,
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[Snapshot Import] Imported snapshot "${snapshot.snapshotName}" from whitelist "${snapshot.whitelistName}" to ${args.tokenType}: ${eligibleWallets.length} eligible wallets`);
+
+    return {
+      success: true,
+      eligibleCount: eligibleWallets.length,
+      snapshotName: snapshot.snapshotName,
+      whitelistName: snapshot.whitelistName,
+      snapshotTakenAt: snapshot.takenAt,
+    };
+  },
+});
+
+/**
  * Import a whitelist from the Whitelist Manager into a design's eligibility snapshot
+ * @deprecated Use importSnapshotToNFT instead
  */
 export const importWhitelistToDesign = mutation({
   args: {

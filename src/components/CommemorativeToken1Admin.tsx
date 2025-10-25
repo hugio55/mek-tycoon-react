@@ -117,7 +117,7 @@ export default function CommemorativeToken1Admin() {
   const existingPolicies = useQuery(api.minting.getMintingPolicies, { network });
   const allDesigns = useQuery(api.commemorativeTokens.getAllDesigns, {});
   const allMints = useQuery(api.commemorativeTokens.getAllCommemorativeTokens, { limit: 100 });
-  const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
+  const allSnapshots = useQuery(api.whitelists.getAllSnapshots);
 
   // Mutations
   const upsertConfig = useMutation(api.airdrop.upsertConfig);
@@ -125,9 +125,10 @@ export default function CommemorativeToken1Admin() {
   const storeMintingPolicy = useMutation(api.minting.storeMintingPolicy);
   const deleteMintingPolicy = useMutation(api.minting.deleteMintingPolicy);
   const initializeTokenType = useMutation(api.commemorativeTokens.initializeTokenType);
+  const updateTokenType = useMutation(api.commemorativeTokens.updateTokenType);
   const deleteTokenType = useMutation(api.commemorativeTokens.deleteTokenType);
   const takeEligibilitySnapshot = useMutation(api.commemorativeTokens.takeEligibilitySnapshot);
-  const importWhitelistToDesign = useMutation(api.commemorativeTokens.importWhitelistToDesign);
+  const importSnapshotToNFT = useMutation(api.commemorativeTokens.importSnapshotToNFT);
 
   // Initialize campaign if it doesn't exist
   useEffect(() => {
@@ -289,7 +290,7 @@ export default function CommemorativeToken1Admin() {
   const handleCreateDesign = async () => {
     // Validation
     if (!designName.trim()) {
-      setDesignError('Please enter a design name');
+      setDesignError('Please enter an NFT name');
       return;
     }
 
@@ -344,25 +345,25 @@ export default function CommemorativeToken1Admin() {
       setUploadFile(null);
       setMetadataImageUrl('');
 
-      alert('NFT Design created successfully! Configure distribution settings in Step 3.');
+      alert('NFT created successfully! Configure distribution settings in Step 3.');
     } catch (error) {
-      console.error('Design creation error:', error);
-      setDesignError(error instanceof Error ? error.message : 'Failed to create design');
+      console.error('NFT creation error:', error);
+      setDesignError(error instanceof Error ? error.message : 'Failed to create NFT');
     } finally {
       setIsCreatingDesign(false);
     }
   };
 
   const handleDeleteDesign = async (tokenType: string) => {
-    if (!confirm('Are you sure you want to delete this design? This cannot be undone if NFTs have been minted.')) {
+    if (!confirm('Are you sure you want to delete this NFT? This cannot be undone if copies have been minted.')) {
       return;
     }
 
     try {
       await deleteTokenType({ tokenType });
     } catch (error) {
-      console.error('Design deletion error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to delete design');
+      console.error('NFT deletion error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete NFT');
     }
   };
 
@@ -1324,28 +1325,28 @@ export default function CommemorativeToken1Admin() {
         </div>
       </div>
 
-      {/* STEP 2: NFT Designs */}
+      {/* STEP 2: NFT Configuration */}
       <div className="bg-gradient-to-r from-pink-900/20 to-purple-900/20 border-4 border-pink-500/50 rounded-lg p-6">
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <div className="text-3xl font-bold text-pink-400">STEP 2</div>
-              <h3 className="text-2xl font-bold text-white">NFT Designs</h3>
+              <h3 className="text-2xl font-bold text-white">NFT Configuration</h3>
             </div>
             <button
               onClick={() => setShowCreateDesign(!showCreateDesign)}
               className="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg transition-all"
             >
-              {showCreateDesign ? '✕ Cancel' : '+ Add New Design'}
+              {showCreateDesign ? '✕ Cancel' : '+ Create New NFT'}
             </button>
           </div>
-          <p className="text-sm text-gray-400">Create NFT designs that can be minted multiple times (Phase 1, Phase 2, etc.)</p>
+          <p className="text-sm text-gray-400">Create NFTs that can be minted multiple times (Phase 1, Phase 2, etc.)</p>
         </div>
 
-        {/* Create Design Form */}
+        {/* Create NFT Form */}
         {showCreateDesign && (
           <div className="mb-6 bg-black/40 border-2 border-pink-500/30 rounded-lg p-6 space-y-4">
-            <h4 className="text-lg font-bold text-pink-300 mb-4">Create New Design</h4>
+            <h4 className="text-lg font-bold text-pink-300 mb-4">Create New NFT</h4>
 
             {/* Token Type ID */}
             <div>
@@ -1364,10 +1365,10 @@ export default function CommemorativeToken1Admin() {
               </div>
             </div>
 
-            {/* Design Name */}
+            {/* NFT Name */}
             <div>
               <label className="block text-xs uppercase tracking-wider text-pink-300 mb-2 font-bold">
-                Design Name
+                NFT Name
               </label>
               <input
                 type="text"
@@ -1412,7 +1413,7 @@ export default function CommemorativeToken1Admin() {
             {/* Note about distribution settings */}
             <div className="bg-blue-900/20 border border-blue-500/30 rounded p-3">
               <div className="text-xs text-blue-300">
-                💡 <strong>Distribution settings</strong> (sale mode, pricing, whitelist eligibility) will be configured in <strong>Step 3: Minting & Distribution</strong> after creating this design.
+                💡 <strong>Distribution settings</strong> (sale mode, pricing, whitelist eligibility) will be configured in <strong>Step 3: Minting & Distribution</strong> after creating this NFT.
               </div>
             </div>
 
@@ -1530,7 +1531,7 @@ export default function CommemorativeToken1Admin() {
               </div>
             )}
 
-            {/* Save Design Button */}
+            {/* Save NFT Button */}
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowCreateDesign(false)}
@@ -1543,16 +1544,16 @@ export default function CommemorativeToken1Admin() {
                 disabled={isCreatingDesign}
                 className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold rounded-lg transition-all"
               >
-                {isCreatingDesign ? 'Creating...' : '💾 Save Design'}
+                {isCreatingDesign ? 'Creating...' : '💾 Save NFT'}
               </button>
             </div>
           </div>
         )}
 
-        {/* Designs List */}
+        {/* NFT List */}
         <div>
           <h4 className="text-sm font-bold text-pink-400 mb-3">
-            NFT Designs ({allDesigns?.length || 0})
+            Created NFTs ({allDesigns?.length || 0})
           </h4>
 
           {allDesigns && allDesigns.length > 0 ? (
@@ -1601,6 +1602,31 @@ export default function CommemorativeToken1Admin() {
                     {design.isActive ? 'ACTIVE' : 'INACTIVE'}
                   </div>
 
+                  {/* Sale Mode Selector */}
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-400 mb-1">Distribution Mode</label>
+                    <select
+                      value={design.saleMode || ''}
+                      onChange={async (e) => {
+                        const newMode = e.target.value as 'whitelist' | 'public_sale' | 'free_claim';
+                        try {
+                          await updateTokenType({
+                            tokenType: design.tokenType,
+                            saleMode: newMode || undefined,
+                          });
+                        } catch (error: any) {
+                          alert(`Error updating sale mode: ${error.message}`);
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-pink-500/30 rounded px-2 py-1 text-xs text-white"
+                    >
+                      <option value="">Not Set</option>
+                      <option value="whitelist">Whitelist</option>
+                      <option value="public_sale">Public Sale</option>
+                      <option value="free_claim">Free Claim</option>
+                    </select>
+                  </div>
+
                   {/* Actions */}
                   <div className="flex gap-2">
                     <button
@@ -1621,7 +1647,7 @@ export default function CommemorativeToken1Admin() {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-4xl mb-2">📦</div>
-              <div>No designs yet. Click "+ Add New Design" to create one.</div>
+              <div>No NFTs yet. Click "+ Create New NFT" to create one.</div>
             </div>
           )}
         </div>
@@ -1674,10 +1700,10 @@ export default function CommemorativeToken1Admin() {
         {/* Whitelist Mode Tab */}
         {activeTab === 'whitelist' && (
           <>
-            {/* Design Selector */}
+            {/* NFT Selector */}
         <div className="bg-black/30 rounded-lg p-4 mb-6">
           <label className="block text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">
-            Select Whitelist Design
+            Select Whitelist NFT
           </label>
           {allDesigns && allDesigns.filter((d: any) => d.saleMode === 'whitelist').length > 0 ? (
             <select
@@ -1685,7 +1711,7 @@ export default function CommemorativeToken1Admin() {
               onChange={(e) => setSelectedDesignForMinting(e.target.value)}
               className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-sm text-white"
             >
-              <option value="">-- Select a design --</option>
+              <option value="">-- Select an NFT --</option>
               {allDesigns.filter((d: any) => d.saleMode === 'whitelist').map((design: any) => (
                 <option key={design._id} value={design.tokenType}>
                   {design.displayName} - {design.eligibilitySnapshot?.length || 0} eligible - {design.totalMinted || 0} minted
@@ -1694,17 +1720,29 @@ export default function CommemorativeToken1Admin() {
             </select>
           ) : (
             <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-3 text-sm text-yellow-400">
-              ⚠️ No whitelist designs available. Please create a whitelist design in Step 2 first.
+              ⚠️ No whitelist NFTs available. Please create a whitelist NFT in Step 2 first.
             </div>
           )}
         </div>
 
-        {/* Whitelist Import from Whitelist Manager */}
-        {selectedDesignForMinting && allWhitelists && allWhitelists.length > 0 && (
+        {/* Debug Info */}
+        {selectedDesignForMinting && (
+          <div className="bg-blue-900/20 border border-blue-500/30 rounded p-3 mb-4 text-xs">
+            <div className="text-blue-300 font-bold mb-1">Debug Info:</div>
+            <div className="text-gray-400">Selected NFT: {selectedDesignForMinting}</div>
+            <div className="text-gray-400">Snapshots Available: {allSnapshots?.length || 0}</div>
+            {allSnapshots && allSnapshots.length > 0 && (
+              <div className="text-gray-400">Snapshot Names: {allSnapshots.map(s => `${s.snapshotName} (${s.userCount})`).join(', ')}</div>
+            )}
+          </div>
+        )}
+
+        {/* Snapshot Import from Whitelist Manager */}
+        {selectedDesignForMinting && allSnapshots && allSnapshots.length > 0 && (
           <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 mb-6">
-            <h4 className="text-sm font-bold text-purple-300 mb-3 uppercase">Import Saved Whitelist</h4>
+            <h4 className="text-sm font-bold text-purple-300 mb-3 uppercase">Import Snapshot</h4>
             <p className="text-xs text-gray-400 mb-3">
-              Select a whitelist from the Whitelist Manager to import eligible users.
+              Select a snapshot from the Whitelist Manager to import eligible users.
             </p>
 
             <div className="flex gap-3">
@@ -1713,10 +1751,10 @@ export default function CommemorativeToken1Admin() {
                 onChange={(e) => setSelectedWhitelistId(e.target.value || null)}
                 className="flex-1 bg-black/50 border border-purple-500/30 rounded px-3 py-2 text-sm text-white"
               >
-                <option value="">-- Select a whitelist --</option>
-                {allWhitelists.map((whitelist) => (
-                  <option key={whitelist._id} value={whitelist._id}>
-                    {whitelist.name} - {whitelist.userCount} eligible users
+                <option value="">-- Select a snapshot --</option>
+                {allSnapshots.map((snapshot) => (
+                  <option key={snapshot._id} value={snapshot._id}>
+                    {snapshot.whitelistName} → {snapshot.snapshotName} ({snapshot.userCount} users) - {new Date(snapshot.takenAt).toLocaleDateString()}
                   </option>
                 ))}
               </select>
@@ -1724,21 +1762,21 @@ export default function CommemorativeToken1Admin() {
               <button
                 onClick={async () => {
                   if (!selectedWhitelistId) {
-                    alert('Please select a whitelist first');
+                    alert('Please select a snapshot first');
                     return;
                   }
                   if (!selectedDesignForMinting) return;
 
                   setIsImportingWhitelist(true);
                   try {
-                    const result = await importWhitelistToDesign({
+                    const result = await importSnapshotToNFT({
                       tokenType: selectedDesignForMinting,
-                      whitelistId: selectedWhitelistId as any,
+                      snapshotId: selectedWhitelistId as any,
                     });
-                    alert(`Whitelist "${result.whitelistName}" imported! ${result.eligibleCount} users are now eligible.`);
+                    alert(`Snapshot "${result.whitelistName} → ${result.snapshotName}" imported! ${result.eligibleCount} users are now eligible.`);
                     setSelectedWhitelistId(null);
                   } catch (error: any) {
-                    alert(`Error importing whitelist: ${error.message}`);
+                    alert(`Error importing snapshot: ${error.message}`);
                   } finally {
                     setIsImportingWhitelist(false);
                   }
@@ -1758,14 +1796,14 @@ export default function CommemorativeToken1Admin() {
         )}
 
         {/* Link to Whitelist Manager */}
-        {selectedDesignForMinting && (!allWhitelists || allWhitelists.length === 0) && (
+        {selectedDesignForMinting && (!allSnapshots || allSnapshots.length === 0) && (
           <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="text-3xl">📋</div>
               <div className="flex-1">
-                <h4 className="text-sm font-bold text-blue-300 mb-1">No Saved Whitelists Found</h4>
+                <h4 className="text-sm font-bold text-blue-300 mb-1">No Snapshots Found</h4>
                 <p className="text-xs text-gray-400">
-                  Create whitelists in the Whitelist Manager to easily import eligible users.
+                  Create whitelists and take snapshots in the Whitelist Manager to easily import eligible users.
                 </p>
               </div>
               <a

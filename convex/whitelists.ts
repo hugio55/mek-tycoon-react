@@ -324,9 +324,124 @@ export const getWhitelistEligibleUsers = query({
   },
 });
 
+export const searchCompanyNames = query({
+  args: { searchTerm: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.searchTerm || args.searchTerm.length < 2) {
+      return [];
+    }
+
+    const allMiners = await ctx.db.query("goldMining").collect();
+
+    const searchLower = args.searchTerm.toLowerCase();
+    const matches = allMiners
+      .filter(miner =>
+        miner.companyName &&
+        miner.companyName.toLowerCase().includes(searchLower) &&
+        miner.walletAddress
+      )
+      .map(miner => ({
+        companyName: miner.companyName!,
+        walletAddress: miner.walletAddress!,
+      }))
+      .slice(0, 10); // Limit to 10 results
+
+    return matches;
+  },
+});
+
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
+
+// ============================================================================
+// MANUAL WHITELIST USER MANAGEMENT
+// ============================================================================
+
+export const removeUserFromWhitelist = mutation({
+  args: {
+    whitelistId: v.id("whitelists"),
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    const updatedUsers = whitelist.eligibleUsers.filter(
+      (user) => user.walletAddress !== args.walletAddress
+    );
+
+    await ctx.db.patch(args.whitelistId, {
+      eligibleUsers: updatedUsers,
+      userCount: updatedUsers.length,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true, newCount: updatedUsers.length };
+  },
+});
+
+export const addUserToWhitelistByCompanyName = mutation({
+  args: {
+    whitelistId: v.id("whitelists"),
+    companyName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    // Find user by company name
+    const miner = await ctx.db
+      .query("goldMining")
+      .filter((q) => q.eq(q.field("companyName"), args.companyName))
+      .first();
+
+    if (!miner) {
+      throw new Error(`No user found with company name "${args.companyName}"`);
+    }
+
+    if (!miner.walletAddress) {
+      throw new Error(`User "${args.companyName}" has no wallet address`);
+    }
+
+    // Check if already in whitelist
+    const alreadyExists = whitelist.eligibleUsers.some(
+      (user) => user.walletAddress === miner.walletAddress
+    );
+
+    if (alreadyExists) {
+      throw new Error(`User "${args.companyName}" is already in this whitelist`);
+    }
+
+    // Add user
+    const updatedUsers = [
+      ...whitelist.eligibleUsers,
+      {
+        walletAddress: miner.walletAddress,
+        displayName: miner.companyName || undefined,
+      },
+    ];
+
+    await ctx.db.patch(args.whitelistId, {
+      eligibleUsers: updatedUsers,
+      userCount: updatedUsers.length,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      newCount: updatedUsers.length,
+      addedUser: {
+        walletAddress: miner.walletAddress,
+        displayName: miner.companyName,
+      },
+    };
+  },
+});
 
 export const initializeDefaultCriteria = mutation({
   args: {},
@@ -382,5 +497,98 @@ export const initializeDefaultCriteria = mutation({
     }
 
     return { message: "Default criteria initialized", count: defaultCriteria.length };
+  },
+});
+
+// ============================================================================
+// WHITELIST SNAPSHOT MANAGEMENT
+// ============================================================================
+
+/**
+ * Create a snapshot of a whitelist's current eligible users
+ * Snapshots are frozen in time and never change
+ */
+export const createSnapshot = mutation({
+  args: {
+    whitelistId: v.id("whitelists"),
+    snapshotName: v.string(),
+    description: v.optional(v.string()),
+    createdBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    // Create frozen snapshot of current eligible users
+    const snapshotId = await ctx.db.insert("whitelistSnapshots", {
+      whitelistId: args.whitelistId,
+      whitelistName: whitelist.name,
+      snapshotName: args.snapshotName,
+      description: args.description,
+      eligibleUsers: whitelist.eligibleUsers,
+      userCount: whitelist.userCount,
+      rulesSnapshot: whitelist.rules.map(r => ({
+        criteriaField: r.criteriaField,
+        operator: r.operator,
+        value: r.value,
+      })),
+      ruleLogic: whitelist.ruleLogic,
+      takenAt: Date.now(),
+      createdBy: args.createdBy,
+    });
+
+    console.log(`[Whitelist Snapshot] Created snapshot "${args.snapshotName}" for whitelist "${whitelist.name}" with ${whitelist.userCount} users`);
+
+    return { snapshotId, userCount: whitelist.userCount };
+  },
+});
+
+/**
+ * Get all snapshots for a specific whitelist
+ */
+export const getSnapshotsByWhitelist = query({
+  args: { whitelistId: v.id("whitelists") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("whitelistSnapshots")
+      .withIndex("by_whitelist", (q) => q.eq("whitelistId", args.whitelistId))
+      .order("desc")
+      .collect();
+  },
+});
+
+/**
+ * Get all snapshots (for dropdown selection in minting)
+ */
+export const getAllSnapshots = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("whitelistSnapshots")
+      .order("desc")
+      .collect();
+  },
+});
+
+/**
+ * Get a specific snapshot by ID
+ */
+export const getSnapshotById = query({
+  args: { snapshotId: v.id("whitelistSnapshots") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.snapshotId);
+  },
+});
+
+/**
+ * Delete a snapshot
+ */
+export const deleteSnapshot = mutation({
+  args: { snapshotId: v.id("whitelistSnapshots") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.snapshotId);
+    console.log(`[Whitelist Snapshot] Deleted snapshot ${args.snapshotId}`);
   },
 });
