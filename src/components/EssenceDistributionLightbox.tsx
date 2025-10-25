@@ -6,11 +6,11 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
+import { useEssence } from "@/contexts/EssenceContext";
 
 interface EssenceDistributionLightboxProps {
   isOpen: boolean;
   onClose: () => void;
-  walletAddress?: string;
 }
 
 // Helper function: Round DOWN essence amounts to nearest 0.1
@@ -38,17 +38,41 @@ function AnimatedEssenceTableCell({
   const [displayAmount, setDisplayAmount] = useState(baseAmount);
   const baseAmountRef = useRef(baseAmount);
   const backendTimeRef = useRef(backendCalculationTime);
+  const previousBackendTimeRef = useRef(backendCalculationTime); // Track previous value to detect changes
 
   // Update baseline when backend sends new values (matches EssenceBalancesViewer)
   useEffect(() => {
-    console.log('🔵 [DISTRIBUTION LIGHTBOX] Baseline update:', {
-      component: 'AnimatedEssenceTableCell',
-      baseAmount: baseAmount.toFixed(12),
-      backendTime: new Date(backendCalculationTime).toISOString(),
-      backendTimeMs: backendCalculationTime,
-      ratePerDay: ratePerDay.toFixed(12),
-      cap
-    });
+    const previousBackendTime = previousBackendTimeRef.current;
+    const backendTimeChanged = backendCalculationTime !== previousBackendTime;
+
+    // CRITICAL LOG: Detect when backend sends NEW snapshot data
+    if (backendTimeChanged) {
+      console.log('🔵🔥 [DISTRIBUTION LIGHTBOX] *** BACKEND SNAPSHOT UPDATE DETECTED ***', {
+        component: 'AnimatedEssenceTableCell',
+        OLD_backendTime: new Date(previousBackendTime).toISOString(),
+        NEW_backendTime: new Date(backendCalculationTime).toISOString(),
+        timeDifference_ms: backendCalculationTime - previousBackendTime,
+        timeDifference_seconds: ((backendCalculationTime - previousBackendTime) / 1000).toFixed(1),
+        OLD_baseAmount: baseAmountRef.current.toFixed(12),
+        NEW_baseAmount: baseAmount.toFixed(12),
+        amountDifference: (baseAmount - baseAmountRef.current).toFixed(12),
+        ratePerDay: ratePerDay.toFixed(12),
+        cap
+      });
+    } else {
+      // Regular baseline update (not a new snapshot, just component re-render)
+      console.log('🔵 [DISTRIBUTION LIGHTBOX] Baseline update (no backend change):', {
+        component: 'AnimatedEssenceTableCell',
+        baseAmount: baseAmount.toFixed(12),
+        backendTime: new Date(backendCalculationTime).toISOString(),
+        backendTimeMs: backendCalculationTime,
+        ratePerDay: ratePerDay.toFixed(12),
+        cap
+      });
+    }
+
+    // Update all refs with new values
+    previousBackendTimeRef.current = backendCalculationTime;
     baseAmountRef.current = baseAmount;
     backendTimeRef.current = backendCalculationTime;
     setDisplayAmount(baseAmount);
@@ -177,17 +201,17 @@ function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: 
   );
 }
 
-export default function EssenceDistributionLightbox({ isOpen, onClose, walletAddress }: EssenceDistributionLightboxProps) {
+export default function EssenceDistributionLightbox({ isOpen, onClose }: EssenceDistributionLightboxProps) {
   // VERSION MARKER - Check browser console to see if this appears
   useEffect(() => {
-    console.log('🔥🔥🔥 [FILE VERSION CHECK] EssenceDistributionLightbox.tsx - RESTORED UI CHANGES - Stat boxes 25% smaller 🔥🔥🔥');
-    console.log('[EssenceDistributionLightbox] Component mounted with props:', { isOpen, walletAddress: walletAddress || 'undefined' });
+    console.log('🔥🔥🔥 [FILE VERSION CHECK] EssenceDistributionLightbox.tsx - USING SHARED ESSENCE CONTEXT 🔥🔥🔥');
+    console.log('[EssenceDistributionLightbox] Component mounted with props:', { isOpen });
   }, []);
 
   // Log when isOpen changes
   useEffect(() => {
-    console.log('[EssenceDistributionLightbox] isOpen changed to:', isOpen, 'walletAddress:', walletAddress || 'undefined');
-  }, [isOpen, walletAddress]);
+    console.log('[EssenceDistributionLightbox] isOpen changed to:', isOpen);
+  }, [isOpen]);
 
   const [mounted, setMounted] = useState(false);
   const [viewCount, setViewCount] = useState<5 | 10 | 20 | 30 | 100>(20);
@@ -212,13 +236,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
   const [cardBlur, setCardBlur] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl'>('md');
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  // Generation animation controls
-  const [showAnimationDebug, setShowAnimationDebug] = useState(false);
-  const [animDirection, setAnimDirection] = useState<'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'radial-out' | 'radial-in'>('top-left');
-  const [animDensity, setAnimDensity] = useState<'low' | 'medium' | 'high'>('high');
-  const [animBlendMode, setAnimBlendMode] = useState<'normal' | 'screen' | 'overlay' | 'lighten'>('overlay');
-  const [animOpacity, setAnimOpacity] = useState(19);
-
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Mount portal and lock body scroll
@@ -235,11 +252,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
     };
   }, [isOpen]);
 
-  // Query player's essence data from Convex
-  const playerEssenceState = useQuery(
-    api.essence.getPlayerEssenceState,
-    { walletAddress: walletAddress || "demo_wallet_123" }
-  );
+  // Get player's essence data from shared context (single source of truth)
+  const { playerEssenceState, isLoading } = useEssence();
+
+  console.log('[EssenceDistributionLightbox] Using shared context data:', {
+    hasData: !!playerEssenceState,
+    isLoading,
+    balanceCount: playerEssenceState?.balances?.length || 0
+  });
 
   // Query marketplace listings to get current prices
   const marketListings = useQuery(
@@ -521,97 +541,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
         style={getBackdropBlurStyle()}
         onClick={onClose}
       />
-
-      {/* Generation Animation Debug Menu - FAR LEFT SIDE - COMPACT */}
-      <div className="fixed left-0 top-1/2 -translate-y-1/2 z-[10000]">
-        {/* Toggle Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowAnimationDebug(!showAnimationDebug);
-          }}
-          className="bg-black/90 border-2 border-yellow-500/50 px-2 py-2 flex items-center justify-center hover:bg-yellow-500/20 hover:border-yellow-500 transition-all"
-          style={{
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed'
-          }}
-        >
-          <span className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider">ANIM</span>
-        </button>
-
-        {/* Compact Animation Debug Panel */}
-        {showAnimationDebug && (
-          <div className="absolute left-full top-0 ml-2 w-56 bg-black/95 border-2 border-yellow-500/50 rounded p-3 shadow-2xl text-xs" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider mb-2 pb-1 border-b border-yellow-500/30">
-              Generation Energy
-            </h3>
-
-            {/* Direction */}
-            <div className="mb-2">
-              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Direction</label>
-              <select
-                value={animDirection}
-                onChange={(e) => setAnimDirection(e.target.value as typeof animDirection)}
-                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
-              >
-                <option value="top-left">↖ Top-Left</option>
-                <option value="top-right">↗ Top-Right</option>
-                <option value="bottom-right">↘ Bottom-Right</option>
-                <option value="bottom-left">↙ Bottom-Left</option>
-                <option value="radial-out">⊙ Radial Outward</option>
-                <option value="radial-in">⊗ Radial Inward</option>
-              </select>
-            </div>
-
-            {/* Density */}
-            <div className="mb-2">
-              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Density</label>
-              <select
-                value={animDensity}
-                onChange={(e) => setAnimDensity(e.target.value as typeof animDensity)}
-                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
-              >
-                <option value="low">Low (Sparse)</option>
-                <option value="medium">Medium</option>
-                <option value="high">High (Dense)</option>
-              </select>
-            </div>
-
-            {/* Blend Mode */}
-            <div className="mb-2">
-              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">Blend Mode</label>
-              <select
-                value={animBlendMode}
-                onChange={(e) => setAnimBlendMode(e.target.value as typeof animBlendMode)}
-                className="w-full bg-black/80 border border-yellow-500/30 text-yellow-400 text-[10px] px-2 py-1 rounded cursor-pointer hover:border-yellow-500/60 transition-colors"
-              >
-                <option value="normal">Normal</option>
-                <option value="screen">Screen</option>
-                <option value="overlay">Overlay</option>
-                <option value="lighten">Lighten</option>
-              </select>
-            </div>
-
-            {/* Opacity Slider */}
-            <div>
-              <label className="text-gray-400 text-[9px] uppercase tracking-wider block mb-1">
-                Opacity: {animOpacity}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={animOpacity}
-                onChange={(e) => setAnimOpacity(parseInt(e.target.value))}
-                className="w-full h-1 bg-black/80 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                style={{
-                  background: `linear-gradient(to right, rgb(234, 179, 8) 0%, rgb(234, 179, 8) ${animOpacity}%, rgba(0,0,0,0.8) ${animOpacity}%, rgba(0,0,0,0.8) 100%)`
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Debug Toggle Button - Fixed to viewport */}
       <button
@@ -979,10 +908,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose, walletAdd
                                 onSliceClick={handleSliceClick}
                                 selectedSlice={selectedSlice}
                                 hoverEffect={hoverEffect}
-                                animDirection={animDirection}
-                                animDensity={animDensity}
-                                animBlendMode={animBlendMode}
-                                animOpacity={animOpacity}
                               />
                             </div>
                           ) : (

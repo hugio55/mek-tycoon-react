@@ -6,6 +6,8 @@ import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import EssenceBuffManagement from '@/components/EssenceBuffManagement';
+import { restoreWalletSession } from '@/lib/walletSessionManager';
+import { EssenceProvider } from '@/contexts/EssenceContext';
 
 /**
  * Global handler for navigation button lightbox events
@@ -19,11 +21,15 @@ export default function GlobalLightboxHandler() {
   const [showEssenceBuffs, setShowEssenceBuffs] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
 
-  // Get wallet address from localStorage on mount
+  // Get wallet address from encrypted session on mount
   useEffect(() => {
-    const stored = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || '';
-    setWalletAddress(stored);
-    console.log('[GlobalLightboxHandler] Wallet address from localStorage:', stored);
+    const loadWallet = async () => {
+      const session = await restoreWalletSession();
+      const stored = session?.stakeAddress || '';
+      setWalletAddress(stored);
+      console.log('[GlobalLightboxHandler] Wallet address from session:', stored ? stored.slice(0, 15) + '...' : 'none');
+    };
+    loadWallet();
   }, []);
 
   useEffect(() => {
@@ -32,12 +38,24 @@ export default function GlobalLightboxHandler() {
     const handleOpenLightbox = (event: CustomEvent) => {
       console.log('[GlobalLightboxHandler] Received openLightbox event!', event);
       const lightboxId = event.detail?.lightboxId;
+      const eventWalletAddress = event.detail?.walletAddress;
       console.log('[GlobalLightboxHandler] Lightbox ID:', lightboxId);
+      console.log('[GlobalLightboxHandler] Wallet from event:', eventWalletAddress);
 
       switch (lightboxId) {
         case 'essence-distribution':
           console.log('[GlobalLightboxHandler] Opening Essence Distribution lightbox');
-          setShowEssenceLightbox(true);
+          // Use wallet from event detail if provided, otherwise restore from encrypted session
+          (async () => {
+            let currentWallet = eventWalletAddress;
+            if (!currentWallet || currentWallet === 'demo_wallet_123') {
+              const session = await restoreWalletSession();
+              currentWallet = session?.stakeAddress || 'demo_wallet_123';
+            }
+            console.log('[GlobalLightboxHandler] Using wallet address:', currentWallet ? currentWallet.slice(0, 15) + '...' : 'demo');
+            setWalletAddress(currentWallet);
+            setShowEssenceLightbox(true);
+          })();
           break;
         case 'mek-levels':
           console.log('[GlobalLightboxHandler] Opening Mek Levels lightbox');
@@ -68,18 +86,17 @@ export default function GlobalLightboxHandler() {
   }, []);
 
   return (
-    <>
+    <EssenceProvider walletAddress={walletAddress || null}>
       {/* Essence Distribution Lightbox */}
       {showEssenceLightbox && (
         <>
-          {console.log('[GlobalLightboxHandler] Rendering EssenceDistributionLightbox with walletAddress:', walletAddress || 'demo_wallet_123')}
+          {console.log('[GlobalLightboxHandler] Rendering EssenceDistributionLightbox (using shared context)')}
           <EssenceDistributionLightbox
             isOpen={true}
             onClose={() => {
               console.log('[GlobalLightboxHandler] Closing EssenceDistributionLightbox');
               setShowEssenceLightbox(false);
             }}
-            walletAddress={walletAddress || 'demo_wallet_123'}
           />
         </>
       )}
@@ -96,13 +113,15 @@ export default function GlobalLightboxHandler() {
 
       {/* Essence Balances Lightbox */}
       {showEssenceBalances && (
-        <EssenceBalancesViewer onClose={() => setShowEssenceBalances(false)} />
+        <EssenceBalancesViewer
+          onClose={() => setShowEssenceBalances(false)}
+        />
       )}
 
       {/* Essence Buffs Lightbox */}
       {showEssenceBuffs && (
         <EssenceBuffManagement onClose={() => setShowEssenceBuffs(false)} />
       )}
-    </>
+    </EssenceProvider>
   );
 }

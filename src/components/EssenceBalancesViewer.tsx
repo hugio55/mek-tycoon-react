@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useEssence } from '@/contexts/EssenceContext';
 
 interface EssenceBalancesViewerProps {
-  walletAddress: string;
   onClose: () => void;
 }
 
@@ -30,18 +30,43 @@ function AnimatedEssenceAmount({
   const [displayAmount, setDisplayAmount] = useState(baseAmount);
   const baseAmountRef = useRef(baseAmount);
   const backendTimeRef = useRef(backendCalculationTime);
+  const previousBackendTimeRef = useRef(backendCalculationTime); // Track previous value to detect changes
 
   // Update baseline when backend sends new values
   useEffect(() => {
-    console.log('🟢 [ADMIN BALANCES] Baseline update:', {
-      component: 'AnimatedEssenceAmount',
-      variationId,
-      baseAmount: baseAmount.toFixed(12),
-      backendTime: new Date(backendCalculationTime).toISOString(),
-      backendTimeMs: backendCalculationTime,
-      ratePerDay: ratePerDay.toFixed(12),
-      cap
-    });
+    const previousBackendTime = previousBackendTimeRef.current;
+    const backendTimeChanged = backendCalculationTime !== previousBackendTime;
+
+    // CRITICAL LOG: Detect when backend sends NEW snapshot data
+    if (backendTimeChanged) {
+      console.log('🟢🔥 [ADMIN BALANCES] *** BACKEND SNAPSHOT UPDATE DETECTED ***', {
+        component: 'AnimatedEssenceAmount',
+        variationId,
+        OLD_backendTime: new Date(previousBackendTime).toISOString(),
+        NEW_backendTime: new Date(backendCalculationTime).toISOString(),
+        timeDifference_ms: backendCalculationTime - previousBackendTime,
+        timeDifference_seconds: ((backendCalculationTime - previousBackendTime) / 1000).toFixed(1),
+        OLD_baseAmount: baseAmountRef.current.toFixed(12),
+        NEW_baseAmount: baseAmount.toFixed(12),
+        amountDifference: (baseAmount - baseAmountRef.current).toFixed(12),
+        ratePerDay: ratePerDay.toFixed(12),
+        cap
+      });
+    } else {
+      // Regular baseline update (not a new snapshot, just component re-render)
+      console.log('🟢 [ADMIN BALANCES] Baseline update (no backend change):', {
+        component: 'AnimatedEssenceAmount',
+        variationId,
+        baseAmount: baseAmount.toFixed(12),
+        backendTime: new Date(backendCalculationTime).toISOString(),
+        backendTimeMs: backendCalculationTime,
+        ratePerDay: ratePerDay.toFixed(12),
+        cap
+      });
+    }
+
+    // Update all refs with new values
+    previousBackendTimeRef.current = backendCalculationTime;
     baseAmountRef.current = baseAmount;
     backendTimeRef.current = backendCalculationTime;
     setDisplayAmount(baseAmount);
@@ -90,13 +115,24 @@ function AnimatedEssenceAmount({
   );
 }
 
-export default function EssenceBalancesViewer({ walletAddress, onClose }: EssenceBalancesViewerProps) {
+export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('amount');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const essenceState = useQuery(api.essence.getPlayerEssenceState, { walletAddress });
+  // Get essence data from shared context (single source of truth)
+  const { playerEssenceState, isLoading } = useEssence();
+  const essenceState = playerEssenceState; // Alias for compatibility with existing code
+
+  console.log('🟢🔥 [ADMIN BALANCES VIEWER] Using shared context data:', {
+    hasData: !!essenceState,
+    isLoading,
+    balanceCount: essenceState?.balances?.length || 0,
+    lastCalculationTime: essenceState?.lastCalculationTime
+      ? new Date(essenceState.lastCalculationTime).toISOString()
+      : 'N/A'
+  });
 
   // Mount portal and lock body scroll
   useEffect(() => {

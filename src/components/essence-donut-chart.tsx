@@ -32,10 +32,6 @@ interface DonutChartProps {
   hoverEffect?: 1 | 2 | 3 | 4;
   liveAccumulation?: boolean;
   essenceConfig?: any;
-  animDirection?: 'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'radial-out' | 'radial-in';
-  animDensity?: 'low' | 'medium' | 'high';
-  animBlendMode?: 'normal' | 'screen' | 'overlay' | 'lighten';
-  animOpacity?: number;
 }
 
 // Industrial color palette for essence types
@@ -66,10 +62,6 @@ export default function EssenceDonutChart({
   hoverEffect = 1,
   liveAccumulation = false,
   essenceConfig,
-  animDirection = 'top-right',
-  animDensity = 'medium',
-  animBlendMode = 'normal',
-  animOpacity = 70,
 }: DonutChartProps) {
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -267,6 +259,24 @@ export default function EssenceDonutChart({
           >
             {/* Definitions for gradients and filters */}
             <defs>
+              {/* CSS animations for energy streaks - converted from SVG animate for better performance */}
+              <style>{`
+                @keyframes energy-streak-1 {
+                  from { transform: translateX(-7px); }
+                  to { transform: translateX(27px); }
+                }
+                @keyframes energy-streak-2 {
+                  from { transform: translateX(-7px); }
+                  to { transform: translateX(27px); }
+                }
+                .energy-streak-1 {
+                  animation: energy-streak-1 0.5s linear infinite;
+                }
+                .energy-streak-2 {
+                  animation: energy-streak-2 0.5s linear infinite;
+                  animation-delay: 0.25s;
+                }
+              `}</style>
               {/* Industrial scan line effect */}
               <filter id="industrial-glow">
                 <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -362,166 +372,12 @@ export default function EssenceDonutChart({
                 <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
               </linearGradient>
 
-              {/* SEAMLESS PATTERNS - Multiple lines ensure no gaps */}
-
-              {/* TOP-LEFT DIRECTION */}
-              <pattern id="gen-anim-top-left-low" x="0" y="0" width="75" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-                <rect width="75" height="800" fill="transparent" />
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" repeatCount="indefinite" />
-                </rect>
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" begin="0.35s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-top-left-med" x="0" y="0" width="40" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-                <rect width="40" height="800" fill="transparent" />
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" repeatCount="indefinite" />
-                </rect>
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" begin="0.3s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
+              {/* GENERATION ANIMATION PATTERN - Top-left diagonal streaks */}
               <pattern id="gen-anim-top-left-high" x="0" y="0" width="20" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
                 <rect width="20" height="800" fill="transparent" />
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" repeatCount="indefinite" />
-                </rect>
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" begin="0.25s" repeatCount="indefinite" />
-                </rect>
+                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)" className="energy-streak-1" />
+                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)" className="energy-streak-2" />
               </pattern>
-
-              {/* TOP-RIGHT DIRECTION */}
-              <pattern id="gen-anim-top-right-low" x="0" y="0" width="75" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <rect width="75" height="800" fill="transparent" />
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" repeatCount="indefinite" />
-                </rect>
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" begin="0.35s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-top-right-med" x="0" y="0" width="40" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <rect width="40" height="800" fill="transparent" />
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" repeatCount="indefinite" />
-                </rect>
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" begin="0.3s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-top-right-high" x="0" y="0" width="20" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <rect width="20" height="800" fill="transparent" />
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" repeatCount="indefinite" />
-                </rect>
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" begin="0.25s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              {/* BOTTOM-RIGHT DIRECTION */}
-              <pattern id="gen-anim-bottom-right-low" x="0" y="0" width="75" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(135)">
-                <rect width="75" height="800" fill="transparent" />
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" repeatCount="indefinite" />
-                </rect>
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" begin="0.35s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-bottom-right-med" x="0" y="0" width="40" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(135)">
-                <rect width="40" height="800" fill="transparent" />
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" repeatCount="indefinite" />
-                </rect>
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" begin="0.3s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-bottom-right-high" x="0" y="0" width="20" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(135)">
-                <rect width="20" height="800" fill="transparent" />
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" repeatCount="indefinite" />
-                </rect>
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" begin="0.25s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              {/* BOTTOM-LEFT DIRECTION */}
-              <pattern id="gen-anim-bottom-left-low" x="0" y="0" width="75" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(225)">
-                <rect width="75" height="800" fill="transparent" />
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" repeatCount="indefinite" />
-                </rect>
-                <rect width="10" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-10" to="75" dur="0.7s" begin="0.35s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-bottom-left-med" x="0" y="0" width="40" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(225)">
-                <rect width="40" height="800" fill="transparent" />
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" repeatCount="indefinite" />
-                </rect>
-                <rect width="8" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-8" to="40" dur="0.6s" begin="0.3s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              <pattern id="gen-anim-bottom-left-high" x="0" y="0" width="20" height="800" patternUnits="userSpaceOnUse" patternTransform="rotate(225)">
-                <rect width="20" height="800" fill="transparent" />
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" repeatCount="indefinite" />
-                </rect>
-                <rect width="7" height="800" fill="url(#energy-gradient)" filter="url(#energy-glow)">
-                  <animate attributeName="x" from="-7" to="20" dur="0.5s" begin="0.25s" repeatCount="indefinite" />
-                </rect>
-              </pattern>
-
-              {/* RADIAL OUTWARD - expanding pulse waves */}
-              <pattern id="radial-out-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                <defs>
-                  <radialGradient id="pulse-gradient-1">
-                    <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-                    <stop offset="45%" stopColor="rgba(255, 255, 255, 0)" />
-                    <stop offset="50%" stopColor="rgba(255, 255, 255, 0.8)" />
-                    <stop offset="55%" stopColor="rgba(255, 255, 255, 0)" />
-                    <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
-                  </radialGradient>
-                </defs>
-                <rect width="200" height="200" fill="transparent" />
-                {/* Expanding pulse circles */}
-                <circle cx="100" cy="100" fill="url(#pulse-gradient-1)" filter="url(#energy-glow)">
-                  <animate attributeName="r" from="0" to="150" dur="1.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="100" cy="100" fill="url(#pulse-gradient-1)" filter="url(#energy-glow)">
-                  <animate attributeName="r" from="0" to="150" dur="1.5s" begin="0.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.5s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="100" cy="100" fill="url(#pulse-gradient-1)" filter="url(#energy-glow)">
-                  <animate attributeName="r" from="0" to="150" dur="1.5s" begin="1s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="1s" repeatCount="indefinite" />
-                </circle>
-              </pattern>
-
-              {/* RADIAL INWARD - reverse gradient */}
-              <radialGradient id="radial-in-gradient">
-                <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-                <stop offset="40%" stopColor="rgba(255, 255, 255, 0.2)" />
-                <stop offset="70%" stopColor="rgba(255, 255, 255, 0.5)" />
-                <stop offset="100%" stopColor="rgba(255, 255, 255, 0.9)" />
-              </radialGradient>
             </defs>
 
             {/* Background ring */}
@@ -649,50 +505,19 @@ export default function EssenceDonutChart({
                       />
                     )}
 
-                    {/* GENERATING ESSENCE ANIMATION OVERLAY - only show when actively generating (baseRate > 0) */}
-                    {slice.baseRate && slice.baseRate > 0 && !shouldDarken && (() => {
-                      // Determine which pattern to use based on direction and density
-                      let patternFill = '';
-
-                      // Map direction and density to pattern ID
-                      if (animDirection === 'top-left') {
-                        if (animDensity === 'low') patternFill = 'url(#gen-anim-top-left-low)';
-                        else if (animDensity === 'medium') patternFill = 'url(#gen-anim-top-left-med)';
-                        else patternFill = 'url(#gen-anim-top-left-high)';
-                      } else if (animDirection === 'top-right') {
-                        if (animDensity === 'low') patternFill = 'url(#gen-anim-top-right-low)';
-                        else if (animDensity === 'medium') patternFill = 'url(#gen-anim-top-right-med)';
-                        else patternFill = 'url(#gen-anim-top-right-high)';
-                      } else if (animDirection === 'bottom-right') {
-                        if (animDensity === 'low') patternFill = 'url(#gen-anim-bottom-right-low)';
-                        else if (animDensity === 'medium') patternFill = 'url(#gen-anim-bottom-right-med)';
-                        else patternFill = 'url(#gen-anim-bottom-right-high)';
-                      } else if (animDirection === 'bottom-left') {
-                        if (animDensity === 'low') patternFill = 'url(#gen-anim-bottom-left-low)';
-                        else if (animDensity === 'medium') patternFill = 'url(#gen-anim-bottom-left-med)';
-                        else patternFill = 'url(#gen-anim-bottom-left-high)';
-                      } else if (animDirection === 'radial-out') {
-                        patternFill = 'url(#radial-out-pattern)';
-                      } else if (animDirection === 'radial-in') {
-                        patternFill = 'url(#radial-in-gradient)';
-                      }
-
-                      // Determine mix-blend-mode
-                      const mixBlendMode = animBlendMode === 'normal' ? 'normal' : animBlendMode;
-
-                      return (
-                        <path
-                          d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
-                          fill={patternFill}
-                          opacity={animOpacity / 100}
-                          pointerEvents="none"
-                          style={{
-                            mixBlendMode: mixBlendMode,
-                            transition: 'opacity 0.2s ease'
-                          }}
-                        />
-                      );
-                    })()}
+                    {/* GENERATING ESSENCE ANIMATION OVERLAY - diagonal energy streaks */}
+                    {slice.baseRate && slice.baseRate > 0 && !shouldDarken && (
+                      <path
+                        d={createSlicePath(slice.startAngle, slice.endAngle, animationProgress)}
+                        fill="url(#gen-anim-top-left-high)"
+                        opacity={0.19}
+                        pointerEvents="none"
+                        style={{
+                          mixBlendMode: 'overlay',
+                          transition: 'opacity 0.2s ease'
+                        }}
+                      />
+                    )}
 
                     {/* Darken texture overlay - hexagon pattern */}
                     {shouldDarken && (
