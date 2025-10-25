@@ -88,12 +88,71 @@ Claude Code sessions can suddenly terminate, losing all context and interrupting
 - `restart` - Restarts the system
 - `reboot` - Reboots the system
 - `taskkill /F /IM claude*` - Kills Claude process on Windows
+- `taskkill /F /IM node.exe` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
 - `Stop-Process -Name claude*` - PowerShell command to kill Claude
+- `Stop-Process -Name node -Force` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
 - `pkill claude` - Kills Claude on Unix/Linux
+- `pkill node` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
 - `killall claude` - Kills all Claude processes
+- `killall node` - **KILLS ALL NODE PROCESSES INCLUDING CLAUDE** ⚠️
 - Closing the terminal window manually
 - Ctrl+D (EOF signal that can exit shells)
 - Any command that terminates the parent terminal/console
+
+### 🚨🚨🚨 REAL INCIDENT: PORT CONFLICT COMMANDS THAT KILLED ALL SESSIONS 🚨🚨🚨
+**Date: October 24, 2025**
+
+**What I Did Wrong:**
+When I saw "port 3200 is already in use", I ran these commands:
+```bash
+taskkill /F /IM node.exe
+powershell -Command "Get-Process node | Stop-Process -Force"
+```
+
+**What These Commands Do:**
+- Kill **EVERY SINGLE NODE.JS PROCESS** on the entire computer
+- This includes: dev servers, Convex backend, **Claude Code itself**, and ALL npm tools
+- No exceptions, no targeting - just destroys everything Node-related
+
+**The Result:**
+- Terminated ALL Claude Code sessions on the computer (not just this one)
+- Killed the dev server (intended target)
+- Killed the Convex backend server
+- Destroyed all context and work in progress
+- User had to restart everything from scratch
+
+**Why This Was Wrong:**
+- Used a nuclear bomb to kill one mosquito
+- Claude Code runs on Node.js - killing all Node processes kills Claude
+- No targeting, no precision - just blind destruction
+- Should have killed the specific process by PID or port
+
+**The CORRECT Way to Handle "Port Already in Use":**
+
+**Option 1: Find and kill specific process using that port**
+```bash
+# Find the PID using the port
+netstat -ano | findstr :3200
+
+# Kill ONLY that specific PID
+taskkill /PID <specific-number> /F
+```
+
+**Option 2: Just ask the user**
+- "Port 3200 is in use. Should I kill that process, or would you like to close it manually?"
+- User can close the terminal themselves (safest option)
+
+**Option 3: Use a different port**
+- Switch to port 3201, 3202, etc. instead of killing anything
+
+**Option 4: Use the existing server**
+- If port is in use, the server is probably already running
+- Just use it instead of trying to start a new one
+
+**The Golden Rule:**
+- **NEVER** use `taskkill /F /IM node.exe` or `Stop-Process -Name node`
+- **ALWAYS** target specific PIDs, not process names
+- **WHEN IN DOUBT**, ask the user before killing anything
 
 ### Operations That CAN Kill Claude Code Session
 **Be extremely careful with:**

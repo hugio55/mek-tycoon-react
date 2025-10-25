@@ -201,7 +201,9 @@ export default function NavigationBar() {
                   router.push(actionData);
                 } else if (action === "lightbox" && actionData) {
                   // Dispatch custom event for lightbox opening
+                  console.log('[NavigationBar] Dispatching openLightbox event with ID:', actionData);
                   window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: actionData } }));
+                  console.log('[NavigationBar] Event dispatched');
                 }
               }}
               style={{

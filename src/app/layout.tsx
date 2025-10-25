@@ -9,6 +9,7 @@ import { Providers } from "./providers";
 import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import NavigationBar from "@/components/NavigationBar";
+import GlobalLightboxHandler from "@/components/GlobalLightboxHandler";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
@@ -66,6 +67,7 @@ export default function RootLayout({
           <DemoModeWrapper>
             <Providers>
               <NavigationBar />
+              <GlobalLightboxHandler />
               {children}
             </Providers>
           </DemoModeWrapper>

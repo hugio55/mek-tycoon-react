@@ -286,8 +286,9 @@ async function calculateEssenceMetadata(
     const effectiveCap = ((config?.essenceCap ?? 10) + capBonus);
 
     // Only set rate if variation is currently slotted (count > 0)
+    // CRITICAL: Multiply rate by count for duplicate variations
     if (count > 0) {
-      rates[variationId] = effectiveRate;
+      rates[variationId] = effectiveRate * count; // Stack rates for duplicates
       counts[variationId] = count;
     }
 
