@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function NavigationBar() {
   const router = useRouter();
@@ -190,7 +191,7 @@ export default function NavigationBar() {
           return (
             <button
               key={zone.id}
-              onClick={() => {
+              onClick={async () => {
                 const action = zone.metadata?.buttonAction;
                 const actionData = zone.metadata?.buttonActionData;
 
@@ -200,10 +201,17 @@ export default function NavigationBar() {
                 if (action === "url" && actionData) {
                   router.push(actionData);
                 } else if (action === "lightbox" && actionData) {
-                  // Dispatch custom event for lightbox opening
-                  console.log('[NavigationBar] Dispatching openLightbox event with ID:', actionData);
-                  window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: actionData } }));
-                  console.log('[NavigationBar] Event dispatched');
+                  // Get wallet address from encrypted session storage
+                  const session = await restoreWalletSession();
+                  console.log('[NavigationBar] Session resolved:', session ? 'found' : 'null');
+                  const walletAddress = session?.stakeAddress || session?.walletAddress || 'demo_wallet_123';
+                  console.log('[NavigationBar] Using wallet:', walletAddress ? walletAddress.slice(0, 15) + '...' : 'demo');
+                  window.dispatchEvent(new CustomEvent('openLightbox', {
+                    detail: {
+                      lightboxId: actionData,
+                      walletAddress: walletAddress
+                    }
+                  }));
                 }
               }}
               style={{

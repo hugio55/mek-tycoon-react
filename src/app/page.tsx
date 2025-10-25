@@ -476,6 +476,8 @@ export default function MekRateLoggingPage() {
     onConnectionSuccess: async (session) => {
       console.log('[Secure Connection] Wallet connected successfully');
       setWalletAddress(session.walletAddress);
+      // Save to localStorage so other components can access it
+      localStorage.setItem('stakeAddress', session.walletAddress);
       setWalletType(session.walletType);
       setIsConnecting(false);
       setWalletConnected(true);
@@ -1184,6 +1186,16 @@ export default function MekRateLoggingPage() {
   }, [walletConnected, companyNameData]);
 
   // Lightbox events now handled by GlobalLightboxHandler in layout.tsx
+
+  // Sync wallet address to localStorage whenever it changes (for other components to access)
+  useEffect(() => {
+    if (walletAddress && walletAddress !== 'null' && !walletAddress.includes('demo')) {
+      console.log('[Wallet Sync] Saving wallet to localStorage:', walletAddress?.slice(0, 15) + '...');
+      localStorage.setItem('stakeAddress', walletAddress);
+    } else if (!walletAddress) {
+      console.log('[Wallet Sync] No wallet to save');
+    }
+  }, [walletAddress]);
 
   // Initialize app on mount
   useEffect(() => {
@@ -2071,7 +2083,9 @@ export default function MekRateLoggingPage() {
       console.log('[Wallet Connect] First Mek:', meks[0]?.assetName);
 
       setWalletAddress(stakeAddress);
-      console.log('[Wallet Connect] ✓ setWalletAddress called');
+      // Save to localStorage so other components can access it
+      localStorage.setItem('stakeAddress', stakeAddress);
+      console.log('[Wallet Connect] ✓ setWalletAddress called and saved to localStorage');
 
       setWalletType(wallet.name.toLowerCase());
       console.log('[Wallet Connect] ✓ setWalletType called');
@@ -3592,8 +3606,13 @@ export default function MekRateLoggingPage() {
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
               <button
                 onClick={() => {
-                  console.log('[page.tsx] Essence button clicked, dispatching openLightbox event');
-                  window.dispatchEvent(new CustomEvent('openLightbox', { detail: { lightboxId: 'essence-distribution' } }));
+                  console.log('[page.tsx] Essence button clicked, dispatching openLightbox event with wallet:', walletAddress || 'demo_wallet_123');
+                  window.dispatchEvent(new CustomEvent('openLightbox', {
+                    detail: {
+                      lightboxId: 'essence-distribution',
+                      walletAddress: walletAddress || 'demo_wallet_123'
+                    }
+                  }));
                 }}
                 className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
               >
