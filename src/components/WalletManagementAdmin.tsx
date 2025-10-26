@@ -13,7 +13,7 @@ import ActivityLogViewer from '@/components/ActivityLogViewer';
 import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
-import EssenceBuffManagement from '@/components/EssenceBuffManagement';
+import BuffManagement from '@/components/BuffManagement';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
 // Lazy load heavy components
@@ -883,12 +883,7 @@ Check console for full timeline.
               >
                 Company Name {sortColumn === 'companyName' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th
-                onClick={() => handleSort('type')}
-                className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
-              >
-                Type {sortColumn === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
+              <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
               <th
                 onClick={() => handleSort('verified')}
                 className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
@@ -943,7 +938,12 @@ Check console for full timeline.
               >
                 Last Active {sortColumn === 'lastActive' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+              <th
+                onClick={() => handleSort('type')}
+                className="px-2 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-yellow-400 transition-colors"
+              >
+                Type {sortColumn === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
@@ -983,96 +983,6 @@ Check console for full timeline.
                         ) : (
                           <span className="text-sm text-gray-600 italic">No name</span>
                         )}
-                      </td>
-                      <td className="px-2 py-2">
-                        <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        {wallet.isVerified ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
-                            ✓ Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700">
-                            ✗ Not Verified
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        {editingGold?.walletAddress === wallet.walletAddress ? (
-                          <input
-                            type="number"
-                            value={editingGold.value}
-                            onChange={(e) => setEditingGold({ ...editingGold, value: e.target.value })}
-                            onBlur={async () => {
-                              const newGold = parseInt(editingGold.value);
-                              if (!isNaN(newGold) && newGold >= 0) {
-                                try {
-                                  const result = await updateWalletGold({
-                                    walletAddress: wallet.walletAddress,
-                                    newGoldAmount: newGold,
-                                  });
-                                  setStatusMessage({ type: 'success', message: result.message });
-                                  setTimeout(() => setStatusMessage(null), 3000);
-                                } catch (error) {
-                                  setStatusMessage({ type: 'error', message: 'Failed to update gold' });
-                                  setTimeout(() => setStatusMessage(null), 3000);
-                                }
-                              }
-                              setEditingGold(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.currentTarget.blur();
-                              } else if (e.key === 'Escape') {
-                                setEditingGold(null);
-                              }
-                            }}
-                            className="px-2 py-1 text-sm bg-gray-800 border border-yellow-500 rounded text-yellow-400 font-semibold w-24 text-right"
-                            autoFocus
-                          />
-                        ) : (
-                          <span
-                            className="text-sm font-semibold text-yellow-400 cursor-pointer hover:bg-yellow-900/20 px-2 py-1 rounded transition-colors"
-                            onClick={() => setEditingGold({ walletAddress: wallet.walletAddress, value: wallet.currentGold.toString() })}
-                            title="Click to edit gold amount"
-                          >
-                            {wallet.currentGold.toLocaleString()}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm font-semibold text-yellow-400">
-                          {(wallet.totalCumulativeGold || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-right">
-                        <span className="text-sm font-semibold text-red-400">
-                          {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <span className="text-xs text-gray-400">
-                          {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <span className="text-xs text-gray-400">
-                          {wallet.lastSnapshotTime
-                            ? new Date(wallet.lastSnapshotTime).toLocaleString()
-                            : wallet.updatedAt
-                            ? new Date(wallet.updatedAt).toLocaleString()
-                            : 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
                       </td>
                       <td className="px-2 py-2">
                         <div
@@ -1202,6 +1112,96 @@ Check console for full timeline.
                           )}
                         </div>
                       </td>
+                      <td className="px-2 py-2 text-center">
+                        {wallet.isVerified ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-700">
+                            ✗ Not Verified
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        <span className="text-sm font-semibold text-yellow-400">{wallet.mekCount}</span>
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        <span className="text-sm text-gray-300">{wallet.totalGoldPerHour.toFixed(2)}</span>
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        {editingGold?.walletAddress === wallet.walletAddress ? (
+                          <input
+                            type="number"
+                            value={editingGold.value}
+                            onChange={(e) => setEditingGold({ ...editingGold, value: e.target.value })}
+                            onBlur={async () => {
+                              const newGold = parseInt(editingGold.value);
+                              if (!isNaN(newGold) && newGold >= 0) {
+                                try {
+                                  const result = await updateWalletGold({
+                                    walletAddress: wallet.walletAddress,
+                                    newGoldAmount: newGold,
+                                  });
+                                  setStatusMessage({ type: 'success', message: result.message });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                } catch (error) {
+                                  setStatusMessage({ type: 'error', message: 'Failed to update gold' });
+                                  setTimeout(() => setStatusMessage(null), 3000);
+                                }
+                              }
+                              setEditingGold(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              } else if (e.key === 'Escape') {
+                                setEditingGold(null);
+                              }
+                            }}
+                            className="px-2 py-1 text-sm bg-gray-800 border border-yellow-500 rounded text-yellow-400 font-semibold w-24 text-right"
+                            autoFocus
+                          />
+                        ) : (
+                          <span
+                            className="text-sm font-semibold text-yellow-400 cursor-pointer hover:bg-yellow-900/20 px-2 py-1 rounded transition-colors"
+                            onClick={() => setEditingGold({ walletAddress: wallet.walletAddress, value: wallet.currentGold.toString() })}
+                            title="Click to edit gold amount"
+                          >
+                            {wallet.currentGold.toLocaleString()}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        <span className="text-sm font-semibold text-yellow-400">
+                          {(wallet.totalCumulativeGold || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        <span className="text-sm font-semibold text-red-400">
+                          {(wallet.totalGoldSpentOnUpgrades || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className="text-xs text-gray-400">
+                          {wallet.createdAt ? new Date(wallet.createdAt).toLocaleString() : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className="text-xs text-gray-400">
+                          {wallet.lastSnapshotTime
+                            ? new Date(wallet.lastSnapshotTime).toLocaleString()
+                            : wallet.updatedAt
+                            ? new Date(wallet.updatedAt).toLocaleString()
+                            : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className="text-xs text-gray-400">{wallet.lastActiveDisplay}</span>
+                      </td>
+                      <td className="px-2 py-2">
+                        <span className="text-sm text-gray-400 capitalize">{wallet.walletType}</span>
+                      </td>
                     </tr>
                   );
               })
@@ -1245,7 +1245,7 @@ Check console for full timeline.
       )}
 
       {viewingBuffs && (
-        <EssenceBuffManagement
+        <BuffManagement
           walletAddress={viewingBuffs}
           onClose={() => setViewingBuffs(null)}
         />

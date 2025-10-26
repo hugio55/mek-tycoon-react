@@ -4,18 +4,73 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
+import { useState, useEffect, useRef } from "react";
 
 export default function NavigationBar() {
   const router = useRouter();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [currentGold, setCurrentGold] = useState(0);
+  const goldAnimationRef = useRef<number | null>(null);
+
+  // Get wallet address from session
+  useEffect(() => {
+    const loadWallet = async () => {
+      const session = await restoreWalletSession();
+      setWalletAddress(session?.stakeAddress || null);
+    };
+    loadWallet();
+  }, []);
 
   // Get active navigation configuration
   const activeNavConfig = useQuery(api.navigation.getActiveNavigationConfig);
+
+  // Get gold mining data for display zones
+  const goldMiningData = useQuery(
+    api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
+
+  // Get essence data for display zones
+  const essenceData = useQuery(
+    api.essence.getPlayerEssenceState,
+    walletAddress ? { walletAddress } : "skip"
+  );
 
   // Get the overlay data if navigation is active
   const overlayData = useQuery(
     api.overlays.getOverlay,
     activeNavConfig ? { imageKey: activeNavConfig.overlayImageKey } : "skip"
   );
+
+  // Accumulate gold in real-time for display zones
+  useEffect(() => {
+    if (!goldMiningData) return;
+
+    const targetGold = goldMiningData.currentGold || 0;
+    const goldPerHour = goldMiningData.totalGoldPerHour || 0;
+    const goldPerMs = goldPerHour / 3600000;
+
+    // Initialize current gold if needed
+    if (currentGold === 0 && targetGold > 0) {
+      setCurrentGold(targetGold);
+    }
+
+    const animate = () => {
+      setCurrentGold(prev => {
+        const newGold = prev + (goldPerMs * 16.67); // ~60fps
+        return Math.min(newGold, targetGold + 1000); // Cap at reasonable value
+      });
+      goldAnimationRef.current = requestAnimationFrame(animate);
+    };
+
+    goldAnimationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (goldAnimationRef.current) {
+        cancelAnimationFrame(goldAnimationRef.current);
+      }
+    };
+  }, [goldMiningData]);
 
   // Don't render anything if no active navigation
   if (!activeNavConfig || !overlayData) {
@@ -151,6 +206,45 @@ export default function NavigationBar() {
     }
   };
 
+  // Get display value based on zone configuration
+  const getDisplayValue = (zone: any): string => {
+    const displayType = zone.metadata?.displayType || "gold";
+
+    switch (displayType) {
+      case "gold":
+        return Math.floor(currentGold).toLocaleString('en-US');
+      case "cumulative-gold":
+        return (goldMiningData?.totalCumulativeGold || 0).toLocaleString('en-US');
+      case "gold-per-hour":
+        return (goldMiningData?.totalGoldPerHour || 0).toLocaleString('en-US');
+      case "mek-count":
+        return (goldMiningData?.ownedMeks?.length || 0).toString();
+      case "essence":
+        const essenceType = zone.metadata?.essenceType || "Fire";
+        const essenceAmount = essenceData?.essenceBalances?.[essenceType] || 0;
+        return Math.floor(essenceAmount).toLocaleString('en-US');
+      default:
+        return "0";
+    }
+  };
+
+  // Get color value from config
+  const getDisplayColor = (colorName: string): string => {
+    switch (colorName) {
+      case "yellow": return "#fab617";
+      case "white": return "#ffffff";
+      case "gold": return "#ffd700";
+      case "green": return "#10b981";
+      case "blue": return "#3b82f6";
+      case "red": return "#ef4444";
+      case "orange": return "#f97316";
+      default: return "#fab617";
+    }
+  };
+
+  // Filter out display zones
+  const displayZones = overlayData?.zones?.filter((zone: any) => zone.mode === "zone" && zone.type === "display") || [];
+
   return (
     <div
       className="fixed top-0 left-0 right-0 z-50"
@@ -271,6 +365,39 @@ export default function NavigationBar() {
               </div>
             );
           })}
+
+        {/* Render display zones (dynamic text displays) */}
+        {displayZones.map((zone: any) => {
+          const fontSize = zone.metadata?.displayFontSize || 32;
+          const color = zone.metadata?.displayColor || "yellow";
+          const fontFamily = zone.metadata?.displayFont || "geist-mono";
+          const textAlign = zone.metadata?.displayAlign || "center";
+
+          return (
+            <div
+              key={zone.id}
+              style={{
+                position: 'absolute',
+                left: zone.x * scale,
+                top: zone.y * scale,
+                width: (zone.width || 0) * scale,
+                height: (zone.height || 0) * scale,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center',
+                pointerEvents: 'none',
+                fontSize: fontSize * scale,
+                color: getDisplayColor(color),
+                fontFamily: getFontFamily(fontFamily),
+                fontWeight: 'bold',
+                textShadow: `0 0 15px ${getDisplayColor(color)}80`,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {getDisplayValue(zone)}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

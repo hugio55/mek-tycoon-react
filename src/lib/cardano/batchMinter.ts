@@ -82,7 +82,7 @@ export async function processBatchMinting(config: BatchMintConfig): Promise<Batc
   const { valid, invalid } = validateRecipientAddresses(recipients);
 
   if (invalid.length > 0) {
-    console.warn(`⚠️  Found ${invalid.length} invalid addresses (will be skipped):`, invalid);
+    console.warn(`[🔨MINT] ⚠️  Found ${invalid.length} invalid addresses (will be skipped):`, invalid);
   }
 
   if (valid.length === 0) {
@@ -142,20 +142,20 @@ export async function processBatchMinting(config: BatchMintConfig): Promise<Batc
     let batchResult: MintResult | null = null;
     let attempt = 0;
 
-    console.log(`\n🔨 [Batch ${batchIndex + 1}/${batches.length}] Starting mint for ${batch.length} NFTs...`);
+    console.log(`\n[🔨MINT] 🔨 [Batch ${batchIndex + 1}/${batches.length}] Starting mint for ${batch.length} NFTs...`);
 
     while (attempt < retryAttempts && !batchResult?.success) {
       try {
         if (attempt > 0) {
-          console.log(`   🔄 Retry attempt ${attempt + 1} for batch ${batchIndex + 1}...`);
+          console.log(`[🔨MINT]    🔄 Retry attempt ${attempt + 1} for batch ${batchIndex + 1}...`);
           // Wait before retry (exponential backoff)
           await delay(1000 * Math.pow(2, attempt));
         }
 
-        console.log(`   🏗️  Building transaction for batch ${batchIndex + 1}...`);
+        console.log(`[🔨MINT]    🏗️  Building transaction for batch ${batchIndex + 1}...`);
         batchResult = await mintBatch(design, batch, mintNumber, network);
       } catch (error: any) {
-        console.error(`   ❌ Batch ${batchIndex + 1} attempt ${attempt + 1} failed:`, error.message);
+        console.error(`[🔨MINT]    ❌ Batch ${batchIndex + 1} attempt ${attempt + 1} failed:`, error.message);
       }
 
       attempt++;
@@ -172,11 +172,11 @@ export async function processBatchMinting(config: BatchMintConfig): Promise<Batc
 
       mintNumber += batch.length;
 
-      console.log(`✅ Batch ${batchIndex + 1} complete: ${batchResult.txHash}`);
+      console.log(`[🔨MINT] ✅ Batch ${batchIndex + 1} complete: ${batchResult.txHash}`);
     } else {
       // Batch failed after all retries
       failedAddresses.push(...batch);
-      console.error(`❌ Batch ${batchIndex + 1} failed after ${retryAttempts} attempts:`, batchResult?.error);
+      console.error(`[🔨MINT] ❌ Batch ${batchIndex + 1} failed after ${retryAttempts} attempts:`, batchResult?.error);
     }
 
     // Notify batch completion

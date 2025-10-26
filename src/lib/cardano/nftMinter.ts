@@ -296,16 +296,34 @@ export async function buildMintTransaction(
   }
 
   try {
+    // Log all design parameters to identify what's undefined
+    console.log('[🔨MINT] Design parameters:');
+    console.log('[🔨MINT]   - tokenType:', design.tokenType);
+    console.log('[🔨MINT]   - name:', design.name);
+    console.log('[🔨MINT]   - description:', design.description);
+    console.log('[🔨MINT]   - assetNamePrefix:', design.assetNamePrefix);
+    console.log('[🔨MINT]   - imageIpfsHash:', design.imageIpfsHash);
+    console.log('[🔨MINT]   - policyId:', design.policyId);
+    console.log('[🔨MINT]   - policyScript type:', typeof design.policyScript);
+    console.log('[🔨MINT] Recipients count:', recipients.length);
+    console.log('[🔨MINT] Network:', network);
+    console.log('[🔨MINT] Connected wallet:', connectedWallet ? 'YES' : 'NO');
+    console.log('[🔨MINT] Wallet address:', walletAddress);
+
     // Create Blockfrost provider for fee calculation
     const blockfrostApiKey = network === 'mainnet'
       ? process.env.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID!
       : process.env.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID_TESTNET!;
 
+    console.log('[🔨MINT] Blockfrost API key:', blockfrostApiKey ? 'PRESENT' : 'UNDEFINED');
+
     const blockfrostProvider = new BlockfrostProvider(blockfrostApiKey);
 
     // Initialize transaction
+    console.log('[🔨MINT] Initializing transaction with wallet...');
     const tx = new Transaction({ initiator: connectedWallet });
     tx.setNetwork(network);
+    console.log('[🔨MINT] Transaction initialized successfully');
 
     // Parse policy script if it's a string
     let policyScript = design.policyScript;
@@ -313,13 +331,13 @@ export async function buildMintTransaction(
       try {
         policyScript = JSON.parse(policyScript);
       } catch (e) {
-        console.error('Failed to parse policyScript:', e);
+        console.error('[🔨MINT] Failed to parse policyScript:', e);
       }
     }
 
-    console.log('[NFT Minter] Policy Script Type:', typeof policyScript);
-    console.log('[NFT Minter] Policy Script:', JSON.stringify(policyScript, null, 2));
-    console.log('[NFT Minter] Policy ID:', design.policyId);
+    console.log('[🔨MINT] Policy Script Type:', typeof policyScript);
+    console.log('[🔨MINT] Policy Script:', JSON.stringify(policyScript, null, 2));
+    console.log('[🔨MINT] Policy ID:', design.policyId);
 
     // Validate policy script structure
     if (!policyScript || typeof policyScript !== 'object') {
@@ -332,19 +350,31 @@ export async function buildMintTransaction(
     }
 
     // Create forge script from policy
-    const forgingScript = ForgeScript.fromNativeScript(policyScript);
+    console.log('[🔨MINT] Creating forge script from policy...');
+    console.log('[🔨MINT] Policy keyHash:', policyScript.keyHash);
+
+    // For signature-based policies with browser wallets, use withOneSignature
+    const forgingScript = ForgeScript.withOneSignature(policyScript.keyHash);
+    console.log('[🔨MINT] Forge script created successfully');
 
     // Add each NFT to the transaction
     let mintNumber = startMintNumber;
     for (const recipient of recipients) {
+      console.log(`[🔨MINT] Processing NFT #${mintNumber}...`);
+
       // Generate asset name
       const assetName = generateAssetName(design.assetNamePrefix, mintNumber);
       const assetNameHex = Buffer.from(assetName, 'utf-8').toString('hex');
+      console.log(`[🔨MINT]   - Asset name: ${assetName}`);
+      console.log(`[🔨MINT]   - Asset name hex: ${assetNameHex}`);
+      console.log(`[🔨MINT]   - Recipient address: ${recipient.address}`);
 
       // Build metadata
       const metadata = buildCIP25Metadata(design, recipient, mintNumber);
+      console.log(`[🔨MINT]   - Metadata built:`, Object.keys(metadata));
 
       // Add minting operation with proper MeshSDK API
+      console.log(`[🔨MINT]   - Adding mint asset to transaction...`);
       tx.mintAsset(
         forgingScript,
         {
@@ -355,21 +385,27 @@ export async function buildMintTransaction(
       );
 
       // Send NFT to recipient
+      const fullAssetId = design.policyId + assetNameHex;
+      console.log(`[🔨MINT]   - Full asset ID: ${fullAssetId}`);
+      console.log(`[🔨MINT]   - Sending asset to recipient...`);
       tx.sendAssets(
         recipient.address,
         [
           {
-            unit: design.policyId + assetNameHex,
+            unit: fullAssetId,
             quantity: '1'
           }
         ]
       );
 
+      console.log(`[🔨MINT]   - NFT #${mintNumber} added to transaction successfully`);
       mintNumber++;
     }
 
     // Build unsigned transaction
+    console.log('[🔨MINT] Building unsigned transaction...');
     const unsignedTx = await tx.build();
+    console.log('[🔨MINT] Unsigned transaction built successfully');
 
     return unsignedTx;
   } catch (error: any) {
@@ -418,14 +454,14 @@ export async function mintBatch(
 ): Promise<MintResult> {
   try {
     // Build transaction
-    console.log(`      🔧 Building unsigned transaction...`);
+    console.log(`[🔨MINT]       🔧 Building unsigned transaction...`);
     const unsignedTx = await buildMintTransaction(design, recipients, startMintNumber, network);
-    console.log(`      ✅ Transaction built successfully`);
+    console.log(`[🔨MINT]       ✅ Transaction built successfully`);
 
     // Sign and submit
-    console.log(`      ✍️  Requesting wallet signature...`);
+    console.log(`[🔨MINT]       ✍️  Requesting wallet signature...`);
     const txHash = await signAndSubmitTransaction(unsignedTx);
-    console.log(`      📤 Transaction submitted: ${txHash}`);
+    console.log(`[🔨MINT]       📤 Transaction submitted: ${txHash}`);
 
     // Generate asset IDs for tracking
     const assetIds: string[] = [];
