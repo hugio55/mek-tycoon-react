@@ -189,6 +189,83 @@ export const deleteWhitelist = mutation({
 });
 
 // ============================================================================
+// MANUAL WHITELIST CREATION
+// ============================================================================
+
+/**
+ * Create a manual whitelist by directly providing payment addresses
+ * Used for testing and one-off NFT distributions
+ *
+ * CRITICAL: Only accepts payment addresses (addr1... or addr_test1...)
+ * Stake addresses CANNOT receive NFTs and will be rejected
+ */
+export const createManualWhitelist = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+    addresses: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Check for duplicate name
+    const existing = await ctx.db
+      .query("whitelists")
+      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .first();
+
+    if (existing) {
+      throw new Error(`Whitelist with name "${args.name}" already exists`);
+    }
+
+    // Validate all addresses are payment addresses
+    const invalidAddresses: string[] = [];
+    const validUsers: Array<{ walletAddress: string; displayName?: string }> = [];
+
+    for (const address of args.addresses) {
+      const trimmedAddress = address.trim();
+      if (!trimmedAddress) continue; // Skip empty lines
+
+      // Check if it's a payment address (addr1... for mainnet, addr_test1... for testnet)
+      if (trimmedAddress.startsWith('addr1') || trimmedAddress.startsWith('addr_test1')) {
+        validUsers.push({ walletAddress: trimmedAddress });
+      } else {
+        invalidAddresses.push(trimmedAddress);
+      }
+    }
+
+    // Report invalid addresses
+    if (invalidAddresses.length > 0) {
+      const preview = invalidAddresses.slice(0, 3).join(', ');
+      const more = invalidAddresses.length > 3 ? ` (+${invalidAddresses.length - 3} more)` : '';
+      throw new Error(
+        `Invalid addresses found (${invalidAddresses.length}): ${preview}${more}. Only payment addresses (addr1... or addr_test1...) are allowed. Stake addresses (stake1...) CANNOT receive NFTs.`
+      );
+    }
+
+    if (validUsers.length === 0) {
+      throw new Error('No valid addresses provided. Please paste payment addresses (one per line).');
+    }
+
+    // Create manual whitelist with empty rules (indicates manual type)
+    const whitelistId = await ctx.db.insert("whitelists", {
+      name: args.name,
+      description: args.description,
+      rules: [], // Empty rules = manual whitelist
+      ruleLogic: "AND",
+      eligibleUsers: validUsers,
+      userCount: validUsers.length,
+      lastGenerated: Date.now(),
+      autoRefresh: false, // Manual whitelists don't auto-refresh
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    console.log(`[Manual Whitelist] Created "${args.name}" with ${validUsers.length} payment addresses`);
+
+    return { whitelistId, userCount: validUsers.length };
+  },
+});
+
+// ============================================================================
 // WHITELIST GENERATION
 // ============================================================================
 

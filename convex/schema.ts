@@ -3143,6 +3143,57 @@ export default defineSchema({
     .index("by_minted_at", ["mintedAt"])
     .index("by_user", ["userId"]),
 
+  // Batch Minted Tokens - Admin batch minting tracking (whitelist/airdrop distributions)
+  batchMintedTokens: defineTable({
+    // Token Info
+    tokenType: v.string(), // Links to commemorativeTokenCounters
+    mintNumber: v.number(), // Sequential mint number (1, 2, 3, etc.)
+    policyId: v.string(),
+    assetName: v.string(), // Hex-encoded name
+    assetId: v.string(), // policyId.assetName
+
+    // Recipient Info
+    recipientAddress: v.string(), // Stake/payment address that received the NFT
+    recipientDisplayName: v.optional(v.string()), // Optional name/label
+    snapshotId: v.optional(v.id("whitelistSnapshots")), // Reference to snapshot if from whitelist
+
+    // Batch Info
+    batchNumber: v.number(), // Which batch this was in (1, 2, 3, etc.)
+    batchId: v.optional(v.string()), // Unique ID for this batch run
+
+    // Minting Status
+    status: v.union(
+      v.literal("pending"),     // Queued for minting
+      v.literal("submitted"),   // Transaction submitted to blockchain
+      v.literal("confirmed"),   // NFT minted successfully
+      v.literal("failed")       // Minting failed
+    ),
+
+    // Blockchain Data
+    txHash: v.optional(v.string()),
+    network: v.string(), // "preprod" or "mainnet"
+
+    // Metadata
+    nftName: v.string(), // "Commemorative Token #1 - Early Miner #042"
+    imageIpfsUrl: v.string(), // ipfs://Qm...
+
+    // Timestamps
+    createdAt: v.number(),
+    submittedAt: v.optional(v.number()),
+    confirmedAt: v.optional(v.number()),
+
+    // Error Tracking
+    errorMessage: v.optional(v.string()),
+    retryCount: v.optional(v.number()),
+  })
+    .index("by_token_type", ["tokenType"])
+    .index("by_recipient", ["recipientAddress"])
+    .index("by_batch", ["batchId"])
+    .index("by_status", ["status"])
+    .index("by_tx_hash", ["txHash"])
+    .index("by_snapshot", ["snapshotId"])
+    .index("by_confirmed_at", ["confirmedAt"]),
+
   // BANDWIDTH OPTIMIZATION: Query result cache
   // Caches expensive query results to reduce bandwidth from repeated calls
   queryCache: defineTable({

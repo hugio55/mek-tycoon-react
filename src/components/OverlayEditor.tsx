@@ -1997,11 +1997,8 @@ export default function OverlayEditor() {
                             className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
                           >
                             <option value="">Choose lightbox...</option>
-                            <option value="mek-levels">Mek Levels Viewer</option>
-                            <option value="activity-log">Activity Log</option>
-                            <option value="essence-balances">Essence Balances</option>
-                            <option value="essence-buffs">Essence Buff Management</option>
                             <option value="essence-distribution">Essence Distribution</option>
+                            <option value="mechanism-grid">Mechanism Grid</option>
                           </select>
                         </div>
                       )}

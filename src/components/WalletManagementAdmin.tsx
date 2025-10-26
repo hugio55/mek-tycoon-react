@@ -14,6 +14,7 @@ import SnapshotHealthDashboard from '@/components/SnapshotHealthDashboard';
 import DuplicateWalletDetector from '@/components/DuplicateWalletDetector';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import EssenceBuffManagement from '@/components/EssenceBuffManagement';
+import { EssenceProvider } from '@/contexts/EssenceContext';
 
 // Lazy load heavy components
 const SnapshotHistoryViewer = lazy(() => import('@/components/SnapshotHistoryViewer'));
@@ -1236,10 +1237,11 @@ Check console for full timeline.
       )}
 
       {viewingEssence && (
-        <EssenceBalancesViewer
-          walletAddress={viewingEssence}
-          onClose={() => setViewingEssence(null)}
-        />
+        <EssenceProvider walletAddress={viewingEssence}>
+          <EssenceBalancesViewer
+            onClose={() => setViewingEssence(null)}
+          />
+        </EssenceProvider>
       )}
 
       {viewingBuffs && (

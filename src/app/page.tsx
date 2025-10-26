@@ -1197,6 +1197,22 @@ export default function MekRateLoggingPage() {
     }
   }, [walletAddress]);
 
+  // Listen for mechanism-grid lightbox open events from navigation buttons
+  useEffect(() => {
+    const handleOpenLightbox = (event: CustomEvent) => {
+      const lightboxId = event.detail?.lightboxId;
+      if (lightboxId === 'mechanism-grid') {
+        console.log('[Page] Opening Mechanism Grid lightbox from navigation button');
+        setShowMechanismGridLightbox(true);
+      }
+    };
+
+    window.addEventListener('openLightbox', handleOpenLightbox as EventListener);
+    return () => {
+      window.removeEventListener('openLightbox', handleOpenLightbox as EventListener);
+    };
+  }, []);
+
   // Initialize app on mount
   useEffect(() => {
     // Guard against SSR
@@ -3600,30 +3616,6 @@ export default function MekRateLoggingPage() {
                   </svg>
                 </div>
               )}
-            </div>
-
-            {/* Essence and Meks buttons at top center */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-              <button
-                onClick={() => {
-                  console.log('[page.tsx] Essence button clicked, dispatching openLightbox event with wallet:', walletAddress || 'demo_wallet_123');
-                  window.dispatchEvent(new CustomEvent('openLightbox', {
-                    detail: {
-                      lightboxId: 'essence-distribution',
-                      walletAddress: walletAddress || 'demo_wallet_123'
-                    }
-                  }));
-                }}
-                className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
-              >
-                Essence
-              </button>
-              <button
-                onClick={() => setShowMechanismGridLightbox(true)}
-                className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
-              >
-                Meks
-              </button>
             </div>
 
             {/* Logo in top right corner */}

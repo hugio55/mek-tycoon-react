@@ -117,69 +117,59 @@ function AnimatedEssenceTableCell({
 }
 
 // Real-time accumulation component showing high-precision decimals
-// CRITICAL FIX: Use client-side time calculation like gold system
-// Backend gives us a snapshot at query time, but we continue accumulating client-side
-function RealTimeAccumulation({ currentAmount, ratePerDay, isFull, essenceId }: { currentAmount: number; ratePerDay: number; isFull: boolean; essenceId: string }) {
-  const [displayAmount, setDisplayAmount] = useState(currentAmount);
+// SYNCHRONIZED: Uses backend calculation time just like table cells
+function RealTimeAccumulation({
+  baseAmount,
+  ratePerDay,
+  isFull,
+  essenceId,
+  backendCalculationTime
+}: {
+  baseAmount: number;
+  ratePerDay: number;
+  isFull: boolean;
+  essenceId: string;
+  backendCalculationTime: number;
+}) {
+  const [displayAmount, setDisplayAmount] = useState(baseAmount);
+  const baseAmountRef = useRef(baseAmount);
+  const backendTimeRef = useRef(backendCalculationTime);
+  const previousEssenceIdRef = useRef(essenceId);
 
-  // CRITICAL: Only reset when component MOUNTS or when hovering to a DIFFERENT essence
-  // Don't reset just because backend re-calculated the same essence
-  const mountTimeRef = useRef(Date.now());
-  const mountAmountRef = useRef(currentAmount);
-  const isInitialMountRef = useRef(true);
-
-  // Only update baseline when we first render THIS essence or when the essence ID changes
+  // Update baseline when essence changes OR when backend data updates
   useEffect(() => {
-    if (isInitialMountRef.current) {
-      // First render of this component
-      console.log(`🎯 [FRONTEND MOUNT] ${essenceId} - Initial mount:`, {
-        currentAmount: currentAmount.toFixed(12),
-        timestamp: new Date().toISOString()
-      });
-      mountTimeRef.current = Date.now();
-      mountAmountRef.current = currentAmount;
-      setDisplayAmount(currentAmount);
-      isInitialMountRef.current = false;
-    } else {
-      // essenceId changed - we're hovering to a different essence
-      console.log(`🎯 [FRONTEND SWITCH] ${essenceId} - Essence changed:`, {
-        newCurrentAmount: currentAmount.toFixed(12),
-        timestamp: new Date().toISOString(),
-        resetToNewEssence: true
-      });
-      mountTimeRef.current = Date.now();
-      mountAmountRef.current = currentAmount;
-      setDisplayAmount(currentAmount);
-    }
-  }, [essenceId]); // ONLY reset when essenceId changes, NOT when currentAmount changes
+    const essenceChanged = essenceId !== previousEssenceIdRef.current;
 
-  // Separate effect for animation - runs continuously without resetting
+    if (essenceChanged) {
+      console.log(`🎯 [REAL-TIME DISPLAY] ${essenceId} - Essence switched:`, {
+        baseAmount: baseAmount.toFixed(12),
+        backendTime: new Date(backendCalculationTime).toISOString()
+      });
+    }
+
+    previousEssenceIdRef.current = essenceId;
+    baseAmountRef.current = baseAmount;
+    backendTimeRef.current = backendCalculationTime;
+    setDisplayAmount(baseAmount);
+  }, [essenceId, baseAmount, backendCalculationTime]);
+
+  // Animation loop - accumulate from backend baseline
   useEffect(() => {
     if (isFull) {
-      setDisplayAmount(currentAmount);
+      setDisplayAmount(baseAmount);
       return;
     }
 
-    console.log(`⏱️ [FRONTEND ANIMATION] ${essenceId} - Starting animation interval:`, {
-      mountAmount: mountAmountRef.current.toFixed(12),
-      ratePerDay,
-      mountTime: new Date(mountTimeRef.current).toISOString()
-    });
-
-    // Update every 50ms for smooth animation
-    // CRITICAL: Use mountTimeRef and mountAmountRef which only update when essence changes
     const interval = setInterval(() => {
-      const elapsedMs = Date.now() - mountTimeRef.current;
+      const now = Date.now();
+      const elapsedMs = now - backendTimeRef.current;
       const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
-      const accumulated = mountAmountRef.current + (ratePerDay * elapsedDays);
+      const accumulated = baseAmountRef.current + (ratePerDay * elapsedDays);
       setDisplayAmount(accumulated);
     }, 50);
 
-    return () => {
-      console.log(`🛑 [FRONTEND ANIMATION] ${essenceId} - Cleaning up interval`);
-      clearInterval(interval);
-    };
-  }, [ratePerDay, isFull, essenceId]); // Removed currentAmount from dependencies
+    return () => clearInterval(interval);
+  }, [ratePerDay, isFull, baseAmount, essenceId]); // Include baseAmount to sync with table
 
   return (
     <div className="mt-3 pt-3 border-t border-yellow-500/20">
@@ -306,6 +296,15 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
       // Use actual generation rate from essenceRates (will be 0 if not generating)
       const actualRate = playerEssenceState.essenceRates?.[balance.variationId] || 0;
       const essenceCap = playerEssenceState.caps?.[balance.variationId] || 10;
+
+      // DEBUG: Log cap lookup for essences showing cap 10
+      if (essenceCap === 10 || essenceCap === 11.2) {
+        console.log(`🔵 [FRONTEND CAP] ${balance.variationName} (ID: ${balance.variationId}):`, {
+          capFromBackend: playerEssenceState.caps?.[balance.variationId],
+          finalCap: essenceCap,
+          isInCapsObject: balance.variationId in (playerEssenceState.caps || {})
+        });
+      }
 
       // Use variation name to construct image path (lowercase, replace spaces with hyphens)
       const imageName = balance.variationName.toLowerCase().replace(/\s+/g, '-');
@@ -436,7 +435,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   };
 
   // Show loading state while data is being fetched (but only for a reasonable time)
-  const isLoading = playerEssenceState === undefined || marketListings === undefined || essenceConfig === undefined;
+  const isDataLoading = playerEssenceState === undefined || marketListings === undefined || essenceConfig === undefined;
 
   // Handle column sorting
   const handleSort = (column: typeof sortColumn) => {
@@ -653,7 +652,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
         onClick={(e) => e.stopPropagation()}
       >
         {/* Loading Overlay */}
-        {isLoading && (
+        {isDataLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mx-auto mb-4"></div>
@@ -976,11 +975,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                   )}
                                 </button>
                                 <button
-                                  onClick={() => handleSort('growth')}
+                                  onClick={() => handleSort('totalValue')}
                                   className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
                                 >
-                                  GROWTH/d
-                                  {sortColumn === 'growth' && (
+                                  APPROX. VALUE
+                                  {sortColumn === 'totalValue' && (
                                     <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                                   )}
                                 </button>
@@ -994,11 +993,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                   )}
                                 </button>
                                 <button
-                                  onClick={() => handleSort('totalValue')}
+                                  onClick={() => handleSort('growth')}
                                   className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
                                 >
-                                  APPROX. VALUE
-                                  {sortColumn === 'totalValue' && (
+                                  GROWTH/d
+                                  {sortColumn === 'growth' && (
                                     <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                                   )}
                                 </button>
@@ -1062,21 +1061,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
                                       <div className="text-white font-semibold">{essence.name.toUpperCase()}</div>
 
-                                      {/* Growth Rate Column */}
-                                      <div className={`text-center tabular-nums ${
-                                        totalRate === 0
-                                          ? 'text-gray-500'
-                                          : hasGrowthBuff
-                                          ? 'text-green-400 font-bold'
-                                          : 'text-cyan-400'
-                                      }`}
-                                      style={hasGrowthBuff ? {
-                                        textShadow: '0 0 10px rgba(34, 197, 94, 0.6)'
-                                      } : isGenerating ? {
-                                        textShadow: '0 0 8px rgba(34, 211, 238, 0.5)'
-                                      } : undefined}
-                                      >
-                                        {totalRate === 0 ? '—' : totalRate.toFixed(2)}
+                                      {/* Total Value Column */}
+                                      <div className="text-center text-yellow-300 tabular-nums">
+                                        {Math.round(totalValue).toLocaleString()}g
                                       </div>
 
                                       {/* Max Cap Column */}
@@ -1092,10 +1079,33 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                         {effectiveMax}
                                       </div>
 
-                                      <div className="text-center text-yellow-300 tabular-nums">
-                                        {Math.round(totalValue).toLocaleString()}g
+                                      {/* Growth Rate Column */}
+                                      <div className={`text-center tabular-nums ${
+                                        totalRate === 0
+                                          ? 'text-gray-500'
+                                          : hasGrowthBuff
+                                          ? 'text-green-400 font-bold'
+                                          : 'text-yellow-400'
+                                      }`}
+                                      style={hasGrowthBuff ? {
+                                        textShadow: '0 0 10px rgba(34, 197, 94, 0.6)'
+                                      } : isGenerating ? {
+                                        textShadow: '0 0 8px rgba(250, 182, 23, 0.5)'
+                                      } : undefined}
+                                      >
+                                        {totalRate === 0 ? '—' : totalRate.toFixed(2)}
                                       </div>
-                                      <div className="text-center text-yellow-400 font-bold tabular-nums">
+
+                                      {/* Owned Column */}
+                                      <div className={`text-center font-bold tabular-nums ${
+                                        isGenerating
+                                          ? 'text-cyan-400'
+                                          : 'text-yellow-400'
+                                      }`}
+                                      style={isGenerating ? {
+                                        textShadow: '0 0 10px rgba(34, 211, 238, 0.5)'
+                                      } : undefined}
+                                      >
                                         <AnimatedEssenceTableCell
                                           baseAmount={essence.amount}
                                           ratePerDay={totalRate}
@@ -1204,10 +1214,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
                             {/* High-Precision Real-Time Accumulation Display */}
                             <RealTimeAccumulation
-                              currentAmount={slice.amount}
+                              baseAmount={slice.amount}
                               ratePerDay={totalRate}
                               isFull={isFull}
                               essenceId={slice.id}
+                              backendCalculationTime={playerEssenceState?.lastCalculationTime || Date.now()}
                             />
                           </div>
 

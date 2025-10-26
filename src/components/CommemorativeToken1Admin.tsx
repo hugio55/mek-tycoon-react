@@ -5,6 +5,18 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { uploadFileToPinata } from '@/lib/cardano/pinata';
 import { generateMintingPolicy, extractPaymentKeyHash } from '@/lib/cardano/policyGenerator';
+import {
+  connectAdminWallet,
+  disconnectWallet,
+  getWalletBalance,
+  type NFTDesign,
+  type MintRecipient
+} from '@/lib/cardano/nftMinter';
+import {
+  processBatchMinting,
+  previewMintingPlan,
+  type BatchMintConfig
+} from '@/lib/cardano/batchMinter';
 
 const CAMPAIGN_NAME = "Commemorative Token 1";
 
@@ -101,6 +113,15 @@ export default function CommemorativeToken1Admin() {
   const [selectedWhitelistId, setSelectedWhitelistId] = useState<string | null>(null);
   const [isImportingWhitelist, setIsImportingWhitelist] = useState(false);
 
+  // Wallet connection state
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0); // in lovelace
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+
+  // UI state
+  const [showPolicySection, setShowPolicySection] = useState(false); // Collapsed by default since it's rare
+
   // Queries
   const config = useQuery(api.airdrop.getConfigByCampaign, { campaignName: CAMPAIGN_NAME });
   const stats = useQuery(api.airdrop.getSubmissionStats, { campaignName: CAMPAIGN_NAME });
@@ -129,6 +150,7 @@ export default function CommemorativeToken1Admin() {
   const deleteTokenType = useMutation(api.commemorativeTokens.deleteTokenType);
   const takeEligibilitySnapshot = useMutation(api.commemorativeTokens.takeEligibilitySnapshot);
   const importSnapshotToNFT = useMutation(api.commemorativeTokens.importSnapshotToNFT);
+  const recordBatchMintedToken = useMutation(api.commemorativeTokens.recordBatchMintedToken);
 
   // Initialize campaign if it doesn't exist
   useEffect(() => {
@@ -163,6 +185,171 @@ export default function CommemorativeToken1Admin() {
       setMetadataImageUrl(uploadResult.ipfsUrl);
     }
   }, [uploadResult]);
+
+  // ===== WALLET CONNECTION & MINTING HANDLERS =====
+
+  // Handler: Connect Admin Wallet
+  const handleConnectWallet = async () => {
+    setIsConnectingWallet(true);
+    setMintError(null);
+
+    try {
+      const address = await connectAdminWallet('lace');
+      setWalletAddress(address);
+      setWalletConnected(true);
+
+      // Get balance
+      const balance = await getWalletBalance();
+      setWalletBalance(balance);
+
+      console.log(`✅ Wallet connected: ${address.substring(0, 30)}...`);
+      console.log(`💰 Balance: ${(balance / 1_000_000).toFixed(2)} ADA`);
+    } catch (error: any) {
+      setMintError(`Failed to connect wallet: ${error.message}`);
+      console.error('❌ Wallet connection error:', error);
+    } finally {
+      setIsConnectingWallet(false);
+    }
+  };
+
+  // Handler: Start Batch Minting
+  const handleBatchMint = async () => {
+    if (!selectedDesignForMinting || !walletConnected) {
+      setMintError('Please connect wallet and select an NFT first');
+      return;
+    }
+
+    // Get current NFT design
+    const design = allDesigns?.find(d => d.tokenType === selectedDesignForMinting);
+    if (!design) {
+      setMintError('NFT design not found');
+      return;
+    }
+
+    // Get snapshot data
+    const snapshot = allSnapshots?.find(s => s._id === selectedWhitelistId);
+    if (!snapshot) {
+      setMintError('Please import a snapshot first');
+      return;
+    }
+
+    // Prepare recipients from snapshot
+    const recipients: MintRecipient[] = snapshot.eligibleUsers.map(user => ({
+      address: user.walletAddress,
+      displayName: user.displayName
+    }));
+
+    // Prepare NFT design configuration
+    const nftDesign: NFTDesign = {
+      tokenType: design.tokenType,
+      name: design.displayName,
+      description: design.description || '',
+      assetNamePrefix: design.assetNamePrefix || 'CommToken1',
+      imageIpfsHash: design.imageUrl,  // Will be formatted to ipfs://
+      policyId: design.policyId,
+      policyScript: design.policyScript
+    };
+
+    setIsMinting(true);
+    setMintError(null);
+    setMintingProgress({ current: 0, total: recipients.length, status: 'Preparing batch minting...' });
+
+    console.log(`🚀 Starting batch mint: ${recipients.length} NFTs`);
+
+    try {
+      // Ensure wallet is connected at module level (not just React state)
+      console.log('🔌 Re-verifying wallet connection...');
+      const address = await connectAdminWallet('lace');
+      console.log(`✅ Wallet connected: ${address}`);
+
+      // Verify we have enough balance
+      const balance = await getWalletBalance();
+      console.log(`💰 Wallet balance: ${(balance / 1_000_000).toFixed(2)} ADA`);
+
+      // Process batch minting
+      const startTime = Date.now();
+      const result = await processBatchMinting({
+        design: nftDesign,
+        recipients: recipients,
+        batchSize: 10,  // 10 NFTs per transaction
+        network: network as 'preprod' | 'mainnet',
+        onProgress: (progress) => {
+          setMintingProgress(progress);
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          console.log(`📊 [${elapsed}s] Progress: ${progress.current}/${progress.total} NFTs | Batch ${progress.currentBatch}/${progress.totalBatches}`);
+          console.log(`   Status: ${progress.status}`);
+        },
+        onBatchComplete: async (batchIndex, batchResult) => {
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          if (batchResult.success) {
+            console.log(`✅ [${elapsed}s] Batch ${batchIndex + 1} SUCCESS`);
+            console.log(`   TX Hash: ${batchResult.txHash}`);
+            console.log(`   Asset IDs:`, batchResult.assetIds);
+          } else {
+            console.error(`❌ [${elapsed}s] Batch ${batchIndex + 1} FAILED`);
+            console.error(`   Error: ${batchResult.error}`);
+          }
+
+          // Record each minted token in database
+          if (batchResult.success && batchResult.assetIds && batchResult.txHash) {
+            const batchStartIndex = batchIndex * 10;
+            for (let i = 0; i < batchResult.assetIds.length; i++) {
+              const assetId = batchResult.assetIds[i];
+              const recipient = recipients[batchStartIndex + i];
+              const mintNumber = batchStartIndex + i + 1;
+
+              try {
+                await recordBatchMintedToken({
+                  tokenType: design.tokenType,
+                  mintNumber: mintNumber,
+                  policyId: nftDesign.policyId,
+                  assetName: assetId.split('.')[1],
+                  assetId: assetId,
+                  recipientAddress: recipient.address,
+                  recipientDisplayName: recipient.displayName,
+                  snapshotId: snapshot._id,
+                  batchNumber: batchIndex + 1,
+                  batchId: `batch_${Date.now()}`,
+                  txHash: batchResult.txHash,
+                  network: network,
+                  nftName: `${nftDesign.name} #${mintNumber.toString().padStart(3, '0')}`,
+                  imageIpfsUrl: `ipfs://${nftDesign.imageIpfsHash.replace('ipfs://', '')}`
+                });
+              } catch (dbError: any) {
+                console.error(`Failed to record mint #${mintNumber}:`, dbError);
+              }
+            }
+          }
+        }
+      });
+
+      // Show results
+      if (result.success) {
+        setMintingProgress({
+          current: result.totalMinted,
+          total: recipients.length,
+          status: `✅ Minting complete! ${result.totalMinted} NFTs minted successfully.`
+        });
+
+        console.log('🎉 Batch minting complete!');
+        console.log('📦 Total minted:', result.totalMinted);
+        console.log('❌ Total failed:', result.totalFailed);
+        console.log('🔗 Transaction hashes:', result.transactionHashes);
+
+        if (result.totalFailed > 0) {
+          console.warn('⚠️  Some mints failed:', result.failedAddresses);
+        }
+      } else {
+        setMintError(result.error || 'Batch minting failed');
+        console.error('❌ Batch minting failed:', result.error);
+      }
+    } catch (error: any) {
+      setMintError(`Minting error: ${error.message}`);
+      console.error('❌ Fatal minting error:', error);
+    } finally {
+      setIsMinting(false);
+    }
+  };
 
   // Auto-select first policy if none selected
   useEffect(() => {
@@ -673,20 +860,45 @@ export default function CommemorativeToken1Admin() {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPolicySection(!showPolicySection)}
+                className="text-3xl font-bold text-indigo-400 hover:text-indigo-300 transition-all"
+              >
+                {showPolicySection ? '▼' : '▶'}
+              </button>
               <div className="text-3xl font-bold text-indigo-400">STEP 1</div>
               <h3 className="text-2xl font-bold text-white">Create Master Policy</h3>
+              {!showPolicySection && activePolicy && (
+                <div className="text-sm text-green-400 font-mono">
+                  ✓ {activePolicy.policyName}
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setShowPolicyBrowser(!showPolicyBrowser)}
-              className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg transition-all flex items-center gap-2"
-            >
-              📂 Policy Browser ({existingPolicies?.length || 0})
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPolicyBrowser(!showPolicyBrowser)}
+                className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg transition-all flex items-center gap-2"
+              >
+                📂 Policy Browser ({existingPolicies?.length || 0})
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-gray-400">Generate ONE policy that will govern ALL commemorative tokens (Phase 1, Phase 2, etc.)</p>
-          <p className="text-xs text-yellow-400 mt-1">⚠️ This is a ONE-TIME setup - all future commemorative NFTs will use this same policy</p>
+          {!showPolicySection && (
+            <p className="text-xs text-gray-500 italic ml-12">
+              Click ▶ to expand (one-time setup, rarely needed)
+            </p>
+          )}
+          {showPolicySection && (
+            <>
+              <p className="text-sm text-gray-400">Generate ONE policy that will govern ALL commemorative tokens (Phase 1, Phase 2, etc.)</p>
+              <p className="text-xs text-yellow-400 mt-1">⚠️ This is a ONE-TIME setup - all future commemorative NFTs will use this same policy</p>
+            </>
+          )}
         </div>
 
+        {/* Collapsible Content */}
+        {showPolicySection && (
+        <>
         {/* Active Policy Indicator */}
         {activePolicy && (
           <div className="mb-4 bg-green-900/20 border-2 border-green-500/50 rounded-lg p-4">
@@ -1323,6 +1535,8 @@ export default function CommemorativeToken1Admin() {
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       {/* STEP 2: NFT Configuration */}
@@ -1774,7 +1988,7 @@ export default function CommemorativeToken1Admin() {
                       snapshotId: selectedWhitelistId as any,
                     });
                     alert(`Snapshot "${result.whitelistName} → ${result.snapshotName}" imported! ${result.eligibleCount} users are now eligible.`);
-                    setSelectedWhitelistId(null);
+                    // Keep selectedWhitelistId so the eligible users table can display the snapshot data
                   } catch (error: any) {
                     alert(`Error importing snapshot: ${error.message}`);
                   } finally {
@@ -1948,61 +2162,80 @@ export default function CommemorativeToken1Admin() {
         )}
 
         {/* Eligible Users Table */}
-        {selectedDesignForMinting && (
-          <div className="bg-black/30 rounded-lg p-4 mb-6">
-            <h4 className="text-sm font-bold text-cyan-400 mb-3">
-              Eligible Users ({eligibleUsers?.length || 0})
-            </h4>
+        {selectedDesignForMinting && (() => {
+          // Use snapshot data if available, otherwise fall back to gold-based eligible users
+          const currentSnapshot = selectedWhitelistId
+            ? allSnapshots?.find(s => s._id === selectedWhitelistId)
+            : null;
 
-            {eligibleUsers && eligibleUsers.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-cyan-500/30">
-                      <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">#</th>
-                      <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Company Name</th>
-                      <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Wallet Address</th>
-                      <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Gold</th>
-                      <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Gold/Hr</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700">
-                    {eligibleUsers.slice(0, 10).map((user, index) => (
-                      <tr key={user._id} className="hover:bg-cyan-900/10">
-                        <td className="py-2 px-3 text-gray-400">{index + 1}</td>
-                        <td className="py-2 px-3 text-white">{user.companyName || 'Unknown'}</td>
-                        <td className="py-2 px-3 font-mono text-xs text-gray-400">
-                          {user.walletAddress.substring(0, 20)}...{user.walletAddress.substring(user.walletAddress.length - 10)}
-                        </td>
-                        <td className="py-2 px-3 text-right text-yellow-400 font-bold">{user.currentGold.toLocaleString()}</td>
-                        <td className="py-2 px-3 text-right text-blue-400">{user.totalGoldPerHour.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {eligibleUsers.length > 10 && (
-                  <div className="mt-3 text-xs text-gray-500 text-center">
-                    Showing 10 of {eligibleUsers.length} eligible users
-                  </div>
+          const displayUsers = currentSnapshot?.eligibleUsers || [];
+          const showSnapshotData = currentSnapshot !== null;
+
+          return (
+            <div className="bg-black/30 rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-bold text-cyan-400 mb-3">
+                Eligible Users ({displayUsers.length})
+                {showSnapshotData && (
+                  <span className="ml-2 text-xs text-purple-400 font-normal">
+                    (from snapshot: {currentSnapshot.snapshotName})
+                  </span>
                 )}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                No eligible users found. Users must have wallet connected, blockchain verified, and gold &gt; 0.
-              </div>
-            )}
-          </div>
-        )}
+              </h4>
+
+              {displayUsers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-cyan-500/30">
+                        <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">#</th>
+                        <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Wallet Address</th>
+                        <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Display Name</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {displayUsers.map((user, index) => (
+                        <tr key={index} className="hover:bg-cyan-900/10">
+                          <td className="py-2 px-3 text-gray-400">{index + 1}</td>
+                          <td className="py-2 px-3 font-mono text-xs text-gray-400">
+                            {user.walletAddress}
+                          </td>
+                          <td className="py-2 px-3 text-white">{user.displayName || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  {showSnapshotData
+                    ? 'This snapshot has no eligible users.'
+                    : 'No snapshot imported. Import a snapshot from Whitelist Manager above.'
+                  }
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Minting Controls */}
-        {selectedDesignForMinting && eligibleUsers && eligibleUsers.length > 0 && (
-          <div className="bg-black/30 rounded-lg p-4 mb-6">
-            <h4 className="text-sm font-bold text-cyan-400 mb-3">Batch Mint Controls</h4>
+        {selectedDesignForMinting && (() => {
+          // Get current snapshot data
+          const currentSnapshot = selectedWhitelistId
+            ? allSnapshots?.find(s => s._id === selectedWhitelistId)
+            : null;
+          const snapshotUserCount = currentSnapshot?.eligibleUsers?.length || 0;
 
-            <div className="space-y-4">
-              {/* Warning */}
-              <div className="bg-orange-900/20 border border-orange-500/30 rounded p-3 text-sm text-orange-300">
-                <strong>⚠️ Warning:</strong> This will mint {eligibleUsers.length} NFT{eligibleUsers.length !== 1 ? 's' : ''} on the Cardano blockchain.
+          // Only show if we have a snapshot with users
+          if (!currentSnapshot || snapshotUserCount === 0) return null;
+
+          return (
+            <div className="bg-black/30 rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-bold text-cyan-400 mb-3">Batch Mint Controls</h4>
+
+              <div className="space-y-4">
+                {/* Warning */}
+                <div className="bg-orange-900/20 border border-orange-500/30 rounded p-3 text-sm text-orange-300">
+                  <strong>⚠️ Warning:</strong> This will mint {snapshotUserCount} NFT{snapshotUserCount !== 1 ? 's' : ''} on the Cardano blockchain.
                 Each mint will create a transaction that costs ADA for fees. Make sure you have sufficient funds in your admin wallet.
               </div>
 
@@ -2011,15 +2244,40 @@ export default function CommemorativeToken1Admin() {
                 <div className="bg-blue-900/20 border border-blue-500/30 rounded p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-blue-400 font-bold">Minting Progress</span>
-                    <span className="text-sm text-blue-300">{mintingProgress.current} / {mintingProgress.total}</span>
+                    <span className="text-sm text-blue-300">{mintingProgress.current} / {mintingProgress.total} NFTs</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                  <div className="w-full bg-gray-700 rounded-full h-3 mb-3">
                     <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(mintingProgress.current / mintingProgress.total) * 100}%` }}
-                    />
+                      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300 flex items-center justify-center text-xs text-white font-bold"
+                      style={{ width: `${Math.max(5, (mintingProgress.current / mintingProgress.total) * 100)}%` }}
+                    >
+                      {Math.round((mintingProgress.current / mintingProgress.total) * 100)}%
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-400">{mintingProgress.status}</div>
+
+                  {/* Batch Info */}
+                  {mintingProgress.currentBatch && mintingProgress.totalBatches && (
+                    <div className="flex items-center justify-between mb-2 text-xs">
+                      <span className="text-purple-400">
+                        📦 Batch {mintingProgress.currentBatch} of {mintingProgress.totalBatches}
+                      </span>
+                      <span className="text-gray-400">
+                        {Math.ceil((mintingProgress.totalBatches - mintingProgress.currentBatch) * 2)} min remaining
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Current Status */}
+                  <div className="bg-blue-900/30 rounded p-2 mb-2">
+                    <div className="text-xs text-blue-300 font-bold mb-1">Current Status:</div>
+                    <div className="text-xs text-gray-300">{mintingProgress.status}</div>
+                  </div>
+
+                  {/* Activity Indicator */}
+                  <div className="flex items-center gap-2 text-xs text-cyan-400">
+                    <div className="animate-spin">⏳</div>
+                    <span>Processing... (check console for detailed logs)</span>
+                  </div>
                 </div>
               )}
 
@@ -2030,27 +2288,124 @@ export default function CommemorativeToken1Admin() {
                 </div>
               )}
 
-              {/* Mint Button */}
-              <button
-                onClick={() => {
-                  setMintError('Minting functionality coming soon. This will integrate with Cardano blockchain via MeshSDK to create and submit minting transactions.');
-                }}
-                disabled={isMinting}
-                className="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-800 disabled:text-gray-500 text-white font-bold rounded-lg transition-all text-lg"
-              >
-                {isMinting ? (
-                  <>⏳ Minting in Progress...</>
-                ) : (
-                  <>🚀 Start Batch Mint ({eligibleUsers.length} NFTs)</>
-                )}
-              </button>
+              {/* Wallet Connection & Minting Controls */}
+              {!walletConnected ? (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleConnectWallet}
+                    disabled={isConnectingWallet}
+                    className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all"
+                  >
+                    {isConnectingWallet ? '⏳ Connecting Wallet...' : '🔗 Connect Admin Wallet (Lace)'}
+                  </button>
+                  <p className="text-xs text-gray-400 text-center">
+                    Connect your Lace wallet to mint NFTs. Make sure you have sufficient test ADA for transaction fees.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Wallet Info */}
+                  <div className="bg-green-900/20 border border-green-500/30 rounded p-3">
+                    <div className="text-xs text-green-300 font-bold mb-1">✅ Wallet Connected</div>
+                    <div className="text-xs text-gray-400 font-mono break-all">{walletAddress}</div>
+                    <div className="text-xs text-green-400 mt-1 font-bold">Balance: {(walletBalance / 1_000_000).toFixed(2)} ADA</div>
+                  </div>
 
-              <div className="text-xs text-gray-500 text-center">
-                This feature requires MeshSDK integration and wallet connection to submit transactions to Cardano blockchain.
-              </div>
+                  {/* Cost Preview */}
+                  {eligibleUsers && eligibleUsers.length > 0 && selectedWhitelistId && (() => {
+                    const snapshot = allSnapshots?.find(s => s._id === selectedWhitelistId);
+                    if (!snapshot) return null;
+
+                    const preview = previewMintingPlan(
+                      snapshot.eligibleUsers.map(u => ({ address: u.walletAddress })),
+                      10
+                    );
+
+                    const hasEnoughFunds = walletBalance >= (preview.estimatedCost.totalAda * 1_000_000);
+
+                    return (
+                      <div className={`border rounded p-3 text-xs ${
+                        hasEnoughFunds
+                          ? 'bg-blue-900/20 border-blue-500/30'
+                          : 'bg-red-900/20 border-red-500/30'
+                      }`}>
+                        <div className="font-bold text-white mb-2">💰 Cost Estimate</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <div className="text-gray-400">Valid Addresses:</div>
+                            <div className="text-white font-bold">{preview.validAddresses}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Total Batches:</div>
+                            <div className="text-white font-bold">{preview.totalBatches}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Transaction Fees:</div>
+                            <div className="text-yellow-400 font-bold">{preview.estimatedCost.transactionFees.toFixed(1)} ADA</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Min UTxO (locked):</div>
+                            <div className="text-blue-400 font-bold">{preview.estimatedCost.minUtxoAda.toFixed(1)} ADA</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Total Cost:</div>
+                            <div className="text-white font-bold text-base">{preview.estimatedCost.totalAda.toFixed(1)} ADA</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Est. Time:</div>
+                            <div className="text-blue-400 font-bold">{preview.estimatedTime} min</div>
+                          </div>
+                        </div>
+                        {!hasEnoughFunds && (
+                          <div className="mt-2 text-red-400 font-bold">
+                            ⚠️  Insufficient funds! Need {preview.estimatedCost.totalAda.toFixed(1)} ADA
+                          </div>
+                        )}
+                        {preview.invalidAddresses > 0 && (
+                          <div className="mt-2 text-orange-400">
+                            ⚠️  {preview.invalidAddresses} invalid address(es) will be skipped
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Mint Button */}
+                  <button
+                    onClick={handleBatchMint}
+                    disabled={isMinting || !selectedWhitelistId}
+                    className="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-800 disabled:text-gray-500 text-white font-bold rounded-lg transition-all text-lg shadow-lg"
+                  >
+                    {isMinting ? (
+                      <>⏳ Minting in Progress...</>
+                    ) : (
+                      <>🚀 Start Batch Mint ({allSnapshots?.find(s => s._id === selectedWhitelistId)?.userCount || 0} NFTs)</>
+                    )}
+                  </button>
+
+                  {!selectedWhitelistId && (
+                    <div className="text-xs text-orange-400 text-center">
+                      ⚠️  Please import a snapshot first before minting
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      disconnectWallet();
+                      setWalletConnected(false);
+                      setWalletAddress(null);
+                      setWalletBalance(0);
+                    }}
+                    className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-all"
+                  >
+                    Disconnect Wallet
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Minting Logs - Whitelist Mode Only */}
         <div className="bg-black/30 rounded-lg p-4">

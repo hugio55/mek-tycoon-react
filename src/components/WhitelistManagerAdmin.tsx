@@ -7,6 +7,7 @@ import { Id } from '@/convex/_generated/dataModel';
 
 export default function WhitelistManagerAdmin() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
   const [editingWhitelist, setEditingWhitelist] = useState<any | null>(null);
   const [selectedWhitelist, setSelectedWhitelist] = useState<Id<"whitelists"> | null>(null);
   const [viewingWhitelistTable, setViewingWhitelistTable] = useState<any | null>(null);
@@ -34,6 +35,7 @@ export default function WhitelistManagerAdmin() {
   const addUserToWhitelistByCompanyName = useMutation(api.whitelists.addUserToWhitelistByCompanyName);
   const createSnapshot = useMutation(api.whitelists.createSnapshot);
   const deleteSnapshot = useMutation(api.whitelists.deleteSnapshot);
+  const createManualWhitelist = useMutation(api.whitelists.createManualWhitelist);
 
   // Initialize default criteria on mount
   useEffect(() => {
@@ -126,12 +128,20 @@ export default function WhitelistManagerAdmin() {
         <div>
           <p className="text-gray-400">Create and manage NFT whitelist eligibility rules</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
-        >
-          + Create New Whitelist
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowManualModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+          >
+            📋 Manual Whitelist
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all"
+          >
+            + Create Rule-Based Whitelist
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -469,6 +479,14 @@ export default function WhitelistManagerAdmin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Manual Whitelist Creation Modal */}
+      {showManualModal && (
+        <ManualWhitelistModal
+          onClose={() => setShowManualModal(false)}
+          createManualWhitelist={createManualWhitelist}
+        />
       )}
     </div>
   );
@@ -931,6 +949,188 @@ function WhitelistTableModal({
               Close
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Manual Whitelist Creation Modal
+function ManualWhitelistModal({
+  onClose,
+  createManualWhitelist,
+}: {
+  onClose: () => void;
+  createManualWhitelist: any;
+}) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [addressesText, setAddressesText] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    valid: number;
+    invalid: number;
+    total: number;
+  } | null>(null);
+
+  const handleValidate = () => {
+    const lines = addressesText.split('\n');
+    let valid = 0;
+    let invalid = 0;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue; // Skip empty lines
+
+      if (trimmed.startsWith('addr1') || trimmed.startsWith('addr_test1')) {
+        valid++;
+      } else {
+        invalid++;
+      }
+    }
+
+    setValidationResult({
+      valid,
+      invalid,
+      total: valid + invalid,
+    });
+  };
+
+  const handleCreate = async () => {
+    if (!name.trim()) {
+      alert('Please enter a whitelist name');
+      return;
+    }
+
+    const addresses = addressesText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (addresses.length === 0) {
+      alert('Please paste at least one payment address');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const result = await createManualWhitelist({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        addresses,
+      });
+      alert(`Manual whitelist created! ${result.userCount} payment addresses added.`);
+      onClose();
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-green-500/50 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-green-400">📋 Create Manual Whitelist</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">×</button>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4 mb-6 text-sm">
+          <div className="font-bold text-yellow-400 mb-2">⚠️ IMPORTANT: Payment Addresses Only</div>
+          <div className="text-gray-300">
+            <div>• Only paste <span className="font-mono text-green-400">payment addresses</span> (addr1... or addr_test1...)</div>
+            <div>• <span className="font-mono text-red-400">Stake addresses</span> (stake1...) <span className="font-bold">CANNOT</span> receive NFTs and will be rejected</div>
+            <div>• One address per line</div>
+            <div>• Empty lines will be skipped</div>
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className="mb-4">
+          <label className="block text-sm text-green-300 mb-2">Whitelist Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Test Whitelist - Oct 25"
+            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="mb-4">
+          <label className="block text-sm text-green-300 mb-2">Description (Optional)</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Notes about this whitelist..."
+            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-20"
+          />
+        </div>
+
+        {/* Addresses Textarea */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm text-green-300">Payment Addresses</label>
+            <button
+              onClick={handleValidate}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
+            >
+              Validate Addresses
+            </button>
+          </div>
+          <textarea
+            value={addressesText}
+            onChange={(e) => {
+              setAddressesText(e.target.value);
+              setValidationResult(null); // Clear validation on edit
+            }}
+            placeholder="Paste payment addresses here (one per line)&#10;addr_test1qz04lcdw53xuhq89lw93m293e6tk82xtwzplyl66p7ajxgsaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qzm7v40&#10;addr_test1qpq3w8lqspr0vxa89n64kpq5urqvfuwvazggkvgulumgxssaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qgntca8k"
+            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-64 font-mono text-xs"
+          />
+        </div>
+
+        {/* Validation Result */}
+        {validationResult && (
+          <div className={`rounded p-4 mb-4 ${
+            validationResult.invalid === 0 ? 'bg-green-900/20 border border-green-500/30' : 'bg-red-900/20 border border-red-500/30'
+          }`}>
+            <div className="font-bold mb-2">
+              {validationResult.invalid === 0 ? '✅ All Addresses Valid' : '⚠️ Validation Results'}
+            </div>
+            <div className="text-sm space-y-1">
+              <div>• Total addresses: <span className="font-bold">{validationResult.total}</span></div>
+              <div className="text-green-400">• Valid payment addresses: <span className="font-bold">{validationResult.valid}</span></div>
+              {validationResult.invalid > 0 && (
+                <div className="text-red-400">• Invalid addresses: <span className="font-bold">{validationResult.invalid}</span></div>
+              )}
+            </div>
+            {validationResult.invalid > 0 && (
+              <div className="mt-3 text-xs text-red-300">
+                Invalid addresses will be rejected when you create the whitelist. Please remove or fix them.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded"
+            disabled={isCreating}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold"
+            disabled={isCreating}
+          >
+            {isCreating ? 'Creating...' : 'Create Manual Whitelist'}
+          </button>
         </div>
       </div>
     </div>

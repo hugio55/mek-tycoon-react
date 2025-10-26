@@ -798,3 +798,127 @@ export const getAllDesigns = query({
       .collect();
   },
 });
+
+// ===== BATCH MINTING FUNCTIONS =====
+
+/**
+ * Record a batch minted token in the database
+ *
+ * Called after successful minting transaction to track the NFT
+ */
+export const recordBatchMintedToken = mutation({
+  args: {
+    tokenType: v.string(),
+    mintNumber: v.number(),
+    policyId: v.string(),
+    assetName: v.string(),
+    assetId: v.string(),
+    recipientAddress: v.string(),
+    recipientDisplayName: v.optional(v.string()),
+    snapshotId: v.optional(v.id("whitelistSnapshots")),
+    batchNumber: v.number(),
+    batchId: v.optional(v.string()),
+    txHash: v.string(),
+    network: v.string(),
+    nftName: v.string(),
+    imageIpfsUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const tokenId = await ctx.db.insert("batchMintedTokens", {
+      tokenType: args.tokenType,
+      mintNumber: args.mintNumber,
+      policyId: args.policyId,
+      assetName: args.assetName,
+      assetId: args.assetId,
+      recipientAddress: args.recipientAddress,
+      recipientDisplayName: args.recipientDisplayName,
+      snapshotId: args.snapshotId,
+      batchNumber: args.batchNumber,
+      batchId: args.batchId,
+      status: "confirmed",
+      txHash: args.txHash,
+      network: args.network,
+      nftName: args.nftName,
+      imageIpfsUrl: args.imageIpfsUrl,
+      createdAt: Date.now(),
+      submittedAt: Date.now(),
+      confirmedAt: Date.now(),
+    });
+
+    console.log(`[Batch Mint] Recorded minted token: ${args.nftName} → ${args.recipientAddress.substring(0, 20)}...`);
+
+    return tokenId;
+  },
+});
+
+/**
+ * Get all batch minted tokens for a token type
+ */
+export const getBatchMintedTokens = query({
+  args: {
+    tokenType: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("batchMintedTokens")
+      .withIndex("by_token_type", (q) => q.eq("tokenType", args.tokenType))
+      .collect();
+  },
+});
+
+/**
+ * Get batch minted tokens by snapshot ID
+ */
+export const getBatchMintedBySnapshot = query({
+  args: {
+    snapshotId: v.id("whitelistSnapshots"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("batchMintedTokens")
+      .withIndex("by_snapshot", (q) => q.eq("snapshotId", args.snapshotId))
+      .collect();
+  },
+});
+
+/**
+ * Get all batch minted tokens for an address
+ */
+export const getBatchMintedByAddress = query({
+  args: {
+    address: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("batchMintedTokens")
+      .withIndex("by_recipient", (q) => q.eq("recipientAddress", args.address))
+      .collect();
+  },
+});
+
+/**
+ * Get minting statistics for a token type
+ */
+export const getBatchMintingStats = query({
+  args: {
+    tokenType: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allMints = await ctx.db
+      .query("batchMintedTokens")
+      .withIndex("by_token_type", (q) => q.eq("tokenType", args.tokenType))
+      .collect();
+
+    const confirmed = allMints.filter(m => m.status === "confirmed").length;
+    const failed = allMints.filter(m => m.status === "failed").length;
+    const pending = allMints.filter(m => m.status === "pending" || m.status === "submitted").length;
+
+    return {
+      total: allMints.length,
+      confirmed,
+      failed,
+      pending,
+      uniqueRecipients: new Set(allMints.map(m => m.recipientAddress)).size,
+    };
+  },
+});

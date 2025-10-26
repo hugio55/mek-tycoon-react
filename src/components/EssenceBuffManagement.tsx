@@ -40,6 +40,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
 
   // Mutations
   const addCapBuff = useMutation(api.essence.addCapBuff);
+  const addGlobalCapBuff = useMutation(api.essence.addGlobalCapBuff);
   const removeCapBuff = useMutation(api.essence.removeCapBuff);
 
   // Search through all 288 variations
@@ -63,6 +64,34 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
     if (!selectedVariation) return null;
     return COMPLETE_VARIATION_RARITY.find(v => v.rank === selectedVariation);
   }, [selectedVariation]);
+
+  // Handler to apply GLOBAL cap buff (all 288 variations)
+  const handleApplyGlobalBuff = async () => {
+    const bonus = parseFloat(capBonusInput);
+    if (isNaN(bonus) || bonus <= 0) {
+      setStatusMessage({ type: 'error', message: 'Please enter a valid bonus amount (greater than 0)' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      return;
+    }
+
+    if (!confirm(`Apply +${bonus} cap buff to ALL 288 variations? This will affect every essence type.`)) {
+      return;
+    }
+
+    try {
+      setStatusMessage({ type: 'success', message: 'Applying global buff to 288 variations...' });
+      const result = await addGlobalCapBuff({
+        walletAddress,
+        capBonus: bonus,
+      });
+      setStatusMessage({ type: 'success', message: `Applied +${bonus} cap to ${result.totalVariations} variations (${result.created} created, ${result.updated} updated)` });
+      setCapBonusInput("0");
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to apply global buff' });
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
 
   // Handler to apply cap buff for individual variation
   const handleApplyIndividualBuff = async () => {
@@ -208,6 +237,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
                     <p className="text-xs text-gray-500 mt-1">Base cap: 10 → New cap: {(10 + parseFloat(capBonusInput || "0")).toFixed(2)}</p>
                   </div>
                   <button
+                    onClick={handleApplyGlobalBuff}
                     className="px-6 py-2 bg-yellow-500/20 border-2 border-yellow-500/50 rounded text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/30 hover:border-yellow-500 transition-all"
                   >
                     Apply Global Buff

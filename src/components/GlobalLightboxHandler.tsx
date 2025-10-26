@@ -6,6 +6,7 @@ import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import EssenceBuffManagement from '@/components/EssenceBuffManagement';
+import MechanismGridLightbox from '@/components/MechanismGridLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
@@ -103,12 +104,18 @@ export default function GlobalLightboxHandler() {
 
       {/* Mek Levels Lightbox */}
       {showMekLevels && (
-        <MekLevelsViewer onClose={() => setShowMekLevels(false)} />
+        <MekLevelsViewer
+          walletAddress={walletAddress}
+          onClose={() => setShowMekLevels(false)}
+        />
       )}
 
       {/* Activity Log Lightbox */}
       {showActivityLog && (
-        <ActivityLogViewer onClose={() => setShowActivityLog(false)} />
+        <ActivityLogViewer
+          walletAddress={walletAddress}
+          onClose={() => setShowActivityLog(false)}
+        />
       )}
 
       {/* Essence Balances Lightbox */}
@@ -120,7 +127,10 @@ export default function GlobalLightboxHandler() {
 
       {/* Essence Buffs Lightbox */}
       {showEssenceBuffs && (
-        <EssenceBuffManagement onClose={() => setShowEssenceBuffs(false)} />
+        <EssenceBuffManagement
+          walletAddress={walletAddress}
+          onClose={() => setShowEssenceBuffs(false)}
+        />
       )}
     </EssenceProvider>
   );
