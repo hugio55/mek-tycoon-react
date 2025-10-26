@@ -1,14 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { restoreWalletSession, clearWalletSession } from "@/lib/walletSessionManager";
 import { CompanyNameModal } from "@/components/CompanyNameModal";
-import EssenceDistributionLightbox from "@/components/EssenceDistributionLightbox";
-import MechanismGridLightbox from "@/components/MechanismGridLightbox";
-import { getMekImageUrl } from "@/lib/mekNumberToVariation";
-import { AnimatedMekValues } from "@/components/MekCard/types";
 
 // Session Timer Component - Shows countdown to session expiration
 function SessionTimer({ expiresAt }: { expiresAt: number }) {
@@ -74,11 +70,6 @@ export default function UnifiedHeader() {
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
   const [showCompanyNameModal, setShowCompanyNameModal] = useState(false);
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
-  const [showEssenceLightbox, setShowEssenceLightbox] = useState(false);
-  const [showMechanismGridLightbox, setShowMechanismGridLightbox] = useState(false);
-  const [upgradingMeks, setUpgradingMeks] = useState<Set<string>>(new Set());
-  const [animatedMekValues, setAnimatedMekValues] = useState<{[key: string]: AnimatedMekValues}>({});
-  const [goldSpentAnimations, setGoldSpentAnimations] = useState<{id: string, amount: number}[]>([]);
 
   // Get wallet address from encrypted session storage
   useEffect(() => {
@@ -126,15 +117,6 @@ export default function UnifiedHeader() {
   // Get owned Meks count
   const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
   const cumulativeGold = goldMiningData?.totalCumulativeGold || 0;
-  const currentGold = goldMiningData?.currentGold || 0;
-  const ownedMeks = goldMiningData?.ownedMeks || [];
-
-  console.log('[UnifiedHeader] walletAddress:', walletAddress);
-  console.log('[UnifiedHeader] ownedMeks count:', ownedMeksCount);
-  console.log('[UnifiedHeader] ownedMeks sample:', ownedMeks[0]);
-
-  // Upgrade mek mutation
-  const upgradeMek = useMutation(api.mekLeveling.upgradeMekLevel);
 
   // Click outside handler for wallet dropdown
   useEffect(() => {
@@ -290,22 +272,6 @@ export default function UnifiedHeader() {
         )}
       </div>
 
-      {/* Essence and Meks buttons at top center */}
-      <div className="absolute top-4 md:top-6 lg:top-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-        <button
-          onClick={() => setShowEssenceLightbox(true)}
-          className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
-        >
-          Essence
-        </button>
-        <button
-          onClick={() => setShowMechanismGridLightbox(true)}
-          className="bg-black/60 border border-yellow-500/30 px-4 sm:px-6 py-2.5 sm:py-2 backdrop-blur-sm hover:bg-black/70 hover:border-yellow-500/50 transition-all font-['Orbitron'] font-bold text-yellow-400 uppercase tracking-wider text-sm sm:text-base"
-        >
-          Meks
-        </button>
-      </div>
-
       {/* Logo in top right corner */}
       <div className="absolute right-4 md:right-6 lg:right-8 z-20 top-[-4px] md:top-[4px] lg:top-[12px]">
         <a
@@ -329,81 +295,6 @@ export default function UnifiedHeader() {
           walletAddress={walletAddress}
           mode={companyNameModalMode}
           currentName={companyNameData?.companyName}
-        />
-      )}
-
-      {/* Essence Distribution Lightbox */}
-      <EssenceDistributionLightbox
-        isOpen={showEssenceLightbox}
-        onClose={() => setShowEssenceLightbox(false)}
-        walletAddress={walletAddress || "demo_wallet_123"}
-      />
-
-      {/* Mechanism Grid Lightbox */}
-      {showMechanismGridLightbox && (
-        <MechanismGridLightbox
-          ownedMeks={ownedMeks}
-          currentGold={currentGold}
-          walletAddress={walletAddress}
-          getMekImageUrl={getMekImageUrl}
-          animatedMekValues={animatedMekValues}
-          upgradingMeks={upgradingMeks}
-          onClose={() => setShowMechanismGridLightbox(false)}
-          onMekClick={(mek) => {
-            // Could navigate to detail page or open detail modal
-            console.log('Mek clicked:', mek);
-          }}
-          onUpgrade={async (mek, upgradeCost, newLevel, newBonusRate, newTotalRate) => {
-            setUpgradingMeks(prev => new Set([...prev, mek.assetId]));
-
-            setAnimatedMekValues(prev => ({
-              ...prev,
-              [mek.assetId]: {
-                level: newLevel,
-                goldRate: newTotalRate,
-                bonusRate: newBonusRate
-              }
-            }));
-
-            try {
-              const result = await upgradeMek({
-                walletAddress: walletAddress!,
-                assetId: mek.assetId,
-                mekNumber: mek.mekNumber,
-              });
-
-              setTimeout(() => {
-                setUpgradingMeks(prev => {
-                  const newSet = new Set(prev);
-                  newSet.delete(mek.assetId);
-                  return newSet;
-                });
-                setAnimatedMekValues(prev => {
-                  const newValues = { ...prev };
-                  delete newValues[mek.assetId];
-                  return newValues;
-                });
-              }, 1000);
-            } catch (error) {
-              console.error('Upgrade failed:', error);
-              setUpgradingMeks(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(mek.assetId);
-                return newSet;
-              });
-              setAnimatedMekValues(prev => {
-                const newValues = { ...prev };
-                delete newValues[mek.assetId];
-                return newValues;
-              });
-            }
-          }}
-          onGoldSpentAnimation={(animationId, amount) => {
-            setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
-            setTimeout(() => {
-              setGoldSpentAnimations(prev => prev.filter(a => a.id !== animationId));
-            }, 2000);
-          }}
         />
       )}
     </>

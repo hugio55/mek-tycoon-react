@@ -239,6 +239,18 @@ export default function CommemorativeToken1Admin() {
       displayName: user.displayName
     }));
 
+    // Look up the policy script from the mintingPolicies table
+    const policy = existingPolicies?.find(p => p.policyId === design.policyId);
+    if (!policy || !policy.policyScript) {
+      setMintError(`Policy script not found for policy ID: ${design.policyId}`);
+      setIsMinting(false);
+      return;
+    }
+
+    console.log(`[🔨MINT] 🔑 Found policy: ${policy.policyName}`);
+    console.log(`[🔨MINT]    Policy ID: ${policy.policyId}`);
+    console.log(`[🔨MINT]    Policy Script Type:`, typeof policy.policyScript);
+
     // Prepare NFT design configuration
     const nftDesign: NFTDesign = {
       tokenType: design.tokenType,
@@ -247,24 +259,24 @@ export default function CommemorativeToken1Admin() {
       assetNamePrefix: design.assetNamePrefix || 'CommToken1',
       imageIpfsHash: design.imageUrl,  // Will be formatted to ipfs://
       policyId: design.policyId,
-      policyScript: design.policyScript
+      policyScript: policy.policyScript  // ← Use the actual script from mintingPolicies table
     };
 
     setIsMinting(true);
     setMintError(null);
     setMintingProgress({ current: 0, total: recipients.length, status: 'Preparing batch minting...' });
 
-    console.log(`🚀 Starting batch mint: ${recipients.length} NFTs`);
+    console.log(`[🔨MINT] 🚀 Starting batch mint: ${recipients.length} NFTs`);
 
     try {
       // Ensure wallet is connected at module level (not just React state)
-      console.log('🔌 Re-verifying wallet connection...');
+      console.log('[🔨MINT] 🔌 Re-verifying wallet connection...');
       const address = await connectAdminWallet('lace');
-      console.log(`✅ Wallet connected: ${address}`);
+      console.log(`[🔨MINT] ✅ Wallet connected: ${address}`);
 
       // Verify we have enough balance
       const balance = await getWalletBalance();
-      console.log(`💰 Wallet balance: ${(balance / 1_000_000).toFixed(2)} ADA`);
+      console.log(`[🔨MINT] 💰 Wallet balance: ${(balance / 1_000_000).toFixed(2)} ADA`);
 
       // Process batch minting
       const startTime = Date.now();
@@ -276,18 +288,18 @@ export default function CommemorativeToken1Admin() {
         onProgress: (progress) => {
           setMintingProgress(progress);
           const elapsed = Math.round((Date.now() - startTime) / 1000);
-          console.log(`📊 [${elapsed}s] Progress: ${progress.current}/${progress.total} NFTs | Batch ${progress.currentBatch}/${progress.totalBatches}`);
-          console.log(`   Status: ${progress.status}`);
+          console.log(`[🔨MINT] 📊 [${elapsed}s] Progress: ${progress.current}/${progress.total} NFTs | Batch ${progress.currentBatch}/${progress.totalBatches}`);
+          console.log(`[🔨MINT]    Status: ${progress.status}`);
         },
         onBatchComplete: async (batchIndex, batchResult) => {
           const elapsed = Math.round((Date.now() - startTime) / 1000);
           if (batchResult.success) {
-            console.log(`✅ [${elapsed}s] Batch ${batchIndex + 1} SUCCESS`);
-            console.log(`   TX Hash: ${batchResult.txHash}`);
-            console.log(`   Asset IDs:`, batchResult.assetIds);
+            console.log(`[🔨MINT] ✅ [${elapsed}s] Batch ${batchIndex + 1} SUCCESS`);
+            console.log(`[🔨MINT]    TX Hash: ${batchResult.txHash}`);
+            console.log(`[🔨MINT]    Asset IDs:`, batchResult.assetIds);
           } else {
-            console.error(`❌ [${elapsed}s] Batch ${batchIndex + 1} FAILED`);
-            console.error(`   Error: ${batchResult.error}`);
+            console.error(`[🔨MINT] ❌ [${elapsed}s] Batch ${batchIndex + 1} FAILED`);
+            console.error(`[🔨MINT]    Error: ${batchResult.error}`);
           }
 
           // Record each minted token in database
@@ -316,7 +328,7 @@ export default function CommemorativeToken1Admin() {
                   imageIpfsUrl: `ipfs://${nftDesign.imageIpfsHash.replace('ipfs://', '')}`
                 });
               } catch (dbError: any) {
-                console.error(`Failed to record mint #${mintNumber}:`, dbError);
+                console.error(`[🔨MINT] Failed to record mint #${mintNumber}:`, dbError);
               }
             }
           }
@@ -331,21 +343,21 @@ export default function CommemorativeToken1Admin() {
           status: `✅ Minting complete! ${result.totalMinted} NFTs minted successfully.`
         });
 
-        console.log('🎉 Batch minting complete!');
-        console.log('📦 Total minted:', result.totalMinted);
-        console.log('❌ Total failed:', result.totalFailed);
-        console.log('🔗 Transaction hashes:', result.transactionHashes);
+        console.log('[🔨MINT] 🎉 Batch minting complete!');
+        console.log('[🔨MINT] 📦 Total minted:', result.totalMinted);
+        console.log('[🔨MINT] ❌ Total failed:', result.totalFailed);
+        console.log('[🔨MINT] 🔗 Transaction hashes:', result.transactionHashes);
 
         if (result.totalFailed > 0) {
-          console.warn('⚠️  Some mints failed:', result.failedAddresses);
+          console.warn('[🔨MINT] ⚠️  Some mints failed:', result.failedAddresses);
         }
       } else {
         setMintError(result.error || 'Batch minting failed');
-        console.error('❌ Batch minting failed:', result.error);
+        console.error('[🔨MINT] ❌ Batch minting failed:', result.error);
       }
     } catch (error: any) {
       setMintError(`Minting error: ${error.message}`);
-      console.error('❌ Fatal minting error:', error);
+      console.error('[🔨MINT] ❌ Fatal minting error:', error);
     } finally {
       setIsMinting(false);
     }

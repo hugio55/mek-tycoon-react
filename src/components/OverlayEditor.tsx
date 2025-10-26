@@ -2029,6 +2029,147 @@ export default function OverlayEditor() {
                 </div>
               )}
 
+              {/* Display Zone Configuration - Only for display zones */}
+              {selectedZone.mode === "zone" && selectedZone.type === "display" && (
+                <div className="border-t border-yellow-500/30 pt-3 mt-3 space-y-3">
+                  <div className="text-sm font-bold text-yellow-400">Display Configuration</div>
+
+                  {/* Display Type Selector */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">What to Display</label>
+                    <select
+                      value={selectedZone.metadata?.displayType || "gold"}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: {
+                            ...z.metadata,
+                            displayType: e.target.value,
+                            // Clear essence-specific fields if switching away from essence
+                            ...(e.target.value !== "essence" && { essenceType: undefined })
+                          }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    >
+                      <option value="gold">Current Gold</option>
+                      <option value="essence">Essence Amount</option>
+                      <option value="mek-count">Mek Count</option>
+                      <option value="cumulative-gold">Cumulative Gold</option>
+                      <option value="gold-per-hour">Gold Per Hour</option>
+                    </select>
+                  </div>
+
+                  {/* Essence Type Selector - Only show if display type is essence */}
+                  {selectedZone.metadata?.displayType === "essence" && (
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Essence Type</label>
+                      <select
+                        value={selectedZone.metadata?.essenceType || "Fire"}
+                        onChange={(e) => {
+                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                            ...z,
+                            metadata: { ...z.metadata, essenceType: e.target.value }
+                          } : z));
+                        }}
+                        className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                      >
+                        <option value="Fire">Fire</option>
+                        <option value="Water">Water</option>
+                        <option value="Earth">Earth</option>
+                        <option value="Air">Air</option>
+                        <option value="Light">Light</option>
+                        <option value="Shadow">Shadow</option>
+                        <option value="Tech">Tech</option>
+                        <option value="Nature">Nature</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Font Size */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      Font Size: {selectedZone.metadata?.displayFontSize || 32}px
+                    </label>
+                    <input
+                      type="range"
+                      min="12"
+                      max="96"
+                      step="2"
+                      value={selectedZone.metadata?.displayFontSize || 32}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, displayFontSize: parseInt(e.target.value) }
+                        } : z));
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Font Color */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Font Color</label>
+                    <select
+                      value={selectedZone.metadata?.displayColor || "yellow"}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, displayColor: e.target.value }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    >
+                      <option value="yellow">Yellow (#fab617)</option>
+                      <option value="white">White</option>
+                      <option value="gold">Gold (#ffd700)</option>
+                      <option value="green">Green (#10b981)</option>
+                      <option value="blue">Blue (#3b82f6)</option>
+                      <option value="red">Red (#ef4444)</option>
+                      <option value="orange">Orange (#f97316)</option>
+                    </select>
+                  </div>
+
+                  {/* Font Family */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Font</label>
+                    <select
+                      value={selectedZone.metadata?.displayFont || "geist-mono"}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, displayFont: e.target.value }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    >
+                      <option value="orbitron">Orbitron</option>
+                      <option value="geist-mono">Geist Mono</option>
+                      <option value="geist-sans">Geist Sans</option>
+                    </select>
+                  </div>
+
+                  {/* Text Alignment */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Text Alignment</label>
+                    <select
+                      value={selectedZone.metadata?.displayAlign || "center"}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, displayAlign: e.target.value }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    >
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
               <div className="text-xs text-gray-400 space-y-1">
                 <div>Mode: {selectedZone.mode}</div>
                 <div>Type: {selectedZone.type}</div>

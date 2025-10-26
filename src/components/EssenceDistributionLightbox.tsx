@@ -1024,7 +1024,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                               </div>
 
                               {/* Terminal Body */}
-                              <div className="max-h-[500px] overflow-y-auto font-mono text-[13px] custom-scrollbar">
+                              <div className="max-h-[500px] overflow-y-auto font-[family-name:var(--font-inter)] text-[13px] custom-scrollbar">
                                 {sortedEssences.map((essence, index) => {
                                   const baseRate = essence.baseRate || 0; // Don't default to 0.1, keep 0 for non-generating
                                   const bonusRate = essence.bonusRate || 0;

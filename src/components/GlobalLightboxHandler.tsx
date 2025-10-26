@@ -5,7 +5,7 @@ import EssenceDistributionLightbox from '@/components/EssenceDistributionLightbo
 import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
-import EssenceBuffManagement from '@/components/EssenceBuffManagement';
+import BuffManagement from '@/components/BuffManagement';
 import MechanismGridLightbox from '@/components/MechanismGridLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
@@ -127,7 +127,7 @@ export default function GlobalLightboxHandler() {
 
       {/* Essence Buffs Lightbox */}
       {showEssenceBuffs && (
-        <EssenceBuffManagement
+        <BuffManagement
           walletAddress={walletAddress}
           onClose={() => setShowEssenceBuffs(false)}
         />
