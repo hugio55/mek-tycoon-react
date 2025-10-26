@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useEssence } from '@/contexts/EssenceContext';
+import { useDemoWallet } from '@/contexts/DemoWalletContext';
 
 interface EssenceBalancesViewerProps {
   onClose: () => void;
@@ -120,6 +121,9 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('amount');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Get wallet address from demo wallet context
+  const { walletAddress } = useDemoWallet();
 
   // Get essence data from shared context (single source of truth)
   const { playerEssenceState, isLoading } = useEssence();
@@ -359,7 +363,7 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm text-blue-400">
-                          {essenceState?.caps?.[balance.variationId]?.toFixed(0) || '0'}
+                          {essenceState?.caps?.[balance.variationId]?.toFixed(2) || '0.00'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

@@ -232,6 +232,19 @@ async function calculateEssenceMetadata(
 ) {
   const slottedMeks = slots.filter((s) => s.mekAssetId);
 
+  // DEBUG: Log what's in each slotted Mek
+  console.log(`🔍 [SLOT READING] Found ${slottedMeks.length} slotted Meks for ${walletAddress.slice(0, 15)}...`);
+  for (const slot of slottedMeks) {
+    console.log(`🔍 [SLOT ${slot.slotNumber}] Mek #${slot.mekNumber}:`, {
+      headVariationId: slot.headVariationId,
+      headVariationName: slot.headVariationName,
+      bodyVariationId: slot.bodyVariationId,
+      bodyVariationName: slot.bodyVariationName,
+      itemVariationId: slot.itemVariationId,
+      itemVariationName: slot.itemVariationName
+    });
+  }
+
   // Count variations from slotted Meks
   const variationCounts = new Map<number, number>();
 
@@ -253,6 +266,9 @@ async function calculateEssenceMetadata(
         slot.itemVariationId,
         (variationCounts.get(slot.itemVariationId) || 0) + 1
       );
+    } else if (slot.itemVariationName) {
+      // DEBUG: Item variation name exists but no ID!
+      console.log(`⚠️ [SLOT ${slot.slotNumber}] Item variation "${slot.itemVariationName}" has NO variationId!`);
     }
   }
 
@@ -260,24 +276,38 @@ async function calculateEssenceMetadata(
   const counts: { [variationId: number]: number } = {};
   const caps: { [variationId: number]: number } = {};
 
-  // Get all unique variation IDs (from both slotted Meks and existing balances)
+  // Get all unique variation IDs (from slotted Meks, existing balances, AND active buffs)
   const safeBalances = balances ?? [];
+
+  // Get all variations that have buffs applied
+  const playerBuffs = await ctx.db
+    .query("essencePlayerBuffs")
+    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .collect();
+
+  console.log(`🔍 [CAP DEBUG] Retrieved ${playerBuffs.length} buffs for ${walletAddress.slice(0, 15)}...`);
+  console.log(`🔍 [CAP DEBUG] Slotted variations: ${variationCounts.size}, Balance records: ${safeBalances.length}`);
+
   const allVariationIds = new Set<number>([
     ...Array.from(variationCounts.keys()),
-    ...safeBalances.map(b => b.variationId)
+    ...safeBalances.map(b => b.variationId),
+    ...playerBuffs.map(b => b.variationId) // CRITICAL: Include buffed variations
   ]);
+
+  console.log(`🔍 [CAP DEBUG] Total unique variation IDs to process: ${allVariationIds.size}`);
+
+  // Create a map of variationId → buff for quick lookup
+  const buffMap = new Map<number, any>();
+  for (const buff of playerBuffs) {
+    buffMap.set(buff.variationId, buff);
+  }
 
   // Calculate rates and caps for all variations
   for (const variationId of allVariationIds) {
     const count = variationCounts.get(variationId) || 0;
 
-    // Check for player buffs
-    const buff = await ctx.db
-      .query("essencePlayerBuffs")
-      .withIndex("by_wallet_and_variation", (q) =>
-        q.eq("walletAddress", walletAddress).eq("variationId", variationId)
-      )
-      .first();
+    // Get buff from map (much faster than querying for each variation)
+    const buff = buffMap.get(variationId);
 
     const rateMultiplier = buff?.rateMultiplier || 1.0;
     const capBonus = buff?.capBonus || 0;
@@ -288,13 +318,32 @@ async function calculateEssenceMetadata(
     // Only set rate if variation is currently slotted (count > 0)
     // CRITICAL: Multiply rate by count for duplicate variations
     if (count > 0) {
-      rates[variationId] = effectiveRate * count; // Stack rates for duplicates
+      const calculatedRate = effectiveRate * count;
+
+      // DEBUG: Log rate calculation for variations with count > 1
+      if (count > 1) {
+        console.log(`🔢 [DUPLICATE VARIATION DEBUG] variationId ${variationId}:`, {
+          count,
+          effectiveRate,
+          calculatedRate,
+          walletAddress: walletAddress.slice(0, 15) + '...'
+        });
+      }
+
+      rates[variationId] = calculatedRate; // Stack rates for duplicates
       counts[variationId] = count;
     }
 
     // Set cap for ALL variations (even if not currently slotted)
     caps[variationId] = effectiveCap;
   }
+
+  console.log(`🔍 [CAP DEBUG] Finished calculating caps for ${Object.keys(caps).length} variations`);
+  console.log(`🔍 [CAP DEBUG] Sample caps:`, Object.entries(caps).slice(0, 10).map(([id, cap]) => `${id}:${cap}`));
+
+  // Log a few specific variations to verify
+  const sampleIds = [1, 26, 154, 190, 233, 288]; // Random sample including Nothing (288)
+  console.log(`🔍 [CAP DEBUG] Specific variation caps:`, sampleIds.map(id => `${id}:${caps[id]}`).join(', '));
 
   return { rates, counts, caps };
 }
@@ -1333,7 +1382,7 @@ export const addCapBuff = mutation({
     // Check if buff already exists for this variation
     const existing = await ctx.db
       .query("essencePlayerBuffs")
-      .withIndex("by_wallet_variation", (q) =>
+      .withIndex("by_wallet_and_variation", (q) =>
         q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
       )
       .first();
@@ -1371,5 +1420,355 @@ export const removeCapBuff = mutation({
   handler: async (ctx, args) => {
     await ctx.db.delete(args.buffId);
     return { success: true };
+  },
+});
+
+/**
+ * ADMIN: Fix missing variation IDs in slotted Meks
+ * Use this to repair slots where variation lookup failed
+ */
+export const fixSlotVariationId = mutation({
+  args: {
+    walletAddress: v.string(),
+    slotNumber: v.number(),
+    headVariationId: v.optional(v.number()),
+    bodyVariationId: v.optional(v.number()),
+    itemVariationId: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { walletAddress, slotNumber, headVariationId, bodyVariationId, itemVariationId } = args;
+
+    // Get the slot
+    const slot = await ctx.db
+      .query("essenceSlots")
+      .withIndex("by_wallet_and_slot", (q) =>
+        q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
+      )
+      .first();
+
+    if (!slot) {
+      throw new Error("Slot not found");
+    }
+
+    const updates: any = { lastModified: Date.now() };
+
+    if (headVariationId !== undefined) {
+      updates.headVariationId = headVariationId;
+    }
+    if (bodyVariationId !== undefined) {
+      updates.bodyVariationId = bodyVariationId;
+    }
+    if (itemVariationId !== undefined) {
+      updates.itemVariationId = itemVariationId;
+    }
+
+    await ctx.db.patch(slot._id, updates);
+
+    console.log(`✅ [ADMIN FIX] Updated slot ${slotNumber} for ${walletAddress.slice(0, 15)}...`, updates);
+
+    return { success: true, updated: updates };
+  },
+});
+
+/**
+ * ADMIN: Fix all slots with missing variation IDs by name match
+ */
+export const fixAllMissingVariationIds = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all slots
+    const allSlots = await ctx.db.query("essenceSlots").collect();
+
+    let fixedCount = 0;
+    const fixes: any[] = [];
+
+    for (const slot of allSlots) {
+      const updates: any = {};
+
+      // Check if item variation name exists but ID is missing
+      if (slot.itemVariationName && !slot.itemVariationId) {
+        // Look up the variation ID by name
+        const itemVar = await ctx.db
+          .query("variationsReference")
+          .withIndex("by_name", (q) => q.eq("name", slot.itemVariationName))
+          .filter((q) => q.eq(q.field("type"), "item"))
+          .first();
+
+        if (itemVar) {
+          updates.itemVariationId = itemVar.variationId;
+          console.log(`🔧 [AUTO FIX] Slot ${slot.slotNumber}: "${slot.itemVariationName}" → ID ${itemVar.variationId}`);
+        } else {
+          console.log(`⚠️  [AUTO FIX] Slot ${slot.slotNumber}: "${slot.itemVariationName}" NOT FOUND in variationsReference`);
+        }
+      }
+
+      // Check head variation
+      if (slot.headVariationName && !slot.headVariationId) {
+        const headVar = await ctx.db
+          .query("variationsReference")
+          .withIndex("by_name", (q) => q.eq("name", slot.headVariationName))
+          .filter((q) => q.eq(q.field("type"), "head"))
+          .first();
+
+        if (headVar) {
+          updates.headVariationId = headVar.variationId;
+        }
+      }
+
+      // Check body variation
+      if (slot.bodyVariationName && !slot.bodyVariationId) {
+        const bodyVar = await ctx.db
+          .query("variationsReference")
+          .withIndex("by_name", (q) => q.eq("name", slot.bodyVariationName))
+          .filter((q) => q.eq(q.field("type"), "body"))
+          .first();
+
+        if (bodyVar) {
+          updates.bodyVariationId = bodyVar.variationId;
+        }
+      }
+
+      // Apply updates if any were found
+      if (Object.keys(updates).length > 0) {
+        updates.lastModified = Date.now();
+        await ctx.db.patch(slot._id, updates);
+        fixedCount++;
+        fixes.push({
+          slotNumber: slot.slotNumber,
+          wallet: slot.walletAddress?.slice(0, 15) + "...",
+          updates
+        });
+      }
+    }
+
+    console.log(`✅ [AUTO FIX COMPLETE] Fixed ${fixedCount} slots`);
+
+    return { success: true, fixedCount, fixes };
+  },
+});
+
+/**
+ * ADMIN: Add missing variation to variationsReference table
+ */
+export const addMissingVariation = mutation({
+  args: {
+    variationId: v.number(),
+    name: v.string(),
+    type: v.union(v.literal("head"), v.literal("body"), v.literal("item")),
+  },
+  handler: async (ctx, args) => {
+    // Check if it already exists
+    const existing = await ctx.db
+      .query("variationsReference")
+      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .filter((q) => q.eq(q.field("type"), args.type))
+      .first();
+
+    if (existing) {
+      return { success: false, message: "Variation already exists", existing };
+    }
+
+    // Insert the variation
+    const id = await ctx.db.insert("variationsReference", {
+      variationId: args.variationId,
+      name: args.name,
+      type: args.type,
+    });
+
+    console.log(`✅ [VARIATION ADDED] ${args.type} variation "${args.name}" with ID ${args.variationId}`);
+
+    return { success: true, id, variationId: args.variationId };
+  },
+});
+
+/**
+ * ADMIN: Seed all 288 variations from COMPLETE_VARIATION_RARITY
+ * This ensures every variation ID has a corresponding record
+ */
+export const seedAllVariations = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Import the complete variation data
+    const COMPLETE_VARIATION_RARITY = [
+      // We'll need to pass this as an array since we can't import client-side code
+      // For now, let's just seed the missing ones manually
+    ];
+
+    console.log('⚠️ [SEED] This function needs to be called with variation data from the client');
+    console.log('⚠️ [SEED] Use the seedMissingVariationsFromList mutation instead');
+
+    return { success: false, message: 'Use seedMissingVariationsFromList instead' };
+  },
+});
+
+/**
+ * ADMIN: Seed specific variations by passing them in
+ */
+export const seedMissingVariationsFromList = mutation({
+  args: {
+    variations: v.array(v.object({
+      variationId: v.number(),
+      name: v.string(),
+      type: v.string(),
+    }))
+  },
+  handler: async (ctx, args) => {
+    let added = 0;
+    let skipped = 0;
+
+    for (const variation of args.variations) {
+      // Check if already exists
+      const existing = await ctx.db
+        .query("variationsReference")
+        .filter((q) => q.eq(q.field("variationId"), variation.variationId))
+        .first();
+
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      // Add the variation
+      await ctx.db.insert("variationsReference", {
+        variationId: variation.variationId,
+        name: variation.name,
+        type: variation.type as "head" | "body" | "item",
+      });
+
+      added++;
+      console.log(`✅ [SEED] Added variation ${variation.variationId}: ${variation.name} (${variation.type})`);
+    }
+
+    return { success: true, added, skipped, total: args.variations.length };
+  },
+});
+
+/**
+ * ADMIN: Check which variation IDs (1-288) are missing from variationsReference
+ */
+export const checkMissingVariations = query({
+  args: {},
+  handler: async (ctx) => {
+    const allVariations = await ctx.db.query("variationsReference").collect();
+    const existingIds = new Set(allVariations.map(v => v.variationId));
+
+    const missing: number[] = [];
+    for (let id = 1; id <= 288; id++) {
+      if (!existingIds.has(id)) {
+        missing.push(id);
+      }
+    }
+
+    console.log(`📊 [VARIATION CHECK] Total variations in DB: ${allVariations.length}`);
+    console.log(`📊 [VARIATION CHECK] Missing variation IDs (1-288): ${missing.length > 0 ? missing.join(', ') : 'None!'}`);
+
+    return {
+      total: allVariations.length,
+      expected: 288,
+      missing,
+      missingCount: missing.length
+    };
+  },
+});
+
+/**
+ * ADMIN: Fix essence balances with variationId = 0
+ * Look up correct variation ID by name and update the record
+ */
+export const fixZeroVariationIds = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all essence balances with variationId = 0
+    const allBalances = await ctx.db.query("essenceBalances").collect();
+    const zeroIdBalances = allBalances.filter(b => b.variationId === 0);
+
+    console.log(`🔧 [FIX VARIATION IDS] Found ${zeroIdBalances.length} balances with variationId = 0`);
+
+    let fixed = 0;
+    const fixes: any[] = [];
+
+    for (const balance of zeroIdBalances) {
+      // Look up the correct variation ID by name and type
+      const variation = await ctx.db
+        .query("variationsReference")
+        .withIndex("by_name", (q) => q.eq("name", balance.variationName))
+        .filter((q) => q.eq(q.field("type"), balance.variationType))
+        .first();
+
+      if (variation) {
+        // Update the balance with correct variation ID
+        await ctx.db.patch(balance._id, {
+          variationId: variation.variationId,
+          lastUpdated: Date.now()
+        });
+
+        console.log(`✅ [FIX] Updated "${balance.variationName}" (${balance.variationType}): 0 → ${variation.variationId}`);
+
+        fixed++;
+        fixes.push({
+          name: balance.variationName,
+          type: balance.variationType,
+          oldId: 0,
+          newId: variation.variationId
+        });
+      } else {
+        console.log(`⚠️  [FIX] No variation found for "${balance.variationName}" (${balance.variationType})`);
+      }
+    }
+
+    return { success: true, fixed, total: zeroIdBalances.length, fixes };
+  },
+});
+
+/**
+ * ADMIN: Apply global cap buff to ALL variations (1-288)
+ */
+export const addGlobalCapBuff = mutation({
+  args: {
+    walletAddress: v.string(),
+    capBonus: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { walletAddress, capBonus } = args;
+    const now = Date.now();
+
+    let created = 0;
+    let updated = 0;
+
+    // Apply buff to all 288 variations (variationId 1-288)
+    for (let variationId = 1; variationId <= 288; variationId++) {
+      // Check if buff already exists for this variation
+      const existing = await ctx.db
+        .query("essencePlayerBuffs")
+        .withIndex("by_wallet_and_variation", (q) =>
+          q.eq("walletAddress", walletAddress).eq("variationId", variationId)
+        )
+        .first();
+
+      if (existing) {
+        // Update existing buff
+        await ctx.db.patch(existing._id, {
+          capBonus,
+          source: `Admin: Global cap buff`,
+          appliedAt: now,
+        });
+        updated++;
+      } else {
+        // Create new buff
+        await ctx.db.insert("essencePlayerBuffs", {
+          walletAddress,
+          variationId,
+          rateMultiplier: 1.0,
+          capBonus,
+          source: `Admin: Global cap buff`,
+          appliedAt: now,
+        });
+        created++;
+      }
+    }
+
+    console.log(`✅ [GLOBAL BUFF] Applied +${capBonus} cap to all 288 variations for ${walletAddress.slice(0, 15)}... (created: ${created}, updated: ${updated})`);
+
+    return { success: true, created, updated, totalVariations: 288 };
   },
 });

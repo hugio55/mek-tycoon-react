@@ -629,6 +629,11 @@ body {
 }
 
 /* Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 182, 23, 0.6) rgba(31, 41, 55, 0.5);
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
@@ -639,12 +644,12 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(251, 191, 36, 0.5);
+  background: rgba(250, 182, 23, 0.6);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(251, 191, 36, 0.7);
+  background: rgba(250, 182, 23, 0.8);
 }
 
 /* Animation for pulsing effect */
