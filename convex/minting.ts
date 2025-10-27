@@ -48,7 +48,13 @@ export const storeMintingPolicy = mutation({
       .first();
 
     if (existing) {
-      throw new Error(`Policy ${args.policyId} already exists`);
+      throw new Error(
+        `Policy ${args.policyId} already exists.\n\n` +
+        `This usually means you're trying to create a policy with the same parameters (wallet + expiry).\n\n` +
+        `To create a different policy:\n` +
+        `1. Set a different expiry date (even by 1 minute creates a unique policy)\n` +
+        `2. Or select an existing policy from the dropdown to add NFT designs to it`
+      );
     }
 
     const policyId = await ctx.db.insert("mintingPolicies", {
@@ -152,6 +158,22 @@ export const deleteMintingPolicy = mutation({
       throw new Error(`Policy ${args.policyId} not found`);
     }
 
+    // Check if any NFT designs use this policy
+    const designs = await ctx.db
+      .query("commemorativeTokenCounters")
+      .filter((q) => q.eq(q.field("policyId"), args.policyId))
+      .collect();
+
+    if (designs.length > 0) {
+      throw new Error(
+        `Cannot delete policy - ${designs.length} NFT design(s) are using this policy.\n\n` +
+        `⚠️ NOTE: Deleting only removes the policy from YOUR database - it does NOT delete anything from the blockchain.\n` +
+        `The policy and any minted NFTs will still exist on Cardano forever.\n\n` +
+        `To delete this policy, first delete all associated NFT designs.`
+      );
+    }
+
+    console.log(`[Policy] Deleting policy ${args.policyId} from database (blockchain policy remains unchanged)`);
     await ctx.db.delete(policy._id);
   },
 });
@@ -268,5 +290,117 @@ export const getMintByTxHash = query({
       .query("testMints")
       .withIndex("by_tx_hash", (q) => q.eq("txHash", args.txHash))
       .first();
+  },
+});
+
+// ===== BATCH MINTING HISTORY =====
+
+/**
+ * Get all batch minted tokens (minting history)
+ * Supports filtering by network, tokenType, status
+ */
+export const getBatchMintingHistory = query({
+  args: {
+    network: v.optional(v.string()),
+    tokenType: v.optional(v.string()),
+    status: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db.query("batchMintedTokens");
+
+    // Apply filters
+    if (args.network) {
+      query = query.withIndex("by_network", (q) => q.eq("network", args.network!));
+    }
+
+    if (args.tokenType) {
+      query = query.filter((q) => q.eq(q.field("tokenType"), args.tokenType));
+    }
+
+    if (args.status) {
+      query = query.filter((q) => q.eq(q.field("status"), args.status));
+    }
+
+    // Order by most recent first
+    const results = await query.order("desc").collect();
+
+    // Apply limit if specified
+    if (args.limit) {
+      return results.slice(0, args.limit);
+    }
+
+    return results;
+  },
+});
+
+/**
+ * Get batch minting summary statistics
+ */
+export const getBatchMintingStats = query({
+  args: {
+    network: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db.query("batchMintedTokens");
+
+    if (args.network) {
+      query = query.withIndex("by_network", (q) => q.eq("network", args.network!));
+    }
+
+    const allMints = await query.collect();
+
+    const stats = {
+      totalMinted: allMints.length,
+      confirmedMints: allMints.filter(m => m.status === "confirmed").length,
+      pendingMints: allMints.filter(m => m.status === "pending" || m.status === "submitted").length,
+      failedMints: allMints.filter(m => m.status === "failed").length,
+      uniqueRecipients: new Set(allMints.map(m => m.recipientAddress)).size,
+      uniqueTokenTypes: new Set(allMints.map(m => m.tokenType)).size,
+      totalBatches: new Set(allMints.map(m => m.batchId)).size,
+    };
+
+    return stats;
+  },
+});
+
+/**
+ * Get batch minting history for a specific recipient
+ */
+export const getBatchMintsByRecipient = query({
+  args: {
+    recipientAddress: v.string(),
+    network: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db
+      .query("batchMintedTokens")
+      .withIndex("by_recipient", (q) => q.eq("recipientAddress", args.recipientAddress));
+
+    const results = await query.order("desc").collect();
+
+    if (args.network) {
+      return results.filter(m => m.network === args.network);
+    }
+
+    return results;
+  },
+});
+
+/**
+ * Get batch minting history for a specific token type
+ */
+export const getBatchMintsByTokenType = query({
+  args: {
+    tokenType: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const results = await ctx.db
+      .query("batchMintedTokens")
+      .filter((q) => q.eq(q.field("tokenType"), args.tokenType))
+      .order("desc")
+      .collect();
+
+    return results;
   },
 });

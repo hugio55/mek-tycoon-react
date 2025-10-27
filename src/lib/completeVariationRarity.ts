@@ -1,6 +1,6 @@
 // Auto-generated variation rarity data
 // Generated from mekRarityMaster.json with 4000 Mek records
-// Total unique variations: 288
+// Total unique variations: 291
 
 export type VariationType = 'head' | 'body' | 'trait';
 
@@ -16,106 +16,16 @@ export interface VariationRarity {
   sourceKey: string; // 3-character code used for image file naming
 }
 
-// Complete variation rarity ranking (288 total variations)
+// Complete variation rarity ranking (291 total variations)
 export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
-  {
-    name: "Ace of Spades Ultimate",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 1,
-    sourceKey: "222"
-  },
-  {
-    name: "Burnt Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 2,
-    sourceKey: "444"
-  },
-  {
-    name: "Carving Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 3,
-    sourceKey: "666"
-  },
-  {
-    name: "Chrome Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 4,
-    sourceKey: "888"
-  },
-  {
-    name: "Cousin Itt",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 5,
-    sourceKey: "777"
-  },
   {
     name: "Derelict",
     type: "head",
     count: 1,
     percentage: "0.03",
     tier: "legendary",
-    rank: 6,
-    sourceKey: "000"
-  },
-  {
-    name: "Discomania",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 7,
-    sourceKey: "333"
-  },
-  {
-    name: "Ellie Mesh",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 8,
-    sourceKey: "888"
-  },
-  {
-    name: "Frost Cage",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 9,
-    sourceKey: "555"
-  },
-  {
-    name: "Frost King",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 10,
-    sourceKey: "555"
-  },
-  {
-    name: "Fury",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 11,
-    sourceKey: "BW5"
+    rank: 1,
+    sourceKey: "000H"
   },
   {
     name: "Gatsby Ultimate",
@@ -123,143 +33,8 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     tier: "legendary",
-    rank: 12,
-    sourceKey: "000"
-  },
-  {
-    name: "Golden Guns Ultimate",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 13,
-    sourceKey: "999"
-  },
-  {
-    name: "Gone",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 14,
-    sourceKey: "777"
-  },
-  {
-    name: "Heatwave Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 15,
-    sourceKey: "111"
-  },
-  {
-    name: "King Tut",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 16,
-    sourceKey: "AZ3"
-  },
-  {
-    name: "Linkinator 3000",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 17,
-    sourceKey: "222"
-  },
-  {
-    name: "Luxury Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 18,
-    sourceKey: "999"
-  },
-  {
-    name: "Nyan Ultimate",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 19,
-    sourceKey: "111"
-  },
-  {
-    name: "Obliterator",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 20,
-    sourceKey: "999"
-  },
-  {
-    name: "Oompah",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 21,
-    sourceKey: "666"
-  },
-  {
-    name: "Paul Ultimate",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 22,
-    sourceKey: "444"
-  },
-  {
-    name: "Peacock Ultimate",
-    type: "trait",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 23,
-    sourceKey: "111"
-  },
-  {
-    name: "Pie",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 24,
-    sourceKey: "666"
-  },
-  {
-    name: "Plush Ultimate",
-    type: "body",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 25,
-    sourceKey: "222"
-  },
-  {
-    name: "Projectionist",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 26,
-    sourceKey: "777"
-  },
-  {
-    name: "Ross",
-    type: "head",
-    count: 1,
-    percentage: "0.03",
-    tier: "legendary",
-    rank: 27,
-    sourceKey: "LZ2"
+    rank: 2,
+    sourceKey: "000B"
   },
   {
     name: "Stolen",
@@ -267,8 +42,53 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     tier: "legendary",
-    rank: 28,
-    sourceKey: "000"
+    rank: 3,
+    sourceKey: "000T"
+  },
+  {
+    name: "Obliterator",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 4,
+    sourceKey: "999H"
+  },
+  {
+    name: "Luxury Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 5,
+    sourceKey: "999B"
+  },
+  {
+    name: "Golden Guns Ultimate",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 6,
+    sourceKey: "999T"
+  },
+  {
+    name: "Ellie Mesh",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 7,
+    sourceKey: "888H"
+  },
+  {
+    name: "Chrome Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 8,
+    sourceKey: "888B"
   },
   {
     name: "Vanished",
@@ -276,8 +96,125 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     tier: "legendary",
-    rank: 29,
-    sourceKey: "888"
+    rank: 9,
+    sourceKey: "888T"
+  },
+  {
+    name: "Projectionist",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 10,
+    sourceKey: "777H"
+  },
+  {
+    name: "Cousin Itt",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 11,
+    sourceKey: "777B"
+  },
+  {
+    name: "Gone",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 12,
+    sourceKey: "777T"
+  },
+  {
+    name: "Pie",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 13,
+    sourceKey: "666H"
+  },
+  {
+    name: "Carving Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 14,
+    sourceKey: "666B"
+  },
+  {
+    name: "Oompah",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 15,
+    sourceKey: "666T"
+  },
+  {
+    name: "Frost King",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 16,
+    sourceKey: "555H"
+  },
+  {
+    name: "Frost Cage",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 17,
+    sourceKey: "555B"
+  },
+  {
+    name: "Nil",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 18,
+    sourceKey: "555T"
+  },
+  {
+    name: "Paul Ultimate",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 19,
+    sourceKey: "444H"
+  },
+  {
+    name: "Burnt Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 20,
+    sourceKey: "444B"
+  },
+  {
+    name: "Null",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 21,
+    sourceKey: "444T"
+  },
+  {
+    name: "Discomania",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 22,
+    sourceKey: "333H"
   },
   {
     name: "X Ray Ultimate",
@@ -285,8 +222,98 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 1,
     percentage: "0.03",
     tier: "legendary",
+    rank: 23,
+    sourceKey: "333B"
+  },
+  {
+    name: "None",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 24,
+    sourceKey: "333T"
+  },
+  {
+    name: "Ace of Spades Ultimate",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 25,
+    sourceKey: "222H"
+  },
+  {
+    name: "Plush Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 26,
+    sourceKey: "222B"
+  },
+  {
+    name: "Linkinator 3000",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 27,
+    sourceKey: "222T"
+  },
+  {
+    name: "Nyan Ultimate",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 28,
+    sourceKey: "111H"
+  },
+  {
+    name: "Heatwave Ultimate",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 29,
+    sourceKey: "111B"
+  },
+  {
+    name: "Peacock Ultimate",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
     rank: 30,
-    sourceKey: "333"
+    sourceKey: "111T"
+  },
+  {
+    name: "Fury",
+    type: "body",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 31,
+    sourceKey: "BW5"
+  },
+  {
+    name: "King Tut",
+    type: "trait",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 32,
+    sourceKey: "AZ3"
+  },
+  {
+    name: "Ross",
+    type: "head",
+    count: 1,
+    percentage: "0.03",
+    tier: "legendary",
+    rank: 33,
+    sourceKey: "LZ2"
   },
   {
     name: "007",
@@ -294,7 +321,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 31,
+    rank: 34,
     sourceKey: "CX2"
   },
   {
@@ -303,7 +330,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 32,
+    rank: 35,
     sourceKey: "AA5"
   },
   {
@@ -312,7 +339,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 33,
+    rank: 36,
     sourceKey: "CX2"
   },
   {
@@ -321,7 +348,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 34,
+    rank: 37,
     sourceKey: "DS3"
   },
   {
@@ -330,7 +357,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 35,
+    rank: 38,
     sourceKey: "DC4"
   },
   {
@@ -339,7 +366,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 36,
+    rank: 39,
     sourceKey: "BF5"
   },
   {
@@ -348,7 +375,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 37,
+    rank: 40,
     sourceKey: "AZ4"
   },
   {
@@ -357,7 +384,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 2,
     percentage: "0.05",
     tier: "ultra-rare",
-    rank: 38,
+    rank: 41,
     sourceKey: "KY4"
   },
   {
@@ -366,7 +393,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 39,
+    rank: 42,
     sourceKey: "DP4"
   },
   {
@@ -375,7 +402,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 40,
+    rank: 43,
     sourceKey: "DC4"
   },
   {
@@ -384,7 +411,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 41,
+    rank: 44,
     sourceKey: "IV1"
   },
   {
@@ -393,7 +420,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 42,
+    rank: 45,
     sourceKey: "AZ2"
   },
   {
@@ -402,7 +429,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 43,
+    rank: 46,
     sourceKey: "ER3"
   },
   {
@@ -411,7 +438,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 44,
+    rank: 47,
     sourceKey: "AA2"
   },
   {
@@ -420,7 +447,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 3,
     percentage: "0.07",
     tier: "ultra-rare",
-    rank: 45,
+    rank: 48,
     sourceKey: "DS1"
   },
   {
@@ -429,7 +456,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 46,
+    rank: 49,
     sourceKey: "AA1"
   },
   {
@@ -438,7 +465,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 47,
+    rank: 50,
     sourceKey: "EY3"
   },
   {
@@ -447,7 +474,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 48,
+    rank: 51,
     sourceKey: "BQ1"
   },
   {
@@ -456,7 +483,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 49,
+    rank: 52,
     sourceKey: "BC1"
   },
   {
@@ -465,7 +492,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 50,
+    rank: 53,
     sourceKey: "AW3"
   },
   {
@@ -474,7 +501,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 51,
+    rank: 54,
     sourceKey: "BJ3"
   },
   {
@@ -483,7 +510,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 4,
     percentage: "0.10",
     tier: "ultra-rare",
-    rank: 52,
+    rank: 55,
     sourceKey: "FS1"
   },
   {
@@ -492,7 +519,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 53,
+    rank: 56,
     sourceKey: "DS2"
   },
   {
@@ -501,7 +528,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 54,
+    rank: 57,
     sourceKey: "BW2"
   },
   {
@@ -510,7 +537,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 55,
+    rank: 58,
     sourceKey: "AA1"
   },
   {
@@ -519,7 +546,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 56,
+    rank: 59,
     sourceKey: "BJ1"
   },
   {
@@ -528,7 +555,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 57,
+    rank: 60,
     sourceKey: "AE1"
   },
   {
@@ -537,7 +564,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 58,
+    rank: 61,
     sourceKey: "AK3"
   },
   {
@@ -546,7 +573,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 59,
+    rank: 62,
     sourceKey: "AA1"
   },
   {
@@ -555,7 +582,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 60,
+    rank: 63,
     sourceKey: "CF3"
   },
   {
@@ -564,7 +591,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 61,
+    rank: 64,
     sourceKey: "KQ3"
   },
   {
@@ -573,7 +600,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 5,
     percentage: "0.13",
     tier: "ultra-rare",
-    rank: 62,
+    rank: 65,
     sourceKey: "AA1"
   },
   {
@@ -582,7 +609,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 63,
+    rank: 66,
     sourceKey: "AA1"
   },
   {
@@ -591,7 +618,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 64,
+    rank: 67,
     sourceKey: "DM1"
   },
   {
@@ -600,7 +627,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 65,
+    rank: 68,
     sourceKey: "CU3"
   },
   {
@@ -609,7 +636,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 66,
+    rank: 69,
     sourceKey: "CF1"
   },
   {
@@ -618,7 +645,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 67,
+    rank: 70,
     sourceKey: "AK2"
   },
   {
@@ -627,7 +654,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 68,
+    rank: 71,
     sourceKey: "AA1"
   },
   {
@@ -636,7 +663,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 69,
+    rank: 72,
     sourceKey: "EV3"
   },
   {
@@ -645,7 +672,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 70,
+    rank: 73,
     sourceKey: "CF1"
   },
   {
@@ -654,7 +681,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 6,
     percentage: "0.15",
     tier: "ultra-rare",
-    rank: 71,
+    rank: 74,
     sourceKey: "BC1"
   },
   {
@@ -663,7 +690,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     tier: "ultra-rare",
-    rank: 72,
+    rank: 75,
     sourceKey: "EY2"
   },
   {
@@ -672,7 +699,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     tier: "ultra-rare",
-    rank: 73,
+    rank: 76,
     sourceKey: "AZ1"
   },
   {
@@ -681,7 +708,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     tier: "ultra-rare",
-    rank: 74,
+    rank: 77,
     sourceKey: "AA1"
   },
   {
@@ -690,7 +717,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     tier: "ultra-rare",
-    rank: 75,
+    rank: 78,
     sourceKey: "AA1"
   },
   {
@@ -699,7 +726,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 7,
     percentage: "0.18",
     tier: "ultra-rare",
-    rank: 76,
+    rank: 79,
     sourceKey: "AK1"
   },
   {
@@ -708,7 +735,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     tier: "ultra-rare",
-    rank: 77,
+    rank: 80,
     sourceKey: "AR1"
   },
   {
@@ -717,7 +744,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     tier: "ultra-rare",
-    rank: 78,
+    rank: 81,
     sourceKey: "AP3"
   },
   {
@@ -726,7 +753,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     tier: "ultra-rare",
-    rank: 79,
+    rank: 82,
     sourceKey: "AK3"
   },
   {
@@ -735,7 +762,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     tier: "ultra-rare",
-    rank: 80,
+    rank: 83,
     sourceKey: "AK1"
   },
   {
@@ -744,7 +771,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 8,
     percentage: "0.20",
     tier: "ultra-rare",
-    rank: 81,
+    rank: 84,
     sourceKey: "BI1"
   },
   {
@@ -753,7 +780,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     tier: "ultra-rare",
-    rank: 82,
+    rank: 85,
     sourceKey: "HB1"
   },
   {
@@ -762,7 +789,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     tier: "ultra-rare",
-    rank: 83,
+    rank: 86,
     sourceKey: "CF2"
   },
   {
@@ -771,7 +798,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     tier: "ultra-rare",
-    rank: 84,
+    rank: 87,
     sourceKey: "AA2"
   },
   {
@@ -780,7 +807,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     tier: "ultra-rare",
-    rank: 85,
+    rank: 88,
     sourceKey: "CB3"
   },
   {
@@ -789,7 +816,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 9,
     percentage: "0.22",
     tier: "ultra-rare",
-    rank: 86,
+    rank: 89,
     sourceKey: "GG1"
   },
   {
@@ -798,7 +825,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 10,
     percentage: "0.25",
     tier: "ultra-rare",
-    rank: 87,
+    rank: 90,
     sourceKey: "AE1"
   },
   {
@@ -807,7 +834,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 10,
     percentage: "0.25",
     tier: "ultra-rare",
-    rank: 88,
+    rank: 91,
     sourceKey: "AK1"
   },
   {
@@ -816,7 +843,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     tier: "ultra-rare",
-    rank: 89,
+    rank: 92,
     sourceKey: "HB2"
   },
   {
@@ -825,7 +852,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     tier: "ultra-rare",
-    rank: 90,
+    rank: 93,
     sourceKey: "CB3"
   },
   {
@@ -834,7 +861,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     tier: "ultra-rare",
-    rank: 91,
+    rank: 94,
     sourceKey: "EY1"
   },
   {
@@ -843,7 +870,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 11,
     percentage: "0.27",
     tier: "ultra-rare",
-    rank: 92,
+    rank: 95,
     sourceKey: "AE1"
   },
   {
@@ -852,7 +879,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 12,
     percentage: "0.30",
     tier: "ultra-rare",
-    rank: 93,
+    rank: 96,
     sourceKey: "CF3"
   },
   {
@@ -861,7 +888,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 12,
     percentage: "0.30",
     tier: "ultra-rare",
-    rank: 94,
+    rank: 97,
     sourceKey: "BR3"
   },
   {
@@ -870,7 +897,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 12,
     percentage: "0.30",
     tier: "ultra-rare",
-    rank: 95,
+    rank: 98,
     sourceKey: "DC1"
   },
   {
@@ -879,7 +906,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     tier: "ultra-rare",
-    rank: 96,
+    rank: 99,
     sourceKey: "HB2"
   },
   {
@@ -888,7 +915,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     tier: "ultra-rare",
-    rank: 97,
+    rank: 100,
     sourceKey: "EV2"
   },
   {
@@ -897,7 +924,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     tier: "ultra-rare",
-    rank: 98,
+    rank: 101,
     sourceKey: "BF1"
   },
   {
@@ -906,7 +933,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 13,
     percentage: "0.33",
     tier: "ultra-rare",
-    rank: 99,
+    rank: 102,
     sourceKey: "GK3"
   },
   {
@@ -915,7 +942,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 14,
     percentage: "0.35",
     tier: "ultra-rare",
-    rank: 100,
+    rank: 103,
     sourceKey: "BC1"
   },
   {
@@ -924,7 +951,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     tier: "ultra-rare",
-    rank: 101,
+    rank: 104,
     sourceKey: "HB2"
   },
   {
@@ -933,7 +960,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     tier: "ultra-rare",
-    rank: 102,
+    rank: 105,
     sourceKey: "FD2"
   },
   {
@@ -942,7 +969,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     tier: "ultra-rare",
-    rank: 103,
+    rank: 106,
     sourceKey: "AS3"
   },
   {
@@ -951,7 +978,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     tier: "ultra-rare",
-    rank: 104,
+    rank: 107,
     sourceKey: "BJ2"
   },
   {
@@ -960,7 +987,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 15,
     percentage: "0.38",
     tier: "ultra-rare",
-    rank: 105,
+    rank: 108,
     sourceKey: "AA3"
   },
   {
@@ -969,7 +996,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 16,
     percentage: "0.40",
     tier: "ultra-rare",
-    rank: 106,
+    rank: 109,
     sourceKey: "AA3"
   },
   {
@@ -978,7 +1005,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 16,
     percentage: "0.40",
     tier: "ultra-rare",
-    rank: 107,
+    rank: 110,
     sourceKey: "GQ2"
   },
   {
@@ -987,7 +1014,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 16,
     percentage: "0.40",
     tier: "ultra-rare",
-    rank: 108,
+    rank: 111,
     sourceKey: "DA3"
   },
   {
@@ -996,7 +1023,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 17,
     percentage: "0.43",
     tier: "ultra-rare",
-    rank: 109,
+    rank: 112,
     sourceKey: "AE1"
   },
   {
@@ -1005,7 +1032,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 18,
     percentage: "0.45",
     tier: "ultra-rare",
-    rank: 110,
+    rank: 113,
     sourceKey: "HH1"
   },
   {
@@ -1014,7 +1041,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 18,
     percentage: "0.45",
     tier: "ultra-rare",
-    rank: 111,
+    rank: 114,
     sourceKey: "BF1"
   },
   {
@@ -1023,7 +1050,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 19,
     percentage: "0.47",
     tier: "ultra-rare",
-    rank: 112,
+    rank: 115,
     sourceKey: "DE3"
   },
   {
@@ -1032,7 +1059,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 19,
     percentage: "0.47",
     tier: "ultra-rare",
-    rank: 113,
+    rank: 116,
     sourceKey: "BF3"
   },
   {
@@ -1041,7 +1068,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 20,
     percentage: "0.50",
     tier: "ultra-rare",
-    rank: 114,
+    rank: 117,
     sourceKey: "AE1"
   },
   {
@@ -1050,7 +1077,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 20,
     percentage: "0.50",
     tier: "ultra-rare",
-    rank: 115,
+    rank: 118,
     sourceKey: "DM1"
   },
   {
@@ -1059,7 +1086,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 21,
     percentage: "0.53",
     tier: "very-rare",
-    rank: 116,
+    rank: 119,
     sourceKey: "AM1"
   },
   {
@@ -1068,7 +1095,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 21,
     percentage: "0.53",
     tier: "very-rare",
-    rank: 117,
+    rank: 120,
     sourceKey: "AA2"
   },
   {
@@ -1077,7 +1104,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 21,
     percentage: "0.53",
     tier: "very-rare",
-    rank: 118,
+    rank: 121,
     sourceKey: "HN3"
   },
   {
@@ -1086,7 +1113,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     tier: "very-rare",
-    rank: 119,
+    rank: 122,
     sourceKey: "ED1"
   },
   {
@@ -1095,7 +1122,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     tier: "very-rare",
-    rank: 120,
+    rank: 123,
     sourceKey: "AJ3"
   },
   {
@@ -1104,7 +1131,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     tier: "very-rare",
-    rank: 121,
+    rank: 124,
     sourceKey: "BC3"
   },
   {
@@ -1113,7 +1140,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 22,
     percentage: "0.55",
     tier: "very-rare",
-    rank: 122,
+    rank: 125,
     sourceKey: "CF3"
   },
   {
@@ -1122,7 +1149,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     tier: "very-rare",
-    rank: 123,
+    rank: 126,
     sourceKey: "AE2"
   },
   {
@@ -1131,7 +1158,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     tier: "very-rare",
-    rank: 124,
+    rank: 127,
     sourceKey: "AA1"
   },
   {
@@ -1140,7 +1167,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     tier: "very-rare",
-    rank: 125,
+    rank: 128,
     sourceKey: "CU2"
   },
   {
@@ -1149,7 +1176,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 23,
     percentage: "0.57",
     tier: "very-rare",
-    rank: 126,
+    rank: 129,
     sourceKey: "HB2"
   },
   {
@@ -1158,7 +1185,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 24,
     percentage: "0.60",
     tier: "very-rare",
-    rank: 127,
+    rank: 130,
     sourceKey: "BC4"
   },
   {
@@ -1167,7 +1194,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 24,
     percentage: "0.60",
     tier: "very-rare",
-    rank: 128,
+    rank: 131,
     sourceKey: "AA2"
   },
   {
@@ -1176,7 +1203,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     tier: "very-rare",
-    rank: 129,
+    rank: 132,
     sourceKey: "AW2"
   },
   {
@@ -1185,7 +1212,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     tier: "very-rare",
-    rank: 130,
+    rank: 133,
     sourceKey: "BC3"
   },
   {
@@ -1194,7 +1221,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     tier: "very-rare",
-    rank: 131,
+    rank: 134,
     sourceKey: "BJ2"
   },
   {
@@ -1203,7 +1230,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 25,
     percentage: "0.63",
     tier: "very-rare",
-    rank: 132,
+    rank: 135,
     sourceKey: "BF1"
   },
   {
@@ -1212,7 +1239,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 26,
     percentage: "0.65",
     tier: "very-rare",
-    rank: 133,
+    rank: 136,
     sourceKey: "MX1"
   },
   {
@@ -1221,7 +1248,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 26,
     percentage: "0.65",
     tier: "very-rare",
-    rank: 134,
+    rank: 137,
     sourceKey: "AA1"
   },
   {
@@ -1230,7 +1257,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 26,
     percentage: "0.65",
     tier: "very-rare",
-    rank: 135,
+    rank: 138,
     sourceKey: "HB1"
   },
   {
@@ -1239,7 +1266,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 27,
     percentage: "0.68",
     tier: "very-rare",
-    rank: 136,
+    rank: 139,
     sourceKey: "KQ2"
   },
   {
@@ -1248,7 +1275,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 28,
     percentage: "0.70",
     tier: "very-rare",
-    rank: 137,
+    rank: 140,
     sourceKey: "AW1"
   },
   {
@@ -1257,7 +1284,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 28,
     percentage: "0.70",
     tier: "very-rare",
-    rank: 138,
+    rank: 141,
     sourceKey: "EH3"
   },
   {
@@ -1266,7 +1293,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 28,
     percentage: "0.70",
     tier: "very-rare",
-    rank: 139,
+    rank: 142,
     sourceKey: "MT2"
   },
   {
@@ -1275,7 +1302,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 28,
     percentage: "0.70",
     tier: "very-rare",
-    rank: 140,
+    rank: 143,
     sourceKey: "HB1"
   },
   {
@@ -1284,7 +1311,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     tier: "very-rare",
-    rank: 141,
+    rank: 144,
     sourceKey: "BJ1"
   },
   {
@@ -1293,7 +1320,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     tier: "very-rare",
-    rank: 142,
+    rank: 145,
     sourceKey: "AK1"
   },
   {
@@ -1302,7 +1329,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     tier: "very-rare",
-    rank: 143,
+    rank: 146,
     sourceKey: "EV1"
   },
   {
@@ -1311,7 +1338,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 30,
     percentage: "0.75",
     tier: "very-rare",
-    rank: 144,
+    rank: 147,
     sourceKey: "BF1"
   },
   {
@@ -1320,7 +1347,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 31,
     percentage: "0.78",
     tier: "very-rare",
-    rank: 145,
+    rank: 148,
     sourceKey: "AS2"
   },
   {
@@ -1329,7 +1356,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 31,
     percentage: "0.78",
     tier: "very-rare",
-    rank: 146,
+    rank: 149,
     sourceKey: "AK3"
   },
   {
@@ -1338,7 +1365,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 31,
     percentage: "0.78",
     tier: "very-rare",
-    rank: 147,
+    rank: 150,
     sourceKey: "BF1"
   },
   {
@@ -1347,7 +1374,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 32,
     percentage: "0.80",
     tier: "very-rare",
-    rank: 148,
+    rank: 151,
     sourceKey: "BF1"
   },
   {
@@ -1356,7 +1383,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 32,
     percentage: "0.80",
     tier: "very-rare",
-    rank: 149,
+    rank: 152,
     sourceKey: "AA2"
   },
   {
@@ -1365,7 +1392,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 33,
     percentage: "0.83",
     tier: "very-rare",
-    rank: 150,
+    rank: 153,
     sourceKey: "BF1"
   },
   {
@@ -1374,7 +1401,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 33,
     percentage: "0.83",
     tier: "very-rare",
-    rank: 151,
+    rank: 154,
     sourceKey: "HH1"
   },
   {
@@ -1383,7 +1410,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     tier: "very-rare",
-    rank: 152,
+    rank: 155,
     sourceKey: "BF1"
   },
   {
@@ -1392,7 +1419,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     tier: "very-rare",
-    rank: 153,
+    rank: 156,
     sourceKey: "HB2"
   },
   {
@@ -1401,7 +1428,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     tier: "very-rare",
-    rank: 154,
+    rank: 157,
     sourceKey: "AP2"
   },
   {
@@ -1410,7 +1437,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 34,
     percentage: "0.85",
     tier: "very-rare",
-    rank: 155,
+    rank: 158,
     sourceKey: "BI1"
   },
   {
@@ -1419,7 +1446,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 35,
     percentage: "0.88",
     tier: "very-rare",
-    rank: 156,
+    rank: 159,
     sourceKey: "AA1"
   },
   {
@@ -1428,7 +1455,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 36,
     percentage: "0.90",
     tier: "very-rare",
-    rank: 157,
+    rank: 160,
     sourceKey: "DH1"
   },
   {
@@ -1437,7 +1464,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 36,
     percentage: "0.90",
     tier: "very-rare",
-    rank: 158,
+    rank: 161,
     sourceKey: "BF1"
   },
   {
@@ -1446,7 +1473,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 37,
     percentage: "0.92",
     tier: "very-rare",
-    rank: 159,
+    rank: 162,
     sourceKey: "BR2"
   },
   {
@@ -1455,7 +1482,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 37,
     percentage: "0.92",
     tier: "very-rare",
-    rank: 160,
+    rank: 163,
     sourceKey: "AA1"
   },
   {
@@ -1464,7 +1491,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 38,
     percentage: "0.95",
     tier: "very-rare",
-    rank: 161,
+    rank: 164,
     sourceKey: "HB1"
   },
   {
@@ -1473,7 +1500,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 38,
     percentage: "0.95",
     tier: "very-rare",
-    rank: 162,
+    rank: 165,
     sourceKey: "BJ1"
   },
   {
@@ -1482,7 +1509,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 39,
     percentage: "0.97",
     tier: "very-rare",
-    rank: 163,
+    rank: 166,
     sourceKey: "MO2"
   },
   {
@@ -1491,7 +1518,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     tier: "rare",
-    rank: 164,
+    rank: 167,
     sourceKey: "HH1"
   },
   {
@@ -1500,7 +1527,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     tier: "rare",
-    rank: 165,
+    rank: 168,
     sourceKey: "HB1"
   },
   {
@@ -1509,7 +1536,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     tier: "rare",
-    rank: 166,
+    rank: 169,
     sourceKey: "BJ1"
   },
   {
@@ -1518,7 +1545,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 41,
     percentage: "1.03",
     tier: "rare",
-    rank: 167,
+    rank: 170,
     sourceKey: "BJ2"
   },
   {
@@ -1527,7 +1554,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 42,
     percentage: "1.05",
     tier: "rare",
-    rank: 168,
+    rank: 171,
     sourceKey: "AK1"
   },
   {
@@ -1536,7 +1563,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 43,
     percentage: "1.07",
     tier: "rare",
-    rank: 169,
+    rank: 172,
     sourceKey: "BJ1"
   },
   {
@@ -1545,7 +1572,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     tier: "rare",
-    rank: 170,
+    rank: 173,
     sourceKey: "HB2"
   },
   {
@@ -1554,7 +1581,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     tier: "rare",
-    rank: 171,
+    rank: 174,
     sourceKey: "BL1"
   },
   {
@@ -1563,7 +1590,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     tier: "rare",
-    rank: 172,
+    rank: 175,
     sourceKey: "AA1"
   },
   {
@@ -1572,7 +1599,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 44,
     percentage: "1.10",
     tier: "rare",
-    rank: 173,
+    rank: 176,
     sourceKey: "BJ1"
   },
   {
@@ -1581,7 +1608,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     tier: "rare",
-    rank: 174,
+    rank: 177,
     sourceKey: "DH1"
   },
   {
@@ -1590,7 +1617,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     tier: "rare",
-    rank: 175,
+    rank: 178,
     sourceKey: "HB1"
   },
   {
@@ -1599,7 +1626,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 45,
     percentage: "1.13",
     tier: "rare",
-    rank: 176,
+    rank: 179,
     sourceKey: "HH1"
   },
   {
@@ -1608,7 +1635,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     tier: "rare",
-    rank: 177,
+    rank: 180,
     sourceKey: "HB3"
   },
   {
@@ -1617,7 +1644,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     tier: "rare",
-    rank: 178,
+    rank: 181,
     sourceKey: "BF1"
   },
   {
@@ -1626,7 +1653,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 46,
     percentage: "1.15",
     tier: "rare",
-    rank: 179,
+    rank: 182,
     sourceKey: "BF1"
   },
   {
@@ -1635,7 +1662,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 49,
     percentage: "1.23",
     tier: "rare",
-    rank: 180,
+    rank: 183,
     sourceKey: "CU1"
   },
   {
@@ -1644,7 +1671,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 49,
     percentage: "1.23",
     tier: "rare",
-    rank: 181,
+    rank: 184,
     sourceKey: "BJ2"
   },
   {
@@ -1653,7 +1680,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 49,
     percentage: "1.23",
     tier: "rare",
-    rank: 182,
+    rank: 185,
     sourceKey: "BL1"
   },
   {
@@ -1662,7 +1689,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 50,
     percentage: "1.25",
     tier: "rare",
-    rank: 183,
+    rank: 186,
     sourceKey: "BF1"
   },
   {
@@ -1671,7 +1698,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 50,
     percentage: "1.25",
     tier: "rare",
-    rank: 184,
+    rank: 187,
     sourceKey: "HB3"
   },
   {
@@ -1680,7 +1707,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     tier: "rare",
-    rank: 185,
+    rank: 188,
     sourceKey: "BF1"
   },
   {
@@ -1689,7 +1716,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     tier: "rare",
-    rank: 186,
+    rank: 189,
     sourceKey: "BJ1"
   },
   {
@@ -1698,7 +1725,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 51,
     percentage: "1.27",
     tier: "rare",
-    rank: 187,
+    rank: 190,
     sourceKey: "BJ2"
   },
   {
@@ -1707,7 +1734,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 52,
     percentage: "1.30",
     tier: "rare",
-    rank: 188,
+    rank: 191,
     sourceKey: "BF1"
   },
   {
@@ -1716,7 +1743,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 53,
     percentage: "1.32",
     tier: "rare",
-    rank: 189,
+    rank: 192,
     sourceKey: "GK2"
   },
   {
@@ -1725,7 +1752,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 54,
     percentage: "1.35",
     tier: "rare",
-    rank: 190,
+    rank: 193,
     sourceKey: "AK1"
   },
   {
@@ -1734,7 +1761,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 54,
     percentage: "1.35",
     tier: "rare",
-    rank: 191,
+    rank: 194,
     sourceKey: "FD1"
   },
   {
@@ -1743,7 +1770,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 192,
+    rank: 195,
     sourceKey: "AA2"
   },
   {
@@ -1752,7 +1779,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 193,
+    rank: 196,
     sourceKey: "BR1"
   },
   {
@@ -1761,7 +1788,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 194,
+    rank: 197,
     sourceKey: "EE2"
   },
   {
@@ -1770,7 +1797,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 195,
+    rank: 198,
     sourceKey: "BF1"
   },
   {
@@ -1779,7 +1806,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 196,
+    rank: 199,
     sourceKey: "BC1"
   },
   {
@@ -1788,7 +1815,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 55,
     percentage: "1.38",
     tier: "rare",
-    rank: 197,
+    rank: 200,
     sourceKey: "BC4"
   },
   {
@@ -1797,7 +1824,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 56,
     percentage: "1.40",
     tier: "rare",
-    rank: 198,
+    rank: 201,
     sourceKey: "HH1"
   },
   {
@@ -1806,7 +1833,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     tier: "rare",
-    rank: 199,
+    rank: 202,
     sourceKey: "HB1"
   },
   {
@@ -1815,7 +1842,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     tier: "rare",
-    rank: 200,
+    rank: 203,
     sourceKey: "HB3"
   },
   {
@@ -1824,7 +1851,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 57,
     percentage: "1.43",
     tier: "rare",
-    rank: 201,
+    rank: 204,
     sourceKey: "FD1"
   },
   {
@@ -1833,7 +1860,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 58,
     percentage: "1.45",
     tier: "rare",
-    rank: 202,
+    rank: 205,
     sourceKey: "MT1"
   },
   {
@@ -1842,7 +1869,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 58,
     percentage: "1.45",
     tier: "rare",
-    rank: 203,
+    rank: 206,
     sourceKey: "AS1"
   },
   {
@@ -1851,7 +1878,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 58,
     percentage: "1.45",
     tier: "rare",
-    rank: 204,
+    rank: 207,
     sourceKey: "BJ1"
   },
   {
@@ -1860,7 +1887,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 59,
     percentage: "1.47",
     tier: "rare",
-    rank: 205,
+    rank: 208,
     sourceKey: "BL1"
   },
   {
@@ -1869,7 +1896,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 60,
     percentage: "1.50",
     tier: "rare",
-    rank: 206,
+    rank: 209,
     sourceKey: "BJ1"
   },
   {
@@ -1878,7 +1905,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 60,
     percentage: "1.50",
     tier: "rare",
-    rank: 207,
+    rank: 210,
     sourceKey: "BF2"
   },
   {
@@ -1887,7 +1914,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     tier: "rare",
-    rank: 208,
+    rank: 211,
     sourceKey: "DM1"
   },
   {
@@ -1896,7 +1923,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     tier: "rare",
-    rank: 209,
+    rank: 212,
     sourceKey: "KQ1"
   },
   {
@@ -1905,7 +1932,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     tier: "rare",
-    rank: 210,
+    rank: 213,
     sourceKey: "DA2"
   },
   {
@@ -1914,7 +1941,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 63,
     percentage: "1.57",
     tier: "rare",
-    rank: 211,
+    rank: 214,
     sourceKey: "DM1"
   },
   {
@@ -1923,7 +1950,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 64,
     percentage: "1.60",
     tier: "rare",
-    rank: 212,
+    rank: 215,
     sourceKey: "EH2"
   },
   {
@@ -1932,7 +1959,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 64,
     percentage: "1.60",
     tier: "rare",
-    rank: 213,
+    rank: 216,
     sourceKey: "HB2"
   },
   {
@@ -1941,7 +1968,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 64,
     percentage: "1.60",
     tier: "rare",
-    rank: 214,
+    rank: 217,
     sourceKey: "BI1"
   },
   {
@@ -1950,7 +1977,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     tier: "rare",
-    rank: 215,
+    rank: 218,
     sourceKey: "BC4"
   },
   {
@@ -1959,7 +1986,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     tier: "rare",
-    rank: 216,
+    rank: 219,
     sourceKey: "CF1"
   },
   {
@@ -1968,7 +1995,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 65,
     percentage: "1.63",
     tier: "rare",
-    rank: 217,
+    rank: 220,
     sourceKey: "HB1"
   },
   {
@@ -1977,7 +2004,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 67,
     percentage: "1.68",
     tier: "rare",
-    rank: 218,
+    rank: 221,
     sourceKey: "AA2"
   },
   {
@@ -1986,7 +2013,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     tier: "rare",
-    rank: 219,
+    rank: 222,
     sourceKey: "BJ1"
   },
   {
@@ -1995,7 +2022,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     tier: "rare",
-    rank: 220,
+    rank: 223,
     sourceKey: "BC1"
   },
   {
@@ -2004,7 +2031,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     tier: "rare",
-    rank: 221,
+    rank: 224,
     sourceKey: "BJ1"
   },
   {
@@ -2013,7 +2040,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 68,
     percentage: "1.70",
     tier: "rare",
-    rank: 222,
+    rank: 225,
     sourceKey: "HN2"
   },
   {
@@ -2022,7 +2049,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 69,
     percentage: "1.73",
     tier: "rare",
-    rank: 223,
+    rank: 226,
     sourceKey: "HH1"
   },
   {
@@ -2031,7 +2058,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 69,
     percentage: "1.73",
     tier: "rare",
-    rank: 224,
+    rank: 227,
     sourceKey: "BJ1"
   },
   {
@@ -2040,7 +2067,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 70,
     percentage: "1.75",
     tier: "rare",
-    rank: 225,
+    rank: 228,
     sourceKey: "HB2"
   },
   {
@@ -2049,7 +2076,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 70,
     percentage: "1.75",
     tier: "rare",
-    rank: 226,
+    rank: 229,
     sourceKey: "BF1"
   },
   {
@@ -2058,7 +2085,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 72,
     percentage: "1.80",
     tier: "rare",
-    rank: 227,
+    rank: 230,
     sourceKey: "BC2"
   },
   {
@@ -2067,7 +2094,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     tier: "rare",
-    rank: 228,
+    rank: 231,
     sourceKey: "HB2"
   },
   {
@@ -2076,7 +2103,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     tier: "rare",
-    rank: 229,
+    rank: 232,
     sourceKey: "AK1"
   },
   {
@@ -2085,7 +2112,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     tier: "rare",
-    rank: 230,
+    rank: 233,
     sourceKey: "FB2"
   },
   {
@@ -2094,7 +2121,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     tier: "rare",
-    rank: 231,
+    rank: 234,
     sourceKey: "OF2"
   },
   {
@@ -2103,7 +2130,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 73,
     percentage: "1.82",
     tier: "rare",
-    rank: 232,
+    rank: 235,
     sourceKey: "AE1"
   },
   {
@@ -2112,7 +2139,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 74,
     percentage: "1.85",
     tier: "rare",
-    rank: 233,
+    rank: 236,
     sourceKey: "BC2"
   },
   {
@@ -2121,7 +2148,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 74,
     percentage: "1.85",
     tier: "rare",
-    rank: 234,
+    rank: 237,
     sourceKey: "AA1"
   },
   {
@@ -2130,7 +2157,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 75,
     percentage: "1.88",
     tier: "rare",
-    rank: 235,
+    rank: 238,
     sourceKey: "AJ2"
   },
   {
@@ -2139,7 +2166,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 75,
     percentage: "1.88",
     tier: "rare",
-    rank: 236,
+    rank: 239,
     sourceKey: "AM1"
   },
   {
@@ -2148,7 +2175,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 76,
     percentage: "1.90",
     tier: "rare",
-    rank: 237,
+    rank: 240,
     sourceKey: "BI1"
   },
   {
@@ -2157,7 +2184,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 77,
     percentage: "1.93",
     tier: "rare",
-    rank: 238,
+    rank: 241,
     sourceKey: "AA2"
   },
   {
@@ -2166,7 +2193,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 77,
     percentage: "1.93",
     tier: "rare",
-    rank: 239,
+    rank: 242,
     sourceKey: "AP1"
   },
   {
@@ -2175,7 +2202,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     tier: "rare",
-    rank: 240,
+    rank: 243,
     sourceKey: "JI2"
   },
   {
@@ -2184,7 +2211,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     tier: "rare",
-    rank: 241,
+    rank: 244,
     sourceKey: "BI1"
   },
   {
@@ -2193,7 +2220,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     tier: "rare",
-    rank: 242,
+    rank: 245,
     sourceKey: "HB3"
   },
   {
@@ -2202,7 +2229,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 78,
     percentage: "1.95",
     tier: "rare",
-    rank: 243,
+    rank: 246,
     sourceKey: "MO1"
   },
   {
@@ -2211,7 +2238,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 79,
     percentage: "1.98",
     tier: "rare",
-    rank: 244,
+    rank: 247,
     sourceKey: "HH1"
   },
   {
@@ -2220,7 +2247,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 80,
     percentage: "2.00",
     tier: "rare",
-    rank: 245,
+    rank: 248,
     sourceKey: "AA1"
   },
   {
@@ -2229,7 +2256,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 80,
     percentage: "2.00",
     tier: "rare",
-    rank: 246,
+    rank: 249,
     sourceKey: "DE2"
   },
   {
@@ -2238,7 +2265,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 81,
     percentage: "2.02",
     tier: "rare",
-    rank: 247,
+    rank: 250,
     sourceKey: "HB3"
   },
   {
@@ -2247,7 +2274,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 81,
     percentage: "2.02",
     tier: "rare",
-    rank: 248,
+    rank: 251,
     sourceKey: "LG2"
   },
   {
@@ -2256,7 +2283,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 83,
     percentage: "2.08",
     tier: "rare",
-    rank: 249,
+    rank: 252,
     sourceKey: "BF1"
   },
   {
@@ -2265,7 +2292,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 85,
     percentage: "2.13",
     tier: "rare",
-    rank: 250,
+    rank: 253,
     sourceKey: "AK1"
   },
   {
@@ -2274,7 +2301,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 86,
     percentage: "2.15",
     tier: "rare",
-    rank: 251,
+    rank: 254,
     sourceKey: "DH1"
   },
   {
@@ -2283,7 +2310,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 89,
     percentage: "2.23",
     tier: "rare",
-    rank: 252,
+    rank: 255,
     sourceKey: "AA1"
   },
   {
@@ -2292,7 +2319,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 90,
     percentage: "2.25",
     tier: "rare",
-    rank: 253,
+    rank: 256,
     sourceKey: "BF1"
   },
   {
@@ -2301,7 +2328,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 91,
     percentage: "2.27",
     tier: "rare",
-    rank: 254,
+    rank: 257,
     sourceKey: "CD2"
   },
   {
@@ -2310,7 +2337,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 91,
     percentage: "2.27",
     tier: "rare",
-    rank: 255,
+    rank: 258,
     sourceKey: "IL2"
   },
   {
@@ -2319,7 +2346,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 92,
     percentage: "2.30",
     tier: "rare",
-    rank: 256,
+    rank: 259,
     sourceKey: "GK1"
   },
   {
@@ -2328,7 +2355,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 93,
     percentage: "2.33",
     tier: "rare",
-    rank: 257,
+    rank: 260,
     sourceKey: "BJ1"
   },
   {
@@ -2337,7 +2364,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 94,
     percentage: "2.35",
     tier: "rare",
-    rank: 258,
+    rank: 261,
     sourceKey: "BJ2"
   },
   {
@@ -2346,7 +2373,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 94,
     percentage: "2.35",
     tier: "rare",
-    rank: 259,
+    rank: 262,
     sourceKey: "AE1"
   },
   {
@@ -2355,7 +2382,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 96,
     percentage: "2.40",
     tier: "rare",
-    rank: 260,
+    rank: 263,
     sourceKey: "AA2"
   },
   {
@@ -2364,7 +2391,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 97,
     percentage: "2.43",
     tier: "rare",
-    rank: 261,
+    rank: 264,
     sourceKey: "DA1"
   },
   {
@@ -2373,7 +2400,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 98,
     percentage: "2.45",
     tier: "rare",
-    rank: 262,
+    rank: 265,
     sourceKey: "HB2"
   },
   {
@@ -2382,7 +2409,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 99,
     percentage: "2.48",
     tier: "rare",
-    rank: 263,
+    rank: 266,
     sourceKey: "BJ1"
   },
   {
@@ -2391,7 +2418,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 99,
     percentage: "2.48",
     tier: "rare",
-    rank: 264,
+    rank: 267,
     sourceKey: "BF1"
   },
   {
@@ -2400,7 +2427,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 101,
     percentage: "2.53",
     tier: "uncommon",
-    rank: 265,
+    rank: 268,
     sourceKey: "AE1"
   },
   {
@@ -2409,7 +2436,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 104,
     percentage: "2.60",
     tier: "uncommon",
-    rank: 266,
+    rank: 269,
     sourceKey: "BJ1"
   },
   {
@@ -2418,7 +2445,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 106,
     percentage: "2.65",
     tier: "uncommon",
-    rank: 267,
+    rank: 270,
     sourceKey: "EE1"
   },
   {
@@ -2427,7 +2454,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 109,
     percentage: "2.73",
     tier: "uncommon",
-    rank: 268,
+    rank: 271,
     sourceKey: "CD1"
   },
   {
@@ -2436,7 +2463,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 111,
     percentage: "2.77",
     tier: "uncommon",
-    rank: 269,
+    rank: 272,
     sourceKey: "OF1"
   },
   {
@@ -2445,7 +2472,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 113,
     percentage: "2.83",
     tier: "uncommon",
-    rank: 270,
+    rank: 273,
     sourceKey: "HB2"
   },
   {
@@ -2454,7 +2481,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 117,
     percentage: "2.93",
     tier: "uncommon",
-    rank: 271,
+    rank: 274,
     sourceKey: "HB1"
   },
   {
@@ -2463,7 +2490,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 117,
     percentage: "2.93",
     tier: "uncommon",
-    rank: 272,
+    rank: 275,
     sourceKey: "IL1"
   },
   {
@@ -2472,7 +2499,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 117,
     percentage: "2.93",
     tier: "uncommon",
-    rank: 273,
+    rank: 276,
     sourceKey: "EH1"
   },
   {
@@ -2481,7 +2508,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 118,
     percentage: "2.95",
     tier: "uncommon",
-    rank: 274,
+    rank: 277,
     sourceKey: "LG1"
   },
   {
@@ -2490,7 +2517,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 118,
     percentage: "2.95",
     tier: "uncommon",
-    rank: 275,
+    rank: 278,
     sourceKey: "BI1"
   },
   {
@@ -2499,7 +2526,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 118,
     percentage: "2.95",
     tier: "uncommon",
-    rank: 276,
+    rank: 279,
     sourceKey: "DE1"
   },
   {
@@ -2508,7 +2535,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 119,
     percentage: "2.97",
     tier: "uncommon",
-    rank: 277,
+    rank: 280,
     sourceKey: "AA2"
   },
   {
@@ -2517,7 +2544,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 121,
     percentage: "3.02",
     tier: "uncommon",
-    rank: 278,
+    rank: 281,
     sourceKey: "BC1"
   },
   {
@@ -2526,7 +2553,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 121,
     percentage: "3.02",
     tier: "uncommon",
-    rank: 279,
+    rank: 282,
     sourceKey: "JI1"
   },
   {
@@ -2535,7 +2562,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 125,
     percentage: "3.13",
     tier: "uncommon",
-    rank: 280,
+    rank: 283,
     sourceKey: "HB2"
   },
   {
@@ -2544,7 +2571,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 125,
     percentage: "3.13",
     tier: "uncommon",
-    rank: 281,
+    rank: 284,
     sourceKey: "FB1"
   },
   {
@@ -2553,7 +2580,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 126,
     percentage: "3.15",
     tier: "uncommon",
-    rank: 282,
+    rank: 285,
     sourceKey: "AA2"
   },
   {
@@ -2562,7 +2589,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 127,
     percentage: "3.17",
     tier: "uncommon",
-    rank: 283,
+    rank: 286,
     sourceKey: "BJ1"
   },
   {
@@ -2571,7 +2598,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 129,
     percentage: "3.23",
     tier: "uncommon",
-    rank: 284,
+    rank: 287,
     sourceKey: "AJ1"
   },
   {
@@ -2580,7 +2607,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 130,
     percentage: "3.25",
     tier: "uncommon",
-    rank: 285,
+    rank: 288,
     sourceKey: "BF1"
   },
   {
@@ -2589,7 +2616,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 132,
     percentage: "3.30",
     tier: "uncommon",
-    rank: 286,
+    rank: 289,
     sourceKey: "AA1"
   },
   {
@@ -2598,7 +2625,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 138,
     percentage: "3.45",
     tier: "uncommon",
-    rank: 287,
+    rank: 290,
     sourceKey: "HN1"
   },
   {
@@ -2607,68 +2634,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     count: 501,
     percentage: "12.53",
     tier: "common",
-    rank: 288,
+    rank: 291,
     sourceKey: "NM1"
   }
 ];
-
-// Rarity tiers breakdown
-export const RARITY_TIERS = {
-  legendary: 30, // 1-of-1 variations
-  'ultra-rare': 85, // ≤0.5% (≤20 copies)
-  'very-rare': 48, // ≤1.0% (≤40 copies)
-  rare: 101, // ≤2.5% (≤100 copies)
-  uncommon: 23, // ≤5.0% (≤200 copies)
-  common: 1 // >5.0% (>200 copies)
-};
-
-// Summary stats
-export const VARIATION_STATS = {
-  totalVariations: 288,
-  totalMeks: 4000,
-  heads: 102,
-  bodies: 112,
-  traits: 74
-};
-
-// Helper functions
-export function getVariationRarity(variationName: string): VariationRarity | undefined {
-  return COMPLETE_VARIATION_RARITY.find(v => v.name === variationName);
-}
-
-export function getVariationsByType(type: VariationType): VariationRarity[] {
-  return COMPLETE_VARIATION_RARITY.filter(v => v.type === type);
-}
-
-export function getVariationsByTier(tier: RarityTier): VariationRarity[] {
-  return COMPLETE_VARIATION_RARITY.filter(v => v.tier === tier);
-}
-
-export function getRarestVariations(limit: number = 10): VariationRarity[] {
-  return COMPLETE_VARIATION_RARITY.slice(0, limit);
-}
-
-export function getMostCommonVariations(limit: number = 10): VariationRarity[] {
-  return COMPLETE_VARIATION_RARITY.slice(-limit).reverse();
-}
-
-// Get rarity rank for any variation (1 = rarest)
-export function getVariationRank(variationName: string): number | undefined {
-  const variation = getVariationRarity(variationName);
-  return variation?.rank;
-}
-
-// Check if variation exists in the dataset
-export function isValidVariation(variationName: string): boolean {
-  return COMPLETE_VARIATION_RARITY.some(v => v.name === variationName);
-}
-
-// Get variation by rank (1 = rarest)
-export function getVariationByRank(rank: number): VariationRarity | undefined {
-  return COMPLETE_VARIATION_RARITY.find(v => v.rank === rank);
-}
-
-// Get variations by rank range (inclusive)
-export function getVariationsByRankRange(minRank: number, maxRank: number): VariationRarity[] {
-  return COMPLETE_VARIATION_RARITY.filter(v => v.rank >= minRank && v.rank <= maxRank);
-}

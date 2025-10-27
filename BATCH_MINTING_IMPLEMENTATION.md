@@ -1,8 +1,110 @@
 # Batch NFT Minting System - Implementation Status
 
-**Last Updated:** October 25, 2025
-**Status:** 100% Complete - Manual Whitelist Feature Added - Ready to test
+**Last Updated:** October 26, 2025
+**Status:** 97% Complete - TESTING PHASE - ForgeScript API Fixed
 **Network:** Cardano Preprod Testnet
+**Branch:** `custom-minting-system`
+
+## 🚨 CURRENT SESSION STATUS (WHERE WE LEFT OFF)
+
+**READY TO TEST**: Fixed ForgeScript creation bug. System ready for batch minting test.
+
+**Last Bug Fixed (October 26, 2025 - 4th Fix):**
+- **Problem**: ForgeScript creation using non-existent `withOneSignature()` method
+- **Root Cause**: Documentation incorrectly stated to use `ForgeScript.withOneSignature()` which doesn't exist in MeshSDK
+- **Solution**: Changed to correct MeshSDK API `ForgeScript.fromNativeScript(policyScript)`
+- **File**: `src/lib/cardano/nftMinter.ts:356-366`
+- **Working Reference**: `src/lib/cardano/mintingTx.ts:82` (correct usage)
+
+**Console Logging:**
+- ALL minting logs tagged with `[🔨MINT]` - filter console with "MINT" to see only minting activity
+- Added comprehensive logging throughout nftMinter.ts, batchMinter.ts, and CommemorativeToken1Admin.tsx
+
+**Next Steps:**
+1. Test batch mint with 2 addresses to verify forge script fix works
+2. If successful, system ready for larger batch tests
+3. Eventually scale to mainnet airdrops
+
+## 🔍 CRITICAL DISCOVERIES (Session Learnings)
+
+### 1. Policy Script Storage Architecture
+**DISCOVERY**: Policy scripts are NOT stored with NFT designs!
+
+```
+Database Structure:
+- mintingPolicies table: Stores actual policy scripts
+  - policyId: "849b0b1d9e53b684..."
+  - policyScript: { type: "sig", keyHash: "..." } ← THE ACTUAL SCRIPT
+
+- commemorativeTokenCounters table: NFT designs
+  - policyId: "849b0b1d9e53b684..." ← JUST A REFERENCE
+  - (NO policyScript field!)
+```
+
+**Implementation**: Must query `mintingPolicies` table by `policyId` to get actual script before minting.
+**Fix Applied**: `CommemorativeToken1Admin.tsx:242-248`
+
+### 2. MeshSDK Browser Wallet ForgeScript Creation
+**CRITICAL API USAGE**:
+- ✅ **MUST USE**: `ForgeScript.fromNativeScript(policyScript)` - correct MeshSDK API
+- ❌ **DO NOT USE**: `ForgeScript.withOneSignature()` - THIS METHOD DOES NOT EXIST in MeshSDK
+- **Reference**: Working code in `src/lib/cardano/mintingTx.ts:82`
+
+### 3. MeshSDK mintAsset API Signature (CRITICAL!)
+**DISCOVERY**: The `tx.mintAsset()` API requires specific structure.
+
+**❌ WRONG (Old Code)**:
+```typescript
+tx.mintAsset(
+  forgingScript,
+  { unit: assetNameHex, quantity: '1' },
+  metadata  // ❌ Metadata as third parameter
+);
+tx.sendAssets(recipient.address, [...]); // ❌ Separate send call
+```
+
+**✅ CORRECT (Fixed)**:
+```typescript
+tx.mintAsset(
+  forgingScript,
+  {
+    assetName: assetNameHex,        // Not "unit"
+    assetQuantity: '1',             // Not "quantity"
+    metadata: nftMetadata,          // Inside mint object
+    label: '721',                   // CIP-25 label
+    recipient: recipient.address    // No separate sendAssets needed
+  }
+);
+```
+
+**Key Points**:
+- MeshSDK expects 2 parameters (script, mint object), NOT 3
+- Mint object must include: `assetName`, `assetQuantity`, `metadata`, `label`, `recipient`
+- Metadata is extracted from CIP-25 wrapper: `metadata["721"][policyId][assetName]`
+- No separate `sendAssets()` call needed - recipient is in mint object
+- Reference working code: `src/lib/cardano/mintingTx.ts:91-100`
+
+### 4. Eligible Users Data Source
+**Two separate systems**:
+1. **OLD (gold-based)**: `eligibleUsers` query - pulls users based on accumulated gold
+2. **NEW (snapshot-based)**: `whitelistSnapshots` table - frozen point-in-time eligibility lists
+
+**UI Must Use**: Snapshot data when `selectedWhitelistId` is set
+**Fix Applied**: `CommemorativeToken1Admin.tsx:2144-2198` - Eligible Users Table now shows snapshot data
+
+### 4. Console Logging Filter System
+**Implementation**: All minting logs tagged with `[🔨MINT]`
+
+**How to filter in Chrome DevTools**:
+1. Open DevTools Console (F12)
+2. Click "Filter" box at top
+3. Type: `MINT` or `🔨MINT`
+4. Only minting logs will show - easy to screenshot/copy
+
+**Files with [🔨MINT] tags**:
+- `src/lib/cardano/nftMinter.ts` - Transaction building, signing, submission
+- `src/lib/cardano/batchMinter.ts` - Batch processing, retry logic
+- `src/components/CommemorativeToken1Admin.tsx` - UI handler, progress tracking
 
 ---
 

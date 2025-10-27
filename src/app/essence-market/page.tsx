@@ -6,6 +6,8 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ALL_VARIATIONS_FLAT } from "@/lib/variationsReferenceData";
 import EssenceListingLightboxV5YellowGradient from "@/components/EssenceListingLightbox-V5-YellowGradient";
+import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
+import EssenceListingLightboxV7HybridGlass from "@/components/EssenceListingLightbox-V7-HybridGlass";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 
@@ -74,6 +76,7 @@ export default function EssenceMarketPage() {
   const essenceTitleColor = 'white'; // LOCKED to white
   const [essenceTitleCase, setEssenceTitleCase] = useState<'uppercase' | 'titlecase'>('uppercase'); // Toggle between uppercase and title case
   const [siphonLayoutChoice, setSiphonLayoutChoice] = useState<1 | 2 | 3 | 4 | 5>(5); // Siphon modal layout style
+  const [lightboxVersion, setLightboxVersion] = useState<5 | 6 | 7>(5); // New listing lightbox design version
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -412,8 +415,7 @@ export default function EssenceMarketPage() {
         itemVariation: selectedVariation,
         quantity: amount,
         pricePerUnit: price,
-        durationDays: selectedDuration,
-        listingFee: durationOption.cost,
+        duration: selectedDuration * 24, // Convert days to hours
       });
 
       setShowCreateListing(false);
@@ -2921,6 +2923,48 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
+            {/* NEW: Lightbox Design Version Switcher */}
+            <div>
+              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">New Listing Lightbox Design</label>
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  onClick={() => setLightboxVersion(5)}
+                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
+                    lightboxVersion === 5
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  V5
+                </button>
+                <button
+                  onClick={() => setLightboxVersion(6)}
+                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
+                    lightboxVersion === 6
+                      ? 'bg-cyan-500 text-black'
+                      : 'bg-black border border-cyan-500/30 text-cyan-400 hover:border-cyan-500'
+                  }`}
+                >
+                  V6
+                </button>
+                <button
+                  onClick={() => setLightboxVersion(7)}
+                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
+                    lightboxVersion === 7
+                      ? 'bg-gradient-to-r from-yellow-500 to-cyan-500 text-black'
+                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
+                  }`}
+                >
+                  V7
+                </button>
+              </div>
+              <div className="mt-1 text-[9px] text-gray-500">
+                {lightboxVersion === 5 && "V5: Yellow Gradient (Original)"}
+                {lightboxVersion === 6 && "V6: Full Market Match (Cyan + Glass)"}
+                {lightboxVersion === 7 && "V7: Hybrid (Yellow + Glass)"}
+              </div>
+            </div>
+
             {/* Gold Management */}
             <div className="pt-4 border-t border-yellow-500/30">
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold</label>
@@ -3136,47 +3180,6 @@ export default function EssenceMarketPage() {
                     showOnlyMyListings,
                     listingCount: debugListingCount
                   })}
-                  <div className="h-16 w-px bg-yellow-500/30" />
-
-                  {/* Gold Display Variations */}
-                  {goldDisplayVariation === 1 && (
-                    /* Variation 1: Stacked - Number over GOLD */
-                    <div className="relative flex flex-col items-center">
-                      <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 text-xs tracking-widest mt-1 uppercase">GOLD</span>
-                    </div>
-                  )}
-
-                  {goldDisplayVariation === 2 && (
-                    /* Variation 2: Inline - Number + G */
-                    <div className="relative flex items-baseline gap-1">
-                      <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/80 text-2xl font-light">G</span>
-                    </div>
-                  )}
-
-                  {goldDisplayVariation === 3 && (
-                    /* Variation 3: Minimal - Just Number */
-                    <div className="relative">
-                      <div className="gold-display-medium text-4xl leading-none">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-
-                  {goldDisplayVariation === 4 && (
-                    /* Variation 4: Vertical Compact */
-                    <div className="relative flex items-start gap-1">
-                      <span className="text-yellow-400/70 text-[10px] tracking-wider uppercase mt-1">GOLD</span>
-                      <div className="gold-display-medium text-3xl leading-none">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -4966,51 +4969,144 @@ export default function EssenceMarketPage() {
           </div>
         )}
 
-        {/* NEW V5 Yellow Gradient Lightbox */}
-        <EssenceListingLightboxV5YellowGradient
-          show={showCreateListing}
-          onClose={() => setShowCreateListing(false)}
-          onSubmit={async (data) => {
-            if (!userId) {
-              alert("Please wait for user initialization...");
-              return;
-            }
+        {/* NEW: Conditionally Render Lightbox Based on Version */}
+        {lightboxVersion === 5 && (
+          <EssenceListingLightboxV5YellowGradient
+            show={showCreateListing}
+            onClose={() => setShowCreateListing(false)}
+            onSubmit={async (data) => {
+              if (!userId) {
+                alert("Please wait for user initialization...");
+                return;
+              }
 
-            const amount = parseFloat(data.amount);
-            const price = parseInt(data.price);
-            const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
+              const amount = parseFloat(data.amount);
+              const price = parseInt(data.price);
+              const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
 
-            if (!durationOption) return;
+              if (!durationOption) return;
 
-            // Check if user can afford listing fee
-            if (userProfile && userProfile.gold < durationOption.cost) {
-              alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
-              return;
-            }
+              // Check if user can afford listing fee
+              if (userProfile && userProfile.gold < durationOption.cost) {
+                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+                return;
+              }
 
-            try {
-              await createListing({
-                sellerId: userId,
-                itemType: "essence",
-                itemVariation: data.variation,
-                quantity: amount,
-                pricePerUnit: price,
-                durationDays: data.duration,
-                listingFee: durationOption.cost,
-              });
+              try {
+                await createListing({
+                  sellerId: userId,
+                  itemType: "essence",
+                  itemVariation: data.variation,
+                  quantity: amount,
+                  pricePerUnit: price,
+                  duration: data.duration * 24, // Convert days to hours
+                });
 
-              setShowCreateListing(false);
-              setSelectedVariation("");
-              setEssenceAmount("1");
-              setPricePerUnit("");
-              alert("Listing created successfully!");
-            } catch (error) {
-              alert(error instanceof Error ? error.message : "An error occurred");
-            }
-          }}
-          ownedEssenceVariations={ownedEssenceVariations}
-          durationOptions={DURATION_OPTIONS}
-        />
+                setShowCreateListing(false);
+                setSelectedVariation("");
+                setEssenceAmount("1");
+                setPricePerUnit("");
+                alert("Listing created successfully!");
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "An error occurred");
+              }
+            }}
+            ownedEssenceVariations={ownedEssenceVariations}
+            durationOptions={DURATION_OPTIONS}
+          />
+        )}
+
+        {lightboxVersion === 6 && (
+          <EssenceListingLightboxV6FullMarketMatch
+            show={showCreateListing}
+            onClose={() => setShowCreateListing(false)}
+            onSubmit={async (data) => {
+              if (!userId) {
+                alert("Please wait for user initialization...");
+                return;
+              }
+
+              const amount = parseFloat(data.amount);
+              const price = parseInt(data.price);
+              const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
+
+              if (!durationOption) return;
+
+              // Check if user can afford listing fee
+              if (userProfile && userProfile.gold < durationOption.cost) {
+                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+                return;
+              }
+
+              try {
+                await createListing({
+                  sellerId: userId,
+                  itemType: "essence",
+                  itemVariation: data.variation,
+                  quantity: amount,
+                  pricePerUnit: price,
+                  duration: data.duration * 24, // Convert days to hours
+                });
+
+                setShowCreateListing(false);
+                setSelectedVariation("");
+                setEssenceAmount("1");
+                setPricePerUnit("");
+                alert("Listing created successfully!");
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "An error occurred");
+              }
+            }}
+            ownedEssenceVariations={ownedEssenceVariations}
+            durationOptions={DURATION_OPTIONS}
+          />
+        )}
+
+        {lightboxVersion === 7 && (
+          <EssenceListingLightboxV7HybridGlass
+            show={showCreateListing}
+            onClose={() => setShowCreateListing(false)}
+            onSubmit={async (data) => {
+              if (!userId) {
+                alert("Please wait for user initialization...");
+                return;
+              }
+
+              const amount = parseFloat(data.amount);
+              const price = parseInt(data.price);
+              const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
+
+              if (!durationOption) return;
+
+              // Check if user can afford listing fee
+              if (userProfile && userProfile.gold < durationOption.cost) {
+                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+                return;
+              }
+
+              try {
+                await createListing({
+                  sellerId: userId,
+                  itemType: "essence",
+                  itemVariation: data.variation,
+                  quantity: amount,
+                  pricePerUnit: price,
+                  duration: data.duration * 24, // Convert days to hours
+                });
+
+                setShowCreateListing(false);
+                setSelectedVariation("");
+                setEssenceAmount("1");
+                setPricePerUnit("");
+                alert("Listing created successfully!");
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "An error occurred");
+              }
+            }}
+            ownedEssenceVariations={ownedEssenceVariations}
+            durationOptions={DURATION_OPTIONS}
+          />
+        )}
 
         {/* Purchase Modal with Slider - LAYOUT OPTIONS */}
         {showPurchaseModal && selectedListing && (() => {

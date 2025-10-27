@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import EssenceDistributionLightbox from '@/components/EssenceDistributionLightbox';
 import MekLevelsViewer from '@/components/MekLevelsViewer';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
 import EssenceBalancesViewer from '@/components/EssenceBalancesViewer';
 import BuffManagement from '@/components/BuffManagement';
 import MechanismGridLightbox from '@/components/MechanismGridLightbox';
+import MeksTriangleLightbox from '@/components/MeksTriangleLightbox';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { EssenceProvider } from '@/contexts/EssenceContext';
 
@@ -20,7 +23,14 @@ export default function GlobalLightboxHandler() {
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showEssenceBalances, setShowEssenceBalances] = useState(false);
   const [showEssenceBuffs, setShowEssenceBuffs] = useState(false);
+  const [showMeksTriangle, setShowMeksTriangle] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
+
+  // Get owned Meks data for triangle lightbox
+  const goldMiningData = useQuery(
+    api.goldMining.getGoldMiningData,
+    walletAddress ? { walletAddress } : "skip"
+  );
 
   // Get wallet address from encrypted session on mount
   useEffect(() => {
@@ -73,6 +83,21 @@ export default function GlobalLightboxHandler() {
         case 'essence-buffs':
           console.log('[GlobalLightboxHandler] Opening Essence Buffs lightbox');
           setShowEssenceBuffs(true);
+          break;
+        case 'variation-triangle':
+        case 'meks-triangle':
+          console.log('[GlobalLightboxHandler] Opening Meks Triangle lightbox');
+          // Ensure we have wallet address for querying owned Meks
+          (async () => {
+            let currentWallet = eventWalletAddress;
+            if (!currentWallet || currentWallet === 'demo_wallet_123') {
+              const session = await restoreWalletSession();
+              currentWallet = session?.stakeAddress || 'demo_wallet_123';
+            }
+            console.log('[GlobalLightboxHandler] Triangle using wallet:', currentWallet ? currentWallet.slice(0, 15) + '...' : 'demo');
+            setWalletAddress(currentWallet);
+            setShowMeksTriangle(true);
+          })();
           break;
         default:
           console.warn('[GlobalLightboxHandler] Unknown lightbox ID:', lightboxId);
@@ -130,6 +155,14 @@ export default function GlobalLightboxHandler() {
         <BuffManagement
           walletAddress={walletAddress}
           onClose={() => setShowEssenceBuffs(false)}
+        />
+      )}
+
+      {/* Meks Triangle Lightbox */}
+      {showMeksTriangle && goldMiningData && (
+        <MeksTriangleLightbox
+          onClose={() => setShowMeksTriangle(false)}
+          ownedMeks={goldMiningData.ownedMeks || []}
         />
       )}
     </EssenceProvider>

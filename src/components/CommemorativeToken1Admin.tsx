@@ -9,6 +9,7 @@ import {
   connectAdminWallet,
   disconnectWallet,
   getWalletBalance,
+  getInstalledWallets,
   type NFTDesign,
   type MintRecipient
 } from '@/lib/cardano/nftMinter';
@@ -17,6 +18,59 @@ import {
   previewMintingPlan,
   type BatchMintConfig
 } from '@/lib/cardano/batchMinter';
+
+/**
+ * Helper component to show if wallet's keyHash matches policy's keyHash
+ */
+function WalletMatchIndicator({ policyKeyHash, walletAddress }: { policyKeyHash: string; walletAddress: string }) {
+  const [walletKeyHash, setWalletKeyHash] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkMatch = async () => {
+      try {
+        const currentKeyHash = await extractPaymentKeyHash(walletAddress);
+        setWalletKeyHash(currentKeyHash);
+      } catch (error) {
+        console.error('Failed to extract wallet keyHash:', error);
+        setWalletKeyHash(null);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkMatch();
+  }, [walletAddress]);
+
+  if (isChecking) {
+    return <div className="text-gray-500">Checking wallet compatibility...</div>;
+  }
+
+  if (!walletKeyHash) {
+    return <div className="text-gray-500">Unable to verify wallet</div>;
+  }
+
+  const matches = walletKeyHash === policyKeyHash;
+
+  if (matches) {
+    return (
+      <div className="flex items-center gap-2 bg-green-900/30 border border-green-500/50 rounded px-2 py-1">
+        <span className="text-green-400 text-sm font-bold">✓ MATCHES CURRENT WALLET</span>
+        <span className="text-xs text-green-300">You can mint with this policy!</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-red-900/30 border border-red-500/50 rounded px-2 py-1">
+      <div className="text-red-400 text-sm font-bold mb-1">✗ DOES NOT MATCH</div>
+      <div className="text-xs text-red-300 mb-1">Current wallet keyHash:</div>
+      <div className="font-mono text-xs text-red-400 break-all">{walletKeyHash}</div>
+      <div className="text-xs text-red-300 mt-1">
+        This policy was created with a different wallet. You cannot mint with it using your current wallet.
+      </div>
+    </div>
+  );
+}
 
 const CAMPAIGN_NAME = "Commemorative Token 1";
 
@@ -60,9 +114,13 @@ export default function CommemorativeToken1Admin() {
 
   // Design creation state
   const [showCreateDesign, setShowCreateDesign] = useState(false);
+  const [selectedDesignForView, setSelectedDesignForView] = useState<any | null>(null);
+  const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
+  const [collapsedPolicies, setCollapsedPolicies] = useState<Set<string>>(new Set());
+  const [selectedPolicyTab, setSelectedPolicyTab] = useState<string | null>(null);
   const [designTokenType, setDesignTokenType] = useState('phase_1_beta');
   const [designName, setDesignName] = useState('Commemorative Token #1 - Early Miner');
-  const [designDescription, setDesignDescription] = useState('Awarded to early supporters who connected their wallet and accumulated gold');
+  const [designDescription, setDesignDescription] = useState('Early supporter reward for connecting and mining gold');
   const [designAssetName, setDesignAssetName] = useState('CommemorativeToken1');
 
   // Sale Mode Settings
@@ -78,12 +136,13 @@ export default function CommemorativeToken1Admin() {
     ipfsHash: string;
     ipfsUrl: string;
     gatewayUrl: string;
+    mediaType?: string;
   } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Metadata upload for design
   const [metadataName, setMetadataName] = useState('Commemorative Token #1 - Early Miner');
-  const [metadataDescription, setMetadataDescription] = useState('Awarded to early supporters who connected their wallet and accumulated gold');
+  const [metadataDescription, setMetadataDescription] = useState('Early supporter reward for connecting and mining gold');
   const [metadataImageUrl, setMetadataImageUrl] = useState('');
   // Metadata attributes - will be auto-populated from active policy's template
   const [metadataAttributes, setMetadataAttributes] = useState<Array<{trait_type: string, value: string}>>([]);
@@ -109,6 +168,7 @@ export default function CommemorativeToken1Admin() {
   } | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
 
+
   // Whitelist Manager Integration
   const [selectedWhitelistId, setSelectedWhitelistId] = useState<string | null>(null);
   const [isImportingWhitelist, setIsImportingWhitelist] = useState(false);
@@ -118,6 +178,8 @@ export default function CommemorativeToken1Admin() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0); // in lovelace
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [selectedWalletType, setSelectedWalletType] = useState<'lace' | 'eternl' | 'nami' | 'typhon'>('lace');
+  const [installedWallets, setInstalledWallets] = useState<string[]>([]);
 
   // UI state
   const [showPolicySection, setShowPolicySection] = useState(false); // Collapsed by default since it's rare
@@ -139,6 +201,12 @@ export default function CommemorativeToken1Admin() {
   const allDesigns = useQuery(api.commemorativeTokens.getAllDesigns, {});
   const allMints = useQuery(api.commemorativeTokens.getAllCommemorativeTokens, { limit: 100 });
   const allSnapshots = useQuery(api.whitelists.getAllSnapshots);
+
+  // Query batch minted tokens for the selected design
+  const batchMintLogs = useQuery(
+    api.commemorativeTokens.getBatchMintedTokens,
+    selectedDesignForMinting?.tokenType ? { tokenType: selectedDesignForMinting.tokenType } : "skip"
+  );
 
   // Mutations
   const upsertConfig = useMutation(api.airdrop.upsertConfig);
@@ -164,7 +232,7 @@ export default function CommemorativeToken1Admin() {
           campaignName: CAMPAIGN_NAME,
           isActive: false, // Start disabled
           nftName: "Early Miner Commemorative NFT",
-          nftDescription: "Awarded to early supporters who connected their wallet and accumulated gold",
+          nftDescription: "Early supporter reward for connecting and mining gold",
           minimumGold: 0, // Any gold qualifies
           testMode: true, // Start in test mode for safe testing
           testWallets: [], // Empty whitelist to start
@@ -186,6 +254,38 @@ export default function CommemorativeToken1Admin() {
     }
   }, [uploadResult]);
 
+  // Load saved active policy from localStorage on mount
+  useEffect(() => {
+    const savedPolicyId = localStorage.getItem('lastActivePolicyId');
+    if (savedPolicyId && existingPolicies && existingPolicies.length > 0) {
+      const savedPolicy = existingPolicies.find(p => p.policyId === savedPolicyId);
+      if (savedPolicy) {
+        setActivePolicy(savedPolicy);
+      }
+    }
+  }, [existingPolicies]); // Run when policies load
+
+  // Save active policy to localStorage whenever it changes
+  useEffect(() => {
+    if (activePolicy?.policyId) {
+      localStorage.setItem('lastActivePolicyId', activePolicy.policyId);
+    }
+  }, [activePolicy]);
+
+  // Detect installed wallets on mount
+  useEffect(() => {
+    const checkWallets = async () => {
+      const wallets = await getInstalledWallets();
+      setInstalledWallets(wallets);
+
+      // If the currently selected wallet isn't installed, select the first available one
+      if (wallets.length > 0 && !wallets.includes(selectedWalletType)) {
+        setSelectedWalletType(wallets[0] as 'lace' | 'eternl' | 'nami' | 'typhon');
+      }
+    };
+    checkWallets();
+  }, []);
+
   // ===== WALLET CONNECTION & MINTING HANDLERS =====
 
   // Handler: Connect Admin Wallet
@@ -194,7 +294,7 @@ export default function CommemorativeToken1Admin() {
     setMintError(null);
 
     try {
-      const address = await connectAdminWallet('lace');
+      const address = await connectAdminWallet(selectedWalletType);
       setWalletAddress(address);
       setWalletConnected(true);
 
@@ -202,10 +302,10 @@ export default function CommemorativeToken1Admin() {
       const balance = await getWalletBalance();
       setWalletBalance(balance);
 
-      console.log(`✅ Wallet connected: ${address.substring(0, 30)}...`);
+      console.log(`✅ ${selectedWalletType.charAt(0).toUpperCase() + selectedWalletType.slice(1)} wallet connected: ${address.substring(0, 30)}...`);
       console.log(`💰 Balance: ${(balance / 1_000_000).toFixed(2)} ADA`);
     } catch (error: any) {
-      setMintError(`Failed to connect wallet: ${error.message}`);
+      setMintError(`Failed to connect ${selectedWalletType} wallet: ${error.message}`);
       console.error('❌ Wallet connection error:', error);
     } finally {
       setIsConnectingWallet(false);
@@ -219,6 +319,14 @@ export default function CommemorativeToken1Admin() {
       return;
     }
 
+    console.log('[🔨MINT] 🔍 Debug: selectedDesignForMinting =', selectedDesignForMinting);
+    console.log('[🔨MINT] 🔍 Debug: allDesigns count =', allDesigns?.length);
+    console.log('[🔨MINT] 🔍 Debug: Available designs:', allDesigns?.map(d => ({
+      tokenType: d.tokenType,
+      displayName: d.displayName,
+      imageUrl: d.imageUrl
+    })));
+
     // Get current NFT design
     const design = allDesigns?.find(d => d.tokenType === selectedDesignForMinting);
     if (!design) {
@@ -226,18 +334,30 @@ export default function CommemorativeToken1Admin() {
       return;
     }
 
-    // Get snapshot data
+    console.log('[🔨MINT] 🔍 Debug: Found design:', {
+      tokenType: design.tokenType,
+      displayName: design.displayName,
+      description: design.description,
+      assetNamePrefix: design.assetNamePrefix,
+      imageUrl: design.imageUrl,
+      policyId: design.policyId
+    });
+
+    console.log('[ATTRIBUTES] Design customAttributes from database:', design.customAttributes);
+
+    // Get recipients from snapshot
     const snapshot = allSnapshots?.find(s => s._id === selectedWhitelistId);
     if (!snapshot) {
       setMintError('Please import a snapshot first');
       return;
     }
 
-    // Prepare recipients from snapshot
     const recipients: MintRecipient[] = snapshot.eligibleUsers.map(user => ({
       address: user.walletAddress,
       displayName: user.displayName
     }));
+
+    console.log(`[🔨MINT] 📸 Snapshot Mode: Minting to ${recipients.length} addresses from snapshot`);
 
     // Look up the policy script from the mintingPolicies table
     const policy = existingPolicies?.find(p => p.policyId === design.policyId);
@@ -250,6 +370,88 @@ export default function CommemorativeToken1Admin() {
     console.log(`[🔨MINT] 🔑 Found policy: ${policy.policyName}`);
     console.log(`[🔨MINT]    Policy ID: ${policy.policyId}`);
     console.log(`[🔨MINT]    Policy Script Type:`, typeof policy.policyScript);
+    console.log('[ATTRIBUTES] Policy metadataTemplate:', policy.metadataTemplate);
+
+    // Validate wallet matches policy
+    // Extract keyHash from policy script
+    let policyScript = policy.policyScript;
+    console.log(`[🔨MINT] 🔍 Raw policy script:`, policy.policyScript);
+    console.log(`[🔨MINT] 🔍 Policy script type:`, typeof policy.policyScript);
+
+    if (typeof policyScript === 'string') {
+      try {
+        policyScript = JSON.parse(policyScript);
+        console.log(`[🔨MINT] 🔍 Parsed policy script:`, policyScript);
+      } catch (e) {
+        console.error(`[🔨MINT] ❌ Failed to parse policy script:`, e);
+        setMintError('Invalid policy script format');
+        setIsMinting(false);
+        return;
+      }
+    }
+
+    // Extract keyHash from policy script (handles both simple and time-locked policies)
+    let policyKeyHash: string | undefined;
+    if (policyScript?.keyHash) {
+      // Simple signature policy: { type: 'sig', keyHash: '...' }
+      policyKeyHash = policyScript.keyHash;
+    } else if (policyScript?.scripts && Array.isArray(policyScript.scripts)) {
+      // Time-locked policy: { type: 'all', scripts: [{ type: 'sig', keyHash: '...' }, ...] }
+      const sigScript = policyScript.scripts.find((s: any) => s.type === 'sig');
+      policyKeyHash = sigScript?.keyHash;
+    }
+
+    console.log(`[🔨MINT] 🔑 Policy requires keyHash: ${policyKeyHash}`);
+    console.log(`[🔨MINT] 🔑 Policy script structure:`, JSON.stringify(policyScript, null, 2));
+
+    if (!policyKeyHash) {
+      const errorMsg =
+        `⚠️ INVALID POLICY SCRIPT!\n\n` +
+        `Could not extract keyHash from policy script.\n\n` +
+        `Policy script structure:\n${JSON.stringify(policyScript, null, 2)}\n\n` +
+        `This policy was created incorrectly or corrupted. You may need to create a new policy.`;
+
+      setMintError(errorMsg);
+      setIsMinting(false);
+      console.error(`[🔨MINT] ❌ BLOCKED: Cannot extract keyHash from policy script!`);
+      return;
+    }
+
+    // Extract keyHash from connected wallet
+    try {
+      console.log(`[🔨MINT] 🔍 Extracting keyHash from wallet address: ${walletAddress}`);
+      const currentWalletKeyHash = await extractPaymentKeyHash(walletAddress!);
+      console.log(`[🔨MINT] 🔑 Connected wallet keyHash: ${currentWalletKeyHash}`);
+      console.log(`[🔨MINT] 🔍 KeyHash comparison:`);
+      console.log(`[🔨MINT]    Policy:  ${policyKeyHash}`);
+      console.log(`[🔨MINT]    Wallet:  ${currentWalletKeyHash}`);
+      console.log(`[🔨MINT]    Match:   ${currentWalletKeyHash === policyKeyHash}`);
+
+      if (currentWalletKeyHash !== policyKeyHash) {
+        const errorMsg =
+          `⚠️ WALLET MISMATCH DETECTED!\n\n` +
+          `Policy keyHash:  ${policyKeyHash}\n` +
+          `Wallet keyHash:  ${currentWalletKeyHash}\n\n` +
+          `The connected wallet cannot sign for this policy. ` +
+          `This usually means:\n` +
+          `1. The policy was created with a different wallet\n` +
+          `2. Your wallet switched to a different account/address\n` +
+          `3. The policy script was created incorrectly\n\n` +
+          `Please verify you're using the exact same wallet that created this policy.`;
+
+        setMintError(errorMsg);
+        setIsMinting(false);
+        console.error(`[🔨MINT] ❌ BLOCKED: KeyHash mismatch!`);
+        return;
+      }
+
+      console.log(`[🔨MINT] ✅ Wallet keyHash matches policy - proceeding with mint`);
+    } catch (error: any) {
+      console.error(`[🔨MINT] ❌ KeyHash verification failed:`, error);
+      console.error(`[🔨MINT] ❌ Error details:`, error.message);
+      console.warn(`[🔨MINT] ⚠️ WARNING: Cannot verify wallet keyHash - proceeding anyway (blockchain will reject if mismatch)`);
+      // Continue anyway - let the blockchain reject it if there's a mismatch
+    }
 
     // Prepare NFT design configuration
     const nftDesign: NFTDesign = {
@@ -258,9 +460,23 @@ export default function CommemorativeToken1Admin() {
       description: design.description || '',
       assetNamePrefix: design.assetNamePrefix || 'CommToken1',
       imageIpfsHash: design.imageUrl,  // Will be formatted to ipfs://
+      mediaType: design.mediaType,  // ← MIME type for proper display (GIF, PNG, JPEG, etc.)
       policyId: design.policyId,
-      policyScript: policy.policyScript  // ← Use the actual script from mintingPolicies table
+      policyScript: policy.policyScript,  // ← Use the actual script from mintingPolicies table
+      metadataTemplate: policy.metadataTemplate,  // ← Include custom metadata fields from policy
+      customAttributes: design.customAttributes  // ← Include design-specific attribute values (like "Poop?: yes")
     };
+
+    // ⚠️ CRITICAL DEBUG: Log exact design configuration being sent to minting
+    console.log(`[🔨MINT] 🔍 DESIGN CONFIGURATION BEING MINTED:`);
+    console.log(`[🔨MINT]    tokenType: "${nftDesign.tokenType}"`);
+    console.log(`[🔨MINT]    name: "${nftDesign.name}"`);
+    console.log(`[🔨MINT]    assetNamePrefix: "${nftDesign.assetNamePrefix}"`);
+    console.log(`[🔨MINT]    imageIpfsHash: "${nftDesign.imageIpfsHash}"`);
+    console.log(`[🔨MINT]    mediaType: "${nftDesign.mediaType}"`);
+    console.log(`[🔨MINT]    policyId: "${nftDesign.policyId}"`);
+    console.log(`[🔨MINT]    description: "${nftDesign.description}"`);
+    console.log(`[🔨MINT]    customAttributes:`, nftDesign.customAttributes);
 
     setIsMinting(true);
     setMintError(null);
@@ -271,8 +487,8 @@ export default function CommemorativeToken1Admin() {
     try {
       // Ensure wallet is connected at module level (not just React state)
       console.log('[🔨MINT] 🔌 Re-verifying wallet connection...');
-      const address = await connectAdminWallet('lace');
-      console.log(`[🔨MINT] ✅ Wallet connected: ${address}`);
+      const address = await connectAdminWallet(selectedWalletType);
+      console.log(`[🔨MINT] ✅ ${selectedWalletType.charAt(0).toUpperCase() + selectedWalletType.slice(1)} wallet connected: ${address}`);
 
       // Verify we have enough balance
       const balance = await getWalletBalance();
@@ -280,9 +496,13 @@ export default function CommemorativeToken1Admin() {
 
       // Process batch minting
       const startTime = Date.now();
+      const startMintNumber = (design.totalMinted || 0) + 1;  // Continue from last minted (e.g., if 5 minted, start at 6)
+      console.log(`[🔨MINT] 🔢 Starting mint number: ${startMintNumber} (${design.totalMinted || 0} already minted)`);
+
       const result = await processBatchMinting({
         design: nftDesign,
         recipients: recipients,
+        startMintNumber: startMintNumber,  // CRITICAL: Start from current count to avoid duplicate asset names
         batchSize: 10,  // 10 NFTs per transaction
         network: network as 'preprod' | 'mainnet',
         onProgress: (progress) => {
@@ -308,7 +528,8 @@ export default function CommemorativeToken1Admin() {
             for (let i = 0; i < batchResult.assetIds.length; i++) {
               const assetId = batchResult.assetIds[i];
               const recipient = recipients[batchStartIndex + i];
-              const mintNumber = batchStartIndex + i + 1;
+              // CRITICAL: Use actual mint number from blockchain (accounts for previous mints)
+              const mintNumber = startMintNumber + batchStartIndex + i;
 
               try {
                 await recordBatchMintedToken({
@@ -324,7 +545,7 @@ export default function CommemorativeToken1Admin() {
                   batchId: `batch_${Date.now()}`,
                   txHash: batchResult.txHash,
                   network: network,
-                  nftName: `${nftDesign.name} #${mintNumber.toString().padStart(3, '0')}`,
+                  nftName: `${nftDesign.name} #${mintNumber}`,
                   imageIpfsUrl: `ipfs://${nftDesign.imageIpfsHash.replace('ipfs://', '')}`
                 });
               } catch (dbError: any) {
@@ -363,10 +584,14 @@ export default function CommemorativeToken1Admin() {
     }
   };
 
-  // Auto-select first policy if none selected
+  // Auto-select first policy if none selected and no saved policy
   useEffect(() => {
     if (existingPolicies && existingPolicies.length > 0 && !activePolicy) {
-      setActivePolicy(existingPolicies[0]);
+      // Only auto-select if there's no saved policy in localStorage
+      const savedPolicyId = localStorage.getItem('lastActivePolicyId');
+      if (!savedPolicyId) {
+        setActivePolicy(existingPolicies[0]);
+      }
     }
   }, [existingPolicies, activePolicy]);
 
@@ -422,26 +647,36 @@ export default function CommemorativeToken1Admin() {
       // Extract payment key hash from wallet address
       const keyHash = extractPaymentKeyHash(adminWalletAddress);
 
-      // Parse expiry date if provided
-      let expiryDateObj: Date | undefined;
+      // Parse expiry date if provided, or auto-generate one for uniqueness
+      let expiryDateObj: Date;
       if (hasExpiry && expiryDate) {
         expiryDateObj = new Date(expiryDate);
         if (isNaN(expiryDateObj.getTime())) {
           throw new Error('Invalid expiry date');
         }
+      } else {
+        // IMPORTANT: Auto-generate a far-future unique expiry to create a unique policy ID
+        // Each policy needs a unique ID - without an expiry, they'd all be identical
+        // This is similar to how NMKR works - each new policy gets unique parameters
+        const now = Date.now();
+        const farFuture = new Date(now + (100 * 365 * 24 * 60 * 60 * 1000)); // 100 years from now
+        // Add current timestamp to ensure uniqueness (even if creating multiple in same second)
+        farFuture.setMilliseconds(now % 1000);
+        expiryDateObj = farFuture;
+        console.log(`[Policy] Auto-generated unique expiry: ${expiryDateObj.toISOString()} (100 years from now)`);
       }
 
       // Generate policy script and ID
       const policy = await generateMintingPolicy(keyHash, expiryDateObj);
 
       // Store in Convex with all NMKR fields
-      await storeMintingPolicy({
+      const policyDbId = await storeMintingPolicy({
         policyId: policy.policyId,
         policyName: policyName.trim(),
         policyScript: policy.policyScript,
         keyHash,
         expirySlot: policy.expirySlot,
-        expiryDate: expiryDateObj ? expiryDateObj.getTime() : undefined,
+        expiryDate: expiryDateObj.getTime(),  // Always have an expiry now (either user-specified or auto-generated)
         network,
         notes: policyDescription.trim() || `Master policy for all commemorative tokens (Phase 1, Phase 2, etc.). Created via ${CAMPAIGN_NAME} admin.`,
 
@@ -460,6 +695,7 @@ export default function CommemorativeToken1Admin() {
         } : undefined,
       });
 
+      console.log(`[Policy] Successfully stored policy (DB ID: ${policyDbId})`);
       setCreatedPolicy(policy);
       setPolicyError(null);
     } catch (error) {
@@ -471,7 +707,13 @@ export default function CommemorativeToken1Admin() {
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    if (!confirm('Are you sure you want to delete this policy? This cannot be undone.')) {
+    if (!confirm(
+      '⚠️ Delete Policy from Database?\n\n' +
+      'This will ONLY remove the policy from your admin interface.\n' +
+      'The policy and any minted NFTs will remain on the Cardano blockchain forever.\n\n' +
+      'You can re-add the policy later if needed.\n\n' +
+      'Continue with deletion?'
+    )) {
       return;
     }
 
@@ -526,10 +768,14 @@ export default function CommemorativeToken1Admin() {
         displayName: designName.trim(),
         description: designDescription.trim() || undefined,
         imageUrl: uploadResult.ipfsUrl,
+        mediaType: uploadResult.mediaType, // MIME type for proper NFT display (GIF, PNG, JPEG, etc.)
         metadataUrl: metadataUploadResult.ipfsUrl,
         policyId,
         assetNameHex,
         isActive: false, // Start inactive - will be configured in Step 3
+
+        // Custom metadata attributes (e.g., "Poop?: yes")
+        customAttributes: metadataAttributes.filter(attr => attr.trait_type.trim() && attr.value.trim()),
 
         // Distribution settings (sale mode, price, eligibility) will be configured in Step 3
       });
@@ -661,7 +907,11 @@ export default function CommemorativeToken1Admin() {
         }
       });
 
-      setUploadResult(result);
+      // Store media type from the uploaded file
+      setUploadResult({
+        ...result,
+        mediaType: uploadFile.type || 'image/png'
+      });
       setUploadFile(null);
     } catch (error) {
       console.error('Pinata upload error:', error);
@@ -692,15 +942,16 @@ export default function CommemorativeToken1Admin() {
 
     try {
       // Build CIP-25 compliant metadata JSON
+      const detectedMediaType = uploadResult?.mediaType || 'image/png';
       const metadata = {
         name: metadataName,
         description: metadataDescription,
         image: metadataImageUrl,
-        mediaType: 'image/png',
+        mediaType: detectedMediaType,
         files: [
           {
             name: metadataName,
-            mediaType: 'image/png',
+            mediaType: detectedMediaType,
             src: metadataImageUrl
           }
         ],
@@ -958,29 +1209,93 @@ export default function CommemorativeToken1Admin() {
             </div>
 
             {existingPolicies.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {existingPolicies.map((policy: any) => (
-                  <div key={policy._id} className={`bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border-2 rounded-lg p-4 hover:border-indigo-500/60 transition-all ${
-                    activePolicy?.policyId === policy.policyId
-                      ? 'border-green-500/60 ring-2 ring-green-500/30'
-                      : 'border-indigo-500/30'
-                  }`}>
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-bold text-white text-lg mb-1">{policy.policyName}</div>
-                        <div className="text-xs text-gray-500">
-                          Created {new Date(policy.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className={`px-3 py-1 rounded text-xs font-bold ${
-                        policy.isActive
-                          ? 'bg-green-600/30 text-green-400'
-                          : 'bg-gray-600/30 text-gray-400'
+              <>
+                {/* Collapse All Button */}
+                <div className="flex justify-end mb-3">
+                  <button
+                    onClick={() => {
+                      if (collapsedPolicies.size === existingPolicies.length) {
+                        setCollapsedPolicies(new Set());
+                      } else {
+                        setCollapsedPolicies(new Set(existingPolicies.map((p: any) => p._id)));
+                      }
+                    }}
+                    className="px-3 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-400 text-xs font-bold rounded transition-all"
+                  >
+                    {collapsedPolicies.size === existingPolicies.length ? '⬇ Expand All' : '⬆ Collapse All'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {existingPolicies.map((policy: any) => {
+                    const isCollapsed = collapsedPolicies.has(policy._id);
+
+                    return (
+                      <div key={policy._id} className={`bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border-2 rounded-lg hover:border-indigo-500/60 transition-all ${
+                        activePolicy?.policyId === policy.policyId
+                          ? 'border-green-500/60 ring-2 ring-green-500/30'
+                          : 'border-indigo-500/30'
                       }`}>
-                        {policy.isActive ? 'ACTIVE' : 'INACTIVE'}
-                      </div>
-                    </div>
+                        {isCollapsed ? (
+                          // COLLAPSED VIEW - Compact row
+                          <div className="p-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-white text-sm truncate">{policy.policyName}</div>
+                                <div className="text-xs text-gray-500">
+                                  {new Date(policy.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div className={`px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${
+                                policy.isActive
+                                  ? 'bg-green-600/30 text-green-400'
+                                  : 'bg-gray-600/30 text-gray-400'
+                              }`}>
+                                {policy.isActive ? 'ACTIVE' : 'INACTIVE'}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newSet = new Set(collapsedPolicies);
+                                newSet.delete(policy._id);
+                                setCollapsedPolicies(newSet);
+                              }}
+                              className="px-2 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs font-bold rounded transition-all whitespace-nowrap"
+                            >
+                              ⬇ Expand
+                            </button>
+                          </div>
+                        ) : (
+                          // EXPANDED VIEW - Full details
+                          <div className="p-4">
+                            {/* Header */}
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <div className="font-bold text-white text-lg mb-1">{policy.policyName}</div>
+                                <div className="text-xs text-gray-500">
+                                  Created {new Date(policy.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className={`px-3 py-1 rounded text-xs font-bold ${
+                                  policy.isActive
+                                    ? 'bg-green-600/30 text-green-400'
+                                    : 'bg-gray-600/30 text-gray-400'
+                                }`}>
+                                  {policy.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const newSet = new Set(collapsedPolicies);
+                                    newSet.add(policy._id);
+                                    setCollapsedPolicies(newSet);
+                                  }}
+                                  className="px-2 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 text-xs font-bold rounded transition-all"
+                                >
+                                  ⬆
+                                </button>
+                              </div>
+                            </div>
 
                     {/* Description */}
                     {policy.notes && (
@@ -996,6 +1311,67 @@ export default function CommemorativeToken1Admin() {
                         {policy.policyId.substring(0, 40)}...
                       </div>
                     </div>
+
+                    {/* Policy KeyHash - CRITICAL for wallet matching */}
+                    {(() => {
+                      let policyScript = policy.policyScript;
+                      if (typeof policyScript === 'string') {
+                        try {
+                          policyScript = JSON.parse(policyScript);
+                        } catch (e) {
+                          return null;
+                        }
+                      }
+
+                      // Extract keyHash from both simple and time-locked policies
+                      let policyKeyHash: string | undefined;
+                      if (policyScript?.keyHash) {
+                        // Simple signature policy: { type: 'sig', keyHash: '...' }
+                        policyKeyHash = policyScript.keyHash;
+                      } else if (policyScript?.scripts && Array.isArray(policyScript.scripts)) {
+                        // Time-locked policy: { type: 'all', scripts: [{ type: 'sig', keyHash: '...' }, ...] }
+                        const sigScript = policyScript.scripts.find((s: any) => s.type === 'sig');
+                        policyKeyHash = sigScript?.keyHash;
+                      }
+
+                      if (!policyKeyHash) return null;
+
+                      // Check if current wallet matches this policy
+                      const matchesCurrentWallet = walletAddress ? (async () => {
+                        try {
+                          const currentKeyHash = await extractPaymentKeyHash(walletAddress);
+                          return currentKeyHash === policyKeyHash;
+                        } catch {
+                          return false;
+                        }
+                      })() : Promise.resolve(false);
+
+                      return (
+                        <div className={`bg-black/40 border-2 rounded px-2 py-2 mb-3 ${
+                          walletConnected ? 'border-yellow-500/50' : 'border-gray-600'
+                        }`}>
+                          <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
+                            🔑 Policy KeyHash:
+                            {walletConnected && (
+                              <span className="text-xs text-yellow-400 font-bold">
+                                ← Must match your wallet!
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono text-xs text-yellow-400 break-all">
+                            {policyKeyHash}
+                          </div>
+                          {walletConnected && walletAddress && (
+                            <div className="mt-2 text-xs">
+                              <WalletMatchIndicator
+                                policyKeyHash={policyKeyHash}
+                                walletAddress={walletAddress}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Info Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
@@ -1083,9 +1459,13 @@ export default function CommemorativeToken1Admin() {
                         🗑️
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <div className="text-6xl mb-4">📂</div>
@@ -1124,6 +1504,51 @@ export default function CommemorativeToken1Admin() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Policy KeyHash - CRITICAL */}
+                    {(() => {
+                      let policyScript = selectedPolicyForView.policyScript;
+                      if (typeof policyScript === 'string') {
+                        try {
+                          policyScript = JSON.parse(policyScript);
+                        } catch (e) {
+                          return null;
+                        }
+                      }
+                      const policyKeyHash = policyScript?.keyHash;
+                      if (!policyKeyHash) return null;
+
+                      return (
+                        <div className="bg-black/40 border-2 border-yellow-500/50 rounded p-4">
+                          <div className="text-xs uppercase tracking-wider text-yellow-300 mb-2 font-bold flex items-center gap-2">
+                            🔑 Policy KeyHash
+                            <span className="text-yellow-400 normal-case font-normal text-xs">
+                              (Must match signing wallet)
+                            </span>
+                          </div>
+                          <div className="font-mono text-sm text-yellow-400 break-all flex items-center gap-2 mb-3">
+                            <span className="flex-1">{policyKeyHash}</span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(policyKeyHash)}
+                              className="px-2 py-1 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-300 text-xs font-bold rounded"
+                            >
+                              📋 Copy
+                            </button>
+                          </div>
+                          {walletConnected && walletAddress && (
+                            <WalletMatchIndicator
+                              policyKeyHash={policyKeyHash}
+                              walletAddress={walletAddress}
+                            />
+                          )}
+                          {!walletConnected && (
+                            <div className="text-xs text-gray-400 bg-gray-900/50 rounded px-3 py-2">
+                              💡 Connect a wallet to check if it matches this policy
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Description */}
                     {selectedPolicyForView.notes && (
@@ -1325,7 +1750,11 @@ export default function CommemorativeToken1Admin() {
 
             {!hasExpiry && (
               <div className="bg-blue-900/20 border border-blue-500/30 rounded p-3 text-xs text-blue-300">
-                Policy will not lock automatically. You can mint NFTs indefinitely.
+                <div className="font-bold mb-1">No expiry lock - mint NFTs indefinitely</div>
+                <div className="text-blue-400/80">
+                  A unique far-future expiry (100 years) will be auto-generated to create a unique Policy ID.
+                  Each policy creation generates a different ID for different collections.
+                </div>
               </div>
             )}
           </div>
@@ -1778,99 +2207,250 @@ export default function CommemorativeToken1Admin() {
 
         {/* NFT List */}
         <div>
-          <h4 className="text-sm font-bold text-pink-400 mb-3">
-            Created NFTs ({allDesigns?.length || 0})
-          </h4>
+          {(() => {
+            // Group designs by policy ID
+            const designsByPolicy: Record<string, any[]> = {};
+            allDesigns?.forEach((design: any) => {
+              if (!designsByPolicy[design.policyId]) {
+                designsByPolicy[design.policyId] = [];
+              }
+              designsByPolicy[design.policyId].push(design);
+            });
 
-          {allDesigns && allDesigns.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allDesigns.map((design: any) => (
-                <div key={design._id} className="bg-black/40 border border-pink-500/30 rounded-lg p-4">
-                  {/* Preview Image */}
-                  <div className="w-full h-32 bg-gray-900 rounded mb-3 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={design.imageUrl.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')}
-                      alt={design.displayName}
-                      className="max-w-full max-h-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder-nft.png';
-                      }}
-                    />
+            const policyIds = Object.keys(designsByPolicy);
+
+            // Auto-select first policy if none selected
+            if (!selectedPolicyTab && policyIds.length > 0) {
+              setSelectedPolicyTab(policyIds[0]);
+            }
+
+            const currentPolicyDesigns = selectedPolicyTab ? designsByPolicy[selectedPolicyTab] || [] : [];
+
+            return (
+              <>
+                {/* Header with tabs */}
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-pink-400">
+                      Created NFTs ({allDesigns?.length || 0})
+                    </h4>
                   </div>
-
-                  {/* Info */}
-                  <div className="mb-3">
-                    <div className="font-bold text-white text-sm mb-1">{design.displayName}</div>
-                    <div className="text-xs text-gray-400 font-mono mb-2">ID: {design.tokenType}</div>
-                    <div className="text-xs text-gray-500">
-                      Asset: {Buffer.from(design.assetNameHex, 'hex').toString('utf-8')}
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-blue-900/20 border border-blue-500/30 rounded p-2">
-                      <div className="text-xs text-gray-400">Minted</div>
-                      <div className="text-lg font-bold text-blue-400">{design.totalMinted || 0}</div>
-                    </div>
-                    <div className="bg-purple-900/20 border border-purple-500/30 rounded p-2">
-                      <div className="text-xs text-gray-400">Next #</div>
-                      <div className="text-lg font-bold text-purple-400">{(design.currentEdition || 0) + 1}</div>
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className={`px-2 py-1 rounded text-xs font-bold text-center mb-3 ${
-                    design.isActive
-                      ? 'bg-green-600/30 text-green-400'
-                      : 'bg-gray-700/30 text-gray-400'
-                  }`}>
-                    {design.isActive ? 'ACTIVE' : 'INACTIVE'}
-                  </div>
-
-                  {/* Sale Mode Selector */}
-                  <div className="mb-3">
-                    <label className="block text-xs text-gray-400 mb-1">Distribution Mode</label>
-                    <select
-                      value={design.saleMode || ''}
-                      onChange={async (e) => {
-                        const newMode = e.target.value as 'whitelist' | 'public_sale' | 'free_claim';
-                        try {
-                          await updateTokenType({
-                            tokenType: design.tokenType,
-                            saleMode: newMode || undefined,
-                          });
-                        } catch (error: any) {
-                          alert(`Error updating sale mode: ${error.message}`);
+                  {currentPolicyDesigns.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (collapsedCards.size === currentPolicyDesigns.length) {
+                          setCollapsedCards(new Set());
+                        } else {
+                          setCollapsedCards(new Set(currentPolicyDesigns.map((d: any) => d._id)));
                         }
                       }}
-                      className="w-full bg-black/50 border border-pink-500/30 rounded px-2 py-1 text-xs text-white"
+                      className="px-3 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-400 text-xs font-bold rounded transition-all"
                     >
-                      <option value="">Not Set</option>
-                      <option value="whitelist">Whitelist</option>
-                      <option value="public_sale">Public Sale</option>
-                      <option value="free_claim">Free Claim</option>
-                    </select>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDeleteDesign(design.tokenType)}
-                      className="flex-1 px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-400 text-xs font-bold rounded transition-all"
-                    >
-                      Delete
+                      {collapsedCards.size === currentPolicyDesigns.length ? '⬇ Expand All' : '⬆ Collapse All'}
                     </button>
-                    <button
-                      className="flex-1 px-3 py-2 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded transition-all"
-                    >
-                      View
-                    </button>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
+
+                {/* Policy Tabs */}
+                {policyIds.length > 1 && (
+                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    {policyIds.map(policyId => {
+                      const policyInfo = existingPolicies?.find((p: any) => p.policyId === policyId);
+                      const designCount = designsByPolicy[policyId].length;
+                      return (
+                        <button
+                          key={policyId}
+                          onClick={() => setSelectedPolicyTab(policyId)}
+                          className={`px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all ${
+                            selectedPolicyTab === policyId
+                              ? 'bg-pink-600 text-white border-2 border-pink-400'
+                              : 'bg-black/40 text-pink-300 border border-pink-500/30 hover:bg-pink-900/30'
+                          }`}
+                        >
+                          {policyInfo?.policyName || `Policy ${policyId.substring(0, 8)}...`}
+                          <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                            {designCount}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {currentPolicyDesigns.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {currentPolicyDesigns.map((design: any) => {
+                const isCollapsed = collapsedCards.has(design._id);
+
+                return (
+                  <div key={design._id} className={`bg-black/40 border border-pink-500/30 rounded-lg transition-all ${isCollapsed ? 'p-2' : 'p-4'}`}>
+                    {isCollapsed ? (
+                      // COLLAPSED VIEW - Compact thumbnail
+                      <div
+                        className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded transition-all"
+                        onClick={() => {
+                          const newCollapsed = new Set(collapsedCards);
+                          newCollapsed.delete(design._id);
+                          setCollapsedCards(newCollapsed);
+                        }}
+                      >
+                        <img
+                          src={design.imageUrl.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')}
+                          alt={design.displayName}
+                          className="w-12 h-12 object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder-nft.png';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-white text-xs truncate">{design.displayName}</div>
+                          <div className="flex gap-2 text-[10px] text-gray-400">
+                            <span>Minted: {design.totalMinted || 0}</span>
+                            <span className={design.isActive ? 'text-green-400' : 'text-gray-500'}>
+                              {design.isActive ? '✓' : '✗'}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newCollapsed = new Set(collapsedCards);
+                            newCollapsed.delete(design._id);
+                            setCollapsedCards(newCollapsed);
+                          }}
+                          className="text-gray-400 hover:text-white text-sm px-1"
+                        >
+                          ⬇
+                        </button>
+                      </div>
+                    ) : (
+                      // EXPANDED VIEW - Full card
+                      <>
+                        {/* Collapse Button */}
+                        <div className="flex justify-end mb-2">
+                          <button
+                            onClick={() => {
+                              const newCollapsed = new Set(collapsedCards);
+                              newCollapsed.add(design._id);
+                              setCollapsedCards(newCollapsed);
+                            }}
+                            className="text-gray-400 hover:text-white text-xs px-2 py-1"
+                          >
+                            ⬆ Collapse
+                          </button>
+                        </div>
+
+                        {/* Preview Image */}
+                        <div className="w-full h-32 bg-gray-900 rounded mb-3 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={design.imageUrl.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')}
+                            alt={design.displayName}
+                            className="max-w-full max-h-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder-nft.png';
+                            }}
+                          />
+                        </div>
+
+                        {/* Info */}
+                        <div className="mb-3">
+                          <div className="font-bold text-white text-sm mb-1">{design.displayName}</div>
+                          <div className="text-xs text-gray-400 font-mono mb-2">ID: {design.tokenType}</div>
+                          <div className="text-xs text-gray-500">
+                            Asset: {Buffer.from(design.assetNameHex, 'hex').toString('utf-8')}
+                          </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <div className="bg-blue-900/20 border border-blue-500/30 rounded p-2">
+                            <div className="text-xs text-gray-400">Minted</div>
+                            <div className="text-lg font-bold text-blue-400">{design.totalMinted || 0}</div>
+                          </div>
+                          <div className="bg-purple-900/20 border border-purple-500/30 rounded p-2">
+                            <div className="text-xs text-gray-400">Next #</div>
+                            <div className="text-lg font-bold text-purple-400">{(design.currentEdition || 0) + 1}</div>
+                          </div>
+                        </div>
+
+                        {/* Status Toggle */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              await updateTokenType({
+                                tokenType: design.tokenType,
+                                isActive: !design.isActive,
+                              });
+                            } catch (error: any) {
+                              console.error('Failed to toggle design status:', error);
+                            }
+                          }}
+                          className={`w-full px-2 py-1 rounded text-xs font-bold text-center mb-3 transition-all ${
+                            design.isActive
+                              ? 'bg-green-600/30 hover:bg-green-600/50 text-green-400'
+                              : 'bg-gray-700/30 hover:bg-gray-700/50 text-gray-400'
+                          }`}
+                        >
+                          {design.isActive ? '✓ ACTIVE (click to deactivate)' : '✗ INACTIVE (click to activate)'}
+                        </button>
+
+                        {/* Sale Mode Selector */}
+                        <div className="mb-3">
+                          <label className="block text-xs text-gray-400 mb-1">Distribution Mode</label>
+                          <select
+                            value={design.saleMode || ''}
+                            onChange={async (e) => {
+                              const newMode = e.target.value as 'whitelist' | 'public_sale' | 'free_claim';
+                              try {
+                                await updateTokenType({
+                                  tokenType: design.tokenType,
+                                  saleMode: newMode || undefined,
+                                });
+                              } catch (error: any) {
+                                alert(`Error updating sale mode: ${error.message}`);
+                              }
+                            }}
+                            className="w-full bg-black/50 border border-pink-500/30 rounded px-2 py-1 text-xs text-white"
+                          >
+                            <option value="">Not Set</option>
+                            <option value="whitelist">Whitelist</option>
+                            <option value="public_sale">Public Sale</option>
+                            <option value="free_claim">Free Claim</option>
+                          </select>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteDesign(design.tokenType)}
+                            className="flex-1 px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-400 text-xs font-bold rounded transition-all"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setSelectedDesignForView(design)}
+                            className="flex-1 px-3 py-2 bg-blue-600/30 hover:bg-blue-600/50 text-blue-400 text-xs font-bold rounded transition-all"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <div className="text-4xl mb-2">📦</div>
+                    <div>No NFTs in this policy yet.</div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {(!allDesigns || allDesigns.length === 0) && (
             <div className="text-center py-12 text-gray-500">
               <div className="text-4xl mb-2">📦</div>
               <div>No NFTs yet. Click "+ Create New NFT" to create one.</div>
@@ -1878,6 +2458,205 @@ export default function CommemorativeToken1Admin() {
           )}
         </div>
       </div>
+
+      {/* NFT Design Details Modal */}
+      {selectedDesignForView && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedDesignForView(null)}>
+          <div className="relative w-[900px] max-w-[95vw] max-h-[90vh] bg-gradient-to-br from-purple-900/95 to-pink-900/95 border-4 border-purple-500/50 rounded-lg overflow-auto p-6" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">{selectedDesignForView.displayName || selectedDesignForView.name}</h3>
+              <button
+                onClick={() => setSelectedDesignForView(null)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded transition-all"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Image Preview */}
+              <div className="bg-black/40 border border-purple-500/30 rounded p-4">
+                <div className="text-xs uppercase tracking-wider text-purple-300 mb-2 font-bold">NFT Image</div>
+                {selectedDesignForView.imageUrl ? (
+                  <img
+                    src={selectedDesignForView.imageUrl.startsWith('ipfs://')
+                      ? `https://ipfs.io/ipfs/${selectedDesignForView.imageUrl.replace('ipfs://', '')}`
+                      : selectedDesignForView.imageUrl
+                    }
+                    alt={selectedDesignForView.displayName || selectedDesignForView.name}
+                    className="w-full rounded border-2 border-purple-500/30"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="%23999">Image not found</text></svg>';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gray-800 rounded flex items-center justify-center text-gray-500">
+                    No image uploaded
+                  </div>
+                )}
+              </div>
+
+              {/* Design Information */}
+              <div className="space-y-4">
+                {/* Token Type */}
+                <div className="bg-black/40 border border-purple-500/30 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-purple-300 mb-2 font-bold">Token Type</div>
+                  <div className="text-lg font-bold text-white">{selectedDesignForView.tokenType}</div>
+                </div>
+
+                {/* Mint Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-black/40 border border-green-500/30 rounded p-4">
+                    <div className="text-xs uppercase tracking-wider text-green-300 mb-1 font-bold">Total Minted</div>
+                    <div className="text-2xl font-bold text-green-400">{selectedDesignForView.totalMinted || 0}</div>
+                  </div>
+                  <div className="bg-black/40 border border-blue-500/30 rounded p-4">
+                    <div className="text-xs uppercase tracking-wider text-blue-300 mb-1 font-bold">Current Edition</div>
+                    <div className="text-2xl font-bold text-blue-400">{selectedDesignForView.totalMinted || 0}</div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="bg-black/40 border border-gray-600 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-gray-400 mb-2 font-bold">Status</div>
+                  <div className={`text-lg font-bold ${selectedDesignForView.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                    {selectedDesignForView.isActive ? '✓ Active' : '✗ Inactive'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Full Details */}
+            <div className="mt-4 space-y-4">
+              {/* Description */}
+              <div className="bg-black/40 border border-purple-500/30 rounded p-4">
+                <div className="text-xs uppercase tracking-wider text-purple-300 mb-2 font-bold">Description</div>
+                <div className="text-sm text-gray-300">{selectedDesignForView.description}</div>
+              </div>
+
+              {/* Policy & IPFS Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-black/40 border border-yellow-500/30 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-yellow-300 mb-2 font-bold">Policy ID</div>
+                  <div className="font-mono text-xs text-yellow-400 break-all">{selectedDesignForView.policyId}</div>
+                </div>
+                <div className="bg-black/40 border border-cyan-500/30 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">Image IPFS URL</div>
+                  <div className="font-mono text-xs text-cyan-400 break-all">{selectedDesignForView.imageUrl || 'Not uploaded'}</div>
+                </div>
+              </div>
+
+              {/* Asset Name */}
+              <div className="bg-black/40 border border-purple-500/30 rounded p-4">
+                <div className="text-xs uppercase tracking-wider text-purple-300 mb-2 font-bold">Asset Name (Hex)</div>
+                <div className="font-mono text-sm text-purple-400">{selectedDesignForView.assetNameHex || 'Not set'}</div>
+              </div>
+
+              {/* Distribution Settings */}
+              {selectedDesignForView.saleMode && (
+                <div className="bg-black/40 border border-orange-500/30 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-orange-300 mb-2 font-bold">Distribution Mode</div>
+                  <div className="text-sm text-orange-400 capitalize">{selectedDesignForView.saleMode.replace('_', ' ')}</div>
+                </div>
+              )}
+
+              {/* Created Date */}
+              <div className="bg-black/40 border border-gray-600 rounded p-4">
+                <div className="text-xs uppercase tracking-wider text-gray-400 mb-2 font-bold">Created</div>
+                <div className="text-sm text-gray-300">{new Date(selectedDesignForView.createdAt).toLocaleString()}</div>
+              </div>
+
+              {/* Metadata Preview */}
+              {(() => {
+                // Find the policy for this design to get metadata template
+                const policy = existingPolicies?.find((p: any) => p.policyId === selectedDesignForView.policyId);
+
+                // Build sample metadata
+                const sampleAttributes: Record<string, string> = {
+                  "Mint Number": "1",
+                  "Recipient": "example_user",
+                  "Collection": selectedDesignForView.tokenType
+                };
+
+                // Use design-specific custom attributes if available
+                if (selectedDesignForView.customAttributes && selectedDesignForView.customAttributes.length > 0) {
+                  for (const attr of selectedDesignForView.customAttributes) {
+                    if (attr.trait_type && attr.value) {
+                      sampleAttributes[attr.trait_type] = attr.value;
+                    }
+                  }
+                }
+                // Otherwise fall back to policy template custom fields
+                else if (policy?.metadataTemplate?.customFields) {
+                  for (const field of policy.metadataTemplate.customFields) {
+                    if (field.fieldType === 'fixed' && field.fixedValue) {
+                      sampleAttributes[field.fieldName] = field.fixedValue;
+                    } else if (field.fieldType === 'placeholder') {
+                      sampleAttributes[field.fieldName] = '<token-specific>';
+                    }
+                  }
+                }
+
+                return (
+                  <div className="bg-black/40 border-2 border-cyan-500/50 rounded p-4">
+                    <div className="text-xs uppercase tracking-wider text-cyan-300 mb-3 font-bold flex items-center gap-2">
+                      📋 NFT Metadata Preview
+                      <span className="text-xs text-gray-400 normal-case font-normal">(CIP-25 Structure)</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Core Metadata */}
+                      <div className="bg-cyan-900/20 border border-cyan-500/30 rounded p-3">
+                        <div className="text-xs text-cyan-400 font-bold mb-2">Core Fields</div>
+                        <div className="space-y-1 text-xs font-mono">
+                          <div className="flex">
+                            <span className="text-gray-500 w-32">name:</span>
+                            <span className="text-cyan-300">{selectedDesignForView.displayName} #001</span>
+                          </div>
+                          <div className="flex">
+                            <span className="text-gray-500 w-32">image:</span>
+                            <span className="text-cyan-300 truncate">{selectedDesignForView.imageUrl || 'ipfs://...'}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="text-gray-500 w-32">mediaType:</span>
+                            <span className="text-cyan-300">{selectedDesignForView.mediaType || 'image/png'}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="text-gray-500 w-32">description:</span>
+                            <span className="text-cyan-300">{selectedDesignForView.description}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Attributes */}
+                      <div className="bg-green-900/20 border border-green-500/30 rounded p-3">
+                        <div className="text-xs text-green-400 font-bold mb-2">Attributes</div>
+                        <div className="space-y-1 text-xs font-mono">
+                          {Object.entries(sampleAttributes).map(([key, value]) => (
+                            <div key={key} className="flex">
+                              <span className="text-gray-500 w-32">{key}:</span>
+                              <span className={`${value === '<token-specific>' ? 'text-yellow-400 italic' : 'text-green-300'}`}>
+                                {value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {policy?.metadataTemplate?.customFields && policy.metadataTemplate.customFields.length > 0 && (
+                        <div className="text-xs text-gray-400 italic">
+                          💡 Custom fields from "{policy.policyName}" policy template
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* STEP 3: Minting & Distribution */}
       <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border-4 border-cyan-500/50 rounded-lg p-6">
@@ -1926,24 +2705,51 @@ export default function CommemorativeToken1Admin() {
         {/* Whitelist Mode Tab */}
         {activeTab === 'whitelist' && (
           <>
-            {/* NFT Selector */}
-        <div className="bg-black/30 rounded-lg p-4 mb-6">
-          <label className="block text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">
-            Select Whitelist NFT
-          </label>
+            {/* NFT Selector - PROMINENT */}
+        <div className="bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border-4 border-cyan-500/50 rounded-lg p-6 mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-3xl">🎯</div>
+            <div>
+              <label className="block text-lg uppercase tracking-wider text-cyan-300 font-bold">
+                Step 3.1: Select NFT Design to Mint
+              </label>
+              <p className="text-xs text-gray-400 mt-1">Choose which NFT you want to batch mint</p>
+            </div>
+          </div>
           {allDesigns && allDesigns.filter((d: any) => d.saleMode === 'whitelist').length > 0 ? (
-            <select
-              value={selectedDesignForMinting || ''}
-              onChange={(e) => setSelectedDesignForMinting(e.target.value)}
-              className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-sm text-white"
-            >
-              <option value="">-- Select an NFT --</option>
-              {allDesigns.filter((d: any) => d.saleMode === 'whitelist').map((design: any) => (
-                <option key={design._id} value={design.tokenType}>
-                  {design.displayName} - {design.eligibilitySnapshot?.length || 0} eligible - {design.totalMinted || 0} minted
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                value={selectedDesignForMinting || ''}
+                onChange={(e) => setSelectedDesignForMinting(e.target.value)}
+                className="w-full bg-black/70 border-2 border-cyan-500/50 rounded-lg px-4 py-3 text-base text-white font-semibold focus:border-cyan-400 focus:outline-none"
+              >
+                <option value="">-- ⚠️ SELECT AN NFT FIRST --</option>
+                {allDesigns.filter((d: any) => d.saleMode === 'whitelist').map((design: any) => (
+                  <option key={design._id} value={design.tokenType}>
+                    {design.displayName} {design.isActive ? '✓' : '✗ (inactive)'} - {design.eligibilitySnapshot?.length || 0} eligible - {design.totalMinted || 0} minted
+                  </option>
+                ))}
+              </select>
+
+              {/* Help text about 0 eligible */}
+              {selectedDesignForMinting && (() => {
+                const design = allDesigns.find((d: any) => d.tokenType === selectedDesignForMinting);
+                if (design && (!design.eligibilitySnapshot || design.eligibilitySnapshot.length === 0)) {
+                  return (
+                    <div className="mt-3 bg-yellow-900/30 border border-yellow-500/50 rounded p-3 text-sm text-yellow-300">
+                      ℹ️ <strong>0 eligible users:</strong> This NFT doesn't have a whitelist snapshot assigned yet. Scroll down to "Import from Whitelist Manager" and click "📸 Take Snapshot" to assign eligible users.
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {!selectedDesignForMinting && (
+                <div className="mt-3 bg-red-900/30 border border-red-500/50 rounded p-3 text-sm text-red-300">
+                  ⚠️ <strong>REQUIRED:</strong> You must select an NFT design before minting!
+                </div>
+              )}
+            </>
           ) : (
             <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-3 text-sm text-yellow-400">
               ⚠️ No whitelist NFTs available. Please create a whitelist NFT in Step 2 first.
@@ -2159,7 +2965,7 @@ export default function CommemorativeToken1Admin() {
                       </div>
                       <div className="bg-purple-900/20 border border-purple-500/30 rounded p-2">
                         <div className="text-xs text-gray-400">Next Edition</div>
-                        <div className="text-lg font-bold text-purple-400">#{(design.currentEdition || 0) + 1}</div>
+                        <div className="text-lg font-bold text-purple-400">#{(design.totalMinted || 0) + 1}</div>
                       </div>
                       <div className="bg-green-900/20 border border-green-500/30 rounded p-2">
                         <div className="text-xs text-gray-400">Policy ID</div>
@@ -2237,7 +3043,7 @@ export default function CommemorativeToken1Admin() {
             : null;
           const snapshotUserCount = currentSnapshot?.eligibleUsers?.length || 0;
 
-          // Only show if we have a snapshot with users
+          // Show only if we have a snapshot with users
           if (!currentSnapshot || snapshotUserCount === 0) return null;
 
           return (
@@ -2285,11 +3091,13 @@ export default function CommemorativeToken1Admin() {
                     <div className="text-xs text-gray-300">{mintingProgress.status}</div>
                   </div>
 
-                  {/* Activity Indicator */}
-                  <div className="flex items-center gap-2 text-xs text-cyan-400">
-                    <div className="animate-spin">⏳</div>
-                    <span>Processing... (check console for detailed logs)</span>
-                  </div>
+                  {/* Activity Indicator - only show while minting is in progress */}
+                  {isMinting && (
+                    <div className="flex items-center gap-2 text-xs text-cyan-400">
+                      <div className="animate-spin">⏳</div>
+                      <span>Processing... (check console for detailed logs)</span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2300,19 +3108,92 @@ export default function CommemorativeToken1Admin() {
                 </div>
               )}
 
+              {/* Policy KeyHash Warning */}
+              {activePolicy && (() => {
+                let policyScript = activePolicy.policyScript;
+                if (typeof policyScript === 'string') {
+                  try {
+                    policyScript = JSON.parse(policyScript);
+                  } catch (e) {
+                    return null;
+                  }
+                }
+                const policyKeyHash = policyScript?.keyHash;
+                if (!policyKeyHash) return null;
+
+                return (
+                  <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">⚠️</div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-yellow-300 mb-2">IMPORTANT: Wallet Requirement</div>
+                        <div className="text-xs text-yellow-200 mb-2">
+                          This policy requires the wallet that created it. You MUST connect the wallet with keyHash:
+                        </div>
+                        <div className="font-mono text-xs bg-black/50 rounded px-2 py-1 text-cyan-400 break-all">
+                          {policyKeyHash}
+                        </div>
+                        <div className="text-xs text-yellow-200 mt-2">
+                          Using a different wallet will cause minting to fail with a signature error.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Wallet Connection & Minting Controls */}
               {!walletConnected ? (
                 <div className="space-y-3">
-                  <button
-                    onClick={handleConnectWallet}
-                    disabled={isConnectingWallet}
-                    className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all"
-                  >
-                    {isConnectingWallet ? '⏳ Connecting Wallet...' : '🔗 Connect Admin Wallet (Lace)'}
-                  </button>
-                  <p className="text-xs text-gray-400 text-center">
-                    Connect your Lace wallet to mint NFTs. Make sure you have sufficient test ADA for transaction fees.
-                  </p>
+                  {installedWallets.length === 0 ? (
+                    /* No wallets installed warning */
+                    <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-center">
+                      <div className="text-3xl mb-2">⚠️</div>
+                      <div className="text-red-300 font-bold mb-2">No Cardano Wallets Detected</div>
+                      <div className="text-sm text-red-200 mb-3">
+                        Please install a Cardano wallet browser extension to continue.
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Recommended: Lace, Eternl, Nami, or Typhon
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Wallet Type Selector */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-2">
+                          Select Admin Wallet Type ({installedWallets.length} detected)
+                        </label>
+                        <select
+                          value={selectedWalletType}
+                          onChange={(e) => setSelectedWalletType(e.target.value as 'lace' | 'eternl' | 'nami' | 'typhon')}
+                          className="w-full bg-black/50 border border-purple-500/30 rounded px-3 py-2 text-white"
+                          disabled={isConnectingWallet}
+                        >
+                          {installedWallets.map(wallet => (
+                            <option key={wallet} value={wallet}>
+                              {wallet.charAt(0).toUpperCase() + wallet.slice(1)} Wallet
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Connect Button */}
+                      <button
+                        onClick={handleConnectWallet}
+                        disabled={isConnectingWallet}
+                        className="w-full px-6 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all"
+                      >
+                        {isConnectingWallet
+                          ? '⏳ Connecting Wallet...'
+                          : `🔗 Connect Admin Wallet (${selectedWalletType.charAt(0).toUpperCase() + selectedWalletType.slice(1)})`
+                        }
+                      </button>
+                      <p className="text-xs text-gray-400 text-center">
+                        Connect your {selectedWalletType.charAt(0).toUpperCase() + selectedWalletType.slice(1)} wallet to mint NFTs. Make sure you have sufficient test ADA for transaction fees.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -2324,14 +3205,16 @@ export default function CommemorativeToken1Admin() {
                   </div>
 
                   {/* Cost Preview */}
-                  {eligibleUsers && eligibleUsers.length > 0 && selectedWhitelistId && (() => {
+                  {(() => {
+                    // Get recipients from snapshot
+                    if (!selectedWhitelistId) return null;
                     const snapshot = allSnapshots?.find(s => s._id === selectedWhitelistId);
                     if (!snapshot) return null;
 
-                    const preview = previewMintingPlan(
-                      snapshot.eligibleUsers.map(u => ({ address: u.walletAddress })),
-                      10
-                    );
+                    const recipients = snapshot.eligibleUsers.map(u => ({ address: u.walletAddress }));
+                    if (recipients.length === 0) return null;
+
+                    const preview = previewMintingPlan(recipients, 10);
 
                     const hasEnoughFunds = walletBalance >= (preview.estimatedCost.totalAda * 1_000_000);
 
@@ -2419,54 +3302,75 @@ export default function CommemorativeToken1Admin() {
           );
         })()}
 
-        {/* Minting Logs - Whitelist Mode Only */}
+        {/* Batch Minting Logs */}
         <div className="bg-black/30 rounded-lg p-4">
           <h4 className="text-sm font-bold text-cyan-400 mb-3">
-            Minting Logs ({allMints?.filter(m => {
-              const design = allDesigns?.find(d => d.tokenType === m.tokenType);
-              return design?.saleMode === 'whitelist';
-            }).length || 0})
+            Batch Minting Logs ({batchMintLogs?.length || 0})
           </h4>
 
-          {allMints && allMints.filter(m => {
-            const design = allDesigns?.find(d => d.tokenType === m.tokenType);
-            return design?.saleMode === 'whitelist';
-          }).length > 0 ? (
+          {batchMintLogs && batchMintLogs.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-cyan-500/30">
                     <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Date</th>
-                    <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Token Type</th>
+                    <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Batch #</th>
                     <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Edition #</th>
                     <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Recipient</th>
                     <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Status</th>
+                    <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-cyan-300 font-bold">Transaction</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {allMints.filter(m => {
-                    const design = allDesigns?.find(d => d.tokenType === m.tokenType);
-                    return design?.saleMode === 'whitelist';
-                  }).slice(0, 20).map((mint) => (
+                  {batchMintLogs
+                    .sort((a, b) => b.createdAt - a.createdAt)
+                    .slice(0, 50)
+                    .map((mint) => (
                     <tr key={mint._id} className="hover:bg-cyan-900/10">
                       <td className="py-2 px-3 text-gray-400 text-xs">
-                        {new Date(mint.mintedAt).toLocaleDateString()}
+                        {new Date(mint.createdAt).toLocaleDateString()} {new Date(mint.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
-                      <td className="py-2 px-3 text-white font-mono text-xs">{mint.tokenType}</td>
-                      <td className="py-2 px-3 text-purple-400 font-bold">#{mint.editionNumber}</td>
-                      <td className="py-2 px-3 font-mono text-xs text-gray-400">
-                        {mint.walletAddress.substring(0, 15)}...
+                      <td className="py-2 px-3 text-white font-mono text-xs">
+                        {mint.batchNumber}
+                      </td>
+                      <td className="py-2 px-3 text-purple-400 font-bold">#{mint.mintNumber}</td>
+                      <td className="py-2 px-3 text-xs">
+                        <div className="text-white">{mint.recipientDisplayName || 'Unknown'}</div>
+                        <div className="font-mono text-gray-400">{mint.recipientAddress.substring(0, 20)}...</div>
                       </td>
                       <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          mint.status === 'confirmed'
-                            ? 'bg-green-600/30 text-green-400'
-                            : mint.status === 'pending'
-                            ? 'bg-yellow-600/30 text-yellow-400'
-                            : 'bg-red-600/30 text-red-400'
-                        }`}>
-                          {mint.status.toUpperCase()}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`px-2 py-1 rounded text-xs font-bold text-center ${
+                            mint.status === 'confirmed'
+                              ? 'bg-green-600/30 text-green-400'
+                              : mint.status === 'submitted'
+                              ? 'bg-blue-600/30 text-blue-400'
+                              : mint.status === 'pending'
+                              ? 'bg-yellow-600/30 text-yellow-400'
+                              : 'bg-red-600/30 text-red-400'
+                          }`}>
+                            {mint.status.toUpperCase()}
+                          </span>
+                          {mint.errorMessage && (
+                            <div className="text-xs text-red-400 mt-1">
+                              ⚠️ {mint.errorMessage}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-xs">
+                        {mint.txHash ? (
+                          <a
+                            href={`https://preprod.cardanoscan.io/transaction/${mint.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline font-mono"
+                          >
+                            {mint.txHash.substring(0, 10)}...
+                          </a>
+                        ) : (
+                          <span className="text-gray-500">No TX</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -2476,7 +3380,7 @@ export default function CommemorativeToken1Admin() {
           ) : (
             <div className="text-center py-6 text-gray-500">
               <div className="text-3xl mb-2">📋</div>
-              <div>No whitelist minting logs yet. Mints will appear here after users claim.</div>
+              <div>No batch minting logs yet. Mints will appear here after batch minting.</div>
             </div>
           )}
         </div>
@@ -2620,6 +3524,302 @@ export default function CommemorativeToken1Admin() {
           </div>
         )}
       </div>
+
+      {/* STEP 4: Minting History */}
+      <div className="bg-gradient-to-r from-green-900/20 to-teal-900/20 border-4 border-green-500/50 rounded-lg p-6 mt-6">
+        <div className="mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="text-3xl font-bold text-green-400">STEP 4</div>
+            <h3 className="text-2xl font-bold text-white">Minting History</h3>
+          </div>
+          <p className="text-sm text-gray-400">Complete log of all NFTs you've ever minted</p>
+        </div>
+
+        <MintingHistoryViewer />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Minting History Viewer Component
+ * Shows complete history of all minted NFTs with filtering and export
+ */
+function MintingHistoryViewer() {
+  const [networkFilter, setNetworkFilter] = useState<string>("all");
+  const [tokenTypeFilter, setTokenTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Fetch minting history
+  const mintingHistory = useQuery(api.minting.getBatchMintingHistory, {
+    network: networkFilter === "all" ? undefined : networkFilter,
+    tokenType: tokenTypeFilter === "all" ? undefined : tokenTypeFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
+  });
+
+  // Fetch statistics
+  const mintingStats = useQuery(api.minting.getBatchMintingStats, {
+    network: networkFilter === "all" ? undefined : networkFilter,
+  });
+
+  // Get all designs for token type filter dropdown
+  const allDesigns = useQuery(api.commemorativeTokenCounters.getAllDesigns);
+
+  // Export to CSV
+  const exportToCSV = () => {
+    if (!mintingHistory || mintingHistory.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = [
+      "NFT Name",
+      "Mint Number",
+      "Token Type",
+      "Recipient Address",
+      "Recipient Name",
+      "Status",
+      "TX Hash",
+      "Network",
+      "Batch Number",
+      "Minted At",
+      "Asset ID"
+    ];
+
+    const rows = mintingHistory.map((mint: any) => [
+      mint.nftName,
+      mint.mintNumber,
+      mint.tokenType,
+      mint.recipientAddress,
+      mint.recipientDisplayName || "—",
+      mint.status,
+      mint.txHash || "—",
+      mint.network,
+      mint.batchNumber,
+      new Date(mint._creationTime).toLocaleString(),
+      mint.assetId
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `minting-history-${Date.now()}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Statistics Cards */}
+      {mintingStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-green-400">{mintingStats.totalMinted}</div>
+            <div className="text-xs text-gray-400 uppercase mt-1">Total Minted</div>
+          </div>
+          <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-blue-400">{mintingStats.confirmedMints}</div>
+            <div className="text-xs text-gray-400 uppercase mt-1">Confirmed</div>
+          </div>
+          <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-yellow-400">{mintingStats.uniqueRecipients}</div>
+            <div className="text-xs text-gray-400 uppercase mt-1">Recipients</div>
+          </div>
+          <div className="bg-purple-900/30 border border-purple-500/50 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-purple-400">{mintingStats.uniqueTokenTypes}</div>
+            <div className="text-xs text-gray-400 uppercase mt-1">NFT Types</div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="bg-black/30 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-sm font-bold text-gray-400 uppercase">Filters:</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Network Filter */}
+          <div>
+            <label className="block text-xs text-gray-400 uppercase mb-2">Network</label>
+            <select
+              value={networkFilter}
+              onChange={(e) => setNetworkFilter(e.target.value)}
+              className="w-full bg-black/70 border border-gray-600 rounded px-3 py-2 text-white text-sm"
+            >
+              <option value="all">All Networks</option>
+              <option value="preprod">Preprod (Testnet)</option>
+              <option value="mainnet">Mainnet</option>
+            </select>
+          </div>
+
+          {/* Token Type Filter */}
+          <div>
+            <label className="block text-xs text-gray-400 uppercase mb-2">NFT Type</label>
+            <select
+              value={tokenTypeFilter}
+              onChange={(e) => setTokenTypeFilter(e.target.value)}
+              className="w-full bg-black/70 border border-gray-600 rounded px-3 py-2 text-white text-sm"
+            >
+              <option value="all">All Types</option>
+              {allDesigns?.map((design: any) => (
+                <option key={design._id} value={design.tokenType}>
+                  {design.displayName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-xs text-gray-400 uppercase mb-2">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full bg-black/70 border border-gray-600 rounded px-3 py-2 text-white text-sm"
+            >
+              <option value="all">All Statuses</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="submitted">Submitted</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Export Button */}
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={exportToCSV}
+            disabled={!mintingHistory || mintingHistory.length === 0}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-bold text-sm transition-colors"
+          >
+            📥 Export to CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Minting History Table */}
+      <div className="bg-black/30 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-900 border-b border-gray-700">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Image</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">NFT Name</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Mint #</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Recipient</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Network</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">TX</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {mintingHistory && mintingHistory.length > 0 ? (
+                mintingHistory.map((mint: any) => (
+                  <tr key={mint._id} className="hover:bg-gray-900/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <img
+                        src={mint.imageIpfsUrl?.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/')}
+                        alt={mint.nftName}
+                        className="w-12 h-12 rounded object-cover border border-gray-700"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-white">{mint.nftName}</div>
+                      <div className="text-xs text-gray-500 font-mono">{mint.tokenType}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-cyan-400">#{mint.mintNumber}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-xs text-gray-300">
+                        {mint.recipientAddress.slice(0, 12)}...{mint.recipientAddress.slice(-8)}
+                      </div>
+                      {mint.recipientDisplayName && (
+                        <div className="text-xs text-gray-500">{mint.recipientDisplayName}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        mint.status === 'confirmed'
+                          ? 'bg-green-600/30 text-green-400'
+                          : mint.status === 'pending'
+                          ? 'bg-yellow-600/30 text-yellow-400'
+                          : mint.status === 'submitted'
+                          ? 'bg-blue-600/30 text-blue-400'
+                          : 'bg-red-600/30 text-red-400'
+                      }`}>
+                        {mint.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-semibold ${
+                        mint.network === 'mainnet' ? 'text-green-400' : 'text-yellow-400'
+                      }`}>
+                        {mint.network.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-xs text-gray-400">
+                        {new Date(mint._creationTime).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {new Date(mint._creationTime).toLocaleTimeString()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {mint.txHash ? (
+                        <div className="flex flex-col gap-1">
+                          <a
+                            href={`https://${mint.network === 'preprod' ? 'preprod.' : ''}cardanoscan.io/transaction/${mint.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:underline text-xs"
+                          >
+                            Cardanoscan ↗
+                          </a>
+                          <a
+                            href={`https://${mint.network === 'preprod' ? 'preprod.' : ''}pool.pm/${mint.assetId.replace('.', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-400 hover:underline text-xs"
+                          >
+                            pool.pm ↗
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-600">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    No minting history found. Start minting NFTs in Step 3 to see them here.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      {mintingHistory && mintingHistory.length > 0 && (
+        <div className="text-center text-sm text-gray-400">
+          Showing {mintingHistory.length} {mintingHistory.length === 1 ? 'mint' : 'mints'}
+        </div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ interface EssenceBalancesViewerProps {
   onClose: () => void;
 }
 
-type SortColumn = 'name' | 'type' | 'generating' | 'amount' | 'growthRate' | 'cap' | 'lastUpdated';
+type SortColumn = 'name' | 'type' | 'generating' | 'amount' | 'count' | 'growthRate' | 'cap' | 'lastUpdated';
 type SortDirection = 'asc' | 'desc';
 
 // Animated essence amount component - updates in real-time based on growth rate
@@ -20,13 +20,15 @@ function AnimatedEssenceAmount({
   ratePerDay,
   cap,
   variationId,
-  backendCalculationTime
+  backendCalculationTime,
+  isGenerating = false
 }: {
   baseAmount: number;
   ratePerDay: number;
   cap: number;
   variationId: number;
   backendCalculationTime: number;
+  isGenerating?: boolean;
 }) {
   const [displayAmount, setDisplayAmount] = useState(baseAmount);
   const baseAmountRef = useRef(baseAmount);
@@ -110,7 +112,9 @@ function AnimatedEssenceAmount({
   }, [ratePerDay, cap, baseAmount, variationId]);
 
   return (
-    <span className="text-lg font-bold text-yellow-400 tabular-nums">
+    <span className={`text-lg font-bold tabular-nums ${
+      isGenerating ? 'text-yellow-400' : 'text-white'
+    }`}>
       {displayAmount.toFixed(7)}
     </span>
   );
@@ -128,6 +132,22 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
   // Get essence data from shared context (single source of truth)
   const { playerEssenceState, isLoading } = useEssence();
   const essenceState = playerEssenceState; // Alias for compatibility with existing code
+
+  // Get slots from essenceState (already queried in context)
+  const allSlots = essenceState?.slots || [];
+
+  // Count how many slots use each variation
+  const getVariationCount = (variationName: string, variationType: 'head' | 'body' | 'item'): number => {
+    if (!allSlots) return 0;
+
+    let count = 0;
+    for (const slot of allSlots) {
+      if (variationType === 'head' && slot.headVariationName === variationName) count++;
+      if (variationType === 'body' && slot.bodyVariationName === variationName) count++;
+      if (variationType === 'item' && slot.itemVariationName === variationName) count++;
+    }
+    return count;
+  };
 
   console.log('🟢🔥 [ADMIN BALANCES VIEWER] Using shared context data:', {
     hasData: !!essenceState,
@@ -195,6 +215,11 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
         break;
       case 'amount':
         compareValue = a.accumulatedAmount - b.accumulatedAmount;
+        break;
+      case 'count':
+        const countA = getVariationCount(a.variationName, a.variationType);
+        const countB = getVariationCount(b.variationName, b.variationType);
+        compareValue = countA - countB;
         break;
       case 'growthRate':
         const growthRateA = essenceState?.essenceRates?.[a.variationId] || 0;
@@ -292,6 +317,12 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                     Amount {getSortIcon('amount')}
                   </th>
                   <th
+                    className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
+                    onClick={() => handleSort('count')}
+                  >
+                    Count {getSortIcon('count')}
+                  </th>
+                  <th
                     className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400 transition-colors select-none"
                     onClick={() => handleSort('growthRate')}
                   >
@@ -354,15 +385,33 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                           cap={essenceState?.caps?.[balance.variationId] || 10}
                           variationId={balance.variationId}
                           backendCalculationTime={essenceState?.lastCalculationTime || Date.now()}
+                          isGenerating={(essenceState?.essenceRates?.[balance.variationId] || 0) > 0}
                         />
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-sm font-semibold ${
+                          getVariationCount(balance.variationName, balance.variationType) > 0
+                            ? 'text-yellow-400'
+                            : 'text-gray-400'
+                        }`}>
+                          {getVariationCount(balance.variationName, balance.variationType)}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-green-400">
+                        <span className={`text-sm ${
+                          (essenceState?.essenceRates?.[balance.variationId] || 0) > 0
+                            ? 'text-green-400'
+                            : 'text-gray-400'
+                        }`}>
                           {essenceState?.essenceRates?.[balance.variationId]?.toFixed(2) || '0.00'}/d
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-blue-400">
+                        <span className={`text-sm ${
+                          (essenceState?.caps?.[balance.variationId] || 10) > 10
+                            ? 'text-blue-400'
+                            : 'text-gray-400'
+                        }`}>
                           {essenceState?.caps?.[balance.variationId]?.toFixed(2) || '0.00'}
                         </span>
                       </td>

@@ -520,6 +520,59 @@ export const addUserToWhitelistByCompanyName = mutation({
   },
 });
 
+export const addUserToWhitelistByAddress = mutation({
+  args: {
+    whitelistId: v.id("whitelists"),
+    walletAddress: v.string(),
+    displayName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const whitelist = await ctx.db.get(args.whitelistId);
+    if (!whitelist) {
+      throw new Error("Whitelist not found");
+    }
+
+    // Validate wallet address format (basic check)
+    const trimmedAddress = args.walletAddress.trim();
+    if (!trimmedAddress.startsWith('addr') && !trimmedAddress.startsWith('stake')) {
+      throw new Error("Invalid Cardano address format. Address must start with 'addr' or 'stake'.");
+    }
+
+    // Check if already in whitelist
+    const alreadyExists = whitelist.eligibleUsers.some(
+      (user) => user.walletAddress === trimmedAddress
+    );
+
+    if (alreadyExists) {
+      throw new Error(`Address ${trimmedAddress.substring(0, 15)}... is already in this whitelist`);
+    }
+
+    // Add user
+    const updatedUsers = [
+      ...whitelist.eligibleUsers,
+      {
+        walletAddress: trimmedAddress,
+        displayName: args.displayName?.trim() || undefined,
+      },
+    ];
+
+    await ctx.db.patch(args.whitelistId, {
+      eligibleUsers: updatedUsers,
+      userCount: updatedUsers.length,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      newCount: updatedUsers.length,
+      addedUser: {
+        walletAddress: trimmedAddress,
+        displayName: args.displayName?.trim(),
+      },
+    };
+  },
+});
+
 export const initializeDefaultCriteria = mutation({
   args: {},
   handler: async (ctx) => {

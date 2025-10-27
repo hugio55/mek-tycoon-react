@@ -33,6 +33,7 @@ export default function WhitelistManagerAdmin() {
   const generateWhitelist = useMutation(api.whitelists.generateWhitelist);
   const removeUserFromWhitelist = useMutation(api.whitelists.removeUserFromWhitelist);
   const addUserToWhitelistByCompanyName = useMutation(api.whitelists.addUserToWhitelistByCompanyName);
+  const addUserToWhitelistByAddress = useMutation(api.whitelists.addUserToWhitelistByAddress);
   const createSnapshot = useMutation(api.whitelists.createSnapshot);
   const deleteSnapshot = useMutation(api.whitelists.deleteSnapshot);
   const createManualWhitelist = useMutation(api.whitelists.createManualWhitelist);
@@ -420,6 +421,7 @@ export default function WhitelistManagerAdmin() {
           onExportCSV={handleExportCSV}
           removeUserFromWhitelist={removeUserFromWhitelist}
           addUserToWhitelistByCompanyName={addUserToWhitelistByCompanyName}
+          addUserToWhitelistByAddress={addUserToWhitelistByAddress}
         />
       )}
 
@@ -735,14 +737,18 @@ function WhitelistTableModal({
   onExportCSV,
   removeUserFromWhitelist,
   addUserToWhitelistByCompanyName,
+  addUserToWhitelistByAddress,
 }: {
   whitelist: any;
   onClose: () => void;
   onExportCSV: (whitelist: any) => void;
   removeUserFromWhitelist: any;
   addUserToWhitelistByCompanyName: any;
+  addUserToWhitelistByAddress: any;
 }) {
   const [companyNameInput, setCompanyNameInput] = useState('');
+  const [manualWalletInput, setManualWalletInput] = useState('');
+  const [manualDisplayNameInput, setManualDisplayNameInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -772,24 +778,42 @@ function WhitelistTableModal({
   };
 
   const handleAddUser = async () => {
-    if (!companyNameInput.trim()) {
-      alert('Please enter a corporation name');
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      await addUserToWhitelistByCompanyName({
-        whitelistId: whitelist._id,
-        companyName: companyNameInput.trim(),
-      });
-      alert(`User "${companyNameInput}" added successfully!`);
-      setCompanyNameInput('');
-      setShowDropdown(false);
-    } catch (error: any) {
-      alert(`Error adding user: ${error.message}`);
-    } finally {
-      setIsAdding(false);
+    // Check if using manual wallet address or company name lookup
+    if (manualWalletInput.trim()) {
+      // Adding by manual wallet address
+      setIsAdding(true);
+      try {
+        await addUserToWhitelistByAddress({
+          whitelistId: whitelist._id,
+          walletAddress: manualWalletInput.trim(),
+          displayName: manualDisplayNameInput.trim() || undefined,
+        });
+        alert(`User added successfully!`);
+        setManualWalletInput('');
+        setManualDisplayNameInput('');
+      } catch (error: any) {
+        alert(`Error adding user: ${error.message}`);
+      } finally {
+        setIsAdding(false);
+      }
+    } else if (companyNameInput.trim()) {
+      // Adding by company name lookup
+      setIsAdding(true);
+      try {
+        await addUserToWhitelistByCompanyName({
+          whitelistId: whitelist._id,
+          companyName: companyNameInput.trim(),
+        });
+        alert(`User "${companyNameInput}" added successfully!`);
+        setCompanyNameInput('');
+        setShowDropdown(false);
+      } catch (error: any) {
+        alert(`Error adding user: ${error.message}`);
+      } finally {
+        setIsAdding(false);
+      }
+    } else {
+      alert('Please enter either a corporation name or wallet address');
     }
   };
 
@@ -834,54 +858,101 @@ function WhitelistTableModal({
 
         {/* Add User Section */}
         <div className="p-6 border-b border-cyan-500/30 bg-black/30">
-          <div className="flex items-end gap-3">
-            <div className="flex-1 relative">
-              <label className="block text-sm text-cyan-300 mb-2">Add User Manually</label>
-              <input
-                type="text"
-                value={companyNameInput}
-                onChange={(e) => {
-                  setCompanyNameInput(e.target.value);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !showDropdown) handleAddUser();
-                }}
-                onFocus={() => {
-                  if (searchResults && searchResults.length > 0) {
-                    setShowDropdown(true);
-                  }
-                }}
-                placeholder="Enter corporation name..."
-                className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white"
-                disabled={isAdding}
-              />
+          <label className="block text-sm font-bold text-cyan-300 mb-4 uppercase tracking-wider">Add User Manually</label>
 
-              {/* Autocomplete Dropdown */}
-              {showDropdown && searchResults && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-cyan-500/50 rounded shadow-lg max-h-60 overflow-y-auto z-50">
-                  {searchResults.map((result, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleSelectCompany(result.companyName)}
-                      className="px-4 py-3 hover:bg-cyan-900/30 cursor-pointer border-b border-gray-700 last:border-0 transition-colors"
-                    >
-                      <div className="text-white font-medium">{result.companyName}</div>
-                      <div className="text-xs text-gray-400 font-mono truncate mt-1">
-                        {result.walletAddress}
+          {/* Option 1: Search by Corporation Name */}
+          <div className="mb-4">
+            <div className="flex items-end gap-3">
+              <div className="flex-1 relative">
+                <label className="block text-xs text-gray-400 mb-2">Option 1: Search by Corporation Name</label>
+                <input
+                  type="text"
+                  value={companyNameInput}
+                  onChange={(e) => {
+                    setCompanyNameInput(e.target.value);
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !showDropdown && !manualWalletInput) handleAddUser();
+                  }}
+                  onFocus={() => {
+                    if (searchResults && searchResults.length > 0) {
+                      setShowDropdown(true);
+                    }
+                  }}
+                  placeholder="Enter corporation name..."
+                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white placeholder-gray-600"
+                  disabled={isAdding || !!manualWalletInput.trim()}
+                />
+
+                {/* Autocomplete Dropdown */}
+                {showDropdown && searchResults && searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-cyan-500/50 rounded shadow-lg max-h-60 overflow-y-auto z-50">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleSelectCompany(result.companyName)}
+                        className="px-4 py-3 hover:bg-cyan-900/30 cursor-pointer border-b border-gray-700 last:border-0 transition-colors"
+                      >
+                        <div className="text-white font-medium">{result.companyName}</div>
+                        <div className="text-xs text-gray-400 font-mono truncate mt-1">
+                          {result.walletAddress}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={handleAddUser}
-              disabled={isAdding}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isAdding ? 'Adding...' : '+ Add User'}
-            </button>
           </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 border-t border-gray-700"></div>
+            <span className="text-xs text-gray-500 uppercase">OR</span>
+            <div className="flex-1 border-t border-gray-700"></div>
+          </div>
+
+          {/* Option 2: Manual Wallet Address */}
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Wallet Address Directly</label>
+            <div className="flex gap-3 mb-2">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={manualWalletInput}
+                  onChange={(e) => setManualWalletInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') handleAddUser();
+                  }}
+                  placeholder="addr1... or addr_test1..."
+                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600"
+                  disabled={isAdding || !!companyNameInput.trim()}
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={manualDisplayNameInput}
+                  onChange={(e) => setManualDisplayNameInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') handleAddUser();
+                  }}
+                  placeholder="Display name (optional)"
+                  className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white placeholder-gray-600"
+                  disabled={isAdding || !!companyNameInput.trim()}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={handleAddUser}
+            disabled={isAdding}
+            className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isAdding ? 'Adding...' : '+ Add User'}
+          </button>
         </div>
 
         {/* Table */}

@@ -25,9 +25,21 @@ export interface NFTDesign {
   description: string;
   assetNamePrefix: string;
   imageIpfsHash: string;      // Just the hash, we'll format to ipfs://
+  mediaType?: string;         // MIME type: "image/png", "image/gif", etc.
   metadataIpfsHash?: string;  // Optional: full metadata on IPFS
   policyId: string;
   policyScript: any;
+  metadataTemplate?: {
+    customFields?: Array<{
+      fieldName: string;
+      fieldType: 'fixed' | 'placeholder';
+      fixedValue?: string;
+    }>;
+  };
+  customAttributes?: Array<{
+    trait_type: string;
+    value: string;
+  }>;
 }
 
 export interface MintingProgress {
@@ -51,6 +63,29 @@ let connectedWallet: BrowserWallet | null = null;
 let walletAddress: string | null = null;
 
 /**
+ * Check which Cardano wallets are installed in the browser
+ *
+ * @returns List of installed wallet names
+ */
+export async function getInstalledWallets(): Promise<string[]> {
+  if (typeof window === 'undefined') return [];
+
+  const cardano = (window as any).cardano;
+  if (!cardano) return [];
+
+  const installedWallets: string[] = [];
+  const knownWallets = ['lace', 'eternl', 'nami', 'typhon', 'flint', 'yoroi', 'gero'];
+
+  for (const walletName of knownWallets) {
+    if (cardano[walletName]) {
+      installedWallets.push(walletName);
+    }
+  }
+
+  return installedWallets;
+}
+
+/**
  * Connect admin wallet for minting
  *
  * @param walletName - Wallet to connect ('lace', 'eternl', 'nami', etc.)
@@ -58,6 +93,12 @@ let walletAddress: string | null = null;
  */
 export async function connectAdminWallet(walletName: string = 'lace'): Promise<string> {
   try {
+    // Check if wallet is installed
+    const installedWallets = await getInstalledWallets();
+    if (!installedWallets.includes(walletName)) {
+      throw new Error(`${walletName.charAt(0).toUpperCase() + walletName.slice(1)} wallet is not installed. Please install it first or choose a different wallet. Installed wallets: ${installedWallets.join(', ') || 'none'}`);
+    }
+
     // Connect to wallet
     const wallet = await BrowserWallet.enable(walletName);
 
@@ -66,7 +107,7 @@ export async function connectAdminWallet(walletName: string = 'lace'): Promise<s
     const address = usedAddresses[0];
 
     if (!address) {
-      throw new Error('No address found in wallet');
+      throw new Error('No address found in wallet. Please make sure your wallet is set up with at least one address.');
     }
 
     // Validate it's a payment address (not stake address)
@@ -79,7 +120,11 @@ export async function connectAdminWallet(walletName: string = 'lace'): Promise<s
 
     return address;
   } catch (error: any) {
-    throw new Error(`Failed to connect wallet: ${error.message}`);
+    // Don't wrap the error message again if it's already our custom message
+    if (error.message.includes('wallet is not installed') || error.message.includes('No address found')) {
+      throw error;
+    }
+    throw new Error(`Failed to connect wallet: ${error.message || 'Unknown error'}`);
   }
 }
 
@@ -174,22 +219,50 @@ export function buildCIP25Metadata(
   // Format IPFS URL correctly (MUST use ipfs:// format)
   const ipfsImageUrl = formatIpfsUrl(design.imageIpfsHash);
 
+  // Build base attributes in array format (OpenSea/industry standard)
+  // Wallets like Lace display this format much better than object format
+  const attributes: Array<{ trait_type: string; value: string }> = [
+    { trait_type: "Mint Number", value: mintNumber.toString() },
+    { trait_type: "Recipient", value: recipient.displayName || shortenAddress(recipient.address) },
+    { trait_type: "Collection", value: design.tokenType }
+  ];
+
+  // Add custom metadata attributes from the design (these override policy template defaults)
+  if (design.customAttributes && design.customAttributes.length > 0) {
+    console.log('[ATTRIBUTES] Using design-specific customAttributes:', design.customAttributes);
+    for (const attr of design.customAttributes) {
+      if (attr.trait_type && attr.value) {
+        console.log(`[ATTRIBUTES]   Adding: ${attr.trait_type} = ${attr.value}`);
+        attributes.push({ trait_type: attr.trait_type, value: attr.value });
+      }
+    }
+  }
+  // Otherwise, fall back to policy template fixed fields
+  else if (design.metadataTemplate?.customFields) {
+    console.log('[ATTRIBUTES] WARNING - No customAttributes on design, falling back to policy template');
+    console.log('[ATTRIBUTES] Policy template fields:', design.metadataTemplate.customFields);
+    for (const field of design.metadataTemplate.customFields) {
+      if (field.fieldType === 'fixed' && field.fixedValue) {
+        console.log(`[ATTRIBUTES]   Adding from policy: ${field.fieldName} = ${field.fixedValue}`);
+        attributes.push({ trait_type: field.fieldName, value: field.fixedValue });
+      }
+    }
+  } else {
+    console.log('[ATTRIBUTES] ERROR - No customAttributes AND no policy template, using base attributes only');
+  }
+
   // Build CIP-25 metadata structure
   // Reference: https://cips.cardano.org/cip/CIP-25
   const metadata = {
     "721": {  // CIP-25 metadata label
       [design.policyId]: {
         [assetNameHex]: {
-          name: `${design.name} #${mintNumber.toString().padStart(3, '0')}`,
+          name: `${design.name} #${mintNumber}`,
           image: ipfsImageUrl,
-          mediaType: "image/png",  // Critical for wallet display
+          mediaType: design.mediaType || "image/png",  // Use stored media type (GIF, PNG, JPEG, etc.)
           description: design.description,
-          // Optional custom attributes
-          attributes: {
-            "Mint Number": mintNumber.toString(),
-            "Recipient": recipient.displayName || shortenAddress(recipient.address),
-            "Collection": design.tokenType
-          }
+          // Attributes in array format for better wallet display
+          attributes
         }
       }
     }
@@ -308,7 +381,6 @@ export async function buildMintTransaction(
     console.log('[🔨MINT] Recipients count:', recipients.length);
     console.log('[🔨MINT] Network:', network);
     console.log('[🔨MINT] Connected wallet:', connectedWallet ? 'YES' : 'NO');
-    console.log('[🔨MINT] Wallet address:', walletAddress);
 
     // Create Blockfrost provider for fee calculation
     const blockfrostApiKey = network === 'mainnet'
@@ -351,11 +423,32 @@ export async function buildMintTransaction(
 
     // Create forge script from policy
     console.log('[🔨MINT] Creating forge script from policy...');
-    console.log('[🔨MINT] Policy keyHash:', policyScript.keyHash);
+    console.log('[🔨MINT] Policy script:', JSON.stringify(policyScript));
+    console.log('[🔨MINT] Policy ID from design:', design.policyId);
 
-    // For signature-based policies with browser wallets, use withOneSignature
-    const forgingScript = ForgeScript.withOneSignature(policyScript.keyHash);
+    // Create ForgeScript from the native policy script
+    // This is the correct approach for MeshSDK - use fromNativeScript()
+    // Reference: Working code in mintingTx.ts line 82
+    console.log('[🔨MINT] Creating forge script from native policy script...');
+    const forgingScript = ForgeScript.fromNativeScript(policyScript);
     console.log('[🔨MINT] Forge script created successfully');
+
+    // Set transaction validity interval if policy has time-lock
+    // CRITICAL: Time-locked policies (with "before" slot) require validity interval
+    if (policyScript.type === 'all' && policyScript.scripts) {
+      const beforeScript = policyScript.scripts.find((s: any) => s.type === 'before');
+      if (beforeScript && beforeScript.slot) {
+        console.log(`[🔨MINT] ⏰ Policy has expiry slot: ${beforeScript.slot}`);
+        console.log(`[🔨MINT] ⏰ Setting transaction validity to expire before slot ${beforeScript.slot}`);
+        // Set transaction to be valid until the policy expiry slot
+        tx.setTimeToExpire(beforeScript.slot.toString());
+      }
+    }
+
+    // Log warning: The connected wallet MUST have the keyHash that matches the policy
+    console.warn('[🔨MINT] ⚠️ IMPORTANT: Connected wallet must control the policy!');
+    console.warn('[🔨MINT]    Policy requires keyHash:', policyScript.keyHash || policyScript.scripts?.find((s: any) => s.type === 'sig')?.keyHash);
+    console.warn('[🔨MINT]    If keyHash mismatch, transaction signing will fail (expected behavior)');
 
     // Add each NFT to the transaction
     let mintNumber = startMintNumber;
@@ -373,29 +466,23 @@ export async function buildMintTransaction(
       const metadata = buildCIP25Metadata(design, recipient, mintNumber);
       console.log(`[🔨MINT]   - Metadata built:`, Object.keys(metadata));
 
-      // Add minting operation with proper MeshSDK API
+      // Extract NFT-specific metadata from CIP-25 structure
+      // MeshSDK's mintAsset expects just the NFT metadata, not the full {721: {...}} wrapper
+      const nftMetadata = metadata["721"][design.policyId][assetNameHex];
+      console.log(`[🔨MINT]   - NFT metadata extracted:`, Object.keys(nftMetadata));
+
+      // Add minting operation with correct MeshSDK API
+      // Reference: https://meshjs.dev/apis/transaction/minting
       console.log(`[🔨MINT]   - Adding mint asset to transaction...`);
       tx.mintAsset(
         forgingScript,
         {
-          unit: assetNameHex,
-          quantity: '1'
-        },
-        metadata
-      );
-
-      // Send NFT to recipient
-      const fullAssetId = design.policyId + assetNameHex;
-      console.log(`[🔨MINT]   - Full asset ID: ${fullAssetId}`);
-      console.log(`[🔨MINT]   - Sending asset to recipient...`);
-      tx.sendAssets(
-        recipient.address,
-        [
-          {
-            unit: fullAssetId,
-            quantity: '1'
-          }
-        ]
+          assetName: assetNameHex,
+          assetQuantity: '1',
+          metadata: nftMetadata,
+          label: '721',  // CIP-25 metadata label
+          recipient: recipient.address
+        }
       );
 
       console.log(`[🔨MINT]   - NFT #${mintNumber} added to transaction successfully`);
