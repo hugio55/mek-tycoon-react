@@ -30,6 +30,26 @@ export default function EssenceListingLightboxV5YellowGradient({
   const [pricePerUnit, setPricePerUnit] = useState("0");
   const [selectedDuration, setSelectedDuration] = useState(7);
 
+  // Helper to sanitize variation name to match bottle filenames
+  const sanitizeVariationName = (name: string): string => {
+    return name
+      .replace(/\s+essence$/i, '') // Remove " Essence" suffix
+      .replace(/'/g, '')
+      .replace(/\./g, '')
+      .replace(/&/g, 'and')
+      .replace(/\?/g, '')
+      .replace(/\//g, '-')
+      .replace(/\\/g, '-')
+      .replace(/:/g, '')
+      .replace(/\*/g, '')
+      .replace(/"/g, '')
+      .replace(/</g, '')
+      .replace(/>/g, '')
+      .replace(/\|/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase();
+  };
+
   if (!show) return null;
 
   // Parse price into individual digits (5 places max)
@@ -143,7 +163,7 @@ export default function EssenceListingLightboxV5YellowGradient({
             {/* Essence Bottle Image - Floating */}
             <div className="w-20 h-20 flex items-center justify-center">
               <img
-                src="/essence-images/1k base.png"
+                src={selectedVariation ? `/essence-images/named-bottles-1k/${sanitizeVariationName(selectedVariation)}.png` : "/essence-images/1k base.png"}
                 alt={selectedVariation || "Essence bottle"}
                 className={`w-full h-full object-contain ${
                   !selectedVariation ? "brightness-0 invert opacity-20" : ""

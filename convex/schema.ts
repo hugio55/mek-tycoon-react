@@ -304,6 +304,8 @@ export default defineSchema({
     variationId: v.number(), // Unique ID for each variation (1-291+)
     name: v.string(),         // Variation name (e.g., "Maps", "Chrome", "Golden Guns")
     type: v.union(v.literal("head"), v.literal("body"), v.literal("item")), // Type of variation
+    sourceKey: v.optional(v.string()), // 3-character code for file naming (e.g., "BC4", "555H")
+    rank: v.optional(v.number()), // Rarity rank (1 = rarest, 291 = most common)
     baseXp: v.optional(v.number()),       // Base XP required to unlock in talent tree
     copies: v.optional(v.number()), // Number of copies in existence
     imageUrl: v.optional(v.string()), // URL to the variation image in public/variation-images/
@@ -3051,11 +3053,18 @@ export default defineSchema({
 
     // IPFS Assets
     imageUrl: v.string(), // IPFS URL for image
+    mediaType: v.optional(v.string()), // MIME type: "image/png", "image/gif", "image/jpeg", etc.
     metadataUrl: v.string(), // IPFS URL for metadata JSON
 
     // Blockchain Info
     policyId: v.string(), // Which minting policy this design uses
     assetNameHex: v.string(), // Hex-encoded asset name for sub-assets (e.g., "436f6d6d656d6f726174697665546f6b656e31")
+
+    // Custom Metadata Attributes (design-specific attribute values like "Artist: Wren Ellis", "Poop?: yes")
+    customAttributes: v.optional(v.array(v.object({
+      trait_type: v.string(),
+      value: v.string()
+    }))),
 
     // Sale Mode Configuration
     saleMode: v.optional(v.union(

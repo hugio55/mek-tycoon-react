@@ -82,16 +82,7 @@ export default function NavigationBar() {
   const scaledWidth = overlayData.imageWidth * scale;
   const scaledHeight = overlayData.imageHeight * scale;
 
-  // Debug logging
-  console.log('🔍 [NavigationBar] Config:', {
-    scale,
-    imageWidth: overlayData.imageWidth,
-    imageHeight: overlayData.imageHeight,
-    scaledWidth,
-    scaledHeight,
-    overlayImageKey: activeNavConfig.overlayImageKey,
-    isActive: activeNavConfig.isActive
-  });
+  // Debug logging removed to reduce console spam
 
   // Filter out only button/clickable zones (not sprites)
   const clickableZones = overlayData.zones.filter((zone: any) => zone.mode === "zone");
@@ -202,29 +193,56 @@ export default function NavigationBar() {
       case "orbitron": return "var(--font-orbitron)";
       case "geist-sans": return "var(--font-geist-sans)";
       case "geist-mono": return "var(--font-geist-mono)";
+      case "segoe-ui": return "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+      case "segoe-ui-thin": return "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
       default: return "var(--font-orbitron)";
     }
   };
 
-  // Get display value based on zone configuration
-  const getDisplayValue = (zone: any): string => {
-    const displayType = zone.metadata?.displayType || "gold";
+  // Get font weight based on configuration
+  const getFontWeight = (font: string) => {
+    return font === "segoe-ui-thin" ? 200 : 'bold';
+  };
 
+  // Get display value based on zone configuration
+  const getDisplayValue = (zone: any): { mainValue: string; decimalValue: string } => {
+    const displayType = zone.metadata?.displayType || "gold";
+    const decimalPlaces = zone.metadata?.decimalPlaces || 0;
+
+    let rawValue = 0;
     switch (displayType) {
       case "gold":
-        return Math.floor(currentGold).toLocaleString('en-US');
+        rawValue = currentGold;
+        break;
       case "cumulative-gold":
-        return (goldMiningData?.totalCumulativeGold || 0).toLocaleString('en-US');
+        rawValue = goldMiningData?.totalCumulativeGold || 0;
+        break;
       case "gold-per-hour":
-        return (goldMiningData?.totalGoldPerHour || 0).toLocaleString('en-US');
+        rawValue = goldMiningData?.totalGoldPerHour || 0;
+        break;
       case "mek-count":
-        return (goldMiningData?.ownedMeks?.length || 0).toString();
+        rawValue = goldMiningData?.ownedMeks?.length || 0;
+        break;
       case "essence":
         const essenceType = zone.metadata?.essenceType || "Fire";
-        const essenceAmount = essenceData?.essenceBalances?.[essenceType] || 0;
-        return Math.floor(essenceAmount).toLocaleString('en-US');
+        rawValue = essenceData?.essenceBalances?.[essenceType] || 0;
+        break;
       default:
-        return "0";
+        rawValue = 0;
+    }
+
+    if (decimalPlaces === 0) {
+      return {
+        mainValue: Math.floor(rawValue).toLocaleString('en-US'),
+        decimalValue: ''
+      };
+    } else {
+      const mainPart = Math.floor(rawValue).toLocaleString('en-US');
+      const decimalPart = (rawValue % 1).toFixed(decimalPlaces).slice(2);
+      return {
+        mainValue: mainPart,
+        decimalValue: decimalPart
+      };
     }
   };
 
@@ -311,6 +329,7 @@ export default function NavigationBar() {
               style={{
                 ...buttonConfig.style,
                 fontFamily: zone.metadata?.buttonFont ? getFontFamily(zone.metadata.buttonFont) : undefined,
+                fontWeight: zone.metadata?.buttonFont ? getFontWeight(zone.metadata.buttonFont) : undefined,
               }}
               className={buttonConfig.hoverClass}
               title={zone.label || zone.type}
@@ -343,6 +362,7 @@ export default function NavigationBar() {
           .filter((zone: any) => zone.mode === "sprite")
           .map((sprite: any) => {
             const spriteScaleValue = sprite.metadata?.spriteScale || 1;
+
             return (
               <div
                 key={sprite.id}
@@ -373,6 +393,9 @@ export default function NavigationBar() {
           const fontFamily = zone.metadata?.displayFont || "geist-mono";
           const textAlign = zone.metadata?.displayAlign || "center";
 
+          const displayValue = getDisplayValue(zone);
+          const decimalFontSizePercent = zone.metadata?.decimalFontSizePercent || 50;
+
           return (
             <div
               key={zone.id}
@@ -383,18 +406,26 @@ export default function NavigationBar() {
                 width: (zone.width || 0) * scale,
                 height: (zone.height || 0) * scale,
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'baseline',
                 justifyContent: textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center',
                 pointerEvents: 'none',
                 fontSize: fontSize * scale,
                 color: getDisplayColor(color),
                 fontFamily: getFontFamily(fontFamily),
-                fontWeight: 'bold',
+                fontWeight: getFontWeight(fontFamily),
                 textShadow: `0 0 15px ${getDisplayColor(color)}80`,
                 whiteSpace: 'nowrap',
               }}
             >
-              {getDisplayValue(zone)}
+              <span>{displayValue.mainValue}</span>
+              {displayValue.decimalValue && (
+                <>
+                  <span>.</span>
+                  <span style={{ fontSize: `${decimalFontSizePercent}%` }}>
+                    {displayValue.decimalValue}
+                  </span>
+                </>
+              )}
             </div>
           );
         })}

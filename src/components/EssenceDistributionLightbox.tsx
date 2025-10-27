@@ -214,9 +214,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   const [filterDesign, setFilterDesign] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [hoverEffect, setHoverEffect] = useState<1 | 2 | 3 | 4>(1);
   const [viewMode, setViewMode] = useState<'donut' | 'table'>('donut');
-  const [mobileDataColumn, setMobileDataColumn] = useState<'amount' | 'growth' | 'maxCap' | 'totalValue'>('amount');
+  const [mobileDataColumn, setMobileDataColumn] = useState<'amount' | 'growth' | 'maxCap' | 'totalValue' | 'count'>('amount');
   const [tableStyle, setTableStyle] = useState<1 | 2 | 3>(2);
-  const [sortColumn, setSortColumn] = useState<'name' | 'growth' | 'maxCap' | 'totalValue' | 'amount'>('amount');
+  const [sortColumn, setSortColumn] = useState<'name' | 'growth' | 'maxCap' | 'totalValue' | 'amount' | 'count'>('amount');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Debug controls
@@ -245,6 +245,12 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   // Get player's essence data from shared context (single source of truth)
   const { playerEssenceState, isLoading } = useEssence();
 
+  // Get wallet address
+  const walletAddress = playerEssenceState?.walletAddress || '';
+
+  // Get slots from playerEssenceState (already queried in context)
+  const allSlots = playerEssenceState?.slots || [];
+
   console.log('[EssenceDistributionLightbox] Using shared context data:', {
     hasData: !!playerEssenceState,
     isLoading,
@@ -260,9 +266,22 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   // Query essence config for base rates
   const essenceConfig = useQuery(api.essence.getEssenceConfig);
 
+  // Count how many slots use each variation
+  const getVariationCount = (variationName: string, variationType: 'head' | 'body' | 'item'): number => {
+    if (!allSlots) return 0;
+
+    let count = 0;
+    for (const slot of allSlots) {
+      if (variationType === 'head' && slot.headVariationName === variationName) count++;
+      if (variationType === 'body' && slot.bodyVariationName === variationName) count++;
+      if (variationType === 'item' && slot.itemVariationName === variationName) count++;
+    }
+    return count;
+  };
+
   // Transform player essence balances into chart-ready data
   const essenceData = useMemo(() => {
-    if (!playerEssenceState?.balances) return [];
+    if (!playerEssenceState?.balances || !allSlots) return [];
 
     // DEBUG: Log raw backend values to prove they're real
     console.log('📦 [FRONTEND USEMEMO] Received backend essence values:',
@@ -309,6 +328,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
       // Use variation name to construct image path (lowercase, replace spaces with hyphens)
       const imageName = balance.variationName.toLowerCase().replace(/\s+/g, '-');
 
+      // Get count of how many slots have this variation
+      const variationCount = getVariationCount(balance.variationName, balance.variationType);
+
       return {
         id: balance.variationName.toLowerCase().replace(/\s+/g, '-'),
         name: balance.variationName,
@@ -320,10 +342,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
         icon: essenceIcons[index % essenceIcons.length],
         image: `/essence-images/${imageName}.png`, // Map to variation-specific images
         baseRate: actualRate, // Use actual rate (0 if not generating)
-        bonusRate: 0 // TODO: Get from buffs
+        bonusRate: 0, // TODO: Get from buffs
+        count: variationCount // How many slots have this variation
       };
     });
-  }, [playerEssenceState, marketListings, essenceConfig]);
+  }, [playerEssenceState, marketListings, essenceConfig, allSlots]);
 
   const defaultMaxAmount = Math.max(...(essenceData.length > 0 ? essenceData.map(e => e.amount) : [10]));
   const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount);
@@ -471,6 +494,10 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
         case 'totalValue':
           aValue = a.amount * a.currentValue;
           bValue = b.amount * b.currentValue;
+          break;
+        case 'count':
+          aValue = (a as any).count || 0;
+          bValue = (b as any).count || 0;
           break;
         case 'amount':
         default:
@@ -943,6 +970,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                 >
                                   <option value="amount">Amount Owned</option>
                                   <option value="growth">Growth Rate</option>
+                                  <option value="count">Variation Count</option>
                                   <option value="maxCap">Max Cap</option>
                                   <option value="totalValue">Total Value</option>
                                 </select>
@@ -964,7 +992,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                               }} />
 
                               {/* Terminal Header */}
-                              <div className="hidden md:grid md:grid-cols-5 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] text-amber-400 uppercase tracking-widest">
+                              <div className="hidden md:grid md:grid-cols-6 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] font-bold text-amber-400 uppercase tracking-widest">
                                 <button
                                   onClick={() => handleSort('name')}
                                   className="text-left hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
@@ -1002,6 +1030,15 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                   )}
                                 </button>
                                 <button
+                                  onClick={() => handleSort('count')}
+                                  className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  COUNT
+                                  {sortColumn === 'count' && (
+                                    <span className="text-[8px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                  )}
+                                </button>
+                                <button
                                   onClick={() => handleSort('amount')}
                                   className="text-center hover:text-amber-300 transition-colors cursor-pointer flex items-center justify-center gap-1"
                                 >
@@ -1013,18 +1050,20 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                               </div>
 
                               {/* Mobile Header */}
-                              <div className="md:hidden grid grid-cols-2 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] text-amber-400 uppercase tracking-widest">
+                              <div className="md:hidden grid grid-cols-2 bg-black/95 border-b-2 border-amber-500/50 px-4 py-3 font-mono text-[11px] font-bold text-amber-400 uppercase tracking-widest">
                                 <div>NAME</div>
                                 <div className="text-center">
                                   {mobileDataColumn === 'amount' && 'OWNED'}
                                   {mobileDataColumn === 'growth' && 'GROWTH/d'}
                                   {mobileDataColumn === 'maxCap' && 'MAX CAP'}
                                   {mobileDataColumn === 'totalValue' && 'APPROX. VALUE'}
+                                  {mobileDataColumn === 'count' && 'COUNT'}
                                 </div>
                               </div>
 
                               {/* Terminal Body */}
-                              <div className="max-h-[500px] overflow-y-auto font-[family-name:var(--font-inter)] text-[13px] custom-scrollbar">
+                              <div className="max-h-[500px] overflow-y-auto font-[family-name:var(--font-inter)] custom-scrollbar">
+                                <div style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }} className="text-[13px]">
                                 {sortedEssences.map((essence, index) => {
                                   const baseRate = essence.baseRate || 0; // Don't default to 0.1, keep 0 for non-generating
                                   const bonusRate = essence.bonusRate || 0;
@@ -1048,7 +1087,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                           setSelectedSlice(essence.id);
                                         }
                                       }}
-                                      className={`relative hidden md:grid md:grid-cols-5 items-center px-4 py-3 border-b ${
+                                      className={`relative hidden md:grid md:grid-cols-6 items-center px-4 h-[56px] border-b ${
                                         selectedSlice === essence.id
                                           ? 'border-amber-400 bg-amber-400/20'
                                           : hoveredSlice === essence.id
@@ -1059,7 +1098,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                       {/* Full height amber bar */}
                                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/30" />
 
-                                      <div className="text-white font-semibold">{essence.name.toUpperCase()}</div>
+                                      <div className={`text-white font-semibold whitespace-nowrap overflow-hidden text-ellipsis ${
+                                        essence.name.length <= 10 ? 'text-base' :
+                                        essence.name.length <= 15 ? 'text-sm' :
+                                        essence.name.length <= 20 ? 'text-xs' :
+                                        'text-[11px]'
+                                      }`}>
+                                        {essence.name.toUpperCase()}
+                                      </div>
 
                                       {/* Total Value Column */}
                                       <div className="text-center text-yellow-300 tabular-nums">
@@ -1096,6 +1142,11 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                         {totalRate === 0 ? '—' : totalRate.toFixed(2)}
                                       </div>
 
+                                      {/* Count Column */}
+                                      <div className="text-center text-amber-300 tabular-nums">
+                                        {(essence as any).count || 0}
+                                      </div>
+
                                       {/* Owned Column */}
                                       <div className={`text-center font-bold tabular-nums ${
                                         isGenerating
@@ -1117,6 +1168,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                     </div>
                                   );
                                 })}
+                                </div>
                               </div>
                             </div>
 

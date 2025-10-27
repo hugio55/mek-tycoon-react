@@ -450,10 +450,17 @@ export const initializeTokenType = mutation({
     displayName: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.string(),
+    mediaType: v.optional(v.string()), // MIME type: "image/png", "image/gif", etc.
     metadataUrl: v.string(),
     policyId: v.string(),
     assetNameHex: v.string(),
     isActive: v.boolean(),
+
+    // Custom metadata attributes (for token-specific values like "Poop?: yes")
+    customAttributes: v.optional(v.array(v.object({
+      trait_type: v.string(),
+      value: v.string()
+    }))),
 
     // Distribution Settings (optional - configured in Step 3)
     saleMode: v.optional(v.union(v.literal("whitelist"), v.literal("public_sale"), v.literal("free_claim"))),
@@ -481,9 +488,13 @@ export const initializeTokenType = mutation({
       displayName: args.displayName,
       description: args.description,
       imageUrl: args.imageUrl,
+      mediaType: args.mediaType, // Store media type for proper NFT display
       metadataUrl: args.metadataUrl,
       policyId: args.policyId,
       assetNameHex: args.assetNameHex,
+
+      // Custom metadata attributes
+      customAttributes: args.customAttributes,
 
       // Sale Mode (will be configured later if not provided)
       saleMode: args.saleMode,
@@ -846,6 +857,21 @@ export const recordBatchMintedToken = mutation({
     });
 
     console.log(`[Batch Mint] Recorded minted token: ${args.nftName} → ${args.recipientAddress.substring(0, 20)}...`);
+
+    // Update totalMinted counter for this design
+    const counter = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", args.tokenType))
+      .first();
+
+    if (counter) {
+      await ctx.db.patch(counter._id, {
+        totalMinted: (counter.totalMinted || 0) + 1,
+      });
+      console.log(`[Batch Mint] Updated totalMinted counter for ${args.tokenType}: ${(counter.totalMinted || 0) + 1}`);
+    } else {
+      console.warn(`[Batch Mint] Counter not found for tokenType: ${args.tokenType}`);
+    }
 
     return tokenId;
   },

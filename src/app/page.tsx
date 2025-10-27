@@ -29,6 +29,7 @@ import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
 import MechanismGridLightbox from "@/components/MechanismGridLightbox";
+import MeksTriangleLightbox from "@/components/MeksTriangleLightbox";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 
 // Animated Number Component with smooth counting animation
@@ -127,133 +128,6 @@ function SessionTimer({ expiresAt }: { expiresAt: number }) {
   return (
     <div className={`font-mono text-base sm:text-lg ${isExpiringSoon ? 'text-orange-400' : 'text-green-400'}`}>
       {timeRemaining}
-    </div>
-  );
-}
-
-
-// Meks Triangle Lightbox Component
-function MeksTriangleLightbox({ onClose, ownedMeks }: { onClose: () => void; ownedMeks: MekAsset[] }) {
-  const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
-
-  // Extract owned variation names from the user's Meks
-  const ownedVariationNames = useMemo(() => {
-    const variationSet = new Set<string>();
-
-    ownedMeks.forEach(mek => {
-      // Extract individual variations from sourceKey (format: "head-body-item")
-      if (mek.sourceKey) {
-        const parts = mek.sourceKey.split('-');
-        if (parts.length === 3) {
-          // Map each sourceKey code to its variation name
-          parts.forEach(sourceKeyCode => {
-            if (sourceKeyCode) {
-              // Find the variation in COMPLETE_VARIATION_RARITY by sourceKey
-              const variation = COMPLETE_VARIATION_RARITY.find(
-                v => v.sourceKey.toUpperCase() === sourceKeyCode.toUpperCase()
-              );
-              if (variation) {
-                variationSet.add(variation.name.toUpperCase());
-              }
-            }
-          });
-        }
-      }
-      // Also add the variation groups if available
-      if (mek.headGroup) variationSet.add(mek.headGroup.toUpperCase());
-      if (mek.bodyGroup) variationSet.add(mek.bodyGroup.toUpperCase());
-      if (mek.itemGroup) variationSet.add(mek.itemGroup.toUpperCase());
-    });
-
-    return variationSet;
-  }, [ownedMeks]);
-
-  // Get sprites from overlay data
-  const sprites = triangleOverlayData?.zones?.filter(zone => zone.mode === "sprite") || [];
-
-  // Count owned sprites
-  const ownedCount = sprites.filter(sprite => {
-    const variationName = sprite.metadata?.variationName?.toUpperCase();
-    return variationName && ownedVariationNames.has(variationName);
-  }).length;
-
-  return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-7xl w-full rounded-xl overflow-hidden">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-300 text-3xl font-bold z-10 w-10 h-10 flex items-center justify-center hover:bg-yellow-500/10 rounded transition-colors"
-        >
-          ×
-        </button>
-
-        {/* Title */}
-        <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-8 bg-yellow-500 mek-glow-yellow" />
-            <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow">
-              MEK VARIATIONS
-            </h2>
-          </div>
-        </div>
-
-        {/* Triangle Canvas */}
-        <div className="relative flex items-center justify-center bg-black/40 rounded-lg p-8">
-          <div className="relative">
-            {/* Background Triangle Image */}
-            <img
-              src="/triangle/backplate_2.webp"
-              alt="Mek Variations Triangle"
-              className="w-full h-auto max-w-4xl"
-            />
-
-            {/* Positioned sprites from database */}
-            {sprites.map((sprite) => {
-              const variationName = sprite.metadata?.variationName?.toUpperCase();
-              const isOwned = variationName && ownedVariationNames.has(variationName);
-
-              return (
-                <div
-                  key={sprite.id}
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: `${sprite.x}px`,
-                    top: `${sprite.y}px`,
-                    transform: 'translate(-50%, -50%)',
-                    filter: isOwned
-                      ? 'drop-shadow(0 0 12px rgba(250, 182, 23, 0.9)) brightness(1.3)'
-                      : 'brightness(0.4) grayscale(0.5)',
-                    transition: 'all 0.3s ease',
-                  }}
-                  title={sprite.label || sprite.metadata?.variationName}
-                >
-                  {sprite.overlayImage && (
-                    <img
-                      src={sprite.overlayImage}
-                      alt={sprite.label || "sprite"}
-                      className={isOwned ? 'animate-pulse' : ''}
-                      style={{
-                        animationDuration: isOwned ? '2s' : undefined,
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Info Text */}
-        <div className="mt-4 text-center space-y-2">
-          <p className="mek-label-uppercase text-yellow-400/60 text-sm">
-            288 TOTAL VARIATIONS • 102 HEADS • 112 BODIES • 74 TRAITS
-          </p>
-          <p className="text-yellow-400 font-bold text-lg">
-            You own {ownedCount} of {sprites.length} displayed variations
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

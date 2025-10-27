@@ -24,6 +24,7 @@ import {
 export interface BatchMintConfig {
   design: NFTDesign;
   recipients: MintRecipient[];
+  startMintNumber?: number;  // Starting mint number (default: 1) - should be totalMinted + 1
   batchSize?: number;  // Default: 10
   network?: 'mainnet' | 'preprod';  // Default: preprod
   onProgress?: (progress: MintingProgress) => void;
@@ -71,6 +72,7 @@ export async function processBatchMinting(config: BatchMintConfig): Promise<Batc
   const {
     design,
     recipients,
+    startMintNumber = 1,
     batchSize = 10,
     network = 'preprod',
     onProgress,
@@ -121,7 +123,7 @@ export async function processBatchMinting(config: BatchMintConfig): Promise<Batc
   const failedAddresses: MintRecipient[] = [...invalid]; // Include pre-validation failures
   const assetIds: string[] = [];
   let totalMinted = 0;
-  let mintNumber = 1;
+  let mintNumber = startMintNumber;  // Start from current count (e.g., if 5 already minted, start at 6)
 
   // Process each batch
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {

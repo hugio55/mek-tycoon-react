@@ -69,6 +69,15 @@ type OverlayRendererProps = {
 
   /** Function to get total count for a variation in collection */
   getTotalCount?: (variationName: string, variationType: string) => number;
+
+  /** Optional ref for the base image element */
+  imageRef?: React.RefObject<HTMLImageElement>;
+
+  /** Optional callback when image loads */
+  onImageLoad?: () => void;
+
+  /** Optional className for the container */
+  className?: string;
 };
 
 // Extract color from sprite image path - matches exact bulb colors
@@ -118,13 +127,16 @@ export function OverlayRenderer({
   useColorGlow = false,
   getOwnedCount,
   getTotalCount,
+  imageRef,
+  onImageLoad,
+  className,
 }: OverlayRendererProps) {
   const [hoveredSprite, setHoveredSprite] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   if (!overlayData) return null;
 
-  const { imageWidth, imageHeight, zones } = overlayData;
+  const { imageWidth, imageHeight, zones, imagePath } = overlayData;
 
   // Get only sprite zones
   let sprites = zones.filter(zone => zone.mode === 'sprite');
@@ -145,8 +157,19 @@ export function OverlayRenderer({
   };
 
   return (
-    <>
-      <style>{`
+    <div className={`relative ${className || ''}`}>
+      {/* Base image from overlay data */}
+      <img
+        ref={imageRef}
+        src={imagePath}
+        alt="Overlay base image"
+        className="w-full h-auto"
+        onLoad={onImageLoad}
+      />
+
+      {/* Sprites overlay - positioned absolutely on top of base image */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <style>{`
         @keyframes bulb-flicker {
           /* Mostly off (0-15%) */
           0%, 15% { opacity: 0; }
@@ -178,13 +201,22 @@ export function OverlayRenderer({
       {sprites.map((sprite) => {
         const isHighlighted = highlightFilter ? highlightFilter(sprite) : false;
 
-        // Convert from absolute pixels to percentages based on original image dimensions
-        const xPercent = (sprite.x / imageWidth) * 100;
-        const yPercent = (sprite.y / imageHeight) * 100;
+        // Use actual sprite dimensions from metadata, or fall back to 56px (actual bulb size)
+        const baseSpriteWidth = sprite.metadata?.imageWidth || 56;
+        const baseSpriteHeight = sprite.metadata?.imageHeight || 56;
 
-        // Calculate scale factor based on actual display size
+        // Calculate display scale (how much the base image is scaled)
         const displayScale = displayWidth / imageWidth;
-        const finalScale = displayScale * (sprite.metadata?.spriteScale || 1);
+
+        // Use absolute pixel positioning to match editor
+        // Editor uses: left: sprite.x * scale
+        // So we do the same: sprite.x * displayScale
+        const scaledX = sprite.x * displayScale;
+        const scaledY = sprite.y * displayScale;
+
+        // Apply sprite's own scale on top of display scale
+        const spriteScale = sprite.metadata?.spriteScale || 1;
+        const finalScale = displayScale * spriteScale;
 
         // Determine glow color and intensity
         let glowColor = '250, 182, 23'; // Default yellow
@@ -200,74 +232,58 @@ export function OverlayRenderer({
         const ownedCount = getOwnedCount ? getOwnedCount(variationName, variationType) : 0;
         const totalCount = getTotalCount ? getTotalCount(variationName, variationType) : 0;
 
-        // Normalize all sprites to consistent base size (64x64) then apply scaling
-        // This prevents inconsistent metadata dimensions from causing size variations
-        const BASE_SPRITE_SIZE = 64;
-        const spriteWidth = BASE_SPRITE_SIZE * finalScale;
-        const spriteHeight = BASE_SPRITE_SIZE * finalScale;
-
         return (
           <div
             key={sprite.id}
-            className="absolute pointer-events-none"
+            className="absolute pointer-events-auto"
             style={{
-              left: `${xPercent}%`,
-              top: `${yPercent}%`,
-              // CRITICAL: Position by top-left corner to match overlay editor
-              // DO NOT add translate(-50%, -50%) here
+              left: `${scaledX}px`,
+              top: `${scaledY}px`,
+              // CRITICAL: Use transform: scale() with transform-origin: top-left to match overlay editor and NavigationBar
+              transform: `scale(${finalScale})`,
+              transformOrigin: 'top left',
               transition: 'all 0.3s ease',
             }}
+            onMouseEnter={(e) => {
+              setHoveredSprite(sprite.id);
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTooltipPos({
+                x: rect.left + rect.width / 2,
+                y: rect.top - 10
+              });
+            }}
+            onMouseLeave={() => setHoveredSprite(null)}
           >
-            <div
-              className="relative pointer-events-auto"
-              style={{
-                width: `${spriteWidth}px`,
-                height: `${spriteHeight}px`,
-              }}
-              onMouseEnter={(e) => {
-                setHoveredSprite(sprite.id);
-                const rect = e.currentTarget.getBoundingClientRect();
-                setTooltipPos({
-                  x: rect.left + rect.width / 2,
-                  y: rect.top - 10
-                });
-              }}
-              onMouseLeave={() => setHoveredSprite(null)}
-            >
-              {sprite.overlayImage && (
-                <>
-                  {/* Sprite image - NO animation, stays at 100% opacity */}
-                  <img
-                    src={sprite.overlayImage}
-                    alt={sprite.label || "sprite"}
+            {sprite.overlayImage && (
+              <>
+                {/* Sprite image - NO animation, stays at 100% opacity */}
+                <img
+                  src={sprite.overlayImage}
+                  alt={sprite.label || "sprite"}
+                  style={{
+                    display: 'block',
+                  }}
+                />
+                {/* Circular glow overlay - positioned exactly like sprite */}
+                {isHighlighted && (
+                  <div
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: `${baseSpriteWidth}px`,
+                      height: `${baseSpriteHeight}px`,
+                      background: `radial-gradient(circle at center, rgba(${glowColor}, 1) 0%, rgba(${glowColor}, 0.7) 15%, transparent 40%)`,
+                      mixBlendMode: 'normal',
+                      pointerEvents: 'none',
+                      filter: 'brightness(1.5) saturate(2)',
+                      animation: `bulb-flicker 5s ease-in-out infinite`,
+                      animationDelay: `${animationDelay}s`,
                     }}
                   />
-                  {/* Circular glow overlay - positioned exactly like sprite */}
-                  {isHighlighted && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        background: `radial-gradient(circle at center, rgba(${glowColor}, 1) 0%, rgba(${glowColor}, 0.7) 15%, transparent 40%)`,
-                        mixBlendMode: 'normal',
-                        pointerEvents: 'none',
-                        filter: 'brightness(1.5) saturate(2)',
-                        animation: `bulb-flicker 5s ease-in-out infinite`,
-                        animationDelay: `${animationDelay}s`,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </>
+            )}
           </div>
         );
       })}
@@ -321,6 +337,7 @@ export function OverlayRenderer({
           </div>
         );
       })()}
-    </>
+      </div>
+    </div>
   );
 }

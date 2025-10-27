@@ -284,6 +284,62 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 - `/visual-check - check if mek template modal opens`
 - `@visual-test check if the talent tree nodes are centered on click`
 
+## Console Debugging & Logging
+
+### Searchable Debug Tags
+**When debugging complex systems with many console logs, use unique searchable prefixes to help the user find specific output quickly.**
+
+**Format**: `[emoji + KEYWORD]` at the beginning of console logs
+- **Example**: `console.log('[🔨MINT] Policy script loaded:', policyScript)`
+- **User workflow**: Type "MINT" in browser console filter box to see only minting-related logs
+
+**Guidelines**:
+1. **Use unique keywords**: Choose words that won't appear in other logs
+   - ✅ Good: `[🔨MINT]`, `[🎯TARGET]`, `[💎ESSENCE]`, `[🛡️VALIDATE]`
+   - ❌ Avoid: `[DEBUG]`, `[LOG]`, `[INFO]` (too common)
+
+2. **Add emojis for visual scanning**: Makes tags stand out in cluttered console
+   - Minting: 🔨, 🏭, ⚙️
+   - Validation: 🛡️, ✅, ❌
+   - Database: 💾, 📊, 🗄️
+   - Wallet: 👛, 💰, 🪙
+   - Essence: 💎, ✨, 🧪
+
+3. **Be consistent**: Use same tag throughout related code
+   ```typescript
+   console.log('[🔨MINT] Starting batch mint...');
+   console.log('[🔨MINT] Building transaction...');
+   console.log('[🔨MINT] Transaction signed:', txHash);
+   ```
+
+4. **Only when safe**: Don't alter critical data structures or break functionality
+   - ✅ Safe: Adding prefix to console.log output
+   - ❌ Unsafe: Modifying transaction data, wallet addresses, or database values
+
+5. **Context-specific tags**: Use different tags for different debugging contexts
+   - `[🔨MINT]` - Minting operations
+   - `[💎ESSENCE]` - Essence distribution and buffs
+   - `[👛WALLET]` - Wallet connection and NFT extraction
+   - `[🗄️CONVEX]` - Database queries and mutations
+   - `[🎯CRAFT]` - Crafting system operations
+
+**When User Reports Console Issues**:
+- Ask: "Can you filter the console by searching for '[TAG]' and share what appears?"
+- Much easier than "send me all console output" (could be thousands of lines)
+- User can quickly isolate the relevant logs without scrolling
+
+**Example Implementation**:
+```typescript
+// Batch minting system - all logs tagged with [🔨MINT]
+console.log('[🔨MINT] Initializing batch mint for', addresses.length, 'addresses');
+console.log('[🔨MINT] Policy script:', policyId);
+console.log('[🔨MINT] Transaction built, awaiting signature...');
+
+// Essence system - different tag for different context
+console.log('[💎ESSENCE] Calculating buff multipliers...');
+console.log('[💎ESSENCE] Applying 2.5x boost to mining rate');
+```
+
 ## Design Requirements
 
 ### 🎨 INDUSTRIAL DESIGN SYSTEM (NEW!)
@@ -737,3 +793,24 @@ Loading chunk app/layout failed.
   58 |         {/* Content layer */}
 
 Next.js version: 15.5.4 (Webpack)
+
+---
+
+## 🔨 CURRENT WORK: NFT BATCH MINTING SYSTEM
+
+**STATUS**: 95% complete - Testing Phase
+**BRANCH**: `custom-minting-system`
+**DOCUMENTATION**: See `BATCH_MINTING_IMPLEMENTATION.md` for complete details
+
+**Where We Left Off (October 26, 2025)**:
+- Just fixed critical ForgeScript bug (changed to `ForgeScript.withOneSignature(keyHash)`)
+- About to test batch minting with 2 addresses
+- All minting logs tagged with `[🔨MINT]` - filter console with "MINT"
+- Console filter in Chrome: Type "MINT" in filter box to see only minting logs
+
+**Critical Fixes Applied This Session**:
+1. Policy script lookup from `mintingPolicies` table (was undefined)
+2. Eligible users display using snapshot data (was showing wrong data)
+3. ForgeScript creation for browser wallets (was using wrong method)
+
+**Next Session**: Test the forge script fix, then system ready for production use.

@@ -14,12 +14,6 @@ export default function HomePage() {
   const [showMekSelector, setShowMekSelector] = useState(false);
   const [mekSearchTerm, setMekSearchTerm] = useState('');
 
-  // Get user profile for net gold
-  const userProfile = useQuery(
-    api.users.getUserProfile,
-    userId ? { walletAddress: userId } : "skip"
-  );
-
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
     api.goldMining.getGoldMiningData,
@@ -235,9 +229,8 @@ export default function HomePage() {
     setShowMekSelector(true);
   };
 
-  const netGold = userProfile?.gold || 0;
-
-  // Extract variation names from SLOTTED Meks only (only slotted Meks generate essence)
+  // Extract variation names+types from SLOTTED Meks only (only slotted Meks generate essence)
+  // Store as "NAME-TYPE" to distinguish between same-named variations (e.g., "AZTEC-head" vs "AZTEC-body")
   const ownedVariationNames = useMemo(() => {
     const variationSet = new Set<string>();
 
@@ -246,14 +239,15 @@ export default function HomePage() {
 
     slottedMeks.forEach((slot: any) => {
       // Slot data already has variation names directly
+      // Store as "NAME-TYPE" to prevent confusion with same-named variations
       if (slot.headVariationName) {
-        variationSet.add(slot.headVariationName.toUpperCase());
+        variationSet.add(`${slot.headVariationName.toUpperCase()}-head`);
       }
       if (slot.bodyVariationName) {
-        variationSet.add(slot.bodyVariationName.toUpperCase());
+        variationSet.add(`${slot.bodyVariationName.toUpperCase()}-body`);
       }
       if (slot.itemVariationName) {
-        variationSet.add(slot.itemVariationName.toUpperCase());
+        variationSet.add(`${slot.itemVariationName.toUpperCase()}-item`);
       }
     });
 
@@ -313,41 +307,6 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', updateSize);
   }, [triangleOverlayData]);
 
-  // DEBUG: Log data flow and variation details
-  useEffect(() => {
-    console.log('=== TRIANGLE OVERLAY DEBUG ===');
-    console.log('triangleOverlayData:', triangleOverlayData);
-    console.log('zones count:', triangleOverlayData?.zones?.length);
-    console.log('ownedVariationNames:', Array.from(ownedVariationNames));
-    console.log('ownedMeks count:', ownedMeks.length);
-    console.log('triangle display size:', triangleSize);
-
-    // Debug: Log each Mek's variations (using full key lookup)
-    console.log('\n=== MEK VARIATIONS BREAKDOWN ===');
-    ownedMeks.forEach((mek: any, index: number) => {
-      const sourceKey = mek.sourceKey || mek.sourceKeyBase;
-      const fallback = {
-        head: mek.headVariation,
-        body: mek.bodyVariation,
-        trait: mek.itemVariation
-      };
-      console.log(`Mek ${index + 1}: ${sourceKey || mek.assetName}`);
-      console.log(`  Raw data: sourceKey=${sourceKey}, head=${mek.headVariation}, body=${mek.bodyVariation}, trait=${mek.itemVariation}`);
-
-      const variations = getVariationInfoFromFullKey(sourceKey, fallback);
-      console.log(`  Resolved - Head: ${variations.head.name}, Body: ${variations.body.name}, Trait: ${variations.trait.name}`);
-    });
-
-    // Debug: Log sprite metadata
-    console.log('\n=== SPRITE METADATA ===');
-    triangleOverlayData?.zones?.forEach((zone: any) => {
-      if (zone.mode === 'sprite') {
-        const varName = zone.metadata?.variationName?.toUpperCase();
-        const isOwned = varName ? ownedVariationNames.has(varName) : false;
-        console.log(`Sprite: ${zone.metadata?.variationName} (${zone.metadata?.variationType}) - Owned: ${isOwned}`);
-      }
-    });
-  }, [triangleOverlayData, ownedVariationNames, ownedMeks, triangleSize]);
 
   // Get detailed variation breakdown for SLOTTED Meks only
   const variationBreakdown = useMemo(() => {
@@ -437,53 +396,45 @@ export default function HomePage() {
           </div>
         </details>
 
-        {/* Header with Triangle and Net Gold */}
+        {/* Header with Triangle */}
         <div className="relative flex items-start justify-center mb-12">
-          {/* Net Gold Display - Left of Triangle */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2">
-            <div className="mek-card-industrial mek-border-sharp-gold p-6 rounded-xl">
-              <div className="absolute inset-0 mek-overlay-scratches opacity-20 pointer-events-none" />
-              <div className="absolute inset-0 mek-overlay-rust opacity-10 pointer-events-none" />
-              <div className="relative z-10">
-                <div className="mek-label-uppercase text-yellow-400/70 text-xs mb-2">
-                  NET GOLD
-                </div>
-                <div className="mek-value-primary text-5xl mb-2">
-                  {Math.floor(netGold).toLocaleString()}
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="w-12 h-1 bg-yellow-500/50" />
-                  <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">G</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Triangle with sprites - using OverlayRenderer (includes base image + sprites) */}
+          <OverlayRenderer
+            overlayData={triangleOverlayData}
+            displayWidth={triangleSize.width}
+            imageRef={triangleRef}
+            onImageLoad={() => {
+              // Trigger size update when image loads
+              if (triangleRef.current) {
+                const rect = triangleRef.current.getBoundingClientRect();
+                setTriangleSize({ width: rect.width, height: rect.height });
+              }
+            }}
+            className="max-w-[48rem]"
+            // Only show sprites for variations the user owns (checking both name AND type)
+            filterSprites={(sprite) => {
+              const variationName = sprite.metadata?.variationName?.toUpperCase();
+              const variationType = sprite.metadata?.variationType;
+              if (!variationName || !variationType) return false;
 
-          {/* Triangle Image - Center - Floating on space */}
-          <div className="relative" style={{ maxWidth: '48rem' }}>
-            <img
-              ref={triangleRef}
-              src="/triangle/backplate_2.webp"
-              alt="Mek Variations Triangle"
-              className="w-full h-auto"
-            />
+              // For traits, check BOTH "trait" and "item" suffixes
+              // (database uses "trait" but owned variations are stored as "item")
+              if (variationType === 'trait' || variationType === 'item') {
+                const traitKey = `${variationName}-trait`;
+                const itemKey = `${variationName}-item`;
+                return ownedVariationNames.has(traitKey) || ownedVariationNames.has(itemKey);
+              }
 
-            {/* Positioned sprites from database - using OverlayRenderer */}
-            <OverlayRenderer
-              overlayData={triangleOverlayData}
-              displayWidth={triangleSize.width}
-              // Only show sprites for variations the user owns
-              filterSprites={(sprite) => {
-                const variationName = sprite.metadata?.variationName?.toUpperCase();
-                return variationName ? ownedVariationNames.has(variationName) : false;
-              }}
-              // All visible sprites glow with their color
-              highlightFilter={() => true}
-              useColorGlow={true}
-              getOwnedCount={getOwnedCount}
-              getTotalCount={getTotalCount}
-            />
-          </div>
+              // For heads and bodies, check exact match
+              const key = `${variationName}-${variationType}`;
+              return ownedVariationNames.has(key);
+            }}
+            // All visible sprites glow with their color
+            highlightFilter={() => true}
+            useColorGlow={true}
+            getOwnedCount={getOwnedCount}
+            getTotalCount={getTotalCount}
+          />
         </div>
 
         {/* Mechanism Slots Section */}

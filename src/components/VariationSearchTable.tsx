@@ -2,16 +2,48 @@
 
 import { useState, useMemo } from 'react';
 import { VARIATION_HIERARCHY, type VariationHierarchy } from '@/lib/variationHierarchy';
+import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
+
+// Extended type that merges accurate rarity data with hierarchy info
+interface EnrichedVariation {
+  name: string;
+  type: 'head' | 'body' | 'trait';
+  style: string;
+  group: string;
+  rank: number;
+  copies: number;
+  sourceKey: string;
+  tier: string;
+}
 
 export default function VariationSearchTable() {
   const [searchQuery, setSearchQuery] = useState('');
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [styleFilter, setStyleFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<'head' | 'body' | 'trait' | null>(null);
+  const [rankSortOrder, setRankSortOrder] = useState<'asc' | 'desc' | null>('asc'); // Default to ascending
+
+  // Merge COMPLETE_VARIATION_RARITY with VARIATION_HIERARCHY for style/group info
+  const enrichedVariations = useMemo(() => {
+    return COMPLETE_VARIATION_RARITY.map(variation => {
+      const hierarchyData = VARIATION_HIERARCHY.find(v => v.name === variation.name);
+
+      return {
+        name: variation.name,
+        type: variation.type === 'trait' ? 'trait' : variation.type,
+        style: hierarchyData?.style || 'Unknown',
+        group: hierarchyData?.group || 'Unknown',
+        rank: variation.rank,
+        copies: variation.count,
+        sourceKey: variation.sourceKey,
+        tier: variation.tier
+      } as EnrichedVariation;
+    });
+  }, []);
 
   // Filter variations based on search and filters
   const filteredVariations = useMemo(() => {
-    let results = VARIATION_HIERARCHY;
+    let results = enrichedVariations;
 
     // Apply type filter
     if (typeFilter) {
@@ -38,19 +70,30 @@ export default function VariationSearchTable() {
       );
     }
 
+    // Apply rank sorting
+    if (rankSortOrder) {
+      results = [...results].sort((a, b) => {
+        if (rankSortOrder === 'asc') {
+          return a.rank - b.rank; // 1, 2, 3... (rarest first)
+        } else {
+          return b.rank - a.rank; // 288, 287, 286... (most common first)
+        }
+      });
+    }
+
     return results;
-  }, [searchQuery, groupFilter, styleFilter, typeFilter]);
+  }, [enrichedVariations, searchQuery, groupFilter, styleFilter, typeFilter, rankSortOrder]);
 
   // Get unique groups and styles for autocomplete
   const allGroups = useMemo(() => {
-    const groups = new Set(VARIATION_HIERARCHY.map(v => v.group));
+    const groups = new Set(enrichedVariations.map(v => v.group));
     return Array.from(groups).sort();
-  }, []);
+  }, [enrichedVariations]);
 
   const allStyles = useMemo(() => {
-    const styles = new Set(VARIATION_HIERARCHY.map(v => v.style));
+    const styles = new Set(enrichedVariations.map(v => v.style));
     return Array.from(styles).sort();
-  }, []);
+  }, [enrichedVariations]);
 
   // Handle group click
   const handleGroupClick = (group: string) => {
@@ -72,6 +115,17 @@ export default function VariationSearchTable() {
     setGroupFilter(null);
     setStyleFilter(null);
     setTypeFilter(null);
+  };
+
+  // Toggle rank sort order
+  const toggleRankSort = () => {
+    if (rankSortOrder === 'asc') {
+      setRankSortOrder('desc');
+    } else if (rankSortOrder === 'desc') {
+      setRankSortOrder('asc');
+    } else {
+      setRankSortOrder('asc');
+    }
   };
 
   // Get type badge color
@@ -179,7 +233,7 @@ export default function VariationSearchTable() {
 
       {/* Results Count */}
       <div className="text-sm text-gray-400">
-        Showing {filteredVariations.length} of {VARIATION_HIERARCHY.length} variations
+        Showing {filteredVariations.length} of {enrichedVariations.length} variations
       </div>
 
       {/* Excel-style Table */}
@@ -201,10 +255,21 @@ export default function VariationSearchTable() {
                   Group
                 </th>
                 <th className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider border-r border-gray-700">
-                  Rank
+                  Source Key
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider">
+                <th className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider border-r border-gray-700">
                   Copies
+                </th>
+                <th
+                  className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors select-none"
+                  onClick={toggleRankSort}
+                  title="Click to sort by rank"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Rank
+                    {rankSortOrder === 'asc' && <span className="text-xs">▲</span>}
+                    {rankSortOrder === 'desc' && <span className="text-xs">▼</span>}
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -236,11 +301,18 @@ export default function VariationSearchTable() {
                       {variation.group}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-center text-yellow-400 font-mono border-r border-gray-800">
-                    #{variation.rank}
+                  <td className="px-4 py-3 text-center border-r border-gray-800">
+                    <span className="text-cyan-300 font-mono font-semibold">
+                      {variation.sourceKey}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-green-400 font-mono">
-                    {variation.copies}
+                  <td className="px-4 py-3 text-center border-r border-gray-800">
+                    <span className="text-gray-300 font-mono">
+                      {variation.copies}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-yellow-400 font-mono">
+                    #{variation.rank}
                   </td>
                 </tr>
               ))}

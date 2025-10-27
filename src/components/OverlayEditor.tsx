@@ -68,6 +68,7 @@ export default function OverlayEditor() {
   const [isDraggingExisting, setIsDraggingExisting] = useState(false);
   const [draggingOffset, setDraggingOffset] = useState({ x: 0, y: 0 });
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [draggedSpritePos, setDraggedSpritePos] = useState({ x: 0, y: 0 });
   const isMouseDownRef = useRef(false);
 
   // Sprite positioning
@@ -78,7 +79,6 @@ export default function OverlayEditor() {
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [spriteScale, setSpriteScale] = useState(1);
   const [usedVariations, setUsedVariations] = useState<Set<string>>(new Set());
-  const [checklistExpanded, setChecklistExpanded] = useState(true);
   const [checklistTypeExpanded, setChecklistTypeExpanded] = useState({
     head: false,
     body: false,
@@ -88,6 +88,15 @@ export default function OverlayEditor() {
     head: "",
     body: "",
     trait: "",
+  });
+
+  // Panel collapse states with localStorage persistence
+  const [panelStates, setPanelStates] = useState({
+    savedProjects: true,
+    overlayPalette: true,
+    variationChecklist: true,
+    items: true,
+    editSelected: true,
   });
 
   // Middle mouse button panning
@@ -161,7 +170,46 @@ export default function OverlayEditor() {
     if (storedPalette) {
       setOverlayPalette(JSON.parse(storedPalette));
     }
+    const storedPanelStates = localStorage.getItem("overlay-editor-panel-states");
+    if (storedPanelStates) {
+      setPanelStates(JSON.parse(storedPanelStates));
+    }
   }, []);
+
+  // Save panel states to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("overlay-editor-panel-states", JSON.stringify(panelStates));
+  }, [panelStates]);
+
+  // Toggle panel collapse state
+  const togglePanel = (panelName: keyof typeof panelStates) => {
+    setPanelStates(prev => ({
+      ...prev,
+      [panelName]: !prev[panelName]
+    }));
+  };
+
+  // Auto-save zones to database whenever they change (with debounce)
+  useEffect(() => {
+    if (!imageLoaded || zones.length === 0) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await saveOverlay({
+          imageKey,
+          imagePath,
+          imageWidth: imageDimensions.width,
+          imageHeight: imageDimensions.height,
+          zones,
+        });
+        console.log('[Overlay Editor] Auto-saved changes to database');
+      } catch (error) {
+        console.error('[Overlay Editor] Auto-save failed:', error);
+      }
+    }, 500); // Wait 500ms after last change before saving
+
+    return () => clearTimeout(timeoutId);
+  }, [zones, imageLoaded, imageKey, imagePath, imageDimensions, saveOverlay]);
 
   // Smart path converter - detect if external file or web path
   const extractWebPath = (input: string): string => {
@@ -456,8 +504,16 @@ export default function OverlayEditor() {
       // Default to 100x100 if dimensions aren't stored (for old sprites before this fix)
       const imageWidth = sprite.metadata?.imageWidth || overlayDimensions.width || 100;
       const imageHeight = sprite.metadata?.imageHeight || overlayDimensions.height || 100;
-      const spriteWidth = imageWidth * spriteScaleValue;
-      const spriteHeight = imageHeight * spriteScaleValue;
+
+      // CRITICAL FIX: Hit detection must match CSS layout bounds, NOT visual scaled size
+      // When using transform: scale() with transformOrigin: "top left":
+      // - The element's LAYOUT position stays at (sprite.x, sprite.y)
+      // - The element's LAYOUT size stays at (imageWidth, imageHeight) - UNSCALED!
+      // - Only the VISUAL rendering is scaled, not the clickable area
+      // Since mouse coords are already in canvas space (divided by zoom scale),
+      // we check against the unscaled dimensions
+      const spriteWidth = imageWidth;
+      const spriteHeight = imageHeight;
 
       return (
         x >= sprite.x &&
@@ -474,25 +530,41 @@ export default function OverlayEditor() {
       // If clicking on already selected sprite, prepare to drag it
       if (selectedZoneId === clickedSprite.id) {
         setIsDraggingExisting(true);
-        setDraggingOffset({
+        // Calculate offset from sprite's top-left corner in canvas coordinates
+        // Both x,y and clickedSprite.x,y are in canvas space (after dividing by zoom scale)
+        // This offset stays constant during drag, representing where the user grabbed the sprite
+        const offset = {
           x: x - clickedSprite.x,
           y: y - clickedSprite.y,
+        };
+        setDraggingOffset(offset);
+        // Also initialize the dragged position to current position
+        setDraggedSpritePos({
+          x: clickedSprite.x,
+          y: clickedSprite.y
         });
         return;
       }
       // Otherwise select the clicked sprite
       setSelectedZoneId(clickedSprite.id);
+      // Update the sprite scale slider to match the selected sprite's scale
+      if (clickedSprite.metadata?.spriteScale) {
+        setSpriteScale(clickedSprite.metadata.spriteScale);
+      }
       return;
     }
 
     // Only allow creating new sprite if overlay image is loaded
     if (!overlayImageLoaded) return;
 
+    // CRITICAL: Center offset must account for sprite scale
+    // Visual center = position + (dimensions * scale) / 2
+    // So to center at click position: position = click - (dimensions * scale) / 2
     setDragState({
       ...dragState,
       isDraggingSprite: true,
-      spriteX: x - overlayDimensions.width / 2,
-      spriteY: y - overlayDimensions.height / 2,
+      spriteX: x - (overlayDimensions.width * spriteScale) / 2,
+      spriteY: y - (overlayDimensions.height * spriteScale) / 2,
     });
   };
 
@@ -509,23 +581,23 @@ export default function OverlayEditor() {
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
 
-    // Handle dragging existing sprite
+    // Handle dragging existing sprite - update position state only, don't modify zones yet
     if (isDraggingExisting && selectedZoneId) {
-      const updatedZones = zones.map((z) =>
-        z.id === selectedZoneId
-          ? { ...z, x: x - draggingOffset.x, y: y - draggingOffset.y }
-          : z
-      );
-      setZones(updatedZones);
+      const newPos = {
+        x: x - draggingOffset.x,
+        y: y - draggingOffset.y
+      };
+      setDraggedSpritePos(newPos);
       return;
     }
 
     // Handle dragging new sprite
     if (dragState.isDraggingSprite) {
+      // CRITICAL: Center offset must account for sprite scale
       setDragState({
         ...dragState,
-        spriteX: x - overlayDimensions.width / 2,
-        spriteY: y - overlayDimensions.height / 2,
+        spriteX: x - (overlayDimensions.width * spriteScale) / 2,
+        spriteY: y - (overlayDimensions.height * spriteScale) / 2,
       });
     }
   };
@@ -548,25 +620,37 @@ export default function OverlayEditor() {
       // If movement was less than 5 pixels, treat as click and deselect
       if (distance < 5) {
         setSelectedZoneId(null);
+        setDraggedSpritePos({ x: 0, y: 0 });
         return;
       }
 
-      // Otherwise it was a drag, so autosave the new position
+      // Apply the final dragged position to zones array
+      const updatedZones = zones.map((z) =>
+        z.id === selectedZoneId
+          ? { ...z, x: draggedSpritePos.x, y: draggedSpritePos.y }
+          : z
+      );
+      setZones(updatedZones);
+
+      // Autosave the new position
       try {
         await saveOverlay({
           imageKey,
           imagePath,
           imageWidth: imageDimensions.width,
           imageHeight: imageDimensions.height,
-          zones,
+          zones: updatedZones,
         });
         await saveAutosave({
           imageKey,
-          zones,
+          zones: updatedZones,
         });
       } catch (error) {
         console.error("Autosave after repositioning failed:", error);
       }
+
+      // Reset dragged position
+      setDraggedSpritePos({ x: 0, y: 0 });
       return;
     }
 
@@ -578,19 +662,32 @@ export default function OverlayEditor() {
   };
 
   // SPRITE MODE: Commit sprite position with variation
-  const commitSpritePosition = async () => {
-    if (!selectedVariation) {
+  const commitSpritePosition = async (variationToCommit?: any) => {
+    const variation = variationToCommit || selectedVariation;
+
+    if (!variation) {
       alert("Please select a variation first");
       return;
     }
 
+    // Check if sprite is positioned
+    if (dragState.spriteX === 0 && dragState.spriteY === 0) {
+      alert("Please drag the sprite to a position on the canvas first");
+      return;
+    }
+
     // Check if variation is already used (type + name for uniqueness)
-    const uniqueId = `${selectedVariation.type}-${selectedVariation.name}`;
+    const uniqueId = `${variation.type}-${variation.name}`;
     if (usedVariations.has(uniqueId)) {
       const confirmDuplicate = window.confirm(
-        `"${selectedVariation.name}" has already been placed. Are you sure you want to place it again?`
+        `"${variation.name}" has already been placed. Are you sure you want to place it again?`
       );
       if (!confirmDuplicate) return;
+    }
+
+    // Set selectedVariation for the commit process
+    if (variationToCommit) {
+      setSelectedVariation(variationToCommit);
     }
 
     const newSprite: Zone = {
@@ -600,12 +697,12 @@ export default function OverlayEditor() {
       x: dragState.spriteX,
       y: dragState.spriteY,
       overlayImage: overlayImagePath,
-      label: selectedVariation.name,
+      label: variation.name,
       metadata: {
         variationId: uniqueId,
-        variationName: selectedVariation.name,
-        variationType: selectedVariation.type,
-        sourceKey: selectedVariation.sourceKey,
+        variationName: variation.name,
+        variationType: variation.type,
+        sourceKey: variation.sourceKey,
         spriteScale,
         imageWidth: overlayDimensions.width,
         imageHeight: overlayDimensions.height,
@@ -887,7 +984,7 @@ export default function OverlayEditor() {
                 {Math.round(scale * 100)}%
               </span>
               <button
-                onClick={() => setScale(Math.min(3, scale + 0.25))}
+                onClick={() => setScale(Math.min(5, scale + 0.25))}
                 className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
               >
                 +
@@ -1115,6 +1212,9 @@ export default function OverlayEditor() {
                   {/* Render sprites */}
                   {allZones.filter(z => z.mode === "sprite").map((sprite) => {
                     const spriteScaleValue = sprite.metadata?.spriteScale || 1;
+                    // Hide sprite if it's being dragged to a new position
+                    const isBeingDragged = isDraggingExisting && sprite.id === selectedZoneId;
+
                     return (
                       <div
                         key={sprite.id}
@@ -1122,7 +1222,8 @@ export default function OverlayEditor() {
                           position: "absolute",
                           left: sprite.x * scale,
                           top: sprite.y * scale,
-                          border: (dragState.isDraggingSprite || isDraggingExisting) ? "none" : (selectedZoneId === sprite.id ? "2px solid #fab617" : "1px solid rgba(250, 182, 23, 0.3)"),
+                          outline: (dragState.isDraggingSprite || isDraggingExisting) ? "none" : (selectedZoneId === sprite.id ? "2px solid #fab617" : "1px solid rgba(250, 182, 23, 0.3)"),
+                          outlineOffset: "0px",
                           pointerEvents: dragState.isDraggingSprite ? "none" : "auto",
                           cursor: selectedZoneId === sprite.id ? "move" : "pointer",
                           // CRITICAL: DO NOT MODIFY THIS TRANSFORM!
@@ -1131,6 +1232,8 @@ export default function OverlayEditor() {
                           // Both must be multiplied to maintain correct sprite size at all zoom levels
                           transform: `scale(${spriteScaleValue * scale})`,
                           transformOrigin: "top left",
+                          opacity: isBeingDragged ? 0 : 1,
+                          visibility: isBeingDragged ? "hidden" : "visible",
                         }}
                       >
                         {sprite.overlayImage && (
@@ -1145,16 +1248,17 @@ export default function OverlayEditor() {
                     );
                   })}
 
-                  {/* Dragging sprite preview */}
-                  {editorMode === "sprite" && overlayImageLoaded && (dragState.spriteX !== 0 || dragState.spriteY !== 0) && (
+                  {/* Dragging sprite preview - for NEW sprites */}
+                  {editorMode === "sprite" && overlayImageLoaded && (dragState.spriteX !== 0 || dragState.spriteY !== 0) && !isDraggingExisting && (
                     <div
                       style={{
                         position: "absolute",
                         left: dragState.spriteX * scale,
                         top: dragState.spriteY * scale,
-                        opacity: dragState.isDraggingSprite ? 0.3 : 0.9,
+                        opacity: dragState.isDraggingSprite ? 0.25 : 0.9,
                         pointerEvents: "none",
-                        border: dragState.isDraggingSprite ? "2px dashed rgba(250, 182, 23, 0.5)" : "2px solid rgba(250, 182, 23, 0.8)",
+                        outline: dragState.isDraggingSprite ? "2px dashed rgba(250, 182, 23, 0.5)" : "2px solid rgba(250, 182, 23, 0.8)",
+                        outlineOffset: "0px",
                         // CRITICAL: DO NOT MODIFY THIS TRANSFORM!
                         // spriteScale = user's chosen sprite size (0.25-3.0)
                         // scale = canvas zoom level (0.25-3.0)
@@ -1164,6 +1268,28 @@ export default function OverlayEditor() {
                       }}
                     >
                       <img src={overlayImagePath} alt="Overlay" style={{ display: "block" }} />
+                    </div>
+                  )}
+
+                  {/* Dragging sprite preview - for EXISTING sprites being moved */}
+                  {editorMode === "sprite" && isDraggingExisting && selectedZone && selectedZone.mode === "sprite" && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: draggedSpritePos.x * scale,
+                        top: draggedSpritePos.y * scale,
+                        opacity: 0.5,
+                        pointerEvents: "none",
+                        outline: "2px dashed rgba(250, 182, 23, 0.8)",
+                        outlineOffset: "0px",
+                        // Use the sprite's own scale, not the default spriteScale
+                        transform: `scale(${(selectedZone.metadata?.spriteScale || 1) * scale})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      {selectedZone.overlayImage && (
+                        <img src={selectedZone.overlayImage} alt={selectedZone.label} style={{ display: "block" }} />
+                      )}
                     </div>
                   )}
                 </div>
@@ -1198,28 +1324,36 @@ export default function OverlayEditor() {
 
           {/* Saved Projects */}
           {allOverlays && allOverlays.length > 0 && (
-            <div className="bg-black/50 border border-yellow-500/30 rounded p-4">
-              <h4 className="mek-label-uppercase mb-3 text-yellow-400">Saved Projects</h4>
-              <div className="space-y-1 text-sm max-h-64 overflow-y-auto">
-                {allOverlays.map((overlay) => (
-                  <div
-                    key={overlay._id}
-                    onClick={() => {
-                      setImageKey(overlay.imageKey);
-                      setImagePath(overlay.imagePath);
-                      setZones(overlay.zones);
-                      setImageDimensions({
-                        width: overlay.imageWidth,
-                        height: overlay.imageHeight,
-                      });
-                    }}
-                    className="p-2 bg-black/50 border border-yellow-500/30 rounded cursor-pointer hover:border-yellow-500/50 transition-colors"
-                  >
-                    <div className="text-yellow-400 font-bold">{overlay.imageKey}</div>
-                    <div className="text-xs text-gray-400">{overlay.zones.length} items</div>
-                  </div>
-                ))}
-              </div>
+            <div className="bg-black/50 border border-yellow-500/30 rounded overflow-hidden">
+              <button
+                onClick={() => togglePanel('savedProjects')}
+                className="w-full p-3 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+              >
+                <h4 className="mek-label-uppercase text-yellow-400">Saved Projects ({allOverlays.length})</h4>
+                <span className="text-yellow-400">{panelStates.savedProjects ? "▼" : "▶"}</span>
+              </button>
+              {panelStates.savedProjects && (
+                <div className="p-4 pt-0 space-y-1 text-sm max-h-64 overflow-y-auto">
+                  {allOverlays.map((overlay) => (
+                    <div
+                      key={overlay._id}
+                      onClick={() => {
+                        setImageKey(overlay.imageKey);
+                        setImagePath(overlay.imagePath);
+                        setZones(overlay.zones);
+                        setImageDimensions({
+                          width: overlay.imageWidth,
+                          height: overlay.imageHeight,
+                        });
+                      }}
+                      className="p-2 bg-black/50 border border-yellow-500/30 rounded cursor-pointer hover:border-yellow-500/50 transition-colors"
+                    >
+                      <div className="text-yellow-400 font-bold">{overlay.imageKey}</div>
+                      <div className="text-xs text-gray-400">{overlay.zones.length} items</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1249,8 +1383,15 @@ export default function OverlayEditor() {
 
           {/* Sprite Mode Tools */}
           {editorMode === "sprite" && (
-            <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
-              <h4 className="mek-label-uppercase text-yellow-400">Overlay Palette</h4>
+            <div className="bg-black/50 border border-yellow-500/30 rounded overflow-hidden">
+              <button
+                onClick={() => togglePanel('overlayPalette')}
+                className="w-full p-3 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+              >
+                <h4 className="mek-label-uppercase text-yellow-400">Overlay Palette ({overlayPalette.length})</h4>
+                <span className="text-yellow-400">{panelStates.overlayPalette ? "▼" : "▶"}</span>
+              </button>
+              {panelStates.overlayPalette && (<div className="p-4 pt-0 space-y-3">
 
               {/* Load from Folder */}
               <div className="border border-yellow-500/20 rounded p-3 space-y-2">
@@ -1317,7 +1458,7 @@ export default function OverlayEditor() {
                               ? "border-yellow-500 bg-yellow-500/20"
                               : "border-yellow-500/30 bg-black/50 hover:border-yellow-500/50"
                           }`}
-                          title={item.name}
+                          title={`${item.name}\n${item.path}`}
                         >
                           <img
                             src={item.path}
@@ -1344,36 +1485,97 @@ export default function OverlayEditor() {
                   </div>
                 </div>
               )}
+              </div>)}
             </div>
           )}
 
           {/* Sprite Scale Controls */}
           {editorMode === "sprite" && overlayImageLoaded && (
             <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
-              <h4 className="mek-label-uppercase text-yellow-400">Sprite Size</h4>
-              <div className="flex gap-2 items-center">
-                <button
-                  onClick={() => setSpriteScale(Math.max(0.25, spriteScale - 0.1))}
-                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
-                >
-                  −
-                </button>
-                <span className="text-yellow-400 font-bold min-w-[60px] text-center">
-                  {Math.round(spriteScale * 100)}%
-                </span>
-                <button
-                  onClick={() => setSpriteScale(Math.min(3, spriteScale + 0.1))}
-                  className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => setSpriteScale(1)}
-                  className="ml-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm"
-                >
-                  Reset
-                </button>
+              <h4 className="mek-label-uppercase text-yellow-400">
+                Sprite Size {selectedZone?.mode === "sprite" ? "(Editing Selected)" : "(New Sprite)"}
+              </h4>
+
+              {/* Slider */}
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">
+                  Scale: {Math.round((selectedZone?.mode === "sprite" ? (selectedZone.metadata?.spriteScale || 1) : spriteScale) * 100)}%
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="300"
+                  step="1"
+                  value={Math.round((selectedZone?.mode === "sprite" ? (selectedZone.metadata?.spriteScale || 1) : spriteScale) * 100)}
+                  onChange={(e) => {
+                    const newScale = parseInt(e.target.value) / 100;
+                    if (selectedZone?.mode === "sprite") {
+                      // Update selected sprite
+                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                        ...z,
+                        metadata: { ...z.metadata, spriteScale: newScale }
+                      } : z));
+                      // Also update default scale for new sprites
+                      setSpriteScale(newScale);
+                    } else {
+                      // Update new sprite scale
+                      setSpriteScale(newScale);
+                    }
+                  }}
+                  className="w-full"
+                />
               </div>
+
+              {/* Number Input */}
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">
+                  Precise Scale (%)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="300"
+                  step="1"
+                  value={Math.round((selectedZone?.mode === "sprite" ? (selectedZone.metadata?.spriteScale || 1) : spriteScale) * 100)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 100;
+                    const newScale = Math.max(0.01, Math.min(3, value / 100));
+                    if (selectedZone?.mode === "sprite") {
+                      // Update selected sprite
+                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                        ...z,
+                        metadata: { ...z.metadata, spriteScale: newScale }
+                      } : z));
+                      // Also update default scale for new sprites
+                      setSpriteScale(newScale);
+                    } else {
+                      // Update new sprite scale
+                      setSpriteScale(newScale);
+                    }
+                  }}
+                  className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  if (selectedZone?.mode === "sprite") {
+                    // Reset selected sprite
+                    setZones(zones.map(z => z.id === selectedZoneId ? {
+                      ...z,
+                      metadata: { ...z.metadata, spriteScale: 1 }
+                    } : z));
+                    // Also reset default scale for new sprites
+                    setSpriteScale(1);
+                  } else {
+                    // Reset new sprite scale
+                    setSpriteScale(1);
+                  }
+                }}
+                className="w-full px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm"
+              >
+                Reset to 100%
+              </button>
             </div>
           )}
 
@@ -1405,18 +1607,17 @@ export default function OverlayEditor() {
                             key={uniqueId}
                             onClick={() => setSelectedVariation(variation)}
                             className={`p-2 border rounded cursor-pointer transition-colors text-sm ${
-                              isUsed
-                                ? "border-gray-600 bg-gray-900/50"
-                                : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                              selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
                                 ? "border-yellow-500 bg-yellow-500/20"
+                                : isUsed
+                                ? "border-gray-600 bg-gray-900/30 hover:bg-yellow-500/10"
                                 : "border-yellow-500/30 bg-black/50 hover:border-yellow-500/50"
                             }`}
                           >
                             <div className={`font-bold flex justify-between items-center ${
-                              isUsed ? "line-through text-gray-600" : "text-yellow-400"
+                              isUsed ? "line-through text-gray-400" : "text-yellow-400"
                             }`}>
                               <span>{variation.name}</span>
-                              {isUsed && <span className="text-xs text-red-400 ml-2">Already placed</span>}
                             </div>
                             <div className={`text-xs ${isUsed ? "text-gray-600" : "text-gray-400"}`}>
                               {variation.type} • {variation.sourceKey} • Rank {variation.rank}
@@ -1464,40 +1665,192 @@ export default function OverlayEditor() {
                       </button>
                     )}
                   </div>
+
+                  {/* Clear Variation button for existing sprites */}
+                  {selectedZoneId && zones.find(z => z.id === selectedZoneId)?.metadata?.variationId && (
+                    <button
+                      onClick={() => {
+                        const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                        if (selectedSprite?.metadata?.variationId) {
+                          // Remove from used variations
+                          const newUsedVariations = new Set(usedVariations);
+                          newUsedVariations.delete(selectedSprite.metadata.variationId);
+                          setUsedVariations(newUsedVariations);
+                        }
+
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          label: "",
+                          metadata: {
+                            ...z.metadata,
+                            variationId: undefined,
+                            variationName: undefined,
+                            variationType: undefined,
+                            sourceKey: undefined,
+                          }
+                        } : z));
+                      }}
+                      className="w-full px-3 py-2 bg-orange-600/20 border border-orange-500/50 rounded text-orange-400 hover:bg-orange-600/30 transition-colors text-sm font-bold"
+                      title="Remove variation assignment, keeping sprite position"
+                    >
+                      Clear Variation
+                    </button>
+                  )}
                 </>
               )}
-
-              <div className="text-sm text-gray-400">
-                1. Add overlay images to palette<br />
-                2. Click a bulb to select it<br />
-                3. Drag it to position on canvas<br />
-                4. Search and select variation<br />
-                5. Click Commit Position<br />
-                <br />
-                <span className="text-red-400">To delete:</span><br />
-                • Uncommitted sprite: Click "Clear" button<br />
-                • Committed sprite: Click it in Items list below, then click Delete
-              </div>
             </div>
           )}
 
           {/* Master Variation Checklist */}
           {editorMode === "sprite" && (
             <div className="bg-black/50 border border-yellow-500/30 rounded overflow-hidden">
-              <button
-                onClick={() => setChecklistExpanded(!checklistExpanded)}
-                className="w-full p-4 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
-              >
-                <div className="flex gap-3 items-center">
-                  <h4 className="mek-label-uppercase text-yellow-400">Variation Checklist</h4>
-                  <div className="text-xs text-gray-400">
-                    {usedVariations.size}/288 placed
+              <div className="flex items-center justify-between p-4">
+                <button
+                  onClick={() => togglePanel('variationChecklist')}
+                  className="flex-1 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+                >
+                  <div className="flex gap-3 items-center">
+                    <h4 className="mek-label-uppercase text-yellow-400">Variation Checklist</h4>
+                    <div className="text-xs text-gray-400">
+                      {usedVariations.size}/288 placed
+                    </div>
                   </div>
-                </div>
-                <span className="text-yellow-400">{checklistExpanded ? "▼" : "▶"}</span>
-              </button>
+                  <span className="text-yellow-400">{panelStates.variationChecklist ? "▼" : "▶"}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const newWindow = window.open('', 'Variation Checklist', 'width=500,height=800,scrollbars=yes');
+                    if (newWindow) {
+                      newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <title>Variation Checklist</title>
+                          <style>
+                            body {
+                              background: #000;
+                              color: #fff;
+                              font-family: system-ui, -apple-system, sans-serif;
+                              margin: 0;
+                              padding: 20px;
+                            }
+                            .section {
+                              margin-bottom: 20px;
+                              border: 1px solid rgba(250, 182, 23, 0.3);
+                              border-radius: 4px;
+                              overflow: hidden;
+                            }
+                            .section-header {
+                              background: rgba(250, 182, 23, 0.1);
+                              padding: 12px;
+                              font-weight: bold;
+                              color: #fab617;
+                              display: flex;
+                              justify-content: space-between;
+                            }
+                            .variation-list {
+                              padding: 8px;
+                              max-height: 400px;
+                              overflow-y: auto;
+                            }
+                            .variation-item {
+                              padding: 8px;
+                              font-size: 13px;
+                              display: flex;
+                              justify-content: space-between;
+                              border-bottom: 1px solid rgba(250, 182, 23, 0.1);
+                            }
+                            .variation-item.used {
+                              text-decoration: line-through;
+                              color: #666;
+                            }
+                            .variation-item:not(.used) {
+                              color: #aaa;
+                            }
+                            .rank {
+                              color: #666;
+                              font-size: 11px;
+                            }
+                            h1 {
+                              color: #fab617;
+                              text-transform: uppercase;
+                              letter-spacing: 2px;
+                              font-size: 18px;
+                              margin-top: 0;
+                            }
+                            .count {
+                              font-size: 12px;
+                              color: #999;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <h1>Variation Checklist <span class="count">(${usedVariations.size}/288 placed)</span></h1>
 
-              {checklistExpanded && (
+                          <div class="section">
+                            <div class="section-header">
+                              <span>Heads</span>
+                              <span class="count">${usedCountByType.head}/${variationsByType.head.length}</span>
+                            </div>
+                            <div class="variation-list">
+                              ${variationsByType.head.map((v: any) => {
+                                const uniqueId = `${v.type}-${v.name}`;
+                                const isUsed = usedVariations.has(uniqueId);
+                                return `<div class="variation-item ${isUsed ? 'used' : ''}">
+                                  <span>${v.name}</span>
+                                  <span class="rank">#${v.rank}</span>
+                                </div>`;
+                              }).join('')}
+                            </div>
+                          </div>
+
+                          <div class="section">
+                            <div class="section-header">
+                              <span>Bodies</span>
+                              <span class="count">${usedCountByType.body}/${variationsByType.body.length}</span>
+                            </div>
+                            <div class="variation-list">
+                              ${variationsByType.body.map((v: any) => {
+                                const uniqueId = `${v.type}-${v.name}`;
+                                const isUsed = usedVariations.has(uniqueId);
+                                return `<div class="variation-item ${isUsed ? 'used' : ''}">
+                                  <span>${v.name}</span>
+                                  <span class="rank">#${v.rank}</span>
+                                </div>`;
+                              }).join('')}
+                            </div>
+                          </div>
+
+                          <div class="section">
+                            <div class="section-header">
+                              <span>Traits</span>
+                              <span class="count">${usedCountByType.trait}/${variationsByType.trait.length}</span>
+                            </div>
+                            <div class="variation-list">
+                              ${variationsByType.trait.map((v: any) => {
+                                const uniqueId = `${v.type}-${v.name}`;
+                                const isUsed = usedVariations.has(uniqueId);
+                                return `<div class="variation-item ${isUsed ? 'used' : ''}">
+                                  <span>${v.name}</span>
+                                  <span class="rank">#${v.rank}</span>
+                                </div>`;
+                              }).join('')}
+                            </div>
+                          </div>
+                        </body>
+                        </html>
+                      `);
+                      newWindow.document.close();
+                    }
+                  }}
+                  className="ml-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-xs font-bold"
+                  title="Open in new window"
+                >
+                  ⧉
+                </button>
+              </div>
+
+              {panelStates.variationChecklist && (
                 <div className="p-4 pt-0 space-y-2">
                   {/* Heads Section */}
                   <div className="border border-yellow-500/20 rounded overflow-hidden">
@@ -1538,14 +1891,53 @@ export default function OverlayEditor() {
                               return (
                                 <div
                                   key={uniqueId}
-                                  onClick={() => !isUsed && setSelectedVariation(variation)}
-                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
-                                    isUsed
-                                      ? "line-through text-gray-600 bg-gray-900/50"
-                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
-                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
-                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  onClick={() => {
+                                    // If dragging a new sprite, commit it
+                                    if (dragState.spriteX !== 0 || dragState.spriteY !== 0) {
+                                      commitSpritePosition(variation);
+                                    }
+                                    // If a sprite is selected, swap the variation (allow duplicates)
+                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                      if (selectedSprite) {
+                                        const newUniqueId = `${variation.type}-${variation.name}`;
+                                        const oldUniqueId = selectedSprite.metadata?.variationId;
+
+                                        // Update the sprite with new variation
+                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                          ...z,
+                                          label: variation.name,
+                                          metadata: {
+                                            ...z.metadata,
+                                            variationId: newUniqueId,
+                                            variationName: variation.name,
+                                            variationType: variation.type,
+                                            sourceKey: variation.sourceKey,
+                                          }
+                                        } : z));
+
+                                        // Update used variations - remove old, add new
+                                        const newUsedVariations = new Set(usedVariations);
+                                        if (oldUniqueId) {
+                                          newUsedVariations.delete(oldUniqueId);
+                                        }
+                                        newUsedVariations.add(newUniqueId);
+                                        setUsedVariations(newUsedVariations);
+                                      }
+                                    }
+                                    // Otherwise just select the variation for dragging
+                                    else {
+                                      setSelectedVariation(variation);
+                                    }
+                                  }}
+                                  className={`text-xs p-2 rounded transition-all ${
+                                    selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border-2 border-yellow-500 bg-yellow-500/30 text-yellow-400 shadow-lg shadow-yellow-500/50 cursor-pointer"
+                                      : isUsed
+                                      ? "line-through text-gray-400 bg-gray-900/30 cursor-pointer hover:bg-yellow-500/10"
+                                      : "hover:bg-yellow-500/20 hover:border hover:border-yellow-500/50 text-gray-300 cursor-pointer hover:scale-102"
                                   }`}
+                                  title={isUsed ? "Already placed (click to swap)" : "Click to assign this variation"}
                                 >
                                   <div className="flex justify-between">
                                     <span>{variation.name}</span>
@@ -1598,14 +1990,53 @@ export default function OverlayEditor() {
                               return (
                                 <div
                                   key={uniqueId}
-                                  onClick={() => !isUsed && setSelectedVariation(variation)}
-                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
-                                    isUsed
-                                      ? "line-through text-gray-600 bg-gray-900/50"
-                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
-                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
-                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  onClick={() => {
+                                    // If dragging a new sprite, commit it
+                                    if (dragState.spriteX !== 0 || dragState.spriteY !== 0) {
+                                      commitSpritePosition(variation);
+                                    }
+                                    // If a sprite is selected, swap the variation (allow duplicates)
+                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                      if (selectedSprite) {
+                                        const newUniqueId = `${variation.type}-${variation.name}`;
+                                        const oldUniqueId = selectedSprite.metadata?.variationId;
+
+                                        // Update the sprite with new variation
+                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                          ...z,
+                                          label: variation.name,
+                                          metadata: {
+                                            ...z.metadata,
+                                            variationId: newUniqueId,
+                                            variationName: variation.name,
+                                            variationType: variation.type,
+                                            sourceKey: variation.sourceKey,
+                                          }
+                                        } : z));
+
+                                        // Update used variations - remove old, add new
+                                        const newUsedVariations = new Set(usedVariations);
+                                        if (oldUniqueId) {
+                                          newUsedVariations.delete(oldUniqueId);
+                                        }
+                                        newUsedVariations.add(newUniqueId);
+                                        setUsedVariations(newUsedVariations);
+                                      }
+                                    }
+                                    // Otherwise just select the variation for dragging
+                                    else {
+                                      setSelectedVariation(variation);
+                                    }
+                                  }}
+                                  className={`text-xs p-2 rounded transition-all ${
+                                    selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border-2 border-yellow-500 bg-yellow-500/30 text-yellow-400 shadow-lg shadow-yellow-500/50 cursor-pointer"
+                                      : isUsed
+                                      ? "line-through text-gray-400 bg-gray-900/30 cursor-pointer hover:bg-yellow-500/10"
+                                      : "hover:bg-yellow-500/20 hover:border hover:border-yellow-500/50 text-gray-300 cursor-pointer hover:scale-102"
                                   }`}
+                                  title={isUsed ? "Already placed (click to swap)" : "Click to assign this variation"}
                                 >
                                   <div className="flex justify-between">
                                     <span>{variation.name}</span>
@@ -1658,14 +2089,53 @@ export default function OverlayEditor() {
                               return (
                                 <div
                                   key={uniqueId}
-                                  onClick={() => !isUsed && setSelectedVariation(variation)}
-                                  className={`text-xs p-2 rounded cursor-pointer transition-all ${
-                                    isUsed
-                                      ? "line-through text-gray-600 bg-gray-900/50"
-                                      : selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
-                                      ? "border border-yellow-500 bg-yellow-500/20 text-yellow-400"
-                                      : "hover:bg-yellow-500/10 text-gray-300"
+                                  onClick={() => {
+                                    // If dragging a new sprite, commit it
+                                    if (dragState.spriteX !== 0 || dragState.spriteY !== 0) {
+                                      commitSpritePosition(variation);
+                                    }
+                                    // If a sprite is selected, swap the variation (allow duplicates)
+                                    else if (selectedZoneId && zones.find(z => z.id === selectedZoneId)?.mode === "sprite") {
+                                      const selectedSprite = zones.find(z => z.id === selectedZoneId);
+                                      if (selectedSprite) {
+                                        const newUniqueId = `${variation.type}-${variation.name}`;
+                                        const oldUniqueId = selectedSprite.metadata?.variationId;
+
+                                        // Update the sprite with new variation
+                                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                                          ...z,
+                                          label: variation.name,
+                                          metadata: {
+                                            ...z.metadata,
+                                            variationId: newUniqueId,
+                                            variationName: variation.name,
+                                            variationType: variation.type,
+                                            sourceKey: variation.sourceKey,
+                                          }
+                                        } : z));
+
+                                        // Update used variations - remove old, add new
+                                        const newUsedVariations = new Set(usedVariations);
+                                        if (oldUniqueId) {
+                                          newUsedVariations.delete(oldUniqueId);
+                                        }
+                                        newUsedVariations.add(newUniqueId);
+                                        setUsedVariations(newUsedVariations);
+                                      }
+                                    }
+                                    // Otherwise just select the variation for dragging
+                                    else {
+                                      setSelectedVariation(variation);
+                                    }
+                                  }}
+                                  className={`text-xs p-2 rounded transition-all ${
+                                    selectedVariation?.name === variation.name && selectedVariation?.type === variation.type
+                                      ? "border-2 border-yellow-500 bg-yellow-500/30 text-yellow-400 shadow-lg shadow-yellow-500/50 cursor-pointer"
+                                      : isUsed
+                                      ? "line-through text-gray-400 bg-gray-900/30 cursor-pointer hover:bg-yellow-500/10"
+                                      : "hover:bg-yellow-500/20 hover:border hover:border-yellow-500/50 text-gray-300 cursor-pointer hover:scale-102"
                                   }`}
+                                  title={isUsed ? "Already placed (click to swap)" : "Click to assign this variation"}
                                 >
                                   <div className="flex justify-between">
                                     <span>{variation.name}</span>
@@ -1684,18 +2154,28 @@ export default function OverlayEditor() {
           )}
 
           {/* Items List */}
-          <div className="bg-black/50 border border-yellow-500/30 rounded p-4 space-y-3">
-            <div className="flex justify-between items-center">
+          <div className="bg-black/50 border border-yellow-500/30 rounded overflow-hidden">
+            <button
+              onClick={() => togglePanel('items')}
+              className="w-full p-3 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+            >
               <h4 className="mek-label-uppercase text-yellow-400">
                 Items ({zones.length})
               </h4>
-              <span className="text-xs text-gray-500">Click to select</span>
-            </div>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+              <span className="text-yellow-400">{panelStates.items ? "▼" : "▶"}</span>
+            </button>
+            {panelStates.items && (
+            <div className="p-4 pt-0 space-y-2 max-h-80 overflow-y-auto">
               {zones.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => setSelectedZoneId(item.id)}
+                  onClick={() => {
+                    setSelectedZoneId(item.id);
+                    // If selecting a sprite, update the scale slider to match
+                    if (item.mode === "sprite" && item.metadata?.spriteScale) {
+                      setSpriteScale(item.metadata.spriteScale);
+                    }
+                  }}
                   className={`p-3 border rounded cursor-pointer transition-colors ${
                     selectedZoneId === item.id
                       ? "border-yellow-500 bg-yellow-500/20"
@@ -1712,13 +2192,21 @@ export default function OverlayEditor() {
                 </div>
               ))}
             </div>
+            )}
           </div>
 
           {/* Selected Item Editor */}
           {selectedZone && (
-            <div className="bg-black/50 border border-yellow-500/50 rounded p-4 space-y-3">
+            <div className="bg-black/50 border border-yellow-500/50 rounded overflow-hidden">
+              <button
+                onClick={() => togglePanel('editSelected')}
+                className="w-full p-3 flex justify-between items-center hover:bg-yellow-500/10 transition-colors"
+              >
+                <h4 className="mek-label-uppercase text-yellow-400">Edit Selected</h4>
+                <span className="text-yellow-400">{panelStates.editSelected ? "▼" : "▶"}</span>
+              </button>
+              {panelStates.editSelected && (<div className="p-4 pt-0 space-y-3">
               <div className="flex justify-between items-center">
-                <h4 className="mek-label-uppercase">Edit Selected</h4>
                 <button
                   onClick={handleDelete}
                   className="px-3 py-1 bg-red-600/20 border border-red-500/50 rounded text-red-400 hover:bg-red-600/30 transition-colors text-xs font-bold"
@@ -1736,6 +2224,115 @@ export default function OverlayEditor() {
                   placeholder="Enter label..."
                 />
               </div>
+
+              {/* Position Controls */}
+              <div className="border border-yellow-500/30 rounded p-3 space-y-3">
+                <div className="text-sm font-bold text-yellow-400">Position</div>
+
+                {/* X Position */}
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">
+                    X Position: {Math.round(selectedZone.x)}px
+                  </label>
+                  <input
+                    type="number"
+                    value={Math.round(selectedZone.x)}
+                    onChange={(e) => {
+                      const newX = parseInt(e.target.value) || 0;
+                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                        ...z,
+                        x: newX
+                      } : z));
+                    }}
+                    className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    step="1"
+                  />
+                </div>
+
+                {/* Y Position */}
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">
+                    Y Position: {Math.round(selectedZone.y)}px
+                  </label>
+                  <input
+                    type="number"
+                    value={Math.round(selectedZone.y)}
+                    onChange={(e) => {
+                      const newY = parseInt(e.target.value) || 0;
+                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                        ...z,
+                        y: newY
+                      } : z));
+                    }}
+                    className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    step="1"
+                  />
+                </div>
+              </div>
+
+              {/* Sprite Scale Configuration - Only for sprites */}
+              {selectedZone.mode === "sprite" && (
+                <div className="border border-yellow-500/30 rounded p-3 space-y-3">
+                  <div className="text-sm font-bold text-yellow-400">Sprite Scale</div>
+
+                  {/* Slider */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      Scale: {Math.round((selectedZone.metadata?.spriteScale || 1) * 100)}%
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="300"
+                      step="1"
+                      value={Math.round((selectedZone.metadata?.spriteScale || 1) * 100)}
+                      onChange={(e) => {
+                        const newScale = parseInt(e.target.value) / 100;
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, spriteScale: newScale }
+                        } : z));
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Number Input */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      Precise Scale (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="300"
+                      step="1"
+                      value={Math.round((selectedZone.metadata?.spriteScale || 1) * 100)}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 100;
+                        const newScale = Math.max(0.01, Math.min(3, value / 100));
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, spriteScale: newScale }
+                        } : z));
+                      }}
+                      className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setZones(zones.map(z => z.id === selectedZoneId ? {
+                        ...z,
+                        metadata: { ...z.metadata, spriteScale: 1 }
+                      } : z));
+                    }}
+                    className="w-full px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 hover:bg-yellow-500/30 text-sm"
+                  >
+                    Reset to 100%
+                  </button>
+                </div>
+              )}
 
               {/* Button Configuration Panel - Only for zones */}
               {selectedZone.mode === "zone" && (
@@ -1804,6 +2401,8 @@ export default function OverlayEditor() {
                           <option value="orbitron">Orbitron</option>
                           <option value="geist-sans">Geist Sans</option>
                           <option value="geist-mono">Geist Mono</option>
+                          <option value="segoe-ui">Segoe UI</option>
+                          <option value="segoe-ui-thin">Segoe UI Thin</option>
                         </select>
                       </div>
 
@@ -2094,7 +2693,7 @@ export default function OverlayEditor() {
                     <input
                       type="range"
                       min="12"
-                      max="96"
+                      max="200"
                       step="2"
                       value={selectedZone.metadata?.displayFontSize || 32}
                       onChange={(e) => {
@@ -2146,6 +2745,8 @@ export default function OverlayEditor() {
                       <option value="orbitron">Orbitron</option>
                       <option value="geist-mono">Geist Mono</option>
                       <option value="geist-sans">Geist Sans</option>
+                      <option value="segoe-ui">Segoe UI</option>
+                      <option value="segoe-ui-thin">Segoe UI Thin</option>
                     </select>
                   </div>
 
@@ -2167,6 +2768,50 @@ export default function OverlayEditor() {
                       <option value="right">Right</option>
                     </select>
                   </div>
+
+                  {/* Decimal Places */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      Decimal Places: {selectedZone.metadata?.decimalPlaces || 0}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="3"
+                      step="1"
+                      value={selectedZone.metadata?.decimalPlaces || 0}
+                      onChange={(e) => {
+                        setZones(zones.map(z => z.id === selectedZoneId ? {
+                          ...z,
+                          metadata: { ...z.metadata, decimalPlaces: parseInt(e.target.value) }
+                        } : z));
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Decimal Font Size */}
+                  {(selectedZone.metadata?.decimalPlaces || 0) > 0 && (
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">
+                        Decimal Font Size: {selectedZone.metadata?.decimalFontSizePercent || 50}%
+                      </label>
+                      <input
+                        type="range"
+                        min="20"
+                        max="100"
+                        step="5"
+                        value={selectedZone.metadata?.decimalFontSizePercent || 50}
+                        onChange={(e) => {
+                          setZones(zones.map(z => z.id === selectedZoneId ? {
+                            ...z,
+                            metadata: { ...z.metadata, decimalFontSizePercent: parseInt(e.target.value) }
+                          } : z));
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2184,6 +2829,7 @@ export default function OverlayEditor() {
                   </div>
                 )}
               </div>
+              </div>)}
             </div>
           )}
 
