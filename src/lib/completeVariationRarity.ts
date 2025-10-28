@@ -2638,3 +2638,18 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "NM1"
   }
 ];
+
+// Utility functions for variation lookup
+export function getVariationByRank(rank: number): VariationRarity | undefined {
+  if (rank < 1 || rank > COMPLETE_VARIATION_RARITY.length) {
+    return undefined;
+  }
+  return COMPLETE_VARIATION_RARITY[rank - 1];
+}
+
+export function getVariationsByRankRange(minRank: number, maxRank: number): VariationRarity[] {
+  if (minRank < 1 || maxRank > COMPLETE_VARIATION_RARITY.length || minRank > maxRank) {
+    return [];
+  }
+  return COMPLETE_VARIATION_RARITY.slice(minRank - 1, maxRank);
+}
