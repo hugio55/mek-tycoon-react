@@ -212,46 +212,61 @@ export function buildCIP25Metadata(
   recipient: MintRecipient,
   mintNumber: number
 ): any {
+  console.log('METADATA_BUILD_START Building CIP25 metadata for mint number:', mintNumber);
+  console.log('METADATA_BUILD_DESIGN Input design:', JSON.stringify({
+    tokenType: design.tokenType,
+    name: design.name,
+    imageIpfsHash: design.imageIpfsHash,
+    mediaType: design.mediaType,
+    assetNamePrefix: design.assetNamePrefix
+  }, null, 2));
+
   // Generate unique asset name (hex-encoded)
   const assetName = generateAssetName(design.assetNamePrefix, mintNumber);
   const assetNameHex = Buffer.from(assetName, 'utf-8').toString('hex');
 
+  console.log('METADATA_BUILD_ASSET Generated asset name:', assetName);
+  console.log('METADATA_BUILD_ASSET_HEX Asset name hex:', assetNameHex);
+
   // Format IPFS URL correctly (MUST use ipfs:// format)
   const ipfsImageUrl = formatIpfsUrl(design.imageIpfsHash);
 
-  // Build base attributes in array format (OpenSea/industry standard)
-  // Wallets like Lace display this format much better than object format
-  const attributes: Array<{ trait_type: string; value: string }> = [
-    { trait_type: "Mint Number", value: mintNumber.toString() },
-    { trait_type: "Recipient", value: recipient.displayName || shortenAddress(recipient.address) },
-    { trait_type: "Collection", value: design.tokenType }
-  ];
+  console.log('METADATA_BUILD_IMAGE Formatted IPFS URL:', ipfsImageUrl);
+  console.log('METADATA_BUILD_MEDIATYPE Media type:', design.mediaType || "image/png");
+
+  // Build metadata fields as direct key-value pairs (cleaner wallet display)
+  // This format displays much better in Lace, Eternl, and other wallets
+  const metadataFields: Record<string, string> = {
+    "Mint Number": mintNumber.toString(),
+    "Collection": design.tokenType
+  };
+
+  console.log('METADATA_BUILD_ATTRS Base attributes created');
 
   // Add custom metadata attributes from the design (these override policy template defaults)
   if (design.customAttributes && design.customAttributes.length > 0) {
-    console.log('[ATTRIBUTES] Using design-specific customAttributes:', design.customAttributes);
+    console.log('METADATA_BUILD_CUSTOM Using design-specific customAttributes:', design.customAttributes);
     for (const attr of design.customAttributes) {
       if (attr.trait_type && attr.value) {
-        console.log(`[ATTRIBUTES]   Adding: ${attr.trait_type} = ${attr.value}`);
-        attributes.push({ trait_type: attr.trait_type, value: attr.value });
+        console.log('METADATA_BUILD_CUSTOM_ADD Adding attribute:', attr.trait_type, '=', attr.value);
+        metadataFields[attr.trait_type] = attr.value;
       }
     }
   }
   // Otherwise, fall back to policy template fixed fields
   else if (design.metadataTemplate?.customFields) {
-    console.log('[ATTRIBUTES] WARNING - No customAttributes on design, falling back to policy template');
-    console.log('[ATTRIBUTES] Policy template fields:', design.metadataTemplate.customFields);
+    console.log('METADATA_BUILD_TEMPLATE Using policy template fields');
     for (const field of design.metadataTemplate.customFields) {
       if (field.fieldType === 'fixed' && field.fixedValue) {
-        console.log(`[ATTRIBUTES]   Adding from policy: ${field.fieldName} = ${field.fixedValue}`);
-        attributes.push({ trait_type: field.fieldName, value: field.fixedValue });
+        console.log('METADATA_BUILD_TEMPLATE_ADD Adding from template:', field.fieldName, '=', field.fixedValue);
+        metadataFields[field.fieldName] = field.fixedValue;
       }
     }
   } else {
-    console.log('[ATTRIBUTES] ERROR - No customAttributes AND no policy template, using base attributes only');
+    console.log('METADATA_BUILD_NONE No custom attributes or template, using base only');
   }
 
-  // Build CIP-25 metadata structure
+  // Build CIP-25 metadata structure with direct key-value pairs
   // Reference: https://cips.cardano.org/cip/CIP-25
   const metadata = {
     "721": {  // CIP-25 metadata label
@@ -261,12 +276,14 @@ export function buildCIP25Metadata(
           image: ipfsImageUrl,
           mediaType: design.mediaType || "image/png",  // Use stored media type (GIF, PNG, JPEG, etc.)
           description: design.description,
-          // Attributes in array format for better wallet display
-          attributes
+          // Spread all custom fields directly at root level for clean wallet display
+          ...metadataFields
         }
       }
     }
   };
+
+  console.log('METADATA_BUILD_COMPLETE Final metadata structure:', JSON.stringify(metadata, null, 2));
 
   return metadata;
 }

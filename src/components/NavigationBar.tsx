@@ -16,7 +16,13 @@ export default function NavigationBar() {
   useEffect(() => {
     const loadWallet = async () => {
       const session = await restoreWalletSession();
-      setWalletAddress(session?.stakeAddress || null);
+      const address = session?.stakeAddress || null;
+      console.log('[🎯NAV] Wallet session loaded:', {
+        hasSession: !!session,
+        stakeAddress: address ? address.slice(0, 20) + '...' : null,
+        fullAddress: address
+      });
+      setWalletAddress(address);
     };
     loadWallet();
   }, []);
@@ -29,6 +35,17 @@ export default function NavigationBar() {
     api.goldMining.getGoldMiningData,
     walletAddress ? { walletAddress } : "skip"
   );
+
+  // Debug log gold mining data
+  useEffect(() => {
+    console.log('[🎯NAV] Gold mining data updated:', {
+      hasData: !!goldMiningData,
+      currentGold: goldMiningData?.currentGold || 0,
+      totalGoldPerHour: goldMiningData?.totalGoldPerHour || 0,
+      mekCount: goldMiningData?.ownedMeks?.length || 0,
+      walletAddress: walletAddress ? walletAddress.slice(0, 20) + '...' : null
+    });
+  }, [goldMiningData, walletAddress]);
 
   // Get essence data for display zones
   const essenceData = useQuery(
@@ -44,14 +61,24 @@ export default function NavigationBar() {
 
   // Accumulate gold in real-time for display zones
   useEffect(() => {
-    if (!goldMiningData) return;
+    if (!goldMiningData) {
+      console.log('[🎯NAV] No gold mining data - skipping accumulation');
+      return;
+    }
 
     const targetGold = goldMiningData.currentGold || 0;
     const goldPerHour = goldMiningData.totalGoldPerHour || 0;
     const goldPerMs = goldPerHour / 3600000;
 
+    console.log('[🎯NAV] Starting gold accumulation:', {
+      targetGold,
+      goldPerHour,
+      currentGoldState: currentGold
+    });
+
     // Initialize current gold if needed
     if (currentGold === 0 && targetGold > 0) {
+      console.log('[🎯NAV] Initializing currentGold to:', targetGold);
       setCurrentGold(targetGold);
     }
 

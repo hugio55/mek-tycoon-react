@@ -1062,8 +1062,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                               </div>
 
                               {/* Terminal Body */}
-                              <div className="max-h-[500px] overflow-y-auto font-[family-name:var(--font-inter)] custom-scrollbar">
-                                <div style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }} className="text-[13px]">
+                              <div className="max-h-[500px] overflow-y-auto font-[family-name:var(--font-inter)] text-[13px] custom-scrollbar">
                                 {sortedEssences.map((essence, index) => {
                                   const baseRate = essence.baseRate || 0; // Don't default to 0.1, keep 0 for non-generating
                                   const bonusRate = essence.bonusRate || 0;
@@ -1098,11 +1097,10 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                       {/* Full height amber bar */}
                                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/30" />
 
-                                      <div className={`text-white font-semibold whitespace-nowrap overflow-hidden text-ellipsis ${
-                                        essence.name.length <= 10 ? 'text-base' :
-                                        essence.name.length <= 15 ? 'text-sm' :
-                                        essence.name.length <= 20 ? 'text-xs' :
-                                        'text-[11px]'
+                                      <div className={`text-white font-semibold line-clamp-2 leading-tight ${
+                                        essence.name.length <= 8 ? 'text-xs' :
+                                        essence.name.length <= 12 ? 'text-[11px]' :
+                                        'text-[10px]'
                                       }`}>
                                         {essence.name.toUpperCase()}
                                       </div>
@@ -1168,7 +1166,6 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                     </div>
                                   );
                                 })}
-                                </div>
                               </div>
                             </div>
 

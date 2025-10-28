@@ -5,11 +5,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ALL_VARIATIONS_FLAT } from "@/lib/variationsReferenceData";
-import EssenceListingLightboxV5YellowGradient from "@/components/EssenceListingLightbox-V5-YellowGradient";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
-import EssenceListingLightboxV7HybridGlass from "@/components/EssenceListingLightbox-V7-HybridGlass";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
-import { restoreWalletSession } from "@/lib/walletSessionManager";
+// Removed: restoreWalletSession - using localStorage directly like hub page
 
 // Variation type categories for essence filtering
 const RARITY_CATEGORIES = [
@@ -37,7 +35,7 @@ const DURATION_OPTIONS = [
 
 export default function EssenceMarketPage() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
-  const [walletAddress, setWalletAddress] = useState<string>("demo_wallet_123");
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [selectedRarity, setSelectedRarity] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -76,7 +74,7 @@ export default function EssenceMarketPage() {
   const essenceTitleColor = 'white'; // LOCKED to white
   const [essenceTitleCase, setEssenceTitleCase] = useState<'uppercase' | 'titlecase'>('uppercase'); // Toggle between uppercase and title case
   const [siphonLayoutChoice, setSiphonLayoutChoice] = useState<1 | 2 | 3 | 4 | 5>(5); // Siphon modal layout style
-  const [lightboxVersion, setLightboxVersion] = useState<5 | 6 | 7>(5); // New listing lightbox design version
+  const lightboxVersion = 6; // New listing lightbox design version - locked to V6
 
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -92,6 +90,11 @@ export default function EssenceMarketPage() {
 
   // My Listings modal state
   const [showMyListingsModal, setShowMyListingsModal] = useState(false);
+
+  // Recall confirmation modal state
+  const [showRecallConfirm, setShowRecallConfirm] = useState(false);
+  const [recallListingId, setRecallListingId] = useState<Id<"marketListings"> | null>(null);
+  const [showRecallSuccess, setShowRecallSuccess] = useState(false);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -213,26 +216,42 @@ export default function EssenceMarketPage() {
 
   useEffect(() => {
     const initUser = async () => {
-      // Restore wallet from encrypted session (same as root page)
-      const session = await restoreWalletSession();
-      const storedWallet = session?.stakeAddress || "demo_wallet_123";
+      try {
+        // SIMPLIFIED: Match hub page pattern - localStorage FIRST (no encrypted session complexity)
+        const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
 
-      console.log('[Essence Market] Using wallet address:', storedWallet);
-      setWalletAddress(storedWallet);
+        console.log('[💰WALLET] Using wallet address from localStorage:', storedWallet);
+        setWalletAddress(storedWallet);
 
-      const user = await getOrCreateUser({ walletAddress: storedWallet });
-      if (user) {
-        setUserId(user._id as Id<"users">);
+        const user = await getOrCreateUser({ walletAddress: storedWallet });
+        if (user) {
+          console.log('[💰WALLET] User found/created:', user);
+          console.log('[💰WALLET] User gold balance:', user.gold);
+          setUserId(user._id as Id<"users">);
+        }
+      } catch (error) {
+        console.error('[💰WALLET] Error initializing user:', error);
       }
     };
     initUser();
-  }, [getOrCreateUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount - getOrCreateUser changes on every render
 
   // Get user profile
   const userProfile = useQuery(
     api.users.getUserProfile,
     userId && walletAddress ? { walletAddress } : "skip"
   );
+
+  // DEBUG: Track when userProfile query is skipped
+  useEffect(() => {
+    console.log('[🔍PROFILE] Query state:', {
+      userId: userId ? 'exists' : 'MISSING',
+      walletAddress: walletAddress ? 'exists' : 'MISSING',
+      userProfile: userProfile ? `loaded (${userProfile.stats?.totalMeks} Meks)` : 'UNDEFINED',
+      queryStatus: (userId && walletAddress) ? 'ACTIVE' : 'SKIPPED'
+    });
+  }, [userId, walletAddress, userProfile]);
 
   // Get gold mining data for real-time updates
   const goldMiningData = useQuery(
@@ -402,9 +421,26 @@ export default function EssenceMarketPage() {
 
     if (!durationOption) return;
 
-    // Check if user can afford listing fee
-    if (userProfile && userProfile.gold < durationOption.cost) {
-      alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+    // Debug: Log gold values
+    console.log('[💰GOLD] walletAddress:', walletAddress);
+    console.log('[💰GOLD] goldMiningData:', goldMiningData);
+    console.log('[💰GOLD] goldMiningData.accumulatedGold:', goldMiningData?.accumulatedGold);
+
+    const currentGold = goldMiningData?.accumulatedGold ?? 0;
+    const totalFee = durationOption.cost + Math.ceil((amount * price) * 0.02); // duration + market fee
+    console.log('[💰GOLD] Current gold:', currentGold);
+    console.log('[💰GOLD] Total fee:', totalFee, '(Duration:', durationOption.cost, '+ Market:', Math.ceil((amount * price) * 0.02) + ')');
+    console.log('[💰GOLD] Can afford?', currentGold >= totalFee);
+
+    // Check if goldMiningData has loaded
+    if (!goldMiningData) {
+      alert('Loading gold data, please try again in a moment.');
+      return;
+    }
+
+    // Check if user can afford TOTAL listing fee (duration + market fee)
+    if (currentGold < totalFee) {
+      alert(`Insufficient gold. Listing fee: ${totalFee}g (Duration: ${durationOption.cost}g + Market: ${Math.ceil((amount * price) * 0.02)}g)`);
       return;
     }
 
@@ -416,6 +452,7 @@ export default function EssenceMarketPage() {
         quantity: amount,
         pricePerUnit: price,
         duration: selectedDuration * 24, // Convert days to hours
+        durationFee: durationOption.cost, // Pass duration cost to backend
       });
 
       setShowCreateListing(false);
@@ -461,13 +498,21 @@ export default function EssenceMarketPage() {
     setShowHistoryModal(true);
   };
 
-  // Handle cancel listing
-  const handleCancelListing = async (listingId: Id<"marketListings">) => {
-    if (!userId) return;
+  // Handle cancel listing - show confirmation modal first
+  const handleCancelListing = (listingId: Id<"marketListings">) => {
+    setRecallListingId(listingId);
+    setShowRecallConfirm(true);
+  };
+
+  // Confirm recall listing
+  const confirmRecallListing = async () => {
+    if (!userId || !recallListingId) return;
 
     try {
-      await cancelListing({ userId, listingId });
-      alert("Listing cancelled!");
+      await cancelListing({ userId, listingId: recallListingId });
+      setShowRecallConfirm(false);
+      setRecallListingId(null);
+      setShowRecallSuccess(true);
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     }
@@ -2532,7 +2577,7 @@ export default function EssenceMarketPage() {
     return (
       <div className="mb-3 text-center">
         <button
-          className="inline-flex items-center gap-2 text-[10px] cursor-pointer hover:scale-105"
+          className="group inline-flex items-center gap-2 text-[10px] cursor-pointer hover:scale-105"
           style={{
             transition: 'transform 0.033s ease-out, color 0.15s ease-out' // 30fps = 33ms
           }}
@@ -2541,11 +2586,11 @@ export default function EssenceMarketPage() {
             console.log('Navigate to corporation:', companyName);
           }}
         >
-          <div className="w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/30 hover:to-yellow-400" style={{ transition: 'background-image 0.15s ease-out' }} />
-          <span className="text-gray-500 uppercase tracking-wide hover:text-yellow-400 hover:tracking-widest" style={{ transition: 'color 0.15s ease-out, letter-spacing 0.15s ease-out' }}>
+          <div className="w-8 h-px bg-gradient-to-r from-transparent to-gray-500/40 group-hover:to-yellow-400 transition-all duration-150" />
+          <span className="text-gray-500 uppercase tracking-wide group-hover:text-yellow-400 group-hover:tracking-widest transition-all duration-150">
             {companyName}
           </span>
-          <div className="w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/30 hover:to-yellow-400" style={{ transition: 'background-image 0.15s ease-out' }} />
+          <div className="w-8 h-px bg-gradient-to-l from-transparent to-gray-500/40 group-hover:to-yellow-400 transition-all duration-150" />
         </button>
       </div>
     );
@@ -2923,48 +2968,6 @@ export default function EssenceMarketPage() {
               </div>
             </div>
 
-            {/* NEW: Lightbox Design Version Switcher */}
-            <div>
-              <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">New Listing Lightbox Design</label>
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  onClick={() => setLightboxVersion(5)}
-                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
-                    lightboxVersion === 5
-                      ? 'bg-yellow-500 text-black'
-                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
-                  }`}
-                >
-                  V5
-                </button>
-                <button
-                  onClick={() => setLightboxVersion(6)}
-                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
-                    lightboxVersion === 6
-                      ? 'bg-cyan-500 text-black'
-                      : 'bg-black border border-cyan-500/30 text-cyan-400 hover:border-cyan-500'
-                  }`}
-                >
-                  V6
-                </button>
-                <button
-                  onClick={() => setLightboxVersion(7)}
-                  className={`px-2 py-2 text-xs font-bold rounded transition-all ${
-                    lightboxVersion === 7
-                      ? 'bg-gradient-to-r from-yellow-500 to-cyan-500 text-black'
-                      : 'bg-black border border-yellow-500/30 text-yellow-400 hover:border-yellow-500'
-                  }`}
-                >
-                  V7
-                </button>
-              </div>
-              <div className="mt-1 text-[9px] text-gray-500">
-                {lightboxVersion === 5 && "V5: Yellow Gradient (Original)"}
-                {lightboxVersion === 6 && "V6: Full Market Match (Cyan + Glass)"}
-                {lightboxVersion === 7 && "V7: Hybrid (Yellow + Glass)"}
-              </div>
-            </div>
-
             {/* Gold Management */}
             <div className="pt-4 border-t border-yellow-500/30">
               <label className="block mb-2 text-yellow-400 text-xs uppercase tracking-wider">Gold</label>
@@ -3038,7 +3041,14 @@ export default function EssenceMarketPage() {
                       <span>LIST ITEM</span>
                     </button>
                     <button
-                      onClick={() => setShowMyListingsModal(true)}
+                      onClick={() => {
+                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
+                          userId: userId ? 'exists' : 'MISSING',
+                          walletAddress: walletAddress ? 'exists' : 'MISSING',
+                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
+                        });
+                        setShowMyListingsModal(true);
+                      }}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
                       <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
@@ -3111,7 +3121,14 @@ export default function EssenceMarketPage() {
                       <span>LIST ITEM</span>
                     </button>
                     <button
-                      onClick={() => setShowMyListingsModal(true)}
+                      onClick={() => {
+                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
+                          userId: userId ? 'exists' : 'MISSING',
+                          walletAddress: walletAddress ? 'exists' : 'MISSING',
+                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
+                        });
+                        setShowMyListingsModal(true);
+                      }}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
                       <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
@@ -4542,12 +4559,6 @@ export default function EssenceMarketPage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/10 to-transparent animate-shimmer" />
                   </div>
 
-                  {isOwn && (
-                    <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] px-3 py-1 font-bold uppercase tracking-wider rounded-md">
-                      ◆ YOUR LISTING
-                    </div>
-                  )}
-
                   {/* Essence Image */}
                   <div className="flex justify-center items-center mb-3" style={{ height: `${bottleImageSize}px` }}>
                     <img
@@ -4573,7 +4584,7 @@ export default function EssenceMarketPage() {
                   </div>
 
                   {/* Essence Details */}
-                  <div className="mb-3 h-14 flex items-center justify-center">
+                  <div className="mb-3 h-14 flex flex-col items-center justify-center gap-1">
                     {(() => {
                       const essenceName = listing.itemVariation || "Unknown Essence";
                       const { fontSize, lineClamp } = getEssenceLabelFontSize(essenceName, essenceLabelFontSize);
@@ -4586,39 +4597,46 @@ export default function EssenceMarketPage() {
                         : essenceName;
 
                       return (
-                        <div
-                          className={`font-bold tracking-wide text-center ${
-                            essenceTitleColor === 'yellow' ? 'text-yellow-400' : 'text-white'
-                          } ${
-                            essenceTitleCase === 'uppercase' ? 'uppercase' : ''
-                          } ${
-                            essenceLabelFont === 'geist' ? 'font-sans' :
-                            essenceLabelFont === 'orbitron' ? 'font-orbitron' :
-                            essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
-                            essenceLabelFont === 'saira' ? 'font-saira' :
-                            essenceLabelFont === 'teko' ? 'font-teko' :
-                            essenceLabelFont === 'michroma' ? 'font-michroma' :
-                            essenceLabelFont === 'audiowide' ? 'font-audiowide' :
-                            essenceLabelFont === 'quantico' ? 'font-quantico' :
-                            essenceLabelFont === 'electrolize' ? 'font-electrolize' :
-                            essenceLabelFont === 'russo' ? 'font-russo' :
-                            essenceLabelFont === 'exo' ? 'font-exo' :
-                            'font-orbitron'
-                          } ${lineClamp === 2 ? 'line-clamp-2' : 'line-clamp-1'} px-1`}
-                          style={{
-                            fontSize: `${fontSize}px`,
-                            lineHeight: '1.2',
-                            wordWrap: 'break-word',
-                            overflowWrap: 'break-word',
-                            hyphens: 'auto',
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: lineClamp,
-                            overflow: 'hidden'
-                          }}
-                        >
-                          {displayName}
-                        </div>
+                        <>
+                          <div
+                            className={`font-bold tracking-wide text-center ${
+                              essenceTitleColor === 'yellow' ? 'text-yellow-400' : 'text-white'
+                            } ${
+                              essenceTitleCase === 'uppercase' ? 'uppercase' : ''
+                            } ${
+                              essenceLabelFont === 'geist' ? 'font-sans' :
+                              essenceLabelFont === 'orbitron' ? 'font-orbitron' :
+                              essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
+                              essenceLabelFont === 'saira' ? 'font-saira' :
+                              essenceLabelFont === 'teko' ? 'font-teko' :
+                              essenceLabelFont === 'michroma' ? 'font-michroma' :
+                              essenceLabelFont === 'audiowide' ? 'font-audiowide' :
+                              essenceLabelFont === 'quantico' ? 'font-quantico' :
+                              essenceLabelFont === 'electrolize' ? 'font-electrolize' :
+                              essenceLabelFont === 'russo' ? 'font-russo' :
+                              essenceLabelFont === 'exo' ? 'font-exo' :
+                              'font-orbitron'
+                            } ${lineClamp === 2 ? 'line-clamp-2' : 'line-clamp-1'} px-1`}
+                            style={{
+                              fontSize: `${fontSize}px`,
+                              lineHeight: '1.2',
+                              wordWrap: 'break-word',
+                              overflowWrap: 'break-word',
+                              hyphens: 'auto',
+                              display: '-webkit-box',
+                              WebkitBoxOrient: 'vertical',
+                              WebkitLineClamp: lineClamp,
+                              overflow: 'hidden'
+                            }}
+                          >
+                            {displayName}
+                          </div>
+                          {isOwn && (
+                            <div className="bg-yellow-400 text-black text-[10px] px-3 py-0.5 font-bold uppercase tracking-wider rounded-md">
+                              ◆ YOUR LISTING
+                            </div>
+                          )}
+                        </>
                       );
                     })()}
                   </div>
@@ -4626,16 +4644,16 @@ export default function EssenceMarketPage() {
                   {/* Price Display */}
                   {renderPricingInfo(listing.pricePerUnit, listing.quantity, pricingInfoLayout)}
 
-                  {/* Corporation Name */}
-                  {!isOwn && (listing as any).sellerCompanyName && renderCorporationName((listing as any).sellerCompanyName)}
+                  {/* Corporation Name - Always show */}
+                  {renderCorporationName((listing as any).sellerCompanyName || "OVER EXPOSED")}
 
                   {/* Action Button */}
                   {isOwn ? (
                     <button
                       onClick={() => handleCancelListing(listing._id)}
-                      className="relative z-10 w-full px-4 py-2 bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer text-sm"
+                      className={`${getSiphonButtonStyle()} bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400`}
                     >
-                      ⊗ CANCEL
+                      ⊗ RECALL
                     </button>
                   ) : (
                     <div className="relative">
@@ -4969,9 +4987,8 @@ export default function EssenceMarketPage() {
           </div>
         )}
 
-        {/* NEW: Conditionally Render Lightbox Based on Version */}
-        {lightboxVersion === 5 && (
-          <EssenceListingLightboxV5YellowGradient
+        {/* New Listing Lightbox - V6 Full Market Match */}
+        <EssenceListingLightboxV6FullMarketMatch
             show={showCreateListing}
             onClose={() => setShowCreateListing(false)}
             onSubmit={async (data) => {
@@ -4986,9 +5003,26 @@ export default function EssenceMarketPage() {
 
               if (!durationOption) return;
 
-              // Check if user can afford listing fee
-              if (userProfile && userProfile.gold < durationOption.cost) {
-                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
+              // Debug: Log gold values
+              console.log('[💰GOLD] walletAddress:', walletAddress);
+              console.log('[💰GOLD] goldMiningData:', goldMiningData);
+              console.log('[💰GOLD] goldMiningData.accumulatedGold:', goldMiningData?.accumulatedGold);
+
+              const currentGold = goldMiningData?.accumulatedGold ?? 0;
+              const totalFee = durationOption.cost + Math.ceil((amount * price) * 0.02); // duration + market fee
+              console.log('[💰GOLD] Current gold:', currentGold);
+              console.log('[💰GOLD] Total fee:', totalFee, '(Duration:', durationOption.cost, '+ Market:', Math.ceil((amount * price) * 0.02) + ')');
+              console.log('[💰GOLD] Can afford?', currentGold >= totalFee);
+
+              // Check if goldMiningData has loaded
+              if (!goldMiningData) {
+                alert('Loading gold data, please try again in a moment.');
+                return;
+              }
+
+              // Check if user can afford TOTAL listing fee (duration + market fee)
+              if (currentGold < totalFee) {
+                alert(`Insufficient gold. Listing fee: ${totalFee}g (Duration: ${durationOption.cost}g + Market: ${Math.ceil((amount * price) * 0.02)}g)`);
                 return;
               }
 
@@ -5000,6 +5034,7 @@ export default function EssenceMarketPage() {
                   quantity: amount,
                   pricePerUnit: price,
                   duration: data.duration * 24, // Convert days to hours
+                  durationFee: durationOption.cost, // Pass duration cost to backend
                 });
 
                 setShowCreateListing(false);
@@ -5014,99 +5049,6 @@ export default function EssenceMarketPage() {
             ownedEssenceVariations={ownedEssenceVariations}
             durationOptions={DURATION_OPTIONS}
           />
-        )}
-
-        {lightboxVersion === 6 && (
-          <EssenceListingLightboxV6FullMarketMatch
-            show={showCreateListing}
-            onClose={() => setShowCreateListing(false)}
-            onSubmit={async (data) => {
-              if (!userId) {
-                alert("Please wait for user initialization...");
-                return;
-              }
-
-              const amount = parseFloat(data.amount);
-              const price = parseInt(data.price);
-              const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
-
-              if (!durationOption) return;
-
-              // Check if user can afford listing fee
-              if (userProfile && userProfile.gold < durationOption.cost) {
-                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
-                return;
-              }
-
-              try {
-                await createListing({
-                  sellerId: userId,
-                  itemType: "essence",
-                  itemVariation: data.variation,
-                  quantity: amount,
-                  pricePerUnit: price,
-                  duration: data.duration * 24, // Convert days to hours
-                });
-
-                setShowCreateListing(false);
-                setSelectedVariation("");
-                setEssenceAmount("1");
-                setPricePerUnit("");
-                alert("Listing created successfully!");
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "An error occurred");
-              }
-            }}
-            ownedEssenceVariations={ownedEssenceVariations}
-            durationOptions={DURATION_OPTIONS}
-          />
-        )}
-
-        {lightboxVersion === 7 && (
-          <EssenceListingLightboxV7HybridGlass
-            show={showCreateListing}
-            onClose={() => setShowCreateListing(false)}
-            onSubmit={async (data) => {
-              if (!userId) {
-                alert("Please wait for user initialization...");
-                return;
-              }
-
-              const amount = parseFloat(data.amount);
-              const price = parseInt(data.price);
-              const durationOption = DURATION_OPTIONS.find(d => d.days === data.duration);
-
-              if (!durationOption) return;
-
-              // Check if user can afford listing fee
-              if (userProfile && userProfile.gold < durationOption.cost) {
-                alert(`Insufficient gold. Listing fee: ${durationOption.cost}g`);
-                return;
-              }
-
-              try {
-                await createListing({
-                  sellerId: userId,
-                  itemType: "essence",
-                  itemVariation: data.variation,
-                  quantity: amount,
-                  pricePerUnit: price,
-                  duration: data.duration * 24, // Convert days to hours
-                });
-
-                setShowCreateListing(false);
-                setSelectedVariation("");
-                setEssenceAmount("1");
-                setPricePerUnit("");
-                alert("Listing created successfully!");
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "An error occurred");
-              }
-            }}
-            ownedEssenceVariations={ownedEssenceVariations}
-            durationOptions={DURATION_OPTIONS}
-          />
-        )}
 
         {/* Purchase Modal with Slider - LAYOUT OPTIONS */}
         {showPurchaseModal && selectedListing && (() => {
@@ -5602,8 +5544,14 @@ export default function EssenceMarketPage() {
 
         {/* My Listings Modal */}
         {showMyListingsModal && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-6xl w-full rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowMyListingsModal(false)}
+          >
+            <div
+              className="relative mek-card-industrial mek-border-sharp-gold p-6 max-w-6xl w-full rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Close button */}
               <button
                 onClick={() => setShowMyListingsModal(false)}
@@ -5672,6 +5620,28 @@ export default function EssenceMarketPage() {
                             <div className="text-xs text-yellow-400/70">{new Date(listing.listedAt).toLocaleDateString()}</div>
                           </div>
 
+                          {/* Duration Remaining */}
+                          {listing.expiresAt && (() => {
+                            const timeRemaining = listing.expiresAt - currentTime;
+                            const isExpired = timeRemaining <= 0;
+                            const days = Math.floor(timeRemaining / (24 * 60 * 60 * 1000));
+                            const hours = Math.floor((timeRemaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                            const minutes = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
+
+                            return (
+                              <div className="mb-3 text-center p-2 bg-black/40 border border-cyan-500/20 rounded">
+                                <div className="mek-label-uppercase text-gray-500 text-[10px] mb-1">DURATION REMAINING</div>
+                                <div className={`text-xs font-bold ${isExpired ? 'text-red-400' : 'text-cyan-400'}`}>
+                                  {isExpired ? 'EXPIRED' : (
+                                    days > 0 ? `${days}d ${hours}h` :
+                                    hours > 0 ? `${hours}h ${minutes}m` :
+                                    `${minutes}m`
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+
                           {/* Recall Button */}
                           <button
                             onClick={() => handleCancelListing(listing._id)}
@@ -5697,6 +5667,99 @@ export default function EssenceMarketPage() {
           </div>
         )}
         </>
+        )}
+
+        {/* Recall Confirmation Modal */}
+        {showRecallConfirm && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowRecallConfirm(false)}>
+            <div
+              className="relative mek-card-industrial mek-border-sharp-gold p-8 max-w-md w-full rounded-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Grunge overlays */}
+              <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-30" />
+              <div className="absolute inset-0 mek-overlay-rust pointer-events-none opacity-15" />
+
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Title */}
+                <div className="mb-6 pb-4 border-b-2 border-yellow-500/30">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1 h-8 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                    <h2 className="mek-text-industrial text-2xl text-red-400 mek-text-shadow">
+                      RECALL LISTING
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Warning Message */}
+                <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    This will return the essence to your inventory, but{' '}
+                    <span className="text-red-400 font-bold">you will not be refunded the listing fees</span>.
+                  </p>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowRecallConfirm(false)}
+                    className="flex-1 px-4 py-3 bg-gray-700/50 border border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={confirmRecallListing}
+                    className="flex-1 px-4 py-3 bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
+                  >
+                    CONFIRM RECALL
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recall Success Modal */}
+        {showRecallSuccess && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowRecallSuccess(false)}>
+            <div
+              className="relative mek-card-industrial p-8 max-w-md w-full rounded-xl overflow-hidden border-2 border-green-500/50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Grunge overlays */}
+              <div className="absolute inset-0 mek-overlay-scratches pointer-events-none opacity-30" />
+              <div className="absolute inset-0 mek-overlay-metal-texture pointer-events-none opacity-20" />
+
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Title */}
+                <div className="mb-6 pb-4 border-b-2 border-green-500/30">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1 h-8 bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                    <h2 className="mek-text-industrial text-2xl text-green-400 mek-text-shadow">
+                      LISTING RECALLED
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <div className="mb-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Listing recalled! Essence returned to inventory.
+                  </p>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowRecallSuccess(false)}
+                  className="w-full px-4 py-3 bg-green-900/40 border-2 border-green-500/50 hover:bg-green-900/60 hover:border-green-400 text-green-400 font-bold uppercase tracking-wider transition-all text-sm rounded-lg"
+                >
+                  CLOSE
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
