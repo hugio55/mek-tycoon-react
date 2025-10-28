@@ -125,7 +125,11 @@ export default function OverlayEditor() {
   const saveOverlay = useMutation(api.overlays.saveOverlay);
   const saveAutosave = useMutation(api.overlays.saveAutosave);
   const overlayData = useQuery(api.overlays.getOverlay, { imageKey });
-  const allOverlays = useQuery(api.overlays.listOverlays);
+  // BANDWIDTH OPTIMIZATION: Only load all overlays when Saved Projects panel is expanded
+  const allOverlays = useQuery(
+    api.overlays.listOverlays,
+    panelStates.savedProjects ? undefined : "skip"
+  );
   const autosaveHistoryFromDb = useQuery(api.overlays.getAutosaveHistory, { imageKey });
 
   // Load overlay data when it arrives from Convex
@@ -206,7 +210,7 @@ export default function OverlayEditor() {
       } catch (error) {
         console.error('[Overlay Editor] Auto-save failed:', error);
       }
-    }, 500); // Wait 500ms after last change before saving
+    }, 3000); // BANDWIDTH OPTIMIZATION: Wait 3 seconds after last change before saving (reduced from 500ms)
 
     return () => clearTimeout(timeoutId);
   }, [zones, imageLoaded, imageKey, imagePath, imageDimensions, saveOverlay]);
