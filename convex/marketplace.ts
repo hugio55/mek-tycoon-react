@@ -322,27 +322,42 @@ export const createListing = mutation({
     itemVariation: v.string(),
     mekId: v.optional(v.id("meks")),
     essenceType: v.optional(v.string()),
-    quantity: v.number(),
-    pricePerUnit: v.number(),
-    duration: v.optional(v.number()), // hours
+    quantity: v.float64(),
+    pricePerUnit: v.float64(),
+    duration: v.optional(v.float64()), // hours
+    durationFee: v.optional(v.float64()), // gold cost for duration
   },
   handler: async (ctx, args) => {
     const seller = await ctx.db.get(args.sellerId);
     if (!seller) {
       throw new Error("Seller not found");
     }
-    
-    // Calculate and deduct listing fee (2% of total value)
+
+    // Calculate total listing fee
     const totalValue = args.quantity * args.pricePerUnit;
-    const listingFee = Math.ceil(totalValue * 0.02);
-    
-    if (seller.gold < listingFee) {
-      throw new Error(`Insufficient gold for listing fee. Need ${listingFee}g, have ${seller.gold}g`);
+    const marketFee = Math.ceil(totalValue * 0.02); // 2% market fee
+    const durationFee = args.durationFee || 0; // Duration fee passed from frontend
+    const totalFee = marketFee + durationFee;
+
+    // Get seller's REAL gold from goldMining table (not users.gold)
+    const goldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+      .first();
+
+    if (!goldMining) {
+      throw new Error("Gold mining record not found");
     }
-    
-    // Deduct listing fee
-    await ctx.db.patch(args.sellerId, {
-      gold: seller.gold - listingFee
+
+    const currentGold = goldMining.accumulatedGold || 0;
+
+    if (currentGold < totalFee) {
+      throw new Error(`Insufficient gold. Total fee: ${totalFee}g (Duration: ${durationFee}g + Market: ${marketFee}g)`);
+    }
+
+    // Deduct total fee from goldMining.accumulatedGold
+    await ctx.db.patch(goldMining._id, {
+      accumulatedGold: currentGold - totalFee
     });
     
     // Validate the listing based on type
@@ -443,7 +458,7 @@ export const createListing = mutation({
       userId: args.sellerId,
       itemType: args.itemType,
       itemVariation: args.itemVariation,
-      details: `Listed ${args.quantity}x for ${args.pricePerUnit}g each (Fee: ${listingFee}g)`,
+      details: `Listed ${args.quantity}x for ${args.pricePerUnit}g each (Total Fee: ${totalFee}g - Duration: ${durationFee}g + Market: ${marketFee}g)`,
       timestamp: now,
     });
     

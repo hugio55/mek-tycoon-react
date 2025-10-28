@@ -232,19 +232,6 @@ async function calculateEssenceMetadata(
 ) {
   const slottedMeks = slots.filter((s) => s.mekAssetId);
 
-  // DEBUG: Log what's in each slotted Mek
-  console.log(`🔍 [SLOT READING] Found ${slottedMeks.length} slotted Meks for ${walletAddress.slice(0, 15)}...`);
-  for (const slot of slottedMeks) {
-    console.log(`🔍 [SLOT ${slot.slotNumber}] Mek #${slot.mekNumber}:`, {
-      headVariationId: slot.headVariationId,
-      headVariationName: slot.headVariationName,
-      bodyVariationId: slot.bodyVariationId,
-      bodyVariationName: slot.bodyVariationName,
-      itemVariationId: slot.itemVariationId,
-      itemVariationName: slot.itemVariationName
-    });
-  }
-
   // Count variations from slotted Meks
   const variationCounts = new Map<number, number>();
 
@@ -266,9 +253,6 @@ async function calculateEssenceMetadata(
         slot.itemVariationId,
         (variationCounts.get(slot.itemVariationId) || 0) + 1
       );
-    } else if (slot.itemVariationName) {
-      // DEBUG: Item variation name exists but no ID!
-      console.log(`⚠️ [SLOT ${slot.slotNumber}] Item variation "${slot.itemVariationName}" has NO variationId!`);
     }
   }
 
@@ -314,17 +298,6 @@ async function calculateEssenceMetadata(
     // CRITICAL: Multiply rate by count for duplicate variations
     if (count > 0) {
       const calculatedRate = effectiveRate * count;
-
-      // DEBUG: Log rate calculation for variations with count > 1
-      if (count > 1) {
-        console.log(`🔢 [DUPLICATE VARIATION DEBUG] variationId ${variationId}:`, {
-          count,
-          effectiveRate,
-          calculatedRate,
-          walletAddress: walletAddress.slice(0, 15) + '...'
-        });
-      }
-
       rates[variationId] = calculatedRate; // Stack rates for duplicates
       counts[variationId] = count;
     }

@@ -10,6 +10,7 @@ import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import NavigationBar from "@/components/NavigationBar";
 import GlobalLightboxHandler from "@/components/GlobalLightboxHandler";
+// SessionCleanup removed - was clearing wallet sessions on every page load, causing auto-disconnect
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
@@ -72,6 +73,7 @@ export default function RootLayout({
         <div className="relative z-10">
           <DemoModeWrapper>
             <Providers>
+              {/* SessionCleanup removed - was clearing wallet sessions on every page load */}
               <NavigationBar />
               <GlobalLightboxHandler />
               {children}
