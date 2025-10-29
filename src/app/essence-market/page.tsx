@@ -106,8 +106,6 @@ export default function EssenceMarketPage() {
     duration: number;
     durationFee: number;
   } | null>(null);
-  const [successLayoutVariation, setSuccessLayoutVariation] = useState(1);
-  const [successTitleVariation, setSuccessTitleVariation] = useState(1);
 
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
@@ -1834,7 +1832,7 @@ export default function EssenceMarketPage() {
                     <span>{pricePerUnit.toLocaleString()}</span>
                     <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -1886,7 +1884,7 @@ export default function EssenceMarketPage() {
                     <span>{pricePerUnit.toLocaleString()}</span>
                     <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -1938,7 +1936,7 @@ export default function EssenceMarketPage() {
                     <span>{pricePerUnit.toLocaleString()}</span>
                     <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -1990,7 +1988,7 @@ export default function EssenceMarketPage() {
                     <span>{pricePerUnit.toLocaleString()}</span>
                     <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2042,7 +2040,7 @@ export default function EssenceMarketPage() {
                     <span>{pricePerUnit.toLocaleString()}</span>
                     <span className="font-thin" style={{ fontSize: '0.45em' }}>G</span>
                   </div>
-                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/50 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2086,7 +2084,7 @@ export default function EssenceMarketPage() {
                   }`}>
                     {pricePerUnit.toLocaleString()}g
                   </div>
-                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2132,7 +2130,7 @@ export default function EssenceMarketPage() {
                   }`}>
                     {pricePerUnit.toLocaleString()}g
                   </div>
-                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2177,7 +2175,7 @@ export default function EssenceMarketPage() {
                   }`}>
                     {pricePerUnit.toLocaleString()}g
                   </div>
-                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2223,7 +2221,7 @@ export default function EssenceMarketPage() {
                   }`}>
                     {pricePerUnit.toLocaleString()}g
                   </div>
-                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -2269,7 +2267,7 @@ export default function EssenceMarketPage() {
                   }`}>
                     {pricePerUnit.toLocaleString()}g
                   </div>
-                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">EACH</div>
+                  <div className="text-xs text-yellow-400/80 tracking-widest mt-0.5">PER 1 COMPLETE ESSENCE</div>
                 </div>
               </div>
             </div>
@@ -3080,7 +3078,7 @@ export default function EssenceMarketPage() {
 
                 {/* Center: Tagline */}
                 <div className="flex-1 text-center px-8">
-                  <p className="text-gray-400/60 italic text-sm tracking-wide">
+                  <p className="text-gray-300 italic text-base tracking-wider">
                     Where fortunes are made
                   </p>
                 </div>
@@ -5831,42 +5829,6 @@ export default function EssenceMarketPage() {
 
           return (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowListingSuccess(false)}>
-              {/* Title Debug Panel */}
-              <div className="fixed left-4 top-1/2 -translate-y-1/2 bg-black/80 border border-purple-500/30 p-3 rounded z-[60]" onClick={(e) => e.stopPropagation()}>
-                <div className="text-purple-400 text-xs font-bold mb-2 uppercase tracking-wider">Title</div>
-                {[1, 2, 3, 4, 5].map(num => (
-                  <button
-                    key={num}
-                    onClick={() => setSuccessTitleVariation(num)}
-                    className={`block w-12 h-8 mb-2 border-2 transition-all text-xs font-bold ${
-                      successTitleVariation === num
-                        ? 'bg-purple-500/30 border-purple-400 text-purple-400'
-                        : 'bg-black/50 border-purple-500/30 text-gray-500 hover:border-purple-400/50'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-
-              {/* Layout Debug Panel */}
-              <div className="fixed right-4 top-1/2 -translate-y-1/2 bg-black/80 border border-cyan-500/30 p-3 rounded z-[60]" onClick={(e) => e.stopPropagation()}>
-                <div className="text-cyan-400 text-xs font-bold mb-2 uppercase tracking-wider">Layout</div>
-                {[1, 2, 3, 4, 5].map(num => (
-                  <button
-                    key={num}
-                    onClick={() => setSuccessLayoutVariation(num)}
-                    className={`block w-12 h-8 mb-2 border-2 transition-all text-xs font-bold ${
-                      successLayoutVariation === num
-                        ? 'bg-cyan-500/30 border-cyan-400 text-cyan-400'
-                        : 'bg-black/50 border-cyan-500/30 text-gray-500 hover:border-cyan-400/50'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-
               {/* Main Modal */}
               <div
                 className="relative mek-card-industrial p-8 max-w-xl w-full rounded-xl overflow-hidden border-2 border-cyan-500/50"
@@ -5878,82 +5840,15 @@ export default function EssenceMarketPage() {
 
                 {/* Content */}
                 <div className="relative z-10">
-                  {/* Title Variations */}
-                  {successTitleVariation === 1 && (
-                    // Variation 1: Large SUCCESS left-aligned with small subtitle
-                    <div className="mb-6 pb-4 border-b-2 border-cyan-500/30">
-                      <div className="text-cyan-400 text-5xl font-bold mek-text-industrial animate-pulse" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8), 0 0 20px rgba(6,182,212,0.4)' }}>
-                        SUCCESS
-                      </div>
-                      <div className="text-gray-400 text-xs uppercase tracking-wider mt-2">
-                        Listing Created
-                      </div>
+                  {/* Title */}
+                  <div className="mb-6 pb-4 border-b-2 border-cyan-500/30">
+                    <div className="text-cyan-400 text-5xl font-bold mek-text-industrial animate-pulse" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8), 0 0 20px rgba(6,182,212,0.4)' }}>
+                      SUCCESS
                     </div>
-                  )}
-
-                  {successTitleVariation === 2 && (
-                    // Variation 2: Corner accent with stacked text
-                    <div className="mb-6 pb-4 border-b-2 border-cyan-500/30 relative">
-                      <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-cyan-500/50" />
-                      <div className="pl-6 pt-4">
-                        <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-                          Listing Status
-                        </div>
-                        <div className="text-cyan-400 text-4xl font-bold mek-text-industrial animate-pulse" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8)' }}>
-                          SUCCESS
-                        </div>
-                      </div>
+                    <div className="text-gray-400 text-xs uppercase tracking-wider mt-2">
+                      Listing Created
                     </div>
-                  )}
-
-                  {successTitleVariation === 3 && (
-                    // Variation 3: Right-side accent bar
-                    <div className="mb-6 pb-4 border-b-2 border-cyan-500/30">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-cyan-400 text-5xl font-bold mek-text-industrial" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8)' }}>
-                            SUCCESS
-                          </div>
-                          <div className="text-gray-500 text-xs uppercase tracking-widest mt-1">
-                            Listing Active
-                          </div>
-                        </div>
-                        <div className="w-2 h-20 bg-gradient-to-b from-cyan-500 to-transparent shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse" />
-                      </div>
-                    </div>
-                  )}
-
-                  {successTitleVariation === 4 && (
-                    // Variation 4: Centered with underline accent
-                    <div className="mb-6 pb-4 border-b-2 border-cyan-500/30">
-                      <div className="text-center">
-                        <div className="text-cyan-400 text-5xl font-bold mek-text-industrial mb-2 animate-pulse" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8), 0 0 20px rgba(6,182,212,0.4)' }}>
-                          SUCCESS
-                        </div>
-                        <div className="inline-flex items-center gap-2">
-                          <div className="w-12 h-px bg-gradient-to-r from-transparent to-cyan-500/50" />
-                          <span className="text-gray-400 text-xs uppercase tracking-wider">Listing Created</span>
-                          <div className="w-12 h-px bg-gradient-to-l from-transparent to-cyan-500/50" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {successTitleVariation === 5 && (
-                    // Variation 5: Diagonal accent with side text
-                    <div className="mb-6 pb-4 border-b-2 border-cyan-500/30 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/20 to-transparent transform rotate-12" />
-                      <div className="relative">
-                        <div className="text-gray-400 text-xs uppercase tracking-widest mb-1 flex items-center gap-2">
-                          <div className="w-8 h-px bg-cyan-500/50" />
-                          Market Status
-                        </div>
-                        <div className="text-cyan-400 text-5xl font-bold mek-text-industrial animate-pulse" style={{ textShadow: '0 0 10px rgba(6,182,212,0.8)' }}>
-                          SUCCESS
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {/* Description */}
                   <div className="mb-6 p-4 bg-cyan-900/10 border border-cyan-500/20 rounded-lg">
@@ -5973,58 +5868,20 @@ export default function EssenceMarketPage() {
                     </p>
                   </div>
 
-                  {/* Layout Variations */}
-                  {successLayoutVariation === 1 && (
-                    // Layout 1: Grid with essence image on left
-                    <div className="mb-6 grid grid-cols-[auto_1fr] gap-6">
-                      {/* Essence Image */}
-                      <div className="w-32 h-32 relative">
-                        <img
-                          src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
-                          alt={successListingData.variation}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
-                          }}
-                        />
-                      </div>
-
-                      {/* Info Grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Essence</div>
-                          <div className="text-cyan-400 text-lg font-bold">{successListingData.variation}</div>
+                  {/* Listing Details */}
+                  <div className="mb-6">
+                    <div className="bg-black/60 border-2 border-cyan-500/30 rounded-lg overflow-hidden">
+                      {/* Header with image */}
+                      <div className="bg-cyan-900/20 p-6 flex items-center justify-between border-b-2 border-cyan-500/30">
+                        <div>
+                          <div className="text-gray-400 text-sm mb-2">ESSENCE TYPE</div>
+                          <div className="text-cyan-400 text-3xl font-bold mek-text-industrial">{successListingData.variation}</div>
                         </div>
-                        <div className="p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Amount</div>
-                          <div className="text-cyan-400 text-lg font-bold">{successListingData.amount}</div>
-                        </div>
-                        <div className="p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Price Per Unit</div>
-                          <div className="text-cyan-400 text-lg font-bold">{successListingData.pricePerUnit.toLocaleString()}g</div>
-                        </div>
-                        <div className="p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Duration</div>
-                          <div className="text-cyan-400 text-lg font-bold">{successListingData.duration}d</div>
-                        </div>
-                        <div className="p-3 bg-black/40 border border-green-500/20 rounded col-span-2">
-                          <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Net Profit (if sold)</div>
-                          <div className="text-green-400 text-xl font-bold">{netProfit.toLocaleString()}g</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {successLayoutVariation === 2 && (
-                    // Layout 2: Horizontal flow with centered image
-                    <div className="mb-6 space-y-4">
-                      {/* Essence Image Centered */}
-                      <div className="flex justify-center">
-                        <div className="w-24 h-24 relative">
+                        <div className="w-32 h-32 relative">
                           <img
                             src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
                             alt={successListingData.variation}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
                             onError={(e) => {
                               e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
                             }}
@@ -6032,174 +5889,31 @@ export default function EssenceMarketPage() {
                         </div>
                       </div>
 
-                      {/* Info List */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <span className="text-gray-400 text-sm">ESSENCE:</span>
-                          <span className="text-cyan-400 font-bold">{successListingData.variation}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <span className="text-gray-400 text-sm">AMOUNT:</span>
-                          <span className="text-cyan-400 font-bold">{successListingData.amount}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <span className="text-gray-400 text-sm">PRICE PER UNIT:</span>
-                          <span className="text-cyan-400 font-bold">{successListingData.pricePerUnit.toLocaleString()}g</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-black/40 border border-cyan-500/20 rounded">
-                          <span className="text-gray-400 text-sm">DURATION:</span>
-                          <span className="text-cyan-400 font-bold">{successListingData.duration} days</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-black/40 border border-green-500/20 rounded">
-                          <span className="text-gray-400 text-sm">NET PROFIT (IF SOLD):</span>
-                          <span className="text-green-400 font-bold text-lg">{netProfit.toLocaleString()}g</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {successLayoutVariation === 3 && (
-                    // Layout 3: Compact table style
-                    <div className="mb-6">
-                      <div className="grid grid-cols-[120px_1fr_120px] gap-4 items-center mb-4">
-                        {/* Essence Image */}
-                        <div className="w-28 h-28 relative">
-                          <img
-                            src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
-                            alt={successListingData.variation}
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
-                            }}
-                          />
-                        </div>
-
-                        {/* Essence Name Large */}
+                      {/* Stats Grid */}
+                      <div className="p-6 grid grid-cols-3 gap-4">
                         <div className="text-center">
-                          <div className="text-cyan-400 text-2xl font-bold mek-text-industrial">{successListingData.variation}</div>
+                          <div className="text-gray-500 text-xs uppercase mb-2">Amount</div>
+                          <div className="text-cyan-400 text-2xl font-bold">{successListingData.amount}</div>
                         </div>
-
-                        {/* Amount Large */}
+                        <div className="text-center border-x border-cyan-500/20">
+                          <div className="text-gray-500 text-xs uppercase mb-2">Price/Unit</div>
+                          <div className="text-cyan-400 text-2xl font-bold">{successListingData.pricePerUnit.toLocaleString()}g</div>
+                        </div>
                         <div className="text-center">
-                          <div className="text-gray-500 text-xs uppercase mb-1">Quantity</div>
-                          <div className="text-cyan-400 text-3xl font-bold">{successListingData.amount}</div>
+                          <div className="text-gray-500 text-xs uppercase mb-2">Duration</div>
+                          <div className="text-cyan-400 text-2xl font-bold">{successListingData.duration}d</div>
                         </div>
                       </div>
 
-                      {/* Data Table */}
-                      <div className="bg-black/40 border border-cyan-500/20 rounded overflow-hidden">
-                        <div className="grid grid-cols-2 border-b border-cyan-500/20">
-                          <div className="p-3 border-r border-cyan-500/20">
-                            <div className="text-gray-500 text-xs uppercase">Price Per Unit</div>
-                            <div className="text-cyan-400 font-bold text-lg">{successListingData.pricePerUnit.toLocaleString()}g</div>
-                          </div>
-                          <div className="p-3">
-                            <div className="text-gray-500 text-xs uppercase">Duration</div>
-                            <div className="text-cyan-400 font-bold text-lg">{successListingData.duration} days</div>
-                          </div>
-                        </div>
-                        <div className="p-3 bg-green-900/10">
-                          <div className="text-gray-500 text-xs uppercase">Potential Net Profit</div>
-                          <div className="text-green-400 font-bold text-xl">{netProfit.toLocaleString()}g</div>
+                      {/* Net Profit */}
+                      <div className="p-4 bg-green-900/20 border-t-2 border-green-500/30">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 uppercase tracking-wider text-sm">Net Profit (if sold):</span>
+                          <span className="text-green-400 text-2xl font-bold">{netProfit.toLocaleString()}g</span>
                         </div>
                       </div>
                     </div>
-                  )}
-
-                  {successLayoutVariation === 4 && (
-                    // Layout 4: Card style with image at top
-                    <div className="mb-6">
-                      <div className="bg-black/60 border-2 border-cyan-500/30 rounded-lg overflow-hidden">
-                        {/* Header with image */}
-                        <div className="bg-cyan-900/20 p-6 flex items-center justify-between border-b-2 border-cyan-500/30">
-                          <div>
-                            <div className="text-gray-400 text-sm mb-2">ESSENCE TYPE</div>
-                            <div className="text-cyan-400 text-3xl font-bold mek-text-industrial">{successListingData.variation}</div>
-                          </div>
-                          <div className="w-32 h-32 relative">
-                            <img
-                              src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
-                              alt={successListingData.variation}
-                              className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
-                              onError={(e) => {
-                                e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="p-6 grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-gray-500 text-xs uppercase mb-2">Amount</div>
-                            <div className="text-cyan-400 text-2xl font-bold">{successListingData.amount}</div>
-                          </div>
-                          <div className="text-center border-x border-cyan-500/20">
-                            <div className="text-gray-500 text-xs uppercase mb-2">Price/Unit</div>
-                            <div className="text-cyan-400 text-2xl font-bold">{successListingData.pricePerUnit.toLocaleString()}g</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-gray-500 text-xs uppercase mb-2">Duration</div>
-                            <div className="text-cyan-400 text-2xl font-bold">{successListingData.duration}d</div>
-                          </div>
-                        </div>
-
-                        {/* Net Profit */}
-                        <div className="p-4 bg-green-900/20 border-t-2 border-green-500/30">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400 uppercase tracking-wider text-sm">Net Profit (if sold):</span>
-                            <span className="text-green-400 text-2xl font-bold">{netProfit.toLocaleString()}g</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {successLayoutVariation === 5 && (
-                    // Layout 5: Terminal/Console style
-                    <div className="mb-6 font-mono">
-                      <div className="bg-black/80 border border-green-500/30 rounded p-4 text-sm">
-                        <div className="text-green-400 mb-3">&gt; LISTING_INITIALIZED</div>
-                        <div className="space-y-2 text-gray-300 pl-4">
-                          <div className="flex items-center gap-4">
-                            <span className="text-cyan-400 w-32">essence_type:</span>
-                            <span className="text-white">{successListingData.variation}</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-cyan-400 w-32">quantity:</span>
-                            <span className="text-white">{successListingData.amount}</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-cyan-400 w-32">unit_price:</span>
-                            <span className="text-white">{successListingData.pricePerUnit.toLocaleString()}g</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-cyan-400 w-32">duration:</span>
-                            <span className="text-white">{successListingData.duration} days</span>
-                          </div>
-                          <div className="flex items-center gap-4 pt-2 border-t border-green-500/30">
-                            <span className="text-green-400 w-32">net_profit:</span>
-                            <span className="text-green-400 font-bold">{netProfit.toLocaleString()}g</span>
-                          </div>
-                        </div>
-                        <div className="text-green-400 mt-3">&gt; STATUS: <span className="animate-pulse">ACTIVE</span></div>
-
-                        {/* Essence preview */}
-                        <div className="mt-4 flex justify-center">
-                          <div className="w-20 h-20 relative opacity-60">
-                            <img
-                              src={`/essence-images/named-bottles-1k/${successListingData.variation.toLowerCase().replace(/\s+/g, '-')}.png`}
-                              alt={successListingData.variation}
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.src = '/essence-images/named-bottles-1k/default.png';
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {/* Close Button */}
                   <button
@@ -6213,24 +5927,6 @@ export default function EssenceMarketPage() {
             </div>
           );
         })()}
-
-        {/* Debug Button - Open Listing Success Modal */}
-        <button
-          onClick={() => {
-            setSuccessListingData({
-              variation: "Bumblebee",
-              amount: 100,
-              pricePerUnit: 50,
-              duration: 7,
-              durationFee: 800
-            });
-            setShowListingSuccess(true);
-          }}
-          className="fixed left-4 top-1/2 -translate-y-1/2 bg-purple-900/80 border-2 border-purple-500/50 hover:bg-purple-800/80 hover:border-purple-400 text-purple-300 px-3 py-2 rounded-lg font-bold uppercase text-xs tracking-wider transition-all z-[70] shadow-lg"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-        >
-          Debug Modal
-        </button>
       </div>
     </div>
   );
