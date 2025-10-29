@@ -1070,7 +1070,8 @@ export default function CommemorativeToken1Admin() {
     window.URL.revokeObjectURL(url);
   };
 
-  if (config === undefined || isInitializing) {
+  // Only show loading spinner if data has been loaded but config is still loading
+  if (commemorativeDataLoaded && (config === undefined || isInitializing)) {
     return (
       <div className="text-center py-8">
         <div className="text-yellow-400 mb-2">⏳ Loading campaign...</div>
