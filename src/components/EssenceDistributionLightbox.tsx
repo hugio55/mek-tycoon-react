@@ -988,7 +988,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                     {/* Search Bar */}
                     <div className="mb-3">
                       <div className="flex justify-center">
-                        <div ref={searchRef} className="relative w-[368px]">
+                        <div ref={searchRef} className="relative w-[423px]">
                           <input
                             type="text"
                             value={searchQuery}
@@ -1099,7 +1099,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
                         {sliderStyle === 3 && (
                           /* Style 3: Industrial Sleek - Compact */
-                          <div className="relative w-[368px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/50 border-2 border-yellow-500/30 px-4 py-1.5 backdrop-blur-sm">
+                          <div className="relative w-[423px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/50 border-2 border-yellow-500/30 px-4 py-1.5 backdrop-blur-sm">
                             {/* Subtle scan line */}
                             <div className="absolute inset-0 opacity-10 animate-pulse pointer-events-none" style={{
                               background: 'linear-gradient(90deg, transparent 0%, rgba(250, 182, 23, 0.3) 50%, transparent 100%)',
@@ -1126,8 +1126,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                                   }}
                                 />
                               </div>
-                              <div className="text-[10px] text-gray-400 tabular-nums whitespace-nowrap">
-                                Quantity &lt; {maxSliceFilter.toFixed(3)}
+                              <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">
+                                QUANTITY &lt; {maxSliceFilter === 2 ? '2' : maxSliceFilter.toFixed(3)}
                               </div>
                             </div>
                           </div>
