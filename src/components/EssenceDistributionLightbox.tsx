@@ -8,6 +8,76 @@ import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";
 
+// Custom styles for range sliders
+const sliderStyles = `
+  /* Style 1 - Horizontal Industrial Slider */
+  input[type="range"].slider-style-1::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 24px;
+    background: linear-gradient(180deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+  }
+
+  input[type="range"].slider-style-1::-moz-range-thumb {
+    width: 20px;
+    height: 24px;
+    background: linear-gradient(180deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+  }
+
+  /* Style 2 - Vertical Military Gauge */
+  input[type="range"].slider-style-2::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 12px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+  }
+
+  input[type="range"].slider-style-2::-moz-range-thumb {
+    width: 24px;
+    height: 12px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+  }
+
+  /* Style 3 - Industrial Sleek Slider */
+  input[type="range"].slider-style-3::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  }
+
+  input[type="range"].slider-style-3::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    cursor: pointer;
+    border: 2px solid #fbbf24;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  }
+`;
+
 interface EssenceDistributionLightboxProps {
   isOpen: boolean;
   onClose: () => void;
@@ -218,6 +288,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   const [tableStyle, setTableStyle] = useState<1 | 2 | 3>(2);
   const [sortColumn, setSortColumn] = useState<'name' | 'growth' | 'maxCap' | 'totalValue' | 'amount' | 'count'>('amount');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sliderStyle, setSliderStyle] = useState<1 | 2 | 3>(1);
 
   // Debug controls
   const [backdropDarkness, setBackdropDarkness] = useState<10 | 20 | 40 | 60 | 80>(10);
@@ -235,6 +306,15 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
     if (isOpen) {
       console.log('[EssenceDistributionLightbox] Locking body scroll');
       document.body.style.overflow = 'hidden';
+
+      // Inject slider styles
+      const styleId = 'essence-slider-styles';
+      if (!document.getElementById(styleId)) {
+        const styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        styleElement.textContent = sliderStyles;
+        document.head.appendChild(styleElement);
+      }
     }
     return () => {
       console.log('[EssenceDistributionLightbox] Cleanup: unlocking body scroll');
@@ -349,13 +429,25 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   }, [playerEssenceState, marketListings, essenceConfig, allSlots]);
 
   const defaultMaxAmount = Math.max(...(essenceData.length > 0 ? essenceData.map(e => e.amount) : [10]));
-  const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount);
+  const [maxSliceFilter, setMaxSliceFilter] = useState(2);
 
-  // Update max filter when data changes
+  // Smart slider handler: snap to whole numbers when >= 2, smooth when < 2
+  const handleSliderChange = (value: number) => {
+    if (value >= 2) {
+      // Snap to nearest whole number for values >= 2
+      setMaxSliceFilter(Math.round(value));
+    } else {
+      // Smooth control for values < 2 (rounded to 2 decimal places for display)
+      setMaxSliceFilter(Math.round(value * 100) / 100);
+    }
+  };
+
+  // Update max filter when data changes (default to 2 or highest if less)
   useEffect(() => {
     if (essenceData.length > 0) {
       const newMax = Math.max(...essenceData.map(e => e.amount));
-      setMaxSliceFilter(newMax);
+      // Start at 2 if any essence is above 2, otherwise start at the max
+      setMaxSliceFilter(newMax > 2 ? 2 : newMax);
     }
   }, [essenceData]);
 
@@ -567,6 +659,28 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
         style={getBackdropBlurStyle()}
         onClick={onClose}
       />
+
+      {/* Slider Style Selector - Fixed to left side */}
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[10000] flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-black/95 border-2 border-purple-500/50 rounded-lg p-2 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-2 text-center border-b border-purple-500/30 pb-1">
+            Slider
+          </div>
+          {[1, 2, 3].map((style) => (
+            <button
+              key={style}
+              onClick={() => setSliderStyle(style as typeof sliderStyle)}
+              className={`w-10 h-10 mb-1 last:mb-0 flex items-center justify-center font-bold text-sm transition-all ${
+                sliderStyle === style
+                  ? 'bg-purple-500 text-black border-2 border-purple-400'
+                  : 'bg-black/60 text-purple-400 border-2 border-purple-500/30 hover:bg-purple-500/20'
+              }`}
+            >
+              {style}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Debug Toggle Button - Fixed to viewport */}
       <button
@@ -872,9 +986,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                 <div className="lg:col-span-2" onClick={handleBackgroundClick}>
                   <div className="relative" onClick={handleBackgroundClick}>
                     {/* Search Bar */}
-                    <div className="mb-8">
+                    <div className="mb-3">
                       <div className="flex justify-center">
-                        <div ref={searchRef} className="relative w-80">
+                        <div ref={searchRef} className="relative w-[368px]">
                           <input
                             type="text"
                             value={searchQuery}
@@ -884,14 +998,14 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                             }}
                             onFocus={() => setShowSearchResults(true)}
                             placeholder="Search essence..."
-                            className="w-full px-4 py-2 bg-black/80 backdrop-blur-sm border-2 border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/60 transition-all"
+                            className="w-full px-4 py-2 bg-black/80 backdrop-blur-sm border-2 border-yellow-500/30 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/60 transition-all"
                           />
                           <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
 
                           {showSearchResults && searchResults.length > 0 && (
-                            <div className="absolute top-full mt-2 w-full bg-black/95 backdrop-blur-sm border-2 border-yellow-500/30 rounded-lg overflow-hidden z-50">
+                            <div className="absolute top-full mt-2 w-full bg-black/95 backdrop-blur-sm border-2 border-yellow-500/30 overflow-hidden z-50">
                               {searchResults.map((essence) => (
                                 <button
                                   key={essence.id}
@@ -914,6 +1028,112 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                         </div>
                       </div>
                     </div>
+
+                    {/* Zoom Slider - Only visible when "All" is selected */}
+                    {viewCount === 100 && (
+                      <div className="mb-4 flex justify-center">
+                        {sliderStyle === 1 && (
+                          /* Style 1: Industrial Horizontal Slider - Compact */
+                          <div className="w-[600px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/40 border border-yellow-500/30 px-4 py-1.5">
+                            <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap">Zoom:</div>
+                            <div className="flex-1 relative h-6">
+                              <input
+                                type="range"
+                                min="0.05"
+                                max={defaultMaxAmount}
+                                step="0.01"
+                                value={maxSliceFilter}
+                                onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
+                                className="slider-style-1 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
+                              />
+                              <div className="absolute top-1/2 -translate-y-1/2 w-full h-0.5 bg-black/60 border-t border-yellow-500/30" />
+                              <div
+                                className="absolute top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-yellow-600 to-yellow-400 pointer-events-none"
+                                style={{
+                                  width: `${((maxSliceFilter - 0.05) / (defaultMaxAmount - 0.05)) * 100}%`,
+                                  boxShadow: '0 0 8px rgba(250, 182, 23, 0.6)'
+                                }}
+                              />
+                            </div>
+                            <div className="text-sm font-bold font-mono text-yellow-400 tabular-nums min-w-[60px] text-right">
+                              ≤ {maxSliceFilter >= 2 ? maxSliceFilter.toFixed(0) : maxSliceFilter.toFixed(2)}
+                            </div>
+                            <div className="text-[8px] text-gray-500 whitespace-nowrap">({defaultMaxAmount.toFixed(1)} max)</div>
+                          </div>
+                        )}
+
+                        {sliderStyle === 2 && (
+                          /* Style 2: Military Segmented Bar - Compact */
+                          <div className="w-[600px] flex items-center gap-3 bg-black/80 border-2 border-yellow-500/40 px-4 py-1.5 relative overflow-hidden">
+                            {/* Hazard stripe background */}
+                            <div className="absolute inset-0 opacity-5" style={{
+                              backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 8px, transparent 8px, transparent 16px)',
+                            }} />
+                            <div className="relative z-10 flex items-center gap-3 w-full">
+                              <div className="text-[9px] text-yellow-400 uppercase tracking-wider font-bold whitespace-nowrap border-r border-yellow-500/30 pr-3">Filter</div>
+                              <div className="flex-1 relative h-6">
+                                <input
+                                  type="range"
+                                  min="0.05"
+                                  max={defaultMaxAmount}
+                                  step="0.01"
+                                  value={maxSliceFilter}
+                                  onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
+                                  className="slider-style-2 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
+                                />
+                                <div className="absolute top-1/2 -translate-y-1/2 w-full h-1 bg-black/80 border border-yellow-500/50" />
+                                <div
+                                  className="absolute top-1/2 -translate-y-1/2 h-1 bg-yellow-500 pointer-events-none border-r-2 border-yellow-400"
+                                  style={{
+                                    width: `${((maxSliceFilter - 0.05) / (defaultMaxAmount - 0.05)) * 100}%`,
+                                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.8), inset 0 0 4px rgba(0, 0, 0, 0.4)'
+                                  }}
+                                />
+                              </div>
+                              <div className="text-base font-bold font-mono text-yellow-400 tabular-nums min-w-[70px] text-right border-l border-yellow-500/30 pl-3">
+                                ≤{maxSliceFilter >= 2 ? maxSliceFilter.toFixed(0) : maxSliceFilter.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {sliderStyle === 3 && (
+                          /* Style 3: Industrial Sleek - Compact */
+                          <div className="relative w-[368px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/50 border-2 border-yellow-500/30 px-4 py-1.5 backdrop-blur-sm">
+                            {/* Subtle scan line */}
+                            <div className="absolute inset-0 opacity-10 animate-pulse pointer-events-none" style={{
+                              background: 'linear-gradient(90deg, transparent 0%, rgba(250, 182, 23, 0.3) 50%, transparent 100%)',
+                            }} />
+                            <div className="relative z-10 flex items-center gap-2 w-full">
+                              <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">ZOOM</div>
+                              <div className="flex-1 relative h-6">
+                                <input
+                                  type="range"
+                                  min="0.001"
+                                  max="2"
+                                  step="0.001"
+                                  value={maxSliceFilter}
+                                  onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
+                                  className="slider-style-3 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
+                                />
+                                <div className="absolute top-1/2 -translate-y-1/2 w-full h-0.5 bg-black/80 border border-yellow-500/30" />
+                                <div
+                                  className="absolute top-1/2 -translate-y-1/2 h-0.5 pointer-events-none"
+                                  style={{
+                                    width: `${((maxSliceFilter - 0.001) / (2 - 0.001)) * 100}%`,
+                                    background: 'linear-gradient(to right, rgb(250, 182, 23), rgb(234, 179, 8))',
+                                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
+                                  }}
+                                />
+                              </div>
+                              <div className="text-[10px] text-gray-400 tabular-nums whitespace-nowrap">
+                                Quantity &lt; {maxSliceFilter.toFixed(3)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Donut Chart or Table View */}
                     <div className="flex flex-col items-center" onClick={handleBackgroundClick}>

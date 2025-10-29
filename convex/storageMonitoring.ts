@@ -10,7 +10,8 @@ export const getStorageStats = query({
     const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
 
     // Use limited sampling to avoid exceeding 16MB read limit
-    const SAMPLE_LIMIT = 5000;
+    // Reduced to 500 because mekOwnershipHistory records are very large (contain arrays of Meks)
+    const SAMPLE_LIMIT = 500;
 
     const [
       goldMiningCount,

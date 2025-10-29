@@ -226,3 +226,37 @@ export const getPurchaseStats = query({
     return stats;
   },
 });
+
+// Check for recent purchase completion (for polling)
+// Returns the most recent completed purchase within the last 5 minutes
+export const checkRecentPurchase = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+
+    const recentPurchase = await ctx.db
+      .query("commemorativePurchases")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("walletAddress"), args.walletAddress),
+          q.eq(q.field("status"), "completed"),
+          q.gte(q.field("completedAt"), fiveMinutesAgo)
+        )
+      )
+      .order("desc")
+      .first();
+
+    if (!recentPurchase) {
+      return null;
+    }
+
+    return {
+      transactionHash: recentPurchase.transactionHash,
+      nftTokenId: recentPurchase.nftTokenId,
+      completedAt: recentPurchase.completedAt,
+      paymentAmount: recentPurchase.paymentAmount,
+    };
+  },
+});

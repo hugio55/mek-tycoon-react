@@ -1908,8 +1908,34 @@ export default function MekRateLoggingPage() {
 
         // Fallback to client-side parsing (less secure but works offline)
         console.log('Falling back to client-side NFT parsing...');
-        const utxos = await api.getUtxos();
-        meks = await parseMeksFromUtxos(utxos, stakeAddress, []);
+
+        try {
+          // Check network ID before attempting to fetch UTXOs
+          const networkId = await walletApi.getNetworkId();
+          console.log('[Wallet Network Check] Network ID:', networkId);
+
+          // Network ID 0 = testnet/preprod, Network ID 1 = mainnet
+          if (networkId === 0) {
+            throw new Error('TESTNET_WALLET_DETECTED');
+          }
+
+          const utxos = await walletApi.getUtxos();
+          meks = await parseMeksFromUtxos(utxos, stakeAddress, []);
+        } catch (utxoError: any) {
+          // Check if this is a testnet wallet error
+          if (utxoError.message === 'TESTNET_WALLET_DETECTED') {
+            setWalletError('You cannot connect with a pre-production or testnet wallet. Please use a mainnet wallet.');
+            setIsConnecting(false);
+            setConnectionStatus('');
+            setShowConnectionStatus(false);
+            connectionLockRef.current = false;
+            console.error('[Wallet Connect] Testnet wallet rejected');
+            return;
+          }
+
+          // Re-throw other errors
+          throw utxoError;
+        }
         setOwnedMeks(meks);
 
         // Initialize with client-parsed meks
