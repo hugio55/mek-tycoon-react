@@ -186,37 +186,59 @@ export default function CommemorativeToken1Admin() {
   // UI state
   const [showPolicySection, setShowPolicySection] = useState(false); // Collapsed by default since it's rare
 
-  // BANDWIDTH OPTIMIZATION: Only load eligible users when user clicks button
+  // BANDWIDTH OPTIMIZATION: Master switch - entire tab is dormant until user activates it
+  const [commemorativeDataLoaded, setCommemorativeDataLoaded] = useState(false);
   const [eligibleDataLoaded, setEligibleDataLoaded] = useState(false);
 
-  // Queries
-  const config = useQuery(api.airdrop.getConfigByCampaign, { campaignName: CAMPAIGN_NAME });
-  const stats = useQuery(api.airdrop.getSubmissionStats, { campaignName: CAMPAIGN_NAME });
+  // Queries - ALL wrapped in skip logic, only load when commemorativeDataLoaded is true
+  const config = useQuery(
+    api.airdrop.getConfigByCampaign,
+    commemorativeDataLoaded ? { campaignName: CAMPAIGN_NAME } : "skip"
+  );
+  const stats = useQuery(
+    api.airdrop.getSubmissionStats,
+    commemorativeDataLoaded ? { campaignName: CAMPAIGN_NAME } : "skip"
+  );
   const eligibleCount = useQuery(
     api.airdrop.getEligibleUsersCount,
-    eligibleDataLoaded ? { minimumGold: 0 } : "skip"
+    commemorativeDataLoaded && eligibleDataLoaded ? { minimumGold: 0 } : "skip"
   );
   const eligibleUsers = useQuery(
     api.airdrop.getEligibleUsersList,
-    eligibleDataLoaded ? { minimumGold: 0 } : "skip"
+    commemorativeDataLoaded && eligibleDataLoaded ? { minimumGold: 0 } : "skip"
   );
-  const allSubmissions = useQuery(api.airdrop.getAllSubmissions, { campaignName: CAMPAIGN_NAME });
+  const allSubmissions = useQuery(
+    api.airdrop.getAllSubmissions,
+    commemorativeDataLoaded ? { campaignName: CAMPAIGN_NAME } : "skip"
+  );
   const companyNames = useQuery(
     api.airdrop.getWalletCompanyNames,
-    config?.testWallets && config.testWallets.length > 0
+    commemorativeDataLoaded && config?.testWallets && config.testWallets.length > 0
       ? { walletAddresses: config.testWallets }
       : "skip"
   );
   const network = (process.env.NEXT_PUBLIC_CARDANO_NETWORK as 'mainnet' | 'preprod' | 'preview') || 'preprod';
-  const existingPolicies = useQuery(api.minting.getMintingPolicies, { network });
-  const allDesigns = useQuery(api.commemorativeTokens.getAllDesigns, {});
-  const allMints = useQuery(api.commemorativeTokens.getAllCommemorativeTokens, { limit: 100 });
-  const allSnapshots = useQuery(api.whitelists.getAllSnapshots);
+  const existingPolicies = useQuery(
+    api.minting.getMintingPolicies,
+    commemorativeDataLoaded ? { network } : "skip"
+  );
+  const allDesigns = useQuery(
+    api.commemorativeTokens.getAllDesigns,
+    commemorativeDataLoaded ? {} : "skip"
+  );
+  const allMints = useQuery(
+    api.commemorativeTokens.getAllCommemorativeTokens,
+    commemorativeDataLoaded ? { limit: 100 } : "skip"
+  );
+  const allSnapshots = useQuery(
+    api.whitelists.getAllSnapshots,
+    commemorativeDataLoaded ? undefined : "skip"
+  );
 
   // Query batch minted tokens for the selected design
   const batchMintLogs = useQuery(
     api.commemorativeTokens.getBatchMintedTokens,
-    selectedDesignForMinting?.tokenType ? { tokenType: selectedDesignForMinting.tokenType } : "skip"
+    commemorativeDataLoaded && selectedDesignForMinting?.tokenType ? { tokenType: selectedDesignForMinting.tokenType } : "skip"
   );
 
   // Mutations
@@ -231,8 +253,10 @@ export default function CommemorativeToken1Admin() {
   const importSnapshotToNFT = useMutation(api.commemorativeTokens.importSnapshotToNFT);
   const recordBatchMintedToken = useMutation(api.commemorativeTokens.recordBatchMintedToken);
 
-  // Initialize campaign if it doesn't exist
+  // Initialize campaign if it doesn't exist - only when data is loaded
   useEffect(() => {
+    if (!commemorativeDataLoaded) return; // Don't run until user activates tab
+
     const initializeCampaign = async () => {
       if (config === undefined) return; // Still loading
       if (config !== null) return; // Already exists
@@ -256,7 +280,7 @@ export default function CommemorativeToken1Admin() {
     };
 
     initializeCampaign();
-  }, [config, upsertConfig]);
+  }, [config, upsertConfig, commemorativeDataLoaded]);
 
   // Auto-fill metadata image URL when image is uploaded
   useEffect(() => {
@@ -1056,8 +1080,44 @@ export default function CommemorativeToken1Admin() {
 
   return (
     <div className="space-y-6">
-      {/* Compact Campaign & Test Mode Controls */}
-      <div className="bg-gradient-to-r from-purple-900/20 to-orange-900/20 border border-purple-500/30 rounded-lg p-3 space-y-3">
+      {/* BANDWIDTH OPTIMIZATION: Master Load Button - Tab is dormant until activated */}
+      {!commemorativeDataLoaded ? (
+        <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500/50 rounded-lg p-8 text-center">
+          <div className="text-6xl mb-4">🏆</div>
+          <h3 className="text-2xl font-bold text-yellow-400 mb-2">Commemorative Token System</h3>
+          <p className="text-gray-400 mb-6">
+            This tab uses custom minting (not NMKR). Since you're using NMKR now, this entire system is dormant to save bandwidth.
+            <br />
+            Click below if you need to access legacy commemorative token data.
+          </p>
+          <button
+            onClick={() => setCommemorativeDataLoaded(true)}
+            className="px-8 py-4 bg-yellow-600 hover:bg-yellow-500 border-2 border-yellow-400 rounded-lg text-white text-xl font-bold transition-all transform hover:scale-105"
+          >
+            📥 Load Commemorative Data
+          </button>
+          <p className="text-xs text-gray-500 mt-4">
+            Tip: Use the Whitelist Manager tab instead for NMKR-based minting
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Data loaded - show normal content */}
+          <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-green-400 text-xl">✓</span>
+              <span className="text-sm text-green-300 font-semibold">Commemorative data loaded</span>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors"
+            >
+              Unload (refresh page)
+            </button>
+          </div>
+
+          {/* Compact Campaign & Test Mode Controls */}
+          <div className="bg-gradient-to-r from-purple-900/20 to-orange-900/20 border border-purple-500/30 rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between gap-4">
           {/* Campaign Status */}
           <div className="flex items-center gap-3">
@@ -3458,8 +3518,10 @@ export default function CommemorativeToken1Admin() {
           <p className="text-sm text-gray-400">Complete log of all NFTs you've ever minted</p>
         </div>
 
-        <MintingHistoryViewer />
+        <MintingHistoryViewer isDataLoaded={commemorativeDataLoaded} />
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -3468,25 +3530,34 @@ export default function CommemorativeToken1Admin() {
  * Minting History Viewer Component
  * Shows complete history of all minted NFTs with filtering and export
  */
-function MintingHistoryViewer() {
+function MintingHistoryViewer({ isDataLoaded }: { isDataLoaded: boolean }) {
   const [networkFilter, setNetworkFilter] = useState<string>("all");
   const [tokenTypeFilter, setTokenTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Fetch minting history
-  const mintingHistory = useQuery(api.minting.getBatchMintingHistory, {
-    network: networkFilter === "all" ? undefined : networkFilter,
-    tokenType: tokenTypeFilter === "all" ? undefined : tokenTypeFilter,
-    status: statusFilter === "all" ? undefined : statusFilter,
-  });
+  // Fetch minting history - only when data is loaded
+  const mintingHistory = useQuery(
+    api.minting.getBatchMintingHistory,
+    isDataLoaded ? {
+      network: networkFilter === "all" ? undefined : networkFilter,
+      tokenType: tokenTypeFilter === "all" ? undefined : tokenTypeFilter,
+      status: statusFilter === "all" ? undefined : statusFilter,
+    } : "skip"
+  );
 
-  // Fetch statistics
-  const mintingStats = useQuery(api.minting.getBatchMintingStats, {
-    network: networkFilter === "all" ? undefined : networkFilter,
-  });
+  // Fetch statistics - only when data is loaded
+  const mintingStats = useQuery(
+    api.minting.getBatchMintingStats,
+    isDataLoaded ? {
+      network: networkFilter === "all" ? undefined : networkFilter,
+    } : "skip"
+  );
 
-  // Get all designs for token type filter dropdown
-  const allDesigns = useQuery(api.commemorativeTokenCounters.getAllDesigns);
+  // Get all designs for token type filter dropdown - only when data is loaded
+  const allDesigns = useQuery(
+    api.commemorativeTokenCounters.getAllDesigns,
+    isDataLoaded ? undefined : "skip"
+  );
 
   // Export to CSV
   const exportToCSV = () => {
