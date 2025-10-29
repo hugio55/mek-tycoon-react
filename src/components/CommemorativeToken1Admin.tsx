@@ -186,11 +186,20 @@ export default function CommemorativeToken1Admin() {
   // UI state
   const [showPolicySection, setShowPolicySection] = useState(false); // Collapsed by default since it's rare
 
+  // BANDWIDTH OPTIMIZATION: Only load eligible users when user clicks button
+  const [eligibleDataLoaded, setEligibleDataLoaded] = useState(false);
+
   // Queries
   const config = useQuery(api.airdrop.getConfigByCampaign, { campaignName: CAMPAIGN_NAME });
   const stats = useQuery(api.airdrop.getSubmissionStats, { campaignName: CAMPAIGN_NAME });
-  const eligibleCount = useQuery(api.airdrop.getEligibleUsersCount, { minimumGold: 0 });
-  const eligibleUsers = useQuery(api.airdrop.getEligibleUsersList, { minimumGold: 0 });
+  const eligibleCount = useQuery(
+    api.airdrop.getEligibleUsersCount,
+    eligibleDataLoaded ? { minimumGold: 0 } : "skip"
+  );
+  const eligibleUsers = useQuery(
+    api.airdrop.getEligibleUsersList,
+    eligibleDataLoaded ? { minimumGold: 0 } : "skip"
+  );
   const allSubmissions = useQuery(api.airdrop.getAllSubmissions, { campaignName: CAMPAIGN_NAME });
   const companyNames = useQuery(
     api.airdrop.getWalletCompanyNames,
@@ -3386,8 +3395,21 @@ export default function CommemorativeToken1Admin() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-black/50 border border-blue-500/30 rounded-lg p-4">
           <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Eligible Users</div>
-          <div className="text-3xl font-bold text-blue-400">{eligibleCount ?? 0}</div>
-          <div className="text-xs text-gray-500 mt-1">Connected + Gold &gt; 0</div>
+          {!eligibleDataLoaded ? (
+            <button
+              onClick={() => setEligibleDataLoaded(true)}
+              className="mt-2 w-full px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded transition-colors"
+            >
+              📊 Load Count
+            </button>
+          ) : eligibleCount === undefined ? (
+            <div className="text-xl text-blue-400/50 mt-2">Loading...</div>
+          ) : (
+            <div className="text-3xl font-bold text-blue-400">{eligibleCount}</div>
+          )}
+          <div className="text-xs text-gray-500 mt-1">
+            {!eligibleDataLoaded ? 'Click to calculate' : 'Connected + Gold > 0'}
+          </div>
         </div>
 
         <div className="bg-black/50 border border-yellow-500/30 rounded-lg p-4">
