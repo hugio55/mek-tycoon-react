@@ -36,7 +36,14 @@ export default function WalletManagementAdmin() {
     };
     loadSession();
   }, []);
-  const wallets = useQuery(api.adminVerificationReset.getAllWallets);
+
+  // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
+  const [walletsLoaded, setWalletsLoaded] = useState(false);
+  const wallets = useQuery(
+    api.adminVerificationReset.getAllWallets,
+    walletsLoaded ? undefined : "skip"
+  );
+
   const resetVerification = useMutation(api.adminVerificationReset.resetVerificationStatus);
   const deleteWallet = useMutation(api.adminVerificationReset.deleteWallet);
   const mergeDuplicates = useMutation(api.adminVerificationReset.mergeDuplicateWallets);
@@ -793,11 +800,22 @@ Check console for full timeline.
                 Player Management
               </h3>
               <p className="text-sm text-gray-400 mt-1">
-                {wallets.length} connected wallets • {verifiedCount} verified
+                {walletsLoaded && wallets ? (
+                  <>{wallets.length} connected wallets • {verifiedCount} verified</>
+                ) : (
+                  <>Click "Load Wallets" to view player data</>
+                )}
               </p>
             </div>
 
         <div className="flex items-center gap-3">
+          {/* Load/Refresh Wallets Button */}
+          <button
+            onClick={() => setWalletsLoaded(true)}
+            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 border border-yellow-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
+          >
+            {walletsLoaded ? '🔄 Refresh' : '📥 Load Wallets'}
+          </button>
           <select
             onChange={async (e) => {
               const action = e.target.value;
@@ -947,7 +965,16 @@ Check console for full timeline.
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {walletDisplay.length === 0 ? (
+            {!walletsLoaded ? (
+              <tr>
+                <td colSpan={13} className="px-4 py-8 text-center">
+                  <div className="text-gray-400">
+                    <p className="text-lg mb-2">Wallet data not loaded</p>
+                    <p className="text-sm text-gray-500">Click "Load Wallets" button above to view player data</p>
+                  </div>
+                </td>
+              </tr>
+            ) : walletDisplay.length === 0 ? (
               <tr>
                 <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                   {searchTerm ? 'No wallets match your search' : 'No wallets connected yet'}
