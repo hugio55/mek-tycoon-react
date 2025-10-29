@@ -1311,12 +1311,28 @@ export const setCompanyName = mutation({
       };
     }
 
-    // Update with the new company name
-    console.log('[setCompanyName] Updating company name...');
+    // Update with the new company name in goldMining table
+    console.log('[setCompanyName] Updating company name in goldMining...');
     await ctx.db.patch(existing._id, {
       companyName: trimmedName,
       updatedAt: Date.now(),
     });
+
+    // ALSO update the users table so marketplace can access it
+    console.log('[setCompanyName] Syncing company name to users table...');
+    const userRecord = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (userRecord) {
+      await ctx.db.patch(userRecord._id, {
+        companyName: trimmedName,
+      });
+      console.log('[setCompanyName] Users table updated successfully');
+    } else {
+      console.log('[setCompanyName] WARNING: User record not found, company name only in goldMining table');
+    }
 
     console.log('[setCompanyName] Success! Company name set to:', trimmedName);
     return {

@@ -22,6 +22,7 @@ import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
 import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
 import CustomTestMinter from '@/components/admin/nft/CustomTestMinter';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
+import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
@@ -2771,7 +2772,7 @@ export default function AdminMasterDataPage() {
 
 // NFT Admin Sub-Tabs Component
 function NFTAdminTabs() {
-  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative' | 'whitelist-manager'>('commemorative');
+  const [nftSubTab, setNftSubTab] = useState<'simple-minter' | 'events' | 'purchases' | 'analytics' | 'commemorative' | 'whitelist-manager' | 'json-generator'>('commemorative');
 
   return (
     <div className="space-y-6">
@@ -2837,6 +2838,16 @@ function NFTAdminTabs() {
         >
           📋 Whitelist Manager
         </button>
+        <button
+          onClick={() => setNftSubTab('json-generator')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
+            nftSubTab === 'json-generator'
+              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
+              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
+          }`}
+        >
+          📦 JSON System
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -2846,6 +2857,7 @@ function NFTAdminTabs() {
       {nftSubTab === 'analytics' && <RevenueAnalytics />}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
+      {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
     </div>
   );
 }

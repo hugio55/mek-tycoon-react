@@ -40,13 +40,27 @@ export const getActiveListings = query({
     // Apply pagination
     const paginated = filtered.slice(offset, offset + limit);
 
-    // Get seller info for each listing
+    // Get seller info and variation type for each listing
     const listingsWithSellers = await Promise.all(
       paginated.map(async (listing) => {
         const seller = await ctx.db.get(listing.sellerId);
+
+        // For essence listings, try to get the variation type from seller's essence balances
+        let variationType: string | undefined;
+        if (listing.itemType === "essence" && listing.itemVariation && seller?.walletAddress) {
+          const essenceBalance = await ctx.db
+            .query("essenceBalances")
+            .withIndex("by_wallet", (q) => q.eq("walletAddress", seller.walletAddress))
+            .filter((q) => q.eq(q.field("variationName"), listing.itemVariation))
+            .first();
+
+          variationType = essenceBalance?.variationType;
+        }
+
         return {
           ...listing,
           sellerCompanyName: seller?.companyName || seller?.username || seller?.walletAddress?.slice(0, 8) || "Unknown Corp",
+          variationType, // Add variation type (head, body, or item/trait)
         };
       })
     );

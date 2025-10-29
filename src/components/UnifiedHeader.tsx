@@ -116,7 +116,7 @@ export default function UnifiedHeader() {
 
   // Get owned Meks count
   const ownedMeksCount = goldMiningData?.ownedMeks?.length || 0;
-  const cumulativeGold = goldMiningData?.totalCumulativeGold || 0;
+  const cumulativeGold = goldMiningData?.accumulatedGold || 0;
 
   // Click outside handler for wallet dropdown
   useEffect(() => {

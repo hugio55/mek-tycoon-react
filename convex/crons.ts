@@ -5,6 +5,7 @@ import { api } from "./_generated/api";
 const crons = cronJobs();
 
 // Check all wallets every 6 hours and update Mek ownership snapshots
+// This prevents cheating by detecting when Meks move between wallets
 crons.interval(
   "wallet snapshot checks",
   {
