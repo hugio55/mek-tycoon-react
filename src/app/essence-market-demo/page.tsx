@@ -5,7 +5,6 @@ import EssenceListingLightboxV1Clean from "@/components/EssenceListingLightbox-V
 import EssenceListingLightboxV2Industrial from "@/components/EssenceListingLightbox-V2-Industrial";
 import EssenceListingLightboxV3Tactical from "@/components/EssenceListingLightbox-V3-Tactical";
 import EssenceListingLightboxV4TacticalYellow from "@/components/EssenceListingLightbox-V4-TacticalYellow";
-import EssenceListingLightboxV5YellowGradient from "@/components/EssenceListingLightbox-V5-YellowGradient";
 
 const DURATION_OPTIONS = [
   { days: 1, label: "1 Day", cost: 100 },
@@ -24,7 +23,7 @@ const DEMO_OWNED_ESSENCE = [
 ];
 
 export default function EssenceMarketDemoPage() {
-  const [version, setVersion] = useState<"v1" | "v2" | "v3" | "v4" | "v5">("v5");
+  const [version, setVersion] = useState<"v1" | "v2" | "v3" | "v4">("v4");
   const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = (data: any) => {
@@ -42,7 +41,7 @@ export default function EssenceMarketDemoPage() {
             Essence Listing Lightbox - Style Comparison
           </h1>
           <p className="text-gray-400">
-            Test the five different aesthetic options
+            Test the four different aesthetic options
           </p>
         </div>
 
@@ -51,7 +50,7 @@ export default function EssenceMarketDemoPage() {
           <h2 className="text-lg font-bold text-gray-300 mb-4">
             Select Lightbox Style:
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => setVersion("v1")}
               className={`p-4 rounded-lg border-2 transition-all ${
@@ -112,20 +111,6 @@ export default function EssenceMarketDemoPage() {
               </div>
             </button>
 
-            <button
-              onClick={() => setVersion("v5")}
-              className={`p-4 rounded-lg border-2 transition-all ${
-                version === "v5"
-                  ? "bg-yellow-500 text-black border-yellow-400 shadow-lg shadow-yellow-500/30"
-                  : "bg-gray-800 text-gray-300 border-gray-700 hover:border-gray-600"
-              }`}
-            >
-              <div className="font-bold mb-2">Version 5</div>
-              <div className="text-xs opacity-75">Yellow Gradient</div>
-              <div className="text-xs mt-2 opacity-60">
-                Black-to-yellow with slider
-              </div>
-            </button>
           </div>
         </div>
 
@@ -136,7 +121,6 @@ export default function EssenceMarketDemoPage() {
             {version === "v2" && "Version 2: Industrial Frame"}
             {version === "v3" && "Version 3: Dark Tactical (Blue)"}
             {version === "v4" && "Version 4: Dark Tactical (Yellow)"}
-            {version === "v5" && "Version 5: Yellow Gradient"}
           </h3>
           <p className="text-sm text-gray-400">
             {version === "v1" &&
@@ -147,8 +131,6 @@ export default function EssenceMarketDemoPage() {
               "Sleek, modern, military-inspired design with blue accent colors. Uses subtle glows and gradients for a tactical command center feel."}
             {version === "v4" &&
               "Same sleek, modern layout as V3 but with yellow accent colors instead of blue. Maintains the tactical command center feel with warmer tones."}
-            {version === "v5" &&
-              "Black-to-yellow gradient theme with NO blue colors. Features slider-based quantity selection with visual feedback (green selling amount / red remaining amount). Updated fee structure shows listing fee, 2% market fee, and total fees."}
           </p>
         </div>
 
@@ -192,15 +174,6 @@ export default function EssenceMarketDemoPage() {
         )}
         {version === "v4" && (
           <EssenceListingLightboxV4TacticalYellow
-            show={showModal}
-            onClose={() => setShowModal(false)}
-            onSubmit={handleSubmit}
-            ownedEssenceVariations={DEMO_OWNED_ESSENCE}
-            durationOptions={DURATION_OPTIONS}
-          />
-        )}
-        {version === "v5" && (
-          <EssenceListingLightboxV5YellowGradient
             show={showModal}
             onClose={() => setShowModal(false)}
             onSubmit={handleSubmit}
