@@ -539,7 +539,9 @@ Check console for full timeline.
     return wallets.filter(w => w.isVerified).length;
   }, [wallets]);
 
-  if (!wallets) {
+  // BANDWIDTH OPTIMIZATION: Don't show loading spinner when intentionally skipping query
+  // Only show loading when walletsLoaded is true but data hasn't arrived yet
+  if (walletsLoaded && !wallets) {
     return (
       <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
         <div className="text-gray-400">Loading wallet data...</div>
