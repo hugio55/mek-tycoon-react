@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 echo Manual commit triggered...
 echo.
 
@@ -14,4 +15,4 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-timeout /t 2 >nul
+timeout /t 5 >nul
