@@ -101,6 +101,7 @@ git checkout f8ed027d^ -- src/app/essence-market-demo/page.tsx
 
 ## 2025-10-29: Dead Code Cleanup - Typography, Verification & Component Variants
 
+**Commit**: `08c27c54` (Remove 35 dead code files and consolidate typography to UI showcase)
 **Total Deleted**: 35 files
 **Verified**: No active imports, verified via grep analysis and /ultra agent analysis
 
@@ -184,14 +185,17 @@ All variants unused - no imports found in any pages.
 
 **Recovery Command**:
 ```bash
-# Restore any file from this session (commit TBD after git commit)
-git checkout <commit>^ -- <file-path>
+# Restore any file from this cleanup session
+git checkout 08c27c54^ -- <file-path>
 
 # Example: Restore typography showcase
-git checkout <commit>^ -- src/app/typography-showcase/page.tsx
+git checkout 08c27c54^ -- src/app/typography-showcase/page.tsx
 
 # Example: Restore verification refactored version
-git checkout <commit>^ -- convex/blockchainVerificationRefactored.ts
+git checkout 08c27c54^ -- convex/blockchainVerificationRefactored.ts
+
+# Example: Restore all MekChapterDistribution variants
+git checkout 08c27c54^ -- src/components/MekChapterDistribution*.tsx
 ```
 
 ---
