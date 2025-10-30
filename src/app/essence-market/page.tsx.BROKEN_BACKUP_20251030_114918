@@ -54,7 +54,6 @@ export default function EssenceMarketPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [buttonStyle, setButtonStyle] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const headerLayout = 5; // Locked to Option 5: Compact Grid - Gold Prominent
   const headerButtonStyle = 5; // Locked to Style 5: Brushed Metal
   const goldDisplayVariation = 2; // Locked to Variation 2: Inline - Number + G
   const timerDisplayVariation = 5; // Locked to Variation 5: Clock + Text w/ Background
@@ -107,6 +106,9 @@ export default function EssenceMarketPage() {
     durationFee: number;
   } | null>(null);
 
+  // My Listings layout variation state
+  const [myListingsLayoutVariation, setMyListingsLayoutVariation] = useState(1);
+
   // Listing form state
   const [selectedVariation, setSelectedVariation] = useState("");
   const [essenceAmount, setEssenceAmount] = useState("1");
@@ -117,55 +119,6 @@ export default function EssenceMarketPage() {
   const [requestVariation, setRequestVariation] = useState("");
   const [requestAmount, setRequestAmount] = useState("1");
   const [requestTotalPrice, setRequestTotalPrice] = useState("");
-
-  // My Listings layout variation
-  const [myListingsLayoutVariation, setMyListingsLayoutVariation] = useState(1);
-
-  // ⚠️ TEMPORARY TEST DATA - DELETE BEFORE PRODUCTION ⚠️
-  // Mock transaction data for visualizing transaction logs
-  // This generates fake transactions to preview the UI layout (up to 20 for testing scrolling)
-  // Uses deterministic amounts based on index to prevent regeneration on every render
-  const getMockTransactions = (listingId: string, count: number = 20) => {
-    const transactions = [];
-    const now = Date.now();
-    const amounts = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5];
-    const corporations = [
-      "Stellar Industries",
-      "Nova Corp",
-      "Quantum Dynamics",
-      "Nexus Enterprises",
-      "Titan Systems",
-      "Eclipse Trading Co",
-      "Apex Solutions",
-      "Zenith Corporation"
-    ];
-
-    for (let i = 0; i < count; i++) {
-      const hoursAgo = count - i;
-      const timestamp = new Date(now - hoursAgo * 60 * 60 * 1000);
-      // Use index to deterministically pick amount (not random)
-      const amountSiphoned = amounts[i % amounts.length];
-      const corporation = corporations[i % corporations.length];
-
-      // Format date with 2-digit year
-      const dateObj = new Date(timestamp);
-      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getUTCDate()).padStart(2, '0');
-      const year = String(dateObj.getUTCFullYear()).slice(-2); // Last 2 digits
-
-      transactions.push({
-        id: `mock-${listingId}-${i}`,
-        date: `${month}/${day}/${year}`,
-        time: timestamp.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }) + ' UTC',
-        amountSiphoned,
-        goldEarned: Math.floor(amountSiphoned * 50000),
-        corporation
-      });
-    }
-
-    return transactions.reverse(); // Most recent first
-  };
-  // ⚠️ END TEMPORARY TEST DATA ⚠️
 
   // Update current time every second for countdown timers
   useEffect(() => {
@@ -619,6 +572,52 @@ export default function EssenceMarketPage() {
       alert(error instanceof Error ? error.message : "An error occurred");
     }
   };
+
+  // ⚠️ TEMPORARY TEST DATA - DELETE BEFORE PRODUCTION ⚠️
+  // Mock transaction data for visualizing transaction logs
+  // This generates fake transactions to preview the UI layout (up to 20 for testing scrolling)
+  // Uses deterministic amounts based on index to prevent regeneration on every render
+  const getMockTransactions = (listingId: string, count: number = 20) => {
+    const transactions = [];
+    const now = Date.now();
+    const amounts = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5];
+    const corporations = [
+      "Stellar Industries",
+      "Nova Corp",
+      "Quantum Dynamics",
+      "Nexus Enterprises",
+      "Titan Systems",
+      "Eclipse Trading Co",
+      "Apex Solutions",
+      "Zenith Corporation"
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const hoursAgo = count - i;
+      const timestamp = new Date(now - hoursAgo * 60 * 60 * 1000);
+      // Use index to deterministically pick amount (not random)
+      const amountSiphoned = amounts[i % amounts.length];
+      const corporation = corporations[i % corporations.length];
+
+      // Format date with 2-digit year
+      const dateObj = new Date(timestamp);
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getUTCDate()).padStart(2, '0');
+      const year = String(dateObj.getUTCFullYear()).slice(-2); // Last 2 digits
+
+      transactions.push({
+        id: `mock-${listingId}-${i}`,
+        date: `${month}/${day}/${year}`,
+        time: timestamp.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false }) + ' UTC',
+        amountSiphoned,
+        goldEarned: Math.floor(amountSiphoned * 50000),
+        corporation
+      });
+    }
+
+    return transactions.reverse(); // Most recent first
+  };
+  // ⚠️ END TEMPORARY TEST DATA ⚠️
 
   // Get button style and textures based on selected variation
   const getButtonStyle = (styleNum: 1 | 2 | 3 | 4 | 5) => {
@@ -2916,6 +2915,13 @@ export default function EssenceMarketPage() {
     }
   };
 
+  // Calculate values for Listing Success Modal
+  const listingSuccessValues = successListingData ? {
+    totalValue: successListingData.amount * successListingData.pricePerUnit,
+    marketFee: Math.ceil((successListingData.amount * successListingData.pricePerUnit) * 0.02),
+    netProfit: (successListingData.amount * successListingData.pricePerUnit) - successListingData.durationFee - Math.ceil((successListingData.amount * successListingData.pricePerUnit) * 0.02)
+  } : null;
+
   return (
     <div className="min-h-screen text-white overflow-hidden relative">
       {/* Debug Panel - Collapsible */}
@@ -3114,194 +3120,41 @@ export default function EssenceMarketPage() {
             <div className="absolute inset-0 mek-overlay-metal-texture" />
           </div>
 
-          {/* OPTION 1: Current Layout - EXACT REFERENCE POINT */}
-          {headerLayout === 1 && (
-            <div className="relative">
-              <div className="flex justify-between items-center mb-4">
-                {/* Left: Title */}
-                <div>
-                  <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                    MARKET
-                  </h1>
-                </div>
-
-                {/* Center: Tagline */}
-                <div className="flex-1 text-center px-8">
-                  <p className="text-gray-300 italic text-base tracking-wider">
-                    Where fortunes are made
-                  </p>
-                </div>
-
-                {/* Right: Buttons */}
-                <div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowCreateListing(true)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>LIST ITEM</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
-                          userId: userId ? 'exists' : 'MISSING',
-                          walletAddress: walletAddress ? 'exists' : 'MISSING',
-                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
-                        });
-                        setShowMyListingsModal(true);
-                      }}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
-                  <div className="relative">
-                    <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                    <div className="mek-value-primary text-3xl">
-                      {Math.floor(displayGold).toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-8 h-1 bg-yellow-500/50" />
-                      <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 2: Horizontal Row - Buttons + Gold on Right */}
-          {headerLayout === 2 && (
-            <div className="relative">
-              <div className="flex justify-between items-center">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>LIST ITEM</span>
-                  </button>
-                  <button
-                    onClick={() => setShowMyListingsModal(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <div className="w-px h-10 bg-yellow-500/30 mx-2" />
-                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 3: Stacked Buttons on Right */}
-          {headerLayout === 3 && (
-            <div className="relative">
-              <div className="flex justify-between items-start">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowCreateListing(true)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>LIST ITEM</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
-                          userId: userId ? 'exists' : 'MISSING',
-                          walletAddress: walletAddress ? 'exists' : 'MISSING',
-                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
-                        });
-                        setShowMyListingsModal(true);
-                      }}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                    </button>
-                  </div>
-                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 4: Integrated Bar - Buttons + Gold in Industrial Frame */}
-          {headerLayout === 4 && (
-            <div className="relative">
-              <div className="flex justify-between items-center mb-4">
+          {/* Header Layout */}
+          <div className="relative pt-[10px]">
+            <div className="flex justify-between items-center">
+              {/* Left: Title */}
+              <div>
                 <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
                   MARKET
                 </h1>
               </div>
-              <div className="relative flex items-center gap-2 p-3 bg-black/40 border-2 border-yellow-500/30 rounded-lg mek-overlay-diagonal-stripes">
-                <div className="flex items-center gap-2 flex-1 justify-end">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>LIST ITEM</span>
-                  </button>
-                  <button
-                    onClick={() => setShowMyListingsModal(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <div className="w-px h-10 bg-yellow-500/50 mx-2" />
-                  <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* OPTION 5: Compact Grid - Gold Prominent on Right */}
-          {headerLayout === 5 && (
-            <div className="relative">
-              <div className="flex justify-between items-center">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex items-center gap-4">
-                  {renderHeaderButtons({
-                    onCreateListing: () => setShowCreateListing(true),
-                    onToggleMyListings: () => setShowMyListingsModal(true),
-                    showOnlyMyListings,
-                    listingCount: debugListingCount
-                  })}
-                </div>
+              {/* Center: Tagline Video */}
+              <div className="flex-1 flex justify-center items-center px-8">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="h-12 w-auto opacity-90"
+                  style={{ filter: 'brightness(1.1) contrast(1.1)' }}
+                >
+                  <source src="/random-images/fortunes webm 1.webm" type="video/webm" />
+                </video>
+              </div>
+
+              {/* Right: Buttons */}
+              <div className="flex items-center gap-4">
+                {renderHeaderButtons({
+                  onCreateListing: () => setShowCreateListing(true),
+                  onToggleMyListings: () => setShowMyListingsModal(true),
+                  showOnlyMyListings,
+                  listingCount: debugListingCount
+                })}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* OFFERS VIEW */}
@@ -5653,15 +5506,15 @@ export default function EssenceMarketPage() {
         {/* My Listings Modal */}
         {showMyListingsModal && (
           <div
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
             style={{ backdropFilter: 'blur(2px)' }}
             onClick={() => setShowMyListingsModal(false)}
           >
             <div
-              className="relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] bg-black/20 backdrop-blur-xl border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
+              className="relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
+              {/* Close Button */}
               <button
                 onClick={() => setShowMyListingsModal(false)}
                 className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
@@ -5673,9 +5526,9 @@ export default function EssenceMarketPage() {
               <div className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
                 <div className="relative text-white">
                   {/* Industrial Header */}
-                  <div className="w-full bg-gradient-to-b from-black via-black to-transparent">
+                  <div className="w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
                     <div className="relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-10">
+                      <div className="absolute inset-0 opacity-5">
                         <div className="absolute inset-0" style={{
                           backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
                         }} />
@@ -5689,14 +5542,32 @@ export default function EssenceMarketPage() {
                         <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
                           lineHeight: '1.6'
                         }}>
-                          View and manage your active marketplace listings. Track sales, monitor remaining stock, and recall listings at any time.
+                          Track your active essence deployments across the marketplace. Monitor siphoning activity, accumulated profits, and manage your listings.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Content Area */}
-                  <div className="max-w-7xl mx-auto px-4 py-6">
+                  {/* Content Padding */}
+                  <div className="p-6">
+
+              {/* Debug Panel for Layout Variations */}
+              <div className="fixed left-4 top-1/2 -translate-y-1/2 bg-black/80 border border-purple-500/30 p-3 rounded z-[60]">
+                <div className="text-purple-400 text-xs font-bold mb-2 uppercase tracking-wider">Layout</div>
+                {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => setMyListingsLayoutVariation(num)}
+                    className={`block w-12 h-8 mb-2 border-2 transition-all text-xs font-bold ${
+                      myListingsLayoutVariation === num
+                        ? 'bg-purple-500/30 border-purple-400 text-purple-400'
+                        : 'bg-black/50 border-purple-500/30 text-gray-500 hover:border-purple-400/50'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
 
               {/* Active Deployments Content */}
               {myListings && myListings.filter(l => l.itemType === "essence").length > 0 ? (
@@ -5712,34 +5583,10 @@ export default function EssenceMarketPage() {
                       // ⚠️ END TEMPORARY TEST DATA ⚠️
 
                       return (
-                      <div key={listing._id} className="relative p-4 rounded-lg overflow-hidden hover:border-yellow-400/10 transition-all duration-500"
-                        style={{
-                          background: `linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)`,
-                          backdropFilter: 'blur(3px) brightness(1.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                        }}
-                      >
-                        {/* Crosshatch pattern */}
-                        <div
-                          className="absolute inset-0 pointer-events-none opacity-40"
-                          style={{
-                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
-                                              repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
-                          }}
-                        />
-                        {/* Radial gradient accents */}
-                        <div
-                          className="absolute inset-0 pointer-events-none"
-                          style={{
-                            background: `radial-gradient(circle at 25% 25%, rgba(250, 182, 23, 0.04) 0%, transparent 25%),
-                                         radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.03) 0%, transparent 25%),
-                                         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%)`
-                          }}
-                        />
-
-                        {/* LAYOUT 1: Compact Vertical with Transaction Log */}
+                      <div key={listing._id} className="relative rounded-lg overflow-hidden border-2 border-yellow-500/30 bg-black/80">
+                        {/* LAYOUT 1: Compact Vertical with Side-by-Side Transaction Log */}
                         {myListingsLayoutVariation === 1 && (
-                          <div className="relative p-4">
+                          <div className="p-4">
                             {/* Bottle Image */}
                             <div className="flex justify-center mb-3">
                               <div className="w-24 h-24 relative">
@@ -5793,7 +5640,7 @@ export default function EssenceMarketPage() {
                                   <div key={tx.id} className="p-2 bg-black/60 border border-gray-700/30 rounded text-xs">
                                     <div className="flex justify-between mb-1">
                                       <span className="text-gray-500">{tx.date} {tx.time}</span>
-                                      <span className="text-purple-400 font-semibold">{tx.corporation}</span>
+                                      <span className="text-purple-400 font-semibold">WrenCo</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                       <span className="text-cyan-400 font-bold" style={{ textShadow: '0 0 8px rgba(6, 182, 212, 0.6)' }}>
@@ -5803,6 +5650,575 @@ export default function EssenceMarketPage() {
                                     </div>
                                   </div>
                                 ))}
+                              </div>
+                            </div>
+
+                            {/* Recall Button */}
+                            <button
+                              onClick={() => handleCancelListing(listing._id)}
+                              className="relative w-full px-4 py-2 font-bold uppercase transition-none cursor-pointer overflow-hidden rounded-lg tracking-[0.5em] text-base font-normal bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400"
+                            >
+                              ⊗ RECALL
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 2: Horizontal Split - Info Left, Transactions Right */}
+                        {myListingsLayoutVariation === 2 && (
+                          <div className="grid grid-cols-2 divide-x divide-yellow-500/20">
+                            {/* Left: Info */}
+                            <div className="p-4">
+                              <div className="flex justify-center mb-3">
+                                <div className="w-20 h-20 relative">
+                                  <img
+                                    src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                    alt={listing.itemVariation}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="text-center mb-3">
+                                <div className="text-yellow-400 font-bold uppercase text-sm mb-2">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+                              </div>
+
+                              <div className="space-y-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Original:</span>
+                                  <span className="text-gray-400">{originalStock}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Remaining:</span>
+                                  <span className="text-cyan-400 font-bold">{remainingStock}</span>
+                                </div>
+                                <div className="h-px bg-gray-700 my-2" />
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Price/Unit:</span>
+                                  <span className="text-yellow-400 font-bold">{listing.pricePerUnit.toLocaleString()}g</span>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => handleCancelListing(listing._id)}
+                                className="w-full mt-3 px-2 py-1.5 bg-red-900/30 border border-red-500/40 text-red-400 font-bold uppercase text-xs rounded"
+                              >
+                                RECALL
+                              </button>
+                            </div>
+
+                            {/* Right: Transactions */}
+                            <div className="p-3 bg-black/40">
+                              <div className="text-gray-400 text-xs uppercase mb-2">Transaction Log</div>
+                              <div className="max-h-64 overflow-y-auto space-y-2">
+                                {mockTransactions.map(tx => (
+                                  <div key={tx.id} className="p-2 bg-black/60 border border-gray-700/30 rounded text-xs">
+                                    <div className="text-gray-500 mb-1">{tx.date}</div>
+                                    <div className="text-gray-400">{tx.time}</div>
+                                    <div className="flex justify-between mt-1">
+                                      <span className="text-cyan-400">-{tx.amountSiphoned}</span>
+                                      <span className="text-green-400">+{tx.goldEarned.toLocaleString()}g</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 3: Expanded Card with Table-Style Log */}
+                        {myListingsLayoutVariation === 3 && (
+                          <div className="p-4">
+                            {/* Header with Image and Name */}
+                            <div className="flex items-center gap-4 mb-4 pb-4 border-b border-yellow-500/30">
+                              <div className="w-20 h-20 relative flex-shrink-0">
+                                <img
+                                  src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                  alt={listing.itemVariation}
+                                  className="w-full h-full object-contain"
+                                  onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-yellow-400 font-bold text-xl uppercase mb-2">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <div className="text-gray-500">Stock:</div>
+                                    <div className="text-cyan-400">{originalStock} → {remainingStock}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-500">Price/Unit:</div>
+                                    <div className="text-yellow-400">{listing.pricePerUnit.toLocaleString()}g</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Transaction Table */}
+                            <div className="mb-3">
+                              <div className="text-gray-400 text-xs uppercase mb-2">Transaction History</div>
+                              <div className="bg-black/40 border border-gray-700/30 rounded overflow-hidden">
+                                <table className="w-full text-xs">
+                                  <thead className="bg-black/60">
+                                    <tr className="border-b border-gray-700/30">
+                                      <th className="text-left p-2 text-gray-500">Date</th>
+                                      <th className="text-left p-2 text-gray-500">Time</th>
+                                      <th className="text-right p-2 text-gray-500">Siphoned</th>
+                                      <th className="text-right p-2 text-gray-500">Earned</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {mockTransactions.map(tx => (
+                                      <tr key={tx.id} className="border-b border-gray-700/20">
+                                        <td className="p-2 text-gray-400">{tx.date}</td>
+                                        <td className="p-2 text-gray-400">{tx.time}</td>
+                                        <td className="p-2 text-right text-cyan-400">-{tx.amountSiphoned}</td>
+                                        <td className="p-2 text-right text-green-400">+{tx.goldEarned.toLocaleString()}g</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+
+                            {/* Recall Button */}
+                            <button
+                              onClick={() => handleCancelListing(listing._id)}
+                              className="w-full px-3 py-2 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 text-red-400 font-bold uppercase text-sm rounded"
+                            >
+                              ⊗ RECALL
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 4: Prominent Stats with Large Numbers */}
+                        {myListingsLayoutVariation === 4 && (
+                          <div className="p-5">
+                            {/* Header with Image and Name */}
+                            <div className="flex items-center gap-6 mb-6 pb-5 border-b-2 border-yellow-500/40">
+                              <div className="w-28 h-28 relative flex-shrink-0">
+                                <img
+                                  src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                  alt={listing.itemVariation}
+                                  className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(250,182,23,0.4)]"
+                                  onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-white font-bold text-2xl uppercase mb-4 tracking-wide">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+
+                                {/* Prominent Stats Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  {/* Stock Display */}
+                                  <div className="p-3 bg-cyan-900/30 border-2 border-cyan-500/40 rounded-lg">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Stock</div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-400 text-lg">{originalStock}</span>
+                                      <span className="text-cyan-400 text-xl">→</span>
+                                      <span className="text-cyan-400 font-bold text-2xl">{remainingStock}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Price Per Unit */}
+                                  <div className="p-3 bg-yellow-900/30 border-2 border-yellow-500/40 rounded-lg">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Price/Unit</div>
+                                    <div className="text-yellow-400 font-bold text-2xl">
+                                      {listing.pricePerUnit.toLocaleString()}
+                                      <span className="text-lg ml-1">g</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Transaction Table - Show 5 rows minimum */}
+                            <div className="mb-4">
+                              <div className="text-gray-400 text-xs uppercase mb-2 tracking-wider">Transaction History</div>
+                              <div className="bg-black/40 border border-gray-700/40 rounded overflow-hidden">
+                                <div className="max-h-[150px] overflow-y-auto">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-black/60 sticky top-0">
+                                      <tr className="border-b border-gray-700/30">
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Date</th>
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Time</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Siphoned</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Earned</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.from({ length: Math.max(5, mockTransactions.length) }).map((_, index) => {
+                                        const tx = mockTransactions[index];
+                                        if (tx) {
+                                          return (
+                                            <tr key={tx.id} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-400">{tx.date}</td>
+                                              <td className="p-2 text-gray-400">{tx.time}</td>
+                                              <td
+                                                className="p-2 text-right text-cyan-400 cursor-pointer hover:text-cyan-300 transition-colors"
+                                                title={`Purchased by ${tx.corporation}`}
+                                              >
+                                                -{tx.amountSiphoned}
+                                              </td>
+                                              <td className="p-2 text-right text-green-400">+{tx.goldEarned.toLocaleString()}g</td>
+                                            </tr>
+                                          );
+                                        } else {
+                                          return (
+                                            <tr key={`empty-${index}`} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                            </tr>
+                                          );
+                                        }
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recall Button */}
+                            <button
+                              onClick={() => handleCancelListing(listing._id)}
+                              className="relative w-full px-4 py-2 font-bold uppercase transition-none cursor-pointer overflow-hidden rounded-lg tracking-[0.5em] text-base font-normal bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400"
+                            >
+                              ⊗ RECALL
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 5: Industrial HUD Style with Maximum Emphasis */}
+                        {myListingsLayoutVariation === 5 && (
+                          <div className="p-5 relative">
+                            {/* Corner Brackets */}
+                            <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-yellow-500/60" />
+                            <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-yellow-500/60" />
+                            <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-yellow-500/60" />
+                            <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-yellow-500/60" />
+
+                            {/* Header Section */}
+                            <div className="mb-5 pb-5 border-b-2 border-yellow-500/40 relative">
+                              {/* Hazard Stripe */}
+                              <div className="absolute top-0 left-0 right-0 h-2 mek-overlay-hazard-stripes opacity-40" />
+
+                              <div className="flex items-start gap-6 mt-3">
+                                <div className="w-32 h-32 relative flex-shrink-0 p-2 bg-black/60 border-2 border-yellow-500/30 rounded">
+                                  <img
+                                    src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                    alt={listing.itemVariation}
+                                    className="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(250,182,23,0.6)]"
+                                    onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                  />
+                                </div>
+
+                                <div className="flex-1">
+                                  {/* Essence Name - Extra Large */}
+                                  <div className="text-yellow-400 font-bold text-3xl uppercase mb-5 tracking-widest mek-text-industrial" style={{ textShadow: '0 0 10px rgba(250,182,23,0.5)' }}>
+                                    {listing.itemVariation || listing.itemType}
+                                  </div>
+
+                                  {/* Stats - Large and Prominent */}
+                                  <div className="space-y-3">
+                                    {/* Stock - Cyan Theme */}
+                                    <div className="p-4 bg-cyan-900/40 border-2 border-cyan-400/60 rounded-lg relative overflow-hidden">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent pointer-events-none" />
+                                      <div className="relative flex items-center justify-between">
+                                        <div>
+                                          <div className="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Inventory Stock</div>
+                                          <div className="flex items-baseline gap-3">
+                                            <span className="text-gray-400 text-xl">{originalStock}</span>
+                                            <span className="text-cyan-400 text-2xl font-bold">→</span>
+                                            <span className="text-cyan-400 font-bold text-3xl" style={{ textShadow: '0 0 10px rgba(6,182,212,0.6)' }}>
+                                              {remainingStock}
+                                            </span>
+                                            <span className="text-cyan-400/60 text-sm uppercase">essence</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Price - Yellow Theme */}
+                                    <div className="p-4 bg-yellow-900/40 border-2 border-yellow-400/60 rounded-lg relative overflow-hidden">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent pointer-events-none" />
+                                      <div className="relative flex items-center justify-between">
+                                        <div>
+                                          <div className="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Unit Price</div>
+                                          <div className="flex items-baseline gap-2">
+                                            <span className="text-yellow-400 font-bold text-3xl" style={{ textShadow: '0 0 10px rgba(250,182,23,0.6)' }}>
+                                              {listing.pricePerUnit.toLocaleString()}
+                                            </span>
+                                            <span className="text-yellow-400/60 text-lg uppercase">gold</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Transaction Table - Compact but clear */}
+                            <div className="mb-4">
+                              <div className="text-gray-400 text-xs uppercase mb-2 tracking-wider flex items-center gap-2">
+                                <div className="w-2 h-2 bg-cyan-400 animate-pulse" />
+                                Transaction Log
+                              </div>
+                              <div className="bg-black/60 border-2 border-gray-700/50 rounded overflow-hidden">
+                                <div className="max-h-[150px] overflow-y-auto">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-black/80 border-b-2 border-gray-700/50 sticky top-0">
+                                      <tr>
+                                        <th className="text-left p-2 text-gray-500 font-bold uppercase">Date</th>
+                                        <th className="text-left p-2 text-gray-500 font-bold uppercase">Time</th>
+                                        <th className="text-right p-2 text-gray-500 font-bold uppercase">Siphoned</th>
+                                        <th className="text-right p-2 text-gray-500 font-bold uppercase">Earned</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.from({ length: Math.max(5, mockTransactions.length) }).map((_, index) => {
+                                        const tx = mockTransactions[index];
+                                        if (tx) {
+                                          return (
+                                            <tr key={tx.id} className="border-b border-gray-700/30 hover:bg-yellow-500/5 transition-colors">
+                                              <td className="p-2 text-gray-400">{tx.date}</td>
+                                              <td className="p-2 text-gray-400 font-mono">{tx.time}</td>
+                                              <td
+                                                className="p-2 text-right text-cyan-400 font-bold cursor-pointer hover:text-cyan-300 transition-colors"
+                                                title={`Purchased by ${tx.corporation}`}
+                                              >
+                                                -{tx.amountSiphoned}
+                                              </td>
+                                              <td className="p-2 text-right text-green-400 font-bold">+{tx.goldEarned.toLocaleString()}g</td>
+                                            </tr>
+                                          );
+                                        } else {
+                                          return (
+                                            <tr key={`empty-${index}`} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-700">—</td>
+                                              <td className="p-2 text-gray-700">—</td>
+                                              <td className="p-2 text-right text-gray-700">—</td>
+                                              <td className="p-2 text-right text-gray-700">—</td>
+                                            </tr>
+                                          );
+                                        }
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recall Button - Industrial Style */}
+                            <button
+                              onClick={() => handleCancelListing(listing._id)}
+                              className="w-full px-4 py-3 bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400/70 text-red-400 font-bold uppercase text-sm rounded relative overflow-hidden transition-all"
+                            >
+                              <div className="absolute inset-0 mek-overlay-hazard-stripes opacity-10 pointer-events-none" />
+                              <span className="relative">⊗ RECALL DEPLOYMENT</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 6: Compact with Progress Bar */}
+                        {myListingsLayoutVariation === 6 && (
+                          <div className="p-5">
+                            {/* Header with Image and Name */}
+                            <div className="flex items-center gap-6 mb-6 pb-5 border-b-2 border-yellow-500/40">
+                              <div className="w-28 h-28 relative flex-shrink-0">
+                                <img
+                                  src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                  alt={listing.itemVariation}
+                                  className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(250,182,23,0.4)]"
+                                  onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-white font-bold text-2xl uppercase mb-4 tracking-wide">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+
+                                {/* Compact Stats Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  {/* Stock with Progress Bar */}
+                                  <div className="p-3 bg-cyan-900/20 border-2 border-cyan-500/40 rounded-lg">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Stock</div>
+                                    <div className="text-cyan-400 font-bold text-xl mb-2">
+                                      {remainingStock} <span className="text-sm text-gray-400">/ {originalStock}</span>
+                                    </div>
+                                    {/* Mini Progress Bar */}
+                                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-cyan-400"
+                                        style={{ width: `${(remainingStock / originalStock) * 100}%` }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Price Per Unit */}
+                                  <div className="p-3 bg-yellow-900/20 border-2 border-yellow-500/40 rounded-lg">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Price/Unit</div>
+                                    <div className="text-yellow-400 font-bold text-xl">
+                                      {listing.pricePerUnit.toLocaleString()}
+                                      <span className="text-sm ml-1">g</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Transaction Table - Show 5 rows minimum */}
+                            <div className="mb-4">
+                              <div className="text-gray-400 text-xs uppercase mb-2 tracking-wider">Transaction History</div>
+                              <div className="bg-black/40 border border-gray-700/40 rounded overflow-hidden">
+                                <div className="max-h-[150px] overflow-y-auto">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-black/60 sticky top-0">
+                                      <tr className="border-b border-gray-700/30">
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Date</th>
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Time</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Siphoned</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Earned</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.from({ length: Math.max(5, mockTransactions.length) }).map((_, index) => {
+                                        const tx = mockTransactions[index];
+                                        if (tx) {
+                                          return (
+                                            <tr key={tx.id} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-400">{tx.date}</td>
+                                              <td className="p-2 text-gray-400">{tx.time}</td>
+                                              <td
+                                                className="p-2 text-right text-cyan-400 cursor-pointer hover:text-cyan-300 transition-colors"
+                                                title={`Purchased by ${tx.corporation}`}
+                                              >
+                                                -{tx.amountSiphoned}
+                                              </td>
+                                              <td className="p-2 text-right text-green-400">+{tx.goldEarned.toLocaleString()}g</td>
+                                            </tr>
+                                          );
+                                        } else {
+                                          return (
+                                            <tr key={`empty-${index}`} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                            </tr>
+                                          );
+                                        }
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recall Button */}
+                            <button
+                              onClick={() => handleCancelListing(listing._id)}
+                              className="relative w-full px-4 py-2 font-bold uppercase transition-none cursor-pointer overflow-hidden rounded-lg tracking-[0.5em] text-base font-normal bg-red-900/40 border-2 border-red-500/50 hover:bg-red-900/60 hover:border-red-400 text-red-400"
+                            >
+                              ⊗ RECALL
+                            </button>
+                          </div>
+                        )}
+
+                        {/* LAYOUT 7: Simple Grid */}
+                        {myListingsLayoutVariation === 7 && (
+                          <div className="p-5">
+                            {/* Header with Image and Name */}
+                            <div className="flex items-center gap-6 mb-6 pb-5 border-b-2 border-yellow-500/40">
+                              <div className="w-28 h-28 relative flex-shrink-0">
+                                <img
+                                  src={`/essence-images/named-bottles-1k/${(listing.itemVariation || 'default').toLowerCase().replace(/\s+/g, '-')}.png`}
+                                  alt={listing.itemVariation}
+                                  className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(250,182,23,0.4)]"
+                                  onError={(e) => { e.currentTarget.src = '/essence-images/named-bottles-1k/default.png'; }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-white font-bold text-2xl uppercase mb-4 tracking-wide">
+                                  {listing.itemVariation || listing.itemType}
+                                </div>
+
+                                {/* Simple Stats Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  {/* Stock Display */}
+                                  <div className="p-3 bg-cyan-900/30 border border-cyan-500/40 rounded">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Stock</div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-400 text-lg">{originalStock}</span>
+                                      <span className="text-cyan-400 text-lg">→</span>
+                                      <span className="text-cyan-400 font-bold text-xl">{remainingStock}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Price Per Unit */}
+                                  <div className="p-3 bg-yellow-900/30 border border-yellow-500/40 rounded">
+                                    <div className="text-gray-400 text-[10px] uppercase mb-1 tracking-wider">Price/Unit</div>
+                                    <div className="text-yellow-400 font-bold text-xl">
+                                      {listing.pricePerUnit.toLocaleString()}
+                                      <span className="text-sm ml-1">g</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Transaction Table - Show 5 rows minimum */}
+                            <div className="mb-4">
+                              <div className="text-gray-400 text-xs uppercase mb-2 tracking-wider">Transaction History</div>
+                              <div className="bg-black/40 border border-gray-700/40 rounded overflow-hidden">
+                                <div className="max-h-[150px] overflow-y-auto">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-black/60 sticky top-0">
+                                      <tr className="border-b border-gray-700/30">
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Date</th>
+                                        <th className="text-left p-2 text-gray-500 font-semibold">Time</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Siphoned</th>
+                                        <th className="text-right p-2 text-gray-500 font-semibold">Earned</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.from({ length: Math.max(5, mockTransactions.length) }).map((_, index) => {
+                                        const tx = mockTransactions[index];
+                                        if (tx) {
+                                          return (
+                                            <tr key={tx.id} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-400">{tx.date}</td>
+                                              <td className="p-2 text-gray-400">{tx.time}</td>
+                                              <td
+                                                className="p-2 text-right text-cyan-400 cursor-pointer hover:text-cyan-300 transition-colors"
+                                                title={`Purchased by ${tx.corporation}`}
+                                              >
+                                                -{tx.amountSiphoned}
+                                              </td>
+                                              <td className="p-2 text-right text-green-400">+{tx.goldEarned.toLocaleString()}g</td>
+                                            </tr>
+                                          );
+                                        } else {
+                                          return (
+                                            <tr key={`empty-${index}`} className="border-b border-gray-700/20">
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                              <td className="p-2 text-right text-gray-600">—</td>
+                                            </tr>
+                                          );
+                                        }
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
                             </div>
 
@@ -5829,13 +6245,14 @@ export default function EssenceMarketPage() {
                   </p>
                 </div>
               )}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
         )}
-        </>
+
+          </>
         )}
 
         {/* Recall Confirmation Modal */}
@@ -5932,13 +6349,8 @@ export default function EssenceMarketPage() {
         )}
 
         {/* Listing Success Modal */}
-        {showListingSuccess && successListingData && (() => {
-          const totalValue = successListingData.amount * successListingData.pricePerUnit;
-          const marketFee = Math.ceil(totalValue * 0.02);
-          const netProfit = totalValue - successListingData.durationFee - marketFee;
-
-          return (
-            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowListingSuccess(false)}>
+        {showListingSuccess && successListingData && listingSuccessValues && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowListingSuccess(false)}>
               {/* Main Modal */}
               <div
                 className="relative mek-card-industrial p-8 max-w-xl w-full rounded-xl overflow-hidden border-2 border-cyan-500/50"
@@ -6019,7 +6431,7 @@ export default function EssenceMarketPage() {
                       <div className="p-4 bg-green-900/20 border-t-2 border-green-500/30">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-400 uppercase tracking-wider text-sm">Net Profit (if sold):</span>
-                          <span className="text-green-400 text-2xl font-bold">{netProfit.toLocaleString()}g</span>
+                          <span className="text-green-400 text-2xl font-bold">{listingSuccessValues.netProfit.toLocaleString()}g</span>
                         </div>
                       </div>
                     </div>
@@ -6035,8 +6447,7 @@ export default function EssenceMarketPage() {
                 </div>
               </div>
             </div>
-          );
-        })()}
+        )}
       </div>
     </div>
   );

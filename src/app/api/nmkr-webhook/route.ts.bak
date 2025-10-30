@@ -153,31 +153,6 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       });
 
       console.log(`✓ Successfully updated purchase status for tx: ${TxHash}`);
-
-      // Record NFT claim in claims table
-      if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {
-        try {
-          const nft = NotificationSaleNfts[0];
-          await convex.mutation(api.commemorativeNFTClaims.recordClaim, {
-            walletAddress: ReceiverStakeAddress,
-            transactionHash: TxHash,
-            nftName: nft.NftName || 'Bronze Token',
-            nftAssetId: nft.AssetId || '',
-            metadata: {
-              imageUrl: '',
-              attributes: [],
-              collection: ProjectUid,
-              artist: '',
-              website: '',
-            }
-          });
-
-          console.log(`✓ Successfully recorded NFT claim for wallet: ${ReceiverStakeAddress}`);
-        } catch (claimError) {
-          console.error('Failed to record claim:', claimError);
-          // Don't fail the webhook if claim recording fails
-        }
-      }
 // Record NFT claim in claims table      if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {        try {          const nft = NotificationSaleNfts[0];          await convex.mutation(api.commemorativeNFTClaims.recordClaim, {            walletAddress: ReceiverStakeAddress,            transactionHash: TxHash,            nftName: nft.NftName || 'Bronze Token',            nftAssetId: nft.AssetId || '',            metadata: {              imageUrl: '',              attributes: [],              collection: ProjectUid,              artist: '',              website: '',            }          });          console.log(`✓ Successfully recorded NFT claim for wallet: ${ReceiverStakeAddress}`);        } catch (claimError) {          console.error('Failed to record claim:', claimError);          // Don't fail the webhook if claim recording fails        }      }
     } catch (dbError) {
       console.error('Failed to update purchase in database:', dbError);
