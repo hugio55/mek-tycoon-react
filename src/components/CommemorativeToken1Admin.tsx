@@ -1081,44 +1081,8 @@ export default function CommemorativeToken1Admin() {
 
   return (
     <div className="space-y-6">
-      {/* BANDWIDTH OPTIMIZATION: Master Load Button - Tab is dormant until activated */}
-      {!commemorativeDataLoaded ? (
-        <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500/50 rounded-lg p-8 text-center">
-          <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-2xl font-bold text-yellow-400 mb-2">Commemorative Token System</h3>
-          <p className="text-gray-400 mb-6">
-            This tab uses custom minting (not NMKR). Since you're using NMKR now, this entire system is dormant to save bandwidth.
-            <br />
-            Click below if you need to access legacy commemorative token data.
-          </p>
-          <button
-            onClick={() => setCommemorativeDataLoaded(true)}
-            className="px-8 py-4 bg-yellow-600 hover:bg-yellow-500 border-2 border-yellow-400 rounded-lg text-white text-xl font-bold transition-all transform hover:scale-105"
-          >
-            📥 Load Commemorative Data
-          </button>
-          <p className="text-xs text-gray-500 mt-4">
-            Tip: Use the Whitelist Manager tab instead for NMKR-based minting
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Data loaded - show normal content */}
-          <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-sm text-green-300 font-semibold">Commemorative data loaded</span>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors"
-            >
-              Unload (refresh page)
-            </button>
-          </div>
-
-          {/* Compact Campaign & Test Mode Controls */}
-          <div className="bg-gradient-to-r from-purple-900/20 to-orange-900/20 border border-purple-500/30 rounded-lg p-3 space-y-3">
+      {/* Compact Campaign & Test Mode Controls - ALWAYS VISIBLE */}
+      <div className="bg-gradient-to-r from-purple-900/20 to-orange-900/20 border border-purple-500/30 rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between gap-4">
           {/* Campaign Status */}
           <div className="flex items-center gap-3">
@@ -1189,6 +1153,42 @@ export default function CommemorativeToken1Admin() {
           </div>
         )}
       </div>
+
+      {/* BANDWIDTH OPTIMIZATION: Load/Unload Controls */}
+      {!commemorativeDataLoaded ? (
+        <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500/50 rounded-lg p-8 text-center">
+          <div className="text-6xl mb-4">🏆</div>
+          <h3 className="text-2xl font-bold text-yellow-400 mb-2">Load Legacy Data</h3>
+          <p className="text-gray-400 mb-6">
+            This tab uses custom minting (not NMKR). STEPs 1-4 below are hidden to save bandwidth.
+            <br />
+            Click below if you need to access legacy commemorative token data.
+          </p>
+          <button
+            onClick={() => setCommemorativeDataLoaded(true)}
+            className="px-8 py-4 bg-yellow-600 hover:bg-yellow-500 border-2 border-yellow-400 rounded-lg text-white text-xl font-bold transition-all transform hover:scale-105"
+          >
+            📥 Load STEPs 1-4
+          </button>
+          <p className="text-xs text-gray-500 mt-4">
+            Tip: Use the Whitelist Manager tab instead for NMKR-based minting
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Data loaded - show confirmation banner */}
+          <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-green-400 text-xl">✓</span>
+              <span className="text-sm text-green-300 font-semibold">Legacy minting data loaded (STEPs 1-4 visible below)</span>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition-colors"
+            >
+              Unload (refresh page)
+            </button>
+          </div>
 
       {/* STEP 1: Policy Creation */}
       <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border-4 border-indigo-500/50 rounded-lg p-6">
