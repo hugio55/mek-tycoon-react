@@ -11,14 +11,17 @@
 
 export interface NMKRMetadataParams {
   collectionName: string;      // "Beta Commemorative"
-  tokenBaseName: string;        // "Bronze Token"
+  displayNameBase: string;      // "Bronze Token" (display name with spaces - shown on pool.pm)
+  tokenBaseName: string;        // "MekBetaBronzeToken" (on-chain asset name - no spaces/special chars)
   numberOfNFTs: number;         // 5, 35, 100, etc.
   phase: number;                // 1, 2, 3...
-  description: string;          // Description template
+  description: string;          // Description template (max 64 chars)
+  policyId: string;             // Cardano policy ID (hex string)
   imageIpfsHash?: string;       // Optional: "QmXxxx..." or leave empty for NMKR to fill
-  artist?: string;              // Default: "Wren Ellis"
-  company?: string;             // Default: "Over Exposed"
-  game?: string;                // Default: "Mek Tycoon"
+  customFields?: Array<{name: string; value: string | number}>;  // Dynamic custom metadata fields
+  artist?: string;              // DEPRECATED: Use customFields instead
+  company?: string;             // DEPRECATED: Use customFields instead
+  game?: string;                // DEPRECATED: Use customFields instead
 }
 
 export interface NMKRMetadataFile {
@@ -39,7 +42,8 @@ export function generateNMKRMetadataFiles(params: NMKRMetadataParams): NMKRMetad
 
   for (let i = 1; i <= params.numberOfNFTs; i++) {
     const metadata = buildSingleNFTMetadata(params, i);
-    const filename = `${params.tokenBaseName} #${i}.metadata`;
+    // Filename uses display name with spaces and number - this becomes the display name in NMKR
+    const filename = `${params.displayNameBase} #${i}.metadata`;
     const content = JSON.stringify(metadata, null, 2);
 
     files.push({ filename, content });
@@ -51,41 +55,59 @@ export function generateNMKRMetadataFiles(params: NMKRMetadataParams): NMKRMetad
 /**
  * Build metadata for a single NFT
  *
- * NMKR Format: Plain JSON object (NOT wrapped in CIP-25 structure)
- * NMKR will wrap this in: { "721": { policyId: { assetName: {...} } } }
+ * Returns FULL CIP-25 structure with NMKR placeholders:
+ * {
+ *   "721": {
+ *     "<policy_id>": {
+ *       "<asset_name>": {
+ *         "name": "<display_name>",
+ *         "image": "<ipfs_link>",
+ *         "mediaType": "<mime_type>",
+ *         ...custom fields...
+ *       }
+ *     },
+ *     "version": "1.0"
+ *   }
+ * }
+ *
+ * NMKR replaces placeholders like <policy_id>, <asset_name>, <ipfs_link>, <mime_type>
+ * during minting with actual values from uploaded files.
  */
 function buildSingleNFTMetadata(params: NMKRMetadataParams, editionNumber: number) {
-  const imageUrl = params.imageIpfsHash
-    ? `ipfs://${params.imageIpfsHash}`
-    : 'ipfs://[PLACEHOLDER - NMKR will populate after image upload]';
+  // Build inner metadata object with required CIP-25 fields
+  // Use NMKR placeholders that get replaced during minting
+  const innerMetadata: Record<string, any> = {
+    name: `<display_name>`,  // NMKR uses display name from filename
+    image: `<ipfs_link>`,     // NMKR fills from uploaded image
+    mediaType: `<mime_type>`, // NMKR detects from uploaded file
+    description: params.description
+  }
 
+  // Add custom fields in order they were defined
+  if (params.customFields && params.customFields.length > 0) {
+    params.customFields.forEach(field => {
+      innerMetadata[field.name] = field.value;
+    });
+  } else {
+    // Legacy fallback: Use old hardcoded fields for backwards compatibility
+    innerMetadata.Collection = params.collectionName;
+    innerMetadata.Game = params.game || 'Mek Tycoon';
+    innerMetadata.Artist = params.artist || 'Wren Ellis';
+    innerMetadata.Company = params.company || 'Over Exposed';
+    innerMetadata.Phase = params.phase;
+  }
+
+  // Website goes last
+  innerMetadata.website = 'https://mek.overexposed.io';
+
+  // Wrap in full CIP-25 structure with NMKR placeholders
   return {
-    // Required CIP-25 fields
-    name: `${params.tokenBaseName} #${editionNumber}`,
-    description: params.description,
-    image: imageUrl,
-    mediaType: inferMediaType(imageUrl),
-
-    // Project-specific metadata
-    Collection: params.collectionName,
-    Game: params.game || 'Mek Tycoon',
-    Artist: params.artist || 'Wren Ellis',
-    Company: params.company || 'Over Exposed',
-    Phase: params.phase,
-    Series: 'Commemorative Tokens',
-
-    // Searchability tags
-    tags: [
-      params.game || 'Mek Tycoon',
-      params.collectionName,
-      `Phase ${params.phase}`,
-      `#${editionNumber}`
-    ],
-
-    // Project info
-    project: params.game || 'Mek Tycoon',
-    category: 'Commemorative Token',
-    website: 'https://mek.overexposed.io'
+    "721": {
+      "<policy_id>": {
+        "<asset_name>": innerMetadata
+      },
+      "version": "1.0"
+    }
   };
 }
 
@@ -109,7 +131,7 @@ function inferMediaType(url: string): string {
  * Get description template for a phase
  */
 export function getDefaultDescription(phase: number, collectionName: string): string {
-  return `Exclusive commemorative NFT awarded to Phase ${phase} beta testers of Mek Tycoon. ${collectionName} collection.`;
+  return `Commemorative NFT for Phase ${phase} beta testers of Mek Tycoon.`;
 }
 
 /**
@@ -123,6 +145,10 @@ export function validateMetadataParams(params: NMKRMetadataParams): {
 
   if (!params.collectionName || params.collectionName.trim() === '') {
     errors.push('Collection name is required');
+  }
+
+  if (!params.displayNameBase || params.displayNameBase.trim() === '') {
+    errors.push('Display name base is required');
   }
 
   if (!params.tokenBaseName || params.tokenBaseName.trim() === '') {
@@ -139,6 +165,29 @@ export function validateMetadataParams(params: NMKRMetadataParams): {
 
   if (!params.description || params.description.trim() === '') {
     errors.push('Description is required');
+  }
+
+  if (params.description.length > 63) {
+    errors.push('Description must be 63 characters or less (NMKR limit)');
+  }
+
+  if (!params.policyId || params.policyId.trim() === '') {
+    errors.push('Policy ID is required');
+  }
+
+  // Validate policy ID format (hex string, typically 56 chars)
+  if (params.policyId && !/^[0-9a-fA-F]{56}$/.test(params.policyId.trim())) {
+    errors.push('Policy ID must be a 56-character hexadecimal string');
+  }
+
+  // Validate IPFS hash format (if provided)
+  if (params.imageIpfsHash) {
+    const cleaned = params.imageIpfsHash.trim();
+    if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+      errors.push('Image IPFS Hash should be CID only (QmXxxx or bafybeif...), not full URL');
+    } else if (!cleaned.startsWith('Qm') && !cleaned.startsWith('bafy')) {
+      errors.push('Image IPFS Hash must be valid CID (start with Qm or bafy)');
+    }
   }
 
   return {

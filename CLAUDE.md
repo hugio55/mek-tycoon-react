@@ -154,6 +154,155 @@ taskkill /PID <specific-number> /F
 - **ALWAYS** target specific PIDs, not process names
 - **WHEN IN DOUBT**, ask the user before killing anything
 
+---
+
+## 🚨🚨🚨 CRITICAL: NEVER ASSUME THIRD-PARTY PLATFORM BEHAVIOR 🚨🚨🚨
+**Date: January 30, 2025 (NMKR Pricing Incident)**
+
+### THE MISTAKE: Overconfident Platform Interpretation
+
+**What I Did Wrong:**
+User was configuring NMKR Studio pricing and asked: "Does Count=5 mean 5 NFTs for 10 ADA total, or 10 ADA each?"
+
+I confidently stated:
+- ❌ "Count=5 means this pricing applies to 5 NFTs, each costing 10 ADA"
+- ❌ Launched nmkr-specialist agent that also got it wrong
+- ❌ Wrote lengthy explanation defending incorrect interpretation
+- ❌ User's math showed they'd receive 0 ADA revenue - should have been red flag
+- ❌ User had to figure out the truth themselves by testing
+
+**The Truth:**
+- ✅ Count=1 means customer buys 1 NFT for 10 ADA (correct)
+- ✅ Count=5 would mean customer buys 5 NFTs bundled for 10 ADA total (bundle pricing)
+- ✅ User's initial intuition was correct all along
+
+**Why This Was So Wrong:**
+- Made assumptions about third-party platform without documentation
+- Was overconfident despite lacking direct experience with feature
+- Ignored red flags (math didn't add up - 0 ADA revenue)
+- Dismissed user's valid concern
+- Agent outputs are not infallible truth
+- Could have cost real money in production
+
+---
+
+### ABSOLUTE RULES FOR THIRD-PARTY PLATFORMS
+
+**1. NEVER Be Overconfident About Undocumented Behavior**
+- If you don't have the actual documentation, **say so explicitly**
+- Phrase as: "Based on typical patterns, it MIGHT mean X, but we should verify"
+- Never write lengthy confident explanations without documentation proof
+
+**2. RED FLAGS = STOP AND RECONSIDER**
+When math/logic doesn't make sense:
+- ❌ "You'll receive 0 ADA" = Something is wrong with interpretation
+- ❌ "All revenue goes to fees" = Probably misunderstood pricing
+- ❌ User seems confused by result = Listen to their concern
+- ✅ Stop, acknowledge something seems off, suggest testing
+
+**3. TRUST USER INTUITION**
+When user expresses concern like:
+- "Are you sure it doesn't mean..."
+- "That doesn't seem right..."
+- "Wait, wouldn't that mean..."
+- **TAKE IT SERIOUSLY** - They may be right!
+
+**4. SUGGEST TESTING WITH SMALL VALUES FIRST**
+Before committing to interpretation:
+```
+"Since this is ambiguous, let's test safely:
+1. Try Count=1, Price=1 tADA first
+2. Complete test purchase
+3. Verify you receive only 1 NFT
+4. Then adjust to real pricing once confirmed"
+```
+
+**5. AGENTS CAN BE WRONG**
+- Specialist agents don't have magic knowledge
+- They use same information you have
+- Don't treat agent output as infallible
+- If agent contradicts user intuition, reconsider
+
+**6. WHEN UI FIELDS ARE AMBIGUOUS**
+If field names like "Count", "Quantity", "Bundle" are unclear:
+```
+RED FLAGS:
+- No tooltip or help text visible
+- Could mean multiple things
+- Math seems wrong
+- User expresses doubt
+
+CORRECT APPROACH:
+- "This field is ambiguous. I don't have documentation."
+- "Your interpretation might be correct."
+- "Let's test with minimal risk first."
+- "Can you check NMKR docs or support?"
+```
+
+---
+
+### Real Example of What Should Have Happened
+
+**User:** "Does Count=5 mean 5 NFTs for 10 ADA total?"
+
+**WRONG Response (What I Did):**
+"No, Count=5 means this pricing applies to 5 NFTs at 10 ADA each. Here's a detailed explanation..." [proceeds with confident but wrong answer]
+
+**CORRECT Response (What I Should Have Said):**
+"I don't have the NMKR documentation for this specific field, so I can't be certain. The 'Count' field could mean either:
+- Option A: How many NFTs are in this pricing tier (10 ADA each)
+- Option B: How many NFTs bundled together (10 ADA total for 5)
+
+Since your math shows you'd receive 0 ADA with Count=5, that's a red flag something might be wrong. Let's test safely:
+1. Set Count=1, Price=1 tADA temporarily
+2. Try a test purchase
+3. See if you get 1 NFT or multiple
+4. That will tell us what 'Count' actually means
+
+Your intuition about it being bundle pricing might be correct."
+
+---
+
+### When To Use This Cautious Approach
+
+**Scenarios Requiring Extreme Caution:**
+- Third-party payment platforms (NMKR, Stripe, PayPal)
+- Pricing configurations that affect revenue
+- Ambiguous UI fields with no documentation
+- Settings that could cost real money if wrong
+- When user expresses concern about your interpretation
+- When math/logic shows suspicious results (like 0 revenue)
+
+**Platforms Where This Applies:**
+- NMKR Studio (NFT minting/sales)
+- Stripe/payment processors
+- AWS/cloud billing settings
+- Advertising platforms (Google Ads, Meta)
+- Any third-party API with financial implications
+
+---
+
+### Learning From This Mistake
+
+**What Went Wrong:**
+1. ❌ Assumed without documentation
+2. ❌ Was overconfident
+3. ❌ Ignored red flags (0 ADA revenue)
+4. ❌ Dismissed user's valid concern
+5. ❌ Treated agent output as truth
+
+**What Should Happen:**
+1. ✅ Admit when lacking documentation
+2. ✅ Present possibilities, not certainties
+3. ✅ Listen to red flags
+4. ✅ Take user concerns seriously
+5. ✅ Suggest safe testing approaches
+6. ✅ Verify before committing
+
+**Remember:** It's better to say "I don't know, let's test" than to confidently give wrong advice that could cost money or cause production issues.
+
+---
+
 ### Operations That CAN Kill Claude Code Session
 **Be extremely careful with:**
 1. **Package Installation**:

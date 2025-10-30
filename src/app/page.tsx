@@ -27,6 +27,7 @@ import { AnimatedNumber as AnimatedNumberComponent } from "@/components/MekCard/
 import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
+import NMKRClaimButton from "@/components/NMKRClaimButton";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
 import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import MeksTriangleLightbox from "@/components/MeksTriangleLightbox";
@@ -3347,6 +3348,11 @@ export default function MekRateLoggingPage() {
                   </div>
                 )}
 
+                {/* NMKR NFT Claim Button - Show on wallet connection page for testing */}
+                <div className="mt-6">
+                  <NMKRClaimButton walletAddress={null} />
+                </div>
+
                 {/* Security Status Indicators - shown during connection */}
                 {isConnecting && connectionState && (
                   <div className="mt-6 p-4 bg-black/40 border border-yellow-500/20 backdrop-blur-sm">
@@ -3592,6 +3598,7 @@ export default function MekRateLoggingPage() {
             {/* AIRDROP CLAIM BANNER - Show if eligible and campaign is active */}
             <div className="max-w-[600px] mx-auto mb-6 px-4 sm:px-0">
               <AirdropClaimBanner userId={null} walletAddress={walletAddress} />
+              <NMKRClaimButton walletAddress={walletAddress} />
             </div>
 
             {/* Combined Card - Stacked Layout */}

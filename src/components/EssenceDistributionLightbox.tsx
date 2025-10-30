@@ -10,50 +10,6 @@ import { useEssence } from "@/contexts/EssenceContext";
 
 // Custom styles for range sliders
 const sliderStyles = `
-  /* Style 1 - Horizontal Industrial Slider */
-  input[type="range"].slider-style-1::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 24px;
-    background: linear-gradient(180deg, #fbbf24, #f59e0b);
-    cursor: pointer;
-    border: 2px solid #fbbf24;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-  }
-
-  input[type="range"].slider-style-1::-moz-range-thumb {
-    width: 20px;
-    height: 24px;
-    background: linear-gradient(180deg, #fbbf24, #f59e0b);
-    cursor: pointer;
-    border: 2px solid #fbbf24;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-  }
-
-  /* Style 2 - Vertical Military Gauge */
-  input[type="range"].slider-style-2::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
-    height: 12px;
-    background: linear-gradient(90deg, #fbbf24, #f59e0b);
-    cursor: pointer;
-    border: 2px solid #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-  }
-
-  input[type="range"].slider-style-2::-moz-range-thumb {
-    width: 24px;
-    height: 12px;
-    background: linear-gradient(90deg, #fbbf24, #f59e0b);
-    cursor: pointer;
-    border: 2px solid #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-  }
-
   /* Style 3 - Industrial Sleek Slider */
   input[type="range"].slider-style-3::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -288,11 +244,10 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   const [tableStyle, setTableStyle] = useState<1 | 2 | 3>(2);
   const [sortColumn, setSortColumn] = useState<'name' | 'growth' | 'maxCap' | 'totalValue' | 'amount' | 'count'>('amount');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [sliderStyle, setSliderStyle] = useState<1 | 2 | 3>(1);
 
   // Debug controls
-  const [backdropDarkness, setBackdropDarkness] = useState<10 | 20 | 40 | 60 | 80>(10);
-  const [backdropBlur, setBackdropBlur] = useState<0 | 1 | 2 | 3 | 4>(1);
+  const [backdropDarkness, setBackdropDarkness] = useState<10 | 20 | 40 | 60 | 80>(40);
+  const [backdropBlur, setBackdropBlur] = useState<0 | 1 | 2 | 3 | 4>(2);
   const [cardDarkness, setCardDarkness] = useState<20 | 30 | 40 | 50 | 70>(20);
   const [cardBlur, setCardBlur] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl'>('md');
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -429,25 +384,13 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   }, [playerEssenceState, marketListings, essenceConfig, allSlots]);
 
   const defaultMaxAmount = Math.max(...(essenceData.length > 0 ? essenceData.map(e => e.amount) : [10]));
-  const [maxSliceFilter, setMaxSliceFilter] = useState(2);
+  const [maxSliceFilter, setMaxSliceFilter] = useState(defaultMaxAmount);
 
-  // Smart slider handler: snap to whole numbers when >= 2, smooth when < 2
-  const handleSliderChange = (value: number) => {
-    if (value >= 2) {
-      // Snap to nearest whole number for values >= 2
-      setMaxSliceFilter(Math.round(value));
-    } else {
-      // Smooth control for values < 2 (rounded to 2 decimal places for display)
-      setMaxSliceFilter(Math.round(value * 100) / 100);
-    }
-  };
-
-  // Update max filter when data changes (default to 2 or highest if less)
+  // Update max filter when data changes (initialize to the actual max)
   useEffect(() => {
     if (essenceData.length > 0) {
       const newMax = Math.max(...essenceData.map(e => e.amount));
-      // Start at 2 if any essence is above 2, otherwise start at the max
-      setMaxSliceFilter(newMax > 2 ? 2 : newMax);
+      setMaxSliceFilter(newMax);
     }
   }, [essenceData]);
 
@@ -660,31 +603,9 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
         onClick={onClose}
       />
 
-      {/* Slider Style Selector - Fixed to left side */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[10000] flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-black/95 border-2 border-purple-500/50 rounded-lg p-2 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-          <div className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-2 text-center border-b border-purple-500/30 pb-1">
-            Slider
-          </div>
-          {[1, 2, 3].map((style) => (
-            <button
-              key={style}
-              onClick={() => setSliderStyle(style as typeof sliderStyle)}
-              className={`w-10 h-10 mb-1 last:mb-0 flex items-center justify-center font-bold text-sm transition-all ${
-                sliderStyle === style
-                  ? 'bg-purple-500 text-black border-2 border-purple-400'
-                  : 'bg-black/60 text-purple-400 border-2 border-purple-500/30 hover:bg-purple-500/20'
-              }`}
-            >
-              {style}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Debug Toggle Button - Fixed to viewport */}
       <button
-        onClick={() => setShowDebugPanel(!showDebugPanel)}
+        onClick={(e) => { e.stopPropagation(); setShowDebugPanel(!showDebugPanel); }}
         className="fixed top-4 right-4 z-[10000] px-3 py-2 flex items-center justify-center bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
       >
         <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Debug</span>
@@ -692,7 +613,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
       {/* Debug Panel - Fixed to viewport */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-4 shadow-2xl">
+        <div className="fixed top-16 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
               Visual Debug Controls
             </h3>
@@ -789,7 +710,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
 
       {/* Lightbox Container */}
       <div
-        className={`relative w-[960px] max-w-[95vw] h-[90vh] ${getCardDarknessClass()} ${getCardBlurClass()} border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl`}
+        className={`relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] ${getCardDarknessClass()} ${getCardBlurClass()} border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Loading Overlay */}
@@ -980,7 +901,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8 pb-16" onClick={handleBackgroundClick}>
+            <div className="max-w-7xl mx-auto px-4 py-8 pb-6" onClick={handleBackgroundClick}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Chart Container */}
                 <div className="lg:col-span-2" onClick={handleBackgroundClick}>
@@ -1032,106 +953,39 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                     {/* Zoom Slider - Only visible when "All" is selected */}
                     {viewCount === 100 && (
                       <div className="mb-4 flex justify-center">
-                        {sliderStyle === 1 && (
-                          /* Style 1: Industrial Horizontal Slider - Compact */
-                          <div className="w-[600px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/40 border border-yellow-500/30 px-4 py-1.5">
-                            <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap">Zoom:</div>
+                        {/* Style 3: Industrial Sleek - Compact */}
+                        <div className="relative w-[423px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/50 border-2 border-yellow-500/30 px-4 py-1.5 backdrop-blur-sm">
+                          {/* Subtle scan line */}
+                          <div className="absolute inset-0 opacity-10 animate-pulse pointer-events-none" style={{
+                            background: 'linear-gradient(90deg, transparent 0%, rgba(250, 182, 23, 0.3) 50%, transparent 100%)',
+                          }} />
+                          <div className="relative z-10 flex items-center gap-2 w-full">
+                            <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">0.001</div>
                             <div className="flex-1 relative h-6">
                               <input
                                 type="range"
-                                min="0.05"
+                                min="0.001"
                                 max={defaultMaxAmount}
-                                step="0.01"
+                                step="0.001"
                                 value={maxSliceFilter}
-                                onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
-                                className="slider-style-1 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
+                                onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
+                                className="slider-style-3 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
                               />
-                              <div className="absolute top-1/2 -translate-y-1/2 w-full h-0.5 bg-black/60 border-t border-yellow-500/30" />
+                              <div className="absolute top-1/2 -translate-y-1/2 w-full h-0.5 bg-black/80 border border-yellow-500/30" />
                               <div
-                                className="absolute top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-yellow-600 to-yellow-400 pointer-events-none"
+                                className="absolute top-1/2 -translate-y-1/2 h-0.5 pointer-events-none"
                                 style={{
-                                  width: `${((maxSliceFilter - 0.05) / (defaultMaxAmount - 0.05)) * 100}%`,
-                                  boxShadow: '0 0 8px rgba(250, 182, 23, 0.6)'
+                                  width: `${((maxSliceFilter - 0.001) / (defaultMaxAmount - 0.001)) * 100}%`,
+                                  background: 'linear-gradient(to right, rgb(250, 182, 23), rgb(234, 179, 8))',
+                                  boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
                                 }}
                               />
                             </div>
-                            <div className="text-sm font-bold font-mono text-yellow-400 tabular-nums min-w-[60px] text-right">
-                              ≤ {maxSliceFilter >= 2 ? maxSliceFilter.toFixed(0) : maxSliceFilter.toFixed(2)}
-                            </div>
-                            <div className="text-[8px] text-gray-500 whitespace-nowrap">({defaultMaxAmount.toFixed(1)} max)</div>
-                          </div>
-                        )}
-
-                        {sliderStyle === 2 && (
-                          /* Style 2: Military Segmented Bar - Compact */
-                          <div className="w-[600px] flex items-center gap-3 bg-black/80 border-2 border-yellow-500/40 px-4 py-1.5 relative overflow-hidden">
-                            {/* Hazard stripe background */}
-                            <div className="absolute inset-0 opacity-5" style={{
-                              backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 8px, transparent 8px, transparent 16px)',
-                            }} />
-                            <div className="relative z-10 flex items-center gap-3 w-full">
-                              <div className="text-[9px] text-yellow-400 uppercase tracking-wider font-bold whitespace-nowrap border-r border-yellow-500/30 pr-3">Filter</div>
-                              <div className="flex-1 relative h-6">
-                                <input
-                                  type="range"
-                                  min="0.05"
-                                  max={defaultMaxAmount}
-                                  step="0.01"
-                                  value={maxSliceFilter}
-                                  onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
-                                  className="slider-style-2 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
-                                />
-                                <div className="absolute top-1/2 -translate-y-1/2 w-full h-1 bg-black/80 border border-yellow-500/50" />
-                                <div
-                                  className="absolute top-1/2 -translate-y-1/2 h-1 bg-yellow-500 pointer-events-none border-r-2 border-yellow-400"
-                                  style={{
-                                    width: `${((maxSliceFilter - 0.05) / (defaultMaxAmount - 0.05)) * 100}%`,
-                                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.8), inset 0 0 4px rgba(0, 0, 0, 0.4)'
-                                  }}
-                                />
-                              </div>
-                              <div className="text-base font-bold font-mono text-yellow-400 tabular-nums min-w-[70px] text-right border-l border-yellow-500/30 pl-3">
-                                ≤{maxSliceFilter >= 2 ? maxSliceFilter.toFixed(0) : maxSliceFilter.toFixed(2)}
-                              </div>
+                            <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">
+                              <span className="text-yellow-400" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.8)' }}>{maxSliceFilter.toFixed(3)} E</span>
                             </div>
                           </div>
-                        )}
-
-                        {sliderStyle === 3 && (
-                          /* Style 3: Industrial Sleek - Compact */
-                          <div className="relative w-[423px] flex items-center gap-3 bg-gradient-to-r from-yellow-900/10 to-black/50 border-2 border-yellow-500/30 px-4 py-1.5 backdrop-blur-sm">
-                            {/* Subtle scan line */}
-                            <div className="absolute inset-0 opacity-10 animate-pulse pointer-events-none" style={{
-                              background: 'linear-gradient(90deg, transparent 0%, rgba(250, 182, 23, 0.3) 50%, transparent 100%)',
-                            }} />
-                            <div className="relative z-10 flex items-center gap-2 w-full">
-                              <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">ZOOM</div>
-                              <div className="flex-1 relative h-6">
-                                <input
-                                  type="range"
-                                  min="0.001"
-                                  max="2"
-                                  step="0.001"
-                                  value={maxSliceFilter}
-                                  onChange={(e) => setMaxSliceFilter(parseFloat(e.target.value))}
-                                  className="slider-style-3 absolute inset-0 w-full h-full appearance-none bg-transparent cursor-pointer z-10"
-                                />
-                                <div className="absolute top-1/2 -translate-y-1/2 w-full h-0.5 bg-black/80 border border-yellow-500/30" />
-                                <div
-                                  className="absolute top-1/2 -translate-y-1/2 h-0.5 pointer-events-none"
-                                  style={{
-                                    width: `${((maxSliceFilter - 0.001) / (2 - 0.001)) * 100}%`,
-                                    background: 'linear-gradient(to right, rgb(250, 182, 23), rgb(234, 179, 8))',
-                                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
-                                  }}
-                                />
-                              </div>
-                              <div className="text-[9px] text-gray-400 uppercase tracking-wider whitespace-nowrap font-bold">
-                                QUANTITY &lt; {maxSliceFilter === 2 ? '2' : maxSliceFilter.toFixed(3)}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     )}
 
@@ -1170,7 +1024,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           {displayedEssences.length > 0 && (
                             <button
                               onClick={() => setViewMode('table')}
-                              className="mt-6 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
+                              className="mt-2 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
                             >
                               Table View
                             </button>
@@ -1394,7 +1248,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           {/* Back to Donut Button */}
                           <button
                             onClick={() => setViewMode('donut')}
-                            className="mt-6 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
+                            className="mt-2 mek-button-primary px-8 py-3 text-sm font-bold uppercase tracking-wider"
                           >
                             Donut View
                           </button>
@@ -1445,8 +1299,20 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           </div>
 
                           {/* Name */}
-                          <div className="text-center mb-4">
-                            <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow text-center">{slice.name.toUpperCase()}</h2>
+                          <div className="text-center mb-4" style={{ minHeight: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <h2
+                              className="mek-text-industrial text-yellow-400 mek-text-shadow text-center line-clamp-2 leading-tight"
+                              style={{
+                                fontSize: slice.name.length > 20 ? '1.25rem' : slice.name.length > 15 ? '1.5rem' : '1.875rem',
+                                maxHeight: '60px',
+                                overflow: 'hidden',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical' as const
+                              }}
+                            >
+                              {slice.name.toUpperCase()}
+                            </h2>
                           </div>
 
                           {/* Ownership Section */}
@@ -1549,7 +1415,7 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
                           </div>
 
                           {/* Placeholder Name */}
-                          <div className="text-center mb-4">
+                          <div className="text-center mb-4" style={{ minHeight: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <h2 className="mek-text-industrial text-3xl text-gray-600 text-center">ESSENCE</h2>
                           </div>
 
