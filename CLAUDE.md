@@ -1,11 +1,5 @@
 # Mek Tycoon - Project Instructions
 
-## Claude Code Documentation
-Local documentation is available in the `claude-code-docs/` directory:
-- **Main docs**: Overview, quickstart, workflows, troubleshooting, etc.
-- **SDK docs**: `claude-code-docs/sdk/` - Headless mode, TypeScript/Python SDKs
-- **Enterprise**: Bedrock, Vertex AI, proxy config, LLM gateways
-
 ## Quick Start Command
 **CRITICAL: We are ONLY working in the STAGING directory now.**
 
@@ -156,150 +150,18 @@ taskkill /PID <specific-number> /F
 
 ---
 
-## 🚨🚨🚨 CRITICAL: NEVER ASSUME THIRD-PARTY PLATFORM BEHAVIOR 🚨🚨🚨
-**Date: January 30, 2025 (NMKR Pricing Incident)**
+## 🚨 CRITICAL: THIRD-PARTY PLATFORM CAUTION 🚨
 
-### THE MISTAKE: Overconfident Platform Interpretation
+**NEVER be overconfident about undocumented third-party platform behavior, especially financial/pricing systems.**
 
-**What I Did Wrong:**
-User was configuring NMKR Studio pricing and asked: "Does Count=5 mean 5 NFTs for 10 ADA total, or 10 ADA each?"
+### Key Rules:
+1. **If lacking documentation, say so explicitly** - Don't guess about pricing fields, payment flows, or billing configs
+2. **Red flags = STOP** - If math doesn't add up (0 revenue, excessive fees), your interpretation is likely wrong
+3. **Trust user intuition** - When user says "that doesn't seem right," take it seriously
+4. **Test with minimal risk first** - Use test amounts/counts before committing to production values
+5. **Agents can be wrong** - Don't treat specialist agent output as infallible truth
 
-I confidently stated:
-- ❌ "Count=5 means this pricing applies to 5 NFTs, each costing 10 ADA"
-- ❌ Launched nmkr-specialist agent that also got it wrong
-- ❌ Wrote lengthy explanation defending incorrect interpretation
-- ❌ User's math showed they'd receive 0 ADA revenue - should have been red flag
-- ❌ User had to figure out the truth themselves by testing
-
-**The Truth:**
-- ✅ Count=1 means customer buys 1 NFT for 10 ADA (correct)
-- ✅ Count=5 would mean customer buys 5 NFTs bundled for 10 ADA total (bundle pricing)
-- ✅ User's initial intuition was correct all along
-
-**Why This Was So Wrong:**
-- Made assumptions about third-party platform without documentation
-- Was overconfident despite lacking direct experience with feature
-- Ignored red flags (math didn't add up - 0 ADA revenue)
-- Dismissed user's valid concern
-- Agent outputs are not infallible truth
-- Could have cost real money in production
-
----
-
-### ABSOLUTE RULES FOR THIRD-PARTY PLATFORMS
-
-**1. NEVER Be Overconfident About Undocumented Behavior**
-- If you don't have the actual documentation, **say so explicitly**
-- Phrase as: "Based on typical patterns, it MIGHT mean X, but we should verify"
-- Never write lengthy confident explanations without documentation proof
-
-**2. RED FLAGS = STOP AND RECONSIDER**
-When math/logic doesn't make sense:
-- ❌ "You'll receive 0 ADA" = Something is wrong with interpretation
-- ❌ "All revenue goes to fees" = Probably misunderstood pricing
-- ❌ User seems confused by result = Listen to their concern
-- ✅ Stop, acknowledge something seems off, suggest testing
-
-**3. TRUST USER INTUITION**
-When user expresses concern like:
-- "Are you sure it doesn't mean..."
-- "That doesn't seem right..."
-- "Wait, wouldn't that mean..."
-- **TAKE IT SERIOUSLY** - They may be right!
-
-**4. SUGGEST TESTING WITH SMALL VALUES FIRST**
-Before committing to interpretation:
-```
-"Since this is ambiguous, let's test safely:
-1. Try Count=1, Price=1 tADA first
-2. Complete test purchase
-3. Verify you receive only 1 NFT
-4. Then adjust to real pricing once confirmed"
-```
-
-**5. AGENTS CAN BE WRONG**
-- Specialist agents don't have magic knowledge
-- They use same information you have
-- Don't treat agent output as infallible
-- If agent contradicts user intuition, reconsider
-
-**6. WHEN UI FIELDS ARE AMBIGUOUS**
-If field names like "Count", "Quantity", "Bundle" are unclear:
-```
-RED FLAGS:
-- No tooltip or help text visible
-- Could mean multiple things
-- Math seems wrong
-- User expresses doubt
-
-CORRECT APPROACH:
-- "This field is ambiguous. I don't have documentation."
-- "Your interpretation might be correct."
-- "Let's test with minimal risk first."
-- "Can you check NMKR docs or support?"
-```
-
----
-
-### Real Example of What Should Have Happened
-
-**User:** "Does Count=5 mean 5 NFTs for 10 ADA total?"
-
-**WRONG Response (What I Did):**
-"No, Count=5 means this pricing applies to 5 NFTs at 10 ADA each. Here's a detailed explanation..." [proceeds with confident but wrong answer]
-
-**CORRECT Response (What I Should Have Said):**
-"I don't have the NMKR documentation for this specific field, so I can't be certain. The 'Count' field could mean either:
-- Option A: How many NFTs are in this pricing tier (10 ADA each)
-- Option B: How many NFTs bundled together (10 ADA total for 5)
-
-Since your math shows you'd receive 0 ADA with Count=5, that's a red flag something might be wrong. Let's test safely:
-1. Set Count=1, Price=1 tADA temporarily
-2. Try a test purchase
-3. See if you get 1 NFT or multiple
-4. That will tell us what 'Count' actually means
-
-Your intuition about it being bundle pricing might be correct."
-
----
-
-### When To Use This Cautious Approach
-
-**Scenarios Requiring Extreme Caution:**
-- Third-party payment platforms (NMKR, Stripe, PayPal)
-- Pricing configurations that affect revenue
-- Ambiguous UI fields with no documentation
-- Settings that could cost real money if wrong
-- When user expresses concern about your interpretation
-- When math/logic shows suspicious results (like 0 revenue)
-
-**Platforms Where This Applies:**
-- NMKR Studio (NFT minting/sales)
-- Stripe/payment processors
-- AWS/cloud billing settings
-- Advertising platforms (Google Ads, Meta)
-- Any third-party API with financial implications
-
----
-
-### Learning From This Mistake
-
-**What Went Wrong:**
-1. ❌ Assumed without documentation
-2. ❌ Was overconfident
-3. ❌ Ignored red flags (0 ADA revenue)
-4. ❌ Dismissed user's valid concern
-5. ❌ Treated agent output as truth
-
-**What Should Happen:**
-1. ✅ Admit when lacking documentation
-2. ✅ Present possibilities, not certainties
-3. ✅ Listen to red flags
-4. ✅ Take user concerns seriously
-5. ✅ Suggest safe testing approaches
-6. ✅ Verify before committing
-
-**Remember:** It's better to say "I don't know, let's test" than to confidently give wrong advice that could cost money or cause production issues.
+**Applies to**: NMKR Studio, Stripe, PayPal, AWS billing, ad platforms, any financial third-party APIs
 
 ---
 
@@ -477,18 +339,6 @@ Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The g
 - Much easier than "send me all console output" (could be thousands of lines)
 - User can quickly isolate the relevant logs without scrolling
 
-**Example Implementation**:
-```typescript
-// Batch minting system - all logs tagged with [🔨MINT]
-console.log('[🔨MINT] Initializing batch mint for', addresses.length, 'addresses');
-console.log('[🔨MINT] Policy script:', policyId);
-console.log('[🔨MINT] Transaction built, awaiting signature...');
-
-// Essence system - different tag for different context
-console.log('[💎ESSENCE] Calculating buff multipliers...');
-console.log('[💎ESSENCE] Applying 2.5x boost to mining rate');
-```
-
 ## Design Requirements
 
 ### 🎨 INDUSTRIAL DESIGN SYSTEM (NEW!)
@@ -503,42 +353,9 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 - **Typography**: 'Orbitron' for headers (uppercase, tracking-wider)
 
 #### Design System Files
-- **CSS Classes**: `/src/styles/global-design-system.css`
-- **JS/TS Utils**: `/src/lib/design-system.ts`
-
-#### Key Patterns to Use
-1. **Industrial Cards**: 
-   ```css
-   .mek-card-industrial /* Translucent with grunge overlays */
-   .mek-border-sharp-gold /* Yellow bordered frames */
-   ```
-
-2. **Hazard Stripes**:
-   ```css
-   .mek-overlay-hazard-stripes /* 45deg black/yellow stripes */
-   .mek-overlay-diagonal-stripes /* 135deg subtle stripes */
-   ```
-
-3. **Grunge Effects**:
-   ```css
-   .mek-overlay-scratches /* Metal wear marks */
-   .mek-overlay-rust /* Rust and stain patterns */
-   .mek-overlay-metal-texture /* Industrial grid texture */
-   ```
-
-4. **Typography Classes**:
-   ```css
-   .mek-value-primary /* Large yellow numbers */
-   .mek-label-uppercase /* Small gray uppercase labels */
-   .mek-text-industrial /* Orbitron bold uppercase */
-   ```
-
-5. **Interactive Elements**:
-   ```css
-   .mek-button-primary /* Angled yellow button */
-   .mek-slot-empty /* Dashed border slots */
-   .mek-glow-yellow /* Yellow glow effects */
-   ```
+- **CSS Classes**: `/src/styles/global-design-system.css` - Industrial cards, hazard stripes, grunge overlays, typography
+- **JS/TS Utils**: `/src/lib/design-system.ts` - Theme utilities and color definitions
+- **Reference**: See `/contracts/single-missions` page for implementation examples
 
 ### Visual Style Guidelines
 - **Primary Color**: Yellow/Gold (#fab617)
@@ -743,46 +560,7 @@ Example transformation:
 
 **Solution**: Use `createPortal` to render modal at document.body root instead of within component tree.
 
-**Working Implementation Pattern**:
-```typescript
-import { createPortal } from "react-dom";
-import { useState, useEffect } from "react";
-
-export default function YourLightbox({ onClose, ...props }) {
-  const [mounted, setMounted] = useState(false);
-
-  // Mount portal and lock body scroll
-  useEffect(() => {
-    setMounted(true);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
-  // Only render on client-side after mount
-  if (!mounted) return null;
-
-  const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Modal container - stopPropagation prevents backdrop click-through */}
-      <div
-        className="relative w-[1200px] max-w-[95vw] h-[90vh] bg-black/95 border-4 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl my-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Your modal content here */}
-      </div>
-    </div>
-  );
-
-  return createPortal(modalContent, document.body);
-}
-```
-
-**Components Using This Pattern** (reference these for examples):
+**Reference Components** (see these for implementation examples):
 - `src/components/MekLevelsViewer.tsx`
 - `src/components/ActivityLogViewer.tsx`
 - `src/components/EssenceBalancesViewer.tsx`
@@ -894,72 +672,3 @@ export default function YourLightbox({ onClose, ...props }) {
 - **BRIEF TASK COMPLETION SUMMARIES**: Keep explanations 35% shorter - just bullet points of what was done. User will ask for details if needed
 - **NO CODE DUMPS**: User does not understand raw code snippets, code blocks, diffs, or technical syntax examples. Describe changes conversationally instead of showing code. Example: Say "I updated the slider to go from 5% to 100%" instead of showing the code block
 
-## Session History & Important Updates
-
-### 2025-08-18 (Latest)
-**Port Configuration Fixed:**
-- Set up fixed port 3100 for Next.js (no more port switching!)
-- Created unified startup with `npm run dev:all`
-- Added `start.bat` for easy double-click startup
-- Installed Cardano wallet integration (MeshSDK)
-- Created WalletContext and WalletConnect components
-
-### 2025-08-18 (Earlier)
-**Major Changes:**
-- Fixed Navigation clicking issues (removed overlapping pointer-events-none divs)
-- Restructured Crafting page to follow correct hierarchy: group → style → variation
-- Corrected head count from 103 to 102 (actual count from CSV)
-- Disabled wallet integration temporarily (MeshSDK components commented out)
-- Removed styled-jsx usage (causes webpack errors) - use global CSS instead
-- Added welcome page routing logic (Navigation hidden on "/" route)
-
-**Issues Discovered:**
-- Port conflicts common (app may run on 3000-3003)
-- styled-jsx doesn't work properly with current Next.js setup
-- Logo shimmer animation removed (was causing visual issues with multiply blend mode)
-
-**Current State:**
-- App functional on port 3002/3003
-- Wallet integration disabled but components exist for future use
-- Crafting system properly structured with all 102 heads, 112 bodies, 95 traits
-- ## Error Type
-Runtime ChunkLoadError
-
-## Error Message
-Loading chunk app/layout failed.
-(timeout: http://localhost:3100/_next/static/chunks/app/layout.js)
-
-
-    at RootLayout (src\app\layout.tsx:55:11)
-
-## Code Frame
-  53 |         {/* Global background with animated stars and particles */}
-  54 |         <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', overflow: 'hidden', zIndex: -1 }}>
-> 55 |           <GlobalBackground />
-     |           ^
-  56 |         </div>
-  57 |         
-  58 |         {/* Content layer */}
-
-Next.js version: 15.5.4 (Webpack)
-
----
-
-## 🔨 CURRENT WORK: NFT BATCH MINTING SYSTEM
-
-**STATUS**: 95% complete - Testing Phase
-**BRANCH**: `custom-minting-system`
-**DOCUMENTATION**: See `BATCH_MINTING_IMPLEMENTATION.md` for complete details
-
-**Where We Left Off (October 26, 2025)**:
-- Just fixed critical ForgeScript bug (changed to `ForgeScript.withOneSignature(keyHash)`)
-- About to test batch minting with 2 addresses
-- All minting logs tagged with `[🔨MINT]` - filter console with "MINT"
-- Console filter in Chrome: Type "MINT" in filter box to see only minting logs
-
-**Critical Fixes Applied This Session**:
-1. Policy script lookup from `mintingPolicies` table (was undefined)
-2. Eligible users display using snapshot data (was showing wrong data)
-3. ForgeScript creation for browser wallets (was using wrong method)
-
-**Next Session**: Test the forge script fix, then system ready for production use.
