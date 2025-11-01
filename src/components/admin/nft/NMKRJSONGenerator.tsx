@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import {
   generateNMKRMetadataFiles,
@@ -11,6 +11,67 @@ import {
 } from '@/lib/nmkr/metadataGenerator';
 
 export default function NMKRJSONGenerator() {
+  // Saved collections list (persisted in localStorage)
+  const [savedCollections, setSavedCollections] = useState<string[]>([]);
+  const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+
+  // Load saved collections from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('mek_tycoon_collections');
+    if (stored) {
+      try {
+        setSavedCollections(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to load saved collections:', e);
+      }
+    } else {
+      // Default collections
+      const defaults = ['Knickknacks', 'Event Rewards', 'PFP Collection'];
+      setSavedCollections(defaults);
+      localStorage.setItem('mek_tycoon_collections', JSON.stringify(defaults));
+    }
+  }, []);
+
+  // Save collections to localStorage whenever they change
+  const saveCollections = (collections: string[]) => {
+    localStorage.setItem('mek_tycoon_collections', JSON.stringify(collections));
+    setSavedCollections(collections);
+  };
+
+  // Add new collection to saved list
+  const handleAddCollection = () => {
+    const trimmed = newCollectionName.trim();
+    if (!trimmed) {
+      setMessage({ type: 'error', text: 'Collection name cannot be empty' });
+      return;
+    }
+    if (savedCollections.includes(trimmed)) {
+      setMessage({ type: 'error', text: 'Collection name already exists' });
+      return;
+    }
+
+    const updated = [...savedCollections, trimmed];
+    saveCollections(updated);
+
+    // Update the Collection custom field value to the new collection
+    const collectionFieldIndex = customFields.findIndex(f => f.name === 'Collection');
+    if (collectionFieldIndex >= 0) {
+      handleUpdateField(collectionFieldIndex, trimmed);
+    }
+
+    setNewCollectionName('');
+    setShowAddCollectionModal(false);
+    setMessage({ type: 'success', text: `✅ Added "${trimmed}" to collections` });
+  };
+
+  // Remove collection from saved list
+  const handleRemoveCollection = (collectionToRemove: string) => {
+    const updated = savedCollections.filter(c => c !== collectionToRemove);
+    saveCollections(updated);
+    setMessage({ type: 'success', text: `Removed "${collectionToRemove}" from collections` });
+  };
+
   // Form state
   const [collectionName, setCollectionName] = useState('Beta Commemorative');
   const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
@@ -23,7 +84,7 @@ export default function NMKRJSONGenerator() {
 
   // Custom metadata fields (dynamic)
   const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>([
-    { name: 'Collection', value: 'Beta Commemorative' },
+    { name: 'Collection', value: 'Knickknacks' },
     { name: 'Game', value: 'Mek Tycoon' },
     { name: 'Artist', value: 'Wren Ellis' },
     { name: 'Company', value: 'Over Exposed' },
@@ -475,12 +536,37 @@ export default function NMKRJSONGenerator() {
                   className="flex items-center gap-2 bg-black/50 border border-yellow-500/20 rounded px-3 py-2 hover:border-yellow-500/40 transition-colors"
                 >
                   <span className="text-xs text-gray-400 font-bold uppercase min-w-[80px]">{field.name}:</span>
-                  <input
-                    type="text"
-                    value={field.value}
-                    onChange={(e) => handleUpdateField(index, e.target.value)}
-                    className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none"
-                  />
+
+                  {/* Special dropdown for Collection field */}
+                  {field.name === 'Collection' ? (
+                    <div className="flex-1 flex items-center gap-2">
+                      <select
+                        value={field.value}
+                        onChange={(e) => handleUpdateField(index, e.target.value)}
+                        className="flex-1 bg-black border border-yellow-500/30 rounded px-2 py-1 text-white text-sm focus:border-yellow-400 focus:outline-none"
+                      >
+                        {savedCollections.map(collection => (
+                          <option key={collection} value={collection}>{collection}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => setShowAddCollectionModal(true)}
+                        className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white font-bold text-sm rounded transition-all"
+                        title="Add new collection"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : (
+                    /* Regular text input for other fields */
+                    <input
+                      type="text"
+                      value={field.value}
+                      onChange={(e) => handleUpdateField(index, e.target.value)}
+                      className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none"
+                    />
+                  )}
+
                   <button
                     onClick={() => handleRemoveField(index)}
                     className="text-red-500 hover:text-red-400 font-bold text-lg"
@@ -597,6 +683,72 @@ export default function NMKRJSONGenerator() {
           💾 Download {numberOfNFTs} Metadata Files (ZIP)
         </button>
       </div>
+
+      {/* Add Collection Modal */}
+      {showAddCollectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowAddCollectionModal(false)}>
+          <div className="bg-black border-2 border-green-500/50 rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h4 className="text-xl font-bold text-green-400 mb-4 uppercase">Add New Collection</h4>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-2">Collection Name</label>
+                <input
+                  type="text"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  placeholder="e.g., Event Rewards, Special Editions"
+                  className="w-full bg-black/50 border border-green-500/30 rounded px-4 py-2 text-white focus:border-green-400 focus:outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddCollection();
+                  }}
+                />
+                <p className="text-xs text-gray-500 mt-1">This will be saved and available in the dropdown</p>
+              </div>
+
+              {/* Show current saved collections */}
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-2">Current Collections</label>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {savedCollections.map(collection => (
+                    <div
+                      key={collection}
+                      className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
+                    >
+                      <span className="text-sm text-white">{collection}</span>
+                      <button
+                        onClick={() => handleRemoveCollection(collection)}
+                        className="text-red-500 hover:text-red-400 font-bold text-sm"
+                        title="Remove collection"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAddCollectionModal(false);
+                    setNewCollectionName('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider rounded transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCollection}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wider rounded transition-all"
+                >
+                  Add Collection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Field Modal */}
       {showAddFieldModal && (

@@ -14,11 +14,11 @@ crons.interval(
   api.goldMiningSnapshot.triggerSnapshot
 );
 
-// Create automatic gold backups every 6 hours
+// Create automatic gold backups every 12 hours
 crons.interval(
   "create gold backups",
   {
-    hours: 6
+    hours: 12
   },
   api.goldBackups.triggerManualDailyBackup
 );
@@ -69,11 +69,11 @@ crons.daily(
   internal.essence.dailyEssenceCheckpoint
 );
 
-// 5-minute essence checkpoints for persistence and crash recovery (mirrors gold system)
+// 12-hour essence checkpoints for persistence and crash recovery (mirrors gold system)
 crons.interval(
   "update essence checkpoints",
   {
-    minutes: 5
+    hours: 12
   },
   internal.essence.updateEssenceCheckpoints
 );
