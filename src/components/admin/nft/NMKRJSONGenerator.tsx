@@ -73,7 +73,6 @@ export default function NMKRJSONGenerator() {
   };
 
   // Form state
-  const [collectionName, setCollectionName] = useState('Beta Commemorative');
   const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
   const [tokenBaseName, setTokenBaseName] = useState('MekBetaBronzeToken');
   const [numberOfNFTs, setNumberOfNFTs] = useState(5);
@@ -378,18 +377,6 @@ export default function NMKRJSONGenerator() {
         {/* Left Column: Basic Config */}
         <div className="space-y-4 bg-black/30 border border-yellow-500/20 rounded-lg p-6">
           <h4 className="text-lg font-bold text-yellow-400 mb-4 uppercase">Basic Configuration</h4>
-
-          {/* Collection Name */}
-          <div>
-            <label className="block text-xs uppercase text-gray-400 mb-2">Collection Name</label>
-            <input
-              type="text"
-              value={collectionName}
-              onChange={(e) => setCollectionName(e.target.value)}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
-              placeholder="Beta Commemorative"
-            />
-          </div>
 
           {/* Display Name Base */}
           <div>
