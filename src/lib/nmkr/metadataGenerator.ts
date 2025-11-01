@@ -10,7 +10,7 @@
  */
 
 export interface NMKRMetadataParams {
-  collectionName: string;      // "Beta Commemorative"
+  collectionName?: string;      // DEPRECATED: Use customFields with 'Collection' instead
   displayNameBase: string;      // "Bronze Token" (display name with spaces - shown on pool.pm)
   tokenBaseName: string;        // "MekBetaBronzeToken" (on-chain asset name - no spaces/special chars)
   numberOfNFTs: number;         // 5, 35, 100, etc.
@@ -143,9 +143,7 @@ export function validateMetadataParams(params: NMKRMetadataParams): {
 } {
   const errors: string[] = [];
 
-  if (!params.collectionName || params.collectionName.trim() === '') {
-    errors.push('Collection name is required');
-  }
+  // collectionName is no longer required - custom fields handle this
 
   if (!params.displayNameBase || params.displayNameBase.trim() === '') {
     errors.push('Display name base is required');

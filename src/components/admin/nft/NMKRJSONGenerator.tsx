@@ -156,7 +156,7 @@ export default function NMKRJSONGenerator() {
   // Generate preview
   const handleGeneratePreview = () => {
     const params: NMKRMetadataParams = {
-      collectionName,
+      collectionName: '', // Not used - custom fields handle this
       displayNameBase,
       tokenBaseName,
       numberOfNFTs,
@@ -300,7 +300,7 @@ export default function NMKRJSONGenerator() {
   // Generate and download ZIP
   const handleDownloadZip = async () => {
     const params: NMKRMetadataParams = {
-      collectionName,
+      collectionName: '', // Not used - custom fields handle this
       displayNameBase,
       tokenBaseName,
       numberOfNFTs,
