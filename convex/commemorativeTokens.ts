@@ -24,16 +24,16 @@ export const checkBetaTesterEligibility = query({
     tokenType: v.string(), // "phase_1_beta"
   },
   handler: async (ctx, args) => {
-    // 1. Find user by wallet
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+    // 1. Get NFT design config
+    const design = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", args.tokenType))
       .first();
 
-    if (!user) {
+    if (!design) {
       return {
         eligible: false,
-        reason: "Not a registered beta tester",
+        reason: "Token type not found",
       };
     }
 
@@ -70,7 +70,44 @@ export const checkBetaTesterEligibility = query({
       };
     }
 
-    // 4. Check beta participation (any activity qualifies)
+    // 4. If whitelist mode with snapshot, check snapshot
+    if (design.saleMode === "whitelist" && design.eligibilitySnapshot && design.eligibilitySnapshot.length > 0) {
+      const isInSnapshot = design.eligibilitySnapshot.includes(args.walletAddress);
+
+      if (isInSnapshot) {
+        // Find user for userId (still useful for tracking)
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+          .first();
+
+        return {
+          eligible: true,
+          reason: "Wallet is in eligibility snapshot",
+          snapshotUsed: true,
+          userId: user?._id,
+        };
+      } else {
+        return {
+          eligible: false,
+          reason: "Wallet not in eligibility snapshot",
+        };
+      }
+    }
+
+    // 5. Otherwise fall back to gold mining check (backwards compatibility)
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!user) {
+      return {
+        eligible: false,
+        reason: "Not a registered beta tester",
+      };
+    }
+
     const goldMining = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))

@@ -2518,6 +2518,70 @@ export default function CommemorativeToken1Admin() {
                           </select>
                         </div>
 
+                        {/* Snapshot Selector (only for whitelist mode) */}
+                        {design.saleMode === 'whitelist' && (
+                          <div className="mb-3 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
+                            <label className="block text-xs text-cyan-300 mb-2 font-bold">Eligibility Snapshot</label>
+
+                            {/* Current snapshot info */}
+                            {design.eligibilitySnapshot && design.eligibilitySnapshot.length > 0 ? (
+                              <div className="mb-2 p-2 bg-green-900/30 border border-green-500/50 rounded">
+                                <div className="text-xs text-green-300 font-bold">✓ Active Snapshot</div>
+                                <div className="text-xs text-green-200 mt-1">
+                                  {design.eligibilitySnapshot.length} eligible wallets
+                                </div>
+                                {design.snapshotTakenAt && (
+                                  <div className="text-xs text-green-200/70 mt-1">
+                                    Imported: {new Date(design.snapshotTakenAt).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mb-2 p-2 bg-orange-900/30 border border-orange-500/50 rounded">
+                                <div className="text-xs text-orange-300">⚠ No snapshot imported yet</div>
+                                <div className="text-xs text-orange-200/70 mt-1">
+                                  Select a snapshot below to enable eligibility checks
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Snapshot selector */}
+                            <select
+                              onChange={async (e) => {
+                                const snapshotId = e.target.value;
+                                if (!snapshotId) return;
+
+                                const confirmed = confirm('Import this snapshot as eligibility list? This will replace any existing snapshot.');
+                                if (!confirmed) return;
+
+                                try {
+                                  await importSnapshotToNFT({
+                                    tokenType: design.tokenType,
+                                    snapshotId: snapshotId as any,
+                                  });
+                                  alert('Snapshot imported successfully!');
+                                } catch (error: any) {
+                                  alert(`Error importing snapshot: ${error.message}`);
+                                }
+                              }}
+                              className="w-full bg-black/50 border border-cyan-500/30 rounded px-2 py-1 text-xs text-white"
+                            >
+                              <option value="">-- Import a snapshot --</option>
+                              {allSnapshots?.map((snapshot: any) => (
+                                <option key={snapshot._id} value={snapshot._id}>
+                                  {snapshot.snapshotName} - {snapshot.eligibleUsers?.length || 0} wallets - {new Date(snapshot.takenAt).toLocaleDateString()}
+                                </option>
+                              ))}
+                            </select>
+
+                            {(!allSnapshots || allSnapshots.length === 0) && (
+                              <div className="mt-2 text-xs text-gray-400 italic">
+                                No snapshots available. Create one in Whitelist Manager first.
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Actions */}
                         <div className="flex gap-2">
                           <button
@@ -2657,6 +2721,46 @@ export default function CommemorativeToken1Admin() {
                 <div className="bg-black/40 border border-orange-500/30 rounded p-4">
                   <div className="text-xs uppercase tracking-wider text-orange-300 mb-2 font-bold">Distribution Mode</div>
                   <div className="text-sm text-orange-400 capitalize">{selectedDesignForView.saleMode.replace('_', ' ')}</div>
+                </div>
+              )}
+
+              {/* Eligibility Snapshot Info */}
+              {selectedDesignForView.saleMode === 'whitelist' && (
+                <div className="bg-black/40 border border-cyan-500/30 rounded p-4">
+                  <div className="text-xs uppercase tracking-wider text-cyan-300 mb-2 font-bold">Eligibility Snapshot</div>
+                  {selectedDesignForView.eligibilitySnapshot && selectedDesignForView.eligibilitySnapshot.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 text-xl">✓</span>
+                        <span className="text-green-300 font-bold">Snapshot Active</span>
+                      </div>
+                      <div className="text-sm text-cyan-200">
+                        <span className="font-bold text-cyan-400">{selectedDesignForView.eligibilitySnapshot.length}</span> eligible wallets
+                      </div>
+                      {selectedDesignForView.snapshotTakenAt && (
+                        <div className="text-xs text-cyan-300/70">
+                          Imported: {new Date(selectedDesignForView.snapshotTakenAt).toLocaleString()}
+                        </div>
+                      )}
+                      <details className="mt-3 p-2 bg-cyan-900/20 border border-cyan-500/20 rounded">
+                        <summary className="text-xs text-cyan-300 cursor-pointer hover:text-cyan-200">
+                          View eligible wallets ({selectedDesignForView.eligibilitySnapshot.length})
+                        </summary>
+                        <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
+                          {selectedDesignForView.eligibilitySnapshot.map((wallet: string, i: number) => (
+                            <div key={i} className="font-mono text-xs text-cyan-400/80 break-all">
+                              {i + 1}. {wallet}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-orange-400 text-xl">⚠</span>
+                      <span className="text-orange-300 text-sm">No snapshot imported yet</span>
+                    </div>
+                  )}
                 </div>
               )}
 
