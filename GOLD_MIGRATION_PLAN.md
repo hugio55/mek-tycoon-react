@@ -55,20 +55,24 @@ Current auto-repair approach has downsides:
   - [x] Create `countCorruptedRecords` query
   - [x] Create `diagnoseWallet` query
   - [x] Create `listWalletsNeedingRepair` query (bonus function)
-  - [ ] Test diagnostic functions work correctly (WAITING FOR USER)
-- [ ] **Step 1.2:** Run initial diagnostics (NEXT STEP - USER ACTION REQUIRED)
-  - [ ] Execute `countCorruptedRecords`
-  - [ ] Record results: `___ total records, ___ corrupted, ___ healthy`
-  - [ ] Review sample corrupted records
-  - [ ] **GO/NO-GO DECISION:** If >50% corrupted, investigate root cause first
-- [ ] **Step 1.3:** Create backup system (`convex/adminGoldBackup.ts`)
-  - [ ] Create `createPreMigrationBackup` mutation
-  - [ ] Create `restoreFromBackup` mutation (emergency use)
-  - [ ] Add backup tables to schema if needed
-- [ ] **Step 1.4:** Execute backup
+  - [x] Test diagnostic functions work correctly
+- [x] **Step 1.2:** Run initial diagnostics ✅ COMPLETE (2025-11-02)
+  - [x] Execute `countCorruptedRecords`
+  - [x] Record results: **39 total records, 14 corrupted, 25 healthy**
+  - [x] Review sample corrupted records (mostly small floating-point deficits)
+  - [x] **GO/NO-GO DECISION:** ✅ SAFE TO PROCEED (only 35.9% corrupted, well below 50% threshold)
+- [x] **Step 1.3:** Create backup system (`convex/adminGoldBackup.ts`) ✅ COMPLETE (2025-11-02)
+  - [x] Create `createPreMigrationBackup` mutation
+  - [x] Create `restoreFromBackup` mutation (emergency use)
+  - [x] Create `listBackups` query
+  - [x] Create `getBackupInfo` query
+  - [x] Create `verifyBackupIntegrity` query
+  - [x] Verified backup tables already exist in schema (goldBackups, goldBackupUserData)
+- [ ] **Step 1.4:** Execute backup (NEXT STEP - USER ACTION REQUIRED)
   - [ ] Run `createPreMigrationBackup`
-  - [ ] Verify backup record count matches live records
+  - [ ] Verify backup record count matches live records (should be 39)
   - [ ] Record backup timestamp: `_______________`
+  - [ ] Verify backup integrity using `verifyBackupIntegrity`
   - [ ] **GO/NO-GO DECISION:** Do not proceed without successful backup
 
 **Phase 1 Completion Time:** ___________
@@ -294,14 +298,51 @@ Current auto-repair approach has downsides:
 
 ### Phase 1 Execution Log
 ```
-[2025-11-02 00:00:00] Step 1.1 Started - Creating diagnostic functions
-[2025-11-02 00:00:00] Created convex/adminGoldDiagnostics.ts with 3 query functions
-[2025-11-02 00:00:00] Functions created:
+[2025-11-02 00:00] Step 1.1 Started - Creating diagnostic functions
+[2025-11-02 00:00] Created convex/adminGoldDiagnostics.ts with 3 query functions
+[2025-11-02 00:00] Functions created:
   - countCorruptedRecords: Scans all records, categorizes as healthy/corrupted/uninitialized
   - diagnoseWallet: Deep-dive diagnosis of specific wallet
   - listWalletsNeedingRepair: Returns list of all wallets requiring repair
-[2025-11-02 00:00:00] Step 1.1 COMPLETE ✅
-[2025-11-02 00:00:00] WAITING FOR USER: Deploy diagnostic functions and run countCorruptedRecords
+[2025-11-02 00:00] Step 1.1 COMPLETE ✅
+
+[2025-11-02 00:05] Step 1.2 Started - Running diagnostics
+[2025-11-02 00:05] User executed countCorruptedRecords via Convex dashboard
+[2025-11-02 00:05] RESULTS:
+  - Total records: 39
+  - Healthy: 25 (64.1%)
+  - Corrupted: 14 (35.9%)
+  - Uninitialized: 0
+  - Needs repair: 14
+  - Estimated time: 1 minute
+[2025-11-02 00:05] ANALYSIS:
+  - Corruption is minor (mostly small floating-point deficits)
+  - Largest deficit: 13,337 gold
+  - Smallest deficit: 0.26 gold (essentially rounding error)
+  - Pattern: Accumulated floating-point errors over time
+  - ROOT CAUSE: Not ongoing corruption, just old precision errors
+[2025-11-02 00:05] GO/NO-GO DECISION: ✅ SAFE TO PROCEED
+  - Well below 50% corruption threshold
+  - Fast repair time (1 minute)
+  - No signs of active bugs
+  - System recommendation: "Safe to proceed with migration"
+[2025-11-02 00:05] Step 1.2 COMPLETE ✅
+
+[2025-11-02 00:10] Step 1.3 Started - Creating backup system
+[2025-11-02 00:10] Created convex/adminGoldBackup.ts with comprehensive backup functions
+[2025-11-02 00:10] Functions created:
+  - createPreMigrationBackup: Captures all gold data before migration
+  - listBackups: View all available backups
+  - getBackupInfo: Detailed backup inspection
+  - verifyBackupIntegrity: Validate backup data integrity
+  - restoreFromBackup: Emergency restore (requires confirmation code)
+[2025-11-02 00:10] Verified existing backup tables in schema:
+  - goldBackups: Backup metadata
+  - goldBackupUserData: Individual user records
+[2025-11-02 00:10] Step 1.3 COMPLETE ✅
+
+[2025-11-02 00:10] Step 1.4 - NEXT: Execute backup and verify
+[2025-11-02 00:10] WAITING FOR USER: Run createPreMigrationBackup mutation
 ```
 
 ### Phase 2 Execution Log

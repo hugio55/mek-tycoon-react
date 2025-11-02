@@ -427,6 +427,75 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                 ⚠ This may take 1-2 minutes. Please don't close this window.
               </p>
             </div>
+
+            {/* Debug Controls - Only visible in debug mode or test mode */}
+            {(isDebugMode || isTestMode) && (
+              <div className="mt-6 p-4 bg-purple-500/10 border-2 border-purple-500/50 rounded backdrop-blur-sm">
+                <div className="text-purple-400 text-xs uppercase tracking-wider font-bold mb-3 text-center">
+                  🐛 Debug Controls
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setChecklistStatus({
+                        paymentReceived: true,
+                        minting: false,
+                        confirming: false
+                      });
+                    }}
+                    disabled={checklistStatus.paymentReceived}
+                    className="w-full px-4 py-2 bg-purple-500/20 border border-purple-500/50 text-purple-300 rounded hover:bg-purple-500/30 transition-colors text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ✓ Complete Payment
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChecklistStatus({
+                        paymentReceived: true,
+                        minting: true,
+                        confirming: false
+                      });
+                    }}
+                    disabled={!checklistStatus.paymentReceived || checklistStatus.confirming}
+                    className="w-full px-4 py-2 bg-purple-500/20 border border-purple-500/50 text-purple-300 rounded hover:bg-purple-500/30 transition-colors text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ✓ Complete Minting
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChecklistStatus({
+                        paymentReceived: true,
+                        minting: true,
+                        confirming: true
+                      });
+                      // Simulate success after a short delay
+                      setTimeout(() => {
+                        setClaimedNFT({
+                          _id: 'debug_claim_' + Date.now(),
+                          _creationTime: Date.now(),
+                          walletAddress: walletAddress,
+                          transactionHash: 'debug_tx_' + Date.now(),
+                          nftName: 'Commemorative NFT (Debug)',
+                          nftAssetId: 'debug_asset_' + Date.now(),
+                          claimedAt: Date.now(),
+                          metadata: {
+                            imageUrl: '/commemorative-nft.png',
+                            collection: 'Mek Tycoon Commemorative',
+                            artist: 'Mek Tycoon Team',
+                            website: 'https://mektycoon.com',
+                          },
+                        });
+                        setState('success');
+                      }, 1000);
+                    }}
+                    disabled={!checklistStatus.minting}
+                    className="w-full px-4 py-2 bg-purple-500/20 border border-purple-500/50 text-purple-300 rounded hover:bg-purple-500/30 transition-colors text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ✓ Complete Transaction
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         );
 
