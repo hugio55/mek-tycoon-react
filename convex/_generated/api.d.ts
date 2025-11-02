@@ -21,6 +21,7 @@ import type * as activityLogs from "../activityLogs.js";
 import type * as addTotalActiveContracts from "../addTotalActiveContracts.js";
 import type * as addressConversion from "../addressConversion.js";
 import type * as adminEssence from "../adminEssence.js";
+import type * as adminGoldDiagnostics from "../adminGoldDiagnostics.js";
 import type * as adminGoldInvestigation from "../adminGoldInvestigation.js";
 import type * as adminMarketplace from "../adminMarketplace.js";
 import type * as adminMigration from "../adminMigration.js";
@@ -217,6 +218,7 @@ declare const fullApi: ApiFromModules<{
   addTotalActiveContracts: typeof addTotalActiveContracts;
   addressConversion: typeof addressConversion;
   adminEssence: typeof adminEssence;
+  adminGoldDiagnostics: typeof adminGoldDiagnostics;
   adminGoldInvestigation: typeof adminGoldInvestigation;
   adminMarketplace: typeof adminMarketplace;
   adminMigration: typeof adminMigration;
