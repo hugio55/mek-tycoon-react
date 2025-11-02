@@ -1,6 +1,7 @@
-# Sentry Error Diagnostic Check
-
-Check Sentry for new errors and provide intelligent diagnosis.
+---
+name: sentry-check
+description: Check Sentry for new errors and provide intelligent diagnosis
+---
 
 ## Instructions
 
