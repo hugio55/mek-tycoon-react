@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { ALL_VARIATIONS_FLAT } from "@/lib/variationsReferenceData";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
@@ -380,7 +379,7 @@ export default function EssenceMarketPage() {
       ];
 
   // Filter to essence variations the user does NOT own (for requests)
-  const unownedEssenceVariations = ALL_VARIATIONS_FLAT.filter(variation => {
+  const unownedEssenceVariations = COMPLETE_VARIATION_RARITY.filter(variation => {
     const owned = essenceState?.balances.find(b => b.variationName === variation.name);
     return !owned || owned.accumulatedAmount === 0;
   });
@@ -388,7 +387,7 @@ export default function EssenceMarketPage() {
   // Autocomplete search
   useEffect(() => {
     if (searchTerm.length >= 2) {
-      const matches = ALL_VARIATIONS_FLAT
+      const matches = COMPLETE_VARIATION_RARITY
         .filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()))
         .slice(0, 10)
         .map(v => v.name);
@@ -444,7 +443,7 @@ export default function EssenceMarketPage() {
 
     // Filter by variation type (head/body/trait)
     if (selectedRarity !== "all" && listing.itemVariation) {
-      const variation = ALL_VARIATIONS_FLAT.find(v => v.name === listing.itemVariation);
+      const variation = COMPLETE_VARIATION_RARITY.find(v => v.name === listing.itemVariation);
       if (variation && variation.type !== selectedRarity) return false;
     }
 
