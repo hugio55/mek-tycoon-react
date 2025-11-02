@@ -1403,7 +1403,8 @@ export default function TalentBuilderPage() {
   const exportTree = () => {
     const data = {
       nodes,
-      connections
+      connections,
+      viewportDimensions
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1416,13 +1417,17 @@ export default function TalentBuilderPage() {
   const importTree = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
         setNodes(data.nodes || []);
         setConnections(data.connections || []);
+        // Restore viewport dimensions if present in imported file
+        if (data.viewportDimensions) {
+          setViewportDimensions(data.viewportDimensions);
+        }
       } catch (error) {
         alert('Invalid file format');
       }
