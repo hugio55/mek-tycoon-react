@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { setEssenceBalance, getOrCreateEssenceBalance } from "./lib/essenceHelpers";
+import { clampEssenceToCap, isEssenceFull } from "./lib/essenceCalculations";
 
 // Seeded random number generator for deterministic slot requirements
 class SeededRandom {
@@ -485,7 +486,7 @@ async function calculateRealTimeEssenceBalances(
       // balance.accumulatedAmount contains the BASE amount as of lastCalculationTime
       // We calculate additional accumulation from lastCalculationTime to NOW
       const essenceEarnedSinceLastSave = daysElapsedSinceLastSave * effectiveRate * variationData.count;
-      const currentRealTimeAmount = Math.min(balance.accumulatedAmount + essenceEarnedSinceLastSave, effectiveCap);
+      const currentRealTimeAmount = clampEssenceToCap(balance.accumulatedAmount + essenceEarnedSinceLastSave, effectiveCap);
 
       // DEBUG: Log calculation for this variation
       console.log(`🔍 [BACKEND CALC] ${balance.variationName}:`, {
@@ -525,7 +526,7 @@ async function calculateRealTimeEssenceBalances(
       const effectiveCap = config.essenceCap + capBonus;
 
       const essenceEarned = daysElapsed * effectiveRate * data.count;
-      const newAmount = Math.min(essenceEarned, effectiveCap);
+      const newAmount = clampEssenceToCap(essenceEarned, effectiveCap);
 
       // Add this as a new balance entry (in-memory only, not persisted)
       updatedBalances.push({
@@ -1075,7 +1076,7 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
 
     // Calculate essence earned
     const essenceEarned = daysElapsed * effectiveRate * data.count;
-    const newAmount = Math.min(currentAmount + essenceEarned, effectiveCap);
+    const newAmount = clampEssenceToCap(currentAmount + essenceEarned, effectiveCap);
 
     console.log(`💾 [CHECKPOINT MUTATION] Saving ${data.name}:`, {
       oldAmount: currentAmount.toFixed(12),

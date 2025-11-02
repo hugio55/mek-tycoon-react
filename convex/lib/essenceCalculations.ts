@@ -4,6 +4,30 @@
  * Mirrors goldCalculations.ts pattern for essence accumulation
  */
 
+// EPSILON TOLERANCE for floating-point cap comparisons
+// This allows essence amounts within 0.001 of the cap to be considered "full"
+// Fixes issue where 9.99999... is treated as less than 10.0
+export const ESSENCE_CAP_EPSILON = 0.001;
+
+/**
+ * Check if essence amount is at or near capacity (within epsilon tolerance)
+ * Use this instead of direct >= comparisons to handle floating-point precision
+ */
+export function isEssenceFull(amount: number, cap: number): boolean {
+  return amount >= (cap - ESSENCE_CAP_EPSILON);
+}
+
+/**
+ * Clamp essence amount to cap, treating near-cap values as exactly at cap
+ * This ensures amounts like 9.99999 become exactly 10.0 for display
+ */
+export function clampEssenceToCap(amount: number, cap: number): number {
+  if (isEssenceFull(amount, cap)) {
+    return cap; // Snap to exact cap value
+  }
+  return Math.min(amount, cap);
+}
+
 export interface EssenceCalculationParams {
   accumulatedAmount: number;   // Snapshot value at lastSnapshotTime
   ratePerDay: number;           // Essence generation rate per day
@@ -18,7 +42,7 @@ export interface EssenceCalculationParams {
  * between client-side animation and server-side persistence.
  *
  * @param params - Essence calculation parameters
- * @returns Current essence amount (capped at essenceCap)
+ * @returns Current essence amount (capped at essenceCap with epsilon tolerance)
  */
 export function calculateCurrentEssence(params: EssenceCalculationParams): number {
   const now = Date.now();
@@ -26,8 +50,8 @@ export function calculateCurrentEssence(params: EssenceCalculationParams): numbe
   const essenceSinceLastUpdate = params.ratePerDay * daysSinceLastUpdate;
   const calculatedEssence = params.accumulatedAmount + essenceSinceLastUpdate;
 
-  // Apply capacity cap
-  return Math.min(calculatedEssence, params.essenceCap);
+  // Apply capacity cap with epsilon tolerance
+  return clampEssenceToCap(calculatedEssence, params.essenceCap);
 }
 
 /**
@@ -82,8 +106,8 @@ export function calculateEssenceIncrease(
   const currentAccumulated = currentRecord.accumulatedAmount || 0;
   const newAmount = currentAccumulated + essenceToAdd;
 
-  // Apply cap
-  const newAccumulatedAmount = Math.min(newAmount, essenceCap);
+  // Apply cap with epsilon tolerance
+  const newAccumulatedAmount = clampEssenceToCap(newAmount, essenceCap);
 
   return {
     newAccumulatedAmount
