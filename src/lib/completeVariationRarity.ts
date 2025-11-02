@@ -2,13 +2,14 @@
 // Generated from mekRarityMaster.json with 4000 Mek records
 // Total unique variations: 291
 //
-// IMPORTANT: Special "Empty" Trait Variations
-// The following trait variations ALL represent valid "no item equipped" states:
+// IMPORTANT: Special Trait Variations (Ghostly/Haunting Theme)
+// The following trait variations have artistic names that may seem like "empty" states,
+// but they are LEGITIMATE variations with ghostly/haunting visual appearances:
 //   - "Nil" (rank 18, legendary, 1-2 copies)
 //   - "Null" (rank 21, legendary, 1-2 copies)
 //   - "None" (rank 24, legendary, 1-2 copies)
 //   - "Nothing" (rank 291, common, 501 copies)
-// These should NEVER be filtered out or ignored - they are legitimate variations
+// These should NEVER be filtered out or ignored - they are real variations
 // that appear in actual Mek data and must be preserved across all systems.
 
 export type VariationType = 'head' | 'body' | 'trait';
