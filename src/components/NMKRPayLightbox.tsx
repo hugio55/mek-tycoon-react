@@ -12,7 +12,7 @@ interface NMKRPayLightboxProps {
   debugState?: 'loading' | 'success'; // Direct state override for debug panel
 }
 
-type LightboxState = 'payment' | 'processing' | 'success' | 'error';
+type LightboxState = 'payment' | 'processing' | 'success' | 'error' | 'cancelled';
 
 export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose, debugState }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
