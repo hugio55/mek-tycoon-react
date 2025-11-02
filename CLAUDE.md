@@ -68,6 +68,169 @@ git checkout src/components/SomeFile.tsx  # ❌❌❌ DESTROYS UNCOMMITTED WORK 
 
 ---
 
+## 🚨🚨🚨 CRITICAL: BRANCH SWITCHING PROTECTION 🚨🚨🚨
+**NEVER SWITCH BRANCHES WITHOUT EXPLICIT USER APPROVAL - MULTIPLE TIMES**
+
+### The Danger of Working on Wrong Branch
+**Working on the wrong branch is the user's BIGGEST NIGHTMARE.** This has caused MULTIPLE incidents of lost work in this project.
+
+### What Happens When You Work on Wrong Branch:
+1. User is on old branch from 9 days ago
+2. Makes hours of changes thinking they're on current branch
+3. Switches back to current branch
+4. **ALL UNCOMMITTED WORK FROM OLD BRANCH IS LOST FOREVER**
+5. User has to re-do everything manually
+
+### Real Incident - November 1, 2025:
+**What happened:**
+- User asked: "Could you please look into the Essence System work tree branch?"
+- I ran `git checkout essence-system-worktree` (branch from Oct 23, 9 days old)
+- Dev server reloaded with old code from 9 days ago
+- User saw old UI and thought "days and days of work" was lost
+- User panicked - this had happened before and they lost real work
+- Had to switch back to custom-minting-system to recover current work
+
+**Why this was dangerous:**
+- User didn't realize branch had switched
+- If they had made changes while on old branch, those would be lost when switching back
+- They've lost work this way before - hours of effort gone forever
+
+### MANDATORY BRANCH PROTECTION RULES:
+
+#### 1. CHECK BRANCH BEFORE ANY WORK
+**BEFORE starting ANY task, ALWAYS run:**
+```bash
+git branch --show-current
+```
+
+**If NOT on `custom-minting-system` branch:**
+- ⚠️ **STOP IMMEDIATELY**
+- Warn user: "⚠️ WARNING: You are currently on branch '[branch-name]', not 'custom-minting-system'. This may be an old branch. Should we switch to custom-minting-system first?"
+- Wait for explicit approval before proceeding
+
+#### 2. ANNOUNCE BRANCH AT SESSION START
+**At the beginning of EVERY session, immediately check and announce:**
+```bash
+git branch --show-current
+```
+Tell user: "Currently on branch: [branch-name]"
+
+If not on custom-minting-system, add warning: "⚠️ This is not your main working branch. Should we switch to custom-minting-system?"
+
+#### 3. NEVER SWITCH BRANCHES WITHOUT TRIPLE CONFIRMATION
+
+**Before ANY `git checkout <branch>` command:**
+
+**First Warning:**
+- "⚠️ WARNING: Switching to branch '[target-branch]' will replace ALL files in your working directory with that branch's versions."
+- "Your localhost:3200 will immediately show different code."
+- "Do you want to proceed?"
+
+**Wait for user response. If yes, give Second Warning:**
+- "⚠️ SECOND WARNING: If you make any changes while on '[target-branch]' and don't commit them, those changes will be LOST when you switch back."
+- "Are you ABSOLUTELY SURE you want to switch branches?"
+
+**Wait for user response. If yes, give Third Warning:**
+- "⚠️ FINAL WARNING: I'm about to run `git checkout [target-branch]`. Your dev server will reload with code from that branch."
+- "Type 'YES' to confirm."
+
+**Only proceed after THREE explicit confirmations.**
+
+#### 4. COMMIT WORK BEFORE SWITCHING
+
+**Before switching branches, ALWAYS:**
+1. Run `git status` to check for uncommitted changes
+2. If there ARE uncommitted changes:
+   - "You have uncommitted changes. Should I commit them before switching branches?"
+   - If user says yes: Create a commit with descriptive message
+   - If user says no: "⚠️ WARNING: These uncommitted changes will be LOST when switching branches. Proceed anyway?"
+3. Only switch after work is safely committed
+
+#### 5. IMMEDIATE WARNING AFTER ACCIDENTAL SWITCH
+
+**If user seems unaware branch was switched:**
+- "🚨 IMPORTANT: The dev server is now showing code from the '[branch-name]' branch (last changed [date])."
+- "Any changes you make now are on THIS branch, not your main branch."
+- "Would you like to switch back to custom-minting-system?"
+
+#### 6. PERIODIC BRANCH REMINDERS
+
+**Every 10 messages or so, briefly remind:**
+- "Currently on branch: [branch-name]" (if not on custom-minting-system)
+
+### The Correct Branch
+**For this project, the user's main working branch is:**
+- **`custom-minting-system`** - This is where current work happens
+
+**Other branches are historical/exploratory:**
+- `essence-system-worktree` - Old work from Oct 23 (9 days old)
+- `master` - May be outdated
+- `backup-multi-wallet-[date]` - Backup branches
+
+**Default assumption:** User should be on `custom-minting-system` unless they explicitly say otherwise.
+
+### Why Git Branches Are Dangerous
+
+**Key concept the user needs to understand:**
+- Git branches are NOT separate folders
+- There is ONE physical directory on the computer
+- `git checkout` physically REPLACES all files in that directory
+- The dev server serves whatever files are currently in the directory
+- When you switch branches, localhost immediately shows different code
+
+**Think of it like:**
+- Your working directory is a stage
+- Git branches are different scenes
+- `git checkout` swaps out ALL the actors and props
+- The audience (dev server) sees whatever's currently on stage
+
+### Commands That Switch Branches (NEVER use without approval):
+- `git checkout <branch-name>` - Switches to different branch
+- `git switch <branch-name>` - Modern alternative to checkout
+- `git checkout -b <new-branch>` - Creates and switches to new branch
+- Any `git` command that changes HEAD to different branch
+
+### Safe Git Commands (Read-Only):
+- `git branch` - List branches (safe)
+- `git branch --show-current` - Show current branch (safe)
+- `git log` - View commit history (safe)
+- `git diff <branch>` - Compare branches without switching (safe)
+- `git status` - Check working directory status (safe)
+
+### Quick Reference Checklist for Branch Safety
+
+**Before EVERY work session:**
+- [ ] Check current branch: `git branch --show-current`
+- [ ] Announce branch to user
+- [ ] If not on custom-minting-system, ask to switch
+- [ ] Never assume current branch is correct
+
+**Before ANY branch switch:**
+- [ ] Warn user THREE times
+- [ ] Check for uncommitted changes (`git status`)
+- [ ] Commit or stash any uncommitted work
+- [ ] Get explicit "YES" confirmation
+- [ ] After switch, remind user they're on different branch
+
+**During work:**
+- [ ] If user seems confused about code state, check branch
+- [ ] Periodically remind if on non-standard branch
+- [ ] Before any git operation, verify branch is correct
+
+### Emergency Recovery
+
+**If user accidentally made changes on wrong branch:**
+1. DON'T PANIC - changes are still in working directory
+2. Immediately commit changes on current branch: `git commit -am "Emergency save from wrong branch"`
+3. Note the commit hash
+4. Switch to correct branch
+5. Cherry-pick the commit: `git cherry-pick <hash>`
+6. Work is now safely on correct branch
+
+**This only works if changes are committed BEFORE switching branches!**
+
+---
+
 ## 🚨 CRITICAL: SESSION PROTECTION 🚨
 **NEVER DO ANYTHING THAT WILL TERMINATE THE CLAUDE CODE SESSION**
 

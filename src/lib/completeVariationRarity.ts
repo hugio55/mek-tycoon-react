@@ -7,18 +7,20 @@ export type VariationType = 'head' | 'body' | 'trait';
 export type RarityTier = 'legendary' | 'ultra-rare' | 'very-rare' | 'rare' | 'uncommon' | 'common';
 
 export interface VariationRarity {
+  id: number;
   name: string;
   type: VariationType;
   count: number;
   percentage: string;
   tier: RarityTier;
-  rank: number; // 1 = rarest
-  sourceKey: string; // 3-character code used for image file naming
+  rank: number;
+  sourceKey: string;
 }
 
 // Complete variation rarity ranking (291 total variations)
 export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
   {
+    id: 2,
     name: "Derelict",
     type: "head",
     count: 1,
@@ -28,6 +30,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "000H"
   },
   {
+    id: 109,
     name: "Gatsby Ultimate",
     type: "body",
     count: 1,
@@ -37,6 +40,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "000B"
   },
   {
+    id: 221,
     name: "Stolen",
     type: "trait",
     count: 1,
@@ -46,6 +50,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "000T"
   },
   {
+    id: 7,
     name: "Obliterator",
     type: "head",
     count: 1,
@@ -55,6 +60,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "999H"
   },
   {
+    id: 111,
     name: "Luxury Ultimate",
     type: "body",
     count: 1,
@@ -64,6 +70,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "999B"
   },
   {
+    id: 215,
     name: "Golden Guns Ultimate",
     type: "trait",
     count: 1,
@@ -73,6 +80,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "999T"
   },
   {
+    id: 4,
     name: "Ellie Mesh",
     type: "head",
     count: 1,
@@ -82,6 +90,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "888H"
   },
   {
+    id: 105,
     name: "Chrome Ultimate",
     type: "body",
     count: 1,
@@ -91,6 +100,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "888B"
   },
   {
+    id: 222,
     name: "Vanished",
     type: "trait",
     count: 1,
@@ -100,6 +110,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "888T"
   },
   {
+    id: 10,
     name: "Projectionist",
     type: "head",
     count: 1,
@@ -109,6 +120,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "777H"
   },
   {
+    id: 106,
     name: "Cousin Itt",
     type: "body",
     count: 1,
@@ -118,6 +130,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "777B"
   },
   {
+    id: 216,
     name: "Gone",
     type: "trait",
     count: 1,
@@ -127,6 +140,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "777T"
   },
   {
+    id: 9,
     name: "Pie",
     type: "head",
     count: 1,
@@ -136,6 +150,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "666H"
   },
   {
+    id: 104,
     name: "Carving Ultimate",
     type: "body",
     count: 1,
@@ -145,6 +160,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "666B"
   },
   {
+    id: 219,
     name: "Oompah",
     type: "trait",
     count: 1,
@@ -154,6 +170,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "666T"
   },
   {
+    id: 5,
     name: "Frost King",
     type: "head",
     count: 1,
@@ -163,6 +180,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "555H"
   },
   {
+    id: 107,
     name: "Frost Cage",
     type: "body",
     count: 1,
@@ -172,6 +190,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "555B"
   },
   {
+    id: 289,
     name: "Nil",
     type: "trait",
     count: 1,
@@ -181,6 +200,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "555T"
   },
   {
+    id: 8,
     name: "Paul Ultimate",
     type: "head",
     count: 1,
@@ -190,6 +210,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "444H"
   },
   {
+    id: 103,
     name: "Burnt Ultimate",
     type: "body",
     count: 1,
@@ -199,6 +220,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "444B"
   },
   {
+    id: 290,
     name: "Null",
     type: "trait",
     count: 1,
@@ -208,6 +230,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "444T"
   },
   {
+    id: 3,
     name: "Discomania",
     type: "head",
     count: 1,
@@ -217,6 +240,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "333H"
   },
   {
+    id: 113,
     name: "X Ray Ultimate",
     type: "body",
     count: 1,
@@ -226,6 +250,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "333B"
   },
   {
+    id: 291,
     name: "None",
     type: "trait",
     count: 1,
@@ -235,6 +260,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "333T"
   },
   {
+    id: 1,
     name: "Ace of Spades Ultimate",
     type: "head",
     count: 1,
@@ -244,6 +270,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "222H"
   },
   {
+    id: 112,
     name: "Plush Ultimate",
     type: "body",
     count: 1,
@@ -253,6 +280,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "222B"
   },
   {
+    id: 218,
     name: "Linkinator 3000",
     type: "trait",
     count: 1,
@@ -262,6 +290,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "222T"
   },
   {
+    id: 6,
     name: "Nyan Ultimate",
     type: "head",
     count: 1,
@@ -271,6 +300,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "111H"
   },
   {
+    id: 110,
     name: "Heatwave Ultimate",
     type: "body",
     count: 1,
@@ -280,6 +310,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "111B"
   },
   {
+    id: 220,
     name: "Peacock Ultimate",
     type: "trait",
     count: 1,
@@ -289,6 +320,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "111T"
   },
   {
+    id: 108,
     name: "Fury",
     type: "body",
     count: 1,
@@ -298,6 +330,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BW5"
   },
   {
+    id: 217,
     name: "King Tut",
     type: "trait",
     count: 1,
@@ -307,6 +340,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AZ3"
   },
   {
+    id: 11,
     name: "Ross",
     type: "head",
     count: 1,
@@ -316,6 +350,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "LZ2"
   },
   {
+    id: 114,
     name: "007",
     type: "body",
     count: 2,
@@ -325,6 +360,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CX2"
   },
   {
+    id: 115,
     name: "Cartoon",
     type: "body",
     count: 2,
@@ -334,6 +370,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA5"
   },
   {
+    id: 116,
     name: "Heatwave",
     type: "body",
     count: 2,
@@ -343,6 +380,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CX2"
   },
   {
+    id: 117,
     name: "Luxury",
     type: "body",
     count: 2,
@@ -352,6 +390,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DS3"
   },
   {
+    id: 118,
     name: "Majesty",
     type: "body",
     count: 2,
@@ -361,6 +400,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DC4"
   },
   {
+    id: 119,
     name: "Oil",
     type: "body",
     count: 2,
@@ -370,6 +410,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF5"
   },
   {
+    id: 223,
     name: "Peacock",
     type: "trait",
     count: 2,
@@ -379,6 +420,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AZ4"
   },
   {
+    id: 120,
     name: "Seabiscuit",
     type: "body",
     count: 2,
@@ -388,6 +430,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "KY4"
   },
   {
+    id: 12,
     name: "Acid",
     type: "head",
     count: 3,
@@ -397,6 +440,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DP4"
   },
   {
+    id: 121,
     name: "Gatsby",
     type: "body",
     count: 3,
@@ -406,6 +450,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DC4"
   },
   {
+    id: 13,
     name: "Gold",
     type: "head",
     count: 3,
@@ -415,6 +460,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "IV1"
   },
   {
+    id: 224,
     name: "Palace",
     type: "trait",
     count: 3,
@@ -424,6 +470,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AZ2"
   },
   {
+    id: 122,
     name: "Pearl",
     type: "body",
     count: 3,
@@ -433,6 +480,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "ER3"
   },
   {
+    id: 123,
     name: "Spaghetti",
     type: "body",
     count: 3,
@@ -442,6 +490,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 124,
     name: "Tarpie",
     type: "body",
     count: 3,
@@ -451,6 +500,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DS1"
   },
   {
+    id: 125,
     name: "Cartoonichrome",
     type: "body",
     count: 4,
@@ -460,6 +510,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 225,
     name: "Drip",
     type: "trait",
     count: 4,
@@ -469,6 +520,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EY3"
   },
   {
+    id: 126,
     name: "Granite",
     type: "body",
     count: 4,
@@ -478,6 +530,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BQ1"
   },
   {
+    id: 14,
     name: "Lazer",
     type: "head",
     count: 4,
@@ -487,6 +540,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 226,
     name: "Test Track",
     type: "trait",
     count: 4,
@@ -496,6 +550,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AW3"
   },
   {
+    id: 127,
     name: "Tie Dye",
     type: "body",
     count: 4,
@@ -505,6 +560,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ3"
   },
   {
+    id: 15,
     name: "Wires",
     type: "head",
     count: 4,
@@ -514,6 +570,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FS1"
   },
   {
+    id: 128,
     name: "Burnt",
     type: "body",
     count: 5,
@@ -523,6 +580,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DS2"
   },
   {
+    id: 129,
     name: "Damascus",
     type: "body",
     count: 5,
@@ -532,6 +590,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BW2"
   },
   {
+    id: 130,
     name: "Giger",
     type: "body",
     count: 5,
@@ -541,6 +600,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 131,
     name: "Maze",
     type: "body",
     count: 5,
@@ -550,6 +610,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 16,
     name: "Nightstalker",
     type: "head",
     count: 5,
@@ -559,6 +620,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 17,
     name: "Nyan",
     type: "head",
     count: 5,
@@ -568,6 +630,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK3"
   },
   {
+    id: 18,
     name: "Paul",
     type: "head",
     count: 5,
@@ -577,6 +640,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 19,
     name: "Pizza",
     type: "head",
     count: 5,
@@ -586,6 +650,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF3"
   },
   {
+    id: 227,
     name: "Screamo",
     type: "trait",
     count: 5,
@@ -595,6 +660,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "KQ3"
   },
   {
+    id: 20,
     name: "Terminator",
     type: "head",
     count: 5,
@@ -604,6 +670,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 21,
     name: "24K",
     type: "head",
     count: 6,
@@ -613,6 +680,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 132,
     name: "Bag",
     type: "body",
     count: 6,
@@ -622,6 +690,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DM1"
   },
   {
+    id: 228,
     name: "Blasters",
     type: "trait",
     count: 6,
@@ -631,6 +700,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CU3"
   },
   {
+    id: 22,
     name: "China",
     type: "head",
     count: 6,
@@ -640,6 +710,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF1"
   },
   {
+    id: 133,
     name: "Nuggets",
     type: "body",
     count: 6,
@@ -649,6 +720,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK2"
   },
   {
+    id: 134,
     name: "Radiance",
     type: "body",
     count: 6,
@@ -658,6 +730,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 229,
     name: "Spectrum",
     type: "trait",
     count: 6,
@@ -667,6 +740,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EV3"
   },
   {
+    id: 23,
     name: "Stained Glass",
     type: "head",
     count: 6,
@@ -676,6 +750,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF1"
   },
   {
+    id: 24,
     name: "The Lethal Dimension",
     type: "head",
     count: 6,
@@ -685,6 +760,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 230,
     name: "2001",
     type: "trait",
     count: 7,
@@ -694,6 +770,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EY2"
   },
   {
+    id: 231,
     name: "Crow",
     type: "trait",
     count: 7,
@@ -703,6 +780,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AZ1"
   },
   {
+    id: 135,
     name: "Jolly Rancher",
     type: "body",
     count: 7,
@@ -712,6 +790,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 25,
     name: "Magma",
     type: "head",
     count: 7,
@@ -721,6 +800,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 136,
     name: "Shipped",
     type: "body",
     count: 7,
@@ -730,6 +810,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 26,
     name: "???",
     type: "head",
     count: 8,
@@ -739,6 +820,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AR1"
   },
   {
+    id: 232,
     name: "Hydra",
     type: "trait",
     count: 8,
@@ -748,6 +830,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AP3"
   },
   {
+    id: 137,
     name: "Lord",
     type: "body",
     count: 8,
@@ -757,6 +840,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK3"
   },
   {
+    id: 27,
     name: "Silicon",
     type: "head",
     count: 8,
@@ -766,6 +850,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 138,
     name: "X Ray",
     type: "body",
     count: 8,
@@ -775,6 +860,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 28,
     name: "Bone Daddy",
     type: "head",
     count: 9,
@@ -784,6 +870,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 29,
     name: "Bowling",
     type: "head",
     count: 9,
@@ -793,6 +880,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF2"
   },
   {
+    id: 139,
     name: "OE Light",
     type: "body",
     count: 9,
@@ -802,6 +890,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 140,
     name: "Peppermint",
     type: "body",
     count: 9,
@@ -811,6 +900,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CB3"
   },
   {
+    id: 30,
     name: "Snow",
     type: "head",
     count: 9,
@@ -820,6 +910,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "GG1"
   },
   {
+    id: 31,
     name: "The Ram",
     type: "head",
     count: 10,
@@ -829,6 +920,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 32,
     name: "Whiskey",
     type: "head",
     count: 10,
@@ -838,6 +930,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 33,
     name: "Arcade",
     type: "head",
     count: 11,
@@ -847,6 +940,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 141,
     name: "Blood",
     type: "body",
     count: 11,
@@ -856,6 +950,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CB3"
   },
   {
+    id: 233,
     name: "Carbonite",
     type: "trait",
     count: 11,
@@ -865,6 +960,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EY1"
   },
   {
+    id: 34,
     name: "Mint",
     type: "head",
     count: 11,
@@ -874,6 +970,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 35,
     name: "Bubblegum",
     type: "head",
     count: 12,
@@ -883,6 +980,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF3"
   },
   {
+    id: 234,
     name: "Iced",
     type: "trait",
     count: 12,
@@ -892,6 +990,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BR3"
   },
   {
+    id: 142,
     name: "Seafoam",
     type: "body",
     count: 12,
@@ -901,6 +1000,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DC1"
   },
   {
+    id: 36,
     name: "Ballerina",
     type: "head",
     count: 13,
@@ -910,6 +1010,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 235,
     name: "Icon",
     type: "trait",
     count: 13,
@@ -919,6 +1020,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EV2"
   },
   {
+    id: 143,
     name: "Ocean",
     type: "body",
     count: 13,
@@ -928,6 +1030,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 236,
     name: "Splatter",
     type: "trait",
     count: 13,
@@ -937,6 +1040,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "GK3"
   },
   {
+    id: 37,
     name: "Heatmap",
     type: "head",
     count: 14,
@@ -946,6 +1050,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 38,
     name: "Acrylic",
     type: "head",
     count: 15,
@@ -955,6 +1060,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 144,
     name: "Carving",
     type: "body",
     count: 15,
@@ -964,6 +1070,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FD2"
   },
   {
+    id: 237,
     name: "Holographic",
     type: "trait",
     count: 15,
@@ -973,6 +1080,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AS3"
   },
   {
+    id: 145,
     name: "Rug",
     type: "body",
     count: 15,
@@ -982,6 +1090,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 146,
     name: "Trapped",
     type: "body",
     count: 15,
@@ -991,6 +1100,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA3"
   },
   {
+    id: 147,
     name: "Frosted",
     type: "body",
     count: 16,
@@ -1000,6 +1110,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA3"
   },
   {
+    id: 39,
     name: "Quilt",
     type: "head",
     count: 16,
@@ -1009,6 +1120,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "GQ2"
   },
   {
+    id: 238,
     name: "Ring Red",
     type: "trait",
     count: 16,
@@ -1018,6 +1130,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DA3"
   },
   {
+    id: 40,
     name: "Ornament",
     type: "head",
     count: 17,
@@ -1027,6 +1140,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 41,
     name: "Sleet",
     type: "head",
     count: 18,
@@ -1036,6 +1150,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 148,
     name: "Sticky",
     type: "body",
     count: 18,
@@ -1045,6 +1160,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 239,
     name: "Tactical",
     type: "trait",
     count: 19,
@@ -1054,6 +1170,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DE3"
   },
   {
+    id: 149,
     name: "Vapor",
     type: "body",
     count: 19,
@@ -1063,6 +1180,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF3"
   },
   {
+    id: 42,
     name: "Hades",
     type: "head",
     count: 20,
@@ -1072,6 +1190,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 150,
     name: "Inner Rainbow",
     type: "body",
     count: 20,
@@ -1081,6 +1200,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DM1"
   },
   {
+    id: 43,
     name: "Drill",
     type: "head",
     count: 21,
@@ -1090,6 +1210,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AM1"
   },
   {
+    id: 151,
     name: "Frostbit",
     type: "body",
     count: 21,
@@ -1099,6 +1220,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 240,
     name: "Nuclear",
     type: "trait",
     count: 21,
@@ -1108,6 +1230,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HN3"
   },
   {
+    id: 44,
     name: "Cotton Candy",
     type: "head",
     count: 22,
@@ -1117,6 +1240,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "ED1"
   },
   {
+    id: 241,
     name: "Foil",
     type: "trait",
     count: 22,
@@ -1126,6 +1250,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AJ3"
   },
   {
+    id: 45,
     name: "Mesh",
     type: "head",
     count: 22,
@@ -1135,6 +1260,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC3"
   },
   {
+    id: 46,
     name: "Tron",
     type: "head",
     count: 22,
@@ -1144,6 +1270,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF3"
   },
   {
+    id: 47,
     name: "Ace of Spades",
     type: "head",
     count: 23,
@@ -1153,6 +1280,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE2"
   },
   {
+    id: 152,
     name: "Denim",
     type: "body",
     count: 23,
@@ -1162,6 +1290,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 242,
     name: "Golden Guns",
     type: "trait",
     count: 23,
@@ -1171,6 +1300,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CU2"
   },
   {
+    id: 48,
     name: "Mars Attacks",
     type: "head",
     count: 23,
@@ -1180,6 +1310,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 49,
     name: "Dualtone",
     type: "head",
     count: 24,
@@ -1189,6 +1320,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC4"
   },
   {
+    id: 50,
     name: "Flaked",
     type: "head",
     count: 24,
@@ -1198,6 +1330,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 243,
     name: "LV-426",
     type: "trait",
     count: 25,
@@ -1207,6 +1340,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AW2"
   },
   {
+    id: 244,
     name: "Sap",
     type: "trait",
     count: 25,
@@ -1216,6 +1350,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC3"
   },
   {
+    id: 153,
     name: "Stars",
     type: "body",
     count: 25,
@@ -1225,6 +1360,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 154,
     name: "White",
     type: "body",
     count: 25,
@@ -1234,6 +1370,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 245,
     name: "Bling",
     type: "trait",
     count: 26,
@@ -1243,6 +1380,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "MX1"
   },
   {
+    id: 51,
     name: "Electrik",
     type: "head",
     count: 26,
@@ -1252,6 +1390,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 52,
     name: "Hal",
     type: "head",
     count: 26,
@@ -1261,6 +1400,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 246,
     name: "R&B",
     type: "trait",
     count: 27,
@@ -1270,6 +1410,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "KQ2"
   },
   {
+    id: 247,
     name: "Earth",
     type: "trait",
     count: 28,
@@ -1279,6 +1420,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AW1"
   },
   {
+    id: 248,
     name: "Jeff",
     type: "trait",
     count: 28,
@@ -1288,6 +1430,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EH3"
   },
   {
+    id: 249,
     name: "Purplex",
     type: "trait",
     count: 28,
@@ -1297,6 +1440,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "MT2"
   },
   {
+    id: 53,
     name: "Recon",
     type: "head",
     count: 28,
@@ -1306,6 +1450,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 155,
     name: "Doom",
     type: "body",
     count: 30,
@@ -1315,6 +1460,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 156,
     name: "Journey",
     type: "body",
     count: 30,
@@ -1324,6 +1470,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 250,
     name: "Just Wren",
     type: "trait",
     count: 30,
@@ -1333,6 +1480,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EV1"
   },
   {
+    id: 157,
     name: "Mercury",
     type: "body",
     count: 30,
@@ -1342,6 +1490,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 251,
     name: "Angler",
     type: "trait",
     count: 31,
@@ -1351,6 +1500,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AS2"
   },
   {
+    id: 158,
     name: "Stone",
     type: "body",
     count: 31,
@@ -1360,6 +1510,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK3"
   },
   {
+    id: 159,
     name: "Tiles",
     type: "body",
     count: 31,
@@ -1369,6 +1520,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 160,
     name: "Soul",
     type: "body",
     count: 32,
@@ -1378,6 +1530,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 54,
     name: "Sun",
     type: "head",
     count: 32,
@@ -1387,6 +1540,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 161,
     name: "Lizard",
     type: "body",
     count: 33,
@@ -1396,6 +1550,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 55,
     name: "Sterling",
     type: "head",
     count: 33,
@@ -1405,6 +1560,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 162,
     name: "Cheetah",
     type: "body",
     count: 34,
@@ -1414,6 +1570,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 56,
     name: "Lich",
     type: "head",
     count: 34,
@@ -1423,6 +1580,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 252,
     name: "Phoenix",
     type: "trait",
     count: 34,
@@ -1432,6 +1590,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AP2"
   },
   {
+    id: 163,
     name: "Sunset",
     type: "body",
     count: 34,
@@ -1441,6 +1600,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 57,
     name: "Plate",
     type: "head",
     count: 35,
@@ -1450,6 +1610,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 164,
     name: "Rose",
     type: "body",
     count: 36,
@@ -1459,6 +1620,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DH1"
   },
   {
+    id: 165,
     name: "Tat",
     type: "body",
     count: 36,
@@ -1468,6 +1630,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 253,
     name: "Firebird",
     type: "trait",
     count: 37,
@@ -1477,6 +1640,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BR2"
   },
   {
+    id: 58,
     name: "Porcelain",
     type: "head",
     count: 37,
@@ -1486,6 +1650,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 59,
     name: "Cream",
     type: "head",
     count: 38,
@@ -1495,6 +1660,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 166,
     name: "Tangerine",
     type: "body",
     count: 38,
@@ -1504,6 +1670,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 254,
     name: "Heliotropium",
     type: "trait",
     count: 39,
@@ -1513,6 +1680,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "MO2"
   },
   {
+    id: 60,
     name: "Baby",
     type: "head",
     count: 41,
@@ -1522,6 +1690,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 61,
     name: "Disco",
     type: "head",
     count: 41,
@@ -1531,6 +1700,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 167,
     name: "Eyes",
     type: "body",
     count: 41,
@@ -1540,6 +1710,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 168,
     name: "Happymeal",
     type: "body",
     count: 41,
@@ -1549,6 +1720,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 169,
     name: "Maple",
     type: "body",
     count: 42,
@@ -1558,6 +1730,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 170,
     name: "Ooze",
     type: "body",
     count: 43,
@@ -1567,6 +1740,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 62,
     name: "Liquid Lavender",
     type: "head",
     count: 44,
@@ -1576,6 +1750,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 171,
     name: "Obsidian",
     type: "body",
     count: 44,
@@ -1585,6 +1760,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BL1"
   },
   {
+    id: 172,
     name: "Prickles",
     type: "body",
     count: 44,
@@ -1594,6 +1770,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 173,
     name: "Prom",
     type: "body",
     count: 44,
@@ -1603,6 +1780,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 174,
     name: "Crystal Camo",
     type: "body",
     count: 45,
@@ -1612,6 +1790,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DH1"
   },
   {
+    id: 63,
     name: "Dragonfly",
     type: "head",
     count: 45,
@@ -1621,6 +1800,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 64,
     name: "Sahara",
     type: "head",
     count: 45,
@@ -1630,6 +1810,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 65,
     name: "Grass",
     type: "head",
     count: 46,
@@ -1639,6 +1820,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB3"
   },
   {
+    id: 175,
     name: "Marble",
     type: "body",
     count: 46,
@@ -1648,6 +1830,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 176,
     name: "Rattler",
     type: "body",
     count: 46,
@@ -1657,6 +1840,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 255,
     name: "Black Parade",
     type: "trait",
     count: 49,
@@ -1666,6 +1850,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CU1"
   },
   {
+    id: 177,
     name: "Forest",
     type: "body",
     count: 49,
@@ -1675,6 +1860,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 178,
     name: "Poker",
     type: "body",
     count: 49,
@@ -1684,6 +1870,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BL1"
   },
   {
+    id: 179,
     name: "Black",
     type: "body",
     count: 50,
@@ -1693,6 +1880,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 66,
     name: "Ivory",
     type: "head",
     count: 50,
@@ -1702,6 +1890,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB3"
   },
   {
+    id: 180,
     name: "Arctic",
     type: "body",
     count: 51,
@@ -1711,6 +1900,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 181,
     name: "Rust",
     type: "body",
     count: 51,
@@ -1720,6 +1910,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 182,
     name: "Smurf",
     type: "body",
     count: 51,
@@ -1729,6 +1920,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 183,
     name: "Dr.",
     type: "body",
     count: 52,
@@ -1738,6 +1930,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 256,
     name: "Bonebox",
     type: "trait",
     count: 53,
@@ -1747,6 +1940,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "GK2"
   },
   {
+    id: 184,
     name: "Aztec",
     type: "body",
     count: 54,
@@ -1756,6 +1950,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 185,
     name: "Meat",
     type: "body",
     count: 54,
@@ -1765,7 +1960,8 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FD1"
   },
   {
-    name: "1960's",
+    id: 292,
+    name: "1960",
     type: "head",
     count: 55,
     percentage: "1.38",
@@ -1774,6 +1970,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 257,
     name: "Hefner",
     type: "trait",
     count: 55,
@@ -1783,6 +1980,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BR1"
   },
   {
+    id: 186,
     name: "Highlights",
     type: "body",
     count: 55,
@@ -1792,6 +1990,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EE2"
   },
   {
+    id: 187,
     name: "Leeloo",
     type: "body",
     count: 55,
@@ -1801,6 +2000,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 68,
     name: "Royal",
     type: "head",
     count: 55,
@@ -1810,6 +2010,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 69,
     name: "Silent Film",
     type: "head",
     count: 55,
@@ -1819,6 +2020,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC4"
   },
   {
+    id: 70,
     name: "Boss",
     type: "head",
     count: 56,
@@ -1828,6 +2030,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 71,
     name: "Butane",
     type: "head",
     count: 57,
@@ -1837,6 +2040,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 72,
     name: "Coin",
     type: "head",
     count: 57,
@@ -1846,6 +2050,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB3"
   },
   {
+    id: 188,
     name: "Waves",
     type: "body",
     count: 57,
@@ -1855,6 +2060,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FD1"
   },
   {
+    id: 258,
     name: "Hammerheat",
     type: "trait",
     count: 58,
@@ -1864,6 +2070,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "MT1"
   },
   {
+    id: 259,
     name: "Luna",
     type: "trait",
     count: 58,
@@ -1873,6 +2080,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AS1"
   },
   {
+    id: 189,
     name: "Plush",
     type: "body",
     count: 58,
@@ -1882,6 +2090,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 190,
     name: "Tickle",
     type: "body",
     count: 59,
@@ -1891,6 +2100,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BL1"
   },
   {
+    id: 191,
     name: "Mugged",
     type: "body",
     count: 60,
@@ -1900,6 +2110,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 192,
     name: "Victoria",
     type: "body",
     count: 60,
@@ -1909,6 +2120,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF2"
   },
   {
+    id: 193,
     name: "Cubes",
     type: "body",
     count: 63,
@@ -1918,6 +2130,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DM1"
   },
   {
+    id: 260,
     name: "Pop",
     type: "trait",
     count: 63,
@@ -1927,6 +2140,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "KQ1"
   },
   {
+    id: 261,
     name: "Ring Green",
     type: "trait",
     count: 63,
@@ -1936,6 +2150,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DA2"
   },
   {
+    id: 194,
     name: "Sand",
     type: "body",
     count: 63,
@@ -1945,6 +2160,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DM1"
   },
   {
+    id: 262,
     name: "Fourzin",
     type: "trait",
     count: 64,
@@ -1954,6 +2170,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EH2"
   },
   {
+    id: 73,
     name: "Hacker",
     type: "head",
     count: 64,
@@ -1963,6 +2180,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 195,
     name: "Heart",
     type: "body",
     count: 64,
@@ -1972,6 +2190,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 74,
     name: "Bumblebee",
     type: "head",
     count: 65,
@@ -1981,6 +2200,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC4"
   },
   {
+    id: 75,
     name: "Camo",
     type: "head",
     count: 65,
@@ -1990,6 +2210,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CF1"
   },
   {
+    id: 76,
     name: "Plastik",
     type: "head",
     count: 65,
@@ -1999,6 +2220,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 77,
     name: "Mac & Cheese",
     type: "head",
     count: 67,
@@ -2008,6 +2230,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 196,
     name: "Carbon",
     type: "body",
     count: 68,
@@ -2017,6 +2240,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 78,
     name: "Crimson",
     type: "head",
     count: 68,
@@ -2026,6 +2250,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 197,
     name: "Crystal Clear",
     type: "body",
     count: 68,
@@ -2035,6 +2260,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 263,
     name: "Molten Core",
     type: "trait",
     count: 68,
@@ -2044,6 +2270,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HN2"
   },
   {
+    id: 79,
     name: "Dazed Piggy",
     type: "head",
     count: 69,
@@ -2053,6 +2280,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 198,
     name: "Sir",
     type: "body",
     count: 69,
@@ -2062,6 +2290,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 80,
     name: "Mahogany",
     type: "head",
     count: 70,
@@ -2071,6 +2300,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 199,
     name: "Princess",
     type: "body",
     count: 70,
@@ -2080,6 +2310,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 264,
     name: "Bumble Bird",
     type: "trait",
     count: 72,
@@ -2089,6 +2320,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC2"
   },
   {
+    id: 81,
     name: "Big Brother",
     type: "head",
     count: 73,
@@ -2098,6 +2330,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 200,
     name: "Chrome",
     type: "body",
     count: 73,
@@ -2107,6 +2340,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 265,
     name: "Deep Space",
     type: "trait",
     count: 73,
@@ -2116,6 +2350,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FB2"
   },
   {
+    id: 266,
     name: "Night Vision",
     type: "trait",
     count: 73,
@@ -2125,6 +2360,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "OF2"
   },
   {
+    id: 82,
     name: "Snapshot",
     type: "head",
     count: 73,
@@ -2134,6 +2370,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 83,
     name: "Cadillac",
     type: "head",
     count: 74,
@@ -2143,6 +2380,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC2"
   },
   {
+    id: 84,
     name: "Corroded",
     type: "head",
     count: 74,
@@ -2152,6 +2390,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 267,
     name: "Albino",
     type: "trait",
     count: 75,
@@ -2161,6 +2400,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AJ2"
   },
   {
+    id: 181,
     name: "Rust",
     type: "head",
     count: 75,
@@ -2170,6 +2410,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AM1"
   },
   {
+    id: 201,
     name: "Steam",
     type: "body",
     count: 76,
@@ -2179,6 +2420,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 86,
     name: "Business",
     type: "head",
     count: 77,
@@ -2188,6 +2430,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 268,
     name: "Scissors",
     type: "trait",
     count: 77,
@@ -2197,6 +2440,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AP1"
   },
   {
+    id: 269,
     name: "Black & White",
     type: "trait",
     count: 78,
@@ -2206,6 +2450,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "JI2"
   },
   {
+    id: 202,
     name: "Goblin",
     type: "body",
     count: 78,
@@ -2215,6 +2460,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 87,
     name: "Neon Flamingo",
     type: "head",
     count: 78,
@@ -2224,6 +2470,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB3"
   },
   {
+    id: 270,
     name: "Silver",
     type: "trait",
     count: 78,
@@ -2233,6 +2480,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "MO1"
   },
   {
+    id: 184,
     name: "Aztec",
     type: "head",
     count: 79,
@@ -2242,6 +2490,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HH1"
   },
   {
+    id: 89,
     name: "Milk",
     type: "head",
     count: 80,
@@ -2251,6 +2500,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 271,
     name: "Whiteout",
     type: "trait",
     count: 80,
@@ -2260,6 +2510,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DE2"
   },
   {
+    id: 90,
     name: "Aqua",
     type: "head",
     count: 81,
@@ -2269,6 +2520,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB3"
   },
   {
+    id: 272,
     name: "Lumberjack",
     type: "trait",
     count: 81,
@@ -2278,6 +2530,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "LG2"
   },
   {
+    id: 203,
     name: "OE Dark",
     type: "body",
     count: 83,
@@ -2287,6 +2540,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 91,
     name: "desufnoC",
     type: "head",
     count: 85,
@@ -2296,6 +2550,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AK1"
   },
   {
+    id: 204,
     name: "Bone",
     type: "body",
     count: 86,
@@ -2305,6 +2560,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DH1"
   },
   {
+    id: 92,
     name: "Bark",
     type: "head",
     count: 89,
@@ -2314,6 +2570,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 205,
     name: "Abominable",
     type: "body",
     count: 90,
@@ -2323,6 +2580,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 273,
     name: "Chromium",
     type: "trait",
     count: 91,
@@ -2332,6 +2590,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CD2"
   },
   {
+    id: 274,
     name: "Rainbow Morpho",
     type: "trait",
     count: 91,
@@ -2341,6 +2600,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "IL2"
   },
   {
+    id: 275,
     name: "Pawn Shop",
     type: "trait",
     count: 92,
@@ -2350,6 +2610,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "GK1"
   },
   {
+    id: 206,
     name: "Sky",
     type: "body",
     count: 93,
@@ -2359,6 +2620,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 207,
     name: "Blush",
     type: "body",
     count: 94,
@@ -2368,6 +2630,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ2"
   },
   {
+    id: 93,
     name: "Polished",
     type: "head",
     count: 94,
@@ -2377,6 +2640,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 94,
     name: "Lightning",
     type: "head",
     count: 96,
@@ -2386,6 +2650,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 276,
     name: "Ring Blue",
     type: "trait",
     count: 97,
@@ -2395,7 +2660,8 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DA1"
   },
   {
-    name: "Ol' Faithful",
+    id: 293,
+    name: "Ol",
     type: "head",
     count: 98,
     percentage: "2.45",
@@ -2404,6 +2670,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 208,
     name: "Iron",
     type: "body",
     count: 99,
@@ -2413,6 +2680,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 209,
     name: "James",
     type: "body",
     count: 99,
@@ -2422,6 +2690,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 96,
     name: "Classic",
     type: "head",
     count: 101,
@@ -2431,6 +2700,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AE1"
   },
   {
+    id: 210,
     name: "Noob",
     type: "body",
     count: 104,
@@ -2440,6 +2710,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 211,
     name: "Matte",
     type: "body",
     count: 106,
@@ -2449,6 +2720,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EE1"
   },
   {
+    id: 277,
     name: "Concrete",
     type: "trait",
     count: 109,
@@ -2458,6 +2730,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "CD1"
   },
   {
+    id: 278,
     name: "Paparazzi",
     type: "trait",
     count: 111,
@@ -2467,6 +2740,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "OF1"
   },
   {
+    id: 97,
     name: "Shamrock",
     type: "head",
     count: 113,
@@ -2476,6 +2750,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 98,
     name: "Exposed",
     type: "head",
     count: 117,
@@ -2485,6 +2760,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB1"
   },
   {
+    id: 279,
     name: "Moth",
     type: "trait",
     count: 117,
@@ -2494,6 +2770,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "IL1"
   },
   {
+    id: 280,
     name: "Who",
     type: "trait",
     count: 117,
@@ -2503,6 +2780,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "EH1"
   },
   {
+    id: 281,
     name: "Contractor",
     type: "trait",
     count: 118,
@@ -2512,6 +2790,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "LG1"
   },
   {
+    id: 212,
     name: "Couch",
     type: "body",
     count: 118,
@@ -2521,6 +2800,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BI1"
   },
   {
+    id: 282,
     name: "Stock",
     type: "trait",
     count: 118,
@@ -2530,6 +2810,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "DE1"
   },
   {
+    id: 99,
     name: "Nuke",
     type: "head",
     count: 119,
@@ -2539,6 +2820,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 283,
     name: "101.1 FM",
     type: "trait",
     count: 121,
@@ -2548,6 +2830,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BC1"
   },
   {
+    id: 284,
     name: "Technicolor",
     type: "trait",
     count: 121,
@@ -2557,6 +2840,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "JI1"
   },
   {
+    id: 100,
     name: "Kevlar",
     type: "head",
     count: 125,
@@ -2566,6 +2850,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HB2"
   },
   {
+    id: 285,
     name: "Near Space",
     type: "trait",
     count: 125,
@@ -2575,6 +2860,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "FB1"
   },
   {
+    id: 101,
     name: "Log",
     type: "head",
     count: 126,
@@ -2584,6 +2870,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA2"
   },
   {
+    id: 213,
     name: "Maps",
     type: "body",
     count: 127,
@@ -2593,6 +2880,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BJ1"
   },
   {
+    id: 286,
     name: "Vampire",
     type: "trait",
     count: 129,
@@ -2602,6 +2890,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AJ1"
   },
   {
+    id: 214,
     name: "Grate",
     type: "body",
     count: 130,
@@ -2611,6 +2900,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "BF1"
   },
   {
+    id: 102,
     name: "Taser",
     type: "head",
     count: 132,
@@ -2620,6 +2910,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "AA1"
   },
   {
+    id: 287,
     name: "Pyrex",
     type: "trait",
     count: 138,
@@ -2629,6 +2920,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
     sourceKey: "HN1"
   },
   {
+    id: 288,
     name: "Nothing",
     type: "trait",
     count: 501,

@@ -9,77 +9,139 @@ import {
   getDownloadFilename,
   type NMKRMetadataParams
 } from '@/lib/nmkr/metadataGenerator';
+import { MEK_TYCOON_POLICY_ID } from '@/lib/nmkr/constants';
 
 export default function NMKRJSONGenerator() {
-  // Saved collections list (persisted in localStorage)
-  const [savedCollections, setSavedCollections] = useState<string[]>([]);
-  const [showAddCollectionModal, setShowAddCollectionModal] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
+  // Saved field names (persisted in localStorage)
+  const [savedFieldNames, setSavedFieldNames] = useState<string[]>([]);
 
-  // Load saved collections from localStorage on mount
+  // Saved field values per field name (persisted in localStorage)
+  const [savedFieldValues, setSavedFieldValues] = useState<Record<string, string[]>>({});
+
+  // Modal state for adding field names/values
+  const [showAddOptionModal, setShowAddOptionModal] = useState(false);
+  const [modalFieldName, setModalFieldName] = useState(''); // Which field we're adding an option for
+  const [modalNewOption, setModalNewOption] = useState('');
+  const [modalType, setModalType] = useState<'fieldName' | 'fieldValue'>('fieldName');
+
+  // Load saved field names and values from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('mek_tycoon_collections');
-    if (stored) {
+    // Load field names
+    const storedNames = localStorage.getItem('mek_tycoon_field_names');
+    if (storedNames) {
       try {
-        setSavedCollections(JSON.parse(stored));
+        setSavedFieldNames(JSON.parse(storedNames));
       } catch (e) {
-        console.error('Failed to load saved collections:', e);
+        console.error('Failed to load saved field names:', e);
       }
     } else {
-      // Default collections
-      const defaults = ['Knickknacks', 'Event Rewards', 'PFP Collection'];
-      setSavedCollections(defaults);
-      localStorage.setItem('mek_tycoon_collections', JSON.stringify(defaults));
+      // Default field names
+      const defaults = ['Collection', 'Game', 'Artist', 'Company', 'Phase', 'Difficulty', 'Type'];
+      setSavedFieldNames(defaults);
+      localStorage.setItem('mek_tycoon_field_names', JSON.stringify(defaults));
+    }
+
+    // Load field values
+    const storedValues = localStorage.getItem('mek_tycoon_field_values');
+    if (storedValues) {
+      try {
+        setSavedFieldValues(JSON.parse(storedValues));
+      } catch (e) {
+        console.error('Failed to load saved field values:', e);
+      }
+    } else {
+      // Default field values
+      const defaults: Record<string, string[]> = {
+        'Collection': ['Knickknacks', 'Event Rewards', 'PFP Collection'],
+        'Game': ['Mek Tycoon'],
+        'Artist': ['Wren Ellis'],
+        'Company': ['Over Exposed'],
+        'Phase': ['1', '2', '3'],
+        'Difficulty': ['Easy', 'Medium', 'Hard'],
+        'Type': ['Beta Token', 'Event Reward', 'Weapon', 'Consumable']
+      };
+      setSavedFieldValues(defaults);
+      localStorage.setItem('mek_tycoon_field_values', JSON.stringify(defaults));
     }
   }, []);
 
-  // Save collections to localStorage whenever they change
-  const saveCollections = (collections: string[]) => {
-    localStorage.setItem('mek_tycoon_collections', JSON.stringify(collections));
-    setSavedCollections(collections);
+  // Save field names to localStorage
+  const saveFieldNames = (names: string[]) => {
+    localStorage.setItem('mek_tycoon_field_names', JSON.stringify(names));
+    setSavedFieldNames(names);
   };
 
-  // Add new collection to saved list
-  const handleAddCollection = () => {
-    const trimmed = newCollectionName.trim();
+  // Save field values to localStorage
+  const saveFieldValues = (values: Record<string, string[]>) => {
+    localStorage.setItem('mek_tycoon_field_values', JSON.stringify(values));
+    setSavedFieldValues(values);
+  };
+
+  // Add new field name
+  const handleAddFieldName = () => {
+    const trimmed = modalNewOption.trim();
     if (!trimmed) {
-      setMessage({ type: 'error', text: 'Collection name cannot be empty' });
+      setMessage({ type: 'error', text: 'Field name cannot be empty' });
       return;
     }
-    if (savedCollections.includes(trimmed)) {
-      setMessage({ type: 'error', text: 'Collection name already exists' });
+    if (savedFieldNames.includes(trimmed)) {
+      setMessage({ type: 'error', text: 'Field name already exists' });
       return;
     }
 
-    const updated = [...savedCollections, trimmed];
-    saveCollections(updated);
+    const updated = [...savedFieldNames, trimmed];
+    saveFieldNames(updated);
 
-    // Update the Collection custom field value to the new collection
-    const collectionFieldIndex = customFields.findIndex(f => f.name === 'Collection');
-    if (collectionFieldIndex >= 0) {
-      handleUpdateField(collectionFieldIndex, trimmed);
-    }
-
-    setNewCollectionName('');
-    setShowAddCollectionModal(false);
-    setMessage({ type: 'success', text: `✅ Added "${trimmed}" to collections` });
+    setModalNewOption('');
+    setShowAddOptionModal(false);
+    setMessage({ type: 'success', text: `✅ Added field name "${trimmed}"` });
   };
 
-  // Remove collection from saved list
-  const handleRemoveCollection = (collectionToRemove: string) => {
-    const updated = savedCollections.filter(c => c !== collectionToRemove);
-    saveCollections(updated);
-    setMessage({ type: 'success', text: `Removed "${collectionToRemove}" from collections` });
+  // Add new field value for a specific field name
+  const handleAddFieldValue = () => {
+    const trimmed = modalNewOption.trim();
+    if (!trimmed) {
+      setMessage({ type: 'error', text: 'Value cannot be empty' });
+      return;
+    }
+
+    const currentValues = savedFieldValues[modalFieldName] || [];
+    if (currentValues.includes(trimmed)) {
+      setMessage({ type: 'error', text: 'Value already exists for this field' });
+      return;
+    }
+
+    const updated = {
+      ...savedFieldValues,
+      [modalFieldName]: [...currentValues, trimmed]
+    };
+    saveFieldValues(updated);
+
+    setModalNewOption('');
+    setShowAddOptionModal(false);
+    setMessage({ type: 'success', text: `✅ Added "${trimmed}" to ${modalFieldName} options` });
+  };
+
+  // Remove field value
+  const handleRemoveFieldValue = (fieldName: string, valueToRemove: string) => {
+    const currentValues = savedFieldValues[fieldName] || [];
+    const updated = {
+      ...savedFieldValues,
+      [fieldName]: currentValues.filter(v => v !== valueToRemove)
+    };
+    saveFieldValues(updated);
+    setMessage({ type: 'success', text: `Removed "${valueToRemove}" from ${fieldName}` });
   };
 
   // Form state
   const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
   const [tokenBaseName, setTokenBaseName] = useState('MekBetaBronzeToken');
   const [numberOfNFTs, setNumberOfNFTs] = useState(5);
-  const [phase, setPhase] = useState(1);
+  const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
   const [description, setDescription] = useState('Exclusive commemorative NFT.');
   const [imageIpfsHash, setImageIpfsHash] = useState('');
-  const [policyId, setPolicyId] = useState('532d6ff5a573411477245efec146aa4fa2f69acc474a005f6105748b');
+  const [policyId, setPolicyId] = useState(MEK_TYCOON_POLICY_ID);
+  const [website, setWebsite] = useState('https://mektycoon.com');
 
   // Custom metadata fields (dynamic)
   const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>([
@@ -143,7 +205,15 @@ export default function NMKRJSONGenerator() {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
 
-  const handleUpdateField = (index: number, newValue: string) => {
+  const handleUpdateFieldName = (index: number, newName: string) => {
+    const updated = [...customFields];
+    // When changing field name, reset value to first available option for that field (if exists)
+    const firstValue = savedFieldValues[newName]?.[0] || '';
+    updated[index] = { name: newName, value: firstValue };
+    setCustomFields(updated);
+  };
+
+  const handleUpdateFieldValue = (index: number, newValue: string) => {
     const value = !isNaN(Number(newValue)) && newValue.trim() !== ''
       ? Number(newValue)
       : newValue;
@@ -164,7 +234,8 @@ export default function NMKRJSONGenerator() {
       description,
       policyId,
       imageIpfsHash: imageIpfsHash || undefined,
-      customFields
+      customFields,
+      website
     };
 
     const validation = validateMetadataParams(params);
@@ -308,7 +379,8 @@ export default function NMKRJSONGenerator() {
       description,
       policyId,
       imageIpfsHash: imageIpfsHash || undefined,
-      customFields
+      customFields,
+      website
     };
 
     const validation = validateMetadataParams(params);
@@ -335,13 +407,13 @@ export default function NMKRJSONGenerator() {
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = getDownloadFilename(tokenBaseName, phase);
+      a.download = getDownloadFilename(tokenBaseName);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(downloadUrl);
 
-      setMessage({ type: 'success', text: `✅ Downloaded ${numberOfNFTs} metadata files as ${getDownloadFilename(tokenBaseName, phase)}` });
+      setMessage({ type: 'success', text: `✅ Downloaded ${numberOfNFTs} metadata files as ${getDownloadFilename(tokenBaseName)}` });
     } catch (error) {
       console.error('ZIP generation error:', error);
       setMessage({ type: 'error', text: 'Failed to generate ZIP file' });
@@ -434,18 +506,6 @@ export default function NMKRJSONGenerator() {
               Test with 5, production: 35, 100, 150, etc.
             </p>
           </div>
-
-          {/* Phase */}
-          <div>
-            <label className="block text-xs uppercase text-gray-400 mb-2">Phase Number</label>
-            <input
-              type="number"
-              min="1"
-              value={phase}
-              onChange={(e) => setPhase(parseInt(e.target.value) || 1)}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
-            />
-          </div>
         </div>
 
         {/* Right Column: Advanced Config */}
@@ -461,7 +521,7 @@ export default function NMKRJSONGenerator() {
                 value={policyId}
                 onChange={(e) => setPolicyId(e.target.value)}
                 className="flex-1 bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none font-mono text-xs"
-                placeholder="532d6ff5a573411477245efec146aa4fa2f69acc474a005f6105748b"
+                placeholder={MEK_TYCOON_POLICY_ID}
               />
               <button
                 onClick={() => {
@@ -513,6 +573,21 @@ export default function NMKRJSONGenerator() {
             </p>
           </div>
 
+          {/* Website */}
+          <div>
+            <label className="block text-xs uppercase text-gray-400 mb-2">Website URL</label>
+            <input
+              type="text"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
+              placeholder="https://mektycoon.com"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Website link displayed in NFT metadata
+            </p>
+          </div>
+
           {/* Custom Metadata Fields */}
           <div>
             <label className="block text-xs uppercase text-gray-400 mb-2">Custom Metadata Fields</label>
@@ -522,38 +597,57 @@ export default function NMKRJSONGenerator() {
                   key={index}
                   className="flex items-center gap-2 bg-black/50 border border-yellow-500/20 rounded px-3 py-2 hover:border-yellow-500/40 transition-colors"
                 >
-                  <span className="text-xs text-gray-400 font-bold uppercase min-w-[80px]">{field.name}:</span>
+                  {/* LEFT DROPDOWN: Field Name */}
+                  <div className="flex items-center gap-1 min-w-[140px]">
+                    <select
+                      value={field.name}
+                      onChange={(e) => handleUpdateFieldName(index, e.target.value)}
+                      className="flex-1 bg-black border border-yellow-500/30 rounded px-2 py-1 text-white text-xs font-bold uppercase focus:border-yellow-400 focus:outline-none"
+                    >
+                      {savedFieldNames.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        setModalType('fieldName');
+                        setModalFieldName('');
+                        setShowAddOptionModal(true);
+                      }}
+                      className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded transition-all"
+                      title="Add new field name"
+                    >
+                      +
+                    </button>
+                  </div>
 
-                  {/* Special dropdown for Collection field */}
-                  {field.name === 'Collection' ? (
-                    <div className="flex-1 flex items-center gap-2">
-                      <select
-                        value={field.value}
-                        onChange={(e) => handleUpdateField(index, e.target.value)}
-                        className="flex-1 bg-black border border-yellow-500/30 rounded px-2 py-1 text-white text-sm focus:border-yellow-400 focus:outline-none"
-                      >
-                        {savedCollections.map(collection => (
-                          <option key={collection} value={collection}>{collection}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => setShowAddCollectionModal(true)}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white font-bold text-sm rounded transition-all"
-                        title="Add new collection"
-                      >
-                        +
-                      </button>
-                    </div>
-                  ) : (
-                    /* Regular text input for other fields */
-                    <input
-                      type="text"
+                  <span className="text-gray-500">:</span>
+
+                  {/* RIGHT DROPDOWN: Field Value */}
+                  <div className="flex-1 flex items-center gap-1">
+                    <select
                       value={field.value}
-                      onChange={(e) => handleUpdateField(index, e.target.value)}
-                      className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none"
-                    />
-                  )}
+                      onChange={(e) => handleUpdateFieldValue(index, e.target.value)}
+                      className="flex-1 bg-black border border-yellow-500/30 rounded px-2 py-1 text-white text-sm focus:border-yellow-400 focus:outline-none"
+                    >
+                      {(savedFieldValues[field.name] || []).map(value => (
+                        <option key={value} value={value}>{value}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        setModalType('fieldValue');
+                        setModalFieldName(field.name);
+                        setShowAddOptionModal(true);
+                      }}
+                      className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded transition-all"
+                      title={`Add new ${field.name} option`}
+                    >
+                      +
+                    </button>
+                  </div>
 
+                  {/* Remove Field Button */}
                   <button
                     onClick={() => handleRemoveField(index)}
                     className="text-red-500 hover:text-red-400 font-bold text-lg"
@@ -671,65 +765,88 @@ export default function NMKRJSONGenerator() {
         </button>
       </div>
 
-      {/* Add Collection Modal */}
-      {showAddCollectionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowAddCollectionModal(false)}>
+      {/* Add Option Modal (for both field names and field values) */}
+      {showAddOptionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowAddOptionModal(false)}>
           <div className="bg-black border-2 border-green-500/50 rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h4 className="text-xl font-bold text-green-400 mb-4 uppercase">Add New Collection</h4>
+            <h4 className="text-xl font-bold text-green-400 mb-4 uppercase">
+              {modalType === 'fieldName' ? 'Add New Field Name' : `Add New ${modalFieldName} Option`}
+            </h4>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs uppercase text-gray-400 mb-2">Collection Name</label>
+                <label className="block text-xs uppercase text-gray-400 mb-2">
+                  {modalType === 'fieldName' ? 'Field Name' : 'Value'}
+                </label>
                 <input
                   type="text"
-                  value={newCollectionName}
-                  onChange={(e) => setNewCollectionName(e.target.value)}
-                  placeholder="e.g., Event Rewards, Special Editions"
+                  value={modalNewOption}
+                  onChange={(e) => setModalNewOption(e.target.value)}
+                  placeholder={modalType === 'fieldName' ? 'e.g., Rarity, Series, Edition' : 'e.g., Legendary, Phase 1'}
                   className="w-full bg-black/50 border border-green-500/30 rounded px-4 py-2 text-white focus:border-green-400 focus:outline-none"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddCollection();
+                    if (e.key === 'Enter') {
+                      modalType === 'fieldName' ? handleAddFieldName() : handleAddFieldValue();
+                    }
                   }}
                 />
-                <p className="text-xs text-gray-500 mt-1">This will be saved and available in the dropdown</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {modalType === 'fieldName'
+                    ? 'This field name will be saved for future use'
+                    : `This value will be saved for the ${modalFieldName} field`}
+                </p>
               </div>
 
-              {/* Show current saved collections */}
+              {/* Show current saved options */}
               <div>
-                <label className="block text-xs uppercase text-gray-400 mb-2">Current Collections</label>
+                <label className="block text-xs uppercase text-gray-400 mb-2">
+                  {modalType === 'fieldName' ? 'Current Field Names' : `Current ${modalFieldName} Values`}
+                </label>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {savedCollections.map(collection => (
-                    <div
-                      key={collection}
-                      className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
-                    >
-                      <span className="text-sm text-white">{collection}</span>
-                      <button
-                        onClick={() => handleRemoveCollection(collection)}
-                        className="text-red-500 hover:text-red-400 font-bold text-sm"
-                        title="Remove collection"
+                  {modalType === 'fieldName' ? (
+                    savedFieldNames.map(name => (
+                      <div
+                        key={name}
+                        className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
                       >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                        <span className="text-sm text-white">{name}</span>
+                      </div>
+                    ))
+                  ) : (
+                    (savedFieldValues[modalFieldName] || []).map(value => (
+                      <div
+                        key={value}
+                        className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
+                      >
+                        <span className="text-sm text-white">{value}</span>
+                        <button
+                          onClick={() => handleRemoveFieldValue(modalFieldName, value)}
+                          className="text-red-500 hover:text-red-400 font-bold text-sm"
+                          title="Remove value"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => {
-                    setShowAddCollectionModal(false);
-                    setNewCollectionName('');
+                    setShowAddOptionModal(false);
+                    setModalNewOption('');
                   }}
                   className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider rounded transition-all"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddCollection}
+                  onClick={modalType === 'fieldName' ? handleAddFieldName : handleAddFieldValue}
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wider rounded transition-all"
                 >
-                  Add Collection
+                  Add {modalType === 'fieldName' ? 'Field Name' : 'Value'}
                 </button>
               </div>
             </div>
@@ -746,24 +863,70 @@ export default function NMKRJSONGenerator() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-2">Field Name</label>
-                <input
-                  type="text"
-                  value={newFieldName}
-                  onChange={(e) => setNewFieldName(e.target.value)}
-                  placeholder="e.g., Rarity, Edition, Series"
-                  className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <select
+                    value={newFieldName}
+                    onChange={(e) => {
+                      setNewFieldName(e.target.value);
+                      // Auto-select first available value for this field
+                      const firstValue = savedFieldValues[e.target.value]?.[0] || '';
+                      setNewFieldValue(firstValue);
+                    }}
+                    className="flex-1 bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
+                  >
+                    <option value="">Select field name...</option>
+                    {savedFieldNames.map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      setShowAddFieldModal(false);
+                      setModalType('fieldName');
+                      setShowAddOptionModal(true);
+                    }}
+                    className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white font-bold text-sm rounded transition-all"
+                    title="Add new field name"
+                  >
+                    + New
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-2">Field Value</label>
-                <input
-                  type="text"
-                  value={newFieldValue}
-                  onChange={(e) => setNewFieldValue(e.target.value)}
-                  placeholder="e.g., Legendary, 1, Commemorative"
-                  className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <select
+                    value={newFieldValue}
+                    onChange={(e) => setNewFieldValue(e.target.value)}
+                    className="flex-1 bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
+                    disabled={!newFieldName}
+                  >
+                    <option value="">
+                      {newFieldName ? 'Select value...' : 'Select field name first'}
+                    </option>
+                    {newFieldName && (savedFieldValues[newFieldName] || []).map(value => (
+                      <option key={value} value={value}>{value}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      if (!newFieldName) {
+                        setMessage({ type: 'error', text: 'Select a field name first' });
+                        return;
+                      }
+                      setShowAddFieldModal(false);
+                      setModalType('fieldValue');
+                      setModalFieldName(newFieldName);
+                      setShowAddOptionModal(true);
+                    }}
+                    className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white font-bold text-sm rounded transition-all disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    title={newFieldName ? `Add new ${newFieldName} value` : 'Select field name first'}
+                    disabled={!newFieldName}
+                  >
+                    + New
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">Can be text or number</p>
               </div>
 
