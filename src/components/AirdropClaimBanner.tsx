@@ -98,99 +98,19 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     });
   };
 
-  const handleMint = async () => {
+  const handleClaim = () => {
     if (!walletAddress || !eligibility?.eligible) return;
 
-    try {
-      // Step 1: Reserve edition number
-      setMintStatus("reserving");
-      const reservation = await reserveEdition({
-        tokenType: TOKEN_TYPE,
-        walletAddress: walletAddress,
-        userId: eligibility.userId,
-      });
+    // Open NMKR payment window
+    window.open(NMKR_PAYMENT_URL, '_blank', 'width=600,height=800');
 
-      setReservationId(reservation.reservationId);
-      setEditionNumber(reservation.editionNumber);
-
-      // Step 2: Build metadata
-      setMintStatus("building_tx");
-
-      const assetName = `Phase1IWasThere${reservation.editionNumber.toString().padStart(4, '0')}`;
-      const policyId = process.env.NEXT_PUBLIC_COMMEMORATIVE_POLICY_ID || "";
-
-      if (!policyId) {
-        throw new Error("Commemorative policy ID not configured");
-      }
-
-      const metadata = buildCommemorativeMetadata(
-        policyId,
-        assetName,
-        {
-          editionNumber: reservation.editionNumber,
-          tokenType: TOKEN_TYPE,
-          displayName: reservation.displayName,
-          imageUrl: reservation.imageUrl,
-          walletAddress: walletAddress,
-        }
-      );
-
-      // Step 3: Build and submit transaction
-      setMintStatus("signing");
-
-      const treasuryAddress = process.env.NEXT_PUBLIC_CARDANO_NETWORK === "mainnet"
-        ? process.env.NEXT_PUBLIC_TREASURY_ADDRESS_MAINNET
-        : process.env.NEXT_PUBLIC_TREASURY_ADDRESS_TESTNET;
-
-      if (!treasuryAddress) {
-        throw new Error("Treasury address not configured");
-      }
-
-      const result = await mintNFT({
-        recipientAddress: walletAddress,
-        assetName,
-        metadata,
-        paymentLovelace: PRICE_ADA * 1_000_000,
-        treasuryAddress,
-      });
-
-      setMintStatus("submitting");
-      setTxHash(result.txHash);
-
-      // Step 4: Confirm mint in database
-      setMintStatus("confirming");
-      await confirmMint({
-        reservationId: reservation.reservationId,
-        txHash: result.txHash,
-        policyId,
-        assetName,
-        explorerUrl: result.explorerUrl,
-      });
-
-      setMintStatus("success");
-
-    } catch (error) {
-      console.error("[CommemorativeMint] Error:", error);
-      setMintStatus("error");
-
-      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
-      setErrorMessage(errorMsg);
-
-      if (reservationId) {
-        try {
-          await markFailed({
-            reservationId,
-            errorMessage: errorMsg,
-          });
-        } catch (markFailedError) {
-          console.error("[CommemorativeMint] Failed to mark as failed:", markFailedError);
-        }
-      }
-    }
+    // Show processing lightbox
+    setShowLightbox(true);
+    setClaimStatus("processing");
   };
 
   // Don't show banner if not connected
-  if (mintStatus === "idle" || mintStatus === "checking") return null;
+  if (claimStatus === "idle" || claimStatus === "checking") return null;
 
   // Debug override: force show claimed text if debug state is 'claimed'
   if (debugClaimState === 'claimed') {
@@ -204,7 +124,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   }
 
   // Show small green claimed text if user already claimed (unless debug unclaimed override)
-  if (debugClaimState !== 'unclaimed' && mintStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
+  if (debugClaimState !== 'unclaimed' && claimStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
     return (
       <div className="mb-4 text-center">
         <p className="text-green-400 text-sm">
@@ -215,103 +135,11 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   }
 
   // Don't show banner if ineligible for other reasons (unless debug unclaimed override)
-  if (mintStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
+  if (claimStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
 
-  // Success state
-  if (mintStatus === "success") {
-    return (
-      <div
-        className="mb-6 p-6 rounded-xl border-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.35) 0%, rgba(74, 222, 128, 0.4) 100%)',
-          borderColor: '#22c55e',
-          boxShadow: '0 0 40px rgba(34, 197, 94, 0.8), inset 0 0 30px rgba(74, 222, 128, 0.3)'
-        }}
-      >
-        <div className="text-center">
-          <div className="text-6xl mb-4">✓</div>
-          <h3
-            className="text-2xl font-bold mb-2"
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              color: '#dcfce7',
-              textShadow: '0 0 15px rgba(34, 197, 94, 0.8)',
-              letterSpacing: '0.05em'
-            }}
-          >
-            Minted Successfully!
-          </h3>
-          <p className="text-green-200 mb-2">
-            Phase 1: I Was There - Edition #{editionNumber}
-          </p>
-          {txHash && (
-            <a
-              href={`https://${process.env.NEXT_PUBLIC_CARDANO_NETWORK === 'mainnet' ? '' : 'preprod.'}cardanoscan.io/transaction/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all mt-4"
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
-            >
-              View on Explorer
-            </a>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (mintStatus === "error") {
-    return (
-      <div
-        className="mb-6 p-6 rounded-xl border-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.4) 100%)',
-          borderColor: '#ef4444',
-          boxShadow: '0 0 40px rgba(239, 68, 68, 0.8), inset 0 0 30px rgba(220, 38, 38, 0.3)'
-        }}
-      >
-        <div className="text-center">
-          <h3
-            className="text-2xl font-bold mb-2 text-red-200"
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              textShadow: '0 0 15px rgba(239, 68, 68, 0.8)',
-              letterSpacing: '0.05em'
-            }}
-          >
-            Minting Failed
-          </h3>
-          <p className="text-red-200 mb-4 text-sm">{errorMessage}</p>
-          <button
-            onClick={() => {
-              setMintStatus("eligible");
-              setErrorMessage("");
-              setReservationId(null);
-              setEditionNumber(null);
-              setTxHash("");
-            }}
-            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all"
-            style={{ fontFamily: "'Orbitron', sans-serif" }}
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Processing states
-  if (["reserving", "building_tx", "signing", "submitting", "confirming"].includes(mintStatus)) {
-    const statusMessages: Record<string, string> = {
-      reserving: "Reserving your edition...",
-      building_tx: `Building transaction for Edition #${editionNumber}...`,
-      signing: "Please sign the transaction in your wallet...",
-      submitting: "Submitting transaction to blockchain...",
-      confirming: "Confirming mint...",
-    };
-
-    return (
+  // Eligible - show claim banner with button
+  return (
+    <>
       <div
         className="mb-6 p-6 rounded-xl border-4"
         style={{
@@ -321,9 +149,6 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
         }}
       >
         <div className="text-center">
-          <div className="mb-4 inline-block">
-            <div className="animate-spin h-12 w-12 border-4 border-cyan-400 border-t-transparent rounded-full"></div>
-          </div>
           <h3
             className="text-xl font-bold mb-2"
             style={{
@@ -333,83 +158,64 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
               letterSpacing: '0.05em'
             }}
           >
-            Processing...
+            Phase 1: Commemorative NFT
           </h3>
-          <p className="text-cyan-200 text-sm">{statusMessages[mintStatus]}</p>
-          {editionNumber && (
-            <p className="text-cyan-300 text-xs mt-2">Edition #{editionNumber}</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Eligible - show mint button
-  return (
-    <div
-      className="mb-6 p-6 rounded-xl border-4"
-      style={{
-        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.35) 0%, rgba(59, 130, 246, 0.4) 100%)',
-        borderColor: '#06b6d4',
-        boxShadow: '0 0 40px rgba(6, 182, 212, 0.8), inset 0 0 30px rgba(59, 130, 246, 0.3)'
-      }}
-    >
-      <div className="text-center">
-        <h3
-          className="text-xl font-bold mb-2"
-          style={{
-            fontFamily: "'Orbitron', sans-serif",
-            color: '#e0f2fe',
-            textShadow: '0 0 15px rgba(6, 182, 212, 0.8)',
-            letterSpacing: '0.05em'
-          }}
-        >
-          Phase 1: Commemorative NFT
-        </h3>
-        <p
-          className="text-sm mb-2"
-          style={{
-            color: '#bae6fd',
-            lineHeight: '1.5',
-            fontSize: '0.875rem'
-          }}
-        >
-          Awarded to early supporters who connected their wallet and accumulated gold
-        </p>
-
-        {tokenInfo?.exists && (
           <p
-            className="text-sm mb-4"
+            className="text-sm mb-2"
             style={{
-              color: '#7dd3fc',
+              color: '#bae6fd',
+              lineHeight: '1.5',
+              fontSize: '0.875rem'
+            }}
+          >
+            Awarded to early supporters who connected their wallet and accumulated gold
+          </p>
+
+          {tokenInfo?.exists && (
+            <p
+              className="text-sm mb-4"
+              style={{
+                color: '#7dd3fc',
+                lineHeight: '1.6'
+              }}
+            >
+              Next Edition: <span className="font-bold text-yellow-400">#{tokenInfo.nextEdition}</span>
+            </p>
+          )}
+
+          <p
+            className="text-xs mb-4 text-cyan-300/80"
+            style={{
               lineHeight: '1.6'
             }}
           >
-            Next Edition: <span className="font-bold text-yellow-400">#{tokenInfo.nextEdition}</span>
+            Price: {PRICE_ADA} ₳ • Sequential Edition • jpg.store Compatible
           </p>
-        )}
 
-        <p
-          className="text-xs mb-4 text-cyan-300/80"
-          style={{
-            lineHeight: '1.6'
-          }}
-        >
-          Price: {PRICE_ADA} ₳ • Sequential Edition • jpg.store Compatible
-        </p>
-
-        <div className="w-full max-w-xs mx-auto">
-          <HolographicButton
-            text="Claim Your NFT"
-            onClick={handleMint}
-            isActive={true}
-            variant="yellow"
-            alwaysOn={true}
-            hideIcon={true}
-            className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
-          />
+          <div className="w-full max-w-xs mx-auto">
+            <HolographicButton
+              text="Claim Your NFT"
+              onClick={handleClaim}
+              isActive={true}
+              variant="yellow"
+              alwaysOn={true}
+              hideIcon={true}
+              className="w-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:!py-3 [&>div>div]:!px-6 [&_span]:!text-base [&_span]:!tracking-[0.15em]"
+            />
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* NMKR Payment Lightbox */}
+      {showLightbox && (
+        <NMKRPayLightbox
+          walletAddress={walletAddress}
+          onClose={() => {
+            setShowLightbox(false);
+            setClaimStatus("eligible");
+          }}
+        />
+      )}
+    </>
   );
 }
