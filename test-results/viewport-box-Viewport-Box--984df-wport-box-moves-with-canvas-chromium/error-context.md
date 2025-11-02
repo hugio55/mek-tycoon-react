@@ -1,0 +1,77 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - img "Navigation" [ref=e10]
+      - button "ESSENCE" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12] [cursor=pointer]: ESSENCE
+      - button "Market" [ref=e13] [cursor=pointer]:
+        - generic [ref=e14] [cursor=pointer]: MARKET
+      - button "MEKS" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16] [cursor=pointer]: MEKS
+      - button "Story" [ref=e17] [cursor=pointer]:
+        - generic [ref=e18] [cursor=pointer]: CORP
+      - button "GOLD" [ref=e19] [cursor=pointer]
+      - generic:
+        - generic: "0"
+        - generic: .
+        - generic: "000"
+    - generic [ref=e20]:
+      - link "← BACK TO SITE" [ref=e22] [cursor=pointer]:
+        - /url: /hub
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - heading "CiruTree Builder" [level=1] [ref=e26]
+            - generic [ref=e27]:
+              - button "CiruTree" [ref=e28] [cursor=pointer]
+              - button "Mek Template" [ref=e29] [cursor=pointer]
+              - button "Story Mode" [ref=e30] [cursor=pointer]
+          - generic [ref=e32]:
+            - text: "Mode:"
+            - generic [ref=e33]: Select
+            - generic [ref=e34]: → Box select | Hold Shift to add to selection
+          - generic [ref=e35]:
+            - 'button "Grid: ON" [ref=e36] [cursor=pointer]'
+            - 'button "Snap: OFF" [ref=e37] [cursor=pointer]'
+            - 'button "Highlight Issues: OFF" [ref=e38] [cursor=pointer]'
+            - generic [ref=e39]:
+              - 'button "Viewport: ON" [ref=e40] [cursor=pointer]'
+              - combobox "Viewport dimensions" [ref=e41]:
+                - option "800×600" [selected]
+                - option "1024×768"
+                - option "1920×1080"
+                - option "1280×720"
+                - option "1440×900"
+        - generic [ref=e42]:
+          - button "Save" [ref=e43] [cursor=pointer]
+          - button "Load" [ref=e44] [cursor=pointer]
+          - button "New Tree" [ref=e45] [cursor=pointer]
+          - button "Test Connections" [ref=e46] [cursor=pointer]
+          - generic [ref=e47]:
+            - button "Select" [ref=e48] [cursor=pointer]
+            - button "Add" [ref=e49] [cursor=pointer]
+            - button "Connect" [ref=e50] [cursor=pointer]
+            - button "Lasso" [ref=e51] [cursor=pointer]
+          - button "Add Label" [ref=e52] [cursor=pointer]
+          - button "Clear" [ref=e53] [cursor=pointer]
+          - button "Export" [ref=e54] [cursor=pointer]
+          - generic [ref=e55] [cursor=pointer]: Import
+      - generic [ref=e56]:
+        - generic [ref=e58]:
+          - img
+          - generic:
+            - generic [ref=e59]:
+              - generic: "0"
+            - generic: START
+        - generic [ref=e60]:
+          - button "+" [ref=e61] [cursor=pointer]
+          - generic [ref=e62]: 100%
+          - button "-" [ref=e63] [cursor=pointer]
+          - button "Reset" [ref=e64] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e70] [cursor=pointer]:
+    - img [ref=e71] [cursor=pointer]
+  - alert [ref=e74]
+```
