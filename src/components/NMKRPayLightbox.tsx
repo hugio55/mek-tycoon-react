@@ -7,18 +7,39 @@ import { api } from '@/convex/_generated/api';
 import NFTClaimSuccess from './NFTClaimSuccess';
 
 interface NMKRPayLightboxProps {
-  walletAddress: string;
+  walletAddress?: string;
   onClose: () => void;
+  debugState?: 'loading' | 'success'; // Direct state override for debug panel
 }
 
 type LightboxState = 'payment' | 'processing' | 'success' | 'error';
 
-export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
+export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose, debugState }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
-  const [state, setState] = useState<LightboxState>('payment');
+  const [state, setState] = useState<LightboxState>(
+    debugState === 'loading' ? 'processing' :
+    debugState === 'success' ? 'success' :
+    'payment'
+  );
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [claimedNFT, setClaimedNFT] = useState<any>(null);
+  const [claimedNFT, setClaimedNFT] = useState<any>(
+    debugState === 'success' ? {
+      _id: 'debug_mock_claim',
+      _creationTime: Date.now(),
+      walletAddress: walletAddress,
+      transactionHash: 'debug_mock_tx_123',
+      nftName: 'Commemorative NFT (Debug)',
+      nftAssetId: 'debug_asset_123',
+      claimedAt: Date.now(),
+      metadata: {
+        imageUrl: '/commemorative-nft.png',
+        collection: 'Mek Tycoon Commemorative',
+        artist: 'Mek Tycoon Team',
+        website: 'https://mektycoon.com',
+      },
+    } : null
+  );
   const [mockPaymentProcessing, setMockPaymentProcessing] = useState(false);
 
   // Get NMKR configuration
@@ -27,6 +48,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
   // Determine if we're in test mode (no real wallet connected)
   const isTestMode = walletAddress === 'test_wallet_address_for_nmkr_testing';
+
+  // Check if in debug mode (debug panel triggering specific states)
+  const isDebugMode = !!debugState;
 
   // Mutation for creating mock claim in test mode
   const recordClaim = useMutation(api.commemorativeNFTClaims.recordClaim);
@@ -52,9 +76,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, []);
 
-  // Open NMKR payment window on mount (ONLY if NOT in test mode)
+  // Open NMKR payment window on mount (ONLY if NOT in test mode or debug mode)
   useEffect(() => {
-    if (!mounted || state !== 'payment' || isTestMode) return;
+    if (!mounted || state !== 'payment' || isTestMode || isDebugMode) return;
 
     // Use preprod URL for testnet, mainnet URL for production
     const baseUrl = NMKR_NETWORK === 'mainnet'
@@ -94,17 +118,18 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, [mounted, state, NMKR_PROJECT_ID, isTestMode]);
 
-  // Check for claim completion
+  // Check for claim completion (skip in debug mode)
   useEffect(() => {
+    if (isDebugMode) return; // Don't auto-transition in debug mode
     if (state === 'processing' && recentClaim?.hasClaimed) {
       setClaimedNFT(recentClaim.claim);
       setState('success');
     }
-  }, [state, recentClaim]);
+  }, [state, recentClaim, isDebugMode]);
 
-  // Timeout after 5 minutes of processing
+  // Timeout after 5 minutes of processing (skip in debug mode)
   useEffect(() => {
-    if (state !== 'processing') return;
+    if (state !== 'processing' || isDebugMode) return;
 
     const timeout = setTimeout(() => {
       setErrorMessage('Transaction is taking longer than expected. Please check your wallet for the NFT.');
@@ -112,7 +137,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearTimeout(timeout);
-  }, [state]);
+  }, [state, isDebugMode]);
 
   // Close payment window if user closes lightbox
   useEffect(() => {
@@ -342,13 +367,22 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
       {/* Modal container with industrial styling */}
       <div
-        className={`relative w-full max-w-md bg-black/95 border-4 ${isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} overflow-hidden shadow-2xl p-8`}
+        className={`relative w-full max-w-md bg-black/95 border-4 ${isDebugMode ? 'border-purple-500/70' : isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} overflow-hidden shadow-2xl p-8`}
         style={{ clipPath: 'polygon(0% 0%, 98% 0%, 100% 2%, 100% 100%, 2% 100%, 0% 98%)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Industrial corner accents */}
         <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/70"></div>
         <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/70"></div>
+
+        {/* Debug Mode Banner */}
+        {isDebugMode && (
+          <div className="mb-4 p-2 bg-purple-500/20 border border-purple-500 rounded text-center">
+            <div className="text-purple-400 font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              🔍 DEBUG MODE 🔍
+            </div>
+          </div>
+        )}
 
         {renderContent()}
 

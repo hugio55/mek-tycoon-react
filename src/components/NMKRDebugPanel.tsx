@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import NMKRPayLightbox from './NMKRPayLightbox';
 
+type DebugState = 'loading' | 'success' | null;
+
 export default function NMKRDebugPanel() {
-  const [showLightbox, setShowLightbox] = useState(false);
-  const [testWalletAddress] = useState('test_wallet_address_for_nmkr_testing');
+  const [debugState, setDebugState] = useState<DebugState>(null);
 
   return (
     <>
@@ -23,35 +24,36 @@ export default function NMKRDebugPanel() {
             NMKR Lightbox States
           </h3>
 
-          {/* Button to trigger lightbox */}
+          {/* Simple debug buttons */}
           <div className="space-y-2">
             <button
-              onClick={() => setShowLightbox(true)}
+              onClick={() => setDebugState('loading')}
               className="w-full px-4 py-2 bg-cyan-500/20 border border-cyan-500 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors text-sm font-semibold"
             >
-              Show NMKR Flow
+              Show Loading State
+            </button>
+
+            <button
+              onClick={() => setDebugState('success')}
+              className="w-full px-4 py-2 bg-green-500/20 border border-green-500 text-green-400 rounded hover:bg-green-500/30 transition-colors text-sm font-semibold"
+            >
+              Show Success State
             </button>
 
             <div className="text-xs text-purple-300 space-y-1 mt-3 p-2 bg-purple-950/50 rounded border border-purple-500/30">
-              <p className="font-bold text-purple-200">Flow States:</p>
-              <p>1. Payment window</p>
-              <p>2. Processing/Loading</p>
-              <p>3. Success/Error</p>
-            </div>
-
-            <div className="text-xs text-purple-400 mt-2 p-2 bg-purple-950/50 rounded border border-purple-500/30">
-              <p className="font-bold text-purple-200 mb-1">Note:</p>
-              <p>The lightbox will automatically transition through states when the NMKR payment window closes.</p>
+              <p className="font-bold text-purple-200">States:</p>
+              <p>Loading = Processing payment</p>
+              <p>Success = NFT claimed</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* NMKR Payment Lightbox */}
-      {showLightbox && (
+      {/* NMKR Payment Lightbox - show specific debug state */}
+      {debugState && (
         <NMKRPayLightbox
-          walletAddress={testWalletAddress}
-          onClose={() => setShowLightbox(false)}
+          debugState={debugState}
+          onClose={() => setDebugState(null)}
         />
       )}
     </>
