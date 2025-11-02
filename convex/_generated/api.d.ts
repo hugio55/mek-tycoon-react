@@ -154,6 +154,7 @@ import type * as nftEvents from "../nftEvents.js";
 import type * as nftPurchases from "../nftPurchases.js";
 import type * as nftSyncSaga from "../nftSyncSaga.js";
 import type * as nftVariations from "../nftVariations.js";
+import type * as nmkr from "../nmkr.js";
 import type * as nmkrApi from "../nmkrApi.js";
 import type * as nmkrSync from "../nmkrSync.js";
 import type * as nodeFeeVersions from "../nodeFeeVersions.js";
@@ -356,6 +357,7 @@ declare const fullApi: ApiFromModules<{
   nftPurchases: typeof nftPurchases;
   nftSyncSaga: typeof nftSyncSaga;
   nftVariations: typeof nftVariations;
+  nmkr: typeof nmkr;
   nmkrApi: typeof nmkrApi;
   nmkrSync: typeof nmkrSync;
   nodeFeeVersions: typeof nodeFeeVersions;
