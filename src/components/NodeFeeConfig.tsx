@@ -22,7 +22,7 @@ interface EssenceRarityRange {
   startPercent: number;
   endPercent: number;
   minRank: number; // 1 = rarest
-  maxRank: number; // 288 = most common (actual variation count)
+  maxRank: number; // 291 = most common (actual variation count)
 }
 
 interface EssenceQuantityConfig {
@@ -184,7 +184,7 @@ export default function NodeFeeConfig() {
 
       // Ensure the config exists
       if (!rarityRanges[index]) {
-        rarityRanges[index] = { startPercent: 0, endPercent: 100, minRank: 1, maxRank: rankedVariations.length || 288 };
+        rarityRanges[index] = { startPercent: 0, endPercent: 100, minRank: 1, maxRank: rankedVariations.length || 291 };
       }
 
       rarityRanges[index] = { ...rarityRanges[index], [field]: numValue };
@@ -211,7 +211,7 @@ export default function NodeFeeConfig() {
           ...current,
           essence: {
             ...essence,
-            rarityRanges: [...essence.rarityRanges, { startPercent: 0, endPercent: 100, minRank: 1, maxRank: rankedVariations.length || 288 }]
+            rarityRanges: [...essence.rarityRanges, { startPercent: 0, endPercent: 100, minRank: 1, maxRank: rankedVariations.length || 291 }]
           }
         }
       };
@@ -562,7 +562,7 @@ export default function NodeFeeConfig() {
                         onFocus={(e) => e.target.value === '0' && (e.target.value = '')}
                         className="px-2 py-1 bg-black/50 border border-green-500/30 rounded text-green-400 w-full text-sm"
                         min="1"
-                        max="288"
+                        max="291"
                         placeholder="Min"
                       />
                       <span className="text-gray-500">to</span>
@@ -700,7 +700,7 @@ export default function NodeFeeConfig() {
               {/* Sample variations at different ranks */}
               <div className="mt-2 pt-2 border-t border-purple-500/20 space-y-1">
                 <div className="text-purple-300 font-semibold">Sample Ranks:</div>
-                {[50, 100, 150, 200, 250, Math.min(288, rankedVariations.length)].map(rank => {
+                {[50, 100, 150, 200, 250, Math.min(291, rankedVariations.length)].map(rank => {
                   const variation = rankedVariations[rank - 1];
                   return variation ? (
                     <div key={rank}>
@@ -719,7 +719,7 @@ export default function NodeFeeConfig() {
                   <div className="text-yellow-400">Very-rare (≤40 copies): Ranks #116-163</div>
                   <div className="text-green-400">Rare (≤100 copies): Ranks #164-264</div>
                   <div className="text-blue-400">Uncommon (≤200 copies): Ranks #265-287</div>
-                  <div className="text-gray-400">{`Common (>200 copies): Rank #288`}</div>
+                  <div className="text-gray-400">{`Common (>200 copies): Rank #291`}</div>
                 </div>
               </div>
             </div>

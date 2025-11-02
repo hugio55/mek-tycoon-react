@@ -76,7 +76,7 @@ export default function VariationSearchTable() {
         if (rankSortOrder === 'asc') {
           return a.rank - b.rank; // 1, 2, 3... (rarest first)
         } else {
-          return b.rank - a.rank; // 288, 287, 286... (most common first)
+          return b.rank - a.rank; // 291, 290, 289... (most common first)
         }
       });
     }

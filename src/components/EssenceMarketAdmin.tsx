@@ -153,7 +153,7 @@ export default function EssenceMarketAdmin() {
       variation.name.toLowerCase().includes(variationSearchTerm.toLowerCase()) ||
       variation.type.toLowerCase().includes(variationSearchTerm.toLowerCase())
     )
-    .sort((a, b) => b.rank - a.rank); // Reverse sort: 288 (least rare) to 1 (most rare)
+    .sort((a, b) => b.rank - a.rank); // Reverse sort: 291 (least rare) to 1 (most rare)
 
   // Filter players for Add to Player dropdown
   const filteredPlayers = (allPlayers || []).filter(player =>
@@ -577,7 +577,7 @@ export default function EssenceMarketAdmin() {
                   {filteredVariations.length > 0 ? (
                     <>
                       <div className="sticky top-0 bg-purple-900/40 px-3 py-2 text-xs text-gray-400 border-b border-gray-700">
-                        Showing {filteredVariations.length} of 288 variations (least rare → most rare)
+                        Showing {filteredVariations.length} of 291 variations (least rare → most rare)
                       </div>
                       {filteredVariations.map((variation) => (
                         <button

@@ -175,7 +175,7 @@ export default function MeksTriangleLightbox({ onClose, ownedMeks }: MeksTriangl
         {/* Info Text */}
         <div className="mt-4 text-center space-y-2">
           <p className="mek-label-uppercase text-yellow-400/60 text-sm">
-            288 TOTAL VARIATIONS • 102 HEADS • 112 BODIES • 74 TRAITS
+            291 TOTAL VARIATIONS • 102 HEADS • 112 BODIES • 77 TRAITS
           </p>
           <p className="text-yellow-400 font-bold text-lg">
             You own {ownedCount} of {sprites.length} displayed variations

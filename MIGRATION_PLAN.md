@@ -1,8 +1,8 @@
 # Variation ID Migration Plan
 
 ## Problem
-Database uses grouped IDs (1-102 heads, 103-214 bodies, 215-288 items).
-Should use rarity-based IDs (1-288 by rarity rank, types mixed).
+Database uses grouped IDs (1-102 heads, 103-214 bodies, 215-291 traits).
+Should use rarity-based IDs (1-291 by rarity rank, types mixed).
 
 ## Solution
 Single migration script fixes everything in 4 steps.
@@ -23,14 +23,14 @@ Single migration script fixes everything in 4 steps.
 ## What It Does
 
 1. Deletes all old variation records
-2. Inserts 288 new variations with correct rarity-based IDs
+2. Inserts 291 new variations with correct rarity-based IDs
 3. Updates all essence slots with correct variation IDs
 4. Updates all essence balances with correct variation IDs
 
 ## Expected Results
 - Lightning: ID 260 (was 94)
 - Iced: ID 94 (was 234)
-- All 288 variations correctly ordered by rarity
+- All 291 variations correctly ordered by rarity
 
 ## Files to Delete After Migration
 
