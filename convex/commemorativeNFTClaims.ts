@@ -138,7 +138,7 @@ export const checkRecentClaim = query({
 
     const recentClaim = await ctx.db
       .query("commemorativeNFTClaims")
-      .withIndex("by_claimed_date", (q) => q.gte("claimedAt", cutoffTime))
+      .withIndex("by_claimed_at", (q) => q.gte("claimedAt", cutoffTime))
       .order("desc")
       .first();
 
