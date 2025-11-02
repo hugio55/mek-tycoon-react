@@ -63,16 +63,11 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   // Mutation for creating mock claim in test mode
   const recordClaim = useMutation(api.commemorativeNFTClaims.recordClaim);
 
-  // Poll for recent purchases
-  // In test mode: check for ANY recent claim (within last 5 minutes)
-  // In production: check for specific wallet address
-  const recentClaim = useQuery(
-    isTestMode
-      ? api.commemorativeNFTClaims.checkRecentClaim
-      : api.commemorativeNFTClaims.checkClaimed,
-    state === 'processing'
-      ? (isTestMode ? { minutesAgo: 5 } : { walletAddress })
-      : "skip"
+  // Poll for payment status (webhook-based, accurate!)
+  // This replaces the old fake setTimeout logic with real webhook tracking
+  const paymentStatus = useQuery(
+    api.commemorativeNFTClaims.checkClaimed,
+    state === 'processing' ? { walletAddress } : "skip"
   );
 
   // Mount portal and lock body scroll
@@ -157,49 +152,38 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     };
   }, [mounted, state, NMKR_PROJECT_ID, isTestMode]);
 
-  // Progressive checklist status updates
+  // Update checklist based on actual webhook events (NO MORE FAKE TIMEOUTS!)
   useEffect(() => {
     if (state !== 'processing') return;
+    if (!paymentStatus) return;
 
-    // Step 1: Payment received (immediately when entering processing state)
-    if (checklistStatus.paymentReceived && !checklistStatus.minting) {
-      const mintingTimeout = setTimeout(() => {
-        setChecklistStatus(prev => ({
-          ...prev,
-          minting: true
-        }));
-      }, 2000); // Wait 2 seconds before showing minting
-
-      return () => clearTimeout(mintingTimeout);
+    // Check if payment was received via webhook
+    if (paymentStatus.hasClaimed && paymentStatus.claim) {
+      // Payment completed! Mark all steps as done
+      console.log('[💰CLAIM] Payment status received from webhook:', paymentStatus);
+      setChecklistStatus({
+        paymentReceived: true,
+        minting: true,
+        confirming: true
+      });
     }
+  }, [state, paymentStatus]);
 
-    // Step 2: Start confirming after minting shows (simulate blockchain confirmation)
-    if (checklistStatus.minting && !checklistStatus.confirming) {
-      const confirmingTimeout = setTimeout(() => {
-        setChecklistStatus(prev => ({
-          ...prev,
-          confirming: true
-        }));
-      }, 3000); // Wait 3 seconds before showing confirming
-
-      return () => clearTimeout(confirmingTimeout);
-    }
-  }, [state, checklistStatus]);
-
-  // Check for claim completion (skip in debug mode)
+  // Check for claim completion (webhook tells us when NFT is delivered!)
   useEffect(() => {
     if (isDebugMode) return; // Don't auto-transition in debug mode
-    if (state === 'processing' && recentClaim?.hasClaimed) {
+    if (state === 'processing' && paymentStatus?.hasClaimed) {
+      console.log('[💰CLAIM] NFT claimed successfully via webhook!');
       // Mark all steps complete before transitioning to success
       setChecklistStatus({
         paymentReceived: true,
         minting: true,
         confirming: true
       });
-      setClaimedNFT(recentClaim.claim);
+      setClaimedNFT(paymentStatus.claim);
       setState('success');
     }
-  }, [state, recentClaim, isDebugMode]);
+  }, [state, paymentStatus, isDebugMode]);
 
   // Timeout after 5 minutes of processing (skip in debug mode)
   useEffect(() => {
@@ -351,7 +335,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
           <div className="text-center">
             {/* Header Section */}
             <div className="mb-6">
-              <h2 className="text-3xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 Processing Your NFT
               </h2>
               <p className="text-gray-400 mb-6">
@@ -605,10 +589,10 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
         {renderContent()}
 
-        {/* Close button - always visible */}
+        {/* Close button - positioned to avoid overlap with title */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-yellow-400 transition-colors z-10 w-8 h-8 flex items-center justify-center border border-gray-600 hover:border-yellow-500/50 bg-black/50"
+          className="absolute top-2 right-2 text-gray-500 hover:text-yellow-400 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 hover:border-yellow-500/50 bg-black/80 backdrop-blur-sm rounded"
           title="Cancel and close"
         >
           <svg
