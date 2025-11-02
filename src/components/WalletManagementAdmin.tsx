@@ -39,6 +39,7 @@ export default function WalletManagementAdmin() {
 
   // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
   const [walletsLoaded, setWalletsLoaded] = useState(false);
+  const [showOnlyWrenCo, setShowOnlyWrenCo] = useState(false);
   const wallets = useQuery(
     api.adminVerificationReset.getAllWallets,
     walletsLoaded ? undefined : "skip"
@@ -428,8 +429,14 @@ Check console for full timeline.
   const walletDisplay = useMemo(() => {
     if (!wallets) return [];
 
-    // First, filter by search term
-    let filtered = wallets.filter(wallet =>
+    // First, filter by WrenCo (user's wallet) if that filter is active
+    let filtered = wallets;
+    if (showOnlyWrenCo && stakeAddress) {
+      filtered = wallets.filter(wallet => wallet.walletAddress === stakeAddress);
+    }
+
+    // Then, filter by search term
+    filtered = filtered.filter(wallet =>
       wallet.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wallet.walletType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (wallet.companyName && wallet.companyName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -522,7 +529,7 @@ Check console for full timeline.
     }
 
     return displayItems;
-  }, [wallets, searchTerm, sortColumn, sortDirection]);
+  }, [wallets, searchTerm, sortColumn, sortDirection, showOnlyWrenCo, stakeAddress]);
 
   // For backwards compatibility, keep filteredWallets for count
   const filteredWallets = useMemo(() => {
@@ -813,10 +820,23 @@ Check console for full timeline.
         <div className="flex items-center gap-3">
           {/* Load/Refresh Wallets Button */}
           <button
-            onClick={() => setWalletsLoaded(true)}
+            onClick={() => {
+              setWalletsLoaded(true);
+              setShowOnlyWrenCo(false);
+            }}
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 border border-yellow-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
           >
             {walletsLoaded ? '🔄 Refresh' : '📥 Load Wallets'}
+          </button>
+          {/* Load WrenCo Button */}
+          <button
+            onClick={() => {
+              setWalletsLoaded(true);
+              setShowOnlyWrenCo(true);
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 border border-blue-500 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
+          >
+            👤 Load WrenCo
           </button>
           <select
             onChange={async (e) => {
