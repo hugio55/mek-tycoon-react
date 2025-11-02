@@ -32,6 +32,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const [reservationId, setReservationId] = useState<Id<"commemorativeTokens"> | null>(null);
   const [editionNumber, setEditionNumber] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string>("");
+  const [debugClaimState, setDebugClaimState] = useState<'claimed' | 'unclaimed' | null>(null);
 
   const TOKEN_TYPE = "phase_1_beta";
   const PRICE_ADA = 10;
@@ -52,6 +53,28 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const reserveEdition = useMutation(api.commemorativeTokens.reserveEdition);
   const confirmMint = useMutation(api.commemorativeTokens.confirmMint);
   const markFailed = useMutation(api.commemorativeTokens.markMintFailed);
+
+  // Load debug state from localStorage and listen for changes
+  useEffect(() => {
+    const loadDebugState = () => {
+      const saved = localStorage.getItem('debug_claim_state');
+      if (saved === 'claimed' || saved === 'unclaimed') {
+        setDebugClaimState(saved);
+      } else {
+        setDebugClaimState(null);
+      }
+    };
+
+    loadDebugState();
+
+    // Listen for storage events from debug panel toggle
+    const handleStorageChange = () => {
+      loadDebugState();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Update status based on eligibility
   useEffect(() => {
@@ -181,8 +204,19 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   // Don't show banner if not connected
   if (mintStatus === "idle" || mintStatus === "checking") return null;
 
-  // Show small green claimed text if user already claimed
-  if (mintStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
+  // Debug override: force show claimed text if debug state is 'claimed'
+  if (debugClaimState === 'claimed') {
+    return (
+      <div className="mb-4 text-center">
+        <p className="text-green-400 text-sm">
+          ✓ You claimed your Phase 1 commemorative NFT on {formatClaimDate(Date.now())}
+        </p>
+      </div>
+    );
+  }
+
+  // Show small green claimed text if user already claimed (unless debug unclaimed override)
+  if (debugClaimState !== 'unclaimed' && mintStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
     return (
       <div className="mb-4 text-center">
         <p className="text-green-400 text-sm">
@@ -192,8 +226,8 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     );
   }
 
-  // Don't show banner if ineligible for other reasons
-  if (mintStatus === "ineligible") return null;
+  // Don't show banner if ineligible for other reasons (unless debug unclaimed override)
+  if (mintStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
 
   // Success state
   if (mintStatus === "success") {
