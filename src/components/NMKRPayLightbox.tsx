@@ -326,29 +326,6 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                 Waiting for blockchain confirmation...
               </p>
 
-              {/* Loading Bar Video with Fallback */}
-              <div className="mb-6 flex justify-center">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full max-w-md h-auto"
-                  onError={(e) => {
-                    // Hide video and show spinner fallback if video fails to load
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.nextElementSibling;
-                    if (fallback) (fallback as HTMLElement).style.display = 'block';
-                  }}
-                >
-                  <source src="/random-images/Loading Bar Full 10.120.webm" type="video/webm" />
-                  <source src="/random-images/Loading Bar h264.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-                {/* Fallback spinner - hidden by default, shows if video fails */}
-                <div className="animate-spin h-16 w-16 border-4 border-yellow-500 border-t-transparent rounded-full mx-auto" style={{ display: 'none' }}></div>
-              </div>
-
               {/* Checklist with Industrial Styling */}
               <div className="bg-black/60 border-2 border-yellow-500/30 rounded p-4 space-y-3 text-left max-w-md mx-auto backdrop-blur-sm">
                 {/* Step 1: Payment Received */}
