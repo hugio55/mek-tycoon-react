@@ -1,6 +1,6 @@
 // Complete variation hierarchy with Group → Style → Variation
 // Extracted from CNFT metadata and merged with rarity data
-// Total: 288 variations (only minted variations)
+// Total: 291 variations (only minted variations)
 
 export interface VariationHierarchy {
   name: string;

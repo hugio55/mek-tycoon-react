@@ -43,7 +43,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
   const addGlobalCapBuff = useMutation(api.essence.addGlobalCapBuff);
   const removeCapBuff = useMutation(api.essence.removeCapBuff);
 
-  // Search through all 288 variations
+  // Search through all 291 variations
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
 
@@ -65,7 +65,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
     return COMPLETE_VARIATION_RARITY.find(v => v.rank === selectedVariation);
   }, [selectedVariation]);
 
-  // Handler to apply GLOBAL cap buff (all 288 variations)
+  // Handler to apply GLOBAL cap buff (all 291 variations)
   const handleApplyGlobalBuff = async () => {
     const bonus = parseFloat(capBonusInput);
     if (isNaN(bonus) || bonus <= 0) {
@@ -74,12 +74,12 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
       return;
     }
 
-    if (!confirm(`Apply +${bonus} cap buff to ALL 288 variations? This will affect every essence type.`)) {
+    if (!confirm(`Apply +${bonus} cap buff to ALL 291 variations? This will affect every essence type.`)) {
       return;
     }
 
     try {
-      setStatusMessage({ type: 'success', message: 'Applying global buff to 288 variations...' });
+      setStatusMessage({ type: 'success', message: 'Applying global buff to 291 variations...' });
       const result = await addGlobalCapBuff({
         walletAddress,
         capBonus: bonus,
@@ -218,7 +218,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
                   Global Max Cap Bonus
                 </h2>
                 <p className="text-gray-400 mb-4">
-                  Increase the maximum capacity for ALL essence types (all 288 variations). This is a rare, late-game buff.
+                  Increase the maximum capacity for ALL essence types (all 291 variations). This is a rare, late-game buff.
                 </p>
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
@@ -257,7 +257,7 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
                 {/* Search Bar */}
                 <div className="mb-4">
                   <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2">
-                    Search Variation (288 total)
+                    Search Variation (291 total)
                   </label>
                   <input
                     type="text"
