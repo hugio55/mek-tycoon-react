@@ -88,7 +88,7 @@ export default function WalletManagementAdmin() {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ bottom: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
 
   // Drag-to-scroll state
@@ -1048,7 +1048,7 @@ Check console for full timeline.
                             onMouseEnter={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
                               const position = {
-                                top: rect.bottom,
+                                bottom: window.innerHeight - rect.top, // Position above button
                                 left: rect.right - 220 // 220px is dropdown width
                               };
                               console.log('[DROPDOWN] Mounted:', mounted, 'Position:', position, 'Wallet:', wallet.walletAddress.slice(0, 12));
@@ -1075,7 +1075,7 @@ Check console for full timeline.
                               data-dropdown="true"
                               className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
                               style={{
-                                top: `${dropdownPosition.top}px`,
+                                bottom: `${dropdownPosition.bottom}px`,
                                 left: `${dropdownPosition.left}px`,
                               }}
                               onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
