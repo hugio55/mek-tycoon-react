@@ -29,7 +29,6 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
   const TOKEN_TYPE = "phase_1_beta";
   const PRICE_ADA = 10;
-  const NMKR_PAYMENT_URL = "https://pay.nmkr.io/?p=c68dc0e9b2ca4e0eb9c4a57ef85a794d&c=1";
 
   // Query eligibility
   const eligibility = useQuery(
@@ -101,10 +100,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const handleClaim = () => {
     if (!walletAddress || !eligibility?.eligible) return;
 
-    // Open NMKR payment window
-    window.open(NMKR_PAYMENT_URL, '_blank', 'width=600,height=800');
-
-    // Show processing lightbox
+    // Show processing lightbox (NMKRPayLightbox will handle opening payment window)
     setShowLightbox(true);
     setClaimStatus("processing");
   };
