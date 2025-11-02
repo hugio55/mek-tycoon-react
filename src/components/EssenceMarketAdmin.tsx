@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
+import EssenceCapReductionWarning, { EssenceCapChange } from './EssenceCapReductionWarning';
 
 type View = 'stats' | 'aggregated' | 'detailed' | 'createListing';
 type CreateMode = 'player' | 'market';
@@ -28,6 +29,11 @@ export default function EssenceMarketAdmin() {
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
   const [playerSearchTerm, setPlayerSearchTerm] = useState('');
   const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
+
+  // Warning modal state
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningChanges, setWarningChanges] = useState<EssenceCapChange[]>([]);
+  const [warningAction, setWarningAction] = useState('');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const playerDropdownRef = useRef<HTMLDivElement>(null);
@@ -141,6 +147,62 @@ export default function EssenceMarketAdmin() {
     }
   };
 
+  // Test scenarios for warning modal
+  const testEssenceLossScenario = () => {
+    setWarningChanges([
+      {
+        variationName: "Bumblebee",
+        variationType: "head",
+        currentCap: 12,
+        newCap: 10,
+        currentAmount: 11.5,
+        lossAmount: 1.5,
+      },
+      {
+        variationName: "Rust",
+        variationType: "body",
+        currentCap: 15,
+        newCap: 10,
+        currentAmount: 14.2,
+        lossAmount: 4.2,
+      },
+    ]);
+    setWarningAction("remove buff from Bumblebee and Rust");
+    setShowWarning(true);
+  };
+
+  const testSafeCapDropScenario = () => {
+    setWarningChanges([
+      {
+        variationName: "Camera",
+        variationType: "item",
+        currentCap: 15,
+        newCap: 10,
+        currentAmount: 8.3,
+        lossAmount: 0,
+      },
+      {
+        variationName: "Steampunk",
+        variationType: "head",
+        currentCap: 12,
+        newCap: 10,
+        currentAmount: 6.7,
+        lossAmount: 0,
+      },
+    ]);
+    setWarningAction("remove buff from Camera and Steampunk");
+    setShowWarning(true);
+  };
+
+  const handleWarningConfirm = () => {
+    setShowWarning(false);
+    alert('Warning confirmed! (This is just a test - no actual changes made)');
+  };
+
+  const handleWarningCancel = () => {
+    setShowWarning(false);
+  };
+
   // Filter summary by search
   const filteredSummary = essenceSummary?.filter(item =>
     item.variationName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -235,6 +297,34 @@ export default function EssenceMarketAdmin() {
                 {marketStats?.totalValue?.toLocaleString() || 0}G
               </div>
               <div className="text-xs text-gray-400 mt-1">Total Market Value</div>
+            </div>
+          </div>
+
+          {/* Testing Tools */}
+          <div className="bg-purple-900/20 border-2 border-purple-500/50 rounded-lg p-4 mt-6">
+            <div>
+              <h4 className="text-sm font-bold text-purple-400 mb-3">🧪 Warning System Testing</h4>
+              <p className="text-xs text-gray-400 mb-4">Test the essence cap reduction warning lightbox with different scenarios</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={testEssenceLossScenario}
+                  className="flex-1 bg-red-600/30 hover:bg-red-600/50 border-2 border-red-500 text-red-300 px-4 py-3 rounded font-bold text-sm transition-colors"
+                >
+                  ⚠️ Test Essence Loss
+                  <div className="text-xs text-red-400/70 mt-1 font-normal">
+                    Cap drops below current amount
+                  </div>
+                </button>
+                <button
+                  onClick={testSafeCapDropScenario}
+                  className="flex-1 bg-yellow-600/30 hover:bg-yellow-600/50 border-2 border-yellow-500 text-yellow-300 px-4 py-3 rounded font-bold text-sm transition-colors"
+                >
+                  ✓ Test Safe Cap Drop
+                  <div className="text-xs text-yellow-400/70 mt-1 font-normal">
+                    Cap drops but no essence lost
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -789,6 +879,15 @@ export default function EssenceMarketAdmin() {
           )}
         </div>
       )}
+
+      {/* Warning Modal */}
+      <EssenceCapReductionWarning
+        isOpen={showWarning}
+        changes={warningChanges}
+        actionDescription={warningAction}
+        onConfirm={handleWarningConfirm}
+        onCancel={handleWarningCancel}
+      />
     </div>
   );
 }
