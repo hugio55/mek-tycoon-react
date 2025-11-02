@@ -361,7 +361,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                     {checklistStatus.paymentReceived ? (
                       <span className="text-green-400 text-sm font-bold">✓</span>
                     ) : (
-                      <span className="text-gray-600 text-sm">⏳</span>
+                      <span className="text-gray-600 text-sm inline-block animate-spin" style={{ animationDuration: '2s' }}>⏳</span>
                     )}
                   </div>
                   <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
@@ -385,7 +385,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                     ) : checklistStatus.minting ? (
                       <div className="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></div>
                     ) : (
-                      <span className="text-gray-600 text-sm">⏳</span>
+                      <span className="text-gray-600 text-sm inline-block animate-spin" style={{ animationDuration: '2s' }}>⏳</span>
                     )}
                   </div>
                   <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
@@ -409,7 +409,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                     {checklistStatus.confirming ? (
                       <div className="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></div>
                     ) : (
-                      <span className="text-gray-600 text-sm">⏳</span>
+                      <span className="text-gray-600 text-sm inline-block animate-spin" style={{ animationDuration: '2s' }}>⏳</span>
                     )}
                   </div>
                   <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
@@ -488,10 +488,9 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
 
-      {/* Modal container with industrial styling */}
+      {/* Modal container with industrial styling - matching EssenceDistributionLightbox */}
       <div
-        className={`relative w-full max-w-md bg-black/95 border-4 ${isDebugMode ? 'border-purple-500/70' : isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} overflow-hidden shadow-2xl p-8`}
-        style={{ clipPath: 'polygon(0% 0%, 98% 0%, 100% 2%, 100% 100%, 2% 100%, 0% 98%)' }}
+        className={`relative w-full max-w-md bg-black/20 backdrop-blur-md border-2 ${isDebugMode ? 'border-purple-500/70' : isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} rounded-lg overflow-hidden shadow-2xl p-8`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Industrial corner accents */}
