@@ -122,6 +122,36 @@ export const checkClaimEligibility = query({
 });
 
 /**
+ * Clear the active snapshot (deactivate eligibility)
+ */
+export const clearActiveSnapshot = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const config = await ctx.db
+      .query("nftEligibilityConfig")
+      .first();
+
+    if (!config) {
+      return {
+        success: false,
+        message: "No config found",
+      };
+    }
+
+    // Clear the active snapshot
+    await ctx.db.patch(config._id, {
+      activeSnapshotId: undefined,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: "Active snapshot cleared. No wallets are now eligible.",
+    };
+  },
+});
+
+/**
  * Get current config info (for admin UI)
  */
 export const getConfig = query({
