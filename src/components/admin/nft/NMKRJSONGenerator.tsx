@@ -24,6 +24,72 @@ export default function NMKRJSONGenerator() {
   const [modalNewOption, setModalNewOption] = useState('');
   const [modalType, setModalType] = useState<'fieldName' | 'fieldValue'>('fieldName');
 
+  // NMKR form fields (moved here before useEffect hooks that reference them)
+  const [displayNameBase, setDisplayNameBase] = useState(() => {
+    const saved = localStorage.getItem('nmkr_displayNameBase');
+    return saved || 'Bronze Token';
+  });
+  const [tokenBaseName, setTokenBaseName] = useState(() => {
+    const saved = localStorage.getItem('nmkr_tokenBaseName');
+    return saved || 'MekBetaBronzeToken';
+  });
+  const [numberOfNFTs, setNumberOfNFTs] = useState(() => {
+    const saved = localStorage.getItem('nmkr_numberOfNFTs');
+    return saved ? parseInt(saved) : 5;
+  });
+  const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
+  const [description, setDescription] = useState(() => {
+    const saved = localStorage.getItem('nmkr_description');
+    return saved || 'Exclusive commemorative NFT.';
+  });
+  const [imageIpfsHash, setImageIpfsHash] = useState(() => {
+    const saved = localStorage.getItem('nmkr_imageIpfsHash');
+    return saved || '';
+  });
+  const [policyId, setPolicyId] = useState(() => {
+    const saved = localStorage.getItem('nmkr_policyId');
+    return saved || MEK_TYCOON_POLICY_ID;
+  });
+  const [website, setWebsite] = useState(() => {
+    const saved = localStorage.getItem('nmkr_website');
+    return saved || 'https://mektycoon.com';
+  });
+
+  // Custom metadata fields (dynamic, with localStorage restore)
+  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>(() => {
+    const saved = localStorage.getItem('nmkr_customFields');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to load custom fields:', e);
+      }
+    }
+    return [
+      { name: 'Collection', value: 'Knickknacks' },
+      { name: 'Game', value: 'Mek Tycoon' },
+      { name: 'Artist', value: 'Wren Ellis' },
+      { name: 'Company', value: 'Over Exposed' },
+      { name: 'Phase', value: 1 }
+    ];
+  });
+
+  // Add field modal state
+  const [showAddFieldModal, setShowAddFieldModal] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldValue, setNewFieldValue] = useState('');
+
+  // UI state
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewMetadata, setPreviewMetadata] = useState<any>(null);
+  const [previewTokenNumber, setPreviewTokenNumber] = useState(1);
+  const [allMetadataFiles, setAllMetadataFiles] = useState<any[]>([]);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // Image duplication state
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Load saved field names and values from localStorage on mount
   useEffect(() => {
     // Load field names
@@ -165,72 +231,6 @@ export default function NMKRJSONGenerator() {
     saveFieldValues(updated);
     setMessage({ type: 'success', text: `Removed "${valueToRemove}" from ${fieldName}` });
   };
-
-  // Form state (with localStorage restore)
-  const [displayNameBase, setDisplayNameBase] = useState(() => {
-    const saved = localStorage.getItem('nmkr_displayNameBase');
-    return saved || 'Bronze Token';
-  });
-  const [tokenBaseName, setTokenBaseName] = useState(() => {
-    const saved = localStorage.getItem('nmkr_tokenBaseName');
-    return saved || 'MekBetaBronzeToken';
-  });
-  const [numberOfNFTs, setNumberOfNFTs] = useState(() => {
-    const saved = localStorage.getItem('nmkr_numberOfNFTs');
-    return saved ? parseInt(saved) : 5;
-  });
-  const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
-  const [description, setDescription] = useState(() => {
-    const saved = localStorage.getItem('nmkr_description');
-    return saved || 'Exclusive commemorative NFT.';
-  });
-  const [imageIpfsHash, setImageIpfsHash] = useState(() => {
-    const saved = localStorage.getItem('nmkr_imageIpfsHash');
-    return saved || '';
-  });
-  const [policyId, setPolicyId] = useState(() => {
-    const saved = localStorage.getItem('nmkr_policyId');
-    return saved || MEK_TYCOON_POLICY_ID;
-  });
-  const [website, setWebsite] = useState(() => {
-    const saved = localStorage.getItem('nmkr_website');
-    return saved || 'https://mektycoon.com';
-  });
-
-  // Custom metadata fields (dynamic, with localStorage restore)
-  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>(() => {
-    const saved = localStorage.getItem('nmkr_customFields');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to load custom fields:', e);
-      }
-    }
-    return [
-      { name: 'Collection', value: 'Knickknacks' },
-      { name: 'Game', value: 'Mek Tycoon' },
-      { name: 'Artist', value: 'Wren Ellis' },
-      { name: 'Company', value: 'Over Exposed' },
-      { name: 'Phase', value: 1 }
-    ];
-  });
-
-  // Add field modal state
-  const [showAddFieldModal, setShowAddFieldModal] = useState(false);
-  const [newFieldName, setNewFieldName] = useState('');
-  const [newFieldValue, setNewFieldValue] = useState('');
-
-  // UI state
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewMetadata, setPreviewMetadata] = useState<any>(null);
-  const [previewTokenNumber, setPreviewTokenNumber] = useState(1);
-  const [allMetadataFiles, setAllMetadataFiles] = useState<any[]>([]);
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-
-  // Image duplication state
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   // Reserved CIP-25 field names that cannot be used as custom fields
   const RESERVED_FIELDS = ['name', 'description', 'image', 'mediaType', 'website'];
