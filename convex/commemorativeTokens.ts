@@ -15,7 +15,7 @@ import { mutation, query } from "./_generated/server";
  *
  * Eligibility requirements:
  * - User exists in database (beta participation)
- * - Has not already minted this token type
+ * - Has not already claimed/minted this token type
  * - Has gold mining activity OR Mek ownership
  */
 export const checkBetaTesterEligibility = query({
@@ -37,7 +37,23 @@ export const checkBetaTesterEligibility = query({
       };
     }
 
-    // 2. Check if already minted this token type
+    // 2. CRITICAL: Check if already claimed (prevents double-claiming even after NFT transfer)
+    // First check the permanent claims table
+    const existingClaim = await ctx.db
+      .query("commemorativeNFTClaims")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (existingClaim) {
+      return {
+        eligible: false,
+        reason: "Already claimed this commemorative NFT",
+        hasClaimed: true,
+        claimedAt: existingClaim.claimedAt,
+      };
+    }
+
+    // 3. Also check commemorativeTokens table (reservation/mint tracking)
     const existingMint = await ctx.db
       .query("commemorativeTokens")
       .withIndex("by_wallet_type", (q) =>
@@ -45,7 +61,7 @@ export const checkBetaTesterEligibility = query({
       )
       .first();
 
-    if (existingMint) {
+    if (existingMint && (existingMint.status === "confirmed" || existingMint.status === "reserved")) {
       return {
         eligible: false,
         reason: "Already minted this commemorative token",
@@ -54,7 +70,7 @@ export const checkBetaTesterEligibility = query({
       };
     }
 
-    // 3. Check beta participation (any activity qualifies)
+    // 4. Check beta participation (any activity qualifies)
     const goldMining = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
