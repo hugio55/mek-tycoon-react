@@ -14,6 +14,110 @@ interface EssenceBalancesViewerProps {
 type SortColumn = 'name' | 'type' | 'generating' | 'amount' | 'count' | 'growthRate' | 'cap' | 'lastUpdated';
 type SortDirection = 'asc' | 'desc';
 
+// Buff breakdown row component
+function BuffBreakdownRow({
+  variationId,
+  walletAddress
+}: {
+  variationId: number;
+  walletAddress: string;
+}) {
+  const breakdown = useQuery(api.essence.getPlayerBuffBreakdown, {
+    walletAddress,
+    variationId,
+  });
+
+  if (!breakdown || breakdown.length === 0) {
+    return (
+      <tr>
+        <td colSpan={8} className="px-4 py-4 bg-gray-800/70">
+          <div className="text-sm text-gray-400 italic">No active buffs for this variation</div>
+        </td>
+      </tr>
+    );
+  }
+
+  const variation = breakdown[0];
+  const rateBoostPercent = ((variation.totalRateMultiplier - 1.0) * 100).toFixed(0);
+  const hasRateBoost = variation.totalRateMultiplier > 1.0;
+  const hasCapBonus = variation.totalCapBonus > 0;
+
+  return (
+    <tr>
+      <td colSpan={8} className="px-4 py-4 bg-gray-800/70">
+        <div className="space-y-3">
+          {/* Buff Summary */}
+          <div className="flex items-center gap-4 pb-2 border-b border-gray-600">
+            <span className="text-xs text-gray-400 uppercase font-semibold">Buff Sources:</span>
+            {hasRateBoost && (
+              <span className="text-yellow-400 font-bold">
+                +{rateBoostPercent}% Rate Bonus
+              </span>
+            )}
+            {hasCapBonus && (
+              <span className="text-blue-400 font-bold">
+                +{variation.totalCapBonus} Cap Bonus
+              </span>
+            )}
+            {!hasRateBoost && !hasCapBonus && (
+              <span className="text-gray-500">No active bonuses</span>
+            )}
+          </div>
+
+          {/* Buff Sources Table */}
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Source Type</th>
+                <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Source Name</th>
+                <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Description</th>
+                <th className="text-right py-2 px-2 text-xs text-gray-400 uppercase">Rate Bonus</th>
+                <th className="text-right py-2 px-2 text-xs text-gray-400 uppercase">Cap Bonus</th>
+              </tr>
+            </thead>
+            <tbody>
+              {variation.sources.map((source: any) => {
+                const sourceRateBoost = ((source.rateMultiplier - 1.0) * 100).toFixed(0);
+                const hasSourceRateBoost = source.rateMultiplier > 1.0;
+
+                return (
+                  <tr key={source.sourceId} className="border-b border-gray-700/50">
+                    <td className="py-2 px-2">
+                      <span className="inline-block px-2 py-1 rounded bg-gray-700/50 text-xs uppercase">
+                        {source.sourceType}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-gray-200 font-semibold">
+                      {source.sourceName}
+                    </td>
+                    <td className="py-2 px-2 text-gray-400 text-xs">
+                      {source.sourceDescription || '—'}
+                    </td>
+                    <td className="text-right py-2 px-2">
+                      {hasSourceRateBoost ? (
+                        <span className="text-yellow-400 font-bold">+{sourceRateBoost}%</span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="text-right py-2 px-2">
+                      {source.capBonus > 0 ? (
+                        <span className="text-blue-400 font-bold">+{source.capBonus}</span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // Animated essence amount component - updates in real-time based on growth rate
 function AnimatedEssenceAmount({
   baseAmount,
@@ -125,9 +229,15 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('amount');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [expandedVariationId, setExpandedVariationId] = useState<number | null>(null);
 
   // Get wallet address from demo wallet context
   const { walletAddress } = useDemoWallet();
+
+  // Toggle buff breakdown visibility
+  const toggleBuffBreakdown = (variationId: number) => {
+    setExpandedVariationId(prev => prev === variationId ? null : variationId);
+  };
 
   // Get essence data from shared context (single source of truth)
   const { playerEssenceState, isLoading } = useEssence();
@@ -350,14 +460,20 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                     'text-purple-400';
 
                   const lastUpdated = new Date(balance.lastUpdated).toLocaleString();
+                  const isExpanded = expandedVariationId === balance.variationId;
 
                   return (
-                    <tr key={balance._id} className="hover:bg-gray-800/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-semibold text-gray-300">
-                          {balance.variationName}
-                        </span>
-                      </td>
+                    <>
+                      <tr key={balance._id} className="hover:bg-gray-800/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => toggleBuffBreakdown(balance.variationId)}
+                            className="text-sm font-semibold text-gray-300 hover:text-yellow-400 transition-colors cursor-pointer text-left flex items-center gap-2"
+                          >
+                            <span className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
+                            {balance.variationName}
+                          </button>
+                        </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold uppercase ${
                           balance.variationType === 'head' ? 'bg-blue-900/30 border border-blue-700' :
@@ -421,6 +537,15 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                         </span>
                       </td>
                     </tr>
+
+                    {/* Expandable Buff Breakdown Row */}
+                    {isExpanded && (
+                      <BuffBreakdownRow
+                        variationId={balance.variationId}
+                        walletAddress={walletAddress}
+                      />
+                    )}
+                  </>
                   );
                 })}
               </tbody>

@@ -542,15 +542,36 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                 {checklistStatus.paymentReceived
                   ? '⚠ This may take 1-2 minutes. Please don\'t close this window.'
                   : pollingStartTime > 0
-                    ? `ℹ System is actively checking for payment (${elapsedSeconds}s elapsed)`
+                    ? 'ℹ System is actively checking for payment'
                     : 'ℹ Payment window closed. Checking if payment was completed...'}
               </p>
-              {!checklistStatus.paymentReceived && pollingStartTime > 0 && elapsedSeconds > 30 && (
-                <p className="text-gray-400 text-xs mt-2">
+            </div>
+
+            {/* Payment timing info - Always show when polling */}
+            {!checklistStatus.paymentReceived && pollingStartTime > 0 && (
+              <div className="mt-3 text-center">
+                <p className="text-gray-400 text-xs">
                   Payments typically appear within 30-60 seconds after completion.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Cancel Button - Allow manual cancellation */}
+            {!checklistStatus.paymentReceived && pollingStartTime > 0 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => {
+                    console.log('[💰CLAIM] User manually cancelled payment polling');
+                    setErrorMessage('Payment check cancelled. You can try claiming again.');
+                    setState('error');
+                  }}
+                  className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 rounded transition-all font-bold uppercase tracking-wider text-sm"
+                  style={{ fontFamily: 'Orbitron, sans-serif' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
 
             {/* Debug Controls - Only visible in debug mode or test mode */}
             {(isDebugMode || isTestMode) && (
