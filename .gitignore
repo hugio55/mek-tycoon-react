@@ -50,3 +50,6 @@ discord-bot/set-secrets.bat
 
 # Log monitoring output
 /logs/
+
+# Sentry Config File
+.env.sentry-build-plugin
