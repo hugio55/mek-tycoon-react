@@ -129,9 +129,39 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
       return;
     }
 
-    // Only process finished transactions
+    // Handle different transaction events
+    if (EventType === 'transactionconfirmed') {
+      // Payment received, transaction confirmed on blockchain, minting started
+      console.log(`✓ Payment confirmed for tx: ${TxHash}`);
+
+      try {
+        // Update purchase status to show payment received + minting
+        await convex.mutation(api.commemorative.updatePurchaseStatus, {
+          transactionHash: TxHash,
+          status: 'completed', // Mark as completed since we don't have granular status in schema
+          nftTokenId: undefined,
+          paymentAmount: Price ? Price.toString() : undefined,
+          metadata: {
+            buyerAddress: ReceiverAddress,
+            stakeAddress: ReceiverStakeAddress,
+            projectId: ProjectUid,
+            eventType: EventType,
+            nfts: NotificationSaleNfts,
+            webhookReceivedAt: new Date().toISOString(),
+          }
+        });
+
+        console.log(`✓ Payment confirmation recorded for tx: ${TxHash}`);
+      } catch (error) {
+        console.error('Failed to record payment confirmation:', error);
+      }
+
+      return; // Don't record claim yet, wait for transactionfinished
+    }
+
+    // Only create claim records for finished transactions
     if (EventType !== 'transactionfinished') {
-      console.log(`Webhook received with event: ${EventType}, skipping processing`);
+      console.log(`Webhook received with event: ${EventType}, skipping claim recording`);
       return;
     }
 
