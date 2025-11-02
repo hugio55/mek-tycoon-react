@@ -19,6 +19,7 @@ export interface NMKRMetadataParams {
   policyId: string;             // Cardano policy ID (hex string)
   imageIpfsHash?: string;       // Optional: "QmXxxx..." or leave empty for NMKR to fill
   customFields?: Array<{name: string; value: string | number}>;  // Dynamic custom metadata fields
+  website?: string;             // Website URL (defaults to 'https://mektycoon.com')
   artist?: string;              // DEPRECATED: Use customFields instead
   company?: string;             // DEPRECATED: Use customFields instead
   game?: string;                // DEPRECATED: Use customFields instead
@@ -97,8 +98,8 @@ function buildSingleNFTMetadata(params: NMKRMetadataParams, editionNumber: numbe
     innerMetadata.Phase = params.phase;
   }
 
-  // Website goes last
-  innerMetadata.website = 'https://mek.overexposed.io';
+  // Website goes last (use param or default)
+  innerMetadata.website = params.website || 'https://mektycoon.com';
 
   // Wrap in full CIP-25 structure with NMKR placeholders
   return {
@@ -197,7 +198,7 @@ export function validateMetadataParams(params: NMKRMetadataParams): {
 /**
  * Format filename for download
  */
-export function getDownloadFilename(tokenBaseName: string, phase: number): string {
+export function getDownloadFilename(tokenBaseName: string): string {
   const sanitized = tokenBaseName.replace(/[^a-zA-Z0-9]/g, '');
-  return `${sanitized}_Phase${phase}_metadata.zip`;
+  return `${sanitized}_metadata.zip`;
 }
