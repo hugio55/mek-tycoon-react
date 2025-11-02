@@ -100,6 +100,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const handleClaim = () => {
     if (!walletAddress || !eligibility?.eligible) return;
 
+    console.log('[💰CLAIM] User clicked Claim button, showing lightbox...');
     // Show processing lightbox (NMKRPayLightbox will handle opening payment window)
     setShowLightbox(true);
     setClaimStatus("processing");
@@ -204,13 +205,17 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
       {/* NMKR Payment Lightbox */}
       {showLightbox && (
-        <NMKRPayLightbox
-          walletAddress={walletAddress}
-          onClose={() => {
-            setShowLightbox(false);
-            setClaimStatus("eligible");
-          }}
-        />
+        <>
+          {console.log('[💰CLAIM] Rendering NMKRPayLightbox, showLightbox =', showLightbox)}
+          <NMKRPayLightbox
+            walletAddress={walletAddress}
+            onClose={() => {
+              console.log('[💰CLAIM] Lightbox closed by user');
+              setShowLightbox(false);
+              setClaimStatus("eligible");
+            }}
+          />
+        </>
       )}
     </>
   );

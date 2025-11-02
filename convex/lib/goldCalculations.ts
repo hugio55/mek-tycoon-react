@@ -161,9 +161,11 @@ export function calculateGoldIncrease(
  * Calculates the new gold values when gold is spent (on upgrades, purchases, etc)
  * This ensures the invariant: totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
  *
+ * FIXED Bug #2 & #3: Now repairs cumulative gold when spending (not just earning)
+ *
  * @param currentRecord - Current gold mining record
  * @param goldToSpend - Amount of gold to spend (positive number)
- * @returns Updated values for accumulatedGold (totalCumulativeGold stays the same)
+ * @returns Updated values including repaired cumulative gold
  */
 export function calculateGoldDecrease(
   currentRecord: GoldMiningRecord,
@@ -171,25 +173,46 @@ export function calculateGoldDecrease(
 ): {
   newAccumulatedGold: number;
   newTotalGoldSpentOnUpgrades: number;
+  newTotalCumulativeGold: number;
 } {
   if (goldToSpend < 0) {
     throw new Error("goldToSpend must be positive");
   }
 
   const currentAccumulated = currentRecord.accumulatedGold || 0;
+  const currentCumulative = currentRecord.totalCumulativeGold || 0;
   const totalSpent = currentRecord.totalGoldSpentOnUpgrades || 0;
 
   if (currentAccumulated < goldToSpend) {
     throw new Error(`Insufficient gold: have ${currentAccumulated}, need ${goldToSpend}`);
   }
 
-  // Deduct from accumulated, track in totalSpent (cumulative stays the same)
+  // Deduct from accumulated, track in totalSpent
   const newAccumulatedGold = currentAccumulated - goldToSpend;
   const newTotalGoldSpentOnUpgrades = totalSpent + goldToSpend;
 
+  // CRITICAL FIX (Bug #2 & #3): Auto-repair cumulative on spending (mirror calculateGoldIncrease logic)
+  const requiredMinimum = newAccumulatedGold + newTotalGoldSpentOnUpgrades;
+  let newTotalCumulativeGold = currentCumulative;
+
+  // Use epsilon to handle floating-point precision errors
+  const EPSILON = 1e-10;
+  if (newTotalCumulativeGold < requiredMinimum - EPSILON) {
+    // DEFENSIVE AUTO-REPAIR: Force cumulative to minimum required value
+    console.warn("[GOLD AUTO-REPAIR ON SPEND] Fixing cumulative:", {
+      currentCumulative,
+      requiredMinimum,
+      deficit: requiredMinimum - newTotalCumulativeGold,
+      newAccumulatedGold,
+      newTotalGoldSpentOnUpgrades
+    });
+    newTotalCumulativeGold = requiredMinimum;
+  }
+
   return {
     newAccumulatedGold,
-    newTotalGoldSpentOnUpgrades
+    newTotalGoldSpentOnUpgrades,
+    newTotalCumulativeGold
   };
 }
 
