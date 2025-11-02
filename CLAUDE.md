@@ -540,24 +540,35 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 ### Variation Names & Mapping
 **🔑 SINGLE SOURCE OF TRUTH**: For complete variation data including 3-character source keys:
 - **File**: `/src/lib/completeVariationRarity.ts`
-- **Export**: `COMPLETE_VARIATION_RARITY` array with all 288 variations
+- **Export**: `COMPLETE_VARIATION_RARITY` array with all 291 variations
 - **Each variation includes**:
-  - `name`: Display name (e.g., "Bumblebee", "Rust")
+  - `id`: Unique ID (1-291)
+  - `name`: Display name (e.g., "Bumblebee", "Rust", "1960's", "Ol' Faithful")
   - `type`: "head" | "body" | "trait"
   - `sourceKey`: 3-character code for file naming (e.g., "BC4", "AM1", "BJ1")
   - `count`, `percentage`, `tier`, `rank`: Rarity data
 - **Use this for**: NFT images, essence bottles, any file naming that needs unique identifiers
 - **Example**: "Rust" head (rank 236) → sourceKey: "AM1", "Rust" body (rank 186) → sourceKey: "BJ1"
 
+**⚠️ CRITICAL: Special "Empty" Trait Variations - NEVER IGNORE THESE**:
+- The following trait variations ALL represent valid "no item equipped" states:
+  - **"Nil"** (rank 18, legendary, 1-2 copies)
+  - **"Null"** (rank 21, legendary, 1-2 copies)
+  - **"None"** (rank 24, legendary, 1-2 copies)
+  - **"Nothing"** (rank 291, common, 501 copies)
+- These should NEVER be filtered out or treated as invalid data
+- They are legitimate variations that appear in actual Mek data
+- Must be preserved across ALL systems (database, UI, exports, etc.)
+
 **Alternative (names only)**: `/src/lib/variationsReferenceData.ts`
 - Contains ALL_VARIATIONS with `{ id, name, type }`
 - Good for dropdowns and UI displays, but lacks source keys
 
-### Mek Variations (from CSV)
-- **102 Head Variations** (not 103)
+### Mek Variations (Complete Breakdown)
+- **102 Head Variations** (includes "1960's" and "Ol' Faithful")
 - **112 Body Variations**
-- **74 Trait/Item Variations**
-- **Total: 288 variations**
+- **77 Trait/Item Variations** (includes Nil, Null, None, Nothing)
+- **Total: 291 variations**
 
 ### Mek Images Location
 **IMPORTANT**: All Mek images are stored in:
