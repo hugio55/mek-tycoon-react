@@ -24,7 +24,7 @@ import { generateSampleMeks } from '../utils/helpers';
 import ModalPortal from './ModalPortal';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import { DifficultyConfig } from '@/lib/difficultyModifiers';
-import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
+import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 
 interface MekRecruitmentModalV4Props {
   showMekModal: string | null;
@@ -150,7 +150,7 @@ export default function MekRecruitmentModalV4({
   // Helper function to get variation name from ID
   const getVariationName = (traitId: string): string => {
     // First try to match with heads
-    const headVariation = ALL_VARIATIONS.heads.find(h => {
+    const headVariation = VARIATIONS_BY_TYPE.heads.find(h => {
       // Convert ID to 3-digit string format (e.g., 1 -> "001")
       const formattedId = String(h.id).padStart(3, '0');
       return formattedId === traitId || h.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
@@ -158,14 +158,14 @@ export default function MekRecruitmentModalV4({
     if (headVariation) return headVariation.name;
 
     // Then try bodies
-    const bodyVariation = ALL_VARIATIONS.bodies.find(b => {
+    const bodyVariation = VARIATIONS_BY_TYPE.bodies.find(b => {
       const formattedId = String(b.id).padStart(3, '0');
       return formattedId === traitId || b.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
     });
     if (bodyVariation) return bodyVariation.name;
 
     // Then try items/traits
-    const itemVariation = ALL_VARIATIONS.items.find(i => {
+    const itemVariation = VARIATIONS_BY_TYPE.traits.find(i => {
       const formattedId = String(i.id).padStart(3, '0');
       return formattedId === traitId || i.name.toLowerCase().replace(/[^a-z0-9]/g, '') === traitId.toLowerCase();
     });
