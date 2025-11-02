@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -536,8 +536,8 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                   const isExpanded = expandedVariationId === balance.variationId;
 
                   return (
-                    <>
-                      <tr key={balance._id} className="hover:bg-gray-800/50 transition-colors">
+                    <Fragment key={balance._id}>
+                      <tr className="hover:bg-gray-800/50 transition-colors">
                         <td className="px-4 py-3">
                           <button
                             onClick={() => toggleBuffBreakdown(balance.variationId)}
@@ -618,7 +618,7 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                         walletAddress={walletAddress}
                       />
                     )}
-                  </>
+                  </Fragment>
                   );
                 })}
               </tbody>
