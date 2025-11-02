@@ -15,7 +15,6 @@ interface EnrichedVariation {
   copies: number;
   percentage: string;
   sourceKey: string;
-  tier: string;
 }
 
 export default function VariationSearchTable() {
@@ -39,8 +38,7 @@ export default function VariationSearchTable() {
         rank: variation.rank,
         copies: variation.count,
         percentage: variation.percentage,
-        sourceKey: variation.sourceKey,
-        tier: variation.tier
+        sourceKey: variation.sourceKey
       } as EnrichedVariation;
     });
   }, []);
@@ -270,9 +268,6 @@ export default function VariationSearchTable() {
                 <th className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider border-r border-gray-700">
                   Percentage
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider border-r border-gray-700">
-                  Tier
-                </th>
                 <th
                   className="text-center px-4 py-3 text-sm font-bold text-yellow-400 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors select-none"
                   onClick={toggleRankSort}
@@ -332,18 +327,6 @@ export default function VariationSearchTable() {
                   <td className="px-4 py-3 text-center border-r border-gray-800">
                     <span className="text-gray-300 font-mono text-sm">
                       {variation.percentage}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center border-r border-gray-800">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      variation.tier === 'legendary' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                      variation.tier === 'ultra-rare' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                      variation.tier === 'very-rare' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                      variation.tier === 'rare' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                      variation.tier === 'uncommon' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                      'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}>
-                      {variation.tier}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-yellow-400 font-mono">
