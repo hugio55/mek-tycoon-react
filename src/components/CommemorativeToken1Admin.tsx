@@ -2509,6 +2509,64 @@ export default function CommemorativeToken1Admin() {
                           </div>
                         )}
 
+                        {/* Test Wallet Override (Quick Testing) */}
+                        {design.saleMode === 'whitelist' && config && (
+                          <div className="mb-3 p-3 bg-orange-900/20 border border-orange-500/30 rounded">
+                            <label className="block text-xs text-orange-300 mb-2 font-bold">⚡ Test Wallet Override (For Testing)</label>
+                            <div className="text-xs text-gray-400 mb-2">
+                              Add your wallet here to bypass snapshot checks and always see the claim button (useful for testing)
+                            </div>
+
+                            {/* Show current test wallets */}
+                            {config.testWallets && config.testWallets.length > 0 ? (
+                              <div className="space-y-1 mb-2">
+                                {config.testWallets.map((w: string) => {
+                                  const name = companyNames?.[w];
+                                  const display = name || `${w.slice(0, 12)}...${w.slice(-8)}`;
+                                  return (
+                                    <div key={w} className="flex items-center justify-between bg-orange-900/20 border border-orange-500/20 rounded px-2 py-1">
+                                      <span className="text-xs text-orange-300 font-mono">{display}</span>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Remove ${display} from test wallets?`)) {
+                                            handleRemoveTestWallet(w);
+                                          }
+                                        }}
+                                        className="text-red-400 hover:text-red-300 text-sm font-bold px-1"
+                                        title="Remove"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-500 italic mb-2">
+                                No test wallets configured
+                              </div>
+                            )}
+
+                            {/* Add new test wallet */}
+                            <div className="flex gap-1">
+                              <input
+                                type="text"
+                                placeholder="stake1... or addr1..."
+                                value={newTestWallet}
+                                onChange={(e) => setNewTestWallet(e.target.value)}
+                                className="flex-1 bg-black/50 border border-orange-500/30 rounded px-2 py-1 text-xs text-white placeholder-gray-500"
+                              />
+                              <button
+                                onClick={handleAddTestWallet}
+                                disabled={!newTestWallet.trim()}
+                                className="px-3 py-1 bg-orange-600/30 hover:bg-orange-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-orange-300 text-xs font-bold rounded transition-all"
+                              >
+                                + Add
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Actions */}
                         <div className="flex gap-2">
                           <button
