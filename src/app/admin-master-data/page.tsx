@@ -1850,7 +1850,7 @@ export default function AdminMasterDataPage() {
                   {expandedSections.has('variations-search') && (
                     <div className="p-4 border-t border-cyan-500/20">
                       <p className="text-sm text-gray-400 mb-4">
-                        Search and filter all 288 variations by name, style, or group. Click on any style or group to filter results.
+                        Search and filter all 291 variations by name, style, or group. Click on any style or group to filter results.
                       </p>
                       <VariationSearchTable />
                     </div>
