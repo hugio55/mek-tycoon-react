@@ -43,6 +43,11 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   );
   const [mockPaymentProcessing, setMockPaymentProcessing] = useState(false);
 
+  // Payment window closure tracking
+  const [paymentWindowClosed, setPaymentWindowClosed] = useState(false);
+  const [userChoice, setUserChoice] = useState<'completed' | 'cancelled' | null>(null);
+  const [windowClosedAt, setWindowClosedAt] = useState<number>(0);
+
   // Checklist status tracking
   const [checklistStatus, setChecklistStatus] = useState({
     paymentReceived: false,
@@ -114,15 +119,15 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
         clearInterval(checkInterval);
 
         const windowOpenDuration = Date.now() - openedAt;
+        const closedAt = Date.now();
         console.log('[💰CLAIM] Payment window closed after', windowOpenDuration, 'ms');
 
-        // IMPORTANT: Don't assume payment based on window open time
-        // Window could be open long due to timeout, user distraction, etc.
-        // Enter 'processing' state to keep webhook polling active
-        // Webhook will detect if payment was actually completed
-        console.log('[💰CLAIM] Window closed - entering processing state, webhook polling will continue');
-        setState('processing');
-        // Reset checklist to show waiting state (webhook will update when it confirms)
+        // Mark that window closed and show choice screen
+        setPaymentWindowClosed(true);
+        setWindowClosedAt(closedAt);
+        setState('processing'); // Keep webhook polling active
+
+        // Reset checklist to show waiting state
         setChecklistStatus({
           paymentReceived: false,
           minting: false,
@@ -200,6 +205,20 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     return () => clearTimeout(timeout);
   }, [state, isDebugMode, checklistStatus.paymentReceived]);
 
+  // Auto-cancel timeout: After 30 seconds with no user choice, assume cancelled
+  useEffect(() => {
+    if (!paymentWindowClosed || userChoice !== null || isDebugMode) return;
+
+    const autoCancelTimeout = setTimeout(() => {
+      console.log('[💰CLAIM] 30 seconds passed with no user choice, auto-cancelling');
+      setUserChoice('cancelled');
+      setErrorMessage('Payment window was closed. No payment detected.');
+      setState('error');
+    }, 30 * 1000); // 30 seconds
+
+    return () => clearTimeout(autoCancelTimeout);
+  }, [paymentWindowClosed, userChoice, isDebugMode]);
+
   // Close payment window if user closes lightbox
   useEffect(() => {
     return () => {
@@ -243,6 +262,20 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       setState('error');
     } finally {
       setMockPaymentProcessing(false);
+    }
+  };
+
+  // Handle user choice when payment window closes
+  const handleUserChoice = (choice: 'completed' | 'cancelled') => {
+    setUserChoice(choice);
+
+    if (choice === 'cancelled') {
+      console.log('[💰CLAIM] User indicated they cancelled payment');
+      setErrorMessage('Payment was cancelled. You can try claiming again.');
+      setState('error');
+    } else {
+      console.log('[💰CLAIM] User indicated they completed payment, continuing to poll for webhook');
+      // Keep processing state, webhook polling will continue
     }
   };
 
@@ -331,6 +364,54 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
         );
 
       case 'processing':
+        // Show choice screen if window closed but user hasn't decided yet
+        if (paymentWindowClosed && userChoice === null) {
+          const secondsElapsed = Math.floor((Date.now() - windowClosedAt) / 1000);
+          const secondsRemaining = Math.max(0, 30 - secondsElapsed);
+
+          return (
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  Payment Window Closed
+                </h2>
+                <p className="text-gray-400 mb-6">
+                  Did you complete the payment?
+                </p>
+              </div>
+
+              {/* Choice Buttons */}
+              <div className="space-y-3 mb-6">
+                <button
+                  onClick={() => handleUserChoice('completed')}
+                  className="w-full px-6 py-4 bg-green-500/20 hover:bg-green-500/30 border-2 border-green-500 text-green-400 hover:text-green-300 rounded-lg transition-all font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'Orbitron, sans-serif' }}
+                >
+                  ✓ Yes, I Completed Payment
+                </button>
+                <button
+                  onClick={() => handleUserChoice('cancelled')}
+                  className="w-full px-6 py-4 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500 text-red-400 hover:text-red-300 rounded-lg transition-all font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'Orbitron, sans-serif' }}
+                >
+                  ✗ No, I Cancelled
+                </button>
+              </div>
+
+              {/* Auto-cancel countdown */}
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-sm">
+                <p className="text-yellow-400">
+                  Auto-cancelling in {secondsRemaining} seconds...
+                </p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Choose an option above to continue
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Normal processing UI with checklist
         return (
           <div className="text-center">
             {/* Header Section */}
