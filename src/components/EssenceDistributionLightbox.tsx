@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import EssenceDonutChart from "@/components/essence-donut-chart";
 import "@/styles/global-design-system.css";
 import { useEssence } from "@/contexts/EssenceContext";
+import { clampEssenceToCap, isEssenceFull, ESSENCE_CAP_EPSILON } from "../../convex/lib/essenceCalculations";
 
 // Custom styles for range sliders
 const sliderStyles = `
@@ -106,8 +107,8 @@ function AnimatedEssenceTableCell({
 
   // Animate if generating (matches EssenceBalancesViewer)
   useEffect(() => {
-    if (ratePerDay <= 0 || displayAmount >= cap) {
-      setDisplayAmount(Math.min(baseAmount, cap));
+    if (ratePerDay <= 0 || isEssenceFull(displayAmount, cap)) {
+      setDisplayAmount(clampEssenceToCap(baseAmount, cap));
       return;
     }
 
@@ -116,7 +117,7 @@ function AnimatedEssenceTableCell({
       const elapsedMs = now - backendTimeRef.current;
       const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
       const accumulated = ratePerDay * elapsedDays;
-      const newAmount = Math.min(baseAmountRef.current + accumulated, cap);
+      const newAmount = clampEssenceToCap(baseAmountRef.current + accumulated, cap);
 
       // Log every 5 seconds (100 intervals at 50ms)
       const intervalCount = Math.floor(elapsedMs / 50);
