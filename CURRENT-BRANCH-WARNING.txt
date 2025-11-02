@@ -1,0 +1,52 @@
+═══════════════════════════════════════════════════════════════
+⚠️  GIT BRANCH STATUS - PLEASE READ BEFORE WORKING ⚠️
+═══════════════════════════════════════════════════════════════
+
+THIS FILE EXISTS TO PREVENT ACCIDENTAL WORK ON WRONG BRANCH
+
+Your main working branch is: custom-minting-system
+
+To check which branch you're currently on, run:
+    git branch --show-current
+
+If you see anything OTHER than "custom-minting-system", you may be
+on an old/experimental branch. This can cause:
+
+❌ Lost work (uncommitted changes disappear when switching branches)
+❌ Confusion (localhost showing old code)
+❌ Wasted time (working on wrong version)
+
+═══════════════════════════════════════════════════════════════
+HOW TO CHECK YOUR CURRENT BRANCH:
+═══════════════════════════════════════════════════════════════
+
+Run this command in terminal:
+    git branch --show-current
+
+Expected result: custom-minting-system
+Wrong result: essence-system-worktree, master, backup-*, etc.
+
+═══════════════════════════════════════════════════════════════
+IF YOU'RE ON THE WRONG BRANCH:
+═══════════════════════════════════════════════════════════════
+
+1. STOP working immediately
+2. Check if you have uncommitted changes: git status
+3. If you DO have changes, commit them first
+4. Then switch to correct branch: git checkout custom-minting-system
+5. Verify: git branch --show-current
+
+═══════════════════════════════════════════════════════════════
+REMEMBER:
+═══════════════════════════════════════════════════════════════
+
+• Git branches are NOT separate folders
+• Switching branches REPLACES files in your working directory
+• Uncommitted work is LOST when switching branches
+• Your dev server (localhost:3200) shows whatever branch you're on
+• ALWAYS commit before switching branches
+
+═══════════════════════════════════════════════════════════════
+
+This warning file was created on: 2025-11-01
+After incident: Accidentally worked on essence-system-worktree branch

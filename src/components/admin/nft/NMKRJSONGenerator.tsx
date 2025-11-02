@@ -65,6 +65,39 @@ export default function NMKRJSONGenerator() {
     }
   }, []);
 
+  // Auto-save form values to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('nmkr_displayNameBase', displayNameBase);
+  }, [displayNameBase]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_tokenBaseName', tokenBaseName);
+  }, [tokenBaseName]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_numberOfNFTs', numberOfNFTs.toString());
+  }, [numberOfNFTs]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_description', description);
+  }, [description]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_imageIpfsHash', imageIpfsHash);
+  }, [imageIpfsHash]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_policyId', policyId);
+  }, [policyId]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_website', website);
+  }, [website]);
+
+  useEffect(() => {
+    localStorage.setItem('nmkr_customFields', JSON.stringify(customFields));
+  }, [customFields]);
+
   // Save field names to localStorage
   const saveFieldNames = (names: string[]) => {
     localStorage.setItem('mek_tycoon_field_names', JSON.stringify(names));
@@ -133,24 +166,55 @@ export default function NMKRJSONGenerator() {
     setMessage({ type: 'success', text: `Removed "${valueToRemove}" from ${fieldName}` });
   };
 
-  // Form state
-  const [displayNameBase, setDisplayNameBase] = useState('Bronze Token');
-  const [tokenBaseName, setTokenBaseName] = useState('MekBetaBronzeToken');
-  const [numberOfNFTs, setNumberOfNFTs] = useState(5);
+  // Form state (with localStorage restore)
+  const [displayNameBase, setDisplayNameBase] = useState(() => {
+    const saved = localStorage.getItem('nmkr_displayNameBase');
+    return saved || 'Bronze Token';
+  });
+  const [tokenBaseName, setTokenBaseName] = useState(() => {
+    const saved = localStorage.getItem('nmkr_tokenBaseName');
+    return saved || 'MekBetaBronzeToken';
+  });
+  const [numberOfNFTs, setNumberOfNFTs] = useState(() => {
+    const saved = localStorage.getItem('nmkr_numberOfNFTs');
+    return saved ? parseInt(saved) : 5;
+  });
   const [phase] = useState(1); // Keep for backwards compatibility with library, but not shown in UI
-  const [description, setDescription] = useState('Exclusive commemorative NFT.');
-  const [imageIpfsHash, setImageIpfsHash] = useState('');
-  const [policyId, setPolicyId] = useState(MEK_TYCOON_POLICY_ID);
-  const [website, setWebsite] = useState('https://mektycoon.com');
+  const [description, setDescription] = useState(() => {
+    const saved = localStorage.getItem('nmkr_description');
+    return saved || 'Exclusive commemorative NFT.';
+  });
+  const [imageIpfsHash, setImageIpfsHash] = useState(() => {
+    const saved = localStorage.getItem('nmkr_imageIpfsHash');
+    return saved || '';
+  });
+  const [policyId, setPolicyId] = useState(() => {
+    const saved = localStorage.getItem('nmkr_policyId');
+    return saved || MEK_TYCOON_POLICY_ID;
+  });
+  const [website, setWebsite] = useState(() => {
+    const saved = localStorage.getItem('nmkr_website');
+    return saved || 'https://mektycoon.com';
+  });
 
-  // Custom metadata fields (dynamic)
-  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>([
-    { name: 'Collection', value: 'Knickknacks' },
-    { name: 'Game', value: 'Mek Tycoon' },
-    { name: 'Artist', value: 'Wren Ellis' },
-    { name: 'Company', value: 'Over Exposed' },
-    { name: 'Phase', value: 1 }
-  ]);
+  // Custom metadata fields (dynamic, with localStorage restore)
+  const [customFields, setCustomFields] = useState<Array<{name: string; value: string | number}>>(() => {
+    const saved = localStorage.getItem('nmkr_customFields');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to load custom fields:', e);
+      }
+    }
+    return [
+      { name: 'Collection', value: 'Knickknacks' },
+      { name: 'Game', value: 'Mek Tycoon' },
+      { name: 'Artist', value: 'Wren Ellis' },
+      { name: 'Company', value: 'Over Exposed' },
+      { name: 'Phase', value: 1 }
+    ];
+  });
 
   // Add field modal state
   const [showAddFieldModal, setShowAddFieldModal] = useState(false);
@@ -424,9 +488,15 @@ export default function NMKRJSONGenerator() {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg p-6">
-        <h3 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-          📦 NMKR Metadata Generator
-        </h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider">
+            📦 NMKR Metadata Generator
+          </h3>
+          <div className="flex items-center gap-2 text-xs text-green-400">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            Auto-saving
+          </div>
+        </div>
         <p className="text-gray-400 text-sm">
           Generate bulk .metadata JSON files for NMKR Studio drag-and-drop upload.
           Upload 1 image + N metadata files = N NFTs with same artwork.
