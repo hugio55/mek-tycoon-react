@@ -18,6 +18,7 @@ export default function WhitelistManagerAdmin() {
   // Queries
   const allWhitelists = useQuery(api.whitelists.getAllWhitelists);
   const allCriteria = useQuery(api.whitelists.getAllCriteria);
+  const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
   const selectedWhitelistData = useQuery(
     api.whitelists.getWhitelistById,
     selectedWhitelist ? { whitelistId: selectedWhitelist } : "skip"
@@ -162,6 +163,54 @@ export default function WhitelistManagerAdmin() {
           </div>
         </div>
       </div>
+
+      {/* All Snapshots Section - Shows ALL snapshots regardless of parent whitelist */}
+      {allSnapshots && allSnapshots.length > 0 && (
+        <div className="bg-purple-900/20 border-2 border-purple-500/50 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-purple-400 mb-4">
+            All Saved Snapshots ({allSnapshots.length})
+          </h2>
+          <p className="text-sm text-gray-400 mb-4">
+            These are all snapshots saved in the system. Delete any you no longer need.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {allSnapshots.map((snapshot: any) => (
+              <div
+                key={snapshot._id}
+                className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4"
+              >
+                <div className="mb-2">
+                  <div className="font-bold text-white text-sm mb-1">
+                    {snapshot.snapshotName}
+                  </div>
+                  {snapshot.description && (
+                    <div className="text-xs text-gray-400 mb-2">
+                      {snapshot.description}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <div className="bg-purple-600/30 text-purple-300 text-xs px-2 py-1 rounded">
+                    {snapshot.userCount || snapshot.eligibleUsers?.length || 0} wallets
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(snapshot.takenAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleDeleteSnapshot(snapshot._id)}
+                  className="w-full px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-400 text-sm font-bold rounded transition-all"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
