@@ -3373,4 +3373,13 @@ export default defineSchema({
     .index("by_transaction", ["transactionHash"])
     .index("by_asset_id", ["nftAssetId"])
     .index("by_claimed_at", ["claimedAt"]),
+
+  // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
+  // Replaces the complex custom minting system above
+  // Just stores which snapshot controls who sees the "Claim NFT" button
+  nftEligibilityConfig: defineTable({
+    activeSnapshotId: v.optional(v.id("whitelistSnapshots")), // Currently active snapshot
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
 });
