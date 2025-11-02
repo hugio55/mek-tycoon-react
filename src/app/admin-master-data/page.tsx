@@ -17,10 +17,6 @@ import NftPurchasePlanner from '@/components/NftPurchasePlanner';
 import VariationSearchTable from '@/components/VariationSearchTable';
 import CommemorativeToken1Admin from '@/components/CommemorativeToken1Admin';
 import SourceKeyMigrationAdmin from '@/components/SourceKeyMigrationAdmin';
-import EventManager from '@/components/admin/nft/EventManager';
-import PurchaseDashboard from '@/components/admin/nft/PurchaseDashboard';
-import RevenueAnalytics from '@/components/admin/nft/RevenueAnalytics';
-import CustomTestMinter from '@/components/admin/nft/CustomTestMinter';
 import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
@@ -2779,46 +2775,6 @@ function NFTAdminTabs() {
       {/* Sub-Tab Navigation */}
       <div className="flex flex-wrap gap-2 border-b-2 border-yellow-500/30 pb-2">
         <button
-          onClick={() => setNftSubTab('simple-minter')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
-            nftSubTab === 'simple-minter'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
-          }`}
-        >
-          🧪 Custom Test Minter (Testnet)
-        </button>
-        <button
-          onClick={() => setNftSubTab('events')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
-            nftSubTab === 'events'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
-          }`}
-        >
-          📅 Events
-        </button>
-        <button
-          onClick={() => setNftSubTab('purchases')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
-            nftSubTab === 'purchases'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
-          }`}
-        >
-          💳 Purchases
-        </button>
-        <button
-          onClick={() => setNftSubTab('analytics')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
-            nftSubTab === 'analytics'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30'
-              : 'bg-black/50 text-gray-400 hover:text-yellow-400 border border-yellow-500/30'
-          }`}
-        >
-          📊 Analytics
-        </button>
-        <button
           onClick={() => setNftSubTab('commemorative')}
           className={`px-6 py-3 font-bold uppercase tracking-wider transition-all ${
             nftSubTab === 'commemorative'
@@ -2851,10 +2807,6 @@ function NFTAdminTabs() {
       </div>
 
       {/* Tab Content */}
-      {nftSubTab === 'simple-minter' && <CustomTestMinter />}
-      {nftSubTab === 'events' && <EventManager />}
-      {nftSubTab === 'purchases' && <PurchaseDashboard />}
-      {nftSubTab === 'analytics' && <RevenueAnalytics />}
       {nftSubTab === 'commemorative' && <CommemorativeToken1Admin />}
       {nftSubTab === 'whitelist-manager' && <WhitelistManagerAdmin />}
       {nftSubTab === 'json-generator' && <NMKRJSONGenerator />}
