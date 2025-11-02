@@ -1049,12 +1049,13 @@ Check console for full timeline.
                               });
                               setHoveredDropdown(wallet.walletAddress);
                             }}
-                            onMouseLeave={() => {
-                              // Don't close immediately - give time to move to dropdown
-                              setTimeout(() => {
+                            onMouseLeave={(e) => {
+                              // Only close if mouse is not moving to dropdown
+                              const relatedTarget = e.relatedTarget as HTMLElement;
+                              if (!relatedTarget || !relatedTarget.closest('[data-dropdown]')) {
                                 setHoveredDropdown(null);
                                 setDropdownPosition(null);
-                              }, 100);
+                              }
                             }}
                           >
                             Actions ▼
@@ -1062,6 +1063,7 @@ Check console for full timeline.
 
                           {mounted && hoveredDropdown === wallet.walletAddress && dropdownPosition && createPortal(
                             <div
+                              data-dropdown="true"
                               className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
                               style={{
                                 top: `${dropdownPosition.top}px`,
@@ -1118,7 +1120,7 @@ Check console for full timeline.
                               </button>
                               {wallet.isVerified && (
                                 <button
-                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); }}
+                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                   className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
                                   title="Reset verification (for testing)"
                                 >
@@ -1127,7 +1129,7 @@ Check console for full timeline.
                               )}
                               {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
                                 <button
-                                  onClick={() => { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); }}
+                                  onClick={() => { manualSetMeks({ walletAddress: wallet.walletAddress, mekCount: 45, totalGoldPerHour: 176.56 }); setHoveredDropdown(null); setDropdownPosition(null); }}
                                   className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
                                   title="Manually fix MEK ownership"
                                 >
@@ -1137,14 +1139,14 @@ Check console for full timeline.
                               {wallet.totalCumulativeGold < wallet.currentGold && (
                                 <>
                                   <button
-                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                     className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
                                     title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
                                   >
                                     🔧 Fix Cumul.
                                   </button>
                                   <button
-                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); }}
+                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                     className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
                                     title="Reconstruct from Snapshots"
                                   >
@@ -1153,21 +1155,21 @@ Check console for full timeline.
                                 </>
                               )}
                               <button
-                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
                                 title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
                               >
                                 🎯 Exact Recon.
                               </button>
                               <button
-                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
                                 title="Reset all Mek levels to Level 1"
                               >
                                 Reset Levels
                               </button>
                               <button
-                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
                                 title="Reset all gold (spendable + cumulative) to zero"
                               >
@@ -1175,7 +1177,7 @@ Check console for full timeline.
                               </button>
                               <div className="border-t border-gray-700 my-1"></div>
                               <button
-                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
                                 title="Delete wallet permanently"
                               >

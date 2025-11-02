@@ -389,15 +389,36 @@ export const upgradeMekLevel = mutation({
         timestamp: new Date(now).toISOString()
       });
 
-      // CRITICAL FIX: Snapshot the time-based gold accumulation BEFORE spending
+      // Calculate gold earned since last snapshot for cumulative update
+      // This value represents time-based earnings not yet reflected in totalCumulativeGold
+      const goldEarnedSinceSnapshot = currentGold - (goldMiningData.accumulatedGold || 0);
+
+      // CRITICAL FIX: Snapshot the time-based gold accumulation AND update cumulative BEFORE spending
       // The bug was: calculateGoldDecrease uses goldMiningData.accumulatedGold (old value),
-      // but currentGold includes time-based earnings that aren't in accumulatedGold yet.
+      // but currentGold includes time-based earnings that aren't in accumulatedGold yet,
+      // AND those earnings weren't being added to totalCumulativeGold.
       // Solution: Create a snapshot record with currentGold as the new accumulatedGold
+      // AND add the earned gold to totalCumulativeGold (mirrors goldMiningSnapshot.ts lines 368-374)
       const snapshotRecord = {
         ...goldMiningData,
         accumulatedGold: currentGold, // Use calculated current gold (includes time-based earnings)
+        totalCumulativeGold: (goldMiningData.totalCumulativeGold || 0) + Math.max(0, goldEarnedSinceSnapshot), // CRITICAL FIX: Add earnings to cumulative
         lastSnapshotTime: now
       };
+
+      // LOG: Cumulative gold update (BUG FIX VERIFICATION)
+      devLog.log('[CUMULATIVE FIX] Gold earned and cumulative update:', {
+        goldSinceSnapshot: goldSinceSnapshot,
+        goldEarnedSinceSnapshot: goldEarnedSinceSnapshot,
+        shouldMatch: goldSinceSnapshot === goldEarnedSinceSnapshot,
+        oldAccumulated: goldMiningData.accumulatedGold || 0,
+        newAccumulated: currentGold,
+        oldCumulative: goldMiningData.totalCumulativeGold || 0,
+        newCumulative: snapshotRecord.totalCumulativeGold,
+        cumulativeIncrease: snapshotRecord.totalCumulativeGold - (goldMiningData.totalCumulativeGold || 0),
+        expectedMatch: goldEarnedSinceSnapshot === (snapshotRecord.totalCumulativeGold - (goldMiningData.totalCumulativeGold || 0)),
+        calculation: `${goldMiningData.totalCumulativeGold || 0} + ${Math.max(0, goldEarnedSinceSnapshot)} = ${snapshotRecord.totalCumulativeGold}`,
+      });
 
       devLog.log('[UPGRADE MUTATION] Gold snapshot for spending:', {
         oldAccumulatedGold: goldMiningData.accumulatedGold,
@@ -417,6 +438,9 @@ export const upgradeMekLevel = mutation({
         oldTotalSpent: goldMiningData.totalGoldSpentOnUpgrades || 0,
         newTotalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
         cumulativeGold: goldDecrease.newTotalCumulativeGold,
+        snapshotCumulative: snapshotRecord.totalCumulativeGold,
+        autoRepairTriggered: goldDecrease.newTotalCumulativeGold !== snapshotRecord.totalCumulativeGold,
+        cumulativeChange: goldDecrease.newTotalCumulativeGold - snapshotRecord.totalCumulativeGold,
         upgradeCost
       });
 
