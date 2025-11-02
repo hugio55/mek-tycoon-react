@@ -22,6 +22,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     'payment'
   );
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
+  const [paymentWindowOpenedAt, setPaymentWindowOpenedAt] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [claimedNFT, setClaimedNFT] = useState<any>(
     debugState === 'success' ? {
@@ -76,16 +77,22 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
   // Mount portal and lock body scroll
   useEffect(() => {
+    console.log('[💰CLAIM] NMKRPayLightbox mounting...');
     setMounted(true);
     document.body.style.overflow = 'hidden';
     return () => {
+      console.log('[💰CLAIM] NMKRPayLightbox unmounting...');
       document.body.style.overflow = 'unset';
     };
   }, []);
 
   // Open NMKR payment window on mount (ONLY if NOT in test mode or debug mode)
   useEffect(() => {
-    if (!mounted || state !== 'payment' || isTestMode || isDebugMode) return;
+    console.log('[💰CLAIM] Payment window effect - mounted:', mounted, 'state:', state, 'isTestMode:', isTestMode, 'isDebugMode:', isDebugMode);
+    if (!mounted || state !== 'payment' || isTestMode || isDebugMode) {
+      console.log('[💰CLAIM] Skipping payment window open (condition not met)');
+      return;
+    }
 
     // Use preprod URL for testnet, mainnet URL for production
     const baseUrl = NMKR_NETWORK === 'mainnet'
@@ -93,6 +100,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       : 'https://pay.preprod.nmkr.io';
     const nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&c=1`;
 
+    console.log('[💰CLAIM] Opening NMKR payment window:', nmkrUrl);
     // Open payment popup
     const popup = window.open(
       nmkrUrl,
@@ -101,24 +109,43 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     );
 
     if (!popup) {
+      console.log('[💰CLAIM] Failed to open popup - likely blocked');
       setErrorMessage('Failed to open payment window. Please allow popups for this site.');
       setState('error');
       return;
     }
 
+    console.log('[💰CLAIM] Payment window opened successfully');
     setPaymentWindow(popup);
+    const openedAt = Date.now();
+    setPaymentWindowOpenedAt(openedAt);
 
     // Monitor popup closure
     const checkInterval = setInterval(() => {
       if (popup.closed) {
         clearInterval(checkInterval);
-        // Payment window closed - switch to processing state and mark payment received
-        setState('processing');
-        setChecklistStatus({
-          paymentReceived: true,
-          minting: false,
-          confirming: false
-        });
+
+        // Check how long the window was open
+        const windowOpenDuration = Date.now() - openedAt;
+        const minimumPaymentTime = 15000; // 15 seconds - minimum time for a real payment
+
+        console.log('[💰CLAIM] Payment window closed after', windowOpenDuration, 'ms');
+
+        // If window was closed very quickly (less than 15 seconds), assume user cancelled
+        if (windowOpenDuration < minimumPaymentTime) {
+          console.log('[💰CLAIM] Window closed too quickly - assuming cancellation');
+          setState('cancelled');
+          setErrorMessage('Payment window was closed before completion.');
+        } else {
+          // Window was open long enough - assume payment completed, start processing
+          console.log('[💰CLAIM] Window was open long enough - starting processing');
+          setState('processing');
+          setChecklistStatus({
+            paymentReceived: true,
+            minting: false,
+            confirming: false
+          });
+        }
       }
     }, 500);
 
@@ -233,7 +260,12 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   };
 
   // Only render on client-side after mount
-  if (!mounted) return null;
+  if (!mounted) {
+    console.log('[💰CLAIM] Not mounted yet, not rendering lightbox');
+    return null;
+  }
+
+  console.log('[💰CLAIM] Rendering lightbox with state:', state);
 
   const renderContent = () => {
     switch (state) {
@@ -491,6 +523,33 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
             <button
               onClick={onClose}
               className="px-6 py-3 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors font-bold"
+            >
+              Close
+            </button>
+          </div>
+        );
+
+      case 'cancelled':
+        return (
+          <div className="text-center">
+            <div className="mb-6">
+              <div className="h-16 w-16 bg-yellow-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span className="text-3xl">⚠</span>
+              </div>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                Payment Incomplete
+              </h2>
+              <p className="text-gray-400 mb-4">
+                The payment window was closed before payment could be completed.
+              </p>
+              <p className="text-gray-500 text-sm mb-4">
+                If you completed the payment, please wait a moment and check your wallet. Otherwise, you can try claiming again.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors font-bold uppercase tracking-wider"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
               Close
             </button>

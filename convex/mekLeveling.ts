@@ -408,22 +408,15 @@ export const upgradeMekLevel = mutation({
       });
 
       // CRITICAL: Use centralized gold decrease function to maintain invariants
-      // When spending gold, totalCumulativeGold stays the same, but totalGoldSpentOnUpgrades increases
+      // calculateGoldDecrease() now handles ALL gold calculations including cumulative repair (Bug #2 & #3 fix)
       const goldDecrease = calculateGoldDecrease(snapshotRecord, upgradeCost);
-
-      // Ensure totalCumulativeGold is initialized if not already
-      let newTotalCumulativeGold = goldMiningData.totalCumulativeGold;
-      if (!newTotalCumulativeGold || newTotalCumulativeGold === 0) {
-        // Initialize from current state (use snapshotRecord which has correct accumulated gold)
-        newTotalCumulativeGold = currentGold + (goldMiningData.totalGoldSpentOnUpgrades || 0);
-      }
 
       devLog.log('[UPGRADE MUTATION] Gold decrease calculation:', {
         oldAccumulated: currentGold,
         newAccumulated: goldDecrease.newAccumulatedGold,
         oldTotalSpent: goldMiningData.totalGoldSpentOnUpgrades || 0,
         newTotalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
-        cumulativeGold: newTotalCumulativeGold,
+        cumulativeGold: goldDecrease.newTotalCumulativeGold,
         upgradeCost
       });
 
@@ -457,7 +450,7 @@ export const upgradeMekLevel = mutation({
       // Update goldMining with new rates AND DEDUCT GOLD - Using centralized calculation!
       await ctx.db.patch(goldMiningData._id, {
         accumulatedGold: goldDecrease.newAccumulatedGold,  // CRITICAL: Actually deduct the gold spent!
-        totalCumulativeGold: newTotalCumulativeGold, // CRITICAL: Preserve cumulative total
+        totalCumulativeGold: goldDecrease.newTotalCumulativeGold, // CRITICAL: Use repaired cumulative from calculation
         lastSnapshotTime: now,  // Reset snapshot time since we're updating accumulated gold
         ownedMeks: updatedMeks,
         baseGoldPerHour,
@@ -474,7 +467,7 @@ export const upgradeMekLevel = mutation({
       devLog.log('[UPGRADE MUTATION] After DB update - gold deducted:', {
         remainingGold: goldDecrease.newAccumulatedGold,
         totalSpent: goldDecrease.newTotalGoldSpentOnUpgrades,
-        cumulativeGold: newTotalCumulativeGold,
+        cumulativeGold: goldDecrease.newTotalCumulativeGold,
         timestamp: new Date(now).toISOString()
       });
 
