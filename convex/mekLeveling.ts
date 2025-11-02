@@ -498,7 +498,7 @@ export const upgradeMekLevel = mutation({
         goldBefore: currentGold,
         goldAfter: goldDecrease.newAccumulatedGold,
         cumulativeGoldBefore: goldMiningData.totalCumulativeGold,
-        cumulativeGoldAfter: newTotalCumulativeGold,
+        cumulativeGoldAfter: goldDecrease.newTotalCumulativeGold,
         totalGoldPerHourBefore: goldMiningData.totalGoldPerHour,
         totalGoldPerHour: totalGoldPerHour,
         newGoldPerHour: newBoostAmount,
