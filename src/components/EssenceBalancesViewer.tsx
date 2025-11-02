@@ -17,34 +17,33 @@ type SortDirection = 'asc' | 'desc';
 // Buff breakdown row component
 function BuffBreakdownRow({
   variationId,
-  walletAddress
+  walletAddress,
+  slots
 }: {
   variationId: number;
   walletAddress: string;
+  slots: any[];
 }) {
   const breakdown = useQuery(api.essence.getPlayerBuffBreakdown, {
     walletAddress,
     variationId,
   });
 
-  // Get slotted mechanisms to show base generation sources
-  const slots = useQuery(api.slots.getPlayerSlots, { walletAddress });
-
   // Find mechanisms that have this variation
-  const mechanismSources = slots?.filter(slot => {
-    if (!slot.mek) return false;
+  const mechanismSources = slots.filter(slot => {
+    if (!slot.mekAssetId) return false;
     return (
-      slot.mek.headVariation === variationId ||
-      slot.mek.bodyVariation === variationId ||
-      slot.mek.itemVariation === variationId
+      slot.headVariationId === variationId ||
+      slot.bodyVariationId === variationId ||
+      slot.itemVariationId === variationId
     );
   }).map(slot => ({
-    slotIndex: slot.slotIndex,
-    mekId: slot.mek?.sourceKey || slot.mekId,
+    slotIndex: slot.slotNumber,
+    mekId: slot.mekSourceKey || slot.mekAssetId,
     variationType:
-      slot.mek?.headVariation === variationId ? 'head' :
-      slot.mek?.bodyVariation === variationId ? 'body' : 'item'
-  })) || [];
+      slot.headVariationId === variationId ? 'head' :
+      slot.bodyVariationId === variationId ? 'body' : 'item'
+  }));
 
   const hasBuffs = breakdown && breakdown.length > 0;
   const hasMechanisms = mechanismSources.length > 0;
@@ -616,6 +615,7 @@ export default function EssenceBalancesViewer({ onClose }: EssenceBalancesViewer
                       <BuffBreakdownRow
                         variationId={balance.variationId}
                         walletAddress={walletAddress}
+                        slots={allSlots}
                       />
                     )}
                   </Fragment>
