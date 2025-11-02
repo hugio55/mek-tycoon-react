@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import { Id } from "@/convex/_generated/dataModel";
+import EssenceCapReductionWarning, { EssenceCapChange } from "./EssenceCapReductionWarning";
 
 interface EssenceBuffManagementProps {
   walletAddress: string;
@@ -22,6 +23,15 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
   const [capBonusInput, setCapBonusInput] = useState("0");
   const [isGlobal, setIsGlobal] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [warningState, setWarningState] = useState<{
+    isOpen: boolean;
+    changes: EssenceCapChange[];
+    buffId: Id<"essencePlayerBuffs"> | null;
+  }>({
+    isOpen: false,
+    changes: [],
+    buffId: null,
+  });
 
   // Mount portal and lock body scroll
   useEffect(() => {
@@ -32,11 +42,18 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
     };
   }, []);
 
-  // Query existing buffs for this wallet
+  // Query existing buffs and balances for this wallet
   const existingBuffs = useQuery(
     api.essence.getPlayerBuffs,
     { walletAddress }
   );
+
+  const essenceState = useQuery(
+    api.essence.getPlayerEssenceState,
+    { walletAddress }
+  );
+
+  const essenceConfig = useQuery(api.essence.getEssenceConfig, {});
 
   // Mutations
   const addCapBuff = useMutation(api.essence.addCapBuff);
@@ -125,18 +142,79 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
     }
   };
 
-  // Handler to remove a buff
+  // Handler to remove a buff - with essence loss warning
   const handleRemoveBuff = async (buffId: Id<"essencePlayerBuffs">) => {
-    if (!confirm('Are you sure you want to remove this buff?')) return;
-
     try {
-      await removeCapBuff({ buffId });
+      // Find the buff being removed
+      const buff = existingBuffs?.find((b: any) => b._id === buffId);
+      if (!buff || !essenceConfig || !essenceState) {
+        setStatusMessage({ type: 'error', message: 'Failed to load buff data' });
+        setTimeout(() => setStatusMessage(null), 3000);
+        return;
+      }
+
+      // Find the corresponding balance
+      const balance = essenceState.balances?.find((b: any) => b.variationId === buff.variationId);
+
+      if (balance && buff.capBonus > 0) {
+        const currentCap = essenceConfig.essenceCap + buff.capBonus;
+        const newCap = essenceConfig.essenceCap;
+        const currentAmount = balance.accumulatedAmount;
+        const lossAmount = Math.max(0, currentAmount - newCap);
+
+        if (lossAmount > 0) {
+          // Show warning lightbox
+          setWarningState({
+            isOpen: true,
+            changes: [
+              {
+                variationName: balance.variationName,
+                variationType: balance.variationType,
+                currentCap,
+                newCap,
+                currentAmount,
+                lossAmount,
+              },
+            ],
+            buffId,
+          });
+          return;
+        }
+      }
+
+      // No loss, proceed directly
+      if (!confirm('Remove this buff?')) return;
+      await removeCapBuff({ buffId, acknowledgeEssenceLoss: false });
       setStatusMessage({ type: 'success', message: 'Buff removed successfully' });
       setTimeout(() => setStatusMessage(null), 3000);
     } catch (error) {
       setStatusMessage({ type: 'error', message: 'Failed to remove buff' });
       setTimeout(() => setStatusMessage(null), 3000);
     }
+  };
+
+  // Confirm buff removal after warning acknowledged
+  const confirmBuffRemoval = async () => {
+    if (!warningState.buffId) return;
+
+    try {
+      await removeCapBuff({
+        buffId: warningState.buffId,
+        acknowledgeEssenceLoss: true, // User acknowledged the warning
+      });
+      setStatusMessage({ type: 'success', message: 'Buff removed (essence loss applied)' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      setWarningState({ isOpen: false, changes: [], buffId: null });
+    } catch (error) {
+      setStatusMessage({ type: 'error', message: 'Failed to remove buff' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      setWarningState({ isOpen: false, changes: [], buffId: null });
+    }
+  };
+
+  // Cancel buff removal
+  const cancelBuffRemoval = () => {
+    setWarningState({ isOpen: false, changes: [], buffId: null });
   };
 
   // Only render portal on client-side after mount

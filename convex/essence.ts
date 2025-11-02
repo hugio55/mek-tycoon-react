@@ -1395,13 +1395,129 @@ export const addCapBuff = mutation({
 });
 
 /**
- * Remove a cap bonus buff
+ * Query to check potential essence loss before removing a buff
+ * Frontend should call this first and show warning if loss will occur
  */
-export const removeCapBuff = mutation({
+export const checkBuffRemovalImpact = query({
   args: {
     buffId: v.id("essencePlayerBuffs"),
   },
   handler: async (ctx, args) => {
+    // Get the buff being removed
+    const buff = await ctx.db.get(args.buffId);
+    if (!buff) {
+      throw new Error("Buff not found");
+    }
+
+    // Get essence config
+    const config = await ctx.db
+      .query("essenceConfig")
+      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .first();
+
+    if (!config) {
+      throw new Error("Essence config not found");
+    }
+
+    // Get current balance for this variation
+    const balance = await ctx.db
+      .query("essenceBalances")
+      .withIndex("by_wallet_and_variation", (q) =>
+        q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
+      )
+      .first();
+
+    if (!balance) {
+      // No balance exists, so no loss possible
+      return {
+        willLoseEssence: false,
+        lossAmount: 0,
+        changes: [],
+      };
+    }
+
+    const currentCap = config.essenceCap + buff.capBonus;
+    const newCap = config.essenceCap; // Back to base cap after buff removal
+    const currentAmount = balance.accumulatedAmount;
+    const newAmount = clampEssenceToCap(currentAmount, newCap);
+    const lossAmount = Math.max(0, currentAmount - newAmount);
+
+    return {
+      willLoseEssence: lossAmount > 0,
+      lossAmount,
+      changes: [
+        {
+          variationName: balance.variationName,
+          variationType: balance.variationType,
+          currentCap,
+          newCap,
+          currentAmount,
+          lossAmount,
+        },
+      ],
+    };
+  },
+});
+
+/**
+ * Remove a cap bonus buff
+ * CRITICAL: Frontend should call checkBuffRemovalImpact first and show warning if needed
+ */
+export const removeCapBuff = mutation({
+  args: {
+    buffId: v.id("essencePlayerBuffs"),
+    acknowledgeEssenceLoss: v.optional(v.boolean()), // Must be true if loss will occur
+  },
+  handler: async (ctx, args) => {
+    // Get the buff to check if it will cause essence loss
+    const buff = await ctx.db.get(args.buffId);
+    if (!buff) {
+      throw new Error("Buff not found");
+    }
+
+    // Get config and balance to check for loss
+    const config = await ctx.db
+      .query("essenceConfig")
+      .withIndex("by_config_type", (q) => q.eq("configType", "global"))
+      .first();
+
+    const balance = await ctx.db
+      .query("essenceBalances")
+      .withIndex("by_wallet_and_variation", (q) =>
+        q.eq("walletAddress", buff.walletAddress).eq("variationId", buff.variationId)
+      )
+      .first();
+
+    if (config && balance && buff.capBonus > 0) {
+      const currentCap = config.essenceCap + buff.capBonus;
+      const newCap = config.essenceCap;
+      const currentAmount = balance.accumulatedAmount;
+      const newAmount = clampEssenceToCap(currentAmount, newCap);
+      const lossAmount = currentAmount - newAmount;
+
+      // If loss will occur, require acknowledgment
+      if (lossAmount > 0 && !args.acknowledgeEssenceLoss) {
+        throw new Error(
+          `This will cause loss of ${lossAmount.toFixed(2)} ${balance.variationName} essence. ` +
+            `Set acknowledgeEssenceLoss=true to proceed.`
+        );
+      }
+
+      // Apply the loss by clamping to new cap
+      if (lossAmount > 0) {
+        await ctx.db.patch(balance._id, {
+          accumulatedAmount: newAmount,
+          lastSnapshotTime: Date.now(),
+          lastUpdated: Date.now(),
+        });
+
+        console.log(
+          `⚠️ [BUFF REMOVAL] ${balance.variationName} essence reduced from ${currentAmount.toFixed(2)} to ${newAmount.toFixed(2)} (lost ${lossAmount.toFixed(2)})`
+        );
+      }
+    }
+
+    // Delete the buff
     await ctx.db.delete(args.buffId);
     return { success: true };
   },
