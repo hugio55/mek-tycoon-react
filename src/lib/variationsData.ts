@@ -1,5 +1,5 @@
 // Complete variations data with XP costs from VARIATION_XP_TALENT_TREE.md
-// Generated from completeVariationRarity.ts (288 total variations)
+// Generated from completeVariationRarity.ts (291 total variations)
 export const variationsData = {
   heads: [
     { name: "Taser", xp: 109, copies: 132 },

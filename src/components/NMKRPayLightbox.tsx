@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import NFTClaimSuccess from './NFTClaimSuccess';
 
@@ -19,6 +19,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [claimedNFT, setClaimedNFT] = useState<any>(null);
+  const [mockPaymentProcessing, setMockPaymentProcessing] = useState(false);
 
   // Get NMKR configuration
   const NMKR_PROJECT_ID = process.env.NEXT_PUBLIC_NMKR_PROJECT_ID;
@@ -26,6 +27,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
   // Determine if we're in test mode (no real wallet connected)
   const isTestMode = walletAddress === 'test_wallet_address_for_nmkr_testing';
+
+  // Mutation for creating mock claim in test mode
+  const recordClaim = useMutation(api.commemorativeNFTClaims.recordClaim);
 
   // Poll for recent purchases
   // In test mode: check for ANY recent claim (within last 5 minutes)
@@ -48,9 +52,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, []);
 
-  // Open NMKR payment window on mount
+  // Open NMKR payment window on mount (ONLY if NOT in test mode)
   useEffect(() => {
-    if (!mounted || state !== 'payment') return;
+    if (!mounted || state !== 'payment' || isTestMode) return;
 
     // Use preprod URL for testnet, mainnet URL for production
     const baseUrl = NMKR_NETWORK === 'mainnet'
@@ -88,7 +92,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         popup.close();
       }
     };
-  }, [mounted, state, NMKR_PROJECT_ID]);
+  }, [mounted, state, NMKR_PROJECT_ID, isTestMode]);
 
   // Check for claim completion
   useEffect(() => {
@@ -119,12 +123,105 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, [paymentWindow]);
 
+  // Handle mock payment completion (test mode only)
+  const handleMockPayment = async () => {
+    if (!isTestMode) return;
+
+    setMockPaymentProcessing(true);
+
+    try {
+      // Create a mock claim record
+      await recordClaim({
+        walletAddress: walletAddress,
+        transactionHash: `mock_tx_${Date.now()}`,
+        nftName: "Commemorative NFT (Test)",
+        nftAssetId: `mock_asset_${Date.now()}`,
+        metadata: {
+          imageUrl: "/commemorative-nft.png",
+          collection: "Mek Tycoon Commemorative",
+          artist: "Mek Tycoon Team",
+          website: "https://mektycoon.com",
+        },
+      });
+
+      // Transition to processing state
+      setState('processing');
+    } catch (error) {
+      console.error('Mock payment error:', error);
+      setErrorMessage('Failed to create mock claim');
+      setState('error');
+    } finally {
+      setMockPaymentProcessing(false);
+    }
+  };
+
   // Only render on client-side after mount
   if (!mounted) return null;
 
   const renderContent = () => {
     switch (state) {
       case 'payment':
+        // TEST MODE: Show mock payment UI
+        if (isTestMode) {
+          return (
+            <div className="text-center">
+              {/* TEST MODE Banner */}
+              <div className="mb-6 p-3 bg-red-500/20 border-2 border-red-500 rounded animate-pulse">
+                <div className="text-red-400 font-bold text-lg uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  ⚠️ TEST MODE ⚠️
+                </div>
+                <p className="text-red-300 text-xs mt-1">Mock Payment - No Real Money Required</p>
+              </div>
+
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  Mock NFT Purchase
+                </h2>
+                <p className="text-gray-400 mb-4">
+                  This is a simulated payment window for testing purposes
+                </p>
+              </div>
+
+              {/* Mock Payment Details */}
+              <div className="bg-black/50 border border-yellow-500/30 rounded-lg p-4 mb-6 text-left">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Item:</span>
+                    <span className="text-yellow-400">Commemorative NFT</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Price:</span>
+                    <span className="text-yellow-400">0 ₳ (Test)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Network:</span>
+                    <span className="text-yellow-400">{NMKR_NETWORK}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Wallet:</span>
+                    <span className="text-yellow-400 text-xs truncate max-w-[200px]">{walletAddress}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mock Payment Button */}
+              <button
+                onClick={handleMockPayment}
+                disabled={mockPaymentProcessing}
+                className="w-full px-6 py-4 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                {mockPaymentProcessing ? 'Processing...' : '✓ Complete Mock Payment'}
+              </button>
+
+              <p className="text-xs text-gray-500 mt-4">
+                Click the button above to simulate a successful payment
+              </p>
+            </div>
+          );
+        }
+
+        // PRODUCTION MODE: Show normal payment UI
         return (
           <div className="text-center">
             <div className="mb-6">
@@ -245,7 +342,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
       {/* Modal container with industrial styling */}
       <div
-        className="relative w-full max-w-md bg-black/95 border-4 border-yellow-500/50 overflow-hidden shadow-2xl p-8"
+        className={`relative w-full max-w-md bg-black/95 border-4 ${isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} overflow-hidden shadow-2xl p-8`}
         style={{ clipPath: 'polygon(0% 0%, 98% 0%, 100% 2%, 100% 100%, 2% 100%, 0% 98%)' }}
         onClick={(e) => e.stopPropagation()}
       >

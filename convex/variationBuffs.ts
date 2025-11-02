@@ -93,15 +93,12 @@ export const applyBuffsToVariations = mutation({
   },
   handler: async (ctx, args) => {
     // Get all variations (heads, bodies, traits)
+    const { VARIATIONS_BY_TYPE } = await import('../src/lib/completeVariationRarity');
+
     const allVariations: any[] = [];
-
-    // TODO: Import variation data - currently commented out due to import issues
-    // const { ALL_VARIATIONS } = await import('../src/lib/variationsReferenceData');
-
-    // For now, return empty array to fix TypeScript errors
-    // allVariations.push(...ALL_VARIATIONS.heads.map((v: any) => ({ ...v, category: 'head' })));
-    // allVariations.push(...ALL_VARIATIONS.bodies.map((v: any) => ({ ...v, category: 'body' })));
-    // allVariations.push(...ALL_VARIATIONS.items.map((v: any) => ({ ...v, category: 'item' })));
+    allVariations.push(...VARIATIONS_BY_TYPE.heads.map((v: any) => ({ ...v, category: 'head' })));
+    allVariations.push(...VARIATIONS_BY_TYPE.bodies.map((v: any) => ({ ...v, category: 'body' })));
+    allVariations.push(...VARIATIONS_BY_TYPE.traits.map((v: any) => ({ ...v, category: 'item' })));
 
     // Sort variations by a pseudo-rarity (for demo purposes, using name length and special characters)
     const sortedVariations = allVariations.sort((a, b) => {
