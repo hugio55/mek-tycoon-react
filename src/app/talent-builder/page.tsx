@@ -1743,20 +1743,47 @@ export default function TalentBuilderPage() {
                 Viewport: {showViewportBox ? 'ON' : 'OFF'}
               </button>
 
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  value={viewportDimensions.width}
+                  onChange={(e) => setViewportDimensions({ ...viewportDimensions, width: parseInt(e.target.value) || 800 })}
+                  className="w-16 px-1 py-1 text-sm rounded bg-gray-700 text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/50 transition-colors font-mono text-center"
+                  title="Viewport width"
+                  min="100"
+                  max="5000"
+                />
+                <span className="text-gray-500">×</span>
+                <input
+                  type="number"
+                  value={viewportDimensions.height}
+                  onChange={(e) => setViewportDimensions({ ...viewportDimensions, height: parseInt(e.target.value) || 600 })}
+                  className="w-16 px-1 py-1 text-sm rounded bg-gray-700 text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/50 transition-colors font-mono text-center"
+                  title="Viewport height"
+                  min="100"
+                  max="5000"
+                />
+              </div>
+
               <select
-                value={`${viewportDimensions.width}x${viewportDimensions.height}`}
+                value="presets"
                 onChange={(e) => {
-                  const [width, height] = e.target.value.split('x').map(Number);
-                  setViewportDimensions({ width, height });
+                  if (e.target.value !== 'presets') {
+                    const [width, height] = e.target.value.split('x').map(Number);
+                    setViewportDimensions({ width, height });
+                  }
                 }}
-                className="px-2 py-1 text-sm rounded bg-gray-700 text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/50 transition-colors font-mono"
-                title="Viewport dimensions"
+                className="px-2 py-1 text-sm rounded bg-gray-700 text-gray-400 border border-gray-600 hover:border-gray-500 transition-colors"
+                title="Quick presets"
               >
+                <option value="presets">Presets</option>
                 <option value="800x600">800×600</option>
                 <option value="1024x768">1024×768</option>
-                <option value="1920x1080">1920×1080</option>
-                <option value="1280x720">1280×720</option>
+                <option value="1920x1080">1920×1080 (HD)</option>
+                <option value="1280x720">1280×720 (HD)</option>
                 <option value="1440x900">1440×900</option>
+                <option value="375x667">375×667 (Phone)</option>
+                <option value="414x896">414×896 (iPhone)</option>
               </select>
             </div>
           </div>
@@ -2188,91 +2215,18 @@ export default function TalentBuilderPage() {
               </div>
             )}
 
-            {/* Viewport Box - Shows what area will be visible on the webpage */}
+            {/* Viewport Box - Defines canvas bounds for webpage import */}
             {showViewportBox && (
               <div
-                className="absolute border-[3px] border-yellow-500 pointer-events-none backdrop-blur-[2px]"
+                className="absolute pointer-events-none border-2 border-dashed border-yellow-500"
                 style={{
                   left: `${3000 - viewportDimensions.width / 2}px`,
                   top: `${3000 - viewportDimensions.height / 2}px`,
                   width: `${viewportDimensions.width}px`,
                   height: `${viewportDimensions.height}px`,
-                  background: 'rgba(250, 182, 23, 0.05)',
-                  boxShadow: '0 0 25px rgba(250, 182, 23, 0.4), inset 0 0 30px rgba(250, 182, 23, 0.08)',
-                  zIndex: 5,
-                  animation: 'mek-pulse-yellow 3s infinite'
+                  zIndex: 5
                 }}
-              >
-                {/* Corner markers - industrial style */}
-                <div
-                  className="absolute -top-1 -left-1 w-5 h-5 border-l-2 border-t-2 border-yellow-400"
-                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
-                />
-                <div
-                  className="absolute -top-1 -right-1 w-5 h-5 border-r-2 border-t-2 border-yellow-400"
-                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
-                />
-                <div
-                  className="absolute -bottom-1 -left-1 w-5 h-5 border-l-2 border-b-2 border-yellow-400"
-                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
-                />
-                <div
-                  className="absolute -bottom-1 -right-1 w-5 h-5 border-r-2 border-b-2 border-yellow-400"
-                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
-                />
-
-                {/* Label with industrial styling */}
-                <div
-                  className="absolute -top-10 left-0 bg-black/90 text-yellow-400 px-3 py-1 text-xs font-bold tracking-wider border border-yellow-500/50 backdrop-blur-sm"
-                  style={{
-                    boxShadow: '0 0 15px rgba(250, 182, 23, 0.5)',
-                    clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)',
-                    fontFamily: "'Orbitron', monospace"
-                  }}
-                >
-                  VIEWPORT - {viewportDimensions.width}×{viewportDimensions.height}
-                </div>
-
-                {/* Hazard stripe pattern on edges (very subtle) */}
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-20"
-                  style={{
-                    backgroundImage: `
-                      repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(250, 182, 23, 0.1) 10px, rgba(250, 182, 23, 0.1) 11px),
-                      repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(250, 182, 23, 0.1) 10px, rgba(250, 182, 23, 0.1) 11px)
-                    `
-                  }}
-                />
-
-                {/* Center crosshair with industrial styling */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent"
-                    style={{ boxShadow: '0 0 8px rgba(250, 182, 23, 0.3)' }}
-                  />
-                  <div
-                    className="absolute h-full w-[2px] bg-gradient-to-b from-transparent via-yellow-400/40 to-transparent"
-                    style={{ boxShadow: '0 0 8px rgba(250, 182, 23, 0.3)' }}
-                  />
-                  <div
-                    className="w-4 h-4 border-2 border-yellow-400 bg-transparent relative"
-                    style={{
-                      boxShadow: '0 0 15px rgba(250, 182, 23, 0.6)',
-                      clipPath: 'polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)'
-                    }}
-                  />
-                </div>
-
-                {/* Scanning line animation (optional, very subtle) */}
-                <div
-                  className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent pointer-events-none"
-                  style={{
-                    top: '50%',
-                    animation: 'mek-scan-line 3s linear infinite',
-                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.8)'
-                  }}
-                />
-              </div>
+              />
             )}
 
             {/* Connections */}
