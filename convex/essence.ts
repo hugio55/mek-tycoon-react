@@ -1872,3 +1872,103 @@ export const addGlobalCapBuff = mutation({
     return { success: true, created, updated, totalVariations: 291 };
   },
 });
+
+// ============================================
+// PHASE 1 TESTING MUTATIONS
+// These are temporary mutations for testing the granular buff system
+// TODO: Remove these after Phase 1 verification is complete
+// ============================================
+
+/**
+ * Test adding a buff source (Phase 1 verification)
+ */
+export const testAddBuffSource = mutation({
+  args: {
+    walletAddress: v.string(),
+    variationId: v.number(),
+    rateMultiplier: v.number(),
+    capBonus: v.number(),
+    sourceType: v.string(),
+    sourceId: v.string(),
+    sourceName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { addBuffSource } = await import("./lib/essenceHelpers");
+
+    const result = await addBuffSource(ctx, {
+      walletAddress: args.walletAddress,
+      variationId: args.variationId,
+      rateMultiplier: args.rateMultiplier,
+      capBonus: args.capBonus,
+      sourceType: args.sourceType,
+      sourceId: args.sourceId,
+      sourceName: args.sourceName,
+      grantedBy: "test",
+      grantReason: "Phase 1 testing",
+    });
+
+    return result;
+  },
+});
+
+/**
+ * Test getting aggregated buffs (Phase 1 verification)
+ */
+export const testGetAggregatedBuffs = query({
+  args: {
+    walletAddress: v.string(),
+    variationId: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { getAggregatedBuffs } = await import("./lib/essenceHelpers");
+
+    const result = await getAggregatedBuffs(ctx, {
+      walletAddress: args.walletAddress,
+      variationId: args.variationId,
+    });
+
+    return result;
+  },
+});
+
+/**
+ * Test removing a buff source (Phase 1 verification)
+ */
+export const testRemoveBuffSource = mutation({
+  args: {
+    walletAddress: v.string(),
+    variationId: v.number(),
+    sourceId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { removeBuffSource } = await import("./lib/essenceHelpers");
+
+    const result = await removeBuffSource(ctx, {
+      walletAddress: args.walletAddress,
+      variationId: args.variationId,
+      sourceId: args.sourceId,
+    });
+
+    return result;
+  },
+});
+
+/**
+ * Test cleanup - delete all test buff sources (Phase 1 verification)
+ */
+export const testCleanupBuffSources = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const buffs = await ctx.db
+      .query("essenceBuffSources")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .filter((q) => q.eq(q.field("grantedBy"), "test"))
+      .collect();
+
+    for (const buff of buffs) {
+      await ctx.db.delete(buff._id);
+    }
+
+    return { success: true, deletedCount: buffs.length };
+  },
+});
