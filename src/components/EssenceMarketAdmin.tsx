@@ -594,14 +594,7 @@ export default function EssenceMarketAdmin() {
                               <span className="text-purple-300 font-medium">{variation.name}</span>
                               <span className="text-gray-500 ml-2">({variation.type})</span>
                             </div>
-                            <span className={`text-xs px-2 py-0.5 rounded ${
-                              variation.tier === 'legendary' ? 'bg-yellow-900/30 text-yellow-400' :
-                              variation.tier === 'ultra-rare' ? 'bg-purple-900/30 text-purple-400' :
-                              variation.tier === 'very-rare' ? 'bg-blue-900/30 text-blue-400' :
-                              variation.tier === 'rare' ? 'bg-green-900/30 text-green-400' :
-                              variation.tier === 'uncommon' ? 'bg-gray-700/30 text-gray-400' :
-                              'bg-gray-800/30 text-gray-500'
-                            }`}>
+                            <span className="text-xs px-2 py-0.5 rounded bg-gray-700/30 text-gray-400">
                               #{variation.rank}
                             </span>
                           </div>

@@ -1,5 +1,5 @@
 import mekRarityMaster from '@/convex/mekRarityMaster.json';
-import { COMPLETE_VARIATION_RARITY, type RarityTier } from './completeVariationRarity';
+import { COMPLETE_VARIATION_RARITY } from './completeVariationRarity';
 
 // Build a lookup map using FULL sourceKey (e.g., "AA1-DM1-AP1")
 const fullSourceKeyLookup = new Map<string, { head: string; body: string; trait: string }>();
@@ -17,20 +17,18 @@ mekRarityMaster.forEach((mek: any) => {
 });
 
 // Build rarity lookup maps (using variation name as key)
-const rarityLookup = new Map<string, { count: number; tier: RarityTier }>();
+const rarityLookup = new Map<string, { count: number }>();
 
 COMPLETE_VARIATION_RARITY.forEach(variation => {
   const key = `${variation.type}-${variation.name.toLowerCase()}`;
   rarityLookup.set(key, {
-    count: variation.count,
-    tier: variation.tier
+    count: variation.count
   });
 });
 
 export interface VariationInfo {
   name: string;
   count: number;
-  tier: RarityTier;
   color: string;
 }
 
@@ -76,7 +74,7 @@ export function getVariationInfoFromFullKey(
   // Helper function to create VariationInfo from a name
   const getInfoForVariation = (name: string | undefined, type: 'head' | 'body' | 'trait'): VariationInfo => {
     if (!name) {
-      return { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' };
+      return { name: 'Unknown', count: 0, color: '#9ca3af' };
     }
     const rarityKey = `${type}-${name.toLowerCase()}`;
     const rarity = rarityLookup.get(rarityKey);
@@ -84,7 +82,6 @@ export function getVariationInfoFromFullKey(
     return {
       name,
       count: rarity?.count || 0,
-      tier: rarity?.tier || 'common',
       color: rarity ? getRarityColor(rarity.count) : '#9ca3af'
     };
   };
@@ -114,8 +111,8 @@ export function getVariationInfoFromFullKey(
 
   // No data available
   return {
-    head: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
-    body: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' },
-    trait: { name: 'Unknown', count: 0, tier: 'common', color: '#9ca3af' }
+    head: { name: 'Unknown', count: 0, color: '#9ca3af' },
+    body: { name: 'Unknown', count: 0, color: '#9ca3af' },
+    trait: { name: 'Unknown', count: 0, color: '#9ca3af' }
   };
 }
