@@ -2,10 +2,7 @@
   "mcpServers": {
     "sentry": {
       "type": "http",
-      "url": "https://mcp.sentry.dev/mcp",
-      "headers": {
-        "Authorization": "Bearer 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"
-      }
+      "url": "https://mcp.sentry.dev/mcp"
     }
   }
 }
