@@ -1143,12 +1143,27 @@ export default function CommemorativeToken1Admin() {
               Add
             </button>
             {config.testWallets && config.testWallets.length > 0 && (
-              <span className="text-gray-500 text-xs">
-                ({config.testWallets.map((w: string) => {
+              <div className="flex flex-wrap gap-1">
+                {config.testWallets.map((w: string) => {
                   const name = companyNames?.[w];
-                  return name || w.slice(0, 8);
-                }).join(', ')})
-              </span>
+                  const display = name || `${w.slice(0, 8)}...`;
+                  return (
+                    <button
+                      key={w}
+                      onClick={() => {
+                        if (confirm(`Remove ${display} from test wallets?`)) {
+                          handleRemoveTestWallet(w);
+                        }
+                      }}
+                      className="px-2 py-1 bg-orange-900/30 hover:bg-red-600/50 border border-orange-500/30 hover:border-red-500 text-orange-400 hover:text-red-400 rounded text-xs transition-all flex items-center gap-1"
+                      title={`Remove ${w}`}
+                    >
+                      <span>{display}</span>
+                      <span className="text-red-400">×</span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
