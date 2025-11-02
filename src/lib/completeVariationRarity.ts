@@ -1,6 +1,15 @@
 // Auto-generated variation rarity data
 // Generated from mekRarityMaster.json with 4000 Mek records
 // Total unique variations: 291
+//
+// IMPORTANT: Special "Empty" Trait Variations
+// The following trait variations ALL represent valid "no item equipped" states:
+//   - "Nil" (rank 18, legendary, 1-2 copies)
+//   - "Null" (rank 21, legendary, 1-2 copies)
+//   - "None" (rank 24, legendary, 1-2 copies)
+//   - "Nothing" (rank 291, common, 501 copies)
+// These should NEVER be filtered out or ignored - they are legitimate variations
+// that appear in actual Mek data and must be preserved across all systems.
 
 export type VariationType = 'head' | 'body' | 'trait';
 
@@ -1961,7 +1970,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
   },
   {
     id: 292,
-    name: "1960",
+    name: "1960's",
     type: "head",
     count: 55,
     percentage: "1.38",
@@ -2661,7 +2670,7 @@ export const COMPLETE_VARIATION_RARITY: VariationRarity[] = [
   },
   {
     id: 293,
-    name: "Ol",
+    name: "Ol' Faithful",
     type: "head",
     count: 98,
     percentage: "2.45",
