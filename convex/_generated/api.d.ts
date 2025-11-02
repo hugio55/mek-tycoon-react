@@ -49,6 +49,7 @@ import type * as chips from "../chips.js";
 import type * as cleanupDifficultyConfigs from "../cleanupDifficultyConfigs.js";
 import type * as commemorative from "../commemorative.js";
 import type * as commemorativeNFTClaims from "../commemorativeNFTClaims.js";
+import type * as commemorativePaymentTracking from "../commemorativePaymentTracking.js";
 import type * as commemorativeTokenCounters from "../commemorativeTokenCounters.js";
 import type * as commemorativeTokens from "../commemorativeTokens.js";
 import type * as comprehensiveWalletFix from "../comprehensiveWalletFix.js";
@@ -248,6 +249,7 @@ declare const fullApi: ApiFromModules<{
   cleanupDifficultyConfigs: typeof cleanupDifficultyConfigs;
   commemorative: typeof commemorative;
   commemorativeNFTClaims: typeof commemorativeNFTClaims;
+  commemorativePaymentTracking: typeof commemorativePaymentTracking;
   commemorativeTokenCounters: typeof commemorativeTokenCounters;
   commemorativeTokens: typeof commemorativeTokens;
   comprehensiveWalletFix: typeof comprehensiveWalletFix;
