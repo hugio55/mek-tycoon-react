@@ -119,6 +119,7 @@ import type * as levelColors from "../levelColors.js";
 import type * as lib_devLog from "../lib/devLog.js";
 import type * as lib_essenceCalculations from "../lib/essenceCalculations.js";
 import type * as lib_essenceHelpers from "../lib/essenceHelpers.js";
+import type * as lib_essenceWarningHelpers from "../lib/essenceWarningHelpers.js";
 import type * as lib_goldCalculations from "../lib/goldCalculations.js";
 import type * as lib_nftFetchingService from "../lib/nftFetchingService.js";
 import type * as lib_queryCache from "../lib/queryCache.js";
@@ -319,6 +320,7 @@ declare const fullApi: ApiFromModules<{
   "lib/devLog": typeof lib_devLog;
   "lib/essenceCalculations": typeof lib_essenceCalculations;
   "lib/essenceHelpers": typeof lib_essenceHelpers;
+  "lib/essenceWarningHelpers": typeof lib_essenceWarningHelpers;
   "lib/goldCalculations": typeof lib_goldCalculations;
   "lib/nftFetchingService": typeof lib_nftFetchingService;
   "lib/queryCache": typeof lib_queryCache;
