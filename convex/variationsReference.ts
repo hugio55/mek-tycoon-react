@@ -1,9 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { ALL_VARIATIONS } from "../src/lib/variationsReferenceData";
+import { VARIATIONS_BY_TYPE } from "../src/lib/completeVariationRarity";
 
-// Note: ALL_VARIATIONS data has been moved to lib/variationsReferenceData.ts
-// This keeps the data separate from Convex backend functions to prevent import errors
+// Note: VARIATIONS_BY_TYPE data comes from lib/completeVariationRarity.ts
+// This is the single source of truth for all variation data (291 total variations)
 
 // Mutation to seed variations reference table
 export const seedVariationsReference = mutation({

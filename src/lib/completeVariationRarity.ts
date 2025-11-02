@@ -2955,3 +2955,23 @@ export function getVariationsByRankRange(minRank: number, maxRank: number): Vari
   }
   return COMPLETE_VARIATION_RARITY.slice(minRank - 1, maxRank);
 }
+
+// Hierarchical exports for systems that need grouped access
+export const VARIATIONS_BY_TYPE = {
+  heads: COMPLETE_VARIATION_RARITY.filter(v => v.type === 'head'),
+  bodies: COMPLETE_VARIATION_RARITY.filter(v => v.type === 'body'),
+  traits: COMPLETE_VARIATION_RARITY.filter(v => v.type === 'trait')
+} as const;
+
+// Convenience exports for direct access
+export const HEAD_VARIATIONS = VARIATIONS_BY_TYPE.heads;
+export const BODY_VARIATIONS = VARIATIONS_BY_TYPE.bodies;
+export const TRAIT_VARIATIONS = VARIATIONS_BY_TYPE.traits;
+
+// Summary counts
+export const VARIATION_COUNTS = {
+  heads: HEAD_VARIATIONS.length,
+  bodies: BODY_VARIATIONS.length,
+  traits: TRAIT_VARIATIONS.length,
+  total: COMPLETE_VARIATION_RARITY.length
+};
