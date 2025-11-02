@@ -13,8 +13,9 @@ export default function CommemorativeToken1Admin() {
   // Query: Get all available snapshots from Whitelist Manager
   const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
 
-  // Mutation: Set active snapshot
+  // Mutations
   const setActiveSnapshot = useMutation(api.nftEligibility.setActiveSnapshot);
+  const clearActiveSnapshot = useMutation(api.nftEligibility.clearActiveSnapshot);
 
   const handleActivateSnapshot = async () => {
     if (!selectedSnapshotId) {
@@ -41,6 +42,26 @@ export default function CommemorativeToken1Admin() {
     }
   };
 
+  const handleDeactivateSnapshot = async () => {
+    const confirmed = confirm(
+      '⚠️ Deactivate current snapshot?\n\n' +
+      'This will immediately remove the "Claim NFT" button from ALL users\' homepages.\n\n' +
+      'You can reactivate a snapshot at any time.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const result = await clearActiveSnapshot();
+      if (result.success) {
+        alert(`✅ Snapshot deactivated!\n\nNo wallets are now eligible to see the claim button.`);
+      }
+    } catch (error: any) {
+      console.error('Error deactivating snapshot:', error);
+      alert(`❌ Error: ${error.message}`);
+    }
+  };
+
   // Find the selected snapshot details for preview
   const selectedSnapshot = allSnapshots?.find((s: any) => s._id === selectedSnapshotId);
 
@@ -63,7 +84,7 @@ export default function CommemorativeToken1Admin() {
         </h3>
 
         {config?.hasActiveSnapshot ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-green-400 text-2xl">✓</span>
               <span className="text-green-400 font-bold">ACTIVE</span>
@@ -79,6 +100,15 @@ export default function CommemorativeToken1Admin() {
                 Last updated: {new Date(config.lastUpdated).toLocaleString()}
               </div>
             )}
+
+            {/* Deactivate Button */}
+            <button
+              onClick={handleDeactivateSnapshot}
+              className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border-2 border-red-500/70 hover:border-red-500 text-red-400 hover:text-red-300 font-bold rounded transition-all mt-3"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              🚫 DEACTIVATE SNAPSHOT
+            </button>
           </div>
         ) : (
           <div className="space-y-2">
