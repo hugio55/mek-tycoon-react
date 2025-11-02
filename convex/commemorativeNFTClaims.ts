@@ -174,3 +174,23 @@ export const getClaimStats = query({
     };
   },
 });
+
+// Get next NFT number for preview (before purchase)
+export const getNextNFTNumber = query({
+  args: {},
+  handler: async (ctx) => {
+    const allClaims = await ctx.db
+      .query("commemorativeNFTClaims")
+      .collect();
+
+    const totalMinted = allClaims.length;
+    const nextNumber = totalMinted + 1;
+
+    console.log('[💰CLAIM] Next NFT number:', nextNumber, '(total minted:', totalMinted + ')');
+
+    return {
+      nextNumber,
+      totalMinted,
+    };
+  },
+});

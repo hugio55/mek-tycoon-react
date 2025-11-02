@@ -12,14 +12,14 @@ interface NMKRPayLightboxProps {
   debugState?: 'loading' | 'success'; // Direct state override for debug panel
 }
 
-type LightboxState = 'payment' | 'processing' | 'success' | 'error';
+type LightboxState = 'preview' | 'payment' | 'processing' | 'success' | 'error';
 
 export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose, debugState }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [state, setState] = useState<LightboxState>(
     debugState === 'loading' ? 'processing' :
     debugState === 'success' ? 'success' :
-    'payment'
+    'preview' // Start with preview, not payment
   );
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [paymentWindowOpenedAt, setPaymentWindowOpenedAt] = useState<number>(0);
@@ -71,6 +71,9 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
   // Mutation for creating mock claim in test mode
   const recordClaim = useMutation(api.commemorativeNFTClaims.recordClaim);
+
+  // Get next NFT number for preview
+  const nftNumberData = useQuery(api.commemorativeNFTClaims.getNextNFTNumber);
 
   // Poll for payment status (webhook-based, accurate!)
   // This replaces the old fake setTimeout logic with real webhook tracking
@@ -304,6 +307,70 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
   const renderContent = () => {
     switch (state) {
+      case 'preview':
+        // PREVIEW STAGE: Show NFT image and details before payment
+        const nftNumber = nftNumberData?.nextNumber || 1;
+        const nftTitle = `Lab Rat #${nftNumber}`;
+
+        return (
+          <div className="text-center">
+            {/* NFT Preview Section */}
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                Your NFT
+              </h2>
+
+              {/* Large NFT Image */}
+              <div className="relative w-full max-w-[500px] mx-auto mb-6 border-4 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
+                {/* Industrial corner accents on image */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-yellow-500/70 z-10"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-yellow-500/70 z-10"></div>
+
+                <img
+                  src="/lab-rat-nft.png"
+                  alt={nftTitle}
+                  className="w-full h-auto"
+                  onError={(e) => {
+                    // Fallback if image doesn't exist yet
+                    e.currentTarget.src = '/logo-big.png';
+                  }}
+                />
+
+                {/* Overlay with glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+              </div>
+
+              {/* NFT Title */}
+              <div className="mb-6 p-4 bg-black/60 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
+                <h3 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  {nftTitle}
+                </h3>
+                <p className="text-gray-400 text-sm mt-2">
+                  Commemorative NFT Collection
+                </p>
+                {nftNumberData && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Total Minted: {nftNumberData.totalMinted}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Proceed to Payment Button */}
+            <button
+              onClick={() => setState('payment')}
+              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg hover:shadow-yellow-500/50"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              💰 Pay via NMKR
+            </button>
+
+            <p className="text-xs text-gray-500 mt-4">
+              Click to proceed to secure payment via NMKR
+            </p>
+          </div>
+        );
+
       case 'payment':
         // TEST MODE: Show mock payment UI
         if (isTestMode) {
@@ -702,9 +769,9 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
 
-      {/* Modal container with industrial styling - matching EssenceDistributionLightbox */}
+      {/* Modal container with industrial styling - larger for preview */}
       <div
-        className={`relative w-full max-w-md bg-black/20 backdrop-blur-md border-2 ${isDebugMode ? 'border-purple-500/70' : isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} rounded-lg overflow-hidden shadow-2xl p-8`}
+        className={`relative w-full ${state === 'preview' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 ${isDebugMode ? 'border-purple-500/70' : isTestMode ? 'border-red-500/70' : 'border-yellow-500/50'} rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Industrial corner accents */}

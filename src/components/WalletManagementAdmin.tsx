@@ -36,6 +36,10 @@ export default function WalletManagementAdmin() {
       }
     };
     loadSession();
+  }, []);
+
+  // Separate useEffect for mounted state (required for portal rendering)
+  useEffect(() => {
     setMounted(true);
   }, []);
 
@@ -1043,16 +1047,19 @@ Check console for full timeline.
                             className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded transition-colors whitespace-nowrap"
                             onMouseEnter={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
-                              setDropdownPosition({
+                              const position = {
                                 top: rect.bottom,
                                 left: rect.right - 220 // 220px is dropdown width
-                              });
+                              };
+                              console.log('[DROPDOWN] Mounted:', mounted, 'Position:', position, 'Wallet:', wallet.walletAddress.slice(0, 12));
+                              setDropdownPosition(position);
                               setHoveredDropdown(wallet.walletAddress);
                             }}
                             onMouseLeave={(e) => {
                               // Only close if mouse is not moving to dropdown
                               const relatedTarget = e.relatedTarget as HTMLElement;
                               if (!relatedTarget || !relatedTarget.closest('[data-dropdown]')) {
+                                console.log('[DROPDOWN] Closing dropdown');
                                 setHoveredDropdown(null);
                                 setDropdownPosition(null);
                               }
@@ -1061,7 +1068,9 @@ Check console for full timeline.
                             Actions ▼
                           </button>
 
-                          {mounted && hoveredDropdown === wallet.walletAddress && dropdownPosition && createPortal(
+                          {mounted && hoveredDropdown === wallet.walletAddress && dropdownPosition && (() => {
+                            console.log('[DROPDOWN] Rendering portal for:', wallet.walletAddress.slice(0, 12));
+                            return createPortal(
                             <div
                               data-dropdown="true"
                               className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
@@ -1185,7 +1194,8 @@ Check console for full timeline.
                               </button>
                             </div>,
                             document.body
-                          )}
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="px-2 py-2 text-center">
