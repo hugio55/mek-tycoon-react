@@ -462,5 +462,16 @@ export default function EssenceBuffManagement({ walletAddress, onClose }: Essenc
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <EssenceCapReductionWarning
+        isOpen={warningState.isOpen}
+        changes={warningState.changes}
+        actionDescription="remove this buff"
+        onConfirm={confirmBuffRemoval}
+        onCancel={cancelBuffRemoval}
+      />
+    </>
+  );
 }
