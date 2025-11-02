@@ -5,37 +5,31 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
-import { buildCommemorativeMetadata } from '@/lib/cardano/metadata';
-import { mintNFT } from '@/lib/cardano/mintingTx';
+import NMKRPayLightbox from '@/components/NMKRPayLightbox';
+import NFTClaimSuccess from '@/components/NFTClaimSuccess';
 
 interface AirdropClaimBannerProps {
   userId: Id<"users"> | null;
   walletAddress: string | null;
 }
 
-type MintStatus =
+type ClaimStatus =
   | "idle"
   | "checking"
   | "eligible"
   | "ineligible"
-  | "reserving"
-  | "building_tx"
-  | "signing"
-  | "submitting"
-  | "confirming"
-  | "success"
-  | "error";
+  | "processing"
+  | "success";
 
 export default function AirdropClaimBanner({ userId, walletAddress }: AirdropClaimBannerProps) {
-  const [mintStatus, setMintStatus] = useState<MintStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [reservationId, setReservationId] = useState<Id<"commemorativeTokens"> | null>(null);
-  const [editionNumber, setEditionNumber] = useState<number | null>(null);
-  const [txHash, setTxHash] = useState<string>("");
+  const [claimStatus, setClaimStatus] = useState<ClaimStatus>("idle");
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
   const [debugClaimState, setDebugClaimState] = useState<'claimed' | 'unclaimed' | null>(null);
 
   const TOKEN_TYPE = "phase_1_beta";
   const PRICE_ADA = 10;
+  const NMKR_PAYMENT_URL = "https://pay.nmkr.io/?p=c68dc0e9b2ca4e0eb9c4a57ef85a794d&c=1";
 
   // Query eligibility
   const eligibility = useQuery(
@@ -48,11 +42,6 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     api.commemorativeTokens.getTokenTypeInfo,
     { tokenType: TOKEN_TYPE }
   );
-
-  // Mutations
-  const reserveEdition = useMutation(api.commemorativeTokens.reserveEdition);
-  const confirmMint = useMutation(api.commemorativeTokens.confirmMint);
-  const markFailed = useMutation(api.commemorativeTokens.markMintFailed);
 
   // Load debug state from localStorage and listen for changes
   useEffect(() => {
@@ -79,20 +68,19 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   // Update status based on eligibility
   useEffect(() => {
     if (!walletAddress) {
-      setMintStatus("idle");
+      setClaimStatus("idle");
       return;
     }
 
     if (eligibility === undefined) {
-      setMintStatus("checking");
+      setClaimStatus("checking");
       return;
     }
 
     if (eligibility.eligible) {
-      setMintStatus("eligible");
+      setClaimStatus("eligible");
     } else {
-      setMintStatus("ineligible");
-      setErrorMessage(eligibility.reason);
+      setClaimStatus("ineligible");
     }
   }, [walletAddress, eligibility]);
 
