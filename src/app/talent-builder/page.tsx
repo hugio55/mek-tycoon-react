@@ -106,6 +106,10 @@ export default function TalentBuilderPage() {
   const [storySaveName, setStorySaveName] = useState<string>("");
   const [backupFiles, setBackupFiles] = useState<{filename: string, timestamp: string, size: number}[]>([]);
 
+  // Viewport box state
+  const [showViewportBox, setShowViewportBox] = useState(true);
+  const [viewportDimensions, setViewportDimensions] = useState({ width: 800, height: 600 });
+
   // Convex queries and mutations
   const templates = useQuery(api.mekTreeTemplates.getAllTemplates);
   const createTemplate = useMutation(api.mekTreeTemplates.createTemplate);
