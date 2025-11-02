@@ -25,7 +25,7 @@ import WhitelistManagerAdmin from '@/components/WhitelistManagerAdmin';
 import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
-import { ALL_VARIATIONS } from '@/lib/variationsReferenceData';
+import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
 
@@ -1971,7 +1971,7 @@ export default function AdminMasterDataPage() {
                                 const allVariationsData: any[] = [];
 
                                 // Add all heads
-                                ALL_VARIATIONS.heads.forEach((v, i) => {
+                                VARIATIONS_BY_TYPE.heads.forEach((v, i) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'head',
@@ -1980,7 +1980,7 @@ export default function AdminMasterDataPage() {
                                 });
 
                                 // Add all bodies
-                                ALL_VARIATIONS.bodies.forEach((v, i) => {
+                                VARIATIONS_BY_TYPE.bodies.forEach((v, i) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'body',
@@ -1988,8 +1988,8 @@ export default function AdminMasterDataPage() {
                                   });
                                 });
 
-                                // Add all items
-                                ALL_VARIATIONS.items.forEach((v, i) => {
+                                // Add all traits
+                                VARIATIONS_BY_TYPE.traits.forEach((v, i) => {
                                   allVariationsData.push({
                                     ...v,
                                     category: 'item',
