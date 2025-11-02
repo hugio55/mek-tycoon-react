@@ -166,31 +166,16 @@ export default function EssenceMarketAdmin() {
         currentAmount: 14.2,
         lossAmount: 4.2,
       },
-    ]);
-    setWarningAction("remove buff from Bumblebee and Rust");
-    setShowWarning(true);
-  };
-
-  const testSafeCapDropScenario = () => {
-    setWarningChanges([
       {
         variationName: "Camera",
         variationType: "item",
-        currentCap: 15,
+        currentCap: 18,
         newCap: 10,
-        currentAmount: 8.3,
-        lossAmount: 0,
-      },
-      {
-        variationName: "Steampunk",
-        variationType: "head",
-        currentCap: 12,
-        newCap: 10,
-        currentAmount: 6.7,
-        lossAmount: 0,
+        currentAmount: 17.8,
+        lossAmount: 7.8,
       },
     ]);
-    setWarningAction("remove buff from Camera and Steampunk");
+    setWarningAction("remove mechanism from slot");
     setShowWarning(true);
   };
 
@@ -304,27 +289,16 @@ export default function EssenceMarketAdmin() {
           <div className="bg-purple-900/20 border-2 border-purple-500/50 rounded-lg p-4 mt-6">
             <div>
               <h4 className="text-sm font-bold text-purple-400 mb-3">🧪 Warning System Testing</h4>
-              <p className="text-xs text-gray-400 mb-4">Test the essence cap reduction warning lightbox with different scenarios</p>
-              <div className="flex gap-3">
-                <button
-                  onClick={testEssenceLossScenario}
-                  className="flex-1 bg-red-600/30 hover:bg-red-600/50 border-2 border-red-500 text-red-300 px-4 py-3 rounded font-bold text-sm transition-colors"
-                >
-                  ⚠️ Test Essence Loss
-                  <div className="text-xs text-red-400/70 mt-1 font-normal">
-                    Cap drops below current amount
-                  </div>
-                </button>
-                <button
-                  onClick={testSafeCapDropScenario}
-                  className="flex-1 bg-yellow-600/30 hover:bg-yellow-600/50 border-2 border-yellow-500 text-yellow-300 px-4 py-3 rounded font-bold text-sm transition-colors"
-                >
-                  ✓ Test Safe Cap Drop
-                  <div className="text-xs text-yellow-400/70 mt-1 font-normal">
-                    Cap drops but no essence lost
-                  </div>
-                </button>
-              </div>
+              <p className="text-xs text-gray-400 mb-4">Test the essence cap reduction warning lightbox (3 essence types affected)</p>
+              <button
+                onClick={testEssenceLossScenario}
+                className="w-full bg-red-600/30 hover:bg-red-600/50 border-2 border-red-500 text-red-300 px-4 py-3 rounded font-bold text-sm transition-colors"
+              >
+                ⚠️ Test Essence Loss Warning
+                <div className="text-xs text-red-400/70 mt-1 font-normal">
+                  Simulates removing mechanism that would cause loss of Bumblebee, Rust, and Camera essence
+                </div>
+              </button>
             </div>
           </div>
 
