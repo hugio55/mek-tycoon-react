@@ -1026,3 +1026,51 @@ export const getBatchMintingStats = query({
     };
   },
 });
+
+/**
+ * Initialize Phase 1 Beta NFT Design
+ * Creates the commemorative token record if it doesn't exist
+ */
+export const initializePhase1BetaNFT = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const TOKEN_TYPE = "phase_1_beta";
+
+    // Check if already exists
+    const existing = await ctx.db
+      .query("commemorativeTokenCounters")
+      .withIndex("by_type", (q) => q.eq("tokenType", TOKEN_TYPE))
+      .first();
+
+    if (existing) {
+      return {
+        success: true,
+        message: "Phase 1 Beta NFT already initialized",
+        existed: true
+      };
+    }
+
+    // Create the NFT design record
+    const nftId = await ctx.db.insert("commemorativeTokenCounters", {
+      tokenType: TOKEN_TYPE,
+      name: "Phase 1 Beta Tester",
+      description: "Commemorative NFT for early supporters who connected their wallet and accumulated gold during Phase 1 beta testing",
+      saleMode: "whitelist",
+      currentEdition: 0,
+      maxSupply: 999999,
+      priceAda: 10,
+      eligibilitySnapshot: [],
+      snapshotTakenAt: undefined,
+      isActive: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: "Phase 1 Beta NFT initialized successfully",
+      existed: false,
+      nftId,
+    };
+  },
+});
