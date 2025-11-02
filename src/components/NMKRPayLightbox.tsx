@@ -55,6 +55,10 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     confirming: false
   });
 
+  // Polling activity tracking
+  const [pollingStartTime, setPollingStartTime] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
   // Get NMKR configuration
   const NMKR_PROJECT_ID = process.env.NEXT_PUBLIC_NMKR_PROJECT_ID;
   const NMKR_NETWORK = process.env.NEXT_PUBLIC_NMKR_NETWORK || 'mainnet';
@@ -275,9 +279,23 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       setState('error');
     } else {
       console.log('[💰CLAIM] User indicated they completed payment, continuing to poll for webhook');
+      // Start polling timer when user confirms payment
+      setPollingStartTime(Date.now());
       // Keep processing state, webhook polling will continue
     }
   };
+
+  // Update elapsed time every second while polling
+  useEffect(() => {
+    if (state !== 'processing' || pollingStartTime === 0) return;
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - pollingStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state, pollingStartTime]);
 
   // Only render on client-side after mount
   if (!mounted) {
@@ -419,11 +437,32 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
               <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 {checklistStatus.paymentReceived ? 'Processing Your NFT' : 'Waiting for Payment'}
               </h2>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-400 mb-4">
                 {checklistStatus.paymentReceived
                   ? 'Waiting for blockchain confirmation...'
                   : 'Checking for payment confirmation...'}
               </p>
+
+              {/* Polling Activity Indicator - Only show when actively polling without payment */}
+              {!checklistStatus.paymentReceived && pollingStartTime > 0 && (
+                <div className="mb-4 flex items-center justify-center gap-2 text-sm">
+                  {/* Pulsing indicator dot */}
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                    <div className="absolute inset-0 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+                  </div>
+
+                  {/* Status message */}
+                  <span className="text-yellow-400/90 font-medium">
+                    Actively polling for payment
+                  </span>
+
+                  {/* Elapsed time */}
+                  <span className="text-gray-500 font-mono">
+                    ({elapsedSeconds}s)
+                  </span>
+                </div>
+              )}
 
               {/* Checklist with Industrial Styling */}
               <div className="bg-black/60 border-2 border-yellow-500/30 rounded p-4 space-y-3 text-left max-w-md mx-auto backdrop-blur-sm">
@@ -502,8 +541,15 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
               <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
                 {checklistStatus.paymentReceived
                   ? '⚠ This may take 1-2 minutes. Please don\'t close this window.'
-                  : 'ℹ Payment window closed. Checking if payment was completed...'}
+                  : pollingStartTime > 0
+                    ? `ℹ System is actively checking for payment (${elapsedSeconds}s elapsed)`
+                    : 'ℹ Payment window closed. Checking if payment was completed...'}
               </p>
+              {!checklistStatus.paymentReceived && pollingStartTime > 0 && elapsedSeconds > 30 && (
+                <p className="text-gray-400 text-xs mt-2">
+                  Payments typically appear within 30-60 seconds after completion.
+                </p>
+              )}
             </div>
 
             {/* Debug Controls - Only visible in debug mode or test mode */}
