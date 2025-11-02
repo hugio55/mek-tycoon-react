@@ -479,16 +479,11 @@ async function calculateRealTimeEssenceBalances(
         return balance;
       }
 
-      // Check for player buffs
-      const buff = await ctx.db
-        .query("essencePlayerBuffs")
-        .withIndex("by_wallet_and_variation", (q) =>
-          q.eq("walletAddress", walletAddress).eq("variationId", balance.variationId)
-        )
-        .first();
-
-      const rateMultiplier = buff?.rateMultiplier || 1.0;
-      const capBonus = buff?.capBonus || 0;
+      // Check for player buffs (granular system)
+      const { rateMultiplier, capBonus } = await getAggregatedBuffs(ctx, {
+        walletAddress,
+        variationId: balance.variationId,
+      });
 
       const effectiveRate = config.essenceRate * rateMultiplier;
       const effectiveCap = config.essenceCap + capBonus;
@@ -1071,16 +1066,11 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
 
     const currentAmount = balance?.accumulatedAmount || 0;
 
-    // Check for player buffs
-    const buff = await ctx.db
-      .query("essencePlayerBuffs")
-      .withIndex("by_wallet_and_variation", (q) =>
-        q.eq("walletAddress", walletAddress).eq("variationId", variationId)
-      )
-      .first();
-
-    const rateMultiplier = buff?.rateMultiplier || 1.0;
-    const capBonus = buff?.capBonus || 0;
+    // Check for player buffs (granular system)
+    const { rateMultiplier, capBonus } = await getAggregatedBuffs(ctx, {
+      walletAddress,
+      variationId,
+    });
 
     const effectiveRate = config.essenceRate * rateMultiplier;
     const effectiveCap = config.essenceCap + capBonus;
@@ -2009,5 +1999,83 @@ export const cleanupOldAggregateBuffs = mutation({
       deletedCount: buffs.length,
       message: `Deleted ${buffs.length} old aggregate buffs. Ready for granular essenceBuffSources system.`
     };
+  },
+});
+
+// ============================================
+// BUFF BREAKDOWN QUERY FOR UI
+// Returns detailed breakdown of all buff sources grouped by variation
+// ============================================
+
+/**
+ * Get exhaustive breakdown of all buff sources for a player.
+ * Shows each individual source (achievement, upgrade, slot, etc.) contributing to essence generation.
+ *
+ * @param walletAddress - Player's wallet address
+ * @param variationId - Optional: filter to specific variation
+ * @returns Array of variations with their buff sources and aggregated totals
+ */
+export const getPlayerBuffBreakdown = query({
+  args: {
+    walletAddress: v.string(),
+    variationId: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Query buff sources for this wallet
+    let sourcesQuery = ctx.db
+      .query("essenceBuffSources")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress));
+
+    // Filter by variation if specified
+    if (args.variationId !== undefined) {
+      sourcesQuery = ctx.db
+        .query("essenceBuffSources")
+        .withIndex("by_wallet_and_variation", (q) =>
+          q.eq("walletAddress", args.walletAddress).eq("variationId", args.variationId)
+        );
+    }
+
+    const allSources = await sourcesQuery.collect();
+
+    // Filter out expired and inactive buffs
+    const now = Date.now();
+    const activeSources = allSources.filter(
+      (s) => s.isActive && (!s.expiresAt || s.expiresAt > now)
+    );
+
+    // Group by variation
+    const variationMap = new Map<number, any>();
+
+    for (const source of activeSources) {
+      if (!variationMap.has(source.variationId)) {
+        variationMap.set(source.variationId, {
+          variationId: source.variationId,
+          totalRateMultiplier: 1.0,
+          totalCapBonus: 0,
+          sources: [],
+        });
+      }
+
+      const entry = variationMap.get(source.variationId)!;
+
+      // Accumulate totals
+      entry.totalRateMultiplier += source.rateMultiplier - 1.0;
+      entry.totalCapBonus += source.capBonus;
+
+      // Add source details
+      entry.sources.push({
+        sourceType: source.sourceType,
+        sourceId: source.sourceId,
+        sourceName: source.sourceName,
+        sourceDescription: source.sourceDescription,
+        rateMultiplier: source.rateMultiplier,
+        capBonus: source.capBonus,
+        appliedAt: source.appliedAt,
+        expiresAt: source.expiresAt,
+        isActive: source.isActive,
+      });
+    }
+
+    return Array.from(variationMap.values());
   },
 });

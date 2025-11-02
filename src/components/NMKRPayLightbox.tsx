@@ -12,7 +12,7 @@ interface NMKRPayLightboxProps {
   debugState?: 'loading' | 'success'; // Direct state override for debug panel
 }
 
-type LightboxState = 'payment' | 'processing' | 'success' | 'error' | 'cancelled';
+type LightboxState = 'payment' | 'processing' | 'success' | 'error';
 
 export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose, debugState }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -118,10 +118,16 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
         // IMPORTANT: Don't assume payment based on window open time
         // Window could be open long due to timeout, user distraction, etc.
-        // Always show cancelled state and let webhook polling handle success detection
-        console.log('[💰CLAIM] Window closed - entering cancelled state, webhook will detect actual payment if completed');
-        setState('cancelled');
-        setErrorMessage('Payment window was closed. If you completed the payment, your NFT will arrive in your wallet within 1-2 minutes.');
+        // Enter 'processing' state to keep webhook polling active
+        // Webhook will detect if payment was actually completed
+        console.log('[💰CLAIM] Window closed - entering processing state, webhook polling will continue');
+        setState('processing');
+        // Reset checklist to show waiting state (webhook will update when it confirms)
+        setChecklistStatus({
+          paymentReceived: false,
+          minting: false,
+          confirming: false
+        });
       }
     }, 500);
 
@@ -166,17 +172,26 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     }
   }, [state, paymentStatus, isDebugMode]);
 
-  // Timeout after 5 minutes of processing (skip in debug mode)
+  // Timeout after 3 minutes of processing (skip in debug mode)
+  // If payment window closed, timeout faster (2 minutes) since most payments resolve quickly
   useEffect(() => {
     if (state !== 'processing' || isDebugMode) return;
 
+    const timeoutDuration = checklistStatus.paymentReceived
+      ? 3 * 60 * 1000  // 3 minutes if payment confirmed
+      : 2 * 60 * 1000; // 2 minutes if waiting for payment after window close
+
     const timeout = setTimeout(() => {
-      setErrorMessage('Transaction is taking longer than expected. Please check your wallet for the NFT.');
+      if (!checklistStatus.paymentReceived) {
+        setErrorMessage('No payment detected. If you completed the payment, please check your wallet in a few minutes. Otherwise, try claiming again.');
+      } else {
+        setErrorMessage('Transaction is taking longer than expected. Please check your wallet for the NFT.');
+      }
       setState('error');
-    }, 5 * 60 * 1000); // 5 minutes
+    }, timeoutDuration);
 
     return () => clearTimeout(timeout);
-  }, [state, isDebugMode]);
+  }, [state, isDebugMode, checklistStatus.paymentReceived]);
 
   // Close payment window if user closes lightbox
   useEffect(() => {
@@ -314,10 +329,12 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
             {/* Header Section */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Processing Your NFT
+                {checklistStatus.paymentReceived ? 'Processing Your NFT' : 'Waiting for Payment'}
               </h2>
               <p className="text-gray-400 mb-6">
-                Waiting for blockchain confirmation...
+                {checklistStatus.paymentReceived
+                  ? 'Waiting for blockchain confirmation...'
+                  : 'Checking for payment confirmation...'}
               </p>
 
               {/* Checklist with Industrial Styling */}
@@ -395,7 +412,9 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
             {/* Warning Box */}
             <div className="mt-6 p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
               <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
-                ⚠ This may take 1-2 minutes. Please don't close this window.
+                {checklistStatus.paymentReceived
+                  ? '⚠ This may take 1-2 minutes. Please don\'t close this window.'
+                  : 'ℹ Payment window closed. Checking if payment was completed...'}
               </p>
             </div>
 

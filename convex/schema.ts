@@ -2449,7 +2449,12 @@ export default defineSchema({
     .index("by_wallet_and_name", ["walletAddress", "variationName"])
     .index("by_variation", ["variationId"]),
 
-  // Essence Player Buffs - per-player rate multipliers and cap bonuses
+  // ⚠️ DEPRECATED: Use essenceBuffSources instead
+  // This table stores aggregate buff values (one record per variation).
+  // The new essenceBuffSources table tracks individual buff sources for granular tracking.
+  // This table remains for backward compatibility only - all new buff logic should use essenceBuffSources.
+  //
+  // Essence Player Buffs - per-player rate multipliers and cap bonuses (LEGACY)
   essencePlayerBuffs: defineTable({
     walletAddress: v.string(),
     variationId: v.number(),
