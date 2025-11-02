@@ -78,6 +78,15 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   // NMKR API action to fetch next available NFT
   const getNextNFT = useAction(api.nmkr.getNextAvailableNFT);
 
+  // State to store fetched NFT preview data
+  const [nextNFTPreview, setNextNFTPreview] = useState<{
+    uid: string | null;
+    nftNumber: number | null;
+    displayName: string | null;
+    error?: string;
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
   // Poll for payment status (webhook-based, accurate!)
   // This replaces the old fake setTimeout logic with real webhook tracking
   const paymentStatus = useQuery(
@@ -94,6 +103,36 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     };
   }, []);
 
+  // Fetch next available NFT for preview on mount (ONLY in preview state)
+  useEffect(() => {
+    if (!mounted || state !== 'preview' || previewLoading || nextNFTPreview) {
+      return;
+    }
+
+    const fetchPreview = async () => {
+      console.log('[💰CLAIM] Fetching NFT preview from NMKR...');
+      setPreviewLoading(true);
+
+      try {
+        const result = await getNextNFT({ projectId: NMKR_PROJECT_ID || '' });
+        console.log('[💰CLAIM] Preview fetched:', result);
+        setNextNFTPreview(result);
+      } catch (error) {
+        console.error('[💰CLAIM] Failed to fetch preview:', error);
+        setNextNFTPreview({
+          uid: null,
+          nftNumber: null,
+          displayName: null,
+          error: 'Failed to load preview'
+        });
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+
+    fetchPreview();
+  }, [mounted, state, previewLoading, nextNFTPreview, getNextNFT, NMKR_PROJECT_ID]);
+
   // Open NMKR payment window on mount (ONLY if NOT in test mode or debug mode)
   useEffect(() => {
     if (!mounted || state !== 'payment' || isTestMode || isDebugMode) {
@@ -102,11 +141,16 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
     // Fetch next available NFT from NMKR and open payment window
     const openPaymentWindow = async () => {
+      console.log('[💰CLAIM] === Opening Payment Window ===');
+      console.log('[💰CLAIM] Project ID:', NMKR_PROJECT_ID);
+      console.log('[💰CLAIM] Network:', NMKR_NETWORK);
       console.log('[💰CLAIM] Fetching next available NFT from NMKR...');
 
       try {
         // Get next available NFT UID from NMKR API
         const nextNFT = await getNextNFT({ projectId: NMKR_PROJECT_ID || '' });
+
+        console.log('[💰CLAIM] NMKR API Response:', nextNFT);
 
         // Use preprod URL for testnet, mainnet URL for production
         const baseUrl = NMKR_NETWORK === 'mainnet'
@@ -118,15 +162,17 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
         if (nextNFT.uid && !nextNFT.error) {
           // Success: Use specific NFT with &n= parameter
           nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&n=${nextNFT.uid}`;
-          console.log('[💰CLAIM] Opening payment for specific NFT:', {
+          console.log('[💰CLAIM] ✅ SUCCESS - Opening payment for specific NFT:', {
             uid: nextNFT.uid,
             nftNumber: nextNFT.nftNumber,
-            displayName: nextNFT.displayName
+            displayName: nextNFT.displayName,
+            url: nmkrUrl
           });
         } else {
           // Fallback: Use random NFT if API call failed
           nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&c=1`;
-          console.warn('[💰CLAIM] NMKR API error, falling back to random NFT:', nextNFT.error);
+          console.warn('[💰CLAIM] ⚠️ FALLBACK - NMKR API error, using random NFT:', nextNFT.error);
+          console.warn('[💰CLAIM] Fallback URL:', nmkrUrl);
 
           if (nextNFT.error === 'All NFTs have been claimed') {
             setErrorMessage('All NFTs have been claimed. Please check back later.');
@@ -135,7 +181,8 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
           }
         }
 
-        console.log('[💰CLAIM] Opening NMKR payment window:', nmkrUrl);
+        console.log('[💰CLAIM] 🚀 Opening NMKR payment window...');
+        console.log('[💰CLAIM] Full URL:', nmkrUrl);
 
         // Open payment popup
         const popup = window.open(
@@ -352,8 +399,11 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     switch (state) {
       case 'preview':
         // PREVIEW STAGE: Show NFT image and details before payment
-        const nftNumber = nftNumberData?.nextNumber || 1;
-        const nftTitle = `Lab Rat #${nftNumber}`;
+        // Use NMKR API data if available, fallback to database count
+        const nftTitle = previewLoading
+          ? 'Loading...'
+          : nextNFTPreview?.displayName || `Lab Rat #${nftNumberData?.nextNumber || 1}`;
+        const nftNumber = nextNFTPreview?.nftNumber || nftNumberData?.nextNumber || 1;
 
         return (
           <div className="text-center">
@@ -362,6 +412,30 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
               <h2 className="text-3xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 Your NFT
               </h2>
+
+              {/* Loading State */}
+              {previewLoading && (
+                <div className="mb-6 p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-yellow-400 text-sm uppercase tracking-wide">
+                      Loading NFT preview...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {nextNFTPreview?.error && !previewLoading && (
+                <div className="mb-6 p-4 bg-red-500/10 border-2 border-red-500/30 rounded backdrop-blur-sm">
+                  <p className="text-red-400 text-sm">
+                    ⚠️ {nextNFTPreview.error}
+                  </p>
+                  <p className="text-gray-400 text-xs mt-2">
+                    Using fallback preview
+                  </p>
+                </div>
+              )}
 
               {/* Large NFT Image */}
               <div className="relative w-full max-w-[500px] mx-auto mb-6 border-4 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
@@ -391,9 +465,12 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                 <p className="text-gray-400 text-sm mt-2">
                   Commemorative NFT Collection
                 </p>
-                {nftNumberData && (
-                  <p className="text-gray-500 text-xs mt-1">
-                    Total Minted: {nftNumberData.totalMinted}
+                <p className="text-green-400 text-sm mt-2 font-medium">
+                  ✓ You will receive: {nftTitle}
+                </p>
+                {nextNFTPreview?.uid && (
+                  <p className="text-gray-500 text-xs mt-1 font-mono">
+                    NFT UID: {nextNFTPreview.uid.slice(0, 8)}...
                   </p>
                 )}
               </div>
