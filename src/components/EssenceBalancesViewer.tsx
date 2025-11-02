@@ -27,42 +27,113 @@ function BuffBreakdownRow({
     variationId,
   });
 
-  if (!breakdown || breakdown.length === 0) {
+  // Get slotted mechanisms to show base generation sources
+  const slots = useQuery(api.slots.getPlayerSlots, { walletAddress });
+
+  // Find mechanisms that have this variation
+  const mechanismSources = slots?.filter(slot => {
+    if (!slot.mek) return false;
+    return (
+      slot.mek.headVariation === variationId ||
+      slot.mek.bodyVariation === variationId ||
+      slot.mek.itemVariation === variationId
+    );
+  }).map(slot => ({
+    slotIndex: slot.slotIndex,
+    mekId: slot.mek?.sourceKey || slot.mekId,
+    variationType:
+      slot.mek?.headVariation === variationId ? 'head' :
+      slot.mek?.bodyVariation === variationId ? 'body' : 'item'
+  })) || [];
+
+  const hasBuffs = breakdown && breakdown.length > 0;
+  const hasMechanisms = mechanismSources.length > 0;
+
+  if (!hasBuffs && !hasMechanisms) {
     return (
       <tr>
         <td colSpan={8} className="px-4 py-4 bg-gray-800/70">
-          <div className="text-sm text-gray-400 italic">No active buffs for this variation</div>
+          <div className="text-sm text-gray-400 italic">No active buffs or mechanisms for this variation</div>
         </td>
       </tr>
     );
   }
 
-  const variation = breakdown[0];
-  const rateBoostPercent = ((variation.totalRateMultiplier - 1.0) * 100).toFixed(0);
-  const hasRateBoost = variation.totalRateMultiplier > 1.0;
-  const hasCapBonus = variation.totalCapBonus > 0;
+  const variation = breakdown?.[0];
+  const rateBoostPercent = variation ? ((variation.totalRateMultiplier - 1.0) * 100).toFixed(0) : '0';
+  const hasRateBoost = variation ? variation.totalRateMultiplier > 1.0 : false;
+  const hasCapBonus = variation ? variation.totalCapBonus > 0 : false;
+
+  // Base rate per mechanism (from config)
+  const baseRatePerMechanism = 0.1; // TODO: Get from config
 
   return (
     <tr>
       <td colSpan={8} className="px-4 py-4 bg-gray-800/70">
-        <div className="space-y-3">
-          {/* Buff Summary */}
-          <div className="flex items-center gap-4 pb-2 border-b border-gray-600">
-            <span className="text-xs text-gray-400 uppercase font-semibold">Buff Sources:</span>
-            {hasRateBoost && (
-              <span className="text-yellow-400 font-bold">
-                +{rateBoostPercent}% Rate Bonus
-              </span>
-            )}
-            {hasCapBonus && (
-              <span className="text-blue-400 font-bold">
-                +{variation.totalCapBonus} Cap Bonus
-              </span>
-            )}
-            {!hasRateBoost && !hasCapBonus && (
-              <span className="text-gray-500">No active bonuses</span>
-            )}
-          </div>
+        <div className="space-y-4">
+          {/* Base Generation Sources */}
+          {hasMechanisms && (
+            <div>
+              <div className="flex items-center gap-4 pb-2 border-b border-gray-600">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Base Generation Sources:</span>
+                <span className="text-green-400 font-bold">
+                  {mechanismSources.length} mechanism{mechanismSources.length !== 1 ? 's' : ''} × {baseRatePerMechanism}/day = {(mechanismSources.length * baseRatePerMechanism).toFixed(1)}/day
+                </span>
+              </div>
+              <table className="w-full text-sm mt-2">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Slot</th>
+                    <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Mechanism</th>
+                    <th className="text-left py-2 px-2 text-xs text-gray-400 uppercase">Variation Part</th>
+                    <th className="text-right py-2 px-2 text-xs text-gray-400 uppercase">Base Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mechanismSources.map((source, index) => (
+                    <tr key={index} className="border-b border-gray-700/50">
+                      <td className="py-2 px-2">
+                        <span className="inline-block px-2 py-1 rounded bg-blue-700/50 text-xs">
+                          Slot {source.slotIndex}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-gray-200 font-mono text-xs">
+                        {source.mekId}
+                      </td>
+                      <td className="py-2 px-2">
+                        <span className="inline-block px-2 py-1 rounded bg-gray-700/50 text-xs uppercase">
+                          {source.variationType}
+                        </span>
+                      </td>
+                      <td className="text-right py-2 px-2">
+                        <span className="text-green-400 font-bold">+{baseRatePerMechanism}/day</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Buff Sources */}
+          {hasBuffs && (
+            <div>
+              <div className="flex items-center gap-4 pb-2 border-b border-gray-600">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Buff Sources (Multipliers):</span>
+                {hasRateBoost && (
+                  <span className="text-yellow-400 font-bold">
+                    +{rateBoostPercent}% Rate Bonus
+                  </span>
+                )}
+                {hasCapBonus && (
+                  <span className="text-blue-400 font-bold">
+                    +{variation.totalCapBonus} Cap Bonus
+                  </span>
+                )}
+                {!hasRateBoost && !hasCapBonus && (
+                  <span className="text-gray-500">No active bonuses</span>
+                )}
+              </div>
 
           {/* Buff Sources Table */}
           <table className="w-full text-sm">
@@ -112,6 +183,8 @@ function BuffBreakdownRow({
               })}
             </tbody>
           </table>
+            </div>
+          )}
         </div>
       </td>
     </tr>

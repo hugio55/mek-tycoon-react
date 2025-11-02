@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import NFTClaimSuccess from './NFTClaimSuccess';
 
@@ -72,8 +72,11 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   // Mutation for creating mock claim in test mode
   const recordClaim = useMutation(api.commemorativeNFTClaims.recordClaim);
 
-  // Get next NFT number for preview
+  // Get next NFT number for preview (from NMKR API)
   const nftNumberData = useQuery(api.commemorativeNFTClaims.getNextNFTNumber);
+
+  // NMKR API action to fetch next available NFT
+  const getNextNFT = useAction(api.nmkr.getNextAvailableNFT);
 
   // Poll for payment status (webhook-based, accurate!)
   // This replaces the old fake setTimeout logic with real webhook tracking
@@ -97,35 +100,78 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       return;
     }
 
-    // Use preprod URL for testnet, mainnet URL for production
-    const baseUrl = NMKR_NETWORK === 'mainnet'
-      ? 'https://pay.nmkr.io'
-      : 'https://pay.preprod.nmkr.io';
-    const nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&c=1`;
+    // Fetch next available NFT from NMKR and open payment window
+    const openPaymentWindow = async () => {
+      console.log('[💰CLAIM] Fetching next available NFT from NMKR...');
 
-    console.log('[💰CLAIM] Opening NMKR payment window:', nmkrUrl);
-    // Open payment popup
-    const popup = window.open(
-      nmkrUrl,
-      'NMKR Payment',
-      'width=500,height=800,left=100,top=100'
-    );
+      try {
+        // Get next available NFT UID from NMKR API
+        const nextNFT = await getNextNFT({ projectId: NMKR_PROJECT_ID || '' });
 
-    if (!popup) {
-      setErrorMessage('Failed to open payment window. Please allow popups for this site.');
-      setState('error');
-      return;
-    }
-    setPaymentWindow(popup);
-    const openedAt = Date.now();
-    setPaymentWindowOpenedAt(openedAt);
+        // Use preprod URL for testnet, mainnet URL for production
+        const baseUrl = NMKR_NETWORK === 'mainnet'
+          ? 'https://pay.nmkr.io'
+          : 'https://pay.preprod.nmkr.io';
 
-    // Monitor popup closure
+        let nmkrUrl: string;
+
+        if (nextNFT.uid && !nextNFT.error) {
+          // Success: Use specific NFT with &n= parameter
+          nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&n=${nextNFT.uid}`;
+          console.log('[💰CLAIM] Opening payment for specific NFT:', {
+            uid: nextNFT.uid,
+            nftNumber: nextNFT.nftNumber,
+            displayName: nextNFT.displayName
+          });
+        } else {
+          // Fallback: Use random NFT if API call failed
+          nmkrUrl = `${baseUrl}/?p=${NMKR_PROJECT_ID}&c=1`;
+          console.warn('[💰CLAIM] NMKR API error, falling back to random NFT:', nextNFT.error);
+
+          if (nextNFT.error === 'All NFTs have been claimed') {
+            setErrorMessage('All NFTs have been claimed. Please check back later.');
+            setState('error');
+            return;
+          }
+        }
+
+        console.log('[💰CLAIM] Opening NMKR payment window:', nmkrUrl);
+
+        // Open payment popup
+        const popup = window.open(
+          nmkrUrl,
+          'NMKR Payment',
+          'width=500,height=800,left=100,top=100'
+        );
+
+        if (!popup) {
+          setErrorMessage('Failed to open payment window. Please allow popups for this site.');
+          setState('error');
+          return;
+        }
+        setPaymentWindow(popup);
+        const openedAt = Date.now();
+        setPaymentWindowOpenedAt(openedAt);
+      } catch (error) {
+        console.error('[💰CLAIM] Failed to fetch next NFT:', error);
+        setErrorMessage('Failed to load NFT data. Please try again.');
+        setState('error');
+        return;
+      }
+    };
+
+    openPaymentWindow();
+  }, [mounted, state, NMKR_PROJECT_ID, isTestMode, getNextNFT]);
+
+  // Monitor payment window closure (separate effect)
+  useEffect(() => {
+    if (!paymentWindow) return;
+
     const checkInterval = setInterval(() => {
-      if (popup.closed) {
+      if (paymentWindow.closed) {
         clearInterval(checkInterval);
 
-        const windowOpenDuration = Date.now() - openedAt;
+        const windowOpenDuration = Date.now() - paymentWindowOpenedAt;
         const closedAt = Date.now();
         console.log('[💰CLAIM] Payment window closed after', windowOpenDuration, 'ms');
 
@@ -145,11 +191,8 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
     return () => {
       clearInterval(checkInterval);
-      if (popup && !popup.closed) {
-        popup.close();
-      }
     };
-  }, [mounted, state, NMKR_PROJECT_ID, isTestMode]);
+  }, [paymentWindow, paymentWindowOpenedAt]);
 
   // Update checklist based on actual webhook events (NO MORE FAKE TIMEOUTS!)
   useEffect(() => {
