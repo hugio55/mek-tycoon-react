@@ -375,14 +375,6 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
         <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/70"></div>
         <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/70"></div>
 
-        {/* Debug Mode Banner */}
-        {isDebugMode && (
-          <div className="mb-4 p-2 bg-purple-500/20 border border-purple-500 rounded text-center">
-            <div className="text-purple-400 font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-              🔍 DEBUG MODE 🔍
-            </div>
-          </div>
-        )}
 
         {renderContent()}
 
