@@ -230,16 +230,19 @@ export const confirmMint = mutation({
       throw new Error(`Cannot confirm mint - current status: ${reservation.status}`);
     }
 
+    const assetId = `${args.policyId}.${args.assetName}`;
+    const now = Date.now();
+
     // Update with blockchain data
     await ctx.db.patch(args.reservationId, {
       status: "confirmed",
       txHash: args.txHash,
       policyId: args.policyId,
       assetName: args.assetName,
-      assetId: `${args.policyId}.${args.assetName}`,
+      assetId: assetId,
       explorerUrl: args.explorerUrl,
-      mintedAt: Date.now(),
-      confirmedAt: Date.now(),
+      mintedAt: now,
+      confirmedAt: now,
     });
 
     // Increment totalMinted counter
@@ -252,6 +255,28 @@ export const confirmMint = mutation({
       await ctx.db.patch(counter._id, {
         totalMinted: (counter.totalMinted || 0) + 1,
       });
+    }
+
+    // CRITICAL: Record permanent claim in commemorativeNFTClaims table
+    // This prevents double-claiming even if user transfers NFT out
+    const existingClaim = await ctx.db
+      .query("commemorativeNFTClaims")
+      .withIndex("by_transaction", (q) => q.eq("transactionHash", args.txHash))
+      .first();
+
+    if (!existingClaim) {
+      await ctx.db.insert("commemorativeNFTClaims", {
+        walletAddress: reservation.walletAddress,
+        transactionHash: args.txHash,
+        nftName: reservation.nftName,
+        nftAssetId: assetId,
+        claimedAt: now,
+        metadata: {
+          imageUrl: reservation.imageUrl,
+          collection: counter?.displayName,
+        },
+      });
+      console.log(`[Commemorative] Recorded permanent claim for ${reservation.walletAddress}`);
     }
 
     console.log(`[Commemorative] Confirmed mint #${reservation.editionNumber} - tx: ${args.txHash}`);
