@@ -73,6 +73,20 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     }
   }, [walletAddress, eligibility]);
 
+  // Format claim date nicely
+  const formatClaimDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }) + ' at ' + date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const handleMint = async () => {
     if (!walletAddress || !eligibility?.eligible) return;
 
@@ -164,8 +178,21 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     }
   };
 
-  // Don't show banner if not eligible or already minted
+  // Don't show banner if not connected
   if (mintStatus === "idle" || mintStatus === "checking") return null;
+
+  // Show small green claimed text if user already claimed
+  if (mintStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
+    return (
+      <div className="mb-4 text-center">
+        <p className="text-green-400 text-sm">
+          ✓ You claimed your Phase 1 commemorative NFT on {formatClaimDate(eligibility.claimedAt)}
+        </p>
+      </div>
+    );
+  }
+
+  // Don't show banner if ineligible for other reasons
   if (mintStatus === "ineligible") return null;
 
   // Success state
