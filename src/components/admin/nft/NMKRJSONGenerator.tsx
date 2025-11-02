@@ -18,11 +18,14 @@ export default function NMKRJSONGenerator() {
   // Saved field values per field name (persisted in localStorage)
   const [savedFieldValues, setSavedFieldValues] = useState<Record<string, string[]>>({});
 
-  // Modal state for adding field names/values
+  // Saved website URLs (persisted in localStorage)
+  const [savedWebsiteUrls, setSavedWebsiteUrls] = useState<string[]>([]);
+
+  // Modal state for adding field names/values/website URLs
   const [showAddOptionModal, setShowAddOptionModal] = useState(false);
   const [modalFieldName, setModalFieldName] = useState(''); // Which field we're adding an option for
   const [modalNewOption, setModalNewOption] = useState('');
-  const [modalType, setModalType] = useState<'fieldName' | 'fieldValue'>('fieldName');
+  const [modalType, setModalType] = useState<'fieldName' | 'fieldValue' | 'websiteUrl'>('fieldName');
 
   // NMKR form fields (moved here before useEffect hooks that reference them)
   const [displayNameBase, setDisplayNameBase] = useState(() => {
@@ -129,6 +132,21 @@ export default function NMKRJSONGenerator() {
       setSavedFieldValues(defaults);
       localStorage.setItem('mek_tycoon_field_values', JSON.stringify(defaults));
     }
+
+    // Load saved website URLs
+    const storedUrls = localStorage.getItem('mek_tycoon_website_urls');
+    if (storedUrls) {
+      try {
+        setSavedWebsiteUrls(JSON.parse(storedUrls));
+      } catch (e) {
+        console.error('Failed to load saved website URLs:', e);
+      }
+    } else {
+      // Default website URLs
+      const defaults = ['https://mektycoon.com', 'https://mek.overexposed.io'];
+      setSavedWebsiteUrls(defaults);
+      localStorage.setItem('mek_tycoon_website_urls', JSON.stringify(defaults));
+    }
   }, []);
 
   // Auto-save form values to localStorage whenever they change
@@ -174,6 +192,12 @@ export default function NMKRJSONGenerator() {
   const saveFieldValues = (values: Record<string, string[]>) => {
     localStorage.setItem('mek_tycoon_field_values', JSON.stringify(values));
     setSavedFieldValues(values);
+  };
+
+  // Save website URLs to localStorage
+  const saveWebsiteUrls = (urls: string[]) => {
+    localStorage.setItem('mek_tycoon_website_urls', JSON.stringify(urls));
+    setSavedWebsiteUrls(urls);
   };
 
   // Add new field name
@@ -230,6 +254,33 @@ export default function NMKRJSONGenerator() {
     };
     saveFieldValues(updated);
     setMessage({ type: 'success', text: `Removed "${valueToRemove}" from ${fieldName}` });
+  };
+
+  // Add new website URL
+  const handleAddWebsiteUrl = () => {
+    const trimmed = modalNewOption.trim();
+    if (!trimmed) {
+      setMessage({ type: 'error', text: 'Website URL cannot be empty' });
+      return;
+    }
+    if (savedWebsiteUrls.includes(trimmed)) {
+      setMessage({ type: 'error', text: 'Website URL already exists' });
+      return;
+    }
+
+    const updated = [...savedWebsiteUrls, trimmed];
+    saveWebsiteUrls(updated);
+
+    setModalNewOption('');
+    setShowAddOptionModal(false);
+    setMessage({ type: 'success', text: `✅ Added website URL "${trimmed}"` });
+  };
+
+  // Remove website URL
+  const handleRemoveWebsiteUrl = (urlToRemove: string) => {
+    const updated = savedWebsiteUrls.filter(url => url !== urlToRemove);
+    saveWebsiteUrls(updated);
+    setMessage({ type: 'success', text: `Removed "${urlToRemove}"` });
   };
 
   // Reserved CIP-25 field names that cannot be used as custom fields
@@ -646,13 +697,27 @@ export default function NMKRJSONGenerator() {
           {/* Website */}
           <div>
             <label className="block text-xs uppercase text-gray-400 mb-2">Website URL</label>
-            <input
-              type="text"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              className="w-full bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
-              placeholder="https://mektycoon.com"
-            />
+            <div className="flex items-center gap-2">
+              <select
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                className="flex-1 bg-black/50 border border-yellow-500/30 rounded px-4 py-2 text-white focus:border-yellow-400 focus:outline-none"
+              >
+                {savedWebsiteUrls.map(url => (
+                  <option key={url} value={url}>{url}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  setModalType('websiteUrl');
+                  setShowAddOptionModal(true);
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded transition-all"
+                title="Add new website URL"
+              >
+                + New
+              </button>
+            </div>
             <p className="text-xs text-gray-500 mt-1">
               Website link displayed in NFT metadata
             </p>
@@ -835,34 +900,52 @@ export default function NMKRJSONGenerator() {
         </button>
       </div>
 
-      {/* Add Option Modal (for both field names and field values) */}
+      {/* Add Option Modal (for field names, field values, and website URLs) */}
       {showAddOptionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowAddOptionModal(false)}>
           <div className="bg-black border-2 border-green-500/50 rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h4 className="text-xl font-bold text-green-400 mb-4 uppercase">
-              {modalType === 'fieldName' ? 'Add New Field Name' : `Add New ${modalFieldName} Option`}
+              {modalType === 'fieldName'
+                ? 'Add New Field Name'
+                : modalType === 'websiteUrl'
+                ? 'Add New Website URL'
+                : `Add New ${modalFieldName} Option`}
             </h4>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-2">
-                  {modalType === 'fieldName' ? 'Field Name' : 'Value'}
+                  {modalType === 'fieldName' ? 'Field Name' : modalType === 'websiteUrl' ? 'Website URL' : 'Value'}
                 </label>
                 <input
                   type="text"
                   value={modalNewOption}
                   onChange={(e) => setModalNewOption(e.target.value)}
-                  placeholder={modalType === 'fieldName' ? 'e.g., Rarity, Series, Edition' : 'e.g., Legendary, Phase 1'}
+                  placeholder={
+                    modalType === 'fieldName'
+                      ? 'e.g., Rarity, Series, Edition'
+                      : modalType === 'websiteUrl'
+                      ? 'e.g., https://example.com'
+                      : 'e.g., Legendary, Phase 1'
+                  }
                   className="w-full bg-black/50 border border-green-500/30 rounded px-4 py-2 text-white focus:border-green-400 focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      modalType === 'fieldName' ? handleAddFieldName() : handleAddFieldValue();
+                      if (modalType === 'fieldName') {
+                        handleAddFieldName();
+                      } else if (modalType === 'websiteUrl') {
+                        handleAddWebsiteUrl();
+                      } else {
+                        handleAddFieldValue();
+                      }
                     }
                   }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   {modalType === 'fieldName'
                     ? 'This field name will be saved for future use'
+                    : modalType === 'websiteUrl'
+                    ? 'This URL will be saved for future use'
                     : `This value will be saved for the ${modalFieldName} field`}
                 </p>
               </div>
@@ -870,7 +953,11 @@ export default function NMKRJSONGenerator() {
               {/* Show current saved options */}
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-2">
-                  {modalType === 'fieldName' ? 'Current Field Names' : `Current ${modalFieldName} Values`}
+                  {modalType === 'fieldName'
+                    ? 'Current Field Names'
+                    : modalType === 'websiteUrl'
+                    ? 'Current Website URLs'
+                    : `Current ${modalFieldName} Values`}
                 </label>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
                   {modalType === 'fieldName' ? (
@@ -880,6 +967,22 @@ export default function NMKRJSONGenerator() {
                         className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
                       >
                         <span className="text-sm text-white">{name}</span>
+                      </div>
+                    ))
+                  ) : modalType === 'websiteUrl' ? (
+                    savedWebsiteUrls.map(url => (
+                      <div
+                        key={url}
+                        className="flex items-center justify-between bg-black/30 border border-green-500/20 rounded px-3 py-2"
+                      >
+                        <span className="text-sm text-white">{url}</span>
+                        <button
+                          onClick={() => handleRemoveWebsiteUrl(url)}
+                          className="text-red-500 hover:text-red-400 font-bold text-sm"
+                          title="Remove URL"
+                        >
+                          Remove
+                        </button>
                       </div>
                     ))
                   ) : (
@@ -913,10 +1016,16 @@ export default function NMKRJSONGenerator() {
                   Cancel
                 </button>
                 <button
-                  onClick={modalType === 'fieldName' ? handleAddFieldName : handleAddFieldValue}
+                  onClick={
+                    modalType === 'fieldName'
+                      ? handleAddFieldName
+                      : modalType === 'websiteUrl'
+                      ? handleAddWebsiteUrl
+                      : handleAddFieldValue
+                  }
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wider rounded transition-all"
                 >
-                  Add {modalType === 'fieldName' ? 'Field Name' : 'Value'}
+                  Add {modalType === 'fieldName' ? 'Field Name' : modalType === 'websiteUrl' ? 'URL' : 'Value'}
                 </button>
               </div>
             </div>
