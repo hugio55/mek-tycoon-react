@@ -1,12 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NMKRPayLightbox from './NMKRPayLightbox';
 
 type DebugState = 'loading' | 'success' | null;
 
 export default function NMKRDebugPanel() {
   const [debugState, setDebugState] = useState<DebugState>(null);
+  const [claimDebugState, setClaimDebugState] = useState<'claimed' | 'unclaimed'>('unclaimed');
+
+  // Load claim debug state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('debug_claim_state');
+    if (saved === 'claimed' || saved === 'unclaimed') {
+      setClaimDebugState(saved);
+    }
+  }, []);
+
+  // Toggle claim state
+  const toggleClaimState = () => {
+    const newState = claimDebugState === 'claimed' ? 'unclaimed' : 'claimed';
+    setClaimDebugState(newState);
+    localStorage.setItem('debug_claim_state', newState);
+    // Trigger a storage event to notify other components
+    window.dispatchEvent(new Event('storage'));
+  };
 
   return (
     <>
@@ -18,6 +36,26 @@ export default function NMKRDebugPanel() {
             <div className="inline-block px-3 py-1 bg-purple-500 text-white text-xs font-bold uppercase tracking-wider rounded">
               DEBUG PANEL
             </div>
+          </div>
+
+          {/* Claim State Toggle */}
+          <div className="mb-4 pb-4 border-b border-purple-500/30">
+            <h3 className="text-sm font-bold text-purple-300 mb-2 uppercase tracking-wide text-center">
+              Claim Status
+            </h3>
+            <button
+              onClick={toggleClaimState}
+              className={`w-full px-4 py-2 border rounded transition-colors text-sm font-semibold ${
+                claimDebugState === 'claimed'
+                  ? 'bg-green-500/20 border-green-500 text-green-400 hover:bg-green-500/30'
+                  : 'bg-yellow-500/20 border-yellow-500 text-yellow-400 hover:bg-yellow-500/30'
+              }`}
+            >
+              {claimDebugState === 'claimed' ? '✓ Claimed' : '○ Not Claimed'}
+            </button>
+            <p className="text-xs text-purple-300 mt-1 text-center">
+              {claimDebugState === 'claimed' ? 'Showing claimed state' : 'Showing unclaimed state'}
+            </p>
           </div>
 
           <h3 className="text-sm font-bold text-purple-300 mb-3 uppercase tracking-wide text-center">
