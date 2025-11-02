@@ -133,7 +133,13 @@ export default defineSchema({
       from: v.string(),
       to: v.string(),
     })),
-    
+
+    // Viewport dimensions - defines what portion of canvas is visible when imported to webpage
+    viewportDimensions: v.optional(v.object({
+      width: v.number(),
+      height: v.number(),
+    })),
+
     // Metadata
     isDefault: v.optional(v.boolean()), // Is this a default template?
     createdAt: v.number(),
