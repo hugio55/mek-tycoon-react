@@ -142,17 +142,24 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   // Update checklist based on actual webhook events (NO MORE FAKE TIMEOUTS!)
   useEffect(() => {
     if (state !== 'processing') return;
-    if (!paymentStatus) return;
+    if (!paymentStatus) {
+      console.log('[💰CLAIM] Webhook polling active, waiting for payment confirmation...');
+      return;
+    }
+
+    console.log('[💰CLAIM] Webhook poll result:', paymentStatus);
 
     // Check if payment was received via webhook
     if (paymentStatus.hasClaimed && paymentStatus.claim) {
       // Payment completed! Mark all steps as done
-      console.log('[💰CLAIM] Payment status received from webhook:', paymentStatus);
+      console.log('[💰CLAIM] ✅ Payment confirmed by webhook:', paymentStatus);
       setChecklistStatus({
         paymentReceived: true,
         minting: true,
         confirming: true
       });
+    } else {
+      console.log('[💰CLAIM] No payment detected yet, continuing to poll...');
     }
   }, [state, paymentStatus]);
 
@@ -504,33 +511,6 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
             <button
               onClick={onClose}
               className="px-6 py-3 bg-green-500/20 border-2 border-green-500 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors font-bold"
-            >
-              Close
-            </button>
-          </div>
-        );
-
-      case 'cancelled':
-        return (
-          <div className="text-center">
-            <div className="mb-6">
-              <div className="h-16 w-16 bg-yellow-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-3xl">⚠</span>
-              </div>
-              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Payment Incomplete
-              </h2>
-              <p className="text-gray-400 mb-4">
-                The payment window was closed before payment could be completed.
-              </p>
-              <p className="text-gray-500 text-sm mb-4">
-                If you completed the payment, please wait a moment and check your wallet. Otherwise, you can try claiming again.
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
               Close
             </button>
