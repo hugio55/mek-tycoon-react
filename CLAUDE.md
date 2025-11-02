@@ -14,6 +14,34 @@ This starts both Next.js (port 3200) and Convex in one terminal.
 **Port**: localhost:3200
 **DO NOT use the main `mek-tycoon-react` directory - ONLY use staging!**
 
+## 🔍 SENTRY ERROR TRACKING - SESSION HANDOFF NOTE
+**⚠️ DELETE THIS ENTIRE SECTION AFTER READING AND CONFIRMING YOU UNDERSTAND IT ⚠️**
+
+**Date**: November 2, 2025
+**Status**: ✅ Fully configured, MCP integration pending session restart
+
+**What's set up:**
+- Sentry Next.js SDK installed and working
+- Project-scoped MCP configuration created (`.mcp.json`)
+- Test errors confirmed reaching Sentry dashboard at https://over-exposed.sentry.io/issues/
+- Routing through Next.js server enabled (works with ad blockers)
+
+**Files created:**
+- `src/app/sentry-example-page/page.tsx` - Test page (can delete after verification)
+- `src/app/api/sentry-example-api/route.ts` - Test API route (can delete after verification)
+- `.env.sentry-build-plugin` - Auth token (safely in .gitignore)
+- `.mcp.json` - Claude Code MCP configuration
+
+**What to do in this new session:**
+1. Check if Sentry MCP tools are now available in your tool list
+2. If available, test querying Sentry issues directly
+3. Confirm MCP integration is working
+4. **Once confirmed and understood, DELETE this entire "SENTRY ERROR TRACKING - SESSION HANDOFF NOTE" section from CLAUDE.md**
+
+**Why delete?** This is a one-time handoff message. Once you've verified MCP integration and understand Sentry is set up, this note is no longer needed and will just clutter the file.
+
+---
+
 ## 🚨🚨🚨 CRITICAL: GIT CHECKOUT DESTROYS UNCOMMITTED WORK 🚨🚨🚨
 **NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
 

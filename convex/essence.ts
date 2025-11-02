@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { setEssenceBalance, getOrCreateEssenceBalance } from "./lib/essenceHelpers";
+import { setEssenceBalance, getOrCreateEssenceBalance, getAggregatedBuffs, addBuffSource, removeBuffSource } from "./lib/essenceHelpers";
 import { clampEssenceToCap, isEssenceFull } from "./lib/essenceCalculations";
 
 // Seeded random number generator for deterministic slot requirements
@@ -1893,8 +1893,6 @@ export const testAddBuffSource = mutation({
     sourceName: v.string(),
   },
   handler: async (ctx, args) => {
-    const { addBuffSource } = await import("./lib/essenceHelpers");
-
     const result = await addBuffSource(ctx, {
       walletAddress: args.walletAddress,
       variationId: args.variationId,
@@ -1920,8 +1918,6 @@ export const testGetAggregatedBuffs = query({
     variationId: v.number(),
   },
   handler: async (ctx, args) => {
-    const { getAggregatedBuffs } = await import("./lib/essenceHelpers");
-
     const result = await getAggregatedBuffs(ctx, {
       walletAddress: args.walletAddress,
       variationId: args.variationId,
@@ -1941,8 +1937,6 @@ export const testRemoveBuffSource = mutation({
     sourceId: v.string(),
   },
   handler: async (ctx, args) => {
-    const { removeBuffSource } = await import("./lib/essenceHelpers");
-
     const result = await removeBuffSource(ctx, {
       walletAddress: args.walletAddress,
       variationId: args.variationId,

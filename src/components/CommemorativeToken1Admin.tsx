@@ -1,41 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-
-const TOKEN_TYPE = "phase_1_beta";
 
 export default function CommemorativeToken1Admin() {
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string>('');
 
-  // Query: Get current NFT configuration (shows active snapshot)
-  const tokenInfo = useQuery(
-    api.commemorativeTokens.getTokenTypeInfo,
-    { tokenType: TOKEN_TYPE }
-  );
+  // Query: Get current config (shows which snapshot is active)
+  const config = useQuery(api.nftEligibility.getConfig);
 
   // Query: Get all available snapshots from Whitelist Manager
   const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
 
-  // Mutations
-  const initializeNFT = useMutation(api.commemorativeTokens.initializePhase1BetaNFT);
-  const importSnapshot = useMutation(api.commemorativeTokens.importSnapshotToNFT);
-
-  // Initialize Phase 1 Beta NFT on mount if it doesn't exist
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        await initializeNFT({});
-      } catch (error) {
-        console.error('Error initializing NFT:', error);
-      }
-    };
-
-    if (tokenInfo !== undefined && !tokenInfo?.exists) {
-      initialize();
-    }
-  }, [tokenInfo, initializeNFT]);
+  // Mutation: Set active snapshot
+  const setActiveSnapshot = useMutation(api.nftEligibility.setActiveSnapshot);
 
   const handleActivateSnapshot = async () => {
     if (!selectedSnapshotId) {
@@ -51,11 +30,10 @@ export default function CommemorativeToken1Admin() {
     if (!confirmed) return;
 
     try {
-      await importSnapshot({
-        tokenType: TOKEN_TYPE,
+      const result = await setActiveSnapshot({
         snapshotId: selectedSnapshotId as any,
       });
-      alert('✅ Snapshot activated successfully!');
+      alert(`✅ Snapshot activated!\n\n${result.snapshotName} - ${result.eligibleWallets} wallets are now eligible`);
       setSelectedSnapshotId(''); // Reset selection
     } catch (error: any) {
       console.error('Error activating snapshot:', error);
@@ -71,31 +49,34 @@ export default function CommemorativeToken1Admin() {
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-yellow-400 mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-          Commemorative NFT Eligibility
+          NFT Claim Eligibility
         </h2>
         <p className="text-gray-400 text-sm">
-          Select which snapshot determines who can claim Phase 1 Beta Tester NFTs
+          Control who sees the "Claim NFT" button on the homepage by selecting a snapshot
         </p>
       </div>
 
       {/* Current Active Snapshot Status */}
       <div className="mb-6 p-4 bg-black/40 border-2 border-yellow-500/50 rounded-lg">
         <h3 className="text-sm font-bold text-yellow-400 mb-3 uppercase tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-          Current Active Snapshot
+          Currently Active Snapshot
         </h3>
 
-        {tokenInfo?.exists && tokenInfo.eligibilitySnapshot && tokenInfo.eligibilitySnapshot.length > 0 ? (
+        {config?.hasActiveSnapshot ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-green-400 text-2xl">✓</span>
               <span className="text-green-400 font-bold">ACTIVE</span>
             </div>
-            <div className="text-sm text-gray-300">
-              <strong className="text-yellow-400">{tokenInfo.eligibilitySnapshot.length}</strong> wallets are currently eligible
+            <div className="text-lg text-white font-bold">
+              {config.snapshotName}
             </div>
-            {tokenInfo.snapshotTakenAt && (
+            <div className="text-sm text-gray-300">
+              <strong className="text-yellow-400">{config.eligibleWallets}</strong> wallets are currently eligible to see the claim button
+            </div>
+            {config.lastUpdated && (
               <div className="text-xs text-gray-400">
-                Last updated: {new Date(tokenInfo.snapshotTakenAt).toLocaleString()}
+                Last updated: {new Date(config.lastUpdated).toLocaleString()}
               </div>
             )}
           </div>
@@ -185,6 +166,7 @@ export default function CommemorativeToken1Admin() {
           <li>• <strong>Step 2:</strong> Return here and select that snapshot from the dropdown</li>
           <li>• <strong>Step 3:</strong> Click "Activate This Snapshot" to enable eligibility</li>
           <li>• <strong>Result:</strong> Any corporation stake address in the snapshot will see the "Claim NFT" button on the homepage</li>
+          <li>• <strong>NMKR handles everything else:</strong> Payment processing, minting, NFT delivery</li>
         </ul>
       </div>
     </div>
