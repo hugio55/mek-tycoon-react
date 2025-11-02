@@ -1732,6 +1732,33 @@ export default function TalentBuilderPage() {
             >
               Highlight Issues: {highlightDisconnected ? 'ON' : 'OFF'}
             </button>
+
+            {/* Viewport Box Controls */}
+            <div className="border-l border-gray-700 pl-2 ml-2 flex items-center gap-2">
+              <button
+                onClick={() => setShowViewportBox(!showViewportBox)}
+                className={`px-2 py-1 text-sm rounded transition-all ${showViewportBox ? 'bg-yellow-600 text-black font-bold border border-yellow-400' : 'bg-gray-700 text-white border border-gray-600'} hover:bg-yellow-500 hover:text-black`}
+                title="Show/hide viewport preview box"
+              >
+                Viewport: {showViewportBox ? 'ON' : 'OFF'}
+              </button>
+
+              <select
+                value={`${viewportDimensions.width}x${viewportDimensions.height}`}
+                onChange={(e) => {
+                  const [width, height] = e.target.value.split('x').map(Number);
+                  setViewportDimensions({ width, height });
+                }}
+                className="px-2 py-1 text-sm rounded bg-gray-700 text-yellow-400 border border-yellow-500/30 hover:border-yellow-500/50 transition-colors font-mono"
+                title="Viewport dimensions"
+              >
+                <option value="800x600">800×600</option>
+                <option value="1024x768">1024×768</option>
+                <option value="1920x1080">1920×1080</option>
+                <option value="1280x720">1280×720</option>
+                <option value="1440x900">1440×900</option>
+              </select>
+            </div>
           </div>
         </div>
         
@@ -2160,7 +2187,94 @@ export default function TalentBuilderPage() {
                 </div>
               </div>
             )}
-            
+
+            {/* Viewport Box - Shows what area will be visible on the webpage */}
+            {showViewportBox && (
+              <div
+                className="absolute border-[3px] border-yellow-500 pointer-events-none backdrop-blur-[2px]"
+                style={{
+                  left: `${3000 - viewportDimensions.width / 2}px`,
+                  top: `${3000 - viewportDimensions.height / 2}px`,
+                  width: `${viewportDimensions.width}px`,
+                  height: `${viewportDimensions.height}px`,
+                  background: 'rgba(250, 182, 23, 0.05)',
+                  boxShadow: '0 0 25px rgba(250, 182, 23, 0.4), inset 0 0 30px rgba(250, 182, 23, 0.08)',
+                  zIndex: 5,
+                  animation: 'mek-pulse-yellow 3s infinite'
+                }}
+              >
+                {/* Corner markers - industrial style */}
+                <div
+                  className="absolute -top-1 -left-1 w-5 h-5 border-l-2 border-t-2 border-yellow-400"
+                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
+                />
+                <div
+                  className="absolute -top-1 -right-1 w-5 h-5 border-r-2 border-t-2 border-yellow-400"
+                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
+                />
+                <div
+                  className="absolute -bottom-1 -left-1 w-5 h-5 border-l-2 border-b-2 border-yellow-400"
+                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
+                />
+                <div
+                  className="absolute -bottom-1 -right-1 w-5 h-5 border-r-2 border-b-2 border-yellow-400"
+                  style={{ boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)' }}
+                />
+
+                {/* Label with industrial styling */}
+                <div
+                  className="absolute -top-10 left-0 bg-black/90 text-yellow-400 px-3 py-1 text-xs font-bold tracking-wider border border-yellow-500/50 backdrop-blur-sm"
+                  style={{
+                    boxShadow: '0 0 15px rgba(250, 182, 23, 0.5)',
+                    clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)',
+                    fontFamily: "'Orbitron', monospace"
+                  }}
+                >
+                  VIEWPORT - {viewportDimensions.width}×{viewportDimensions.height}
+                </div>
+
+                {/* Hazard stripe pattern on edges (very subtle) */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-20"
+                  style={{
+                    backgroundImage: `
+                      repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(250, 182, 23, 0.1) 10px, rgba(250, 182, 23, 0.1) 11px),
+                      repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(250, 182, 23, 0.1) 10px, rgba(250, 182, 23, 0.1) 11px)
+                    `
+                  }}
+                />
+
+                {/* Center crosshair with industrial styling */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div
+                    className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent"
+                    style={{ boxShadow: '0 0 8px rgba(250, 182, 23, 0.3)' }}
+                  />
+                  <div
+                    className="absolute h-full w-[2px] bg-gradient-to-b from-transparent via-yellow-400/40 to-transparent"
+                    style={{ boxShadow: '0 0 8px rgba(250, 182, 23, 0.3)' }}
+                  />
+                  <div
+                    className="w-4 h-4 border-2 border-yellow-400 bg-transparent relative"
+                    style={{
+                      boxShadow: '0 0 15px rgba(250, 182, 23, 0.6)',
+                      clipPath: 'polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)'
+                    }}
+                  />
+                </div>
+
+                {/* Scanning line animation (optional, very subtle) */}
+                <div
+                  className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent pointer-events-none"
+                  style={{
+                    top: '50%',
+                    animation: 'mek-scan-line 3s linear infinite',
+                    boxShadow: '0 0 10px rgba(250, 182, 23, 0.8)'
+                  }}
+                />
+              </div>
+            )}
+
             {/* Connections */}
             {connections.map((conn, index) => {
               const fromNode = nodes.find(n => n.id === conn.from);
