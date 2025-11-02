@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -18,8 +18,24 @@ export default function CommemorativeToken1Admin() {
   // Query: Get all available snapshots from Whitelist Manager
   const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
 
-  // Mutation: Import snapshot to activate eligibility
+  // Mutations
+  const initializeNFT = useMutation(api.commemorativeTokens.initializePhase1BetaNFT);
   const importSnapshot = useMutation(api.commemorativeTokens.importSnapshotToNFT);
+
+  // Initialize Phase 1 Beta NFT on mount if it doesn't exist
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await initializeNFT({});
+      } catch (error) {
+        console.error('Error initializing NFT:', error);
+      }
+    };
+
+    if (tokenInfo !== undefined && !tokenInfo?.exists) {
+      initialize();
+    }
+  }, [tokenInfo, initializeNFT]);
 
   const handleActivateSnapshot = async () => {
     if (!selectedSnapshotId) {

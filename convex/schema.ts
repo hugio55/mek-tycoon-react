@@ -2465,6 +2465,39 @@ export default defineSchema({
     .index("by_wallet_and_variation", ["walletAddress", "variationId"])
     .index("by_expires", ["expiresAt"]),
 
+  // Essence Buff Sources - granular tracking of individual buff sources
+  // This table tracks EACH individual buff source separately (e.g., each achievement, upgrade, level milestone)
+  // Replaces aggregate tracking in essencePlayerBuffs with detailed per-source tracking
+  essenceBuffSources: defineTable({
+    walletAddress: v.string(),
+    variationId: v.number(),
+
+    // Buff values from THIS specific source
+    rateMultiplier: v.number(), // 1.15 = +15% rate from this source
+    capBonus: v.number(),        // 2 = +2 cap from this source
+
+    // Source identification
+    sourceType: v.string(),      // "achievement", "upgrade", "level_milestone", "event", "admin"
+    sourceId: v.string(),        // Unique identifier: "level_5", "upgrade_speed_3", "achievement_collector_1"
+    sourceName: v.string(),      // Human-readable: "Level 5 Milestone", "Speed Upgrade III"
+    sourceDescription: v.optional(v.string()), // "Reach level 5 to unlock +15% rate"
+
+    // Metadata
+    appliedAt: v.number(),
+    expiresAt: v.optional(v.number()), // null for permanent buffs
+    isActive: v.boolean(),             // Can be disabled without deleting
+
+    // Audit trail
+    grantedBy: v.optional(v.string()), // "system", "admin", "player_action"
+    grantReason: v.optional(v.string()), // Additional context
+  })
+    .index("by_wallet", ["walletAddress"])
+    .index("by_wallet_and_variation", ["walletAddress", "variationId"])
+    .index("by_wallet_variation_source", ["walletAddress", "variationId", "sourceId"]) // Prevent duplicate sources
+    .index("by_source_type", ["sourceType"])
+    .index("by_active", ["isActive"])
+    .index("by_expires", ["expiresAt"]),
+
   // System Monitoring - 24/7 backend monitoring and error tracking
   systemMonitoring: defineTable({
     timestamp: v.number(),
