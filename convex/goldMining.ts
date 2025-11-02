@@ -416,13 +416,40 @@ export const updateGoldCheckpoint = mutation({
       newTotalCumulativeGold = existing.totalCumulativeGold || (existing.accumulatedGold || 0) + (existing.totalGoldSpentOnUpgrades || 0);
     }
 
-    // Save the snapshot
+    // CRITICAL: Check version for race condition protection (optimistic concurrency control)
+    // Re-fetch the latest data to check if version changed during this mutation
+    const latestGoldMiningData = await ctx.db.get(existing._id);
+    if (!latestGoldMiningData) {
+      throw new Error("Gold mining data was deleted during checkpoint update");
+    }
+    const currentVersion = existing.version || 0;
+    const latestVersion = latestGoldMiningData.version || 0;
+    if (currentVersion !== latestVersion) {
+      // LOG: Concurrent modification detected (race condition)
+      await ctx.scheduler.runAfter(0, internal.monitoring.logEvent, {
+        eventType: "warning",
+        category: "gold",
+        message: "Concurrent modification detected during gold checkpoint update",
+        severity: "medium",
+        functionName: "updateGoldCheckpoint",
+        walletAddress: args.walletAddress,
+        details: {
+          expectedVersion: currentVersion,
+          actualVersion: latestVersion,
+        },
+      });
+
+      throw new Error("Concurrent modification detected. Please refresh and try again.");
+    }
+
+    // Save the snapshot with version increment
     await ctx.db.patch(existing._id, {
       accumulatedGold: newAccumulatedGold,
       totalCumulativeGold: newTotalCumulativeGold,
       lastSnapshotTime: now,
       lastActiveTime: now,
       updatedAt: now,
+      version: currentVersion + 1, // Increment version to detect concurrent modifications
     });
 
     return {
