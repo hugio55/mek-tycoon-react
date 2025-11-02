@@ -36,8 +36,13 @@ export const getNextAvailableNFT = action({
   }> => {
     const apiKey = process.env.NMKR_API_KEY;
 
+    console.log('[🔨NMKR] === NMKR API Call Starting ===');
+    console.log('[🔨NMKR] Project ID:', args.projectId);
+    console.log('[🔨NMKR] API Key exists:', !!apiKey);
+    console.log('[🔨NMKR] API Key length:', apiKey?.length);
+
     if (!apiKey) {
-      console.error('[🔨NMKR] NMKR_API_KEY not found in environment variables');
+      console.error('[🔨NMKR] ❌ NMKR_API_KEY not found in environment variables');
       return {
         uid: null,
         nftNumber: null,
@@ -48,7 +53,7 @@ export const getNextAvailableNFT = action({
 
     const apiUrl = `https://studio-api.nmkr.io/v2/ListNfts/${args.projectId}`;
 
-    console.log('[🔨NMKR] Fetching NFTs from NMKR Studio:', apiUrl);
+    console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl);
 
     try {
       const response = await fetch(apiUrl, {
@@ -72,13 +77,24 @@ export const getNextAvailableNFT = action({
 
       const data: NMKRListNftsResponse = await response.json();
 
-      console.log('[🔨NMKR] Fetched', data.nfts?.length || 0, 'NFTs from project');
+      console.log('[🔨NMKR] ✅ API Response received');
+      console.log('[🔨NMKR] Total NFTs in project:', data.nfts?.length || 0);
+      console.log('[🔨NMKR] Total count:', data.totalCount);
+
+      // Log state breakdown
+      const stateBreakdown: Record<string, number> = {};
+      data.nfts.forEach(nft => {
+        stateBreakdown[nft.state] = (stateBreakdown[nft.state] || 0) + 1;
+      });
+      console.log('[🔨NMKR] State breakdown:', stateBreakdown);
 
       // Filter for unminted NFTs (state === "free")
       const availableNfts = data.nfts.filter(nft => nft.state === "free");
 
+      console.log('[🔨NMKR] Available (free) NFTs:', availableNfts.length);
+
       if (availableNfts.length === 0) {
-        console.log('[🔨NMKR] No available NFTs found (all claimed)');
+        console.log('[🔨NMKR] ❌ No available NFTs found (all claimed)');
         return {
           uid: null,
           nftNumber: null,
@@ -87,6 +103,15 @@ export const getNextAvailableNFT = action({
         };
       }
 
+      // Log first few available NFTs before sorting
+      console.log('[🔨NMKR] First 3 available NFTs (unsorted):',
+        availableNfts.slice(0, 3).map(n => ({
+          name: n.tokenname || n.displayname,
+          state: n.state,
+          uid: n.uid
+        }))
+      );
+
       // Sort by NFT number (extract number from tokenname like "Lab Rat #1")
       const sortedNfts = availableNfts.sort((a, b) => {
         const aNum = extractNftNumber(a.tokenname || a.displayname);
@@ -94,10 +119,20 @@ export const getNextAvailableNFT = action({
         return aNum - bNum;
       });
 
+      // Log first few NFTs after sorting
+      console.log('[🔨NMKR] First 3 NFTs (sorted):',
+        sortedNfts.slice(0, 3).map(n => ({
+          name: n.tokenname || n.displayname,
+          number: extractNftNumber(n.tokenname || n.displayname),
+          state: n.state,
+          uid: n.uid
+        }))
+      );
+
       const nextNft = sortedNfts[0];
       const nftNumber = extractNftNumber(nextNft.tokenname || nextNft.displayname);
 
-      console.log('[🔨NMKR] Next available NFT:', {
+      console.log('[🔨NMKR] 🎯 NEXT AVAILABLE NFT:', {
         uid: nextNft.uid,
         displayName: nextNft.displayname,
         tokenName: nextNft.tokenname,
