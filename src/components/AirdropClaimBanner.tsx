@@ -27,19 +27,12 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [debugClaimState, setDebugClaimState] = useState<'claimed' | 'unclaimed' | null>(null);
 
-  const TOKEN_TYPE = "phase_1_beta";
   const PRICE_ADA = 10;
 
-  // Query eligibility
+  // Query eligibility (NEW SIMPLE SYSTEM)
   const eligibility = useQuery(
-    api.commemorativeTokens.checkBetaTesterEligibility,
-    walletAddress ? { walletAddress, tokenType: TOKEN_TYPE } : "skip"
-  );
-
-  // Query token type info (shows next edition)
-  const tokenInfo = useQuery(
-    api.commemorativeTokens.getTokenTypeInfo,
-    { tokenType: TOKEN_TYPE }
+    api.nftEligibility.checkClaimEligibility,
+    walletAddress ? { walletAddress } : "skip"
   );
 
   // Load debug state from localStorage and listen for changes
@@ -120,18 +113,7 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
     );
   }
 
-  // Show small green claimed text if user already claimed (unless debug unclaimed override)
-  if (debugClaimState !== 'unclaimed' && claimStatus === "ineligible" && eligibility?.hasClaimed && eligibility?.claimedAt) {
-    return (
-      <div className="mb-4 text-center">
-        <p className="text-green-400 text-sm">
-          ✓ You claimed your Phase 1 commemorative NFT on {formatClaimDate(eligibility.claimedAt)}
-        </p>
-      </div>
-    );
-  }
-
-  // Don't show banner if ineligible for other reasons (unless debug unclaimed override)
+  // Don't show banner if ineligible (unless debug unclaimed override)
   if (claimStatus === "ineligible" && debugClaimState !== 'unclaimed') return null;
 
   // Eligible - show claim banner with button
@@ -167,18 +149,6 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
           >
             Awarded to early supporters who connected their wallet and accumulated gold
           </p>
-
-          {tokenInfo?.exists && (
-            <p
-              className="text-sm mb-4"
-              style={{
-                color: '#7dd3fc',
-                lineHeight: '1.6'
-              }}
-            >
-              Next Edition: <span className="font-bold text-yellow-400">#{tokenInfo.nextEdition}</span>
-            </p>
-          )}
 
           <p
             className="text-xs mb-4 text-cyan-300/80"

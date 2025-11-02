@@ -149,6 +149,7 @@ import type * as monitoringSummaryGenerator from "../monitoringSummaryGenerator.
 import type * as multiWalletAggregation from "../multiWalletAggregation.js";
 import type * as navigation from "../navigation.js";
 import type * as nftArtAssets from "../nftArtAssets.js";
+import type * as nftEligibility from "../nftEligibility.js";
 import type * as nftEvents from "../nftEvents.js";
 import type * as nftPurchases from "../nftPurchases.js";
 import type * as nftSyncSaga from "../nftSyncSaga.js";
@@ -350,6 +351,7 @@ declare const fullApi: ApiFromModules<{
   multiWalletAggregation: typeof multiWalletAggregation;
   navigation: typeof navigation;
   nftArtAssets: typeof nftArtAssets;
+  nftEligibility: typeof nftEligibility;
   nftEvents: typeof nftEvents;
   nftPurchases: typeof nftPurchases;
   nftSyncSaga: typeof nftSyncSaga;
