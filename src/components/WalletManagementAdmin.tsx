@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, lazy, Suspense, useMemo, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
@@ -35,6 +36,7 @@ export default function WalletManagementAdmin() {
       }
     };
     loadSession();
+    setMounted(true);
   }, []);
 
   // BANDWIDTH OPTIMIZATION: Only load wallets when user clicks "Load Wallets" button
@@ -82,6 +84,8 @@ export default function WalletManagementAdmin() {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [hoveredDropdown, setHoveredDropdown] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Drag-to-scroll state
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1034,58 +1038,78 @@ Check console for full timeline.
                         )}
                       </td>
                       <td className="px-2 py-2">
-                        <div
-                          className="relative"
-                          onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
-                          onMouseLeave={() => setHoveredDropdown(null)}
-                        >
-                          <button className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded transition-colors whitespace-nowrap">
+                        <div className="relative">
+                          <button
+                            className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded transition-colors whitespace-nowrap"
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setDropdownPosition({
+                                top: rect.bottom,
+                                left: rect.right - 220 // 220px is dropdown width
+                              });
+                              setHoveredDropdown(wallet.walletAddress);
+                            }}
+                            onMouseLeave={() => {
+                              // Don't close immediately - give time to move to dropdown
+                              setTimeout(() => {
+                                setHoveredDropdown(null);
+                                setDropdownPosition(null);
+                              }, 100);
+                            }}
+                          >
                             Actions ▼
                           </button>
 
-                          {hoveredDropdown === wallet.walletAddress && (
+                          {mounted && hoveredDropdown === wallet.walletAddress && dropdownPosition && createPortal(
                             <div
-                              className="absolute top-full right-0 mt-0 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
+                              className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-[9999] w-[220px] py-1"
+                              style={{
+                                top: `${dropdownPosition.top}px`,
+                                left: `${dropdownPosition.left}px`,
+                              }}
                               onMouseEnter={() => setHoveredDropdown(wallet.walletAddress)}
-                              onMouseLeave={() => setHoveredDropdown(null)}
+                              onMouseLeave={() => {
+                                setHoveredDropdown(null);
+                                setDropdownPosition(null);
+                              }}
                             >
                               <button
-                                onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors"
                                 title="View all Mek levels for this wallet"
                               >
                                 View Levels
                               </button>
                               <button
-                                onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-400 transition-colors"
                                 title="View essence balances for this wallet"
                               >
                                 View Essence
                               </button>
                               <button
-                                onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
                                 title="Manage essence buffs (generation rate & max cap)"
                               >
                                 ⚡ Buffs
                               </button>
                               <button
-                                onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
                                 title="View activity log (upgrades, connections, etc.)"
                               >
                                 📋 Activity
                               </button>
                               <button
-                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
                                 title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
                               >
                                 🔍 Boost Sync
                               </button>
                               <button
-                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); }}
+                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 disabled={isRunningSnapshot}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
                                 title="Run blockchain snapshot for this wallet (with debug logging)"
@@ -1157,7 +1181,8 @@ Check console for full timeline.
                               >
                                 Delete
                               </button>
-                            </div>
+                            </div>,
+                            document.body
                           )}
                         </div>
                       </td>
