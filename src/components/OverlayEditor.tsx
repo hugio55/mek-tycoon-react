@@ -1716,7 +1716,7 @@ export default function OverlayEditor() {
                   <div className="flex gap-3 items-center">
                     <h4 className="mek-label-uppercase text-yellow-400">Variation Checklist</h4>
                     <div className="text-xs text-gray-400">
-                      {usedVariations.size}/288 placed
+                      {usedVariations.size}/291 placed
                     </div>
                   </div>
                   <span className="text-yellow-400">{panelStates.variationChecklist ? "▼" : "▶"}</span>
@@ -1789,7 +1789,7 @@ export default function OverlayEditor() {
                           </style>
                         </head>
                         <body>
-                          <h1>Variation Checklist <span class="count">(${usedVariations.size}/288 placed)</span></h1>
+                          <h1>Variation Checklist <span class="count">(${usedVariations.size}/291 placed)</span></h1>
 
                           <div class="section">
                             <div class="section-header">

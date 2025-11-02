@@ -550,14 +550,15 @@ The site uses an **Industrial/Military** aesthetic with the following key elemen
 - **Use this for**: NFT images, essence bottles, any file naming that needs unique identifiers
 - **Example**: "Rust" head (rank 236) → sourceKey: "AM1", "Rust" body (rank 186) → sourceKey: "BJ1"
 
-**⚠️ CRITICAL: Special "Empty" Trait Variations - NEVER IGNORE THESE**:
-- The following trait variations ALL represent valid "no item equipped" states:
+**⚠️ CRITICAL: Special Trait Variations (Ghostly/Haunting Theme) - NEVER IGNORE THESE**:
+- The following trait variations have artistic names that may seem like "empty" states,
+  but they are LEGITIMATE variations with ghostly/haunting visual appearances:
   - **"Nil"** (rank 18, legendary, 1-2 copies)
   - **"Null"** (rank 21, legendary, 1-2 copies)
   - **"None"** (rank 24, legendary, 1-2 copies)
   - **"Nothing"** (rank 291, common, 501 copies)
 - These should NEVER be filtered out or treated as invalid data
-- They are legitimate variations that appear in actual Mek data
+- They are real variations with actual visual appearances (ghostly/haunting themed)
 - Must be preserved across ALL systems (database, UI, exports, etc.)
 
 **Alternative (names only)**: `/src/lib/variationsReferenceData.ts`
