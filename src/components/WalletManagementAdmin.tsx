@@ -1085,56 +1085,51 @@ Check console for full timeline.
                               }}
                             >
                               <button
-                                onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors"
-                                title="View all Mek levels for this wallet"
+                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
+                                title="Delete wallet permanently"
                               >
-                                View Levels
+                                Delete
                               </button>
+                              <div className="border-t border-gray-700 my-1"></div>
                               <button
-                                onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-400 transition-colors"
-                                title="View essence balances for this wallet"
-                              >
-                                View Essence
-                              </button>
-                              <button
-                                onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
-                                title="Manage essence buffs (generation rate & max cap)"
-                              >
-                                ⚡ Buffs
-                              </button>
-                              <button
-                                onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
-                                title="View activity log (upgrades, connections, etc.)"
-                              >
-                                📋 Activity
-                              </button>
-                              <button
-                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
-                                title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
+                                title="Reset all gold (spendable + cumulative) to zero"
                               >
-                                🔍 Boost Sync
+                                Reset All Gold
                               </button>
                               <button
-                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                disabled={isRunningSnapshot}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
-                                title="Run blockchain snapshot for this wallet (with debug logging)"
+                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
+                                title="Reset all Mek levels to Level 1"
                               >
-                                📸 Snapshot
+                                Reset Levels
                               </button>
-                              {wallet.isVerified && (
-                                <button
-                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
-                                  title="Reset verification (for testing)"
-                                >
-                                  Reset Verify
-                                </button>
+                              <button
+                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
+                                title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                              >
+                                🎯 Exact Recon.
+                              </button>
+                              {wallet.totalCumulativeGold < wallet.currentGold && (
+                                <>
+                                  <button
+                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
+                                    title="Reconstruct from Snapshots"
+                                  >
+                                    📸 Reconstruct
+                                  </button>
+                                  <button
+                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
+                                    title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
+                                  >
+                                    🔧 Fix Cumul.
+                                  </button>
+                                </>
                               )}
                               {wallet.totalGoldPerHour === 0 && wallet.walletAddress.endsWith('fe6012f1') && (
                                 <button
@@ -1145,52 +1140,57 @@ Check console for full timeline.
                                   Fix MEKs
                                 </button>
                               )}
-                              {wallet.totalCumulativeGold < wallet.currentGold && (
-                                <>
-                                  <button
-                                    onClick={() => { handleFixCumulativeGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors animate-pulse"
-                                    title="Fix corrupted cumulative gold (cumulative cannot be less than current!)"
-                                  >
-                                    🔧 Fix Cumul.
-                                  </button>
-                                  <button
-                                    onClick={() => { handleReconstructFromSnapshots(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                    className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors animate-pulse"
-                                    title="Reconstruct from Snapshots"
-                                  >
-                                    📸 Reconstruct
-                                  </button>
-                                </>
+                              {wallet.isVerified && (
+                                <button
+                                  onClick={() => { handleResetVerification(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                  className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-orange-900/50 text-orange-400 transition-colors"
+                                  title="Reset verification (for testing)"
+                                >
+                                  Reset Verify
+                                </button>
                               )}
                               <button
-                                onClick={() => { handleReconstructExact(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-300 transition-colors"
-                                title="100% ACCURATE reconstruction using snapshot history + upgrade tracking with minute-by-minute timeline"
+                                onClick={() => { handleSingleWalletSnapshot(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                disabled={isRunningSnapshot}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-indigo-900/50 text-indigo-400 transition-colors disabled:opacity-50"
+                                title="Run blockchain snapshot for this wallet (with debug logging)"
                               >
-                                🎯 Exact Recon.
+                                📸 Snapshot
                               </button>
                               <button
-                                onClick={() => { handleResetMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
-                                title="Reset all Mek levels to Level 1"
-                              >
-                                Reset Levels
-                              </button>
-                              <button
-                                onClick={() => { handleResetAllGold(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                onClick={() => { setDiagnosticWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
                                 className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-purple-900/50 text-purple-400 transition-colors"
-                                title="Reset all gold (spendable + cumulative) to zero"
+                                title="Diagnose boost sync issues - compare ownedMeks vs mekLevels"
                               >
-                                Reset All Gold
+                                🔍 Boost Sync
                               </button>
-                              <div className="border-t border-gray-700 my-1"></div>
                               <button
-                                onClick={() => { handleDeleteWallet(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
-                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-red-900/50 text-red-400 transition-colors"
-                                title="Delete wallet permanently"
+                                onClick={() => { setViewingActivityLog(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-green-900/50 text-green-400 transition-colors"
+                                title="View activity log (upgrades, connections, etc.)"
                               >
-                                Delete
+                                📋 Activity
+                              </button>
+                              <button
+                                onClick={() => { setViewingBuffs(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-yellow-900/50 text-yellow-400 transition-colors"
+                                title="Manage essence buffs (generation rate & max cap)"
+                              >
+                                ⚡ Buffs
+                              </button>
+                              <button
+                                onClick={() => { setViewingEssence(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-cyan-900/50 text-cyan-400 transition-colors"
+                                title="View essence balances for this wallet"
+                              >
+                                View Essence
+                              </button>
+                              <button
+                                onClick={() => { setViewingMekLevels(wallet.walletAddress); setHoveredDropdown(null); setDropdownPosition(null); }}
+                                className="w-full px-3 py-2 text-sm text-left bg-transparent hover:bg-blue-900/50 text-blue-400 transition-colors"
+                                title="View all Mek levels for this wallet"
+                              >
+                                View Levels
                               </button>
                             </div>,
                             document.body
