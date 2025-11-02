@@ -42,6 +42,13 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
   );
   const [mockPaymentProcessing, setMockPaymentProcessing] = useState(false);
 
+  // Checklist status tracking
+  const [checklistStatus, setChecklistStatus] = useState({
+    paymentReceived: false,
+    minting: false,
+    confirming: false
+  });
+
   // Get NMKR configuration
   const NMKR_PROJECT_ID = process.env.NEXT_PUBLIC_NMKR_PROJECT_ID;
   const NMKR_NETWORK = process.env.NEXT_PUBLIC_NMKR_NETWORK || 'mainnet';
@@ -105,8 +112,13 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     const checkInterval = setInterval(() => {
       if (popup.closed) {
         clearInterval(checkInterval);
-        // Payment window closed - switch to processing state
+        // Payment window closed - switch to processing state and mark payment received
         setState('processing');
+        setChecklistStatus({
+          paymentReceived: true,
+          minting: false,
+          confirming: false
+        });
       }
     }, 500);
 
@@ -118,10 +130,45 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     };
   }, [mounted, state, NMKR_PROJECT_ID, isTestMode]);
 
+  // Progressive checklist status updates
+  useEffect(() => {
+    if (state !== 'processing') return;
+
+    // Step 1: Payment received (immediately when entering processing state)
+    if (checklistStatus.paymentReceived && !checklistStatus.minting) {
+      const mintingTimeout = setTimeout(() => {
+        setChecklistStatus(prev => ({
+          ...prev,
+          minting: true
+        }));
+      }, 2000); // Wait 2 seconds before showing minting
+
+      return () => clearTimeout(mintingTimeout);
+    }
+
+    // Step 2: Start confirming after minting shows (simulate blockchain confirmation)
+    if (checklistStatus.minting && !checklistStatus.confirming) {
+      const confirmingTimeout = setTimeout(() => {
+        setChecklistStatus(prev => ({
+          ...prev,
+          confirming: true
+        }));
+      }, 3000); // Wait 3 seconds before showing confirming
+
+      return () => clearTimeout(confirmingTimeout);
+    }
+  }, [state, checklistStatus]);
+
   // Check for claim completion (skip in debug mode)
   useEffect(() => {
     if (isDebugMode) return; // Don't auto-transition in debug mode
     if (state === 'processing' && recentClaim?.hasClaimed) {
+      // Mark all steps complete before transitioning to success
+      setChecklistStatus({
+        paymentReceived: true,
+        minting: true,
+        confirming: true
+      });
       setClaimedNFT(recentClaim.claim);
       setState('success');
     }
@@ -169,8 +216,13 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
         },
       });
 
-      // Transition to processing state
+      // Transition to processing state and mark payment received
       setState('processing');
+      setChecklistStatus({
+        paymentReceived: true,
+        minting: false,
+        confirming: false
+      });
     } catch (error) {
       console.error('Mock payment error:', error);
       setErrorMessage('Failed to create mock claim');
@@ -265,9 +317,17 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       case 'processing':
         return (
           <div className="text-center">
+            {/* Header Section */}
             <div className="mb-6">
+              <h2 className="text-3xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                Processing Your NFT
+              </h2>
+              <p className="text-gray-400 mb-6">
+                Waiting for blockchain confirmation...
+              </p>
+
               {/* Loading Bar Video with Fallback */}
-              <div className="mb-4 flex justify-center">
+              <div className="mb-6 flex justify-center">
                 <video
                   autoPlay
                   loop
@@ -286,22 +346,85 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                   Your browser does not support the video tag.
                 </video>
                 {/* Fallback spinner - hidden by default, shows if video fails */}
-                <div className="animate-spin h-16 w-16 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto" style={{ display: 'none' }}></div>
+                <div className="animate-spin h-16 w-16 border-4 border-yellow-500 border-t-transparent rounded-full mx-auto" style={{ display: 'none' }}></div>
               </div>
 
-              <h2 className="text-2xl font-bold text-cyan-400 mb-2">Processing Your NFT</h2>
-              <p className="text-gray-400 mb-4">
-                Waiting for blockchain confirmation...
-              </p>
-              <div className="space-y-2 text-sm text-gray-500">
-                <p>✓ Payment received</p>
-                <p className="animate-pulse">⏳ Minting NFT on blockchain...</p>
-                <p className="text-gray-600">⏳ Confirming transaction</p>
+              {/* Checklist with Industrial Styling */}
+              <div className="bg-black/60 border-2 border-yellow-500/30 rounded p-4 space-y-3 text-left max-w-md mx-auto backdrop-blur-sm">
+                {/* Step 1: Payment Received */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full ${
+                    checklistStatus.paymentReceived
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : 'bg-gray-700/20 border-2 border-gray-600'
+                  } flex items-center justify-center transition-all duration-300`}>
+                    {checklistStatus.paymentReceived ? (
+                      <span className="text-green-400 text-sm font-bold">✓</span>
+                    ) : (
+                      <span className="text-gray-600 text-sm">⏳</span>
+                    )}
+                  </div>
+                  <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
+                    checklistStatus.paymentReceived ? 'text-green-400' : 'text-gray-500'
+                  }`}>
+                    Payment received
+                  </span>
+                </div>
+
+                {/* Step 2: Minting NFT */}
+                <div className={`flex items-center gap-3 ${checklistStatus.minting && !checklistStatus.confirming ? 'animate-pulse' : ''}`}>
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full ${
+                    checklistStatus.confirming
+                      ? 'bg-green-500/20 border-2 border-green-500'
+                      : checklistStatus.minting
+                        ? 'bg-yellow-500/20 border-2 border-yellow-500'
+                        : 'bg-gray-700/20 border-2 border-gray-600'
+                  } flex items-center justify-center transition-all duration-300`}>
+                    {checklistStatus.confirming ? (
+                      <span className="text-green-400 text-sm font-bold">✓</span>
+                    ) : checklistStatus.minting ? (
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></div>
+                    ) : (
+                      <span className="text-gray-600 text-sm">⏳</span>
+                    )}
+                  </div>
+                  <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
+                    checklistStatus.confirming
+                      ? 'text-green-400'
+                      : checklistStatus.minting
+                        ? 'text-yellow-400'
+                        : 'text-gray-500'
+                  }`}>
+                    Minting NFT on blockchain...
+                  </span>
+                </div>
+
+                {/* Step 3: Confirming Transaction */}
+                <div className={`flex items-center gap-3 ${checklistStatus.confirming && state === 'processing' ? 'animate-pulse' : ''}`}>
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full ${
+                    checklistStatus.confirming
+                      ? 'bg-yellow-500/20 border-2 border-yellow-500'
+                      : 'bg-gray-700/20 border-2 border-gray-600'
+                  } flex items-center justify-center transition-all duration-300`}>
+                    {checklistStatus.confirming ? (
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></div>
+                    ) : (
+                      <span className="text-gray-600 text-sm">⏳</span>
+                    )}
+                  </div>
+                  <span className={`font-medium uppercase tracking-wide text-sm transition-colors duration-300 ${
+                    checklistStatus.confirming ? 'text-yellow-400' : 'text-gray-500'
+                  }`}>
+                    Confirming transaction
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded">
-              <p className="text-yellow-400 text-xs">
-                This may take 1-2 minutes. Please don't close this window.
+
+            {/* Warning Box */}
+            <div className="mt-6 p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
+              <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
+                ⚠ This may take 1-2 minutes. Please don't close this window.
               </p>
             </div>
           </div>
