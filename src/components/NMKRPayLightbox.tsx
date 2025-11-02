@@ -327,7 +327,7 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-yellow-500/70 z-10"></div>
 
                 <img
-                  src="/lab-rat-nft.png"
+                  src="/random-images/Lab%20Rat.jpg"
                   alt={nftTitle}
                   className="w-full h-auto"
                   onError={(e) => {
