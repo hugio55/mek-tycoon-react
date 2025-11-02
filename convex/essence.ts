@@ -264,23 +264,34 @@ async function calculateEssenceMetadata(
   // Get all unique variation IDs (from slotted Meks, existing balances, AND active buffs)
   const safeBalances = balances ?? [];
 
-  // Get all variations that have buffs applied
-  const playerBuffs = await ctx.db
-    .query("essencePlayerBuffs")
+  // Get all buff sources for this wallet (granular system)
+  const buffSources = await ctx.db
+    .query("essenceBuffSources")
     .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .filter((q) => q.eq(q.field("isActive"), true))
     .collect();
+
+  // Filter out expired buffs
+  const now = Date.now();
+  const activeBuffSources = buffSources.filter(
+    (s) => !s.expiresAt || s.expiresAt > now
+  );
+
+  // Group sources by variationId and calculate aggregated buffs
+  const buffMap = new Map<number, { rateMultiplier: number; capBonus: number }>();
+  for (const source of activeBuffSources) {
+    const existing = buffMap.get(source.variationId) || { rateMultiplier: 1.0, capBonus: 0 };
+    buffMap.set(source.variationId, {
+      rateMultiplier: existing.rateMultiplier + (source.rateMultiplier - 1.0),
+      capBonus: existing.capBonus + source.capBonus,
+    });
+  }
 
   const allVariationIds = new Set<number>([
     ...Array.from(variationCounts.keys()),
     ...safeBalances.map(b => b.variationId),
-    ...playerBuffs.map(b => b.variationId) // CRITICAL: Include buffed variations
+    ...Array.from(buffMap.keys()) // CRITICAL: Include buffed variations
   ]);
-
-  // Create a map of variationId → buff for quick lookup
-  const buffMap = new Map<number, any>();
-  for (const buff of playerBuffs) {
-    buffMap.set(buff.variationId, buff);
-  }
 
   // Calculate rates and caps for all variations
   for (const variationId of allVariationIds) {
@@ -1964,5 +1975,39 @@ export const testCleanupBuffSources = mutation({
     }
 
     return { success: true, deletedCount: buffs.length };
+  },
+});
+
+// ============================================
+// CLEANUP MUTATION - TRANSITION TO GRANULAR SYSTEM
+// Run this once to delete old aggregate buffs from essencePlayerBuffs
+// ============================================
+
+/**
+ * Delete all old aggregate buffs from essencePlayerBuffs table.
+ * This is a one-time cleanup to transition to the granular essenceBuffSources system.
+ *
+ * WARNING: This will delete ALL buffs for the specified wallet.
+ * Only run this during dev phase cleanup.
+ */
+export const cleanupOldAggregateBuffs = mutation({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    const buffs = await ctx.db
+      .query("essencePlayerBuffs")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+
+    for (const buff of buffs) {
+      await ctx.db.delete(buff._id);
+    }
+
+    console.log(`✅ [CLEANUP] Deleted ${buffs.length} old aggregate buffs from essencePlayerBuffs for ${args.walletAddress.slice(0, 15)}...`);
+
+    return {
+      success: true,
+      deletedCount: buffs.length,
+      message: `Deleted ${buffs.length} old aggregate buffs. Ready for granular essenceBuffSources system.`
+    };
   },
 });

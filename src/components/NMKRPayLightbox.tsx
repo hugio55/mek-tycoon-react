@@ -72,20 +72,16 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
   // Mount portal and lock body scroll
   useEffect(() => {
-    console.log('[💰CLAIM] NMKRPayLightbox mounting...');
     setMounted(true);
     document.body.style.overflow = 'hidden';
     return () => {
-      console.log('[💰CLAIM] NMKRPayLightbox unmounting...');
       document.body.style.overflow = 'unset';
     };
   }, []);
 
   // Open NMKR payment window on mount (ONLY if NOT in test mode or debug mode)
   useEffect(() => {
-    console.log('[💰CLAIM] Payment window effect - mounted:', mounted, 'state:', state, 'isTestMode:', isTestMode, 'isDebugMode:', isDebugMode);
     if (!mounted || state !== 'payment' || isTestMode || isDebugMode) {
-      console.log('[💰CLAIM] Skipping payment window open (condition not met)');
       return;
     }
 
@@ -104,13 +100,10 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
     );
 
     if (!popup) {
-      console.log('[💰CLAIM] Failed to open popup - likely blocked');
       setErrorMessage('Failed to open payment window. Please allow popups for this site.');
       setState('error');
       return;
     }
-
-    console.log('[💰CLAIM] Payment window opened successfully');
     setPaymentWindow(popup);
     const openedAt = Date.now();
     setPaymentWindowOpenedAt(openedAt);
@@ -120,27 +113,15 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
       if (popup.closed) {
         clearInterval(checkInterval);
 
-        // Check how long the window was open
         const windowOpenDuration = Date.now() - openedAt;
-        const minimumPaymentTime = 15000; // 15 seconds - minimum time for a real payment
-
         console.log('[💰CLAIM] Payment window closed after', windowOpenDuration, 'ms');
 
-        // If window was closed very quickly (less than 15 seconds), assume user cancelled
-        if (windowOpenDuration < minimumPaymentTime) {
-          console.log('[💰CLAIM] Window closed too quickly - assuming cancellation');
-          setState('cancelled');
-          setErrorMessage('Payment window was closed before completion.');
-        } else {
-          // Window was open long enough - assume payment completed, start processing
-          console.log('[💰CLAIM] Window was open long enough - starting processing');
-          setState('processing');
-          setChecklistStatus({
-            paymentReceived: true,
-            minting: false,
-            confirming: false
-          });
-        }
+        // IMPORTANT: Don't assume payment based on window open time
+        // Window could be open long due to timeout, user distraction, etc.
+        // Always show cancelled state and let webhook polling handle success detection
+        console.log('[💰CLAIM] Window closed - entering cancelled state, webhook will detect actual payment if completed');
+        setState('cancelled');
+        setErrorMessage('Payment window was closed. If you completed the payment, your NFT will arrive in your wallet within 1-2 minutes.');
       }
     }, 500);
 
@@ -245,11 +226,8 @@ export default function NMKRPayLightbox({ walletAddress = 'test_wallet', onClose
 
   // Only render on client-side after mount
   if (!mounted) {
-    console.log('[💰CLAIM] Not mounted yet, not rendering lightbox');
     return null;
   }
-
-  console.log('[💰CLAIM] Rendering lightbox with state:', state);
 
   const renderContent = () => {
     switch (state) {
