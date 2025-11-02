@@ -1869,6 +1869,7 @@ export default function TalentBuilderPage() {
                         templateId: selectedTemplateId,
                         nodes: cleanedNodes,
                         connections,
+                        viewportDimensions,
                       });
                       setSaveStatus('Template updated!');
                     } else {
@@ -1878,6 +1879,7 @@ export default function TalentBuilderPage() {
                         category: 'custom',
                         nodes: cleanedNodes,
                         connections,
+                        viewportDimensions,
                       });
                       setSelectedTemplateId(id);
                       setSaveStatus('Template created: ' + name);
@@ -3344,7 +3346,12 @@ export default function TalentBuilderPage() {
                             setSelectedTemplateId(template._id);
                             setTemplateName(template.name);
                             setTemplateDescription(template.description || '');
-                            
+
+                            // Restore viewport dimensions if saved with template
+                            if (template.viewportDimensions) {
+                              setViewportDimensions(template.viewportDimensions);
+                            }
+
                             // Auto-align to start node
                             const startNode = template.nodes.find((n: any) => n.id === 'start');
                             if (startNode && canvasRef.current) {
@@ -3355,7 +3362,7 @@ export default function TalentBuilderPage() {
                               });
                               setZoom(1);
                             }
-                            
+
                             setShowTemplateManager(false);
                             setSaveStatus('Loaded: ' + template.name);
                             setTimeout(() => setSaveStatus(''), 2000);
