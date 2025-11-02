@@ -17,9 +17,9 @@ export const seedVariationsReference = mutation({
 
     // Insert all variations
     const allVariations = [
-      ...ALL_VARIATIONS.heads,
-      ...ALL_VARIATIONS.bodies,
-      ...ALL_VARIATIONS.items
+      ...VARIATIONS_BY_TYPE.heads,
+      ...VARIATIONS_BY_TYPE.bodies,
+      ...VARIATIONS_BY_TYPE.traits
     ];
 
     for (const variation of allVariations) {
@@ -33,9 +33,9 @@ export const seedVariationsReference = mutation({
 
     return {
       message: `Seeded ${allVariations.length} variations`,
-      heads: ALL_VARIATIONS.heads.length,
-      bodies: ALL_VARIATIONS.bodies.length,
-      items: ALL_VARIATIONS.items.length,
+      heads: VARIATIONS_BY_TYPE.heads.length,
+      bodies: VARIATIONS_BY_TYPE.bodies.length,
+      items: VARIATIONS_BY_TYPE.traits.length,
     };
   },
 });

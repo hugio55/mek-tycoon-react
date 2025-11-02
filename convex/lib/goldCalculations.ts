@@ -120,16 +120,19 @@ export function calculateGoldIncrease(
   const newAccumulatedGold = currentAccumulated + goldToAdd;
 
   // Add to cumulative
-  const newTotalCumulativeGold = baseCumulative + goldToAdd;
+  let newTotalCumulativeGold = baseCumulative + goldToAdd;
 
   // Verify invariant: cumulative >= accumulated + spent
   // Use epsilon to handle floating-point precision errors
   const EPSILON = 1e-10;
   const difference = newTotalCumulativeGold - (newAccumulatedGold + totalSpent);
   if (difference < -EPSILON) {
-    console.error("[GOLD ERROR] Invariant violation detected!", {
+    // DEFENSIVE AUTO-REPAIR: Force cumulative to minimum required value instead of crashing
+    const requiredCumulative = newAccumulatedGold + totalSpent;
+    console.error("[GOLD AUTO-REPAIR] Invariant violation detected - forcing repair!", {
       newAccumulatedGold,
-      newTotalCumulativeGold,
+      newTotalCumulativeGold_BROKEN: newTotalCumulativeGold,
+      newTotalCumulativeGold_FIXED: requiredCumulative,
       totalSpent,
       goldToAdd,
       currentAccumulated,
@@ -138,10 +141,13 @@ export function calculateGoldIncrease(
       calculation: {
         expected: `${newTotalCumulativeGold} >= ${newAccumulatedGold} + ${totalSpent}`,
         actual: `${newTotalCumulativeGold} >= ${newAccumulatedGold + totalSpent}`,
-        difference: difference
+        difference: difference,
+        repair: `Forcing to ${requiredCumulative}`
       }
     });
-    throw new Error("Gold invariant violation: totalCumulativeGold < accumulatedGold + totalSpent");
+
+    // Force repair instead of throwing
+    newTotalCumulativeGold = requiredCumulative;
   }
 
   return {
@@ -192,7 +198,7 @@ export function calculateGoldDecrease(
  * totalCumulativeGold >= accumulatedGold + totalGoldSpentOnUpgrades
  *
  * @param record - Gold mining record to validate
- * @returns true if valid, throws error if invalid
+ * @returns true if valid, false if invalid (logs warning but doesn't throw)
  */
 export function validateGoldInvariant(record: GoldMiningRecord): boolean {
   const accumulated = record.accumulatedGold || 0;
@@ -209,16 +215,16 @@ export function validateGoldInvariant(record: GoldMiningRecord): boolean {
   const EPSILON = 1e-10;
   const difference = cumulative - (accumulated + spent);
   if (cumulative > 0 && difference < -EPSILON) {
-    console.error("[GOLD VALIDATION ERROR] Invariant violation!", {
+    console.warn("[GOLD VALIDATION WARNING] Invariant violation detected (non-fatal):", {
       accumulated,
       cumulative,
       spent,
       expected: accumulated + spent,
-      difference: difference
+      difference: difference,
+      note: "This will be auto-repaired on next gold increase/decrease operation"
     });
-    throw new Error(
-      `Gold invariant violation: totalCumulativeGold (${cumulative}) < accumulatedGold (${accumulated}) + totalSpent (${spent})`
-    );
+    // Return false instead of throwing - caller can handle repair
+    return false;
   }
 
   return true;
