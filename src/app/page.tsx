@@ -2838,6 +2838,9 @@ export default function MekRateLoggingPage() {
 
   return (
     <div className="fixed inset-0 overflow-hidden touch-manipulation">
+      {/* NMKR Debug Panel */}
+      <NMKRDebugPanel />
+
       {/* Industrial grid overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
