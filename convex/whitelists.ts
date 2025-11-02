@@ -703,6 +703,19 @@ export const getAllSnapshots = query({
 });
 
 /**
+ * Alias for getAllSnapshots - used by commemorative token admin
+ */
+export const getAllWhitelistSnapshots = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("whitelistSnapshots")
+      .order("desc")
+      .collect();
+  },
+});
+
+/**
  * Get a specific snapshot by ID
  */
 export const getSnapshotById = query({
