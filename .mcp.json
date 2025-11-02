@@ -1,7 +1,8 @@
 {
   "mcpServers": {
-    "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/over-exposed/javascript-nextjs"
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
     }
   }
 }
