@@ -8,6 +8,7 @@ export default function TestNMKRPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
   const [csvContent, setCsvContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Actions and mutations
   const testProjectInfo = useAction(api.nmkr.getProjectInfo);
