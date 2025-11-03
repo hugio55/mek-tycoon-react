@@ -456,8 +456,10 @@ export default function HomePage() {
             ? customSlotSize.width / customSlotOverlayData.imageWidth
             : 1;
 
-          // Find the display zone (mode: 'zone', not 'sprite')
-          const displayZone = customSlotOverlayData.zones?.find(z => z.type === 'Display Zone');
+          // Find the "Slotted Mek PFP" display zone
+          const displayZone = customSlotOverlayData.zones?.find(
+            z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
+          );
 
           return (
             <div className="max-w-6xl mx-auto mb-12">
