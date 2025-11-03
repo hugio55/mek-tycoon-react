@@ -24,7 +24,8 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const mekLevels = useQuery(api.mekLeveling.getMekLevels, { walletAddress });
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData, { walletAddress });
-  const essenceSlots = useQuery(api.essence.getEssenceSlots, { walletAddress });
+  const essenceState = useQuery(api.essence.getPlayerEssenceState, { walletAddress });
+  const essenceSlots = essenceState?.slots;
 
   // Mount portal and lock body scroll
   useEffect(() => {
