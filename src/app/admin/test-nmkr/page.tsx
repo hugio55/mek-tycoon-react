@@ -120,6 +120,43 @@ export default function TestNMKRPage() {
     setIsLoading(false);
   };
 
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const csvFile = files.find(file => file.name.endsWith('.csv'));
+
+    if (!csvFile) {
+      addLog("❌ Please drop a CSV file");
+      return;
+    }
+
+    addLog(`📁 Reading file: ${csvFile.name}`);
+
+    try {
+      const text = await csvFile.text();
+      setCsvContent(text);
+      addLog(`✅ Loaded ${csvFile.name} (${text.length} characters)`);
+    } catch (error) {
+      addLog(`❌ Failed to read file: ${error}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -186,15 +223,31 @@ export default function TestNMKRPage() {
             Method 1: CSV Import (RECOMMENDED)
           </h2>
           <div className="space-y-3">
-            <div>
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-lg p-4 transition-all ${
+                isDragging
+                  ? "border-yellow-500 bg-yellow-500/10"
+                  : "border-gray-600 bg-black/30"
+              }`}
+            >
+              {isDragging && (
+                <div className="absolute inset-0 flex items-center justify-center bg-yellow-500/20 rounded-lg pointer-events-none">
+                  <p className="text-2xl font-bold text-yellow-500">
+                    📁 Drop CSV file here
+                  </p>
+                </div>
+              )}
               <label className="block text-sm text-gray-400 mb-2">
-                Paste CSV content from NMKR Studio export:
+                Drag & drop CSV file or paste content:
               </label>
               <textarea
                 value={csvContent}
                 onChange={(e) => setCsvContent(e.target.value)}
                 className="w-full h-40 bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
-                placeholder="uid,name,nftnumber,state&#10;10aec295-d9e247e39c04e56e2df92ad5,Lab Rat #1,1,free&#10;..."
+                placeholder="Drag Mek Tycoon.csv here, or paste CSV content..."
               />
             </div>
             <button
@@ -205,9 +258,10 @@ export default function TestNMKRPage() {
               Initialize from CSV
             </button>
             <p className="text-sm text-gray-400">
-              1. Go to NMKR Studio → Your Project → NFTs tab<br />
-              2. Click Export/Download CSV<br />
-              3. Paste content here and click Initialize
+              <strong>Option 1:</strong> Drag & drop your Mek Tycoon.csv file onto the box above<br />
+              <strong>Option 2:</strong> Paste CSV content manually<br />
+              <br />
+              To get CSV: NMKR Studio → Your Project → NFTs tab → Export Token Info as CSV
             </p>
           </div>
         </div>
