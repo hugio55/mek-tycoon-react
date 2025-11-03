@@ -945,6 +945,9 @@ export default function HomePage() {
             }}
           />
         )}
+
+        {/* DEBUG: Lightbox Concepts Comparison */}
+        <MekManagementLightboxConcepts />
       </div>
     </div>
   );

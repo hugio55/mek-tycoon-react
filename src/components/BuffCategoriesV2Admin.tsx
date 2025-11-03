@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 interface BuffCategory {
   id: string;
@@ -181,9 +183,16 @@ function ExpandableRow({ category, level, isExpanded, onToggle, onEdit }: Expand
 }
 
 export default function BuffCategoriesV2Admin() {
-  const [tenureBaseRate, setTenureBaseRate] = useState(1.0);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tenure']));
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Query base rate from Convex
+  const baseRateData = useQuery(api.tenureConfig.getBaseRate);
+
+  // Mutations
+  const setBaseRateMutation = useMutation(api.tenureConfig.setBaseRate);
+
+  const tenureBaseRate = baseRateData?.baseRate || 1.0;
 
   // Hierarchical buff category structure
   const buffCategories: BuffCategory[] = [
@@ -221,11 +230,20 @@ export default function BuffCategoriesV2Admin() {
     });
   };
 
-  const handleSaveTenureRate = (newValue: number) => {
-    setTenureBaseRate(newValue);
-    setShowEditModal(false);
-    // TODO: Save to database
-    console.log('[🔧CONFIG] Tenure base rate updated:', newValue);
+  const handleSaveTenureRate = async (newValue: number) => {
+    try {
+      const result = await setBaseRateMutation({ baseRate: newValue });
+      if (result.success) {
+        console.log('[🔧CONFIG] Tenure base rate updated:', newValue);
+        setShowEditModal(false);
+      } else {
+        console.error('[🔧CONFIG] Failed to update base rate:', result.message);
+        alert('Failed to save: ' + result.message);
+      }
+    } catch (error) {
+      console.error('[🔧CONFIG] Error saving tenure base rate:', error);
+      alert('An error occurred while saving');
+    }
   };
 
   return (
