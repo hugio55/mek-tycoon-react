@@ -319,6 +319,5 @@ export default function MekManagementLightboxConcepts() {
         </div>
       </div>
     </div>
-    </div>
   );
 }
