@@ -315,28 +315,122 @@ export default function CampaignManager({
                   : "border-gray-700"
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h4 className="text-lg font-semibold text-white">
-                    {campaign.name}
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    {campaign.description}
-                  </p>
-                  <p className="text-xs text-gray-500 font-mono mt-1">
-                    Project ID: {campaign.nmkrProjectId}
-                  </p>
-                </div>
-                <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                    campaign.status === "active"
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-500 text-white"
-                  }`}
-                >
-                  {campaign.status.toUpperCase()}
-                </span>
-              </div>
+              {editingCampaignId === campaign._id ? (
+                <form onSubmit={handleEditSave} className="space-y-3">
+                  <h3 className="text-lg font-semibold text-yellow-500 mb-3">
+                    Edit Campaign
+                  </h3>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      Campaign Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      Description <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2"
+                      rows={3}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      NMKR Project ID <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={nmkrProjectId}
+                      onChange={(e) => setNmkrProjectId(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      Max NFTs <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={maxNFTs}
+                      onChange={(e) => setMaxNFTs(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2"
+                      min="1"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as CampaignStatus)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2"
+                      disabled={isSubmitting}
+                    >
+                      <option value="inactive">Inactive</option>
+                      <option value="active">Active</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex-1"
+                    >
+                      {isSubmitting ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEditCancel}
+                      disabled={isSubmitting}
+                      className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="text-lg font-semibold text-white">
+                        {campaign.name}
+                      </h4>
+                      <p className="text-sm text-gray-400">
+                        {campaign.description}
+                      </p>
+                      <p className="text-xs text-gray-500 font-mono mt-1">
+                        Project ID: {campaign.nmkrProjectId}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        campaign.status === "active"
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {campaign.status.toUpperCase()}
+                    </span>
+                  </div>
 
               <div className="grid grid-cols-5 gap-2 mb-3">
                 <div className="bg-black/50 p-2 rounded">
@@ -371,24 +465,32 @@ export default function CampaignManager({
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleToggleStatus(campaign)}
-                  className={`px-4 py-1 rounded text-sm ${
-                    campaign.status === "active"
-                      ? "bg-gray-600 hover:bg-gray-700 text-white"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                >
-                  {campaign.status === "active" ? "Deactivate" : "Activate"}
-                </button>
-                <button
-                  onClick={() => handleDelete(campaign._id)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-sm"
-                >
-                  Delete
-                </button>
-              </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditStart(campaign)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(campaign)}
+                      className={`px-4 py-1 rounded text-sm ${
+                        campaign.status === "active"
+                          ? "bg-gray-600 hover:bg-gray-700 text-white"
+                          : "bg-green-600 hover:bg-green-700 text-white"
+                      }`}
+                    >
+                      {campaign.status === "active" ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(campaign._id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))
         )}
