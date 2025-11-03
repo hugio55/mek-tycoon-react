@@ -87,8 +87,8 @@ async function getActiveTenureBuffsForMek(
  */
 async function getTenureBaseRateConfig(ctx: any): Promise<number> {
   const config = await ctx.db
-    .query("globalConfig")
-    .withIndex("by_key", (q: any) => q.eq("key", "tenure_base_rate"))
+    .query("tenureConfig")
+    .withIndex("by_key", (q: any) => q.eq("key", "baseRate"))
     .first();
 
   return config ? (config.value as number) : 1.0; // Default to 1.0 if not configured
@@ -323,8 +323,9 @@ export const unslotMek = mutation({
     }
 
     // Calculate and snapshot current tenure
+    const baseRate = await getTenureBaseRateConfig(ctx);
     const buffs = await getActiveTenureBuffsForMek(ctx, args.mekId, now);
-    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, now);
+    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, baseRate, now);
 
     // Update Mek with unslotted status and frozen tenure
     await ctx.db.patch(args.mekId, {
@@ -402,8 +403,9 @@ export const levelUpMek = mutation({
     }
 
     // Calculate current tenure
+    const baseRate = await getTenureBaseRateConfig(ctx);
     const buffs = await getActiveTenureBuffsForMek(ctx, args.mekId, now);
-    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, now);
+    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, baseRate, now);
 
     // Check if enough tenure
     if (currentTenure < levelThreshold.tenureRequired) {
@@ -465,8 +467,9 @@ export const batchLevelUpMek = mutation({
     const startingLevel = currentLevel;
 
     // Calculate current tenure
+    const baseRate = await getTenureBaseRateConfig(ctx);
     const buffs = await getActiveTenureBuffsForMek(ctx, args.mekId, now);
-    let remainingTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, now);
+    let remainingTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, baseRate, now);
 
     let levelsGained = 0;
 
