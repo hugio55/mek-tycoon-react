@@ -377,7 +377,7 @@ export default function MekManagementLightbox({
         <ConfirmationLightbox
           isOpen={showTerminateConfirm}
           title="TERMINATE MEK"
-          message={`Are you sure you want to terminate ${mekData.customName || "this Mek"}? This will empty Slot ${slotNumber}.`}
+          message={`Are you sure you want to terminate ${displayName || mekData.customName || "this Mek"}? This will empty Slot ${slotNumber}.`}
           confirmText={isTerminating ? "Terminating..." : "Terminate"}
           cancelText="Cancel"
           onConfirm={handleTerminate}
