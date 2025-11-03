@@ -48,6 +48,41 @@ export const getMeksByOwner = query({
   },
 });
 
+// Get meks with tenure tracking data - For Levels table
+export const getMeksWithTenure = query({
+  args: { owner: v.string() },
+  handler: async (ctx, args) => {
+    const meks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner", (q) => q.eq("owner", args.owner))
+      .collect();
+
+    // Return essential fields + tenure tracking
+    return meks.map(mek => ({
+      _id: mek._id,
+      assetId: mek.assetId,
+      assetName: mek.assetName,
+      headVariation: mek.headVariation,
+      bodyVariation: mek.bodyVariation,
+      itemVariation: mek.itemVariation,
+      traitVariation: mek.traitVariation,
+      level: mek.level || 1,
+      rarityRank: mek.rarityRank || mek.gameRank || 9999,
+      gameRank: mek.gameRank || mek.rarityRank || 9999,
+      rarityTier: mek.rarityTier || "Common",
+      powerScore: mek.powerScore || 100,
+      iconUrl: mek.iconUrl,
+      sourceKeyBase: mek.sourceKeyBase,
+      owner: mek.owner,
+      // Tenure tracking fields
+      tenurePoints: mek.tenurePoints || 0,
+      lastTenureUpdate: mek.lastTenureUpdate,
+      isSlotted: mek.isSlotted || false,
+      slotNumber: mek.slotNumber,
+    }));
+  },
+});
+
 // Get meks with pagination - Essential for large collections
 export const getMeksPaginated = query({
   args: { 
@@ -620,19 +655,74 @@ export const assignToEmployeeSlot = mutation({
     await ctx.db.patch(args.mekId, {
       isEmployee: true,
     });
-    
+
     // Update user's gold rate based on new employee
     const goldRateIncrease = (mek.level || 1) * 3.5;
     await ctx.db.patch(args.userId, {
       goldPerHour: (user.goldPerHour || 0) + goldRateIncrease,
       employeeCount: (user.employeeCount || 0) + 1,
     });
-    
+
     return {
       success: true,
       mekId: args.mekId,
       goldRateIncrease,
       newTotalGoldRate: (user.goldPerHour || 0) + goldRateIncrease,
     };
+  },
+});
+
+// ----------------------------------------------------------------------------
+// LEVELS & TENURE - Combined data for View Levels table
+// ----------------------------------------------------------------------------
+
+/**
+ * Get Meks with level and tenure data for a wallet
+ * Returns comprehensive data for the View Levels management table
+ */
+export const getMeksWithLevelsAndTenure = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    // Get all Meks owned by wallet
+    const meks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .collect();
+
+    // Get level data for all Meks
+    const levelData = await ctx.db
+      .query("mekLevels")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .filter((q) => q.neq(q.field("ownershipStatus"), "transferred"))
+      .collect();
+
+    // Create level lookup map
+    const levelMap = new Map(levelData.map(level => [level.assetId, level]));
+
+    // Combine Mek data with level data and tenure fields
+    return meks.map(mek => {
+      const level = levelMap.get(mek.assetId);
+
+      return {
+        // Basic Mek info
+        assetId: mek.assetId,
+        assetName: mek.assetName,
+        sourceKey: mek.sourceKey,
+        sourceKeyBase: mek.sourceKeyBase,
+
+        // Level data (from mekLevels table)
+        currentLevel: level?.currentLevel || 1,
+        currentBoostPercent: level?.currentBoostPercent || 0,
+        currentBoostAmount: level?.currentBoostAmount || 0,
+        totalGoldSpent: level?.totalGoldSpent || 0,
+        baseGoldPerHour: level?.baseGoldPerHour || mek.goldRate || 0,
+
+        // Tenure data (from meks table)
+        tenurePoints: mek.tenurePoints || 0,
+        lastTenureUpdate: mek.lastTenureUpdate || Date.now(),
+        isSlotted: mek.isSlotted || false,
+        slotNumber: mek.slotNumber,
+      };
+    });
   },
 });

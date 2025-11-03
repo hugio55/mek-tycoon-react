@@ -1766,3 +1766,28 @@ export const getMekName = query({
     };
   },
 });
+
+// Get tenure data for all Meks owned by a wallet from the meks table
+// This is the source of truth for tenure points, not goldMining.ownedMeks
+export const getMekTenureData = query({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get all Meks owned by this wallet from the meks table
+    const meks = await ctx.db
+      .query("meks")
+      .withIndex("by_owner", (q) => q.eq("owner", args.walletAddress))
+      .collect();
+
+    // Return tenure data mapped by assetId for fast lookup
+    return meks.map(mek => ({
+      assetId: mek.assetId,
+      tenurePoints: mek.tenurePoints || 0,
+      tenureRate: mek.tenureRate || 0,
+      lastTenureUpdate: mek.lastTenureUpdate || Date.now(),
+      isSlotted: mek.isSlotted || false,
+      slotNumber: mek.slotNumber,
+    }));
+  },
+});
