@@ -33,6 +33,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     reservationId ? { walletAddress } : "skip"
   );
 
+  // Query for payment completion (polls when in processing state)
+  const claimStatus = useQuery(
+    api.commemorativeNFTClaims.checkClaimed,
+    state === 'processing' ? { walletAddress } : "skip"
+  );
+
   // Mount portal and lock body scroll
   useEffect(() => {
     setMounted(true);
@@ -136,6 +142,16 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Check for payment completion
+  useEffect(() => {
+    if (state !== 'processing' || !claimStatus) return;
+
+    if (claimStatus.hasClaimed && claimStatus.claim) {
+      console.log('[✅VERIFY] Payment detected! Claim:', claimStatus.claim);
+      setState('success');
+    }
+  }, [state, claimStatus]);
 
   // Check if reservation expired (including grace period)
   useEffect(() => {

@@ -208,7 +208,22 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
           // Don't fail the webhook if claim recording fails
         }
       }
-// Record NFT claim in claims table      if (ReceiverStakeAddress && NotificationSaleNfts && NotificationSaleNfts.length > 0) {        try {          const nft = NotificationSaleNfts[0];          await convex.mutation(api.commemorativeNFTClaims.recordClaim, {            walletAddress: ReceiverStakeAddress,            transactionHash: TxHash,            nftName: nft.NftName || 'Bronze Token',            nftAssetId: nft.AssetId || '',            metadata: {              imageUrl: '',              attributes: [],              collection: ProjectUid,              artist: '',              website: '',            }          });          console.log(`✓ Successfully recorded NFT claim for wallet: ${ReceiverStakeAddress}`);        } catch (claimError) {          console.error('Failed to record claim:', claimError);          // Don't fail the webhook if claim recording fails        }      }
+
+      // NEW: Complete reservation if one exists for this wallet
+      if (ReceiverStakeAddress) {
+        try {
+          await convex.mutation(api.commemorativeNFTReservations.completeReservationByWallet, {
+            walletAddress: ReceiverStakeAddress,
+            transactionHash: TxHash,
+          });
+
+          console.log(`✓ Completed reservation for wallet: ${ReceiverStakeAddress}`);
+        } catch (reservationError) {
+          console.error('Failed to complete reservation:', reservationError);
+          // Don't fail the webhook if reservation completion fails
+          // (user might have used old system without reservations)
+        }
+      }
     } catch (dbError) {
       console.error('Failed to update purchase in database:', dbError);
     }

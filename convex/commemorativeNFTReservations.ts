@@ -187,6 +187,45 @@ export const completeReservation = mutation({
   },
 });
 
+// Complete reservation by wallet address (called by webhook)
+export const completeReservationByWallet = mutation({
+  args: {
+    walletAddress: v.string(),
+    transactionHash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[RESERVATION] Webhook attempting to complete reservation for wallet:', args.walletAddress);
+
+    // Find active reservation for this wallet
+    const reservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .first();
+
+    if (!reservation) {
+      console.log('[RESERVATION] No active reservation found for wallet:', args.walletAddress);
+      return { success: false, error: "No active reservation found" };
+    }
+
+    console.log('[RESERVATION] Found reservation:', reservation._id, 'NFT:', reservation.nftNumber);
+
+    // Update reservation status
+    await ctx.db.patch(reservation._id, {
+      status: "completed",
+    });
+
+    // Update NFT inventory to sold
+    await ctx.db.patch(reservation.nftInventoryId, {
+      status: "sold",
+    });
+
+    console.log('[RESERVATION] Completed reservation from webhook:', reservation._id, 'for NFT:', reservation.nftNumber);
+
+    return { success: true, reservationId: reservation._id, nftNumber: reservation.nftNumber };
+  },
+});
+
 // Release a reservation (user cancelled or expired)
 export const releaseReservation = mutation({
   args: {

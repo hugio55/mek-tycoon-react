@@ -135,6 +135,7 @@ export default function OverlayEditor() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const overlayImageRef = useRef<HTMLImageElement>(null);
+  const hasLoadedInitialData = useRef(false);
 
   const saveOverlay = useMutation(api.overlays.saveOverlay);
   const saveAutosave = useMutation(api.overlays.saveAutosave);
@@ -146,9 +147,13 @@ export default function OverlayEditor() {
   );
   const autosaveHistoryFromDb = useQuery(api.overlays.getAutosaveHistory, { imageKey });
 
-  // Load overlay data when it arrives from Convex
+  // Load overlay data when it arrives from Convex (ONLY on initial load)
+  // This prevents Convex reactivity from overwriting unsaved local changes
   useEffect(() => {
-    if (overlayData && overlayData.zones) {
+    if (overlayData && overlayData.zones && !hasLoadedInitialData.current) {
+      console.log('[Overlay Editor] Loading initial data from database');
+      hasLoadedInitialData.current = true;
+
       setZones(overlayData.zones);
       setImagePath(overlayData.imagePath);
       setImageDimensions({
@@ -1378,6 +1383,7 @@ export default function OverlayEditor() {
                     <div
                       key={overlay._id}
                       onClick={() => {
+                        hasLoadedInitialData.current = false; // Reset flag to allow loading new overlay
                         setImageKey(overlay.imageKey);
                         setImagePath(overlay.imagePath);
                         setZones(overlay.zones);
