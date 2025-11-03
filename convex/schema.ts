@@ -3379,6 +3379,51 @@ export default defineSchema({
     .index("by_asset_id", ["nftAssetId"])
     .index("by_claimed_at", ["claimedAt"]),
 
+  // Commemorative NFT Inventory - Pre-populated list of all Lab Rat NFTs
+  // Each row represents one specific NFT with its NMKR UID
+  commemorativeNFTInventory: defineTable({
+    nftUid: v.string(), // NMKR NFT UID (e.g., "10aec295-d9e2-47e3-9c04-e56e2df92ad5")
+    nftNumber: v.number(), // Edition number (1-10 for Lab Rat collection)
+    name: v.string(), // Display name (e.g., "Lab Rat #1")
+    status: v.union(
+      v.literal("available"),
+      v.literal("reserved"),
+      v.literal("sold")
+    ), // Current status
+    projectId: v.string(), // NMKR project ID
+    paymentUrl: v.string(), // Pre-built NMKR payment URL
+    imageUrl: v.optional(v.string()), // NFT image URL
+    createdAt: v.number(),
+  })
+    .index("by_uid", ["nftUid"])
+    .index("by_number", ["nftNumber"])
+    .index("by_status", ["status"])
+    .index("by_status_and_number", ["status", "nftNumber"]),
+
+  // Commemorative NFT Reservations - Active reservations for claim process
+  // Tracks who has reserved which NFT and for how long
+  commemorativeNFTReservations: defineTable({
+    nftInventoryId: v.id("commemorativeNFTInventory"), // Reference to inventory item
+    nftUid: v.string(), // NMKR NFT UID (denormalized for quick lookup)
+    nftNumber: v.number(), // Edition number (denormalized)
+    reservedBy: v.string(), // Wallet address or session ID
+    reservedAt: v.number(), // Timestamp when reservation was created
+    expiresAt: v.number(), // Timestamp when reservation expires (10 minutes)
+    status: v.union(
+      v.literal("active"),
+      v.literal("expired"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    paymentWindowOpenedAt: v.optional(v.number()), // When NMKR window opened (for timer pause)
+    paymentWindowClosedAt: v.optional(v.number()), // When NMKR window closed
+  })
+    .index("by_nft_uid", ["nftUid"])
+    .index("by_reserved_by", ["reservedBy"])
+    .index("by_status", ["status"])
+    .index("by_expires_at", ["expiresAt"])
+    .index("by_inventory_id", ["nftInventoryId"]),
+
   // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
   // Replaces the complex custom minting system above
   // Just stores which snapshot controls who sees the "Claim NFT" button

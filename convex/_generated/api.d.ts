@@ -49,6 +49,8 @@ import type * as chips from "../chips.js";
 import type * as cleanupDifficultyConfigs from "../cleanupDifficultyConfigs.js";
 import type * as commemorative from "../commemorative.js";
 import type * as commemorativeNFTClaims from "../commemorativeNFTClaims.js";
+import type * as commemorativeNFTInventorySetup from "../commemorativeNFTInventorySetup.js";
+import type * as commemorativeNFTReservations from "../commemorativeNFTReservations.js";
 import type * as commemorativePaymentTracking from "../commemorativePaymentTracking.js";
 import type * as commemorativeTokenCounters from "../commemorativeTokenCounters.js";
 import type * as commemorativeTokens from "../commemorativeTokens.js";
@@ -252,6 +254,8 @@ declare const fullApi: ApiFromModules<{
   cleanupDifficultyConfigs: typeof cleanupDifficultyConfigs;
   commemorative: typeof commemorative;
   commemorativeNFTClaims: typeof commemorativeNFTClaims;
+  commemorativeNFTInventorySetup: typeof commemorativeNFTInventorySetup;
+  commemorativeNFTReservations: typeof commemorativeNFTReservations;
   commemorativePaymentTracking: typeof commemorativePaymentTracking;
   commemorativeTokenCounters: typeof commemorativeTokenCounters;
   commemorativeTokens: typeof commemorativeTokens;
