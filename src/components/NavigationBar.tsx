@@ -13,6 +13,7 @@ export default function NavigationBar() {
   const goldAnimationRef = useRef<number | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const imageKeyRef = useRef<string | null>(null);
 
   // Get wallet address from session
   useEffect(() => {
@@ -63,15 +64,39 @@ export default function NavigationBar() {
 
   // Handle image load - show immediately
   const handleImageLoad = () => {
+    console.log('[🎯NAV-DEBUG] handleImageLoad fired - setting imageLoaded to TRUE');
     setImageLoaded(true);
     setIsVisible(true);
   };
 
-  // Reset loading state when navigation changes
+  // Reset loading state ONLY when navigation changes (not on initial load)
   useEffect(() => {
-    setImageLoaded(false);
-    setIsVisible(false);
-  }, [activeNavConfig, overlayData]);
+    const currentImageKey = activeNavConfig?.overlayImageKey;
+    const previousImageKey = imageKeyRef.current;
+
+    console.log('[🔄RESET-EFFECT] Reset effect triggered', {
+      currentImageKey,
+      previousImageKey,
+      isInitialLoad: previousImageKey === null,
+      imageKeysMatch: previousImageKey === currentImageKey,
+      willReset: previousImageKey !== null && previousImageKey !== currentImageKey,
+      imageLoadedState: imageLoaded
+    });
+
+    // Only reset if we're switching to a DIFFERENT navigation (not initial load)
+    if (previousImageKey !== null && previousImageKey !== currentImageKey) {
+      console.log('[🔄RESET-EFFECT] Navigation changed - resetting imageLoaded to FALSE');
+      setImageLoaded(false);
+      setIsVisible(false);
+    } else if (previousImageKey === null) {
+      console.log('[🔄RESET-EFFECT] Initial load - NOT resetting imageLoaded (let onLoad handler set it)');
+    } else {
+      console.log('[🔄RESET-EFFECT] Same navigation - no reset needed');
+    }
+
+    // Update ref to track current image key
+    imageKeyRef.current = currentImageKey || null;
+  }, [activeNavConfig?.overlayImageKey]); // Only depend on the image key, not full objects
 
   // Accumulate gold in real-time for display zones
   useEffect(() => {
@@ -113,8 +138,18 @@ export default function NavigationBar() {
     };
   }, [goldMiningData]);
 
+  // Log render state
+  console.log('[🎨RENDER] NavigationBar rendering', {
+    hasActiveNavConfig: !!activeNavConfig,
+    hasOverlayData: !!overlayData,
+    imageLoaded,
+    isVisible,
+    buttonsWillRender: imageLoaded && !!overlayData
+  });
+
   // Don't render anything if no active navigation
   if (!activeNavConfig || !overlayData) {
+    console.log('[🎨RENDER] No config or overlay data - returning null');
     return null;
   }
 
@@ -337,6 +372,7 @@ export default function NavigationBar() {
         />
 
         {/* Render clickable zones - only after image loads */}
+        {console.log('[🎯NAV-DEBUG] Rendering buttons?', { imageLoaded, clickableZoneCount: clickableZones.length })}
         {imageLoaded && clickableZones.map((zone: any) => {
           const buttonConfig = getButtonStyle(zone);
           const buttonStyle = zone.metadata?.buttonStyle || "none";
