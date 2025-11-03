@@ -2793,6 +2793,59 @@ export default function OverlayEditor() {
                     </select>
                   </div>
 
+                  {/* Clickable Configuration - Only for Mek PFP */}
+                  {selectedZone.metadata?.displayType === "slotted-mek-pfp" && (
+                    <div className="border-t border-yellow-500/20 pt-3 mt-3 space-y-3">
+                      <div className="text-sm font-bold text-yellow-400/80">Interactivity</div>
+
+                      {/* Clickable Toggle */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="isClickable"
+                          checked={selectedZone.metadata?.isClickable || false}
+                          onChange={(e) => {
+                            setZones(zones.map(z => z.id === selectedZoneId ? {
+                              ...z,
+                              metadata: {
+                                ...z.metadata,
+                                isClickable: e.target.checked,
+                                // Set default action when enabled
+                                clickAction: e.target.checked ? (z.metadata?.clickAction || "openMekManagement") : undefined
+                              }
+                            } : z));
+                          }}
+                          className="w-4 h-4 rounded border-yellow-500/30 bg-black/50"
+                        />
+                        <label htmlFor="isClickable" className="text-sm text-gray-300 cursor-pointer">
+                          Make Clickable
+                        </label>
+                      </div>
+
+                      {/* Click Action Selector - Only show when clickable */}
+                      {selectedZone.metadata?.isClickable && (
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">Click Action</label>
+                          <select
+                            value={selectedZone.metadata?.clickAction || "openMekManagement"}
+                            onChange={(e) => {
+                              setZones(zones.map(z => z.id === selectedZoneId ? {
+                                ...z,
+                                metadata: { ...z.metadata, clickAction: e.target.value }
+                              } : z));
+                            }}
+                            className="w-full px-2 py-1 bg-black/50 border border-yellow-500/30 rounded text-sm text-white"
+                          >
+                            <option value="openMekManagement">Open Mek Management</option>
+                          </select>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Opens lightbox to rename, swap, or terminate the Mek
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Text Alignment */}
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Text Alignment</label>
