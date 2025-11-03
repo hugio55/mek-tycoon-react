@@ -192,67 +192,76 @@ export default function MekManagementLightbox({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/90 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop - very light with minimal blur */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-md" />
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-2xl mx-4"
+        className="relative z-10 w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-yellow-500/30 bg-black/40">
-            <h2 className="mek-text-industrial text-xl text-yellow-400">
-              MEK MANAGEMENT
-            </h2>
+        <div
+          className="rounded-lg overflow-hidden shadow-2xl border-2 border-yellow-500/50"
+          style={{
+            background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)',
+            backdropFilter: 'blur(20px) brightness(1.05)',
+          }}
+        >
+          {/* Industrial Header with hazard stripes */}
+          <div className="relative overflow-hidden bg-gradient-to-b from-black via-black to-transparent">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
+              }} />
+            </div>
+            <div className="px-6 py-4">
+              <h2 className="text-3xl font-bold font-orbitron tracking-wider text-center">
+                <span className="text-yellow-400">MEK</span>{" "}
+                <span className="text-gray-400">MANAGEMENT</span>
+              </h2>
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="p-8 space-y-6">
-            {/* Large Mek Image */}
-            <div className="flex justify-center">
-              <div className="relative w-96 h-96">
-                <img
-                  src={imagePath}
-                  alt={mekData.customName || mekData.assetName || "Mek"}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = `/mek-images/150px/${cleanSourceKey}.webp`;
-                  }}
-                />
-              </div>
+          {/* Content with crosshatch pattern overlay */}
+          <div className="relative p-6">
+            {/* Crosshatch pattern background */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-30"
+              style={{
+                backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+                                  repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
+              }}
+            />
+
+            {/* Mek Image */}
+            <div className="relative mb-4 p-4 rounded-lg" style={{
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+            }}>
+              <img
+                src={imagePath}
+                alt={mekData.customName || mekData.assetName || "Mek"}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                onError={(e) => {
+                  e.currentTarget.src = `/mek-images/150px/${cleanSourceKey}.webp`;
+                }}
+              />
             </div>
 
             {/* Name Display/Edit Section */}
             {!isEditingName ? (
               // View Mode
-              <div className="flex items-center justify-center gap-3">
-                <div className="mek-value-primary text-3xl">
+              <div className="text-center mb-4">
+                <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-1">Employee Name</div>
+                <div className="text-white text-2xl font-bold mb-2">
                   {displayName || mekData.customName || "UNNAMED"}
                 </div>
                 <button
                   onClick={handleStartEdit}
-                  className="p-2 rounded-lg bg-black/50 border border-yellow-500/30 hover:border-yellow-400 hover:bg-yellow-500/10 transition-all"
-                  title="Rename Mek"
+                  className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors"
                 >
-                  <svg
-                    className="w-5 h-5 text-yellow-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
+                  Edit Name
                 </button>
               </div>
             ) : (

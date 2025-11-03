@@ -688,7 +688,6 @@ When user types `/ui-team`, activate these three agents together:
 
 **UI/Design Issues** (layout broken, styling wrong, visual problems):
 - `@ui-layout-debugger` - Debug positioning, z-index, layout issues
-- `@visual-test` - Verify visual changes in browser
 
 **Code Quality Issues** (syntax errors, messy code, refactoring needed):
 - `@code-modularizer` - Refactor monolithic code into modular architecture
