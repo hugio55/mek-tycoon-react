@@ -816,7 +816,13 @@ export const slotMek = mutation({
     let hasName = false;
 
     if (mekRecord) {
-      console.log(`[🔒TENURE] Slotting Mek ${mekAssetId} in meks table, current tenure: ${mekRecord.tenurePoints || 0}`);
+      console.log(`[🔒TENURE-DEBUG] === SLOTTING MEK IN MEKS TABLE ===`);
+      console.log(`[🔒TENURE-DEBUG] Mek assetId: ${mekAssetId}`);
+      console.log(`[🔒TENURE-DEBUG] Mek assetName: ${mekRecord.assetName}`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - tenurePoints: ${mekRecord.tenurePoints} (type: ${typeof mekRecord.tenurePoints})`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - isSlotted: ${mekRecord.isSlotted} (type: ${typeof mekRecord.isSlotted})`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - slotNumber: ${mekRecord.slotNumber}`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
 
       // Check if Mek has custom name (check goldMining.ownedMeks for this)
       const goldMiningRecord = await ctx.db
@@ -830,14 +836,29 @@ export const slotMek = mutation({
 
       // Update Mek with slotted status in meks table
       const tenureToSave = mekRecord.tenurePoints ?? 0;
-      await ctx.db.patch(mekRecord._id, {
+
+      const patchData = {
         isSlotted: true,
         slotNumber: slotNumber,
         lastTenureUpdate: now,
         // Initialize tenurePoints to 0 if undefined, otherwise preserve existing value
         tenurePoints: tenureToSave,
-      });
-      console.log(`[🔒TENURE] Wrote to database for ${mekAssetId}: tenurePoints=${tenureToSave}, lastTenureUpdate=${now}, isSlotted=true`);
+      };
+
+      console.log(`[🔒TENURE-DEBUG] PATCH DATA being applied:`, patchData);
+
+      await ctx.db.patch(mekRecord._id, patchData);
+
+      // Re-fetch to verify the patch worked
+      const updatedMek = await ctx.db.get(mekRecord._id);
+      console.log(`[🔒TENURE-DEBUG] === AFTER PATCH VERIFICATION ===`);
+      console.log(`[🔒TENURE-DEBUG] AFTER patch - tenurePoints: ${updatedMek?.tenurePoints} (type: ${typeof updatedMek?.tenurePoints})`);
+      console.log(`[🔒TENURE-DEBUG] AFTER patch - isSlotted: ${updatedMek?.isSlotted} (type: ${typeof updatedMek?.isSlotted})`);
+      console.log(`[🔒TENURE-DEBUG] AFTER patch - slotNumber: ${updatedMek?.slotNumber}`);
+      console.log(`[🔒TENURE-DEBUG] AFTER patch - lastTenureUpdate: ${updatedMek?.lastTenureUpdate}`);
+      console.log(`[🔒TENURE-DEBUG] === SLOTTING COMPLETE ===`);
+    } else {
+      console.log(`[🔒TENURE-DEBUG] WARNING: No mek record found in meks table for assetId ${mekAssetId}!`);
     }
 
     return {
@@ -1887,6 +1908,51 @@ export const seedMissingVariationsFromList = mutation({
     }
 
     return { success: true, added, skipped, total: args.variations.length };
+  },
+});
+
+/**
+ * ADMIN: Fix tenure for all currently slotted Meks
+ * This ensures existing slotted Meks have tenurePoints initialized to 0
+ */
+export const fixSlottedMeksTenure = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[🔒TENURE-FIX] Starting tenure fix for slotted Meks...');
+
+    // Get all Meks that are currently slotted
+    const allMeks = await ctx.db.query("meks").collect();
+    const slottedMeks = allMeks.filter(m => m.isSlotted);
+
+    console.log(`[🔒TENURE-FIX] Found ${slottedMeks.length} slotted Meks`);
+
+    let fixedCount = 0;
+    const now = Date.now();
+
+    for (const mek of slottedMeks) {
+      // Check if tenurePoints is undefined
+      if (mek.tenurePoints === undefined) {
+        console.log(`[🔒TENURE-FIX] Fixing ${mek.assetId}: tenurePoints was undefined, setting to 0`);
+
+        await ctx.db.patch(mek._id, {
+          tenurePoints: 0, // Initialize to 0
+          lastTenureUpdate: now, // Set current time as start point
+        });
+
+        fixedCount++;
+      } else {
+        console.log(`[🔒TENURE-FIX] Skipping ${mek.assetId}: tenurePoints already exists (${mek.tenurePoints})`);
+      }
+    }
+
+    console.log(`[🔒TENURE-FIX] Complete - Fixed ${fixedCount} Meks`);
+
+    return {
+      success: true,
+      totalSlotted: slottedMeks.length,
+      fixed: fixedCount,
+      message: `Fixed ${fixedCount} slotted Meks with missing tenure data`
+    };
   },
 });
 

@@ -45,12 +45,11 @@ export function LoadingOverlay({
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
       style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
         opacity: isFadingOut ? 0 : 1,
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
       }}
     >
-      {/* Dark Overlay (10% opacity) - sits on top of existing background from layout.tsx */}
-      <div className="absolute inset-0 bg-black/10" />
 
       {/* Center Content Container */}
       <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-xl px-4">
