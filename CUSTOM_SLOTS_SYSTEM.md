@@ -18,25 +18,36 @@ The custom slots system allows:
 
 ---
 
-## Display Zone Types
+## Zone Architecture
 
-Zones in the overlay editor define what content appears in specific areas of a slot.
+Zones in the overlay editor use a two-level system:
 
-### Current Zone Types (Display Dropdown Options)
+### 1. Zone Type (Behavior/Interaction)
+Defines HOW the zone behaves:
+- **Mechanism Slot** - Interactive slot for placing Meks
+- **Button** - Clickable button
+- **Clickable Area** - General click target
+- **Display Zone** - Shows dynamic data/images (non-interactive)
+- **Custom** - User-defined behavior
 
-#### 1. **Slotted Mek PFP**
-- **Purpose:** Shows the profile picture (thumbnail) of the Mek placed in this slot
+### 2. What to Display (Content Type)
+For Display Zones only - defines WHAT content shows:
+
+#### Current Display Options:
+- **Current Gold** - Live gold balance
+- **Essence Amount** - Specific essence balance
+- **Mek Count** - Number of Meks owned
+- **Cumulative Gold** - Total gold earned
+- **Gold Per Hour** - Mining rate
+- **Slotted Mek PFP** - Profile picture of Mek in this slot *(Added 2025-11-02)*
+
+#### Slotted Mek PFP Details:
+- **Purpose:** Shows the thumbnail image of the Mek placed in this slot
 - **Behavior:**
   - When slot is empty: Shows placeholder or empty state
   - When Mek is slotted: Displays Mek image from `/mek-images/150px/[sourceKey].webp`
 - **Use Case:** Primary Mek display area in custom slots
-- **Implementation:** Uses `Display Zone` type, renders slotted Mek image at defined position
-- **Added:** 2025-11-02
-
-#### 2. **Display Zone** (Generic)
-- **Purpose:** Generic display area (existing functionality)
-- **Current Use:** Shows Mek images based on positioning data
-- **May be deprecated:** Once specific types like "Slotted Mek PFP" are added
+- **Architecture:** Display Zone → What to Display: "Slotted Mek PFP"
 
 ---
 
@@ -154,12 +165,13 @@ const scaledY = zone.y * displayScale;
 - [x] Render custom slot on home page
 - [x] Scale zone positioning correctly
 - [x] Display slotted Mek image in designated zone
-- [x] Added "Slotted Mek PFP" zone type concept
+- [x] Added "Slotted Mek PFP" to Display Zone options
+- [x] Established proper two-level zone architecture (Zone Type → Display Type)
 
 ### 🔄 In Progress
-- [ ] Add "Slotted Mek PFP" to overlay editor dropdown
 - [ ] Define buff mechanics
 - [ ] Implement slot upgrade system
+- [ ] Render "Slotted Mek PFP" zones on actual slot pages
 
 ### 📋 Planned
 - [ ] Multiple zone type options in dropdown
@@ -183,8 +195,15 @@ const scaledY = zone.y * displayScale;
 ### 2025-11-02: Initial System Setup
 - Created custom slot rendering on home page
 - Implemented proper zone scaling mathematics
-- User requested "Slotted Mek PFP" zone type addition
+- User requested "Slotted Mek PFP" display option
 - Created this documentation file to track evolving requirements
+
+### 2025-11-02: Architecture Refinement
+- **Initial approach:** Added "Slotted Mek PFP" as separate zone type (incorrect)
+- **User feedback:** Should be under Display Zone → "What to Display" dropdown
+- **Reasoning:** Zone Type = behavior (display/click/slot), Display Type = content (gold/mek/stats)
+- **Correction:** Moved to proper location for better scalability and separation of concerns
+- **Result:** Clean two-level architecture (Zone Type → Display Type)
 
 ---
 
