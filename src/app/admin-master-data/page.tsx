@@ -68,7 +68,14 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('wallet-management');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem('admin-master-data-active-tab');
+      return stored || 'wallet-management';
+    } catch {
+      return 'wallet-management';
+    }
+  });
   const [storyClimbSubTab, setStoryClimbSubTab] = useState<string>('difficulty-subsystem');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
@@ -157,6 +164,15 @@ export default function AdminMasterDataPage() {
       });
     }
   }, [buffConfig]);
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin-master-data-active-tab', activeTab);
+    } catch (error) {
+      console.error('Failed to save active tab to localStorage:', error);
+    }
+  }, [activeTab]);
 
   // Auto-load the most recent duration configuration
   useEffect(() => {
