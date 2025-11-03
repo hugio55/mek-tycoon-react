@@ -806,36 +806,34 @@ export const slotMek = mutation({
       });
     }
 
-    // TENURE INTEGRATION: Mark Mek as slotted and start tenure tracking
-    // Also check if Mek has a custom name already (do both in one query)
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    // TENURE INTEGRATION: Mark Mek as slotted and start tenure tracking in meks table
+    // Update the authoritative meks table (not goldMining.ownedMeks)
+    const mekRecord = await ctx.db
+      .query("meks")
+      .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
       .first();
 
     let hasName = false;
 
-    if (goldMiningRecord && goldMiningRecord.ownedMeks) {
-      // Check for existing name before updating
-      hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+    if (mekRecord) {
+      console.log(`[🔒TENURE] Slotting Mek ${mekAssetId} in meks table, current tenure: ${mekRecord.tenurePoints || 0}`);
 
-      // Update Mek with slotted status
-      const updatedMeks = goldMiningRecord.ownedMeks.map((mek: any) => {
-        if (mek.assetId === mekAssetId) {
-          console.log(`[🔒TENURE] Slotting Mek ${mekAssetId}, current tenure: ${mek.tenurePoints || 0}`);
-          return {
-            ...mek,
-            isSlotted: true,
-            slotNumber: slotNumber,
-            lastTenureUpdate: now,
-            // Note: tenurePoints remains unchanged (carries over from before)
-          };
-        }
-        return mek;
-      });
+      // Check if Mek has custom name (check goldMining.ownedMeks for this)
+      const goldMiningRecord = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+        .first();
 
-      await ctx.db.patch(goldMiningRecord._id, {
-        ownedMeks: updatedMeks,
+      if (goldMiningRecord && goldMiningRecord.ownedMeks) {
+        hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+      }
+
+      // Update Mek with slotted status in meks table
+      await ctx.db.patch(mekRecord._id, {
+        isSlotted: true,
+        slotNumber: slotNumber,
+        lastTenureUpdate: now,
+        // Note: tenurePoints remains unchanged (carries over from before)
       });
     }
 
@@ -886,31 +884,25 @@ export const unslotMek = mutation({
 
     console.log(`[🔒TENURE] Unslotting Mek ${mekAssetId}: earned ${tenureEarned.toFixed(2)} tenure points (${timeSlotted.toFixed(0)}s slotted)`);
 
-    // Save tenure to goldMining.ownedMeks
-    const goldMiningRecord = await ctx.db
-      .query("goldMining")
-      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
-      .first();
+    // Save tenure to meks table (the authoritative source)
+    if (mekAssetId) {
+      const mekRecord = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
+        .first();
 
-    if (goldMiningRecord && goldMiningRecord.ownedMeks && mekAssetId) {
-      const updatedMeks = goldMiningRecord.ownedMeks.map((mek: any) => {
-        if (mek.assetId === mekAssetId) {
-          const currentTenure = mek.tenurePoints || 0;
-          const newTenure = currentTenure + tenureEarned;
-          console.log(`[🔒TENURE] Saving: ${currentTenure.toFixed(2)} + ${tenureEarned.toFixed(2)} = ${newTenure.toFixed(2)}`);
-          return {
-            ...mek,
-            tenurePoints: newTenure,
-            lastTenureUpdate: now,
-            isSlotted: false,
-          };
-        }
-        return mek;
-      });
+      if (mekRecord) {
+        const currentTenure = mekRecord.tenurePoints || 0;
+        const newTenure = currentTenure + tenureEarned;
+        console.log(`[🔒TENURE] Saving to meks table: ${currentTenure.toFixed(2)} + ${tenureEarned.toFixed(2)} = ${newTenure.toFixed(2)}`);
 
-      await ctx.db.patch(goldMiningRecord._id, {
-        ownedMeks: updatedMeks,
-      });
+        await ctx.db.patch(mekRecord._id, {
+          tenurePoints: newTenure,
+          lastTenureUpdate: now,
+          isSlotted: false,
+          slotNumber: undefined, // Clear slot number
+        });
+      }
     }
 
     // Clear slot
