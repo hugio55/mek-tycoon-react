@@ -344,6 +344,16 @@ export const getGoldMiningData = query({
       currentGold: result.currentGold.toFixed(2),
       mekCount: result.ownedMeks.length
     });
+
+    // DEBUG: Log custom names in ownedMeks for name debugging
+    console.log('[🔍MEKNAME] getGoldMiningData - custom names in ownedMeks:',
+      result.ownedMeks.map(m => ({
+        assetId: m.assetId,
+        customName: m.customName || 'NO NAME',
+        assetName: m.assetName
+      }))
+    );
+
     devLog.log('[QUERY] ===================================');
 
     return result;
