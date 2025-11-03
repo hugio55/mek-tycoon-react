@@ -200,18 +200,47 @@ export const initializeGoldMining = mutation({
       // [🔍MEKNAME] Log what's being saved vs what existed
       const existingNames = existing.ownedMeks.filter(m => m.customName);
       const newNames = args.ownedMeks.filter(m => m.customName);
-      console.log('[🔍MEKNAME] initializeGoldMining - Replacing ownedMeks:', {
+      console.log('[🔍MEKNAME] initializeGoldMining - Before merge:', {
         existingMeksWithNames: existingNames.length,
         newMeksWithNames: newNames.length,
         existingNames: existingNames.map(m => ({ assetId: m.assetId, name: m.customName })),
-        newNames: newNames.map(m => ({ assetId: m.assetId, name: m.customName })),
-        willOverwrite: existingNames.length > newNames.length
+        newNames: newNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+      });
+
+      // CRITICAL FIX: Preserve customName from existing data
+      // Create a map of existing custom names by assetId
+      const existingNameMap = new Map(
+        existing.ownedMeks
+          .filter(m => m.customName)
+          .map(m => [m.assetId, m.customName])
+      );
+
+      // Merge new data with existing custom names
+      const mergedMeks = args.ownedMeks.map(newMek => {
+        const existingName = existingNameMap.get(newMek.assetId);
+        if (existingName) {
+          console.log('[🔍MEKNAME] Preserving customName for:', {
+            assetId: newMek.assetId,
+            customName: existingName
+          });
+          return {
+            ...newMek,
+            customName: existingName
+          };
+        }
+        return newMek;
+      });
+
+      const finalNames = mergedMeks.filter(m => m.customName);
+      console.log('[🔍MEKNAME] After merge, preserved names:', {
+        count: finalNames.length,
+        names: finalNames.map(m => ({ assetId: m.assetId, name: m.customName }))
       });
 
       await ctx.db.patch(existing._id, {
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
-        ownedMeks: args.ownedMeks,
+        ownedMeks: mergedMeks, // Use merged data with preserved custom names
         baseGoldPerHour, // UPDATE base rate
         boostGoldPerHour, // UPDATE boost rate
         totalGoldPerHour, // UPDATE the total rate with new meks!
