@@ -48,6 +48,7 @@ import type * as chipConfigurations from "../chipConfigurations.js";
 import type * as chips from "../chips.js";
 import type * as cleanupDifficultyConfigs from "../cleanupDifficultyConfigs.js";
 import type * as commemorative from "../commemorative.js";
+import type * as commemorativeCampaigns from "../commemorativeCampaigns.js";
 import type * as commemorativeNFTClaims from "../commemorativeNFTClaims.js";
 import type * as commemorativeNFTInventorySetup from "../commemorativeNFTInventorySetup.js";
 import type * as commemorativeNFTReservations from "../commemorativeNFTReservations.js";
@@ -255,6 +256,7 @@ declare const fullApi: ApiFromModules<{
   chips: typeof chips;
   cleanupDifficultyConfigs: typeof cleanupDifficultyConfigs;
   commemorative: typeof commemorative;
+  commemorativeCampaigns: typeof commemorativeCampaigns;
   commemorativeNFTClaims: typeof commemorativeNFTClaims;
   commemorativeNFTInventorySetup: typeof commemorativeNFTInventorySetup;
   commemorativeNFTReservations: typeof commemorativeNFTReservations;

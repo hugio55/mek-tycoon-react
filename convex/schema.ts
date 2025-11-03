@@ -3366,9 +3366,36 @@ export default defineSchema({
     .index("by_takenAt", ["takenAt"])
     .index("by_whitelist_and_date", ["whitelistId", "takenAt"]),
 
+  // ===== COMMEMORATIVE CAMPAIGNS (Multi-Campaign System) =====
+  // Master table for commemorative NFT campaigns
+  // Each campaign has independent inventory, numbering, and lifecycle
+  commemorativeCampaigns: defineTable({
+    name: v.string(), // Display name (e.g., "Lab Rat", "Pilot Program")
+    description: v.string(), // Campaign description for users
+    nmkrProjectId: v.string(), // NMKR project ID for this campaign
+    status: v.union(
+      v.literal("active"),    // Currently claimable
+      v.literal("inactive")   // Not yet active or closed
+    ),
+    maxNFTs: v.number(), // Total NFTs in this campaign
+    startDate: v.optional(v.number()), // Campaign start timestamp
+    endDate: v.optional(v.number()), // Campaign end timestamp
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    // Performance counters (synced from inventory)
+    totalNFTs: v.number(),     // Total NFTs added
+    availableNFTs: v.number(), // Currently available
+    reservedNFTs: v.number(),  // Currently reserved
+    soldNFTs: v.number(),      // Sold/completed
+  })
+    .index("by_name", ["name"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"]),
+
   // Commemorative NFT Claims - Tracks actual NFT ownership
   // This table records when users successfully receive their NFTs via NMKR
   commemorativeNFTClaims: defineTable({
+    campaignId: v.optional(v.id("commemorativeCampaigns")), // Link to campaign (optional for backward compatibility)
     walletAddress: v.string(), // Owner's wallet address
     transactionHash: v.string(), // Blockchain transaction hash
     nftName: v.string(), // Display name (e.g., "Bronze Token #1")
@@ -3388,13 +3415,15 @@ export default defineSchema({
     .index("by_wallet", ["walletAddress"])
     .index("by_transaction", ["transactionHash"])
     .index("by_asset_id", ["nftAssetId"])
-    .index("by_claimed_at", ["claimedAt"]),
+    .index("by_claimed_at", ["claimedAt"])
+    .index("by_campaign", ["campaignId"]),
 
-  // Commemorative NFT Inventory - Pre-populated list of all Lab Rat NFTs
+  // Commemorative NFT Inventory - Pre-populated list of NFTs per campaign
   // Each row represents one specific NFT with its NMKR UID
   commemorativeNFTInventory: defineTable({
+    campaignId: v.optional(v.id("commemorativeCampaigns")), // Link to campaign (optional for backward compatibility)
     nftUid: v.string(), // NMKR NFT UID (e.g., "10aec295-d9e2-47e3-9c04-e56e2df92ad5")
-    nftNumber: v.number(), // Edition number (1-10 for Lab Rat collection)
+    nftNumber: v.number(), // Campaign-scoped edition number (1-N per campaign)
     name: v.string(), // Display name (e.g., "Lab Rat #1")
     status: v.union(
       v.literal("available"),
@@ -3409,14 +3438,18 @@ export default defineSchema({
     .index("by_uid", ["nftUid"])
     .index("by_number", ["nftNumber"])
     .index("by_status", ["status"])
-    .index("by_status_and_number", ["status", "nftNumber"]),
+    .index("by_status_and_number", ["status", "nftNumber"])
+    .index("by_campaign", ["campaignId"])
+    .index("by_campaign_and_status", ["campaignId", "status"])
+    .index("by_campaign_and_number", ["campaignId", "nftNumber"]),
 
   // Commemorative NFT Reservations - Active reservations for claim process
   // Tracks who has reserved which NFT and for how long
   commemorativeNFTReservations: defineTable({
+    campaignId: v.optional(v.id("commemorativeCampaigns")), // Link to campaign (optional for backward compatibility)
     nftInventoryId: v.id("commemorativeNFTInventory"), // Reference to inventory item
     nftUid: v.string(), // NMKR NFT UID (denormalized for quick lookup)
-    nftNumber: v.number(), // Edition number (denormalized)
+    nftNumber: v.number(), // Campaign-scoped edition number (denormalized)
     reservedBy: v.string(), // Wallet address or session ID
     reservedAt: v.number(), // Timestamp when reservation was created
     expiresAt: v.number(), // Timestamp when reservation expires (10 minutes)
@@ -3433,7 +3466,10 @@ export default defineSchema({
     .index("by_reserved_by", ["reservedBy"])
     .index("by_status", ["status"])
     .index("by_expires_at", ["expiresAt"])
-    .index("by_inventory_id", ["nftInventoryId"]),
+    .index("by_inventory_id", ["nftInventoryId"])
+    .index("by_campaign", ["campaignId"])
+    .index("by_campaign_and_wallet", ["campaignId", "reservedBy"])
+    .index("by_wallet_and_status", ["reservedBy", "status"]),
 
   // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
   // Replaces the complex custom minting system above
