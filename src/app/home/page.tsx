@@ -8,6 +8,7 @@ import { OverlayRenderer } from '@/components/OverlayRenderer';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
+import MekManagementLightbox from '@/components/MekManagementLightbox';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -22,6 +23,16 @@ export default function HomePage() {
   const [namingMekAssetId, setNamingMekAssetId] = useState<string | null>(null);
   const [namingMekImage, setNamingMekImage] = useState<string | null>(null);
   const [pendingSlotInfo, setPendingSlotInfo] = useState<{slotNumber: number, variations: any} | null>(null);
+
+  // Mek management lightbox state
+  const [showMekManagement, setShowMekManagement] = useState(false);
+  const [managementMekData, setManagementMekData] = useState<{
+    assetId: string;
+    sourceKey: string;
+    customName?: string | null;
+    assetName?: string;
+    slotNumber: number;
+  } | null>(null);
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
@@ -568,18 +579,31 @@ export default function HomePage() {
                   {/* Display Zone - Show Mek from Slot 1 */}
                   {displayZone && customSlotSize.width > 0 && slot1.mekSourceKey && (
                     <div
-                      className="absolute"
+                      className={`absolute ${displayZone.metadata?.isClickable ? 'overflow-hidden cursor-pointer' : ''}`}
                       style={{
                         left: `${displayZone.x * displayScale}px`,
                         top: `${displayZone.y * displayScale}px`,
                         width: `${(displayZone.width || 150) * displayScale}px`,
                         height: `${(displayZone.height || 150) * displayScale}px`,
                       }}
+                      onClick={() => {
+                        if (displayZone.metadata?.isClickable && displayZone.metadata?.clickAction === 'openMekManagement') {
+                          // Open Mek management lightbox
+                          setManagementMekData({
+                            assetId: slot1.mekAssetId,
+                            sourceKey: slot1.mekSourceKey,
+                            customName: mekCustomName,
+                            assetName: slot1.headVariationName,
+                            slotNumber: 1
+                          });
+                          setShowMekManagement(true);
+                        }
+                      }}
                     >
                       <img
                         src={`/mek-images/150px/${slot1.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
                         alt={slot1.headVariationName}
-                        className="w-full h-full object-contain"
+                        className={`w-full h-full object-contain ${displayZone.metadata?.isClickable ? 'transition-transform duration-300 hover:scale-110' : ''}`}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
