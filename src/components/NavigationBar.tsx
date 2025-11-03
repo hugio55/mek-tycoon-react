@@ -327,7 +327,7 @@ export default function NavigationBar() {
           style={{
             width: '100%',
             height: '100%',
-            display: isVisible ? 'block' : 'none',
+            display: 'block',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
             willChange: 'transform',
