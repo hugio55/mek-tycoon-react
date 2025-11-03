@@ -43,6 +43,17 @@ export default function MekManagementLightbox({
   // Local display name state (overrides prop after successful rename)
   const [displayName, setDisplayName] = useState<string | null>(null);
 
+  // [🔍MEKNAME] Track prop changes
+  useEffect(() => {
+    console.log('[🔍MEKNAME] Component received props:', {
+      assetId: mekData.assetId,
+      customName: mekData.customName,
+      assetName: mekData.assetName,
+      displayName: displayName,
+      timestamp: new Date().toISOString()
+    });
+  }, [mekData.customName, mekData.assetId, displayName]);
+
   const unslotMekMutation = useMutation(api.essence.unslotMek);
   const setMekNameMutation = useMutation(api.goldMining.setMekName);
 

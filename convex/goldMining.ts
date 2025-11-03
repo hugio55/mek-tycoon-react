@@ -197,6 +197,17 @@ export const initializeGoldMining = mutation({
         newMekCount: args.ownedMeks.length
       });
 
+      // [🔍MEKNAME] Log what's being saved vs what existed
+      const existingNames = existing.ownedMeks.filter(m => m.customName);
+      const newNames = args.ownedMeks.filter(m => m.customName);
+      console.log('[🔍MEKNAME] initializeGoldMining - Replacing ownedMeks:', {
+        existingMeksWithNames: existingNames.length,
+        newMeksWithNames: newNames.length,
+        existingNames: existingNames.map(m => ({ assetId: m.assetId, name: m.customName })),
+        newNames: newNames.map(m => ({ assetId: m.assetId, name: m.customName })),
+        willOverwrite: existingNames.length > newNames.length
+      });
+
       await ctx.db.patch(existing._id, {
         walletType: args.walletType,
         paymentAddresses: args.paymentAddresses,
@@ -265,6 +276,7 @@ export const getGoldMiningData = query({
       .first();
 
     if (!data) {
+      console.log('[🔍MEKNAME] Query returned NULL - wallet not found');
       return null;
     }
 
@@ -276,6 +288,17 @@ export const getGoldMiningData = query({
       storedBaseRate: data.baseGoldPerHour,
       storedBoostRate: data.boostGoldPerHour,
       mekCount: data.ownedMeks.length
+    });
+
+    // [🔍MEKNAME] Log customName fields
+    const meksWithNames = data.ownedMeks.filter(m => m.customName);
+    console.log('[🔍MEKNAME] Query returning data:', {
+      totalMeks: data.ownedMeks.length,
+      meksWithNames: meksWithNames.length,
+      namedMeks: meksWithNames.map(m => ({
+        assetId: m.assetId,
+        customName: m.customName
+      }))
     });
 
     // Use stored rates (updated by mutations) - no need to recalculate on every query
@@ -813,6 +836,13 @@ export const initializeWithBlockfrost = action({
       if (existingData && existingData.ownedMeks.length > meksForMutation.length) {
         devLog.log(`[GoldMining] Merging existing ${existingData.ownedMeks.length} Meks with ${meksForMutation.length} on-chain Meks`);
 
+        // [🔍MEKNAME] Log existing custom names before merge
+        const existingNames = existingData.ownedMeks.filter(m => m.customName);
+        console.log('[🔍MEKNAME] initializeWithBlockfrost - Existing custom names:', {
+          count: existingNames.length,
+          names: existingNames.map(m => ({ assetId: m.assetId, name: m.customName }))
+        });
+
         // Create a map of on-chain Meks by assetId
         const onChainMekMap = new Map(meksForMutation.map(m => [m.assetId, m]));
 
@@ -822,12 +852,21 @@ export const initializeWithBlockfrost = action({
           if (onChainMek) {
             // Mek is on-chain - use the on-chain data (which includes level boosts)
             // CRITICAL: Preserve customName from existing data
+            console.log('[🔍MEKNAME] Merging on-chain Mek, preserving customName:', {
+              assetId: existingMek.assetId,
+              existingName: existingMek.customName,
+              preserving: true
+            });
             return {
               ...onChainMek,
               customName: existingMek.customName
             };
           } else {
             // Mek not on-chain - keep existing data (preserve level boosts and customName)
+            console.log('[🔍MEKNAME] Keeping off-chain Mek with customName:', {
+              assetId: existingMek.assetId,
+              customName: existingMek.customName
+            });
             return {
               assetId: existingMek.assetId,
               policyId: existingMek.policyId,
@@ -846,6 +885,13 @@ export const initializeWithBlockfrost = action({
               customName: existingMek.customName
             };
           }
+        });
+
+        // [🔍MEKNAME] Verify custom names survived the merge
+        const finalNames = finalMeksList.filter(m => m.customName);
+        console.log('[🔍MEKNAME] After merge, custom names preserved:', {
+          count: finalNames.length,
+          names: finalNames.map(m => ({ assetId: m.assetId, name: m.customName }))
         });
 
         devLog.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
@@ -1624,9 +1670,18 @@ export const setMekName = mutation({
     newName: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log('[🔍MEKNAME] ========== setMekName MUTATION START ==========');
+    console.log('[🔍MEKNAME] Input:', {
+      wallet: args.walletAddress.substring(0, 20) + '...',
+      mekAssetId: args.mekAssetId,
+      newName: args.newName,
+      timestamp: new Date().toISOString()
+    });
+
     // Validate the name
     const validation = validateMekName(args.newName);
     if (!validation.valid) {
+      console.log('[🔍MEKNAME] Validation failed:', validation.error);
       return {
         success: false,
         error: validation.error
@@ -1642,11 +1697,14 @@ export const setMekName = mutation({
       .first();
 
     if (!existing) {
+      console.log('[🔍MEKNAME] ERROR: Wallet not found');
       return {
         success: false,
         error: "Wallet not found. Please connect your wallet first."
       };
     }
+
+    console.log('[🔍MEKNAME] Found wallet record, total Meks:', existing.ownedMeks.length);
 
     // Check if name is unique GLOBALLY (across all wallets in the game)
     const allWallets = await ctx.db.query("goldMining").collect();
@@ -1657,6 +1715,7 @@ export const setMekName = mutation({
       );
 
       if (nameExists) {
+        console.log('[🔍MEKNAME] Name already taken by another wallet');
         return {
           success: false,
           error: "This name is already taken by another player. Please choose a unique name."
@@ -1667,6 +1726,11 @@ export const setMekName = mutation({
     // Find the Mek in the ownedMeks array and update its name
     const updatedMeks = existing.ownedMeks.map(mek => {
       if (mek.assetId === args.mekAssetId) {
+        console.log('[🔍MEKNAME] FOUND target Mek, updating name:', {
+          assetId: mek.assetId,
+          oldName: mek.customName || '(unnamed)',
+          newName: trimmedName
+        });
         return {
           ...mek,
           customName: trimmedName
@@ -1678,6 +1742,7 @@ export const setMekName = mutation({
     // Check if we actually found and updated the Mek
     const mekFound = updatedMeks.some(mek => mek.assetId === args.mekAssetId);
     if (!mekFound) {
+      console.log('[🔍MEKNAME] ERROR: Mek not found in collection');
       return {
         success: false,
         error: "Mek not found in your collection"
@@ -1685,11 +1750,25 @@ export const setMekName = mutation({
     }
 
     // Update the database
+    console.log('[🔍MEKNAME] Saving to database...');
     await ctx.db.patch(existing._id, {
       ownedMeks: updatedMeks,
       updatedAt: Date.now(),
     });
 
+    console.log('[🔍MEKNAME] ✅ DATABASE UPDATED SUCCESSFULLY');
+    console.log('[🔍MEKNAME] Verifying update...');
+
+    // Re-fetch to verify the update persisted
+    const verification = await ctx.db.get(existing._id);
+    const verifiedMek = verification?.ownedMeks.find(m => m.assetId === args.mekAssetId);
+    console.log('[🔍MEKNAME] Verification check:', {
+      mekFound: !!verifiedMek,
+      customName: verifiedMek?.customName,
+      matches: verifiedMek?.customName === trimmedName
+    });
+
+    console.log('[🔍MEKNAME] ========== setMekName MUTATION END ==========');
     return {
       success: true,
       customName: trimmedName

@@ -829,12 +829,15 @@ export const slotMek = mutation({
       }
 
       // Update Mek with slotted status in meks table
+      const tenureToSave = mekRecord.tenurePoints ?? 0;
       await ctx.db.patch(mekRecord._id, {
         isSlotted: true,
         slotNumber: slotNumber,
         lastTenureUpdate: now,
-        // Note: tenurePoints remains unchanged (carries over from before)
+        // Initialize tenurePoints to 0 if undefined, otherwise preserve existing value
+        tenurePoints: tenureToSave,
       });
+      console.log(`[🔒TENURE] Wrote to database for ${mekAssetId}: tenurePoints=${tenureToSave}, lastTenureUpdate=${now}, isSlotted=true`);
     }
 
     return {

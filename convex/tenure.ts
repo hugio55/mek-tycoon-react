@@ -266,7 +266,8 @@ export const slotMek = mutation({
       isSlotted: true,
       slotNumber: args.slotNumber,
       lastTenureUpdate: now,
-      // Note: tenurePoints remains unchanged (carries over from before)
+      // Initialize tenurePoints to 0 if undefined, otherwise preserve existing value
+      tenurePoints: mek.tenurePoints ?? 0,
     });
 
     // Also update essenceSlots table if it exists
