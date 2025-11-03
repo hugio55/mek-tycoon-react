@@ -1376,6 +1376,7 @@ export default function OverlayEditor() {
                   <option value="button">Button</option>
                   <option value="clickable">Clickable Area</option>
                   <option value="display">Display Zone</option>
+                  <option value="slotted-mek-pfp">Slotted Mek PFP</option>
                   <option value="custom">Custom</option>
                 </select>
               </div>
