@@ -443,7 +443,14 @@ export default function HomePage() {
         </div>
 
         {/* Custom Slot Test */}
-        {customSlotOverlayData && customSlotOverlayData.imagePath && ownedMeks.length > 0 && (() => {
+        {customSlotOverlayData && customSlotOverlayData.imagePath && (() => {
+          // Get Mek from essence slot 1
+          const slot1 = essenceState?.slots?.find((s: any) => s.slotNumber === 1);
+          const hasMekInSlot1 = slot1?.mekAssetId;
+
+          // Only show custom slot if slot 1 has a Mek
+          if (!hasMekInSlot1) return null;
+
           // Calculate scale factor based on displayed image size vs original size
           const displayScale = customSlotSize.width > 0
             ? customSlotSize.width / customSlotOverlayData.imageWidth
@@ -481,8 +488,8 @@ export default function HomePage() {
                     }}
                   />
 
-                  {/* Display Zone - Show first Mek */}
-                  {displayZone && customSlotSize.width > 0 && (
+                  {/* Display Zone - Show Mek from Slot 1 */}
+                  {displayZone && customSlotSize.width > 0 && slot1.mekSourceKey && (
                     <div
                       className="absolute"
                       style={{
@@ -493,15 +500,15 @@ export default function HomePage() {
                       }}
                     >
                       <img
-                        src={`/mek-images/150px/${ownedMeks[0].sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
-                        alt={ownedMeks[0].headVariationName}
+                        src={`/mek-images/150px/${slot1.mekSourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                        alt={slot1.headVariationName}
                         className="w-full h-full object-contain"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
                       <div className="text-center text-yellow-400 text-xs mt-1" style={{ fontSize: `${12 * displayScale}px` }}>
-                        {ownedMeks[0].headVariationName}
+                        {slot1.headVariationName}
                       </div>
                     </div>
                   )}
