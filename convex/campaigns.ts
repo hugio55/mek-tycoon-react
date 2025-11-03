@@ -58,6 +58,7 @@ export const updateCampaign = mutation({
     campaignId: v.id("commemorativeCampaigns"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
+    nmkrProjectId: v.optional(v.string()),
     status: v.optional(
       v.union(
         v.literal("active"),
