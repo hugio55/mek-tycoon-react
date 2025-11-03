@@ -241,23 +241,13 @@ export const initializeFromCSV = action({
 // Add known test NFTs (for testing)
 export const addKnownNFTs = action({
   handler: async (ctx) => {
-    console.log('[ADD KNOWN] Adding all 3 Lab Rat test NFTs...');
+    console.log('[ADD KNOWN] Adding Lab Rat #1 test NFT...');
 
     const testNFTs = [
       {
         nftUid: "10aec295-d9e2-47e3-9c04-e56e2df92ad5",
         nftNumber: 1,
         name: "Lab Rat #1",
-      },
-      {
-        nftUid: "7b8a6e99-7b32-40fa-bf28-97582ed5d5e0",
-        nftNumber: 2,
-        name: "Lab Rat #2",
-      },
-      {
-        nftUid: "49548b77-0624-4de5-b0ab-3c967bbfeb1f",
-        nftNumber: 3,
-        name: "Lab Rat #3",
       },
     ];
 
