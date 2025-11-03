@@ -134,9 +134,9 @@ export default function HomePage() {
       if (result.shouldShowNaming) {
         console.log('[HomePage] Mek needs naming, showing lightbox');
         setNamingMekAssetId(mekAssetId);
-        // Generate Mek image path
+        // Generate Mek image path (using high-res 500px version)
         const cleanKey = (sourceKey || mek.sourceKeyBase)?.replace(/-[A-Z]$/, '').toLowerCase();
-        setNamingMekImage(cleanKey ? `/mek-images/150px/${cleanKey}.webp` : null);
+        setNamingMekImage(cleanKey ? `/mek-images/500px/${cleanKey}.webp` : null);
         setShowNamingLightbox(true);
       }
     } catch (error) {

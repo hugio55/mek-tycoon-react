@@ -111,7 +111,7 @@ export default function MekNamingLightbox({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -136,7 +136,7 @@ export default function MekNamingLightbox({
                 <img
                   src={mekImage}
                   alt="Mek"
-                  className="w-64 h-64 object-contain border-2 border-yellow-500/30 rounded-lg bg-black/40"
+                  className="w-80 h-80 object-contain border-2 border-yellow-500/30 rounded-lg bg-black/40"
                 />
               </div>
             )}
