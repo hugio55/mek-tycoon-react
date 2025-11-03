@@ -214,14 +214,12 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           <div className="text-center">
             {/* NFT Preview */}
             <div className="mb-6">
-              <h2 className="text-3xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              <h2 className="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 Your NFT Reserved
               </h2>
 
               {/* NFT Image */}
-              <div className="relative w-full max-w-[400px] mx-auto mb-6 border-4 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-yellow-500/70 z-10"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-yellow-500/70 z-10"></div>
+              <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
                 <img
                   src="/random-images/Lab%20Rat.jpg"
                   alt={activeReservation.nft.name}
@@ -233,76 +231,85 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
               </div>
 
-              {/* NFT Details */}
+              {/* NFT Details with Timer */}
               <div className="mb-6 p-4 bg-black/60 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
-                <h3 className="text-2xl font-bold text-yellow-400 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <h3 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                   {activeReservation.nft.name}
                 </h3>
-                <p className="text-gray-400 text-sm mt-2">
-                  NFT #{activeReservation.nftNumber}
+                <p className="text-gray-400 text-base mb-4">
+                  You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
                 </p>
-                <p className="text-green-400 text-sm mt-2 font-medium">
-                  ✓ Reserved for you
-                </p>
-              </div>
 
-              {/* Countdown Timer */}
-              <div className={`mb-6 p-4 rounded backdrop-blur-sm ${
-                isInGracePeriod
-                  ? 'bg-red-500/20 border-2 border-red-500'
-                  : activeReservation.isPaymentWindowOpen
-                    ? 'bg-blue-500/20 border-2 border-blue-500/50'
-                    : 'bg-yellow-500/20 border-2 border-yellow-500/50'
-              }`}>
-                <div className="text-xs uppercase tracking-wider text-gray-400 mb-2">
-                  {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
-                </div>
-                <div className={`text-4xl font-bold font-mono ${
-                  isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-400' : 'text-yellow-400'
+                {/* Countdown Timer */}
+                <div className={`mt-4 p-3 rounded backdrop-blur-sm ${
+                  isInGracePeriod
+                    ? 'bg-red-500/20 border-2 border-red-500'
+                    : activeReservation.isPaymentWindowOpen
+                      ? 'bg-blue-500/20 border-2 border-blue-500/50'
+                      : 'bg-gray-500/20 border-2 border-gray-500/50'
                 }`}>
-                  {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                  <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
+                    {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
+                  </div>
+                  <div className={`text-3xl font-bold font-mono ${
+                    isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-400' : 'text-gray-300'
+                  }`}>
+                    {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                  </div>
+                  {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
+                    <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
+                      Payment window open - timer continues
+                    </div>
+                  )}
+                  {isInGracePeriod && (
+                    <div className="text-xs text-red-400 mt-2 uppercase tracking-wide">
+                      ⚠️ Final chance to complete payment
+                    </div>
+                  )}
                 </div>
-                {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
-                  <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
-                    💳 Payment window open - timer continues
-                  </div>
-                )}
-                {isInGracePeriod && (
-                  <div className="text-xs text-red-400 mt-2 uppercase tracking-wide">
-                    ⚠️ Final chance to complete payment
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Open Payment Button */}
             <button
               onClick={handleOpenPayment}
-              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg hover:shadow-yellow-500/50"
+              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
               style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
-              💰 Open Payment Window
+              Open Payment Window
             </button>
-
-            <p className="text-xs text-gray-500 mt-4">
-              You have {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')} to complete payment
-            </p>
           </div>
         );
 
       case 'payment':
+        if (!activeReservation) return null;
+
+        const paymentRemainingMs = activeReservation.remainingMs || 0;
+        const paymentMinutes = Math.floor(paymentRemainingMs / 60000);
+        const paymentSeconds = Math.floor((paymentRemainingMs % 60000) / 1000);
+
         return (
           <div className="text-center">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 Complete Your Purchase
               </h2>
-              <p className="text-gray-400">
+              <p className="text-gray-400 mb-6">
                 Complete the payment in the NMKR window
               </p>
-              <p className="text-blue-400 text-sm mt-4">
-                ⏱️ Timer continues while window is open
-              </p>
+
+              {/* Timer Display */}
+              <div className="p-4 bg-blue-500/20 border-2 border-blue-500/50 rounded backdrop-blur-sm mb-4">
+                <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
+                  Time Remaining
+                </div>
+                <div className="text-3xl font-bold font-mono text-blue-400">
+                  {paymentMinutes}:{paymentSeconds.toString().padStart(2, '0')}
+                </div>
+                <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
+                  Timer continues while window is open
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -329,11 +336,20 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 </span>
               </div>
 
-              <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
+              <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm mb-6">
                 <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
                   ⚠ This may take 1-2 minutes. Please don't close this window.
                 </p>
               </div>
+
+              {/* Cancel Button */}
+              <button
+                onClick={handleCancel}
+                className="px-6 py-3 bg-gray-500/20 border-2 border-gray-500 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-colors font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                Cancel Transaction
+              </button>
             </div>
           </div>
         );
