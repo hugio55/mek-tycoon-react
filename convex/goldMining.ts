@@ -1584,3 +1584,134 @@ export const syncWalletFromBlockchain = action({
     }
   },
 });
+
+// Mek name validation helper
+function validateMekName(name: string): { valid: boolean; error?: string } {
+  if (!name || typeof name !== 'string') {
+    return { valid: false, error: "Mek name is required" };
+  }
+
+  const trimmed = name.trim();
+
+  if (trimmed.length < 1) {
+    return { valid: false, error: "Mek name cannot be empty" };
+  }
+
+  if (trimmed.length > 20) {
+    return { valid: false, error: "Mek name must be 20 characters or less" };
+  }
+
+  // Allow letters, numbers, spaces, and basic punctuation (-, ', .)
+  const allowedCharsRegex = /^[a-zA-Z0-9\s\-'.]+$/;
+  if (!allowedCharsRegex.test(trimmed)) {
+    return { valid: false, error: "Mek name can only contain letters, numbers, spaces, hyphens, apostrophes, and periods" };
+  }
+
+  return { valid: true };
+}
+
+// Set custom name for a Mek
+export const setMekName = mutation({
+  args: {
+    walletAddress: v.string(),
+    mekAssetId: v.string(),
+    newName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate the name
+    const validation = validateMekName(args.newName);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: validation.error
+      };
+    }
+
+    const trimmedName = args.newName.trim();
+
+    // Find the user's gold mining record
+    const existing = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!existing) {
+      return {
+        success: false,
+        error: "Wallet not found. Please connect your wallet first."
+      };
+    }
+
+    // Check if name is unique within this wallet's owned Meks
+    const nameExists = existing.ownedMeks.some(
+      mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() && mek.assetId !== args.mekAssetId
+    );
+
+    if (nameExists) {
+      return {
+        success: false,
+        error: "You already have a Mek with this name. Please choose a unique name."
+      };
+    }
+
+    // Find the Mek in the ownedMeks array and update its name
+    const updatedMeks = existing.ownedMeks.map(mek => {
+      if (mek.assetId === args.mekAssetId) {
+        return {
+          ...mek,
+          customName: trimmedName
+        };
+      }
+      return mek;
+    });
+
+    // Check if we actually found and updated the Mek
+    const mekFound = updatedMeks.some(mek => mek.assetId === args.mekAssetId);
+    if (!mekFound) {
+      return {
+        success: false,
+        error: "Mek not found in your collection"
+      };
+    }
+
+    // Update the database
+    await ctx.db.patch(existing._id, {
+      ownedMeks: updatedMeks,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      customName: trimmedName
+    };
+  },
+});
+
+// Get custom name for a Mek
+export const getMekName = query({
+  args: {
+    walletAddress: v.string(),
+    mekAssetId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const data = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!data) {
+      return {
+        customName: null,
+        hasName: false
+      };
+    }
+
+    // Find the Mek in the ownedMeks array
+    const mek = data.ownedMeks.find(m => m.assetId === args.mekAssetId);
+
+    return {
+      customName: mek?.customName || null,
+      hasName: !!mek?.customName
+    };
+  },
+});
