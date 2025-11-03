@@ -20,8 +20,11 @@ interface MekWithTenure {
 export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [tenureData, setTenureData] = useState<Map<string, MekWithTenure>>(new Map());
+  const [sortColumn, setSortColumn] = useState<string>('level');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const mekLevels = useQuery(api.mekLeveling.getMekLevels, { walletAddress });
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData, { walletAddress });
+  const essenceSlots = useQuery(api.essence.getEssenceSlots, { walletAddress });
 
   // Mount portal and lock body scroll
   useEffect(() => {
@@ -34,15 +37,24 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
 
   // Client-side tenure accumulation for real-time updates
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks) return;
+    if (!goldMiningData?.ownedMeks || !essenceSlots) return;
+
+    // Create a set of slotted asset IDs from essenceSlots
+    const slottedAssetIds = new Set<string>();
+    essenceSlots.forEach(slot => {
+      if (slot.slottedMekAssetId) {
+        slottedAssetIds.add(slot.slottedMekAssetId);
+      }
+    });
 
     // Initialize tenure data from Meks
     const initialData = new Map<string, MekWithTenure>();
     goldMiningData.ownedMeks.forEach(mek => {
+      const isActuallySlotted = slottedAssetIds.has(mek.assetId);
       initialData.set(mek.assetId, {
         currentTenure: mek.tenurePoints || 0,
         tenureRate: 1, // Base rate of 1 tenure/second
-        isSlotted: mek.isSlotted || false
+        isSlotted: isActuallySlotted
       });
     });
     setTenureData(initialData);
@@ -66,7 +78,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [goldMiningData?.ownedMeks]);
+  }, [goldMiningData?.ownedMeks, essenceSlots]);
 
   const loadingContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">

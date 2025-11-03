@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import GlobalBackgroundStarfield from '@/components/GlobalBackgroundStarfield';
+import GlobalBackground from '@/components/GlobalBackground';
 import { HexagonalSpinner } from './HexagonalSpinner';
 import { ProgressBar } from './ProgressBar';
 import { LoadingText } from './LoadingText';
@@ -51,18 +51,20 @@ export function LoadingOverlay({
       }}
     >
       {/* Starfield Background */}
-      <GlobalBackgroundStarfield />
+      <GlobalBackground />
 
       {/* Dark Overlay (10% opacity) */}
       <div className="absolute inset-0 bg-black/10" />
 
       {/* Center Content Container */}
-      <div className="relative z-10 flex flex-col items-center gap-8">
+      <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-xl px-4">
         {/* Hexagonal Spinner */}
         <HexagonalSpinner />
 
         {/* Progress Bar */}
-        <ProgressBar percentage={percentage} showPercentage={true} />
+        <div className="w-full">
+          <ProgressBar percentage={percentage} showPercentage={true} />
+        </div>
 
         {/* Loading Text */}
         <LoadingText currentStage={stage} />
