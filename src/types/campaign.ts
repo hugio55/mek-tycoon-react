@@ -11,7 +11,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 export type NFTStatus = "available" | "reserved" | "sold";
 
 // Campaign Status States
-export type CampaignStatus = "active" | "inactive" | "completed" | "draft";
+export type CampaignStatus = "active" | "inactive";
 
 // NFT Inventory Item
 export interface NFTInventoryItem {
@@ -24,15 +24,17 @@ export interface NFTInventoryItem {
   paymentUrl: string;
   imageUrl?: string;
   createdAt: number;
+  campaignId?: Id<"commemorativeCampaigns">;
 }
 
 // Campaign Definition
 export interface Campaign {
-  _id: Id<"campaigns">;
+  _id: Id<"commemorativeCampaigns">;
   name: string;
   description: string;
-  projectId: string;
+  nmkrProjectId: string;
   status: CampaignStatus;
+  maxNFTs: number;
   totalNFTs: number;
   availableNFTs: number;
   reservedNFTs: number;
