@@ -197,6 +197,7 @@ import type * as sunspots from "../sunspots.js";
 import type * as syncChecksums from "../syncChecksums.js";
 import type * as talentTree from "../talentTree.js";
 import type * as tenure from "../tenure.js";
+import type * as tenureConfig from "../tenureConfig.js";
 import type * as testSessionManagement from "../testSessionManagement.js";
 import type * as transactionCleanup from "../transactionCleanup.js";
 import type * as updateTop30Ranks from "../updateTop30Ranks.js";
@@ -409,6 +410,7 @@ declare const fullApi: ApiFromModules<{
   syncChecksums: typeof syncChecksums;
   talentTree: typeof talentTree;
   tenure: typeof tenure;
+  tenureConfig: typeof tenureConfig;
   testSessionManagement: typeof testSessionManagement;
   transactionCleanup: typeof transactionCleanup;
   updateTop30Ranks: typeof updateTop30Ranks;

@@ -32,13 +32,11 @@ export function calculateCurrentTenure(
   mek: Doc<"meks">,
   globalBuffMultiplier: number,
   perMekBuffMultiplier: number,
+  baseRatePerSecond: number,
   now: number
 ): number {
-  // Base rate: 1 tenure/second = 3600 tenure/hour
-  const BASE_TENURE_PER_SECOND = 1;
-
   // Effective rate with buffs
-  const effectiveRate = BASE_TENURE_PER_SECOND * (1 + globalBuffMultiplier + perMekBuffMultiplier);
+  const effectiveRate = baseRatePerSecond * (1 + globalBuffMultiplier + perMekBuffMultiplier);
 
   // Calculate elapsed time if slotted
   let tenureGained = 0;
@@ -84,6 +82,18 @@ async function getActiveTenureBuffsForMek(
   return { global: globalMultiplier, perMek: perMekMultiplier };
 }
 
+/**
+ * Get the configured tenure base rate (with fallback to 1.0)
+ */
+async function getTenureBaseRateConfig(ctx: any): Promise<number> {
+  const config = await ctx.db
+    .query("globalConfig")
+    .withIndex("by_key", (q: any) => q.eq("key", "tenure_base_rate"))
+    .first();
+
+  return config ? (config.value as number) : 1.0; // Default to 1.0 if not configured
+}
+
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -98,13 +108,14 @@ export const getMekWithTenure = query({
     if (!mek) return null;
 
     const now = Date.now();
+    const baseRate = await getTenureBaseRateConfig(ctx);
     const buffs = await getActiveTenureBuffsForMek(ctx, args.mekId, now);
-    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, now);
+    const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, baseRate, now);
 
     return {
       ...mek,
       currentTenure,
-      tenureRate: 1 * (1 + buffs.global + buffs.perMek), // tenure per second
+      tenureRate: baseRate * (1 + buffs.global + buffs.perMek), // tenure per second
       activeBuffs: buffs,
     };
   },
@@ -148,6 +159,7 @@ export const getActiveTenureBuffs = query({
   args: { mekId: v.id("meks") },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const baseRate = await getTenureBaseRateConfig(ctx);
     const buffs = await getActiveTenureBuffsForMek(ctx, args.mekId, now);
 
     // Get detailed buff information
@@ -167,7 +179,7 @@ export const getActiveTenureBuffs = query({
       global: buffs.global,
       perMek: buffs.perMek,
       totalMultiplier: buffs.global + buffs.perMek,
-      effectiveRate: 1 * (1 + buffs.global + buffs.perMek),
+      effectiveRate: baseRate * (1 + buffs.global + buffs.perMek),
       globalBuffs: activeGlobalBuffs,
       perMekBuffs: activePerMekBuffs,
     };
@@ -186,6 +198,7 @@ export const getWalletTenureStats = query({
       .collect();
 
     const now = Date.now();
+    const baseRate = await getTenureBaseRateConfig(ctx);
     let totalSlottedTenure = 0;
     let totalFrozenTenure = 0;
     let slottedCount = 0;
@@ -193,7 +206,7 @@ export const getWalletTenureStats = query({
 
     for (const mek of meks) {
       const buffs = await getActiveTenureBuffsForMek(ctx, mek._id, now);
-      const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, now);
+      const currentTenure = calculateCurrentTenure(mek, buffs.global, buffs.perMek, baseRate, now);
 
       if (mek.isSlotted) {
         totalSlottedTenure += currentTenure;
