@@ -304,3 +304,158 @@ export const getProjectStats = action({
     }
   },
 });
+
+/**
+ * NEW FUNCTIONS FOR INVENTORY SETUP
+ * Added to support test page and CSV import
+ */
+
+const NMKR_API_BASE = "https://studio-api.nmkr.io";
+
+interface NMKRProjectInfoResponse {
+  projectUid: string;
+  projectName: string;
+  nftCount: number;
+  soldCount: number;
+  state: string;
+}
+
+// Fetch project information to verify project exists
+export const getProjectInfo = action({
+  args: {
+    projectId: v.string(),
+  },
+  handler: async (ctx, args): Promise<NMKRProjectInfoResponse | null> => {
+    const apiKey = process.env.NMKR_API_KEY;
+
+    if (!apiKey) {
+      console.error("[🔨NMKR] NMKR_API_KEY not found in environment");
+      throw new Error("NMKR_API_KEY is required");
+    }
+
+    console.log("[🔨NMKR] Fetching project info for:", args.projectId);
+
+    try {
+      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${args.projectId}?apiKey=${apiKey}`;
+      console.log("[🔨NMKR] Request URL:", url.replace(apiKey, "***"));
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+      });
+
+      console.log("[🔨NMKR] Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[🔨NMKR] API Error:", errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log("[🔨NMKR] Project info:", data);
+      return data;
+
+    } catch (error) {
+      console.error("[🔨NMKR] Failed to fetch project info:", error);
+      return null;
+    }
+  },
+});
+
+// Fetch NFTs from NMKR project with correct authentication
+export const fetchNFTsFromNMKR = action({
+  args: {
+    projectId: v.string(),
+    state: v.optional(v.union(v.literal("free"), v.literal("sold"), v.literal("reserved"))),
+    count: v.optional(v.number()),
+    page: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.NMKR_API_KEY;
+
+    if (!apiKey) {
+      console.error("[🔨NMKR] NMKR_API_KEY not found in environment");
+      throw new Error("NMKR_API_KEY is required");
+    }
+
+    const state = args.state || "free";
+    const count = args.count || 50;
+    const page = args.page || 1;
+
+    console.log("[🔨NMKR] Fetching NFTs:", { projectId: args.projectId, state, count, page });
+
+    try {
+      const url = `${NMKR_API_BASE}/v2/GetNfts/${args.projectId}/${state}/${count}/${page}?apiKey=${apiKey}`;
+      console.log("[🔨NMKR] Request URL:", url.replace(apiKey, "***"));
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+      });
+
+      console.log("[🔨NMKR] Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[🔨NMKR] API Error:", errorText);
+        throw new Error(`NMKR API request failed: ${response.status} ${errorText}`);
+      }
+
+      const nfts = await response.json();
+      console.log("[🔨NMKR] Successfully fetched", nfts.length, "NFTs");
+
+      return nfts;
+
+    } catch (error) {
+      console.error("[🔨NMKR] Failed to fetch NFTs:", error);
+      throw error;
+    }
+  },
+});
+
+// Parse NMKR CSV export
+interface CSVNFTRow {
+  uid: string;
+  name: string;
+  nftNumber: string;
+  state: string;
+}
+
+export const parseNMKRCSV = action({
+  args: {
+    csvContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log("[🔨NMKR] Parsing NMKR CSV export");
+
+    const lines = args.csvContent.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+
+    console.log("[🔨NMKR] CSV headers:", headers);
+
+    const nfts: CSVNFTRow[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(",");
+
+      const nft: CSVNFTRow = {
+        uid: values[headers.indexOf("uid")] || "",
+        name: values[headers.indexOf("name")] || "",
+        nftNumber: values[headers.indexOf("nftnumber")] || values[headers.indexOf("number")] || "",
+        state: values[headers.indexOf("state")] || "",
+      };
+
+      if (nft.uid) {
+        nfts.push(nft);
+      }
+    }
+
+    console.log("[🔨NMKR] Parsed", nfts.length, "NFTs from CSV");
+    return nfts;
+  },
+});

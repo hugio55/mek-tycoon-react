@@ -4090,6 +4090,7 @@ export default function MekRateLoggingPage() {
                         animatedValues={animatedMekValues[mek.assetId]}
                         upgradingMeks={upgradingMeks}
                         onClick={() => setSelectedMek(mek)}
+                        index={currentIndex}
                         onGoldSpentAnimation={(animationId, amount) => {
                           setGoldSpentAnimations(prev => [...prev, { id: animationId, amount }]);
                           setTimeout(() => {
