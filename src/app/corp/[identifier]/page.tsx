@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { getMekImageUrl } from '@/lib/mekNumberToVariation';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import Link from 'next/link';
+import { OverlayRenderer } from '@/components/OverlayRenderer';
 
 interface WalletMek {
   assetId: string;
@@ -37,6 +38,11 @@ export default function CorporationPage() {
 
   // Get level colors
   const levelColors = useQuery(api.levelColors.getLevelColors);
+
+  // Get custom slot overlay data
+  const slotOverlayData = useQuery(api.overlays.getOverlay, {
+    imageKey: "slot test 1"
+  });
 
   // Sync action
   const syncWallet = useAction(api.goldMining.syncWalletFromBlockchain);
@@ -170,6 +176,50 @@ export default function CorporationPage() {
             </div>
           )}
         </div>
+
+        {/* Custom Slot Section */}
+        {slotOverlayData && (
+          <div className="mb-6 mek-card-industrial mek-border-sharp-gold overflow-hidden">
+            <div className="relative">
+              {/* Base slot image */}
+              <img
+                src={slotOverlayData.imagePath}
+                alt="Custom Slot"
+                className="w-full h-auto"
+              />
+
+              {/* Render Mek in the display zone if we have meks */}
+              {corpData.meks.length > 0 && slotOverlayData.zones.map((zone: any) => {
+                if (zone.type === 'display' && zone.label === 'Mek') {
+                  const displayMek = corpData.meks[0]; // Show first Mek
+                  const scale = slotOverlayData.imageWidth / 1838; // Scale factor for positioning
+
+                  return (
+                    <div
+                      key={zone.id}
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: `${(zone.x / slotOverlayData.imageWidth) * 100}%`,
+                        top: `${(zone.y / slotOverlayData.imageHeight) * 100}%`,
+                        width: `${(zone.width / slotOverlayData.imageWidth) * 100}%`,
+                        height: `${(zone.height / slotOverlayData.imageHeight) * 100}%`,
+                      }}
+                    >
+                      {displayMek.imageUrl && (
+                        <img
+                          src={displayMek.imageUrl}
+                          alt={displayMek.assetName}
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </div>
+        )}
 
         {/* All Meks Grid */}
         <div className="mek-card-industrial mek-border-sharp-gold">

@@ -28,7 +28,6 @@ import { MekCard } from "@/components/MekCard";
 import { AnimatedMekValues } from "@/components/MekCard/types";
 import AirdropClaimBanner from "@/components/AirdropClaimBanner";
 import NMKRClaimButton from "@/components/NMKRClaimButton";
-import NMKRDebugPanel from "@/components/NMKRDebugPanel";
 import { useActivityTracking } from '@/hooks/useActivityTracking';
 import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import MeksTriangleLightbox from "@/components/MeksTriangleLightbox";
@@ -2838,9 +2837,6 @@ export default function MekRateLoggingPage() {
 
   return (
     <div className="fixed inset-0 overflow-hidden touch-manipulation">
-      {/* NMKR Debug Panel */}
-      <NMKRDebugPanel />
-
       {/* Industrial grid overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
