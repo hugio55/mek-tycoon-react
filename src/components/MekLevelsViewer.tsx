@@ -43,8 +43,8 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     // Create a set of slotted asset IDs from essenceSlots
     const slottedAssetIds = new Set<string>();
     essenceSlots.forEach(slot => {
-      if (slot.slottedMekAssetId) {
-        slottedAssetIds.add(slot.slottedMekAssetId);
+      if (slot.mekAssetId) {
+        slottedAssetIds.add(slot.mekAssetId);
       }
     });
 
@@ -79,7 +79,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [goldMiningData?.ownedMeks, essenceSlots]);
+  }, [goldMiningData?.ownedMeks, essenceState]);
 
   const loadingContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
