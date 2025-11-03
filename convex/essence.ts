@@ -1,8 +1,86 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
 import { setEssenceBalance, getOrCreateEssenceBalance, getAggregatedBuffs, addBuffSource, removeBuffSource } from "./lib/essenceHelpers";
 import { clampEssenceToCap, isEssenceFull } from "./lib/essenceCalculations";
+
+// ============================================================================
+// TENURE HELPERS (for integration with slot/unslot)
+// ============================================================================
+
+/**
+ * Get active tenure buffs for a Mek
+ */
+async function getActiveTenureBuffsForMek(
+  ctx: any,
+  mekId: Id<"meks">,
+  now: number
+): Promise<{ global: number; perMek: number }> {
+  const buffs = await ctx.db
+    .query("tenureBuffs")
+    .filter((q: any) => q.eq(q.field("active"), true))
+    .collect();
+
+  let globalMultiplier = 0;
+  let perMekMultiplier = 0;
+
+  for (const buff of buffs) {
+    // Check expiration
+    if (buff.expiresAt && buff.expiresAt < now) {
+      continue;
+    }
+
+    // Apply buff based on scope
+    if (buff.scope === "global") {
+      globalMultiplier += buff.multiplier;
+    } else if (buff.scope === "perMek" && buff.mekId && buff.mekId === mekId) {
+      perMekMultiplier += buff.multiplier;
+    }
+  }
+
+  return { global: globalMultiplier, perMek: perMekMultiplier };
+}
+
+/**
+ * Get the configured tenure base rate (with fallback to 1.0)
+ */
+async function getTenureBaseRateConfig(ctx: any): Promise<number> {
+  const config = await ctx.db
+    .query("tenureConfig")
+    .withIndex("by_key", (q: any) => q.eq("key", "baseRate"))
+    .first();
+
+  return config ? (config.value as number) : 1.0; // Default to 1.0 if not configured
+}
+
+/**
+ * Calculate accumulated tenure for a Mek
+ * Formula: effectiveTenureRate = baseRate * (1 + globalBuffs + perMekBuffs)
+ */
+function calculateCurrentTenure(
+  mek: Doc<"meks">,
+  globalBuffMultiplier: number,
+  perMekBuffMultiplier: number,
+  baseRatePerSecond: number,
+  now: number
+): number {
+  // Effective rate with buffs
+  const effectiveRate = baseRatePerSecond * (1 + globalBuffMultiplier + perMekBuffMultiplier);
+
+  // Calculate elapsed time if slotted
+  let tenureGained = 0;
+  if (mek.isSlotted && mek.lastTenureUpdate) {
+    const elapsedSeconds = (now - mek.lastTenureUpdate) / 1000;
+    tenureGained = elapsedSeconds * effectiveRate;
+  }
+
+  // Return total tenure (saved + gained)
+  return (mek.tenurePoints || 0) + tenureGained;
+}
+
+// ============================================================================
+// END TENURE HELPERS
+// ============================================================================
 
 // Seeded random number generator for deterministic slot requirements
 class SeededRandom {
@@ -728,13 +806,38 @@ export const slotMek = mutation({
       });
     }
 
-    // Check if Mek has a custom name already
+    // TENURE INTEGRATION: Mark Mek as slotted and start tenure tracking
+    // Also check if Mek has a custom name already (do both in one query)
     const goldMiningRecord = await ctx.db
       .query("goldMining")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
       .first();
 
-    const hasName = goldMiningRecord?.ownedMeks?.find((m: any) => m.assetId === mekAssetId)?.customName;
+    let hasName = false;
+
+    if (goldMiningRecord && goldMiningRecord.ownedMeks) {
+      // Check for existing name before updating
+      hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+
+      // Update Mek with slotted status
+      const updatedMeks = goldMiningRecord.ownedMeks.map((mek: any) => {
+        if (mek.assetId === mekAssetId) {
+          console.log(`[🔒TENURE] Slotting Mek ${mekAssetId}, current tenure: ${mek.tenurePoints || 0}`);
+          return {
+            ...mek,
+            isSlotted: true,
+            slotNumber: slotNumber,
+            lastTenureUpdate: now,
+            // Note: tenurePoints remains unchanged (carries over from before)
+          };
+        }
+        return mek;
+      });
+
+      await ctx.db.patch(goldMiningRecord._id, {
+        ownedMeks: updatedMeks,
+      });
+    }
 
     return {
       success: true,
@@ -772,6 +875,43 @@ export const unslotMek = mutation({
 
     // Calculate accumulated essence before unslotting
     await calculateAndUpdateEssence(ctx, walletAddress);
+
+    // CRITICAL FIX: Calculate and save tenure before unslotting
+    const mekAssetId = slot.mekAssetId;
+    const slottedAt = slot.slottedAt || now;
+
+    // Calculate how long this Mek was slotted (in seconds)
+    const timeSlotted = (now - slottedAt) / 1000;
+    const tenureEarned = timeSlotted * 1; // 1 tenure point per second base rate
+
+    console.log(`[🔒TENURE] Unslotting Mek ${mekAssetId}: earned ${tenureEarned.toFixed(2)} tenure points (${timeSlotted.toFixed(0)}s slotted)`);
+
+    // Save tenure to goldMining.ownedMeks
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .first();
+
+    if (goldMiningRecord && goldMiningRecord.ownedMeks && mekAssetId) {
+      const updatedMeks = goldMiningRecord.ownedMeks.map((mek: any) => {
+        if (mek.assetId === mekAssetId) {
+          const currentTenure = mek.tenurePoints || 0;
+          const newTenure = currentTenure + tenureEarned;
+          console.log(`[🔒TENURE] Saving: ${currentTenure.toFixed(2)} + ${tenureEarned.toFixed(2)} = ${newTenure.toFixed(2)}`);
+          return {
+            ...mek,
+            tenurePoints: newTenure,
+            lastTenureUpdate: now,
+            isSlotted: false,
+          };
+        }
+        return mek;
+      });
+
+      await ctx.db.patch(goldMiningRecord._id, {
+        ownedMeks: updatedMeks,
+      });
+    }
 
     // Clear slot
     await ctx.db.patch(slot._id, {

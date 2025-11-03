@@ -36,9 +36,49 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     };
   }, []);
 
-  // Client-side tenure accumulation for real-time updates
+  // Initialize tenure data once when Meks are loaded or change
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks || !essenceSlots) return;
+    if (!goldMiningData?.ownedMeks) return;
+
+    setTenureData(prevData => {
+      const newData = new Map(prevData);
+
+      // Add any new Meks that don't exist in tenure data
+      goldMiningData.ownedMeks.forEach(mek => {
+        if (!newData.has(mek.assetId)) {
+          newData.set(mek.assetId, {
+            currentTenure: mek.tenurePoints || 0,
+            tenureRate: 1,
+            isSlotted: false
+          });
+        } else {
+          // Update tenure from database if it's higher (means it was saved)
+          const existing = newData.get(mek.assetId)!;
+          const dbTenure = mek.tenurePoints || 0;
+          if (dbTenure > existing.currentTenure) {
+            newData.set(mek.assetId, {
+              ...existing,
+              currentTenure: dbTenure
+            });
+          }
+        }
+      });
+
+      // Remove any Meks that no longer exist
+      const currentAssetIds = new Set(goldMiningData.ownedMeks.map(m => m.assetId));
+      Array.from(newData.keys()).forEach(assetId => {
+        if (!currentAssetIds.has(assetId)) {
+          newData.delete(assetId);
+        }
+      });
+
+      return newData;
+    });
+  }, [goldMiningData?.ownedMeks]);
+
+  // Update slotted status when essence slots change (preserves accumulated values)
+  useEffect(() => {
+    if (!essenceSlots) return;
 
     // Create a set of slotted asset IDs from essenceSlots
     const slottedAssetIds = new Set<string>();
@@ -48,38 +88,46 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       }
     });
 
-    // Initialize tenure data from Meks
-    const initialData = new Map<string, MekWithTenure>();
-    goldMiningData.ownedMeks.forEach(mek => {
-      const isActuallySlotted = slottedAssetIds.has(mek.assetId);
-      initialData.set(mek.assetId, {
-        currentTenure: mek.tenurePoints || 0,
-        tenureRate: 1, // Base rate of 1 tenure/second
-        isSlotted: isActuallySlotted
+    // Update only the isSlotted flag, preserve all other data
+    setTenureData(prevData => {
+      const newData = new Map(prevData);
+      newData.forEach((value, assetId) => {
+        const shouldBeSlotted = slottedAssetIds.has(assetId);
+        if (value.isSlotted !== shouldBeSlotted) {
+          newData.set(assetId, {
+            ...value,
+            isSlotted: shouldBeSlotted
+          });
+        }
       });
+      return newData;
     });
-    setTenureData(initialData);
+  }, [essenceSlots]);
 
-    // Update tenure every second for slotted Meks
+  // Accumulate tenure every second for slotted Meks
+  useEffect(() => {
     const interval = setInterval(() => {
       setTenureData(prevData => {
         const newData = new Map(prevData);
-        goldMiningData.ownedMeks.forEach(mek => {
-          const existing = prevData.get(mek.assetId);
-          if (existing && existing.isSlotted) {
-            // Increment tenure by rate per second
-            newData.set(mek.assetId, {
-              ...existing,
-              currentTenure: existing.currentTenure + existing.tenureRate
+        let hasChanges = false;
+
+        newData.forEach((value, assetId) => {
+          if (value.isSlotted) {
+            hasChanges = true;
+            newData.set(assetId, {
+              ...value,
+              currentTenure: value.currentTenure + value.tenureRate
             });
           }
         });
-        return newData;
+
+        // Only return new Map if there were changes (optimization)
+        return hasChanges ? newData : prevData;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [goldMiningData?.ownedMeks, essenceState]);
+  }, []); // Empty deps - runs once, uses functional updates
 
   const loadingContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
