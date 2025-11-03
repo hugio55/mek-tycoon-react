@@ -19,6 +19,7 @@ export interface MekCardProps {
   onUpgrade?: (mek: MekAsset, upgradeCost: number, newLevel: number, newBonusRate: number, newTotalRate: number) => void;
   onGoldSpentAnimation?: (animationId: string, amount: number) => void;
   onClick?: () => void;
+  index?: number;
 }
 
 export const MekCard = React.memo(({
@@ -30,7 +31,8 @@ export const MekCard = React.memo(({
   upgradingMeks = new Set(),
   onUpgrade,
   onGoldSpentAnimation,
-  onClick
+  onClick,
+  index = 0
 }: MekCardProps) => {
   // Load level colors from Convex database (only once per component tree)
   const levelColorsFromDb = useQuery(api.levelColors.getLevelColors);
@@ -309,7 +311,8 @@ export const MekCard = React.memo(({
                       backgroundImage: `linear-gradient(0deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent),
                         linear-gradient(90deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent)`,
                       backgroundSize: '20px 20px',
-                      animation: 'holo-grid 10s linear infinite'
+                      animation: 'holo-grid 10s linear infinite',
+                      animationDelay: `${index * 0.15}s`
                     }}
                   />
 
@@ -321,7 +324,8 @@ export const MekCard = React.memo(({
                         className="absolute top-0 w-px h-full opacity-50 bg-gradient-to-b from-transparent via-yellow-400 to-transparent"
                         style={{
                           left: `${20 * (i + 1)}%`,
-                          animation: `data-stream ${2 + i * 0.5}s linear infinite ${i * 0.2}s`
+                          animation: `data-stream ${2 + i * 0.5}s linear infinite`,
+                          animationDelay: `${(index * 0.15) + (i * 0.2)}s`
                         }}
                       />
                     ))}
@@ -337,7 +341,8 @@ export const MekCard = React.memo(({
                         rgba(250,182,23,0.2) 50%,
                         rgba(250,182,23,0.2) 60%,
                         transparent 70%)`,
-                      animation: 'holo-shimmer 3s ease-in-out infinite'
+                      animation: 'holo-shimmer 3s ease-in-out infinite',
+                      animationDelay: `${index * 0.15}s`
                     }}
                   />
 
