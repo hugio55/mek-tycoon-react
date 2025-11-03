@@ -39,14 +39,28 @@ type OverlayPaletteItem = {
 
 export default function OverlayEditor() {
   // Project settings
-  const [imageKey, setImageKey] = useState("");
+  const [imageKey, setImageKey] = useState(() => {
+    try {
+      const stored = localStorage.getItem("overlay-editor-current-project");
+      return stored || "";
+    } catch {
+      return "";
+    }
+  });
   const [imagePath, setImagePath] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [recentBasePaths, setRecentBasePaths] = useState<string[]>([]);
 
   // Editor mode
-  const [editorMode, setEditorMode] = useState<EditorMode>("sprite");
+  const [editorMode, setEditorMode] = useState<EditorMode>(() => {
+    try {
+      const stored = localStorage.getItem("overlay-editor-mode");
+      return (stored === "sprite" || stored === "zone") ? stored : "sprite";
+    } catch {
+      return "sprite";
+    }
+  });
 
   // Zones and sprites
   const [zones, setZones] = useState<Zone[]>([]);
@@ -184,6 +198,28 @@ export default function OverlayEditor() {
   useEffect(() => {
     localStorage.setItem("overlay-editor-panel-states", JSON.stringify(panelStates));
   }, [panelStates]);
+
+  // Save current project to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (imageKey) {
+        localStorage.setItem("overlay-editor-current-project", imageKey);
+      } else {
+        localStorage.removeItem("overlay-editor-current-project");
+      }
+    } catch (error) {
+      console.error("Failed to save current project to localStorage:", error);
+    }
+  }, [imageKey]);
+
+  // Save editor mode to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("overlay-editor-mode", editorMode);
+    } catch (error) {
+      console.error("Failed to save editor mode to localStorage:", error);
+    }
+  }, [editorMode]);
 
   // Toggle panel collapse state
   const togglePanel = (panelName: keyof typeof panelStates) => {
