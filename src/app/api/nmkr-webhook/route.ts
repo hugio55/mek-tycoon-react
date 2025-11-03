@@ -22,6 +22,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
  *   "Price": 10000000, // lovelace
  *   "NotificationSaleNfts": [
  *     {
+ *       "NftUid": "10aec295-d9e2-47e3-9c04-e56e2df92ad5",
  *       "NftName": "Commemorative Dorito #1",
  *       "AssetId": "asset1...",
  *       "PolicyId": "policy_id...",
@@ -226,17 +227,17 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
             // No reservation found - this is an external sale (purchased directly from NMKR Studio)
             console.log('[🔨WEBHOOK] No reservation found - external sale detected');
 
-            // Extract NFT name from webhook payload
-            const nftName = NotificationSaleNfts?.[0]?.NftName;
+            // Extract NFT UID from webhook payload
+            const nftUid = NotificationSaleNfts?.[0]?.NftUid;
 
-            if (nftName) {
-              console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by name:', nftName);
+            if (nftUid) {
+              console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by UID:', nftUid);
 
-              // Update inventory directly by name
+              // Update inventory directly by UID
               const inventoryResult = await convex.mutation(
-                api.commemorativeNFTInventorySetup.markInventoryAsSoldByName,
+                api.commemorativeNFTInventorySetup.markInventoryAsSoldByUid,
                 {
-                  nftName: nftName,
+                  nftUid: nftUid,
                   transactionHash: TxHash,
                 }
               );
@@ -248,7 +249,7 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
                 console.error('[🔨WEBHOOK] ✗ Failed to update inventory:', inventoryResult.error);
               }
             } else {
-              console.error('[🔨WEBHOOK] ✗ No NFT name found in webhook payload');
+              console.error('[🔨WEBHOOK] ✗ No NFT UID found in webhook payload');
             }
           }
         } catch (error) {
