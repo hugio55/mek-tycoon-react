@@ -1691,6 +1691,47 @@ export const setMekName = mutation({
   },
 });
 
+// Check if a Mek name is available (for real-time validation)
+export const checkMekNameAvailability = query({
+  args: {
+    mekName: v.string(),
+    currentMekAssetId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // First validate the name format
+    const validation = validateMekName(args.mekName);
+    if (!validation.valid) {
+      return {
+        available: false,
+        error: validation.error
+      };
+    }
+
+    const trimmedName = args.mekName.trim();
+
+    // Check if name is unique GLOBALLY (across all wallets)
+    const allWallets = await ctx.db.query("goldMining").collect();
+
+    for (const wallet of allWallets) {
+      const nameExists = wallet.ownedMeks?.some(
+        mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() &&
+               mek.assetId !== args.currentMekAssetId
+      );
+
+      if (nameExists) {
+        return {
+          available: false,
+          error: "This name is already taken. Please choose a unique name."
+        };
+      }
+    }
+
+    return {
+      available: true
+    };
+  },
+});
+
 // Get custom name for a Mek
 export const getMekName = query({
   args: {
