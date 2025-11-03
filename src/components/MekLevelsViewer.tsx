@@ -36,73 +36,45 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     };
   }, []);
 
-  // Initialize tenure data once when Meks are loaded or change
+  // CRITICAL FIX: Rebuild tenure data from database when Meks or slots change
+  // This ensures tenure reflects database state after slot/unslot operations
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks) return;
+    if (!goldMiningData?.ownedMeks || !essenceSlots) return;
 
-    setTenureData(prevData => {
-      const newData = new Map(prevData);
+    console.log('[🔒TENURE-UI] Rebuilding tenure data from database...');
 
-      // Add any new Meks that don't exist in tenure data
-      goldMiningData.ownedMeks.forEach(mek => {
-        if (!newData.has(mek.assetId)) {
-          newData.set(mek.assetId, {
-            currentTenure: mek.tenurePoints || 0,
-            tenureRate: 1,
-            isSlotted: false
-          });
-        } else {
-          // Update tenure from database if it's higher (means it was saved)
-          const existing = newData.get(mek.assetId)!;
-          const dbTenure = mek.tenurePoints || 0;
-          if (dbTenure > existing.currentTenure) {
-            newData.set(mek.assetId, {
-              ...existing,
-              currentTenure: dbTenure
-            });
-          }
-        }
-      });
-
-      // Remove any Meks that no longer exist
-      const currentAssetIds = new Set(goldMiningData.ownedMeks.map(m => m.assetId));
-      Array.from(newData.keys()).forEach(assetId => {
-        if (!currentAssetIds.has(assetId)) {
-          newData.delete(assetId);
-        }
-      });
-
-      return newData;
-    });
-  }, [goldMiningData?.ownedMeks]);
-
-  // Update slotted status when essence slots change (preserves accumulated values)
-  useEffect(() => {
-    if (!essenceSlots) return;
-
-    // Create a set of slotted asset IDs from essenceSlots
-    const slottedAssetIds = new Set<string>();
+    // Create a set of slotted asset IDs and their slot times
+    const slottedInfo = new Map<string, { slottedAt: number }>();
     essenceSlots.forEach(slot => {
-      if (slot.mekAssetId) {
-        slottedAssetIds.add(slot.mekAssetId);
+      if (slot.mekAssetId && slot.slottedAt) {
+        slottedInfo.set(slot.mekAssetId, { slottedAt: slot.slottedAt });
       }
     });
 
-    // Update only the isSlotted flag, preserve all other data
-    setTenureData(prevData => {
-      const newData = new Map(prevData);
-      newData.forEach((value, assetId) => {
-        const shouldBeSlotted = slottedAssetIds.has(assetId);
-        if (value.isSlotted !== shouldBeSlotted) {
-          newData.set(assetId, {
-            ...value,
-            isSlotted: shouldBeSlotted
-          });
-        }
+    const newData = new Map<string, MekWithTenure>();
+
+    goldMiningData.ownedMeks.forEach(mek => {
+      const isSlotted = slottedInfo.has(mek.assetId);
+      const dbTenure = mek.tenurePoints || 0;
+
+      // For slotted Meks, calculate additional tenure since lastTenureUpdate
+      let currentTenure = dbTenure;
+      if (isSlotted && mek.lastTenureUpdate) {
+        const elapsedSeconds = (Date.now() - mek.lastTenureUpdate) / 1000;
+        currentTenure = dbTenure + (elapsedSeconds * 1); // 1 tenure/sec base rate
+      }
+
+      console.log(`[🔒TENURE-UI] ${mek.assetName}: slotted=${isSlotted}, db=${dbTenure.toFixed(1)}, current=${currentTenure.toFixed(1)}`);
+
+      newData.set(mek.assetId, {
+        currentTenure,
+        tenureRate: 1,
+        isSlotted
       });
-      return newData;
     });
-  }, [essenceSlots]);
+
+    setTenureData(newData);
+  }, [goldMiningData?.ownedMeks, essenceSlots]);
 
   // Accumulate tenure every second for slotted Meks
   useEffect(() => {

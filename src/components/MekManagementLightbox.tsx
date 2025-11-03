@@ -346,37 +346,34 @@ export default function MekManagementLightbox({
             )}
 
             {/* Slot Display */}
-            <div className="text-center">
-              <div className="text-base text-yellow-400 font-bold uppercase tracking-wider">
-                SLOT {slotNumber}
-              </div>
+            <div className="text-center mb-4">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Deployed To</div>
+              <div className="text-yellow-400 text-lg font-bold">SLOT {slotNumber}</div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2">
               <button
                 onClick={handleSwap}
-                className="flex-1 mek-button-secondary"
+                className="flex-1 px-6 py-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all"
               >
-                <span className="text-lg">🔄</span> SWAP MEK
+                Swap
               </button>
               <button
                 onClick={() => setShowTerminateConfirm(true)}
-                className="flex-1 px-6 py-3 bg-red-900/30 border-2 border-red-500/50 rounded-lg text-red-400 font-bold uppercase tracking-wider hover:bg-red-900/50 hover:border-red-400 transition-all"
+                className="flex-1 px-6 py-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/20 hover:border-red-500/50 transition-all"
               >
-                <span className="text-lg">⚠️</span> TERMINATE
+                Terminate
               </button>
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-center pt-2">
-              <button
-                onClick={onClose}
-                className="px-8 py-2 text-sm text-gray-400 hover:text-yellow-400 transition-colors"
-              >
-                Close
-              </button>
-            </div>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
+            >
+              <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
+            </button>
           </div>
         </div>
       </div>
