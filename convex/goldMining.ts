@@ -345,15 +345,6 @@ export const getGoldMiningData = query({
       mekCount: result.ownedMeks.length
     });
 
-    // DEBUG: Log custom names in ownedMeks for name debugging
-    console.log('[🔍MEKNAME] getGoldMiningData - custom names in ownedMeks:',
-      result.ownedMeks.map(m => ({
-        assetId: m.assetId,
-        customName: m.customName || 'NO NAME',
-        assetName: m.assetName
-      }))
-    );
-
     devLog.log('[QUERY] ===================================');
 
     return result;
@@ -858,11 +849,6 @@ export const initializeWithBlockfrost = action({
         });
 
         devLog.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
-
-        // DEBUG: Log how many Meks have custom names after merge
-        const namedMeks = finalMeksList.filter(m => m.customName);
-        console.log('[🔍MEKNAME] After merge - Meks with custom names:', namedMeks.length,
-          namedMeks.map(m => ({ assetId: m.assetId, customName: m.customName })));
       }
 
       // CRITICAL FIX: Always use stake address for database records
@@ -1702,14 +1688,6 @@ export const setMekName = mutation({
     await ctx.db.patch(existing._id, {
       ownedMeks: updatedMeks,
       updatedAt: Date.now(),
-    });
-
-    console.log('[🔍MEKNAME] setMekName SUCCESS:', {
-      walletAddress: args.walletAddress.slice(0, 15) + '...',
-      mekAssetId: args.mekAssetId,
-      newName: trimmedName,
-      updatedMeksCount: updatedMeks.length,
-      namedMek: updatedMeks.find(m => m.assetId === args.mekAssetId)
     });
 
     return {

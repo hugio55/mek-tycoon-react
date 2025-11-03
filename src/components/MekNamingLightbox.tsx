@@ -131,11 +131,6 @@ export default function MekNamingLightbox({
       });
 
       if (result.success) {
-        console.log('[🔍MEKNAME] Name set successfully in lightbox:', {
-          mekAssetId,
-          newName: trimmedName,
-          resultCustomName: result.customName
-        });
         setNameWasSet(true);
         if (onSuccess) {
           onSuccess();
