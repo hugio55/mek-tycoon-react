@@ -205,10 +205,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           );
         }
 
-        const remainingMs = activeReservation.remainingMs || 0;
+        // Calculate remaining time client-side for real-time updates
+        const now = Date.now();
+        const remainingMs = Math.max(0, activeReservation.expiresAt - now);
         const remainingMinutes = Math.floor(remainingMs / 60000);
         const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-        const isInGracePeriod = activeReservation.isExpired && remainingMs > 0;
+        const GRACE_PERIOD = 30 * 1000;
+        const isInGracePeriod = remainingMs === 0 && (now - activeReservation.expiresAt) < GRACE_PERIOD;
 
         return (
           <div className="text-center">
@@ -236,7 +239,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 <h3 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                   {activeReservation.nft.name}
                 </h3>
-                <p className="text-gray-400 text-base mb-4">
+                <p className="text-green-400 text-base mb-4 font-medium">
                   You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
                 </p>
 
@@ -284,7 +287,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       case 'payment':
         if (!activeReservation) return null;
 
-        const paymentRemainingMs = activeReservation.remainingMs || 0;
+        // Calculate remaining time client-side for real-time updates
+        const paymentNow = Date.now();
+        const paymentRemainingMs = Math.max(0, activeReservation.expiresAt - paymentNow);
         const paymentMinutes = Math.floor(paymentRemainingMs / 60000);
         const paymentSeconds = Math.floor((paymentRemainingMs % 60000) / 1000);
 
@@ -317,40 +322,38 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       case 'processing':
         return (
           <div className="text-center">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Checking Payment...
-              </h2>
-              <p className="text-gray-400 mb-6">
-                Waiting for blockchain confirmation
-              </p>
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              Checking Payment...
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Waiting for blockchain confirmation
+            </p>
 
-              {/* Processing indicator */}
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <div className="relative">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <div className="absolute inset-0 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
-                </div>
-                <span className="text-yellow-400/90 font-medium">
-                  Actively checking for payment
-                </span>
+            {/* Processing indicator */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="relative">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                <div className="absolute inset-0 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
               </div>
-
-              <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm mb-6">
-                <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
-                  ⚠ This may take 1-2 minutes. Please don't close this window.
-                </p>
-              </div>
-
-              {/* Cancel Button */}
-              <button
-                onClick={handleCancel}
-                className="px-6 py-3 bg-gray-500/20 border-2 border-gray-500 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-colors font-bold uppercase tracking-wider"
-                style={{ fontFamily: 'Orbitron, sans-serif' }}
-              >
-                Cancel Transaction
-              </button>
+              <span className="text-yellow-400/90 font-medium">
+                Actively checking for payment
+              </span>
             </div>
+
+            <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded backdrop-blur-sm mb-8">
+              <p className="text-yellow-400 text-xs uppercase tracking-wider font-bold">
+                ⚠ This may take 1-2 minutes. Please don't close this window.
+              </p>
+            </div>
+
+            {/* Cancel Button - Made more prominent */}
+            <button
+              onClick={handleCancel}
+              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              Cancel Transaction
+            </button>
           </div>
         );
 
