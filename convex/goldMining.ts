@@ -32,6 +32,8 @@ export const initializeGoldMining = mutation({
       levelBoostPercent: v.optional(v.number()),
       levelBoostAmount: v.optional(v.number()),
       effectiveGoldPerHour: v.optional(v.number()),
+      // Custom name field (optional, must be unique within wallet)
+      customName: v.optional(v.string()),
     })),
   },
   handler: async (ctx, args) => {
