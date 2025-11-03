@@ -241,21 +241,21 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               <div className={`mb-6 p-4 rounded backdrop-blur-sm ${
                 isInGracePeriod
                   ? 'bg-red-500/20 border-2 border-red-500'
-                  : activeReservation.isPaused
+                  : activeReservation.isPaymentWindowOpen
                     ? 'bg-blue-500/20 border-2 border-blue-500/50'
                     : 'bg-yellow-500/20 border-2 border-yellow-500/50'
               }`}>
                 <div className="text-xs uppercase tracking-wider text-gray-400 mb-2">
-                  {isInGracePeriod ? 'Grace Period' : activeReservation.isPaused ? 'Timer Paused' : 'Time Remaining'}
+                  {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
                 </div>
                 <div className={`text-4xl font-bold font-mono ${
-                  isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaused ? 'text-blue-400' : 'text-yellow-400'
+                  isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-400' : 'text-yellow-400'
                 }`}>
                   {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
                 </div>
-                {activeReservation.isPaused && (
+                {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
                   <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
-                    ⏸ Paused while payment window is open
+                    💳 Payment window open - timer continues
                   </div>
                 )}
                 {isInGracePeriod && (
@@ -276,7 +276,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
             </button>
 
             <p className="text-xs text-gray-500 mt-4">
-              Timer will pause while payment window is open
+              You have {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')} to complete payment
             </p>
           </div>
         );
@@ -292,7 +292,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 Complete the payment in the NMKR window
               </p>
               <p className="text-blue-400 text-sm mt-4">
-                ⏸ Timer is paused while window is open
+                ⏱️ Timer continues while window is open
               </p>
             </div>
           </div>

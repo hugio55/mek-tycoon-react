@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import ConfirmationLightbox from "./ConfirmationLightbox";
 
@@ -27,12 +27,34 @@ export default function MekNamingLightbox({
 }: MekNamingLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [mekName, setMekName] = useState(currentName || "");
+  const [debouncedMekName, setDebouncedMekName] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameWasSet, setNameWasSet] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const setMekNameMutation = useMutation(api.goldMining.setMekName);
+
+  // Debounce the name check - only check after 625ms pause in typing
+  useEffect(() => {
+    setIsTyping(true);
+    const timer = setTimeout(() => {
+      setDebouncedMekName(mekName);
+      setIsTyping(false);
+    }, 625);
+
+    return () => clearTimeout(timer);
+  }, [mekName]);
+
+  // Check name availability in real-time
+  const checkAvailability = useQuery(
+    api.goldMining.checkMekNameAvailability,
+    debouncedMekName.trim().length >= 1 ? {
+      mekName: debouncedMekName.trim(),
+      currentMekAssetId: mekAssetId
+    } : 'skip'
+  );
 
   // Handle client-side mounting for portal
   useEffect(() => {
@@ -56,11 +78,20 @@ export default function MekNamingLightbox({
   useEffect(() => {
     if (isOpen) {
       setMekName(currentName || "");
+      setDebouncedMekName("");
       setError(null);
       setIsSubmitting(false);
       setNameWasSet(false);
+      setIsTyping(false);
     }
   }, [isOpen, currentName]);
+
+  // Clear error when name changes
+  useEffect(() => {
+    if (error && mekName.trim().length >= 1) {
+      setError(null);
+    }
+  }, [mekName, error]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -69,18 +100,24 @@ export default function MekNamingLightbox({
     const trimmedName = mekName.trim();
 
     if (!trimmedName) {
-      setError("Mek name cannot be empty");
+      setError("Employee name cannot be empty");
       return;
     }
 
     if (trimmedName.length > 20) {
-      setError("Mek name must be 20 characters or less");
+      setError("Employee name must be 20 characters or less");
       return;
     }
 
     const allowedCharsRegex = /^[a-zA-Z0-9\s\-'.]+$/;
     if (!allowedCharsRegex.test(trimmedName)) {
       setError("Name can only contain letters, numbers, spaces, hyphens, apostrophes, and periods");
+      return;
+    }
+
+    // Check availability one more time before submitting
+    if (checkAvailability && !checkAvailability.available) {
+      setError(checkAvailability.error || "Name is not available");
       return;
     }
 
@@ -190,6 +227,31 @@ export default function MekNamingLightbox({
               <p className="mt-1 text-xs text-gray-500">
                 {mekName.length}/20 characters
               </p>
+
+              {/* Real-time Availability Feedback */}
+              {mekName.trim().length >= 1 && !error && (
+                <div className="mt-2 text-sm">
+                  {isTyping ? (
+                    <div className="text-yellow-400 flex items-center gap-2">
+                      <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                      Checking availability...
+                    </div>
+                  ) : checkAvailability === undefined ? (
+                    <div className="text-yellow-400 flex items-center gap-2">
+                      <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                      Checking availability...
+                    </div>
+                  ) : checkAvailability.available ? (
+                    <div className="text-green-400">
+                      ✓ "{mekName.trim()}" is available
+                    </div>
+                  ) : (
+                    <div className="text-red-400">
+                      ✗ {checkAvailability.error}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Allowed Characters Info */}
@@ -217,7 +279,13 @@ export default function MekNamingLightbox({
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !mekName.trim()}
+                disabled={
+                  isSubmitting ||
+                  !mekName.trim() ||
+                  (checkAvailability && !checkAvailability.available) ||
+                  isTyping ||
+                  checkAvailability === undefined
+                }
                 className="flex-1 mek-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Saving...' : currentName ? 'Update Name' : 'Set Name'}
