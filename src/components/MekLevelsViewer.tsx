@@ -37,34 +37,18 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     };
   }, []);
 
-  // CRITICAL FIX: Rebuild tenure data from database when Meks or slots change
-  // This ensures tenure reflects database state after slot/unslot operations
+  // CRITICAL FIX: Rebuild tenure data from meks table (authoritative source)
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks || !essenceSlots || !mekTenureData) return;
+    if (!meksData) return;
 
-    console.log('[🔒TENURE-UI] Rebuilding tenure data from meks table (source of truth)...');
-
-    // Create a set of slotted asset IDs and their slot times
-    const slottedInfo = new Map<string, { slottedAt: number }>();
-    essenceSlots.forEach(slot => {
-      if (slot.mekAssetId && slot.slottedAt) {
-        slottedInfo.set(slot.mekAssetId, { slottedAt: slot.slottedAt });
-      }
-    });
-
-    // Create tenure map from meks table data
-    const tenureMap = new Map<string, typeof mekTenureData[0]>();
-    mekTenureData.forEach(data => {
-      tenureMap.set(data.assetId, data);
-    });
+    console.log('[🔒TENURE-UI] Building tenure data from meks table...');
 
     const newData = new Map<string, MekWithTenure>();
 
-    goldMiningData.ownedMeks.forEach(mek => {
-      const isSlotted = slottedInfo.has(mek.assetId);
-      const tenureInfo = tenureMap.get(mek.assetId);
-      const dbTenure = tenureInfo?.tenurePoints || 0;
-      const dbLastUpdate = tenureInfo?.lastTenureUpdate || Date.now();
+    meksData.forEach((mek: any) => {
+      const dbTenure = mek.tenurePoints || 0;
+      const dbLastUpdate = mek.lastTenureUpdate || Date.now();
+      const isSlotted = mek.isSlotted || false;
 
       // For slotted Meks, calculate additional tenure since lastTenureUpdate
       let currentTenure = dbTenure;
@@ -83,7 +67,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     });
 
     setTenureData(newData);
-  }, [goldMiningData?.ownedMeks, essenceSlots, mekTenureData]);
+  }, [meksData]);
 
   // Accumulate tenure every second for slotted Meks
   useEffect(() => {
@@ -121,27 +105,21 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   // Only render portal on client-side after mount
   if (!mounted) return null;
 
-  if (!mekLevels || !goldMiningData) {
+  if (!meksData) {
     return createPortal(loadingContent, document.body);
   }
 
-  // Create a map of existing level records
-  const levelMap = new Map(mekLevels.map(level => [level.assetId, level]));
-
-  // Merge all owned Meks with their level data
-  const allMeks = goldMiningData.ownedMeks.map(mek => {
-    const levelData = levelMap.get(mek.assetId);
-    return {
-      assetId: mek.assetId,
-      mekNumber: parseInt(mek.assetName.replace(/\D/g, '')) || 0,
-      baseGoldPerHour: mek.baseGoldPerHour || mek.goldPerHour || 0,
-      currentLevel: levelData?.currentLevel || 1,
-      currentBoostPercent: levelData?.currentBoostPercent || 0,
-      currentBoostAmount: levelData?.currentBoostAmount || 0,
-      totalGoldSpent: levelData?.totalGoldSpent || 0,
-      _id: levelData?._id || mek.assetId,
-    };
-  });
+  // Use data directly from meks table (already includes level and tenure data)
+  const allMeks = meksData.map((mek: any) => ({
+    assetId: mek.assetId,
+    mekNumber: parseInt(mek.assetName.replace(/\D/g, '')) || 0,
+    baseGoldPerHour: mek.baseGoldPerHour || 0,
+    currentLevel: mek.currentLevel || 1,
+    currentBoostPercent: mek.currentBoostPercent || 0,
+    currentBoostAmount: mek.currentBoostAmount || 0,
+    totalGoldSpent: mek.totalGoldSpent || 0,
+    _id: mek.assetId,
+  }));
 
   // Handle column sorting
   const handleSort = (column: string) => {
