@@ -8,6 +8,7 @@ import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
 import DifficultyAdminConfig from '@/components/DifficultyAdminConfig';
 import BuffCategoriesAdmin from '@/components/BuffCategoriesAdmin';
+import BuffCategoriesV2Admin from '@/components/BuffCategoriesV2Admin';
 import MekBaseConfig from '@/components/MekBaseConfig';
 import MekTalentTreeConfig from '@/components/MekTalentTreeConfig';
 import MekDetailViewer from '@/components/MekDetailViewer';
@@ -46,6 +47,7 @@ const DATA_SYSTEMS = [
   { id: 'mech-power-chips', name: 'Mech Power Chips', icon: '⚡', implemented: false },
   { id: 'universal-chips', name: 'Universal Power Chips', icon: '🔮', implemented: true },
   { id: 'buff-categories', name: 'Buff Categories', icon: '✨', implemented: true },
+  { id: 'buff-categories-v2', name: 'Buff Categories V2', icon: '⚡', implemented: true },
   { id: 'story-climb-mechanics', name: 'Story Climb Mechanics', icon: '🏔️', implemented: false },
   { id: 'daily-recipes', name: 'Daily Recipes (Universal Chips)', icon: '📖', implemented: false },
   { id: 'salvage-materials', name: 'Salvage Materials', icon: '🔧', implemented: false },
