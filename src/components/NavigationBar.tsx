@@ -61,11 +61,10 @@ export default function NavigationBar() {
     activeNavConfig ? { imageKey: activeNavConfig.overlayImageKey } : "skip"
   );
 
-  // Handle image load - trigger fade-in after image is ready
+  // Handle image load - show immediately
   const handleImageLoad = () => {
     setImageLoaded(true);
-    // Small delay to ensure dimensions are calculated, then fade in
-    setTimeout(() => setIsVisible(true), 50);
+    setIsVisible(true);
   };
 
   // Reset loading state when navigation changes
@@ -328,13 +327,11 @@ export default function NavigationBar() {
           style={{
             width: '100%',
             height: '100%',
-            display: 'block',
+            display: isVisible ? 'block' : 'none',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
             willChange: 'transform',
             imageRendering: 'crisp-edges',
-            opacity: isVisible ? 1 : 0,
-            transition: 'opacity 0.5s ease',
           }}
           onLoad={handleImageLoad}
         />
@@ -375,8 +372,6 @@ export default function NavigationBar() {
                 ...buttonConfig.style,
                 fontFamily: zone.metadata?.buttonFont ? getFontFamily(zone.metadata.buttonFont) : undefined,
                 fontWeight: zone.metadata?.buttonFont ? getFontWeight(zone.metadata.buttonFont) : undefined,
-                opacity: isVisible ? 1 : 0,
-                transition: 'opacity 0.5s ease',
               }}
               className={buttonConfig.hoverClass}
               title={zone.label || zone.type}
@@ -420,8 +415,6 @@ export default function NavigationBar() {
                   transform: `scale(${spriteScaleValue * scale})`,
                   transformOrigin: 'top left',
                   pointerEvents: 'none',
-                  opacity: isVisible ? 1 : 0,
-                  transition: 'opacity 0.5s ease',
                 }}
               >
                 {sprite.overlayImage && (
@@ -459,8 +452,6 @@ export default function NavigationBar() {
                 justifyContent: textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center',
                 pointerEvents: 'none',
                 fontSize: fontSize * scale,
-                opacity: isVisible ? 1 : 0,
-                transition: 'opacity 0.5s ease',
                 color: getDisplayColor(color),
                 fontFamily: getFontFamily(fontFamily),
                 fontWeight: getFontWeight(fontFamily),
