@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import GlobalBackground from '@/components/GlobalBackground';
 import { HexagonalSpinner } from './HexagonalSpinner';
 import { ProgressBar } from './ProgressBar';
 import { LoadingText } from './LoadingText';
@@ -50,10 +49,7 @@ export function LoadingOverlay({
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
       }}
     >
-      {/* Starfield Background */}
-      <GlobalBackground />
-
-      {/* Dark Overlay (10% opacity) */}
+      {/* Dark Overlay (10% opacity) - sits on top of existing background from layout.tsx */}
       <div className="absolute inset-0 bg-black/10" />
 
       {/* Center Content Container */}
