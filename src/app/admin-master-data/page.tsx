@@ -68,14 +68,9 @@ const DATA_SYSTEMS = [
 export default function AdminMasterDataPage() {
   const convex = useConvex();
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    try {
-      const stored = localStorage.getItem('admin-master-data-active-tab');
-      return stored || 'wallet-management';
-    } catch {
-      return 'wallet-management';
-    }
-  });
+  // Initialize with static value to avoid hydration mismatch
+  // Load from localStorage after mount (client-side only)
+  const [activeTab, setActiveTab] = useState<string>('wallet-management');
   const [storyClimbSubTab, setStoryClimbSubTab] = useState<string>('difficulty-subsystem');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showGameDataLightbox, setShowGameDataLightbox] = useState(false);
@@ -209,8 +204,14 @@ export default function AdminMasterDataPage() {
   }, [durationConfigsList, durationConfigAutoLoaded, convex]);
 
 
-  // Load variations folder path from localStorage on mount
+  // Load variations folder path and active tab from localStorage on mount
   useEffect(() => {
+    // Load active tab (fixes hydration mismatch)
+    const savedTab = localStorage.getItem('admin-master-data-active-tab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+
     const savedPath = localStorage.getItem('variationsImageFolder');
     if (savedPath) {
       setVariationsImageFolder(savedPath);
