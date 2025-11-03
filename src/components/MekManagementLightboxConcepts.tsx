@@ -274,8 +274,13 @@ function MekManagementConcept3({ onClose }: { onClose: () => void }) {
 export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
   const [activeConcept, setActiveConcept] = useState<1 | 2 | 3>(3);
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleControls = (
     <>
       {/* Toggle Controls - Fixed position top-right - Above lightbox backdrop */}
       <div className="fixed top-20 right-4 z-[10001] flex flex-col gap-2">
@@ -327,6 +332,15 @@ export default function MekManagementLightboxConcepts() {
           </div>
         )}
       </div>
+    </>
+  );
+
+  if (!mounted) return null;
+
+  return (
+    <>
+      {/* Render Toggle Controls via Portal (above all lightbox backdrops) */}
+      {createPortal(toggleControls, document.body)}
 
       {/* Render Active Concept */}
       {showConcepts && (
