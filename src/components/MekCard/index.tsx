@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { MekAsset, AnimatedMekValues, DEFAULT_LEVEL_COLORS, UPGRADE_COSTS } from './types';
@@ -46,6 +46,19 @@ export const MekCard = React.memo(({
   const animationRef = useRef<number>();
   const particlesRef = useRef<any[]>([]);
   const isMaxLevel = (mek.currentLevel || 1) === 10;
+
+  // Generate pseudo-random delays based on index for varied animation timing
+  const randomDelays = useMemo(() => {
+    const seed1 = (index * 7919) % 10000;
+    const seed2 = (index * 3571) % 3000;
+    const seed3 = (index * 5381) % 10000;
+
+    return {
+      grid: seed1 / 1000,      // 0-10 seconds
+      shimmer: seed2 / 1000,   // 0-3 seconds
+      stream: seed3 / 1000,    // 0-10 seconds
+    };
+  }, [index]);
 
   // Particle class for MAX LVL holographic effects
   class Particle {
@@ -312,23 +325,26 @@ export const MekCard = React.memo(({
                         linear-gradient(90deg, transparent 24%, rgba(250,182,23,0.05) 25%, rgba(250,182,23,0.05) 26%, transparent 27%, transparent 74%, rgba(250,182,23,0.05) 75%, rgba(250,182,23,0.05) 76%, transparent 77%, transparent)`,
                       backgroundSize: '20px 20px',
                       animation: 'holo-grid 10s linear infinite',
-                      animationDelay: `${index * 0.15}s`
+                      animationDelay: `${-randomDelays.grid}s`
                     }}
                   />
 
                   {/* Data stream effect */}
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <div
-                        key={i}
-                        className="absolute top-0 w-px h-full opacity-50 bg-gradient-to-b from-transparent via-yellow-400 to-transparent"
-                        style={{
-                          left: `${20 * (i + 1)}%`,
-                          animation: `data-stream ${2 + i * 0.5}s linear infinite`,
-                          animationDelay: `${(index * 0.15) + (i * 0.2)}s`
-                        }}
-                      />
-                    ))}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const streamDelay = ((index * 5381 + i * 1879) % 10000) / 1000;
+                      return (
+                        <div
+                          key={i}
+                          className="absolute top-0 w-px h-full opacity-50 bg-gradient-to-b from-transparent via-yellow-400 to-transparent"
+                          style={{
+                            left: `${20 * (i + 1)}%`,
+                            animation: `data-stream ${2 + i * 0.5}s linear infinite`,
+                            animationDelay: `${-streamDelay}s`
+                          }}
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* Holographic shimmer */}
@@ -342,7 +358,7 @@ export const MekCard = React.memo(({
                         rgba(250,182,23,0.2) 60%,
                         transparent 70%)`,
                       animation: 'holo-shimmer 3s ease-in-out infinite',
-                      animationDelay: `${index * 0.15}s`
+                      animationDelay: `${-randomDelays.shimmer}s`
                     }}
                   />
 
