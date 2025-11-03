@@ -26,6 +26,9 @@ export default function HomePage() {
   // Load triangle overlay data from database
   const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
 
+  // Load custom slot overlay data
+  const customSlotOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "slot test 1" });
+
   // Get essence slots state
   const essenceState = useQuery(
     api.essence.getPlayerEssenceState,
@@ -436,6 +439,55 @@ export default function HomePage() {
             getTotalCount={getTotalCount}
           />
         </div>
+
+        {/* Custom Slot Test */}
+        {customSlotOverlayData && customSlotOverlayData.imagePath && ownedMeks.length > 0 && (
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="mb-6">
+              <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow mb-2">
+                CUSTOM SLOT TEST
+              </h2>
+              <div className="h-px bg-yellow-500/30 w-full" />
+            </div>
+
+            <div className="mek-card-industrial mek-border-sharp-gold p-6 rounded-xl">
+              {/* Background Effects */}
+              <div className="absolute inset-0 mek-overlay-scratches opacity-15 pointer-events-none" />
+              <div className="absolute inset-0 mek-overlay-rust opacity-10 pointer-events-none" />
+
+              <div className="relative">
+                {/* Base Slot Image */}
+                <img
+                  src={customSlotOverlayData.imagePath}
+                  alt="Custom Slot"
+                  className="w-full max-w-2xl mx-auto"
+                />
+
+                {/* Display Zone - Show first Mek */}
+                {customSlotOverlayData.zones && customSlotOverlayData.zones.length > 0 && (
+                  <div className="absolute" style={{
+                    left: `${customSlotOverlayData.zones[0].x}px`,
+                    top: `${customSlotOverlayData.zones[0].y}px`,
+                    width: `${customSlotOverlayData.zones[0].width || 150}px`,
+                    height: `${customSlotOverlayData.zones[0].height || 150}px`,
+                  }}>
+                    <img
+                      src={`/mek-images/150px/${ownedMeks[0].sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                      alt={ownedMeks[0].headVariationName}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <div className="text-center text-yellow-400 text-sm mt-2">
+                      {ownedMeks[0].headVariationName}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Mechanism Slots Section */}
         <div className="max-w-6xl mx-auto">
