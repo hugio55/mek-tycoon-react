@@ -296,6 +296,142 @@ export const addKnownNFTs = action({
   },
 });
 
+// Mark inventory item as sold by NFT UID (for external NMKR sales)
+// This is called when an NFT is sold directly through NMKR Studio (not through our UI)
+export const markInventoryAsSoldByUid = mutation({
+  args: {
+    nftUid: v.string(),
+    transactionHash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔨INVENTORY] External sale - marking as sold:', args.nftUid);
+    console.log('[🔨INVENTORY] Transaction:', args.transactionHash);
+
+    // Query inventory by nftUid using the index
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_nft_uid", (q) => q.eq("nftUid", args.nftUid))
+      .first();
+
+    // NFT not found in inventory
+    if (!inventory) {
+      console.log('[🔨INVENTORY] ERROR: NFT UID not found in inventory:', args.nftUid);
+      return {
+        success: false,
+        error: `NFT with UID ${args.nftUid} not found in inventory`,
+      };
+    }
+
+    // Already sold - idempotent operation
+    if (inventory.status === "sold") {
+      console.log('[🔨INVENTORY] NFT already marked as sold (idempotent):', inventory.nftNumber);
+      return {
+        success: true,
+        nftNumber: inventory.nftNumber,
+        alreadySold: true,
+      };
+    }
+
+    // Update status to sold
+    await ctx.db.patch(inventory._id, {
+      status: "sold",
+    });
+
+    console.log('[🔨INVENTORY] Updated NFT #' + inventory.nftNumber + ' to sold');
+    console.log('[🔨INVENTORY] Status changed from', inventory.status, '→ sold');
+
+    // Cancel any active reservations for this NFT (if reserved status)
+    if (inventory.status === "reserved") {
+      const activeReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_nft_inventory_id", (q) => q.eq("nftInventoryId", inventory._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (activeReservation) {
+        await ctx.db.patch(activeReservation._id, {
+          status: "cancelled",
+        });
+        console.log('[🔨INVENTORY] Cancelled reservation for NFT #' + inventory.nftNumber);
+      }
+    }
+
+    return {
+      success: true,
+      nftNumber: inventory.nftNumber,
+      alreadySold: false,
+    };
+  },
+});
+
+// Mark inventory item as sold by NFT name (for NMKR webhook external sales)
+// NMKR webhooks don't include nftUid, only NftName, so we match by name
+export const markInventoryAsSoldByName = mutation({
+  args: {
+    nftName: v.string(),
+    transactionHash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔨INVENTORY] External sale (by name) - marking as sold:', args.nftName);
+    console.log('[🔨INVENTORY] Transaction:', args.transactionHash);
+
+    // Find inventory item by name
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) => q.eq(q.field("name"), args.nftName))
+      .first();
+
+    if (!inventory) {
+      console.log('[🔨INVENTORY] ERROR: NFT name not found in inventory:', args.nftName);
+      return {
+        success: false,
+        error: `NFT "${args.nftName}" not found in inventory`,
+      };
+    }
+
+    // Already sold - idempotent operation
+    if (inventory.status === "sold") {
+      console.log('[🔨INVENTORY] NFT already marked as sold (idempotent):', inventory.nftNumber);
+      return {
+        success: true,
+        nftNumber: inventory.nftNumber,
+        alreadySold: true,
+      };
+    }
+
+    // Update status to sold
+    await ctx.db.patch(inventory._id, {
+      status: "sold",
+    });
+
+    console.log('[🔨INVENTORY] Updated NFT #' + inventory.nftNumber + ' to sold');
+    console.log('[🔨INVENTORY] Status changed from', inventory.status, '→ sold');
+
+    // Cancel any active reservations for this NFT (if reserved status)
+    if (inventory.status === "reserved") {
+      const activeReservation = await ctx.db
+        .query("commemorativeNFTReservations")
+        .withIndex("by_nft_inventory_id", (q) => q.eq("nftInventoryId", inventory._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+
+      if (activeReservation) {
+        await ctx.db.patch(activeReservation._id, {
+          status: "cancelled",
+        });
+        console.log('[🔨INVENTORY] Cancelled reservation for NFT #' + inventory.nftNumber);
+      }
+    }
+
+    return {
+      success: true,
+      nftNumber: inventory.nftNumber,
+      nftUid: inventory.nftUid,
+      alreadySold: false,
+    };
+  },
+});
+
 /**
  * EXAMPLE USAGE:
  *
@@ -308,5 +444,15 @@ export const addKnownNFTs = action({
  *     { nftUid: "[UID_FROM_NMKR]", nftNumber: 3, name: "Lab Rat #3" },
  *     ... (up to Lab Rat #10)
  *   ]
+ * })
+ *
+ * markInventoryAsSoldByUid({
+ *   nftUid: "10aec295-d9e2-47e3-9c04-e56e2df92ad5",
+ *   transactionHash: "0xabcdef1234567890..."
+ * })
+ *
+ * markInventoryAsSoldByName({
+ *   nftName: "Lab Rat #1",
+ *   transactionHash: "0xabcdef1234567890..."
  * })
  */

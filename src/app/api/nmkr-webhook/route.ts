@@ -209,19 +209,51 @@ async function processWebhookAsync(request: NextRequest, url: URL, payloadHash: 
         }
       }
 
-      // NEW: Complete reservation if one exists for this wallet
+      // NEW: Complete reservation if one exists, otherwise mark inventory as sold directly
       if (ReceiverStakeAddress) {
         try {
-          await convex.mutation(api.commemorativeNFTReservations.completeReservationByWallet, {
-            walletAddress: ReceiverStakeAddress,
-            transactionHash: TxHash,
-          });
+          const reservationResult = await convex.mutation(
+            api.commemorativeNFTReservations.completeReservationByWallet,
+            {
+              walletAddress: ReceiverStakeAddress,
+              transactionHash: TxHash,
+            }
+          );
 
-          console.log(`✓ Completed reservation for wallet: ${ReceiverStakeAddress}`);
-        } catch (reservationError) {
-          console.error('Failed to complete reservation:', reservationError);
-          // Don't fail the webhook if reservation completion fails
-          // (user might have used old system without reservations)
+          if (reservationResult.success) {
+            console.log('[🔨WEBHOOK] ✓ Completed reservation for:', ReceiverStakeAddress);
+          } else {
+            // No reservation found - this is an external sale (purchased directly from NMKR Studio)
+            console.log('[🔨WEBHOOK] No reservation found - external sale detected');
+
+            // Extract NFT name from webhook payload
+            const nftName = NotificationSaleNfts?.[0]?.NftName;
+
+            if (nftName) {
+              console.log('[🔨WEBHOOK] Attempting to mark inventory as sold by name:', nftName);
+
+              // Update inventory directly by name
+              const inventoryResult = await convex.mutation(
+                api.commemorativeNFTInventorySetup.markInventoryAsSoldByName,
+                {
+                  nftName: nftName,
+                  transactionHash: TxHash,
+                }
+              );
+
+              if (inventoryResult.success) {
+                console.log('[🔨WEBHOOK] ✓✓✓ Successfully updated inventory for external sale');
+                console.log('[🔨WEBHOOK] NFT #' + inventoryResult.nftNumber + ' marked as sold');
+              } else {
+                console.error('[🔨WEBHOOK] ✗ Failed to update inventory:', inventoryResult.error);
+              }
+            } else {
+              console.error('[🔨WEBHOOK] ✗ No NFT name found in webhook payload');
+            }
+          }
+        } catch (error) {
+          console.error('[🔨WEBHOOK] Error processing sale:', error);
+          // Don't fail the webhook - transaction already succeeded on blockchain
         }
       }
     } catch (dbError) {
