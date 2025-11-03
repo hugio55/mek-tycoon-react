@@ -133,6 +133,8 @@ export function OverlayRenderer({
 }: OverlayRendererProps) {
   const [hoveredSprite, setHoveredSprite] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   if (!overlayData) return null;
 
@@ -145,6 +147,17 @@ export function OverlayRenderer({
   if (filterSprites) {
     sprites = sprites.filter(filterSprites);
   }
+
+  // Handle image load - trigger fade-in after image is ready
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    // Small delay to ensure dimensions are calculated, then fade in
+    setTimeout(() => setIsVisible(true), 50);
+    // Call parent's onImageLoad if provided
+    if (onImageLoad) {
+      onImageLoad();
+    }
+  };
 
   // Generate a pseudo-random delay based on sprite ID (0-5s to spread across full cycle)
   const getAnimationDelay = (spriteId: string): number => {
@@ -163,12 +176,18 @@ export function OverlayRenderer({
         ref={imageRef}
         src={imagePath}
         alt="Overlay base image"
-        className="w-full h-auto"
-        onLoad={onImageLoad}
+        className="w-full h-auto transition-opacity duration-500"
+        style={{ opacity: isVisible ? 1 : 0 }}
+        onLoad={handleImageLoad}
       />
 
       {/* Sprites overlay - positioned absolutely on top of base image */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+      {/* CRITICAL: Only render after image is loaded to prevent position flash */}
+      {imageLoaded && (
+        <div
+          className="absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-500"
+          style={{ opacity: isVisible ? 1 : 0 }}
+        >
         <style>{`
         @keyframes bulb-flicker {
           /* Mostly off (0-15%) */
@@ -337,7 +356,8 @@ export function OverlayRenderer({
           </div>
         );
       })()}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

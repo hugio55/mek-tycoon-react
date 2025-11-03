@@ -830,9 +830,13 @@ export const initializeWithBlockfrost = action({
           const onChainMek = onChainMekMap.get(existingMek.assetId);
           if (onChainMek) {
             // Mek is on-chain - use the on-chain data (which includes level boosts)
-            return onChainMek;
+            // CRITICAL: Preserve customName from existing data
+            return {
+              ...onChainMek,
+              customName: existingMek.customName
+            };
           } else {
-            // Mek not on-chain - keep existing data (preserve level boosts)
+            // Mek not on-chain - keep existing data (preserve level boosts and customName)
             return {
               assetId: existingMek.assetId,
               policyId: existingMek.policyId,
@@ -847,12 +851,18 @@ export const initializeWithBlockfrost = action({
               currentLevel: existingMek.currentLevel,
               levelBoostPercent: existingMek.levelBoostPercent,
               levelBoostAmount: existingMek.levelBoostAmount,
-              effectiveGoldPerHour: existingMek.effectiveGoldPerHour
+              effectiveGoldPerHour: existingMek.effectiveGoldPerHour,
+              customName: existingMek.customName
             };
           }
         });
 
         devLog.log(`[GoldMining] Final merged list: ${finalMeksList.length} Meks`);
+
+        // DEBUG: Log how many Meks have custom names after merge
+        const namedMeks = finalMeksList.filter(m => m.customName);
+        console.log('[🔍MEKNAME] After merge - Meks with custom names:', namedMeks.length,
+          namedMeks.map(m => ({ assetId: m.assetId, customName: m.customName })));
       }
 
       // CRITICAL FIX: Always use stake address for database records

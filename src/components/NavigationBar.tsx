@@ -11,6 +11,8 @@ export default function NavigationBar() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [currentGold, setCurrentGold] = useState(0);
   const goldAnimationRef = useRef<number | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Get wallet address from session
   useEffect(() => {
