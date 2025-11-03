@@ -443,11 +443,29 @@ export const parseNMKRCSV = action({
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(",");
 
+      // NMKR CSV has: Uid, Tokenname, Displayname, State
+      const uid = values[headers.indexOf("uid")] || "";
+      const name = values[headers.indexOf("tokenname")] || values[headers.indexOf("displayname")] || values[headers.indexOf("name")] || "";
+      const state = values[headers.indexOf("state")] || "";
+
+      // Extract number from name like "Lab Rat #1"
+      let nftNumber = "";
+      const match = name.match(/#(\d+)/);
+      if (match) {
+        nftNumber = match[1];
+      } else {
+        // Fallback: try any number
+        const numMatch = name.match(/(\d+)/);
+        if (numMatch) {
+          nftNumber = numMatch[1];
+        }
+      }
+
       const nft: CSVNFTRow = {
-        uid: values[headers.indexOf("uid")] || "",
-        name: values[headers.indexOf("name")] || "",
-        nftNumber: values[headers.indexOf("nftnumber")] || values[headers.indexOf("number")] || "",
-        state: values[headers.indexOf("state")] || "",
+        uid: uid,
+        name: name,
+        nftNumber: nftNumber,
+        state: state,
       };
 
       if (nft.uid) {
