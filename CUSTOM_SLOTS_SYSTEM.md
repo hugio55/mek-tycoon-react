@@ -40,6 +40,7 @@ For Display Zones only - defines WHAT content shows:
 - **Cumulative Gold** - Total gold earned
 - **Gold Per Hour** - Mining rate
 - **Slotted Mek PFP** - Profile picture of Mek in this slot *(Added 2025-11-02)*
+- **Tenure Progress** - Progress bar showing Mek's tenure accumulation toward next level *(Added 2025-11-02)*
 
 #### Slotted Mek PFP Details:
 - **Purpose:** Shows the thumbnail image of the Mek placed in this slot
@@ -49,13 +50,48 @@ For Display Zones only - defines WHAT content shows:
 - **Use Case:** Primary Mek display area in custom slots
 - **Architecture:** Display Zone → What to Display: "Slotted Mek PFP"
 
+#### Tenure Progress Details:
+- **Purpose:** Shows time-based leveling progress for slotted Mek *(Added 2025-11-02)*
+- **Behavior:**
+  - Progress bar fills as Mek accumulates tenure while slotted
+  - Base rate: 1 tenure/second (buffable via global or per-Mek buffs)
+  - When bar reaches 100%, "Level Up" button appears
+  - Tenure persists when Mek is unslotted/reslotted
+- **Use Case:** Primary leveling mechanic (replaces gold-based leveling)
+- **Architecture:** Display Zone → What to Display: "Tenure Progress"
+- **Visual Variants:**
+  - Minimal: Compact single-line progress bar
+  - Standard: Full industrial frame with percentage
+  - Detailed: Premium design with hazard stripes and effects
+- **Size Options:** Small (160px), Medium (224px), Large (288px)
+
 ---
 
-## Slot Mechanics (To Be Defined)
+## Slot Mechanics
+
+### Tenure System *(Added 2025-11-02)*
+- **Status:** Architecture designed, implementation pending
+- **Purpose:** Time-based leveling system that replaces gold-based leveling
+- **Core Mechanic:**
+  - Meks accumulate "tenure" while slotted (1 tenure/second base rate)
+  - When tenure reaches threshold, player manually clicks "Level Up"
+  - Tenure persists when Mek is unslotted/reslotted
+  - No auto-leveling - requires player action
+- **Key Features:**
+  - Admin-configurable level thresholds (editable in admin panel)
+  - Buffable tenure rate (global buffs affect all Meks, per-Mek buffs affect specific Mek)
+  - Excess tenure carries over after level-up (1200 tenure, need 1000 → keep 200)
+  - Real-time progress bar with smooth animation
+- **Technical Architecture:**
+  - Stored on Mek record (tenurePoints, tenureRate, lastTenureUpdate)
+  - Calculated on-read (no passive database writes)
+  - Hybrid client/server sync for smooth UI updates
+- **Display:** Tenure Progress display zone (see Display Options above)
 
 ### Buff System
-- **Status:** Not yet implemented
-- **Concept:** When a Mek is equipped to a custom slot, it receives buffs based on:
+- **Status:** Partially defined (tenure rate buffs designed, other buffs TBD)
+- **Tenure Buffs:** Global and per-Mek tenure rate multipliers
+- **Other Buffs (Future):** When a Mek is equipped to a custom slot, it may receive buffs based on:
   - Slot type/rarity
   - Mek variations (head/body/trait combinations)
   - Slot upgrade level
@@ -169,16 +205,19 @@ const scaledY = zone.y * displayScale;
 - [x] Established proper two-level zone architecture (Zone Type → Display Type)
 
 ### 🔄 In Progress
-- [ ] Define buff mechanics
-- [ ] Implement slot upgrade system
+- [ ] Implement tenure system backend (schema, mutations, queries)
+- [ ] Create tenure progress display zone component
+- [ ] Add admin UI for editing tenure level thresholds
+- [ ] Archive gold-based leveling code
 - [ ] Render "Slotted Mek PFP" zones on actual slot pages
 
 ### 📋 Planned
 - [ ] Multiple zone type options in dropdown
 - [ ] Slot categorization system
-- [ ] Buff calculation and display
+- [ ] Buff calculation and display (beyond tenure buffs)
 - [ ] Player-specific slot configurations
 - [ ] Admin tools for slot management
+- [ ] Slot upgrade system
 
 ---
 
@@ -204,6 +243,31 @@ const scaledY = zone.y * displayScale;
 - **Reasoning:** Zone Type = behavior (display/click/slot), Display Type = content (gold/mek/stats)
 - **Correction:** Moved to proper location for better scalability and separation of concerns
 - **Result:** Clean two-level architecture (Zone Type → Display Type)
+
+### 2025-11-02: Tenure System Architecture Designed
+- **Major Feature:** Time-based leveling system replacing gold-based leveling
+- **User Requirements:**
+  - Tenure stored on Mek (persists across unslot/reslot)
+  - Base rate: 1 tenure/second, buffable via global or per-Mek buffs
+  - Admin-configurable level thresholds
+  - Manual level-up only (no auto-leveling)
+  - Display as progress bar on slot via overlay editor
+- **Technical Decisions:**
+  - Hybrid client/server real-time calculation pattern
+  - On-read calculation (zero passive database writes)
+  - Three visual variants (minimal, standard, detailed)
+  - Industrial aesthetic matching site design system
+- **Implementation Plan:**
+  - Phase 1: Backend schema and mutations (Convex)
+  - Phase 2: Real-time sync hook (React)
+  - Phase 3: Display zone component (industrial UI)
+  - Phase 4: Admin configuration UI
+  - Phase 5: Archive gold leveling code (preserve, don't delete)
+- **Documentation Created:**
+  - Backend schema design and API reference
+  - Real-time sync architecture and edge case handling
+  - Display zone component specifications
+  - Integration guides for all components
 
 ---
 
