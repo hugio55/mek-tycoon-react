@@ -370,6 +370,23 @@ const scaledY = zone.y * displayScale;
 - **Conclusion:** Backend is production-ready and actively accumulating tenure for slotted Meks
 - **Next Steps:** Frontend integration to display and interact with tenure system
 
+### 2025-11-03: View Levels Table Enhancement
+- **Issue Discovered:** User reported all Meks showing "0.0 (frozen)" tenure despite having 6 slotted Meks
+- **Root Cause:** Component was checking `mek.isSlotted` from goldMiningData, but this field isn't populated
+- **Source of Truth:** The `essenceSlots` table contains actual slotted Mek information
+- **Fix Applied:**
+  1. Added `essenceSlots` query to MekLevelsViewer component
+  2. Created Set of slotted asset IDs from essenceSlots data
+  3. Check Mek's assetId against Set to determine actual slotted status
+  4. Use accurate slotted status for tenure accumulation tracking
+- **Feature Added:** Sortable "Slotted" column to filter slotted Meks to top
+  - Clickable column headers for all major columns (Mek #, Level, Base Gold, Boost %, Total Gold, Tenure, Slotted, Gold Spent)
+  - Up/down arrows show current sort direction
+  - Slotted column displays "✓ Yes" (green) for slotted Meks, "No" (gray) for unslotted
+- **Files Modified:**
+  - `src/components/MekLevelsViewer.tsx` - Lines 23-24 (state), 27 (query), 40-81 (tenure init), 116-165 (sorting), 189-242 (headers), 306-312 (column data)
+- **Result:** Tenure now displays correctly for slotted Meks with live accumulation, and table is fully sortable
+
 ---
 
 *This document will be continuously updated as the custom slots system evolves. All new requirements, mechanics, and changes should be logged here.*
