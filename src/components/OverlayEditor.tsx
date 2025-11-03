@@ -2698,6 +2698,7 @@ export default function OverlayEditor() {
                       <option value="gold-per-hour">Gold Per Hour</option>
                       <option value="slotted-mek-pfp">Slotted Mek PFP</option>
                       <option value="mek-name">Mek Name</option>
+                      <option value="tenure-progress">Tenure Progress</option>
                     </select>
                   </div>
 
