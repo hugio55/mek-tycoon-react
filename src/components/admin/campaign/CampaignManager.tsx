@@ -21,6 +21,7 @@ export default function CampaignManager({
 }: CampaignManagerProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -100,6 +101,60 @@ export default function CampaignManager({
       const errorMsg = `Failed to update campaign status: ${error}`;
       onError?.(errorMsg);
     }
+  };
+
+  const handleEditStart = (campaign: Campaign) => {
+    setEditingCampaignId(campaign._id);
+    setName(campaign.name);
+    setDescription(campaign.description);
+    setNmkrProjectId(campaign.nmkrProjectId);
+    setMaxNFTs(campaign.maxNFTs.toString());
+    setStatus(campaign.status);
+    setShowCreateForm(false);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingCampaignId || !name.trim() || !description.trim() || !nmkrProjectId.trim() || !maxNFTs.trim()) {
+      const errorMsg = "All fields are required";
+      onError?.(errorMsg);
+      return;
+    }
+
+    const maxNFTsNum = parseInt(maxNFTs);
+    if (isNaN(maxNFTsNum) || maxNFTsNum <= 0) {
+      const errorMsg = "Max NFTs must be a positive number";
+      onError?.(errorMsg);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await updateCampaign({
+        campaignId: editingCampaignId as Id<"commemorativeCampaigns">,
+        name: name.trim(),
+        description: description.trim(),
+        nmkrProjectId: nmkrProjectId.trim(),
+        maxNFTs: maxNFTsNum,
+        status,
+      });
+
+      setEditingCampaignId(null);
+      clearForm();
+      onCampaignUpdated?.();
+    } catch (error) {
+      const errorMsg = `Failed to update campaign: ${error}`;
+      onError?.(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingCampaignId(null);
+    clearForm();
   };
 
   const clearForm = () => {
@@ -267,6 +322,9 @@ export default function CampaignManager({
                   </h4>
                   <p className="text-sm text-gray-400">
                     {campaign.description}
+                  </p>
+                  <p className="text-xs text-gray-500 font-mono mt-1">
+                    Project ID: {campaign.nmkrProjectId}
                   </p>
                 </div>
                 <span
