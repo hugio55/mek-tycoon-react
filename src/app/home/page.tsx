@@ -13,6 +13,8 @@ export default function HomePage() {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [showMekSelector, setShowMekSelector] = useState(false);
   const [mekSearchTerm, setMekSearchTerm] = useState('');
+  const customSlotRef = useRef<HTMLImageElement>(null);
+  const [customSlotSize, setCustomSlotSize] = useState({ width: 0, height: 0 });
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
@@ -441,53 +443,73 @@ export default function HomePage() {
         </div>
 
         {/* Custom Slot Test */}
-        {customSlotOverlayData && customSlotOverlayData.imagePath && ownedMeks.length > 0 && (
-          <div className="max-w-6xl mx-auto mb-12">
-            <div className="mb-6">
-              <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow mb-2">
-                CUSTOM SLOT TEST
-              </h2>
-              <div className="h-px bg-yellow-500/30 w-full" />
-            </div>
+        {customSlotOverlayData && customSlotOverlayData.imagePath && ownedMeks.length > 0 && (() => {
+          // Calculate scale factor based on displayed image size vs original size
+          const displayScale = customSlotSize.width > 0
+            ? customSlotSize.width / customSlotOverlayData.imageWidth
+            : 1;
 
-            <div className="mek-card-industrial mek-border-sharp-gold p-6 rounded-xl">
-              {/* Background Effects */}
-              <div className="absolute inset-0 mek-overlay-scratches opacity-15 pointer-events-none" />
-              <div className="absolute inset-0 mek-overlay-rust opacity-10 pointer-events-none" />
+          // Find the display zone (mode: 'zone', not 'sprite')
+          const displayZone = customSlotOverlayData.zones?.find(z => z.type === 'Display Zone');
 
-              <div className="relative">
-                {/* Base Slot Image */}
-                <img
-                  src={customSlotOverlayData.imagePath}
-                  alt="Custom Slot"
-                  className="w-full max-w-2xl mx-auto"
-                />
+          return (
+            <div className="max-w-6xl mx-auto mb-12">
+              <div className="mb-6">
+                <h2 className="mek-text-industrial text-3xl text-yellow-400 mek-text-shadow mb-2">
+                  CUSTOM SLOT TEST
+                </h2>
+                <div className="h-px bg-yellow-500/30 w-full" />
+              </div>
 
-                {/* Display Zone - Show first Mek */}
-                {customSlotOverlayData.zones && customSlotOverlayData.zones.length > 0 && (
-                  <div className="absolute" style={{
-                    left: `${customSlotOverlayData.zones[0].x}px`,
-                    top: `${customSlotOverlayData.zones[0].y}px`,
-                    width: `${customSlotOverlayData.zones[0].width || 150}px`,
-                    height: `${customSlotOverlayData.zones[0].height || 150}px`,
-                  }}>
-                    <img
-                      src={`/mek-images/150px/${ownedMeks[0].sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
-                      alt={ownedMeks[0].headVariationName}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+              <div className="mek-card-industrial mek-border-sharp-gold p-6 rounded-xl relative">
+                {/* Background Effects */}
+                <div className="absolute inset-0 mek-overlay-scratches opacity-15 pointer-events-none rounded-xl" />
+                <div className="absolute inset-0 mek-overlay-rust opacity-10 pointer-events-none rounded-xl" />
+
+                <div className="relative max-w-3xl mx-auto">
+                  {/* Base Slot Image */}
+                  <img
+                    ref={customSlotRef}
+                    src={customSlotOverlayData.imagePath}
+                    alt="Custom Slot"
+                    className="w-full h-auto"
+                    onLoad={() => {
+                      if (customSlotRef.current) {
+                        const rect = customSlotRef.current.getBoundingClientRect();
+                        setCustomSlotSize({ width: rect.width, height: rect.height });
+                      }
+                    }}
+                  />
+
+                  {/* Display Zone - Show first Mek */}
+                  {displayZone && customSlotSize.width > 0 && (
+                    <div
+                      className="absolute"
+                      style={{
+                        left: `${displayZone.x * displayScale}px`,
+                        top: `${displayZone.y * displayScale}px`,
+                        width: `${(displayZone.width || 150) * displayScale}px`,
+                        height: `${(displayZone.height || 150) * displayScale}px`,
                       }}
-                    />
-                    <div className="text-center text-yellow-400 text-sm mt-2">
-                      {ownedMeks[0].headVariationName}
+                    >
+                      <img
+                        src={`/mek-images/150px/${ownedMeks[0].sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                        alt={ownedMeks[0].headVariationName}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className="text-center text-yellow-400 text-xs mt-1" style={{ fontSize: `${12 * displayScale}px` }}>
+                        {ownedMeks[0].headVariationName}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Mechanism Slots Section */}
         <div className="max-w-6xl mx-auto">
