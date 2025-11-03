@@ -1,323 +1,341 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
-export default function MekManagementLightboxConcepts() {
+// Mock data for demonstration
+const mockMekData = {
+  assetId: "demo-mek-001",
+  sourceKey: "bc2-dm1-ap1",
+  customName: "Steel Thunder",
+  assetName: "Bumblebee",
+  slotNumber: 1
+};
+
+// CONCEPT 1: Maximum Transparency (Glass Effect)
+// Heavy glass-morphism with minimal opacity - lets background show through
+function MekManagementConcept1({ onClose }: { onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
-  const [isDebugOpen, setIsDebugOpen] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
-  if (!mounted) return null;
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop - very transparent */}
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-lg" />
 
-  // Sample data
-  const sampleMekImage = "/mek-images/500px/aa1-aa1-aa1.webp";
-  const sampleName = "bong";
-  const slotNumber = 1;
-  const charCount = 4;
-
-  if (!isDebugOpen) {
-    return (
-      <button
-        onClick={() => setIsDebugOpen(true)}
-        className="fixed left-4 top-20 z-[20000] px-4 py-2 bg-black/90 border-2 border-cyan-500/50 rounded text-cyan-400 hover:bg-cyan-500/20 transition-all"
+      {/* Lightbox Card - Maximum transparency */}
+      <div
+        className="relative z-10 w-full max-w-md mx-4"
+        onClick={(e) => e.stopPropagation()}
       >
-        Open Debug Panel
-      </button>
-    );
-  }
-
-  return (
-    <div className="fixed left-0 top-0 bottom-0 w-[700px] bg-black/95 backdrop-blur-md z-[20000] overflow-y-auto border-r-2 border-cyan-500/30 shadow-2xl shadow-black">
-      {/* Header with Close Button */}
-      <div className="sticky top-0 z-10 bg-black/95 border-b-2 border-cyan-500/30 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl text-cyan-400 font-bold uppercase tracking-wider">
-            Debug Panel
-          </h1>
+        <div className="bg-black/60 backdrop-blur-lg border border-yellow-500/20 rounded-xl shadow-2xl shadow-black/50">
+          {/* Close Button */}
           <button
-            onClick={() => setIsDebugOpen(false)}
-            className="px-3 py-1 bg-red-900/20 border border-red-500/50 rounded text-red-400 hover:bg-red-900/40 transition-all text-sm"
+            onClick={onClose}
+            className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center bg-black/80 border border-yellow-500/40 rounded-full hover:border-yellow-400 transition-all z-20"
           >
-            ✕ Close
+            <span className="text-yellow-400 text-xl">×</span>
           </button>
-        </div>
-        <p className="text-gray-400 text-xs">
-          Mek Management Lightbox - Three Design Concepts
-        </p>
-      </div>
 
-      {/* Scrollable Content */}
-      <div className="p-6 space-y-8">
-        {/* CONCEPT 1: Glass-Morphism Layers */}
-        <div>
-          <div className="mb-3 text-center border-b border-cyan-500/30 pb-2">
-            <h3 className="text-cyan-400 font-bold text-sm tracking-wider">CONCEPT 1</h3>
-            <p className="text-gray-500 text-xs">Glass-Morphism Layers</p>
-          </div>
+          {/* Content */}
+          <div className="p-6">
+            {/* Header */}
+            <h2 className="text-center text-yellow-400 text-lg font-bold uppercase tracking-wider mb-4">
+              MEK MANAGEMENT
+            </h2>
 
-          <div className="w-[500px] mx-auto bg-black/80 backdrop-blur-md border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
-            {/* Header - Dark background with separator */}
-            <div className="px-6 py-4 border-b border-yellow-500/30 bg-black/40">
-              <h2 className="text-yellow-400 font-bold text-xl tracking-wider text-center uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Mek Management
-              </h2>
+            {/* Mek Image - even more transparent inner section */}
+            <div className="bg-black/40 rounded-lg p-4 mb-4 border border-yellow-500/20">
+              <img
+                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                alt={mockMekData.assetName}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              {/* Mek Image - Layered card */}
-              <div className="bg-black/60 backdrop-blur-sm border border-yellow-500/20 rounded-lg p-4 flex items-center justify-center">
-                <img
-                  src={sampleMekImage}
-                  alt="Mek"
-                  className="w-full h-80 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = "/mek-images/150px/aa1-aa1-aa1.webp";
-                  }}
-                />
-              </div>
-
-              {/* Slot Badge - Transparent card */}
-              <div className="flex justify-center">
-                <div className="px-6 py-2 bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/30 rounded">
-                  <div className="text-yellow-400 font-bold text-sm tracking-widest uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                    Slot {slotNumber}
-                  </div>
-                </div>
-              </div>
-
-              {/* Name Section - Nested transparent card */}
-              <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-lg p-4">
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
-                  Employee Name
-                </label>
-                <div className="bg-black/60 border border-yellow-500/30 rounded px-4 py-3 flex items-center justify-between gap-3">
-                  <div className="text-yellow-100 font-semibold text-lg flex-1">
-                    {sampleName}
-                  </div>
-                  <button className="w-8 h-8 flex items-center justify-center rounded bg-black/50 border border-yellow-500/30 hover:border-yellow-400 hover:bg-yellow-500/10 transition-all">
-                    <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="mt-2 flex justify-between items-center text-[10px]">
-                  <span className="text-green-400">✓ Available</span>
-                  <span className="text-gray-500">{charCount}/20 chars</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button className="flex-1 px-4 py-3 bg-black/60 backdrop-blur-sm border-2 border-yellow-500/50 rounded text-yellow-400 font-bold text-sm uppercase tracking-wider hover:bg-yellow-500/10 hover:border-yellow-400 transition-all">
-                  🔄 Swap
-                </button>
-                <button className="flex-1 px-4 py-3 bg-red-900/20 backdrop-blur-sm border-2 border-red-500/50 rounded text-red-400 font-bold text-sm uppercase tracking-wider hover:bg-red-900/40 hover:border-red-400 transition-all">
-                  ⚠️ Terminate
-                </button>
-              </div>
-
-              {/* Close */}
-              <div className="text-center border-t border-yellow-500/10 pt-3">
-                <button className="text-xs text-gray-500 hover:text-yellow-400 transition-colors uppercase tracking-wider">
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CONCEPT 2: Industrial Panel System */}
-        <div>
-          <div className="mb-3 text-center border-b border-cyan-500/30 pb-2">
-            <h3 className="text-cyan-400 font-bold text-sm tracking-wider">CONCEPT 2</h3>
-            <p className="text-gray-500 text-xs">Industrial Panel System</p>
-          </div>
-
-          <div className="w-[500px] mx-auto mek-card-industrial mek-border-sharp-gold overflow-hidden">
-            {/* Header Section */}
-            <div className="px-6 py-4 border-b border-yellow-500/30 bg-black/40">
-              <h2 className="mek-text-industrial text-xl text-yellow-400 text-center">
-                MEK MANAGEMENT
-              </h2>
+            {/* Name Section */}
+            <div className="bg-black/40 rounded-lg p-4 mb-4 border border-yellow-500/20">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Name</div>
+              <div className="text-white text-xl font-bold">{mockMekData.customName || "UNNAMED"}</div>
+              <button className="mt-2 text-cyan-400 text-xs hover:text-cyan-300 transition-colors">
+                Edit Name
+              </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              {/* Mek Preview Image */}
-              <div className="flex justify-center">
-                <img
-                  src={sampleMekImage}
-                  alt="Mek"
-                  className="w-80 h-80 object-contain border-2 border-yellow-500/30 rounded-lg bg-black/40"
-                  onError={(e) => {
-                    e.currentTarget.src = "/mek-images/150px/aa1-aa1-aa1.webp";
-                  }}
-                />
-              </div>
-
-              {/* Slot Section */}
-              <div className="bg-black/40 border-b border-yellow-500/30 py-2">
-                <div className="text-yellow-400 font-bold text-sm tracking-widest text-center uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                  Slot {slotNumber}
-                </div>
-              </div>
-
-              {/* Name Section */}
-              <div>
-                <label className="mek-label-uppercase mb-2 text-gray-400">
-                  Employee Name
-                </label>
-                <div className="bg-black/60 border-2 border-yellow-500/30 rounded px-4 py-3 flex items-center justify-between gap-3">
-                  <div className="text-yellow-100 font-semibold text-lg flex-1">
-                    {sampleName}
-                  </div>
-                  <button className="w-8 h-8 flex items-center justify-center rounded bg-black/50 border border-yellow-500/30 hover:border-yellow-400 hover:bg-yellow-500/10 transition-all">
-                    <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-gray-500 flex justify-between">
-                  <span className="text-green-400">✓ Available</span>
-                  <span>{charCount}/20 characters</span>
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 mt-6">
-                <button className="flex-1 mek-button-primary">
-                  🔄 Swap Mek
-                </button>
-                <button className="flex-1 px-4 py-3 bg-red-900/20 border-2 border-red-500/50 rounded text-red-400 font-bold text-sm uppercase tracking-wider hover:bg-red-900/40 hover:border-red-400 transition-all">
-                  ⚠️ Terminate
-                </button>
-              </div>
-
-              {/* Close Button */}
-              <div className="text-center border-t border-yellow-500/30 pt-3">
-                <button className="mek-button-secondary">
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CONCEPT 3: Centered Symmetry */}
-        <div>
-          <div className="mb-3 text-center border-b border-cyan-500/30 pb-2">
-            <h3 className="text-cyan-400 font-bold text-sm tracking-wider">CONCEPT 3</h3>
-            <p className="text-gray-500 text-xs">Centered Symmetry (User Approved)</p>
-          </div>
-
-          <div className="w-[400px] mx-auto bg-gradient-to-b from-black via-black to-gray-900/50 border border-yellow-500/40 rounded shadow-2xl shadow-black">
-            {/* Minimalist Header */}
-            <div className="px-6 py-5 text-center border-b border-yellow-500/20">
-              <h2 className="text-yellow-400 font-bold text-base tracking-[0.3em] mb-1" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                MEK MANAGEMENT
-              </h2>
-              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-yellow-500/60 to-transparent mx-auto"></div>
+            {/* Slot Info */}
+            <div className="text-center text-gray-400 text-sm mb-4">
+              SLOT {mockMekData.slotNumber}
             </div>
 
-            {/* Perfectly Centered Content */}
-            <div className="p-6 space-y-5">
-              {/* Image with subtle frame */}
-              <div className="flex justify-center">
-                <div className="relative">
-                  <div className="absolute -inset-2 border border-yellow-500/20 rounded"></div>
-                  <div className="w-96 h-96 bg-black rounded flex items-center justify-center">
-                    <img
-                      src={sampleMekImage}
-                      alt="Mek"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.src = "/mek-images/150px/aa1-aa1-aa1.webp";
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Slot Badge - centered */}
-              <div className="flex justify-center">
-                <div className="px-6 py-2 bg-yellow-500/10 border-l-2 border-r-2 border-yellow-500/60 rounded-sm">
-                  <div className="text-yellow-400 font-bold text-sm tracking-[0.2em]" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                    SLOT {slotNumber}
-                  </div>
-                </div>
-              </div>
-
-              {/* Name Display - centered */}
-              <div className="text-center space-y-2">
-                <label className="text-[9px] text-gray-600 uppercase tracking-widest block">
-                  Employee Name
-                </label>
-                <div className="flex items-center justify-center gap-3">
-                  <div className="text-yellow-100 font-semibold text-2xl tracking-wide">
-                    {sampleName}
-                  </div>
-                  <button className="w-7 h-7 flex items-center justify-center rounded-full border border-yellow-500/30 hover:border-yellow-400 hover:bg-yellow-500/10 transition-all">
-                    <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex justify-center gap-4 text-[10px]">
-                  <span className="text-green-400">✓ Available</span>
-                  <span className="text-gray-600">·</span>
-                  <span className="text-gray-500">{charCount}/20</span>
-                </div>
-              </div>
-
-              {/* Symmetric Button Layout */}
-              <div className="flex gap-3 pt-2">
-                <button className="flex-1 px-3 py-2.5 bg-black/60 border border-yellow-500/40 rounded text-yellow-400 font-semibold text-xs uppercase tracking-wider hover:bg-yellow-500/10 hover:border-yellow-400 transition-all">
-                  <div className="flex items-center justify-center gap-2">
-                    <span>🔄</span>
-                    <span>SWAP</span>
-                  </div>
-                </button>
-                <button className="flex-1 px-3 py-2.5 bg-black/60 border border-red-500/40 rounded text-red-400 font-semibold text-xs uppercase tracking-wider hover:bg-red-900/30 hover:border-red-400 transition-all">
-                  <div className="flex items-center justify-center gap-2">
-                    <span>⚠️</span>
-                    <span>TERMINATE</span>
-                  </div>
-                </button>
-              </div>
-
-              {/* Centered Close */}
-              <div className="text-center pt-3 border-t border-yellow-500/10">
-                <button className="text-[11px] text-gray-600 hover:text-yellow-400 transition-colors uppercase tracking-widest">
-                  Close
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-3 bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/30 transition-all">
+                Swap
+              </button>
+              <button className="flex-1 px-4 py-3 bg-red-500/20 border border-red-500/40 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/30 transition-all">
+                Terminate
+              </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Design Summary */}
-      <div className="mt-8 border-t border-cyan-500/30 pt-6 px-6">
-        <h3 className="text-cyan-400 font-bold text-sm uppercase tracking-wider mb-4">Design Summary</h3>
-        <div className="space-y-3 text-xs text-gray-400">
-          <div className="bg-black/60 border border-yellow-500/20 rounded p-3">
-            <p className="text-yellow-400 font-semibold mb-1">Concept 1 - Glass-Morphism Layers:</p>
-            <p>Heavy glass effects with layered transparency, backdrop blur, and nested cards. Matches Essence Distribution aesthetic.</p>
-          </div>
-          <div className="bg-black/60 border border-yellow-500/20 rounded p-3">
-            <p className="text-yellow-400 font-semibold mb-1">Concept 2 - Industrial Panel System:</p>
-            <p>Uses mek-card-industrial classes with sharp borders, clean separators, and design system buttons. Professional organization.</p>
-          </div>
-          <div className="bg-black/60 border border-green-500/20 rounded p-3">
-            <p className="text-green-400 font-semibold mb-1">✓ Concept 3 - Centered Symmetry (User Approved):</p>
-            <p>Minimalist, perfectly centered elements with balanced proportions and subtle decorative touches.</p>
           </div>
         </div>
       </div>
     </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// CONCEPT 2: Layered Panels (Depth Through Transparency)
+// Multiple transparency layers creating visual depth
+function MekManagementConcept2({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-md" />
+
+      {/* Lightbox Card - Progressive transparency layers */}
+      <div
+        className="relative z-10 w-full max-w-md mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-500/40 rounded-xl shadow-2xl shadow-black/60">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute -top-3 -right-3 w-10 h-10 flex items-center justify-center bg-black/95 border-2 border-yellow-500/50 rounded-full hover:border-yellow-400 transition-all z-20"
+          >
+            <span className="text-yellow-400 text-2xl font-bold">×</span>
+          </button>
+
+          {/* Content - layered with different opacity levels */}
+          <div className="p-6 space-y-4">
+            {/* Header - Layer 1 (darkest) */}
+            <div className="bg-black/70 rounded-lg p-3 border-b-2 border-yellow-500/30">
+              <h2 className="text-center text-yellow-400 text-xl font-bold uppercase tracking-wider">
+                MEK MANAGEMENT
+              </h2>
+            </div>
+
+            {/* Mek Image - Layer 2 (medium) */}
+            <div className="bg-black/70 rounded-lg p-4 border border-yellow-500/30">
+              <img
+                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                alt={mockMekData.assetName}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Name Section - Layer 3 (lighter) */}
+            <div className="bg-black/50 rounded-lg p-4 border border-yellow-500/30">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Mek Name</div>
+              <div className="text-white text-2xl font-bold mb-2">{mockMekData.customName || "UNNAMED"}</div>
+              <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors border-b border-cyan-400/50 hover:border-cyan-300">
+                ✏️ Edit Name
+              </button>
+            </div>
+
+            {/* Slot Info - Layer 4 (lightest) */}
+            <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/20 text-center">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Assigned To</div>
+              <div className="text-yellow-400 text-lg font-bold">SLOT {mockMekData.slotNumber}</div>
+            </div>
+
+            {/* Action Buttons - Layer 5 (on base) */}
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-3 bg-yellow-500/20 border-2 border-yellow-500/50 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/30 hover:border-yellow-500/70 transition-all">
+                Swap Mek
+              </button>
+              <button className="flex-1 px-4 py-3 bg-red-500/20 border-2 border-red-500/50 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/30 hover:border-red-500/70 transition-all">
+                Terminate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// CONCEPT 3: Centered Minimalism (User's Current Favorite - IMPROVED)
+// Clean, centered, balanced design with medium transparency
+function MekManagementConcept3({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" />
+
+      {/* Lightbox Card - Clean centered design */}
+      <div
+        className="relative z-10 w-full max-w-md mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-black/80 backdrop-blur-md border-2 border-yellow-500/50 rounded-xl shadow-2xl shadow-black/50">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-20"
+          >
+            <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
+          </button>
+
+          {/* Content - perfectly centered and balanced */}
+          <div className="p-8">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <h2 className="text-yellow-400 text-2xl font-bold uppercase tracking-wider" style={{ textShadow: '0 0 20px rgba(250, 182, 23, 0.3)' }}>
+                MEK MANAGEMENT
+              </h2>
+            </div>
+
+            {/* Mek Image - centered with even padding */}
+            <div className="bg-black/60 rounded-lg p-6 mb-6 border border-yellow-500/30">
+              <img
+                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                alt={mockMekData.assetName}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Name Section - centered */}
+            <div className="text-center mb-6">
+              <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-2">Mek Name</div>
+              <div className="text-white text-2xl font-bold mb-3">{mockMekData.customName || "UNNAMED"}</div>
+              <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
+                ✏️ Edit Name
+              </button>
+            </div>
+
+            {/* Slot Info - centered */}
+            <div className="text-center mb-6">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Slot</div>
+              <div className="text-yellow-400 text-lg font-bold">SLOT {mockMekData.slotNumber}</div>
+            </div>
+
+            {/* Action Buttons - centered, full width */}
+            <div className="space-y-3">
+              <button className="w-full px-6 py-3 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-500/30 hover:border-yellow-500/70 transition-all">
+                Swap Mek
+              </button>
+              <button className="w-full px-6 py-3 bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-red-500/30 hover:border-red-500/70 transition-all">
+                Terminate Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// Main component with toggle controls
+export default function MekManagementLightboxConcepts() {
+  const [showConcepts, setShowConcepts] = useState(false);
+  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3>(3);
+
+  return (
+    <>
+      {/* Toggle Controls - Fixed position top-right */}
+      <div className="fixed top-20 right-4 z-[10000] flex flex-col gap-2">
+        {/* Master Toggle */}
+        <button
+          onClick={() => setShowConcepts(!showConcepts)}
+          className={`px-4 py-2 text-sm font-bold uppercase tracking-wider rounded transition-all ${
+            showConcepts
+              ? 'bg-yellow-500 text-black border-2 border-yellow-400'
+              : 'bg-black/80 text-yellow-400 border-2 border-yellow-500/50 hover:bg-yellow-500/20'
+          }`}
+        >
+          {showConcepts ? '✕ Close Concepts' : '👁️ Show Concepts'}
+        </button>
+
+        {/* Concept Selector - only show when concepts are visible */}
+        {showConcepts && (
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setActiveConcept(1)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 1
+                  ? 'bg-cyan-500 text-black border-2 border-cyan-400'
+                  : 'bg-black/80 text-cyan-400 border-2 border-cyan-500/50 hover:bg-cyan-500/20'
+              }`}
+            >
+              Concept 1: Glass
+            </button>
+            <button
+              onClick={() => setActiveConcept(2)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 2
+                  ? 'bg-blue-500 text-black border-2 border-blue-400'
+                  : 'bg-black/80 text-blue-400 border-2 border-blue-500/50 hover:bg-blue-500/20'
+              }`}
+            >
+              Concept 2: Layers
+            </button>
+            <button
+              onClick={() => setActiveConcept(3)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 3
+                  ? 'bg-green-500 text-black border-2 border-green-400'
+                  : 'bg-black/80 text-green-400 border-2 border-green-500/50 hover:bg-green-500/20'
+              }`}
+            >
+              Concept 3: Clean ⭐
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Render Active Concept */}
+      {showConcepts && (
+        <>
+          {activeConcept === 1 && <MekManagementConcept1 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 2 && <MekManagementConcept2 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} />}
+        </>
+      )}
+    </>
   );
 }

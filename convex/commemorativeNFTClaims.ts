@@ -194,3 +194,62 @@ export const getNextNFTNumber = query({
     };
   },
 });
+
+// ADMIN ONLY: Delete a specific claim record (for cleaning up test/invalid data)
+export const deleteClaim = mutation({
+  args: {
+    claimId: v.id("commemorativeNFTClaims"),
+  },
+  handler: async (ctx, args) => {
+    const claim = await ctx.db.get(args.claimId);
+
+    if (!claim) {
+      return { success: false, error: "Claim not found" };
+    }
+
+    console.log('[🔨CLAIM] ADMIN: Deleting claim record:', {
+      id: args.claimId,
+      wallet: claim.walletAddress,
+      tx: claim.transactionHash,
+      nft: claim.nftName
+    });
+
+    await ctx.db.delete(args.claimId);
+
+    return {
+      success: true,
+      deletedClaim: claim
+    };
+  },
+});
+
+// ADMIN ONLY: Delete all test claims (mock transactions)
+export const deleteTestClaims = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const testClaims = await ctx.db
+      .query("commemorativeNFTClaims")
+      .collect();
+
+    // Filter for test/mock claims
+    const claimsToDelete = testClaims.filter(claim =>
+      claim.transactionHash.startsWith('mock_') ||
+      claim.transactionHash.startsWith('debug_') ||
+      claim.transactionHash.startsWith('test_') ||
+      claim.walletAddress.includes('test_wallet')
+    );
+
+    console.log('[🔨CLAIM] ADMIN: Found', claimsToDelete.length, 'test claims to delete');
+
+    for (const claim of claimsToDelete) {
+      console.log('[🔨CLAIM] ADMIN: Deleting test claim:', claim.transactionHash);
+      await ctx.db.delete(claim._id);
+    }
+
+    return {
+      success: true,
+      deletedCount: claimsToDelete.length,
+      deletedClaims: claimsToDelete
+    };
+  },
+});
