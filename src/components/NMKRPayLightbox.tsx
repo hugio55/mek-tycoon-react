@@ -128,6 +128,15 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     return () => clearInterval(checkInterval);
   }, [paymentWindow, state, reservationId, markPaymentWindowClosed]);
 
+  // Force re-render every second to update countdown timer
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(tick => tick + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Check if reservation expired (including grace period)
   useEffect(() => {
     if (!activeReservation || state === 'success') return;
