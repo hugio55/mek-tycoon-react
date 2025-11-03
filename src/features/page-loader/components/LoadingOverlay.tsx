@@ -1,0 +1,74 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import GlobalBackgroundStarfield from '@/components/GlobalBackgroundStarfield';
+import { HexagonalSpinner } from './HexagonalSpinner';
+import { ProgressBar } from './ProgressBar';
+import { LoadingText } from './LoadingText';
+import { TIMING } from '../config/constants';
+
+interface LoadingOverlayProps {
+  percentage: number;
+  stage: string;
+  isComplete: boolean;
+  onComplete?: () => void;
+}
+
+export function LoadingOverlay({
+  percentage,
+  stage,
+  isComplete,
+  onComplete,
+}: LoadingOverlayProps) {
+  const [mounted, setMounted] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isComplete && !isFadingOut) {
+      setIsFadingOut(true);
+
+      setTimeout(() => {
+        if (onComplete) {
+          onComplete();
+        }
+      }, TIMING.FADE_DURATION);
+    }
+  }, [isComplete, isFadingOut, onComplete]);
+
+  if (!mounted) return null;
+
+  const overlayContent = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      style={{
+        opacity: isFadingOut ? 0 : 1,
+        transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+      }}
+    >
+      {/* Starfield Background */}
+      <GlobalBackgroundStarfield />
+
+      {/* Dark Overlay (10% opacity) */}
+      <div className="absolute inset-0 bg-black/10" />
+
+      {/* Center Content Container */}
+      <div className="relative z-10 flex flex-col items-center gap-8">
+        {/* Hexagonal Spinner */}
+        <HexagonalSpinner />
+
+        {/* Progress Bar */}
+        <ProgressBar percentage={percentage} showPercentage={true} />
+
+        {/* Loading Text */}
+        <LoadingText currentStage={stage} />
+      </div>
+    </div>
+  );
+
+  return createPortal(overlayContent, document.body);
+}
