@@ -105,6 +105,7 @@ import type * as getAllMekHolders from "../getAllMekHolders.js";
 import type * as getAllSourceKeys from "../getAllSourceKeys.js";
 import type * as getTop50MekHolders from "../getTop50MekHolders.js";
 import type * as getWalletAssetsFlexible from "../getWalletAssetsFlexible.js";
+import type * as globalConfig from "../globalConfig.js";
 import type * as goldBackupScheduler from "../goldBackupScheduler.js";
 import type * as goldBackups from "../goldBackups.js";
 import type * as goldCheckpointing from "../goldCheckpointing.js";
@@ -316,6 +317,7 @@ declare const fullApi: ApiFromModules<{
   getAllSourceKeys: typeof getAllSourceKeys;
   getTop50MekHolders: typeof getTop50MekHolders;
   getWalletAssetsFlexible: typeof getWalletAssetsFlexible;
+  globalConfig: typeof globalConfig;
   goldBackupScheduler: typeof goldBackupScheduler;
   goldBackups: typeof goldBackups;
   goldCheckpointing: typeof goldCheckpointing;
