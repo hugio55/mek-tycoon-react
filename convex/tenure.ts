@@ -14,6 +14,19 @@
  * - Buffs apply globally and per-Mek
  * - Level-up requires manual action, spending tenure
  * - Excess tenure carries over after level-up
+ *
+ * ARCHITECTURE - SINGLE SOURCE OF TRUTH:
+ * - `meks` table is the ONLY source of truth for:
+ *   - tenurePoints (accumulated tenure)
+ *   - tenureRate (points per second)
+ *   - lastTenureUpdate (timestamp of last update)
+ *   - isSlotted (whether Mek is in a slot)
+ *   - slotNumber (which slot, if slotted)
+ *
+ * - goldMining.ownedMeks does NOT store tenure or slotting data
+ * - essence.essenceSlots references Meks via mekAssetId
+ * - All tenure queries/mutations operate on meks table
+ * - Use getMekTenureData() query to access tenure data
  */
 
 import { v } from "convex/values";
