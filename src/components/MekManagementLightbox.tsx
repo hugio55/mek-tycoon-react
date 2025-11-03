@@ -40,6 +40,9 @@ export default function MekManagementLightbox({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Local display name state (overrides prop after successful rename)
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
   const unslotMekMutation = useMutation(api.essence.unslotMek);
   const setMekNameMutation = useMutation(api.goldMining.setMekName);
 
@@ -165,9 +168,11 @@ export default function MekManagementLightbox({
       });
 
       if (result.success) {
+        // Optimistically update display name immediately
+        setDisplayName(trimmedName);
         setIsEditingName(false);
         setTempName("");
-        // Parent component should refetch data to show new name
+        console.log('[🎯RENAME] Name saved successfully, updated display to:', trimmedName);
       } else {
         setError(result.error || "Failed to set Mek name");
       }
@@ -228,7 +233,7 @@ export default function MekManagementLightbox({
               // View Mode
               <div className="flex items-center justify-center gap-3">
                 <div className="mek-value-primary text-3xl">
-                  {mekData.customName || "UNNAMED"}
+                  {displayName || mekData.customName || "UNNAMED"}
                 </div>
                 <button
                   onClick={handleStartEdit}
@@ -331,9 +336,11 @@ export default function MekManagementLightbox({
               </div>
             )}
 
-            {/* Asset ID Info */}
-            <div className="text-center text-xs text-gray-500">
-              Slot {slotNumber} • Asset ID: {mekData.assetId.slice(0, 8)}...
+            {/* Slot Display */}
+            <div className="text-center">
+              <div className="text-base text-yellow-400 font-bold uppercase tracking-wider">
+                SLOT {slotNumber}
+              </div>
             </div>
 
             {/* Action Buttons */}
