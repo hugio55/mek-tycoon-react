@@ -101,7 +101,6 @@ export default function NavigationBar() {
   // Accumulate gold in real-time for display zones
   useEffect(() => {
     if (!goldMiningData) {
-      console.log('[🎯NAV] No gold mining data - skipping accumulation');
       return;
     }
 
@@ -109,15 +108,8 @@ export default function NavigationBar() {
     const goldPerHour = goldMiningData.totalGoldPerHour || 0;
     const goldPerMs = goldPerHour / 3600000;
 
-    console.log('[🎯NAV] Starting gold accumulation:', {
-      targetGold,
-      goldPerHour,
-      currentGoldState: currentGold
-    });
-
     // Initialize current gold if needed
     if (currentGold === 0 && targetGold > 0) {
-      console.log('[🎯NAV] Initializing currentGold to:', targetGold);
       setCurrentGold(targetGold);
     }
 
@@ -138,18 +130,8 @@ export default function NavigationBar() {
     };
   }, [goldMiningData]);
 
-  // Log render state
-  console.log('[🎨RENDER] NavigationBar rendering', {
-    hasActiveNavConfig: !!activeNavConfig,
-    hasOverlayData: !!overlayData,
-    imageLoaded,
-    isVisible,
-    buttonsWillRender: imageLoaded && !!overlayData
-  });
-
   // Don't render anything if no active navigation
   if (!activeNavConfig || !overlayData) {
-    console.log('[🎨RENDER] No config or overlay data - returning null');
     return null;
   }
 
@@ -372,7 +354,6 @@ export default function NavigationBar() {
         />
 
         {/* Render clickable zones - only after image loads */}
-        {console.log('[🎯NAV-DEBUG] Rendering buttons?', { imageLoaded, clickableZoneCount: clickableZones.length })}
         {imageLoaded && clickableZones.map((zone: any) => {
           const buttonConfig = getButtonStyle(zone);
           const buttonStyle = zone.metadata?.buttonStyle || "none";
