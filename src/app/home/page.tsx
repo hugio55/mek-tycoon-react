@@ -918,6 +918,32 @@ export default function HomePage() {
             onSuccess={handleSlotAfterNaming}
           />
         )}
+
+        {/* Mek Management Lightbox */}
+        {userId && managementMekData && (
+          <MekManagementLightbox
+            isOpen={showMekManagement}
+            onClose={() => {
+              setShowMekManagement(false);
+              setManagementMekData(null);
+            }}
+            walletAddress={userId}
+            slotNumber={managementMekData.slotNumber}
+            mekData={{
+              assetId: managementMekData.assetId,
+              sourceKey: managementMekData.sourceKey,
+              customName: managementMekData.customName,
+              assetName: managementMekData.assetName
+            }}
+            onSwapClick={() => {
+              // Open the Mek selector for swapping
+              setSelectedSlot(managementMekData.slotNumber);
+              setShowMekSelector(true);
+              setShowMekManagement(false);
+              setManagementMekData(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
