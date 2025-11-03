@@ -808,58 +808,107 @@ export const slotMek = mutation({
 
     // TENURE INTEGRATION: Mark Mek as slotted and start tenure tracking in meks table
     // Update the authoritative meks table (not goldMining.ownedMeks)
-    const mekRecord = await ctx.db
-      .query("meks")
-      .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
-      .first();
+    console.log(`[🔒TENURE-DEBUG] ========================================`);
+    console.log(`[🔒TENURE-DEBUG] 🔥 TENURE UPDATE CODE BLOCK REACHED 🔥`);
+    console.log(`[🔒TENURE-DEBUG] ========================================`);
+    console.log(`[🔒TENURE-DEBUG] Step 1: About to query meks table for assetId: ${mekAssetId}`);
 
     let hasName = false;
 
-    if (mekRecord) {
-      console.log(`[🔒TENURE-DEBUG] === SLOTTING MEK IN MEKS TABLE ===`);
-      console.log(`[🔒TENURE-DEBUG] Mek assetId: ${mekAssetId}`);
-      console.log(`[🔒TENURE-DEBUG] Mek assetName: ${mekRecord.assetName}`);
-      console.log(`[🔒TENURE-DEBUG] BEFORE patch - tenurePoints: ${mekRecord.tenurePoints} (type: ${typeof mekRecord.tenurePoints})`);
-      console.log(`[🔒TENURE-DEBUG] BEFORE patch - isSlotted: ${mekRecord.isSlotted} (type: ${typeof mekRecord.isSlotted})`);
-      console.log(`[🔒TENURE-DEBUG] BEFORE patch - slotNumber: ${mekRecord.slotNumber}`);
-      console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
-
-      // Check if Mek has custom name (check goldMining.ownedMeks for this)
-      const goldMiningRecord = await ctx.db
-        .query("goldMining")
-        .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    try {
+      const mekRecord = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q) => q.eq("assetId", mekAssetId))
         .first();
 
-      if (goldMiningRecord && goldMiningRecord.ownedMeks) {
-        hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+      console.log(`[🔒TENURE-DEBUG] Step 2: Query completed. mekRecord is ${mekRecord ? 'FOUND' : 'NULL'}`);
+
+      if (mekRecord) {
+        console.log(`[🔒TENURE-DEBUG] === SLOTTING MEK IN MEKS TABLE ===`);
+        console.log(`[🔒TENURE-DEBUG] Mek _id: ${mekRecord._id}`);
+        console.log(`[🔒TENURE-DEBUG] Mek assetId: ${mekAssetId}`);
+        console.log(`[🔒TENURE-DEBUG] Mek assetName: ${mekRecord.assetName}`);
+        console.log(`[🔒TENURE-DEBUG] BEFORE patch - tenurePoints: ${mekRecord.tenurePoints} (type: ${typeof mekRecord.tenurePoints})`);
+        console.log(`[🔒TENURE-DEBUG] BEFORE patch - isSlotted: ${mekRecord.isSlotted} (type: ${typeof mekRecord.isSlotted})`);
+        console.log(`[🔒TENURE-DEBUG] BEFORE patch - slotNumber: ${mekRecord.slotNumber}`);
+        console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
+
+        console.log(`[🔒TENURE-DEBUG] Step 3: Checking for custom name...`);
+        // Check if Mek has custom name (check goldMining.ownedMeks for this)
+        try {
+          const goldMiningRecord = await ctx.db
+            .query("goldMining")
+            .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+            .first();
+
+          if (goldMiningRecord && goldMiningRecord.ownedMeks) {
+            hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+            console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
+          } else {
+            console.log(`[🔒TENURE-DEBUG] No goldMining record or ownedMeks found`);
+          }
+        } catch (nameCheckError) {
+          console.error(`[🔒TENURE-DEBUG] ERROR checking custom name:`, nameCheckError);
+        }
+
+        console.log(`[🔒TENURE-DEBUG] Step 4: Preparing patch data...`);
+        // Update Mek with slotted status in meks table
+        const tenureToSave = mekRecord.tenurePoints ?? 0;
+
+        const patchData = {
+          isSlotted: true,
+          slotNumber: slotNumber,
+          lastTenureUpdate: now,
+          // Initialize tenurePoints to 0 if undefined, otherwise preserve existing value
+          tenurePoints: tenureToSave,
+        };
+
+        console.log(`[🔒TENURE-DEBUG] PATCH DATA being applied:`, JSON.stringify(patchData, null, 2));
+        console.log(`[🔒TENURE-DEBUG] Patching document ID: ${mekRecord._id}`);
+
+        console.log(`[🔒TENURE-DEBUG] Step 5: Executing patch...`);
+        try {
+          await ctx.db.patch(mekRecord._id, patchData);
+          console.log(`[🔒TENURE-DEBUG] ✅ PATCH COMPLETED SUCCESSFULLY`);
+        } catch (patchError) {
+          console.error(`[🔒TENURE-DEBUG] ❌ PATCH FAILED:`, patchError);
+          throw patchError;
+        }
+
+        console.log(`[🔒TENURE-DEBUG] Step 6: Re-fetching to verify...`);
+        // Re-fetch to verify the patch worked
+        try {
+          const updatedMek = await ctx.db.get(mekRecord._id);
+          console.log(`[🔒TENURE-DEBUG] === AFTER PATCH VERIFICATION ===`);
+          if (updatedMek) {
+            console.log(`[🔒TENURE-DEBUG] ✅ Record found after patch`);
+            console.log(`[🔒TENURE-DEBUG] AFTER patch - tenurePoints: ${updatedMek.tenurePoints} (type: ${typeof updatedMek.tenurePoints})`);
+            console.log(`[🔒TENURE-DEBUG] AFTER patch - isSlotted: ${updatedMek.isSlotted} (type: ${typeof updatedMek.isSlotted})`);
+            console.log(`[🔒TENURE-DEBUG] AFTER patch - slotNumber: ${updatedMek.slotNumber}`);
+            console.log(`[🔒TENURE-DEBUG] AFTER patch - lastTenureUpdate: ${updatedMek.lastTenureUpdate}`);
+          } else {
+            console.error(`[🔒TENURE-DEBUG] ❌ Record NOT found after patch! This should never happen!`);
+          }
+        } catch (verifyError) {
+          console.error(`[🔒TENURE-DEBUG] ❌ VERIFICATION FAILED:`, verifyError);
+        }
+
+        console.log(`[🔒TENURE-DEBUG] === SLOTTING COMPLETE ===`);
+      } else {
+        console.error(`[🔒TENURE-DEBUG] ❌ WARNING: No mek record found in meks table for assetId ${mekAssetId}!`);
+        console.log(`[🔒TENURE-DEBUG] This means the Mek exists in goldMining.ownedMeks but NOT in the meks table.`);
+        console.log(`[🔒TENURE-DEBUG] Tenure tracking CANNOT be enabled for this Mek until it's added to meks table.`);
       }
-
-      // Update Mek with slotted status in meks table
-      const tenureToSave = mekRecord.tenurePoints ?? 0;
-
-      const patchData = {
-        isSlotted: true,
-        slotNumber: slotNumber,
-        lastTenureUpdate: now,
-        // Initialize tenurePoints to 0 if undefined, otherwise preserve existing value
-        tenurePoints: tenureToSave,
-      };
-
-      console.log(`[🔒TENURE-DEBUG] PATCH DATA being applied:`, patchData);
-
-      await ctx.db.patch(mekRecord._id, patchData);
-
-      // Re-fetch to verify the patch worked
-      const updatedMek = await ctx.db.get(mekRecord._id);
-      console.log(`[🔒TENURE-DEBUG] === AFTER PATCH VERIFICATION ===`);
-      console.log(`[🔒TENURE-DEBUG] AFTER patch - tenurePoints: ${updatedMek?.tenurePoints} (type: ${typeof updatedMek?.tenurePoints})`);
-      console.log(`[🔒TENURE-DEBUG] AFTER patch - isSlotted: ${updatedMek?.isSlotted} (type: ${typeof updatedMek?.isSlotted})`);
-      console.log(`[🔒TENURE-DEBUG] AFTER patch - slotNumber: ${updatedMek?.slotNumber}`);
-      console.log(`[🔒TENURE-DEBUG] AFTER patch - lastTenureUpdate: ${updatedMek?.lastTenureUpdate}`);
-      console.log(`[🔒TENURE-DEBUG] === SLOTTING COMPLETE ===`);
-    } else {
-      console.log(`[🔒TENURE-DEBUG] WARNING: No mek record found in meks table for assetId ${mekAssetId}!`);
+    } catch (error) {
+      console.error(`[🔒TENURE-DEBUG] ❌ FATAL ERROR in tenure update block:`, error);
+      console.error(`[🔒TENURE-DEBUG] Error name: ${(error as Error).name}`);
+      console.error(`[🔒TENURE-DEBUG] Error message: ${(error as Error).message}`);
+      console.error(`[🔒TENURE-DEBUG] Error stack:`, (error as Error).stack);
     }
+
+    console.log(`[🔒TENURE-DEBUG] ========================================`);
+    console.log(`[🔒TENURE-DEBUG] 🔥 TENURE UPDATE CODE BLOCK FINISHED 🔥`);
+    console.log(`[🔒TENURE-DEBUG] ========================================`);
 
     return {
       success: true,
@@ -2289,5 +2338,72 @@ export const getPlayerBuffBreakdown = query({
     }
 
     return Array.from(variationMap.values());
+  },
+});
+
+/**
+ * DIAGNOSTIC: Check if user's slotted Meks exist in meks table
+ * This helps diagnose why tenure tracking isn't working
+ */
+export const diagnosticCheckSlottedMeksInMeksTable = query({
+  args: { walletAddress: v.string() },
+  handler: async (ctx, args) => {
+    // Get all slotted Meks from essence slots
+    const slots = await ctx.db
+      .query("essenceSlots")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .collect();
+
+    const slottedSlots = slots.filter(s => s.mekAssetId);
+    const results: any[] = [];
+
+    for (const slot of slottedSlots) {
+      // Check if this Mek exists in meks table
+      const mekRecord = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q) => q.eq("assetId", slot.mekAssetId!))
+        .first();
+
+      // Check if it exists in goldMining.ownedMeks
+      const goldMining = await ctx.db
+        .query("goldMining")
+        .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+        .first();
+
+      const ownedMek = goldMining?.ownedMeks?.find((m: any) => m.assetId === slot.mekAssetId);
+
+      results.push({
+        slotNumber: slot.slotNumber,
+        mekAssetId: slot.mekAssetId,
+        existsInMeksTable: !!mekRecord,
+        existsInGoldMining: !!ownedMek,
+        mekRecordData: mekRecord ? {
+          assetId: mekRecord.assetId,
+          assetName: mekRecord.assetName,
+          owner: mekRecord.owner,
+          isSlotted: mekRecord.isSlotted,
+          tenurePoints: mekRecord.tenurePoints,
+          lastTenureUpdate: mekRecord.lastTenureUpdate,
+        } : null,
+        diagnosis: !mekRecord
+          ? "❌ PROBLEM: Mek not in meks table - tenure won't work!"
+          : !mekRecord.isSlotted
+          ? "⚠️  WARNING: Mek in meks table but isSlotted=false"
+          : mekRecord.lastTenureUpdate
+          ? "✅ OK: Mek properly configured for tenure"
+          : "⚠️  WARNING: Mek slotted but lastTenureUpdate not set"
+      });
+    }
+
+    return {
+      walletAddress: args.walletAddress,
+      totalSlottedMeks: slottedSlots.length,
+      results,
+      summary: {
+        inMeksTable: results.filter(r => r.existsInMeksTable).length,
+        notInMeksTable: results.filter(r => !r.existsInMeksTable).length,
+        properlyConfigured: results.filter(r => r.diagnosis.startsWith("✅")).length,
+      }
+    };
   },
 });

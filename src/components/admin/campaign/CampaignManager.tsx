@@ -13,6 +13,12 @@ interface CampaignManagerProps {
   onError?: (error: string) => void;
 }
 
+interface NFTImportEntry {
+  nftUid: string;
+  nftNumber: string;
+  name: string;
+}
+
 export default function CampaignManager({
   selectedCampaignId,
   onCampaignCreated,
@@ -22,6 +28,8 @@ export default function CampaignManager({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [showImportForm, setShowImportForm] = useState(false);
+  const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -30,9 +38,16 @@ export default function CampaignManager({
   const [maxNFTs, setMaxNFTs] = useState("");
   const [status, setStatus] = useState<CampaignStatus>("inactive");
 
+  // NFT Import state
+  const [nftUid, setNftUid] = useState("");
+  const [nftNumber, setNftNumber] = useState("");
+  const [nftName, setNftName] = useState("");
+
   const createCampaign = useMutation(api.campaigns.createCampaign);
   const updateCampaign = useMutation(api.campaigns.updateCampaign);
   const deleteCampaign = useMutation(api.campaigns.deleteCampaign);
+  const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
+  const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
@@ -163,6 +178,78 @@ export default function CampaignManager({
     setNmkrProjectId("");
     setMaxNFTs("");
     setStatus("inactive");
+  };
+
+  const clearImportForm = () => {
+    setNftUid("");
+    setNftNumber("");
+    setNftName("");
+    setImportMessage(null);
+  };
+
+  const handleGenerateName = (number: string) => {
+    if (number && !isNaN(parseInt(number))) {
+      const campaignName = campaigns?.find((c) => c._id === selectedCampaignId)?.name || "";
+      setNftName(`${campaignName} #${number}`);
+    }
+  };
+
+  const handleImportNFT = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedCampaignId) {
+      setImportMessage({ type: "error", text: "No campaign selected" });
+      return;
+    }
+
+    if (!nftUid.trim() || !nftNumber.trim()) {
+      setImportMessage({ type: "error", text: "NFT UID and NFT Number are required" });
+      return;
+    }
+
+    const number = parseInt(nftNumber);
+    if (isNaN(number) || number < 1 || number > 10) {
+      setImportMessage({ type: "error", text: "NFT Number must be between 1 and 10" });
+      return;
+    }
+
+    const finalName = nftName.trim() || `NFT #${number}`;
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await populateInventory({
+        campaignId: selectedCampaignId as Id<"commemorativeCampaigns">,
+        nfts: [
+          {
+            nftUid: nftUid.trim(),
+            nftNumber: number,
+            name: finalName,
+          },
+        ],
+      });
+
+      if (result.success) {
+        setImportMessage({ type: "success", text: `NFT ${finalName} imported successfully!` });
+        clearImportForm();
+
+        // Refresh campaign stats
+        await syncCounters({
+          campaignId: selectedCampaignId as Id<"commemorativeCampaigns">,
+        });
+
+        onCampaignUpdated?.();
+      } else {
+        setImportMessage({ type: "error", text: result.error || "Failed to import NFT" });
+      }
+    } catch (error) {
+      setImportMessage({
+        type: "error",
+        text: `Error importing NFT: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!campaigns) {
@@ -464,6 +551,111 @@ export default function CampaignManager({
                   </p>
                 </div>
               </div>
+
+              {campaign.status === "active" && (
+                <div className="mb-3">
+                  <button
+                    onClick={() => {
+                      setShowImportForm(!showImportForm);
+                      if (!showImportForm) clearImportForm();
+                    }}
+                    className="mek-button-secondary text-sm"
+                  >
+                    {showImportForm ? "Cancel Import" : "Import NFTs"}
+                  </button>
+
+                  {showImportForm && campaign._id === selectedCampaignId && (
+                    <form onSubmit={handleImportNFT} className="mt-3 p-3 bg-black/50 rounded border border-yellow-500/30 space-y-3">
+                      <h4 className="text-sm font-semibold text-yellow-500">
+                        Add NFT to Campaign
+                      </h4>
+
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          NFT UID <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={nftUid}
+                          onChange={(e) => setNftUid(e.target.value)}
+                          className="w-full bg-black/50 border border-gray-600 rounded p-2 text-sm font-mono"
+                          placeholder="10aec295-d9e2-47e3-9c04-e56e2df92ad5"
+                          disabled={isSubmitting}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">
+                            NFT Number (1-10) <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            value={nftNumber}
+                            onChange={(e) => {
+                              setNftNumber(e.target.value);
+                              if (e.target.value) {
+                                handleGenerateName(e.target.value);
+                              }
+                            }}
+                            className="w-full bg-black/50 border border-gray-600 rounded p-2 text-sm"
+                            placeholder="1"
+                            min="1"
+                            max="10"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">
+                            NFT Name (auto-generated)
+                          </label>
+                          <input
+                            type="text"
+                            value={nftName}
+                            onChange={(e) => setNftName(e.target.value)}
+                            className="w-full bg-black/50 border border-gray-600 rounded p-2 text-sm"
+                            placeholder="Lab Rat #1"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+
+                      {importMessage && (
+                        <div
+                          className={`p-2 rounded text-sm ${
+                            importMessage.type === "success"
+                              ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                              : "bg-red-500/20 text-red-400 border border-red-500/50"
+                          }`}
+                        >
+                          {importMessage.text}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex-1"
+                        >
+                          {isSubmitting ? "Importing..." : "Add NFT"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowImportForm(false);
+                            clearImportForm();
+                          }}
+                          disabled={isSubmitting}
+                          className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
 
                   <div className="flex gap-2">
                     <button
