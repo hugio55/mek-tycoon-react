@@ -698,7 +698,7 @@ export const getMeksWithLevelsAndTenure = query({
     const levelMap = new Map(levelData.map(level => [level.assetId, level]));
 
     // Combine Mek data with level data and tenure fields
-    return meks.map(mek => {
+    const result = meks.map(mek => {
       const level = levelMap.get(mek.assetId);
 
       return {
@@ -722,5 +722,18 @@ export const getMeksWithLevelsAndTenure = query({
         slotNumber: mek.slotNumber,
       };
     });
+
+    console.log('[🔒TENURE-DEBUG] === BACKEND QUERY RESULT ===');
+    console.log('[🔒TENURE-DEBUG] Returning tenure data for', result.length, 'meks');
+    result.forEach(m => {
+      console.log(`[🔒TENURE-DEBUG] ${m.assetName}:`, {
+        tenurePoints: m.tenurePoints,
+        lastTenureUpdate: m.lastTenureUpdate,
+        isSlotted: m.isSlotted,
+        slotNumber: m.slotNumber
+      });
+    });
+
+    return result;
   },
 });

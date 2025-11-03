@@ -28,6 +28,19 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   const essenceState = useQuery(api.essence.getPlayerEssenceState, { walletAddress });
   const essenceSlots = essenceState?.slots;
 
+  // DEBUG: Log what the query returns
+  useEffect(() => {
+    if (meksData) {
+      console.log('[🔒TENURE-DEBUG] Query returned meks data:', meksData.map(m => ({
+        assetId: m.assetId,
+        tenurePoints: m.tenurePoints,
+        lastTenureUpdate: m.lastTenureUpdate,
+        isSlotted: m.isSlotted,
+        slotNumber: m.slotNumber
+      })));
+    }
+  }, [meksData]);
+
   // Mount portal and lock body scroll
   useEffect(() => {
     setMounted(true);
@@ -41,7 +54,8 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   useEffect(() => {
     if (!meksData) return;
 
-    console.log('[🔒TENURE-UI] Building tenure data from meks table...');
+    console.log('[🔒TENURE-DEBUG] === BUILDING TENURE DATA FROM MEKS TABLE ===');
+    console.log('[🔒TENURE-DEBUG] meksData count:', meksData.length);
 
     const newData = new Map<string, MekWithTenure>();
 
@@ -50,14 +64,23 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       const dbLastUpdate = mek.lastTenureUpdate || Date.now();
       const isSlotted = mek.isSlotted || false;
 
+      console.log(`[🔒TENURE-DEBUG] Processing ${mek.assetName}:`);
+      console.log(`  - Raw tenurePoints from DB: ${mek.tenurePoints} (type: ${typeof mek.tenurePoints})`);
+      console.log(`  - Raw lastTenureUpdate from DB: ${mek.lastTenureUpdate} (type: ${typeof mek.lastTenureUpdate})`);
+      console.log(`  - Raw isSlotted from DB: ${mek.isSlotted} (type: ${typeof mek.isSlotted})`);
+      console.log(`  - Coerced dbTenure: ${dbTenure}`);
+      console.log(`  - Coerced isSlotted: ${isSlotted}`);
+
       // For slotted Meks, calculate additional tenure since lastTenureUpdate
       let currentTenure = dbTenure;
       if (isSlotted && dbLastUpdate) {
         const elapsedSeconds = (Date.now() - dbLastUpdate) / 1000;
+        console.log(`  - Elapsed seconds since lastTenureUpdate: ${elapsedSeconds.toFixed(1)}`);
+        console.log(`  - Additional tenure to add: ${(elapsedSeconds * 1).toFixed(1)}`);
         currentTenure = dbTenure + (elapsedSeconds * 1); // 1 tenure/sec base rate
       }
 
-      console.log(`[🔒TENURE-UI] ${mek.assetName}: slotted=${isSlotted}, db=${dbTenure.toFixed(1)}, current=${currentTenure.toFixed(1)}`);
+      console.log(`  - FINAL currentTenure for display: ${currentTenure.toFixed(1)}`);
 
       newData.set(mek.assetId, {
         currentTenure,
@@ -66,6 +89,8 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       });
     });
 
+    console.log('[🔒TENURE-DEBUG] === TENURE DATA BUILD COMPLETE ===');
+    console.log('[🔒TENURE-DEBUG] newData map size:', newData.size);
     setTenureData(newData);
   }, [meksData]);
 
