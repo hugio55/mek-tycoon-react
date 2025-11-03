@@ -277,8 +277,8 @@ export default function MekManagementLightboxConcepts() {
 
   return (
     <>
-      {/* Toggle Controls - Fixed position top-right */}
-      <div className="fixed top-20 right-4 z-[10000] flex flex-col gap-2">
+      {/* Toggle Controls - Fixed position top-right - Above lightbox backdrop */}
+      <div className="fixed top-20 right-4 z-[10001] flex flex-col gap-2">
         {/* Master Toggle */}
         <button
           onClick={() => setShowConcepts(!showConcepts)}
