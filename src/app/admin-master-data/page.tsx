@@ -862,6 +862,28 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* Buff Categories V2 */}
+          {activeTab === 'buff-categories-v2' && (
+          <div id="section-buff-categories-v2" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
+            <button
+              onClick={() => toggleSection('buff-categories-v2')}
+              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚡</span>
+                <h3 className="text-xl font-bold text-yellow-400">Buff Categories V2</h3>
+                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+              </div>
+              <span className="text-gray-400">{expandedSections.has('buff-categories-v2') ? '▼' : '▶'}</span>
+            </button>
+            {expandedSections.has('buff-categories-v2') && (
+              <div className="p-4 border-t border-gray-700/50">
+                <BuffCategoriesV2Admin />
+              </div>
+            )}
+          </div>
+          )}
+
           {/* Story Climb Mechanics */}
           {activeTab === 'story-climb-mechanics' && (
           <div id="section-story-climb-mechanics" className="bg-black/50 backdrop-blur border-2 border-gray-700/50 rounded-lg shadow-lg shadow-black/50">

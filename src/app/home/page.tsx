@@ -9,6 +9,7 @@ import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
+import MekManagementLightboxConcepts from '@/components/MekManagementLightboxConcepts';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);

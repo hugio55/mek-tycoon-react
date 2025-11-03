@@ -3481,6 +3481,16 @@ export default defineSchema({
   }),
 
   // ===== TENURE SYSTEM =====
+  // Configuration for tenure system (base rates, multipliers, etc.)
+  tenureConfig: defineTable({
+    key: v.string(), // Unique config key (e.g., "baseRate", "maxLevel")
+    value: v.union(v.number(), v.string(), v.boolean()), // Config value
+    description: v.optional(v.string()), // What this config controls
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_key", ["key"]),
+
   // Tracks levels/thresholds for tenure progression
   tenureLevels: defineTable({
     level: v.number(), // Tenure level (1, 2, 3, etc.)
