@@ -687,7 +687,6 @@ When user types `/ui-team`, activate these three agents together:
 - `@state-sync-debugger` - Debug state sync between database and UI
 
 **UI/Design Issues** (layout broken, styling wrong, visual problems):
-- `@scifi-ui-designer` - Apply industrial sci-fi aesthetic
 - `@ui-layout-debugger` - Debug positioning, z-index, layout issues
 - `@visual-test` - Verify visual changes in browser
 
