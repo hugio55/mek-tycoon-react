@@ -22,8 +22,9 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   const [tenureData, setTenureData] = useState<Map<string, MekWithTenure>>(new Map());
   const [sortColumn, setSortColumn] = useState<string>('level');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const mekLevels = useQuery(api.mekLeveling.getMekLevels, { walletAddress });
-  const goldMiningData = useQuery(api.goldMining.getGoldMiningData, { walletAddress });
+
+  // CRITICAL FIX: Query meks table directly for all level + tenure data in one call
+  const meksData = useQuery(api.meks.getMeksWithLevelsAndTenure, { walletAddress });
   const essenceState = useQuery(api.essence.getPlayerEssenceState, { walletAddress });
   const essenceSlots = essenceState?.slots;
 
@@ -39,9 +40,9 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
   // CRITICAL FIX: Rebuild tenure data from database when Meks or slots change
   // This ensures tenure reflects database state after slot/unslot operations
   useEffect(() => {
-    if (!goldMiningData?.ownedMeks || !essenceSlots) return;
+    if (!goldMiningData?.ownedMeks || !essenceSlots || !mekTenureData) return;
 
-    console.log('[🔒TENURE-UI] Rebuilding tenure data from database...');
+    console.log('[🔒TENURE-UI] Rebuilding tenure data from meks table (source of truth)...');
 
     // Create a set of slotted asset IDs and their slot times
     const slottedInfo = new Map<string, { slottedAt: number }>();
@@ -51,16 +52,24 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       }
     });
 
+    // Create tenure map from meks table data
+    const tenureMap = new Map<string, typeof mekTenureData[0]>();
+    mekTenureData.forEach(data => {
+      tenureMap.set(data.assetId, data);
+    });
+
     const newData = new Map<string, MekWithTenure>();
 
     goldMiningData.ownedMeks.forEach(mek => {
       const isSlotted = slottedInfo.has(mek.assetId);
-      const dbTenure = mek.tenurePoints || 0;
+      const tenureInfo = tenureMap.get(mek.assetId);
+      const dbTenure = tenureInfo?.tenurePoints || 0;
+      const dbLastUpdate = tenureInfo?.lastTenureUpdate || Date.now();
 
       // For slotted Meks, calculate additional tenure since lastTenureUpdate
       let currentTenure = dbTenure;
-      if (isSlotted && mek.lastTenureUpdate) {
-        const elapsedSeconds = (Date.now() - mek.lastTenureUpdate) / 1000;
+      if (isSlotted && dbLastUpdate) {
+        const elapsedSeconds = (Date.now() - dbLastUpdate) / 1000;
         currentTenure = dbTenure + (elapsedSeconds * 1); // 1 tenure/sec base rate
       }
 
@@ -74,7 +83,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     });
 
     setTenureData(newData);
-  }, [goldMiningData?.ownedMeks, essenceSlots]);
+  }, [goldMiningData?.ownedMeks, essenceSlots, mekTenureData]);
 
   // Accumulate tenure every second for slotted Meks
   useEffect(() => {
