@@ -136,6 +136,12 @@ export function OverlayRenderer({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  // Reset loading state when overlayData changes
+  React.useEffect(() => {
+    setImageLoaded(false);
+    setIsVisible(false);
+  }, [overlayData]);
+
   if (!overlayData) return null;
 
   const { imageWidth, imageHeight, zones, imagePath } = overlayData;
