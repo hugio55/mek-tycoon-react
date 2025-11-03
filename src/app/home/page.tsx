@@ -580,19 +580,22 @@ export default function HomePage() {
                   {/* Name Zone - Show Mek's Custom Name */}
                   {nameZone && customSlotSize.width > 0 && (
                     <div
-                      className="absolute flex items-center justify-center"
+                      className="absolute flex items-center"
                       style={{
                         left: `${nameZone.x * displayScale}px`,
                         top: `${nameZone.y * displayScale}px`,
                         width: `${(nameZone.width || 200) * displayScale}px`,
                         height: `${(nameZone.height || 40) * displayScale}px`,
+                        justifyContent: nameZone.metadata?.displayAlign || 'center',
                       }}
                     >
                       <div
-                        className="text-center text-yellow-400 font-bold mek-text-industrial uppercase"
+                        className="text-yellow-400 font-bold"
                         style={{
-                          fontSize: `${16 * displayScale}px`,
-                          lineHeight: 1.2
+                          fontSize: `${(nameZone.metadata?.displayFontSize || 16) * displayScale}px`,
+                          lineHeight: 1.2,
+                          fontFamily: nameZone.metadata?.fontFamily || 'Orbitron, sans-serif',
+                          textAlign: (nameZone.metadata?.displayAlign || 'center') as any,
                         }}
                       >
                         {mekCustomName || "UNNAMED"}

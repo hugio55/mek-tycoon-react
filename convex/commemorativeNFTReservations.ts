@@ -252,21 +252,17 @@ export const getActiveReservation = query({
     // Get the NFT details
     const nft = await ctx.db.get(reservation.nftInventoryId);
 
-    // Calculate remaining time (accounting for paused timer)
-    let remainingMs = reservation.expiresAt - now;
-
-    // If payment window is open and no close time, timer is paused
-    if (reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt) {
-      // Timer is paused - show time remaining when window opened
-      remainingMs = reservation.expiresAt - reservation.paymentWindowOpenedAt;
-    }
+    // Calculate remaining time (ALWAYS based on absolute deadline)
+    // The payment window state is tracked but does NOT extend the deadline
+    const remainingMs = Math.max(0, reservation.expiresAt - now);
+    const isPaymentWindowOpen = !!reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt;
 
     return {
       ...reservation,
       nft,
       isExpired: false,
       remainingMs,
-      isPaused: !!reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt,
+      isPaymentWindowOpen, // Track this for UI display only
     };
   },
 });
