@@ -3,10 +3,66 @@
  *
  * Provides admin interface for configuring the tenure system,
  * including base rates and buff categories.
+ *
+ * USAGE:
+ * - Query: getBaseRate() - Get current base rate with fallback
+ * - Update: setBaseRate({ baseRate: 1.5 }) - Update base rate with validation
+ * - Initialize: initializeDefaultConfig() - Seed default base rate
  */
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+
+// ============================================================================
+// VALIDATION RULES
+// ============================================================================
+
+const VALIDATION_RULES: Record<
+  string,
+  {
+    type: "number" | "string" | "boolean";
+    min?: number;
+    max?: number;
+    description: string;
+  }
+> = {
+  baseRate: {
+    type: "number",
+    min: 0.1,
+    max: 10.0,
+    description: "Base tenure accumulation rate per second (0.1 to 10.0)",
+  },
+  // Add more config keys here as system grows
+};
+
+function validateConfigValue(key: string, value: number | string | boolean): void {
+  const rules = VALIDATION_RULES[key];
+  if (!rules) {
+    // Unknown keys are allowed but not validated
+    return;
+  }
+
+  // Type check
+  if (typeof value !== rules.type) {
+    throw new Error(
+      `Invalid type for '${key}': expected ${rules.type}, got ${typeof value}`
+    );
+  }
+
+  // Range validation for numbers
+  if (rules.type === "number" && typeof value === "number") {
+    if (rules.min !== undefined && value < rules.min) {
+      throw new Error(
+        `Value ${value} is below minimum ${rules.min} for '${key}'`
+      );
+    }
+    if (rules.max !== undefined && value > rules.max) {
+      throw new Error(
+        `Value ${value} exceeds maximum ${rules.max} for '${key}'`
+      );
+    }
+  }
+}
 
 // ============================================================================
 // QUERIES
@@ -65,7 +121,7 @@ export const getBaseRate = query({
 // ============================================================================
 
 /**
- * Set or update a config value
+ * Set or update a config value (with validation)
  */
 export const setConfig = mutation({
   args: {
@@ -74,6 +130,9 @@ export const setConfig = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Validate value against rules
+    validateConfigValue(args.key, args.value);
+
     const now = Date.now();
 
     // Check if config exists
@@ -86,7 +145,7 @@ export const setConfig = mutation({
       // Update existing
       await ctx.db.patch(existing._id, {
         value: args.value,
-        description: args.description,
+        description: args.description || existing.description,
         updatedAt: now,
       });
 
@@ -102,7 +161,7 @@ export const setConfig = mutation({
       const configId = await ctx.db.insert("tenureConfig", {
         key: args.key,
         value: args.value,
-        description: args.description,
+        description: args.description || VALIDATION_RULES[args.key]?.description || `Config for ${args.key}`,
         createdAt: now,
         updatedAt: now,
       });
@@ -118,22 +177,15 @@ export const setConfig = mutation({
 });
 
 /**
- * Set tenure base rate (helper for common operation)
+ * Set tenure base rate (helper with enhanced validation)
  */
 export const setBaseRate = mutation({
   args: {
     baseRate: v.number(),
   },
   handler: async (ctx, args) => {
-    // Validate base rate
-    if (args.baseRate <= 0) {
-      return {
-        success: false,
-        message: "Base rate must be greater than 0",
-      };
-    }
-
-    const result = await setConfig(ctx, {
+    // Validation is handled by setConfig via validateConfigValue
+    const result = await ctx.runMutation((api as any).tenureConfig.setConfig, {
       key: "baseRate",
       value: args.baseRate,
       description: `Base tenure accumulation rate: ${args.baseRate} tenure per second`,
@@ -144,7 +196,7 @@ export const setBaseRate = mutation({
 });
 
 /**
- * Delete a config value
+ * Delete a config value (admin only - use with caution)
  */
 export const deleteConfig = mutation({
   args: { key: v.string() },
@@ -166,6 +218,53 @@ export const deleteConfig = mutation({
     return {
       success: true,
       message: `Config "${args.key}" deleted successfully`,
+    };
+  },
+});
+
+/**
+ * Initialize default config values (run once to seed database)
+ * Safely creates default configs without overwriting existing values
+ */
+export const initializeDefaultConfig = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const results = [];
+
+    // Initialize baseRate config if it doesn't exist
+    const existing = await ctx.db
+      .query("tenureConfig")
+      .withIndex("by_key", (q) => q.eq("key", "baseRate"))
+      .first();
+
+    if (existing) {
+      results.push({
+        key: "baseRate",
+        action: "already_exists",
+        value: existing.value
+      });
+    } else {
+      // Create default baseRate config
+      await ctx.db.insert("tenureConfig", {
+        key: "baseRate",
+        value: 1.0, // Default: 1 tenure per second
+        description: VALIDATION_RULES["baseRate"].description,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      results.push({
+        key: "baseRate",
+        action: "created",
+        value: 1.0
+      });
+    }
+
+    return {
+      success: true,
+      message: `Initialized ${results.filter((r) => r.action === "created").length} tenure configs`,
+      results,
     };
   },
 });
