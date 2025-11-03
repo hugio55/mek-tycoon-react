@@ -521,7 +521,20 @@ export default function HomePage() {
           );
 
           // Get Mek's custom name from goldMiningData
-          const mekCustomName = goldMiningData?.ownedMeks?.find((m: any) => m.assetId === slot1?.mekAssetId)?.customName;
+          const mekFromGoldMining = goldMiningData?.ownedMeks?.find((m: any) => m.assetId === slot1?.mekAssetId);
+          const mekCustomName = mekFromGoldMining?.customName;
+
+          // DEBUG: Log custom name data flow
+          console.log('[🔍MEKNAME] Custom slot rendering:', {
+            slot1AssetId: slot1?.mekAssetId,
+            mekFoundInGoldMining: !!mekFromGoldMining,
+            customName: mekCustomName,
+            mekData: mekFromGoldMining ? {
+              assetId: mekFromGoldMining.assetId,
+              customName: mekFromGoldMining.customName,
+              assetName: mekFromGoldMining.assetName
+            } : 'MEK NOT FOUND IN goldMiningData.ownedMeks'
+          });
 
           return (
             <div className="max-w-6xl mx-auto mb-12">
@@ -571,9 +584,6 @@ export default function HomePage() {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                      <div className="text-center text-yellow-400 text-xs mt-1" style={{ fontSize: `${12 * displayScale}px` }}>
-                        {slot1.headVariationName}
-                      </div>
                     </div>
                   )}
 

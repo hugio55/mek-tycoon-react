@@ -1684,6 +1684,14 @@ export const setMekName = mutation({
       updatedAt: Date.now(),
     });
 
+    console.log('[🔍MEKNAME] setMekName SUCCESS:', {
+      walletAddress: args.walletAddress.slice(0, 15) + '...',
+      mekAssetId: args.mekAssetId,
+      newName: trimmedName,
+      updatedMeksCount: updatedMeks.length,
+      namedMek: updatedMeks.find(m => m.assetId === args.mekAssetId)
+    });
+
     return {
       success: true,
       customName: trimmedName
