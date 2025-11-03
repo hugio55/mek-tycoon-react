@@ -270,10 +270,397 @@ function MekManagementConcept3({ onClose }: { onClose: () => void }) {
   return createPortal(modalContent, document.body);
 }
 
+// CONCEPT 4: Ultra Bright Glass (Essence Market Style)
+// Inspired by essence-market listing lightbox - very light, ultra translucent
+function MekManagementConcept4({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop - very light with minimal blur */}
+      <div className="fixed inset-0 bg-black/40" style={{ backdropFilter: 'blur(2px)' }} />
+
+      {/* Lightbox Card - Ultra translucent glass effect */}
+      <div
+        className="relative z-10 w-full max-w-md mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="rounded-lg overflow-hidden shadow-2xl border-2 border-yellow-500/50"
+          style={{
+            background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0.01) 100%)',
+            backdropFilter: 'blur(20px) brightness(1.05)',
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
+          </button>
+
+          {/* Industrial Header with hazard stripes */}
+          <div className="relative overflow-hidden bg-gradient-to-b from-black via-black to-transparent">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, transparent 10px, transparent 20px)',
+              }} />
+            </div>
+            <div className="px-6 py-4">
+              <h2 className="text-3xl font-bold font-orbitron tracking-wider text-center">
+                <span className="text-yellow-400">MEK</span>{" "}
+                <span className="text-gray-400">MANAGEMENT</span>
+              </h2>
+            </div>
+          </div>
+
+          {/* Content with crosshatch pattern overlay */}
+          <div className="relative p-6">
+            {/* Crosshatch pattern background */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-30"
+              style={{
+                backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px),
+                                  repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.01) 35px, rgba(255, 255, 255, 0.01) 70px)`
+              }}
+            />
+
+            {/* Mek Image */}
+            <div className="relative mb-4 p-4 rounded-lg" style={{
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+            }}>
+              <img
+                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                alt={mockMekData.assetName}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+
+            {/* Name Section */}
+            <div className="text-center mb-4">
+              <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-1">Mek Name</div>
+              <div className="text-white text-2xl font-bold mb-2">{mockMekData.customName || "UNNAMED"}</div>
+              <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
+                ✏️ Edit Name
+              </button>
+            </div>
+
+            {/* Slot Info */}
+            <div className="text-center mb-4">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">Deployed To</div>
+              <div className="text-yellow-400 text-lg font-bold">SLOT {mockMekData.slotNumber}</div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <button className="w-full px-6 py-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all">
+                Swap Mek
+              </button>
+              <button className="w-full px-6 py-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-bold uppercase tracking-wider rounded hover:bg-red-500/20 hover:border-red-500/50 transition-all">
+                Terminate Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// CONCEPT 5: Gradient Border Frame (Blue/Purple Theme)
+// Completely different aesthetic - gradient borders, purple/blue colors, side-by-side layout
+function MekManagementConcept5({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop - medium darkness with blur */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-md" />
+
+      {/* Lightbox Card - Gradient border frame */}
+      <div
+        className="relative z-10 w-full max-w-2xl mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Gradient border wrapper */}
+        <div className="p-[2px] rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+          <div className="bg-black/70 backdrop-blur-xl rounded-xl">
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 rounded-full hover:scale-110 transition-transform z-20 shadow-lg"
+            >
+              <span className="text-white text-2xl font-bold">×</span>
+            </button>
+
+            {/* Content - Split layout */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left: Image Section */}
+                <div>
+                  <h3 className="text-blue-400 text-xs uppercase tracking-wider mb-3 font-bold">Mek Visual</h3>
+                  <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg p-4 border border-blue-500/30">
+                    <img
+                      src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                      alt={mockMekData.assetName}
+                      className="w-full h-auto rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Info & Actions */}
+                <div className="flex flex-col">
+                  <h3 className="text-purple-400 text-xs uppercase tracking-wider mb-3 font-bold">Mek Details</h3>
+
+                  {/* Name */}
+                  <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-purple-500/20">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Name</div>
+                    <div className="text-white text-xl font-bold mb-2">{mockMekData.customName || "UNNAMED"}</div>
+                    <button className="text-blue-400 text-xs hover:text-blue-300 transition-colors flex items-center gap-1">
+                      <span>✏️</span> Edit Name
+                    </button>
+                  </div>
+
+                  {/* Slot */}
+                  <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-pink-500/20">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Slot Assignment</div>
+                    <div className="text-purple-400 text-lg font-bold">SLOT {mockMekData.slotNumber}</div>
+                  </div>
+
+                  {/* Actions - stacked vertically */}
+                  <div className="mt-auto space-y-3">
+                    <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40 text-blue-300 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-blue-500/30 hover:to-purple-500/30 transition-all">
+                      Swap Mek
+                    </button>
+                    <button className="w-full px-4 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/40 text-red-300 text-sm font-bold uppercase tracking-wider rounded-lg hover:from-red-500/30 hover:to-pink-500/30 transition-all">
+                      Terminate Slot
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
+// CONCEPT 6: Neon Holographic (Cyan/Magenta Theme)
+// Futuristic holographic aesthetic with neon glows, scan lines, and animated effects
+function MekManagementConcept6({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop - medium with blur */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-md" />
+
+      {/* Lightbox Card - Holographic neon */}
+      <div
+        className="relative z-10 w-full max-w-lg mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="rounded-2xl overflow-hidden border-2 shadow-2xl relative"
+          style={{
+            borderColor: 'rgba(0, 255, 255, 0.5)',
+            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 40, 0.8) 50%, rgba(0, 0, 0, 0.8) 100%)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 0 40px rgba(0, 255, 255, 0.3), 0 0 80px rgba(255, 0, 255, 0.2)',
+          }}
+        >
+          {/* Animated scan line effect */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-20"
+            style={{
+              background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 255, 0.1) 2px, rgba(0, 255, 255, 0.1) 4px)',
+              animation: 'scan 4s linear infinite',
+            }}
+          />
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full z-20 hover:scale-110 transition-transform"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(255, 0, 255, 0.3))',
+              border: '2px solid rgba(0, 255, 255, 0.5)',
+              boxShadow: '0 0 20px rgba(0, 255, 255, 0.5)',
+            }}
+          >
+            <span className="text-cyan-300 text-2xl font-bold">×</span>
+          </button>
+
+          {/* Header with neon glow */}
+          <div className="relative p-6 pb-4">
+            <h2
+              className="text-3xl font-bold text-center tracking-wider uppercase"
+              style={{
+                background: 'linear-gradient(90deg, #00ffff, #ff00ff, #00ffff)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 0 20px rgba(0, 255, 255, 0.5)',
+              }}
+            >
+              MEK CONTROL
+            </h2>
+          </div>
+
+          {/* Content */}
+          <div className="px-6 pb-6">
+            {/* Mek Image with holographic border */}
+            <div
+              className="mb-4 p-4 rounded-xl relative"
+              style={{
+                background: 'rgba(0, 0, 0, 0.4)',
+                border: '2px solid rgba(0, 255, 255, 0.3)',
+                boxShadow: 'inset 0 0 20px rgba(0, 255, 255, 0.1), 0 0 30px rgba(255, 0, 255, 0.2)',
+              }}
+            >
+              <img
+                src={`/mek-images/500px/${mockMekData.sourceKey.replace(/-[A-Z]$/, '').toLowerCase()}.webp`}
+                alt={mockMekData.assetName}
+                className="w-full h-auto max-w-[384px] mx-auto"
+                style={{
+                  filter: 'drop-shadow(0 0 10px rgba(0, 255, 255, 0.3))',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              {/* Corner accents */}
+              <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+              <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-magenta-400" />
+              <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-magenta-400" />
+              <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Name */}
+              <div
+                className="col-span-2 p-3 rounded-lg"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05))',
+                  border: '1px solid rgba(0, 255, 255, 0.2)',
+                }}
+              >
+                <div className="text-[9px] text-cyan-400 uppercase tracking-wider mb-1">Designation</div>
+                <div className="text-white text-lg font-bold" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.3)' }}>
+                  {mockMekData.customName || "UNNAMED"}
+                </div>
+              </div>
+
+              {/* Slot */}
+              <div
+                className="p-3 rounded-lg"
+                style={{
+                  background: 'rgba(0, 255, 255, 0.05)',
+                  border: '1px solid rgba(0, 255, 255, 0.2)',
+                }}
+              >
+                <div className="text-[9px] text-cyan-400 uppercase tracking-wider mb-1">Slot</div>
+                <div className="text-cyan-300 text-lg font-bold">{mockMekData.slotNumber}</div>
+              </div>
+
+              {/* Edit Name */}
+              <div
+                className="p-3 rounded-lg flex items-center justify-center cursor-pointer hover:bg-magenta-500/10 transition-colors"
+                style={{
+                  background: 'rgba(255, 0, 255, 0.05)',
+                  border: '1px solid rgba(255, 0, 255, 0.2)',
+                }}
+              >
+                <button className="text-magenta-400 text-xs hover:text-magenta-300 transition-colors flex items-center gap-1">
+                  <span>✏️</span> Edit
+                </button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <button
+                className="w-full px-6 py-3 text-cyan-300 text-sm font-bold uppercase tracking-wider rounded-lg transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 200, 200, 0.1))',
+                  border: '2px solid rgba(0, 255, 255, 0.3)',
+                  boxShadow: '0 0 15px rgba(0, 255, 255, 0.2)',
+                }}
+              >
+                Swap Mek
+              </button>
+              <button
+                className="w-full px-6 py-3 text-red-300 text-sm font-bold uppercase tracking-wider rounded-lg transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 0, 100, 0.1), rgba(200, 0, 100, 0.1))',
+                  border: '2px solid rgba(255, 0, 100, 0.3)',
+                  boxShadow: '0 0 15px rgba(255, 0, 100, 0.2)',
+                }}
+              >
+                Terminate Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add keyframe animation for scan effect */}
+      <style jsx>{`
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+      `}</style>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
 // Main component with toggle controls
 export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
-  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3>(3);
+  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6>(3);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -329,6 +716,36 @@ export default function MekManagementLightboxConcepts() {
             >
               Concept 3: Clean ⭐
             </button>
+            <button
+              onClick={() => setActiveConcept(4)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 4
+                  ? 'bg-yellow-500 text-black border-2 border-yellow-400'
+                  : 'bg-black/80 text-yellow-400 border-2 border-yellow-500/50 hover:bg-yellow-500/20'
+              }`}
+            >
+              Concept 4: Market
+            </button>
+            <button
+              onClick={() => setActiveConcept(5)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 5
+                  ? 'bg-purple-500 text-black border-2 border-purple-400'
+                  : 'bg-black/80 text-purple-400 border-2 border-purple-500/50 hover:bg-purple-500/20'
+              }`}
+            >
+              Concept 5: Gradient
+            </button>
+            <button
+              onClick={() => setActiveConcept(6)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 6
+                  ? 'bg-cyan-500 text-black border-2 border-cyan-400'
+                  : 'bg-black/80 text-cyan-400 border-2 border-cyan-500/50 hover:bg-cyan-500/20'
+              }`}
+            >
+              Concept 6: Neon
+            </button>
           </div>
         )}
       </div>
@@ -348,6 +765,9 @@ export default function MekManagementLightboxConcepts() {
           {activeConcept === 1 && <MekManagementConcept1 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 2 && <MekManagementConcept2 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 4 && <MekManagementConcept4 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 5 && <MekManagementConcept5 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 6 && <MekManagementConcept6 onClose={() => setShowConcepts(false)} />}
         </>
       )}
     </>
