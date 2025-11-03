@@ -207,24 +207,59 @@ export const initializeFromCSV = action({
     console.log('[CSV INIT] Parsing CSV content...');
 
     const lines = args.csvContent.trim().split('\n');
+
+    // Parse header row to find column indices
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    console.log('[CSV INIT] CSV headers:', headers);
+
     const nfts = [];
 
-    // Skip header row
+    // Parse data rows
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
-      const [uid, name, number] = line.split(',');
-      if (uid && name && number) {
+      const values = line.split(',');
+
+      // NMKR CSV has: Uid, Tokenname, Displayname, State, etc.
+      const uid = values[headers.indexOf('uid')]?.trim() || '';
+      const tokenname = values[headers.indexOf('tokenname')]?.trim() || '';
+      const displayname = values[headers.indexOf('displayname')]?.trim() || '';
+      const state = values[headers.indexOf('state')]?.trim()?.toLowerCase() || '';
+
+      // Use tokenname first, fall back to displayname
+      const name = tokenname || displayname;
+
+      // Only process NFTs that are "free" (available)
+      if (!uid || !name || state !== 'free') {
+        console.log('[CSV INIT] Skipping NFT:', { uid, name, state });
+        continue;
+      }
+
+      // Extract number from name like "Lab Rat #1"
+      let nftNumber = 0;
+      const match = name.match(/#(\d+)/);
+      if (match) {
+        nftNumber = parseInt(match[1]);
+      } else {
+        // Fallback: try any number in the string
+        const numMatch = name.match(/(\d+)/);
+        if (numMatch) {
+          nftNumber = parseInt(numMatch[1]);
+        }
+      }
+
+      if (nftNumber > 0) {
         nfts.push({
-          nftUid: uid.trim(),
-          name: name.trim(),
-          nftNumber: parseInt(number.trim()),
+          nftUid: uid,
+          name: name,
+          nftNumber: nftNumber,
         });
+        console.log('[CSV INIT] Parsed NFT:', { uid, name, nftNumber, state });
       }
     }
 
-    console.log('[CSV INIT] Parsed', nfts.length, 'NFTs from CSV');
+    console.log('[CSV INIT] Successfully parsed', nfts.length, 'available NFTs from CSV');
 
     // Use the existing populateInventoryManually mutation
     const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {

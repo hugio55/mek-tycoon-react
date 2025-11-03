@@ -1438,6 +1438,8 @@ export default defineSchema({
       levelBoostPercent: v.optional(v.number()), // Boost percentage from level (0-90)
       levelBoostAmount: v.optional(v.number()), // Actual boost amount in gold/hr
       effectiveGoldPerHour: v.optional(v.number()), // baseGoldPerHour + levelBoostAmount
+      // Custom name field (optional, must be unique globally across all users)
+      customName: v.optional(v.string()),
     })),
 
     // Gold accumulation (SIMPLIFIED: Gold = (now - createdAt) × totalGoldPerHour, capped at 50,000)
