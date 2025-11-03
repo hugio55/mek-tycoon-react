@@ -118,7 +118,7 @@ export default function HomePage() {
       };
       const variations = getVariationInfoFromFullKey(sourceKey, fallback);
 
-      await slotMek({
+      const result = await slotMek({
         walletAddress: userId,
         slotNumber,
         mekAssetId,
@@ -129,6 +129,16 @@ export default function HomePage() {
       console.log('[HomePage] Mek slotted successfully!');
       setShowMekSelector(false);
       setSelectedSlot(null);
+
+      // Show naming lightbox if Mek doesn't have a name yet
+      if (result.shouldShowNaming) {
+        console.log('[HomePage] Mek needs naming, showing lightbox');
+        setNamingMekAssetId(mekAssetId);
+        // Generate Mek image path
+        const cleanKey = (sourceKey || mek.sourceKeyBase)?.replace(/-[A-Z]$/, '').toLowerCase();
+        setNamingMekImage(cleanKey ? `/mek-images/150px/${cleanKey}.webp` : null);
+        setShowNamingLightbox(true);
+      }
     } catch (error) {
       console.error('[HomePage] Failed to slot Mek:', error);
       alert(`Failed to slot Mek: ${error}`);
@@ -467,6 +477,14 @@ export default function HomePage() {
             z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'slotted-mek-pfp'
           );
 
+          // Find the "Mek Name" display zone
+          const nameZone = customSlotOverlayData.zones?.find(
+            z => z.mode === 'zone' && z.type === 'display' && z.metadata?.displayType === 'mek-name'
+          );
+
+          // Get Mek's custom name from goldMiningData
+          const mekCustomName = goldMiningData?.ownedMeks?.find((m: any) => m.assetId === slot1?.mekAssetId)?.customName;
+
           return (
             <div className="max-w-6xl mx-auto mb-12">
               <div className="mb-6">
@@ -517,6 +535,29 @@ export default function HomePage() {
                       />
                       <div className="text-center text-yellow-400 text-xs mt-1" style={{ fontSize: `${12 * displayScale}px` }}>
                         {slot1.headVariationName}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Name Zone - Show Mek's Custom Name */}
+                  {nameZone && customSlotSize.width > 0 && (
+                    <div
+                      className="absolute flex items-center justify-center"
+                      style={{
+                        left: `${nameZone.x * displayScale}px`,
+                        top: `${nameZone.y * displayScale}px`,
+                        width: `${(nameZone.width || 200) * displayScale}px`,
+                        height: `${(nameZone.height || 40) * displayScale}px`,
+                      }}
+                    >
+                      <div
+                        className="text-center text-yellow-400 font-bold mek-text-industrial uppercase"
+                        style={{
+                          fontSize: `${16 * displayScale}px`,
+                          lineHeight: 1.2
+                        }}
+                      >
+                        {mekCustomName || "UNNAMED"}
                       </div>
                     </div>
                   )}
@@ -784,6 +825,21 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Mek Naming Lightbox */}
+        {userId && namingMekAssetId && (
+          <MekNamingLightbox
+            isOpen={showNamingLightbox}
+            onClose={() => {
+              setShowNamingLightbox(false);
+              setNamingMekAssetId(null);
+              setNamingMekImage(null);
+            }}
+            walletAddress={userId}
+            mekAssetId={namingMekAssetId}
+            mekImage={namingMekImage || undefined}
+          />
         )}
       </div>
     </div>
