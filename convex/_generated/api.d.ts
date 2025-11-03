@@ -116,6 +116,7 @@ import type * as goldTracking from "../goldTracking.js";
 import type * as goldTrackingOptimized from "../goldTrackingOptimized.js";
 import type * as importFullMekCollection from "../importFullMekCollection.js";
 import type * as initializeCache from "../initializeCache.js";
+import type * as investigateFalseClaim from "../investigateFalseClaim.js";
 import type * as investments from "../investments.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as leaderboardDiagnostics from "../leaderboardDiagnostics.js";
@@ -328,6 +329,7 @@ declare const fullApi: ApiFromModules<{
   goldTrackingOptimized: typeof goldTrackingOptimized;
   importFullMekCollection: typeof importFullMekCollection;
   initializeCache: typeof initializeCache;
+  investigateFalseClaim: typeof investigateFalseClaim;
   investments: typeof investments;
   leaderboard: typeof leaderboard;
   leaderboardDiagnostics: typeof leaderboardDiagnostics;
