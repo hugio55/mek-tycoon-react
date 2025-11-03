@@ -12,6 +12,7 @@ interface MekNamingLightboxProps {
   mekAssetId: string;
   mekImage?: string;
   currentName?: string | null;
+  onSuccess?: () => void;
 }
 
 export default function MekNamingLightbox({
@@ -20,12 +21,14 @@ export default function MekNamingLightbox({
   walletAddress,
   mekAssetId,
   mekImage,
-  currentName
+  currentName,
+  onSuccess
 }: MekNamingLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [mekName, setMekName] = useState(currentName || "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nameWasSet, setNameWasSet] = useState(false);
 
   const setMekNameMutation = useMutation(api.goldMining.setMekName);
 
@@ -53,6 +56,7 @@ export default function MekNamingLightbox({
       setMekName(currentName || "");
       setError(null);
       setIsSubmitting(false);
+      setNameWasSet(false);
     }
   }, [isOpen, currentName]);
 
@@ -88,6 +92,10 @@ export default function MekNamingLightbox({
       });
 
       if (result.success) {
+        setNameWasSet(true);
+        if (onSuccess) {
+          onSuccess();
+        }
         onClose();
       } else {
         setError(result.error || "Failed to set Mek name");
@@ -103,6 +111,23 @@ export default function MekNamingLightbox({
     if (e.key === 'Enter' && !isSubmitting) {
       handleSubmit();
     } else if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
+  const handleClose = () => {
+    // If name was set, just close normally
+    if (nameWasSet) {
+      onClose();
+      return;
+    }
+
+    // If no name was set, show confirmation dialog
+    const confirmed = window.confirm(
+      "You have not named your new employee. It will not be slotted. Are you sure?"
+    );
+
+    if (confirmed) {
       onClose();
     }
   };
@@ -112,7 +137,7 @@ export default function MekNamingLightbox({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal Card */}
@@ -124,7 +149,7 @@ export default function MekNamingLightbox({
           {/* Header */}
           <div className="px-6 py-4 border-b border-yellow-500/30 bg-black/40">
             <h2 className="mek-text-industrial text-xl text-yellow-400">
-              NAME YOUR MEK
+              NAME YOUR EMPLOYEE
             </h2>
           </div>
 
@@ -144,7 +169,7 @@ export default function MekNamingLightbox({
             {/* Input Field */}
             <div>
               <label className="mek-label-uppercase mb-2 text-gray-400">
-                MEK NAME
+                EMPLOYEE NAME
               </label>
               <input
                 type="text"
@@ -166,7 +191,7 @@ export default function MekNamingLightbox({
             <div className="text-xs text-gray-500 bg-black/40 border border-gray-700 rounded p-3">
               <p className="mb-1 text-gray-400 font-semibold">Allowed characters:</p>
               <p>Letters, numbers, spaces, hyphens (-), apostrophes ('), and periods (.)</p>
-              <p className="mt-2 text-yellow-500/70">Names must be unique globally across all players</p>
+              <p className="mt-2 text-yellow-500/70">Names must be unique across the universe of MekTycoon</p>
             </div>
 
             {/* Error Message */}
@@ -179,7 +204,7 @@ export default function MekNamingLightbox({
             {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isSubmitting}
                 className="flex-1 mek-button-secondary"
               >

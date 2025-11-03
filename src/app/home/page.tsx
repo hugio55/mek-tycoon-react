@@ -21,6 +21,7 @@ export default function HomePage() {
   const [showNamingLightbox, setShowNamingLightbox] = useState(false);
   const [namingMekAssetId, setNamingMekAssetId] = useState<string | null>(null);
   const [namingMekImage, setNamingMekImage] = useState<string | null>(null);
+  const [pendingSlotInfo, setPendingSlotInfo] = useState<{slotNumber: number, variations: any} | null>(null);
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(
@@ -101,7 +102,7 @@ export default function HomePage() {
     if (!userId) return;
 
     try {
-      console.log('[HomePage] Slotting Mek:', { mekAssetId, slotNumber });
+      console.log('[HomePage] Processing slot request:', { mekAssetId, slotNumber });
 
       // Find the Mek to get its variation data
       const mek = ownedMeks.find((m: any) => m.assetId === mekAssetId);
@@ -118,29 +119,66 @@ export default function HomePage() {
       };
       const variations = getVariationInfoFromFullKey(sourceKey, fallback);
 
-      const result = await slotMek({
-        walletAddress: userId,
-        slotNumber,
-        mekAssetId,
-        headVariationName: variations.head.name,
-        bodyVariationName: variations.body.name,
-        itemVariationName: variations.trait.name
-      });
-      console.log('[HomePage] Mek slotted successfully!');
-      setShowMekSelector(false);
-      setSelectedSlot(null);
+      // Check if Mek already has a name
+      const hasName = !!mek.customName;
 
-      // Show naming lightbox if Mek doesn't have a name yet
-      if (result.shouldShowNaming) {
-        console.log('[HomePage] Mek needs naming, showing lightbox');
+      if (!hasName) {
+        // Mek needs naming - show lightbox FIRST, don't slot yet
+        console.log('[HomePage] Mek needs naming, showing lightbox BEFORE slotting');
         setNamingMekAssetId(mekAssetId);
         // Generate Mek image path (using high-res 500px version)
         const cleanKey = (sourceKey || mek.sourceKeyBase)?.replace(/-[A-Z]$/, '').toLowerCase();
         setNamingMekImage(cleanKey ? `/mek-images/500px/${cleanKey}.webp` : null);
+        // Store slotting info to execute after naming
+        setPendingSlotInfo({ slotNumber, variations });
         setShowNamingLightbox(true);
+        setShowMekSelector(false);
+        setSelectedSlot(null);
+      } else {
+        // Mek already has a name - slot immediately
+        console.log('[HomePage] Mek already named, slotting immediately');
+        const result = await slotMek({
+          walletAddress: userId,
+          slotNumber,
+          mekAssetId,
+          headVariationName: variations.head.name,
+          bodyVariationName: variations.body.name,
+          itemVariationName: variations.trait.name
+        });
+        console.log('[HomePage] Mek slotted successfully!');
+        setShowMekSelector(false);
+        setSelectedSlot(null);
       }
     } catch (error) {
-      console.error('[HomePage] Failed to slot Mek:', error);
+      console.error('[HomePage] Failed to process slot request:', error);
+      alert(`Failed to slot Mek: ${error}`);
+    }
+  };
+
+  // Execute the actual slotting after successful naming
+  const handleSlotAfterNaming = async () => {
+    if (!userId || !namingMekAssetId || !pendingSlotInfo) {
+      console.error('[HomePage] Missing required data for slotting after naming');
+      return;
+    }
+
+    try {
+      console.log('[HomePage] Executing deferred slot after naming:', {
+        mekAssetId: namingMekAssetId,
+        slotNumber: pendingSlotInfo.slotNumber
+      });
+
+      const result = await slotMek({
+        walletAddress: userId,
+        slotNumber: pendingSlotInfo.slotNumber,
+        mekAssetId: namingMekAssetId,
+        headVariationName: pendingSlotInfo.variations.head.name,
+        bodyVariationName: pendingSlotInfo.variations.body.name,
+        itemVariationName: pendingSlotInfo.variations.trait.name
+      });
+      console.log('[HomePage] Mek slotted successfully after naming!');
+    } catch (error) {
+      console.error('[HomePage] Failed to slot Mek after naming:', error);
       alert(`Failed to slot Mek: ${error}`);
     }
   };
@@ -835,10 +873,12 @@ export default function HomePage() {
               setShowNamingLightbox(false);
               setNamingMekAssetId(null);
               setNamingMekImage(null);
+              setPendingSlotInfo(null);
             }}
             walletAddress={userId}
             mekAssetId={namingMekAssetId}
             mekImage={namingMekImage || undefined}
+            onSuccess={handleSlotAfterNaming}
           />
         )}
       </div>
