@@ -18,7 +18,8 @@ interface NMKRNft {
   price?: number;
 }
 
-interface NMKRListNftsResponse {
+// Response from /v2/GetNfts endpoint
+interface NMKRGetNftsResponse {
   nfts: NMKRNft[];
   totalCount: number;
 }
@@ -51,7 +52,11 @@ export const getNextAvailableNFT = action({
       };
     }
 
-    const apiUrl = `https://studio-api.nmkr.io/v2/ListNfts/${args.projectId}`;
+    // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
+    // State: "free" to get only unminted/available NFTs
+    // Count: 50 (max allowed by NMKR API)
+    // Page: 1 (first page)
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
 
     console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl);
 
@@ -59,8 +64,8 @@ export const getNextAvailableNFT = action({
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
       });
 
@@ -75,7 +80,7 @@ export const getNextAvailableNFT = action({
         };
       }
 
-      const data: NMKRListNftsResponse = await response.json();
+      const data: NMKRGetNftsResponse = await response.json();
 
       console.log('[🔨NMKR] ✅ API Response received');
       console.log('[🔨NMKR] Total NFTs in project:', data.nfts?.length || 0);
@@ -190,14 +195,15 @@ export const verifyNftAvailability = action({
       return { available: false, error: 'NMKR API key not configured' };
     }
 
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNft/${args.projectId}/${args.nftUid}`;
+    // NMKR API endpoint: /v2/GetNftDetailsById/{nftuid}
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
       });
 
@@ -249,14 +255,17 @@ export const getProjectStats = action({
       };
     }
 
-    const apiUrl = `https://studio-api.nmkr.io/v2/ListNfts/${args.projectId}`;
+    // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
+    // State: "free" to get only available NFTs (for accurate stats)
+    // Count: 50 (max allowed by NMKR API)
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
       });
 
@@ -270,7 +279,7 @@ export const getProjectStats = action({
         };
       }
 
-      const data: NMKRListNftsResponse = await response.json();
+      const data: NMKRGetNftsResponse = await response.json();
 
       const stats = {
         totalNfts: data.nfts.length,
