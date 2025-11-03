@@ -4,14 +4,22 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface MekLevelsViewerProps {
   walletAddress: string;
   onClose: () => void;
 }
 
+interface MekWithTenure {
+  currentTenure: number;
+  tenureRate: number;
+  isSlotted?: boolean;
+}
+
 export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsViewerProps) {
   const [mounted, setMounted] = useState(false);
+  const [tenureData, setTenureData] = useState<Map<string, MekWithTenure>>(new Map());
   const mekLevels = useQuery(api.mekLeveling.getMekLevels, { walletAddress });
   const goldMiningData = useQuery(api.goldMining.getGoldMiningData, { walletAddress });
 
@@ -23,6 +31,42 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Client-side tenure accumulation for real-time updates
+  useEffect(() => {
+    if (!goldMiningData?.ownedMeks) return;
+
+    // Initialize tenure data from Meks
+    const initialData = new Map<string, MekWithTenure>();
+    goldMiningData.ownedMeks.forEach(mek => {
+      initialData.set(mek.assetId, {
+        currentTenure: mek.tenurePoints || 0,
+        tenureRate: 1, // Base rate of 1 tenure/second
+        isSlotted: mek.isSlotted || false
+      });
+    });
+    setTenureData(initialData);
+
+    // Update tenure every second for slotted Meks
+    const interval = setInterval(() => {
+      setTenureData(prevData => {
+        const newData = new Map(prevData);
+        goldMiningData.ownedMeks.forEach(mek => {
+          const existing = prevData.get(mek.assetId);
+          if (existing && existing.isSlotted) {
+            // Increment tenure by rate per second
+            newData.set(mek.assetId, {
+              ...existing,
+              currentTenure: existing.currentTenure + existing.tenureRate
+            });
+          }
+        });
+        return newData;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [goldMiningData?.ownedMeks]);
 
   const loadingContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -96,6 +140,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Boost %</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Boost Gold/hr</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Total Gold/hr</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Tenure</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Gold Spent</th>
                 </tr>
               </thead>
@@ -104,6 +149,7 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
                   const baseRate = mek.baseGoldPerHour || 0;
                   const boostAmount = mek.currentBoostAmount || 0;
                   const totalRate = baseRate + boostAmount;
+                  const tenureInfo = tenureData.get(mek.assetId);
 
                   return (
                     <tr key={mek._id} className="hover:bg-gray-800/50 transition-colors">
@@ -146,6 +192,20 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
                         <span className="text-sm font-bold text-yellow-400">
                           {totalRate.toFixed(2)}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {tenureInfo ? (
+                          <div className="flex flex-col items-end">
+                            <span className={`text-sm font-semibold ${tenureInfo.isSlotted ? 'text-cyan-400' : 'text-gray-400'}`}>
+                              {tenureInfo.currentTenure.toFixed(1)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {tenureInfo.isSlotted ? '(accumulating)' : '(frozen)'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">0.0</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm text-gray-300">
