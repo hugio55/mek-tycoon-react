@@ -7,6 +7,7 @@ import { COMPLETE_VARIATION_RARITY } from '@/lib/completeVariationRarity';
 import { OverlayRenderer } from '@/components/OverlayRenderer';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
+import MekNamingLightbox from '@/components/MekNamingLightbox';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -15,6 +16,11 @@ export default function HomePage() {
   const [mekSearchTerm, setMekSearchTerm] = useState('');
   const customSlotRef = useRef<HTMLImageElement>(null);
   const [customSlotSize, setCustomSlotSize] = useState({ width: 0, height: 0 });
+
+  // Mek naming lightbox state
+  const [showNamingLightbox, setShowNamingLightbox] = useState(false);
+  const [namingMekAssetId, setNamingMekAssetId] = useState<string | null>(null);
+  const [namingMekImage, setNamingMekImage] = useState<string | null>(null);
 
   // Get user's gold mining data (includes correct Mek list)
   const goldMiningData = useQuery(

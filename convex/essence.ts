@@ -728,7 +728,18 @@ export const slotMek = mutation({
       });
     }
 
-    return { success: true };
+    // Check if Mek has a custom name already
+    const goldMiningRecord = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+      .first();
+
+    const hasName = goldMiningRecord?.ownedMeks?.find((m: any) => m.assetId === mekAssetId)?.customName;
+
+    return {
+      success: true,
+      shouldShowNaming: !hasName // Show naming lightbox if no name exists
+    };
   },
 });
 
