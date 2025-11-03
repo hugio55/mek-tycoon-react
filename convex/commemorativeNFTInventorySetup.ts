@@ -364,8 +364,8 @@ export const markInventoryAsSoldByUid = mutation({
   },
 });
 
-// Mark inventory item as sold by NFT name (for NMKR webhook external sales)
-// NMKR webhooks don't include nftUid, only NftName, so we match by name
+// Mark inventory item as sold by NFT name (fallback method)
+// Note: Prefer markInventoryAsSoldByUid when NftUid is available from webhook
 export const markInventoryAsSoldByName = mutation({
   args: {
     nftName: v.string(),
