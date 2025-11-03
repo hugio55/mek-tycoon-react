@@ -1642,16 +1642,20 @@ export const setMekName = mutation({
       };
     }
 
-    // Check if name is unique within this wallet's owned Meks
-    const nameExists = existing.ownedMeks.some(
-      mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() && mek.assetId !== args.mekAssetId
-    );
+    // Check if name is unique GLOBALLY (across all wallets in the game)
+    const allWallets = await ctx.db.query("goldMining").collect();
 
-    if (nameExists) {
-      return {
-        success: false,
-        error: "You already have a Mek with this name. Please choose a unique name."
-      };
+    for (const wallet of allWallets) {
+      const nameExists = wallet.ownedMeks?.some(
+        mek => mek.customName?.toLowerCase() === trimmedName.toLowerCase() && mek.assetId !== args.mekAssetId
+      );
+
+      if (nameExists) {
+        return {
+          success: false,
+          error: "This name is already taken by another player. Please choose a unique name."
+        };
+      }
     }
 
     // Find the Mek in the ownedMeks array and update its name
