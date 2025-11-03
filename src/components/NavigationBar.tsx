@@ -61,6 +61,19 @@ export default function NavigationBar() {
     activeNavConfig ? { imageKey: activeNavConfig.overlayImageKey } : "skip"
   );
 
+  // Handle image load - trigger fade-in after image is ready
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    // Small delay to ensure dimensions are calculated, then fade in
+    setTimeout(() => setIsVisible(true), 50);
+  };
+
+  // Reset loading state when navigation changes
+  useEffect(() => {
+    setImageLoaded(false);
+    setIsVisible(false);
+  }, [activeNavConfig, overlayData]);
+
   // Accumulate gold in real-time for display zones
   useEffect(() => {
     if (!goldMiningData) {
@@ -320,11 +333,14 @@ export default function NavigationBar() {
             backfaceVisibility: 'hidden',
             willChange: 'transform',
             imageRendering: 'crisp-edges',
+            opacity: isVisible ? 1 : 0,
+            transition: 'opacity 0.5s ease',
           }}
+          onLoad={handleImageLoad}
         />
 
-        {/* Render clickable zones */}
-        {clickableZones.map((zone: any) => {
+        {/* Render clickable zones - only after image loads */}
+        {imageLoaded && clickableZones.map((zone: any) => {
           const buttonConfig = getButtonStyle(zone);
           const buttonStyle = zone.metadata?.buttonStyle || "none";
           const isCustomImage = buttonStyle === "custom-image";
@@ -359,6 +375,8 @@ export default function NavigationBar() {
                 ...buttonConfig.style,
                 fontFamily: zone.metadata?.buttonFont ? getFontFamily(zone.metadata.buttonFont) : undefined,
                 fontWeight: zone.metadata?.buttonFont ? getFontWeight(zone.metadata.buttonFont) : undefined,
+                opacity: isVisible ? 1 : 0,
+                transition: 'opacity 0.5s ease',
               }}
               className={buttonConfig.hoverClass}
               title={zone.label || zone.type}
@@ -386,8 +404,8 @@ export default function NavigationBar() {
           );
         })}
 
-        {/* Render sprites (decorative overlays) */}
-        {overlayData.zones
+        {/* Render sprites (decorative overlays) - only after image loads */}
+        {imageLoaded && overlayData.zones
           .filter((zone: any) => zone.mode === "sprite")
           .map((sprite: any) => {
             const spriteScaleValue = sprite.metadata?.spriteScale || 1;
@@ -402,6 +420,8 @@ export default function NavigationBar() {
                   transform: `scale(${spriteScaleValue * scale})`,
                   transformOrigin: 'top left',
                   pointerEvents: 'none',
+                  opacity: isVisible ? 1 : 0,
+                  transition: 'opacity 0.5s ease',
                 }}
               >
                 {sprite.overlayImage && (
@@ -415,8 +435,8 @@ export default function NavigationBar() {
             );
           })}
 
-        {/* Render display zones (dynamic text displays) */}
-        {displayZones.map((zone: any) => {
+        {/* Render display zones (dynamic text displays) - only after image loads */}
+        {imageLoaded && displayZones.map((zone: any) => {
           const fontSize = zone.metadata?.displayFontSize || 32;
           const color = zone.metadata?.displayColor || "yellow";
           const fontFamily = zone.metadata?.displayFont || "geist-mono";
@@ -439,6 +459,8 @@ export default function NavigationBar() {
                 justifyContent: textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center',
                 pointerEvents: 'none',
                 fontSize: fontSize * scale,
+                opacity: isVisible ? 1 : 0,
+                transition: 'opacity 0.5s ease',
                 color: getDisplayColor(color),
                 fontFamily: getFontFamily(fontFamily),
                 fontWeight: getFontWeight(fontFamily),
