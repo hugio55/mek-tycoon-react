@@ -1,3 +1,26 @@
+/**
+ * GOLD MINING SYSTEM
+ *
+ * ARCHITECTURE - DATA SEPARATION:
+ * This file manages gold production and Mek ownership metadata.
+ *
+ * IMPORTANT: goldMining.ownedMeks does NOT store tenure or slotting data.
+ * - Tenure data lives in `meks` table (single source of truth)
+ * - Slotting data lives in `meks` table (isSlotted, slotNumber)
+ * - Use api.tenure.getMekTenureData() to access tenure/slotting data
+ *
+ * goldMining.ownedMeks stores:
+ * - assetId, policyId, assetName (NFT identity)
+ * - goldPerHour, baseGoldPerHour (gold production rates)
+ * - currentLevel, levelBoostPercent, levelBoostAmount (leveling system)
+ * - customName (user-assigned Mek names)
+ * - rarityRank, variations, sourceKey (metadata)
+ *
+ * goldMining.ownedMeks does NOT store:
+ * - isSlotted, slotNumber (use meks table)
+ * - tenurePoints, tenureRate (use meks table)
+ */
+
 import { v } from "convex/values";
 import { mutation, query, action, internalMutation, internalAction } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
