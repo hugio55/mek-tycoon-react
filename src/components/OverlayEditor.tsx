@@ -1376,7 +1376,6 @@ export default function OverlayEditor() {
                   <option value="button">Button</option>
                   <option value="clickable">Clickable Area</option>
                   <option value="display">Display Zone</option>
-                  <option value="slotted-mek-pfp">Slotted Mek PFP</option>
                   <option value="custom">Custom</option>
                 </select>
               </div>
@@ -2661,6 +2660,7 @@ export default function OverlayEditor() {
                       <option value="mek-count">Mek Count</option>
                       <option value="cumulative-gold">Cumulative Gold</option>
                       <option value="gold-per-hour">Gold Per Hour</option>
+                      <option value="slotted-mek-pfp">Slotted Mek PFP</option>
                     </select>
                   </div>
 
