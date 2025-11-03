@@ -663,48 +663,56 @@ When user types `/ui-team`, activate these three agents together:
 - `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
-### `/ultra` - Strategic multi-agent coordination
-When user types `/ultra`, activate ONLY the `@project-lead` agent. **The project-lead will analyze the problem and selectively launch only the relevant specialist agents needed for the specific issue.**
+### `/ultra` - Multi-agent coordination with guaranteed specialist activation
 
-**CRITICAL RULES**:
-- **ONLY launch the project-lead agent initially** - do NOT blindly launch all 11 agents
-- **Project-lead must be strategic** - it should analyze the problem and activate only relevant specialists
-- **No unnecessary agents** - if the issue is clearly unrelated to mobile, don't launch mobile-responsive-optimizer
-- **Be critical and selective** - fewer, targeted agents are better than launching everything
+**APPROACH**: Analyze the user's problem and launch `@project-lead` PLUS all clearly relevant specialists in parallel.
 
 **How It Works**:
 1. User types `/ultra` describing their issue
-2. Claude launches ONLY the `@project-lead` agent
-3. Project-lead analyzes the problem and identifies which specialists are actually needed
-4. Project-lead launches only the relevant agents and coordinates their work
-5. Project-lead integrates solutions and ensures teams stay aligned
+2. Analyze which domains are involved (wallet, database, UI, code quality, mobile)
+3. Launch project-lead + relevant specialists together in parallel
+4. Project-lead coordinates their work and integrates solutions
 
-**Available Specialist Agents (for project-lead to selectively activate)**:
+**Activation Rules** (launch ALL that apply to the problem):
 
-**Wallet Integration Team:**
-- `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, and CIP-30 API issues
-- `@blockchain-architecture-specialist` - Design trustless verification and on-chain integration
+**Core Coordinator (always launch)**:
+- `@project-lead` - Analyzes, coordinates, and integrates all specialist work
 
-**Database Team:**
-- `@convex-database-architect` - Fix Convex queries, mutations, schemas, and reactivity
-- `@state-sync-debugger` - Debug state synchronization between database and UI
+**Wallet/Blockchain Issues** (NFT problems, wallet connection, minting, transactions):
+- `@cardano-wallet-integrator` - Debug wallet connections, NFT extraction, CIP-30 API
+- `@blockchain-architecture-specialist` - On-chain verification, smart contracts, trustless systems
 
-**Code Quality Team:**
-- `@code-modularizer` - Refactor monolithic code into clean, modular architecture
-- `@syntax-error-fixer` - Fix syntax errors, bracket mismatches, and parsing errors
+**Database Issues** (Convex queries, data not updating, sync problems):
+- `@convex-database-architect` - Fix queries, mutations, schemas, reactivity
+- `@state-sync-debugger` - Debug state sync between database and UI
 
-**UI & Design Team:**
-- `@scifi-ui-designer` - Apply industrial sci-fi aesthetic and design systems
-- `@ui-layout-debugger` - Debug layout issues, positioning, and responsive design
-- `@visual-test` - Verify visual changes in browser and check console errors
-- `@mobile-responsive-optimizer` - Transform desktop UI to mobile-responsive design
+**UI/Design Issues** (layout broken, styling wrong, visual problems):
+- `@scifi-ui-designer` - Apply industrial sci-fi aesthetic
+- `@ui-layout-debugger` - Debug positioning, z-index, layout issues
+- `@visual-test` - Verify visual changes in browser
 
-**Example Decision-Making**:
-- Issue: "NFTs not showing in wallet" → Launch wallet integrator + state-sync debugger (NOT mobile optimizer)
-- Issue: "Convex query returning wrong data" → Launch convex architect + state-sync (NOT UI or wallet teams)
-- Issue: "Button layout broken on mobile" → Launch mobile optimizer + ui-layout debugger (NOT wallet or database teams)
+**Code Quality Issues** (syntax errors, messy code, refactoring needed):
+- `@code-modularizer` - Refactor monolithic code into modular architecture
+- `@syntax-error-fixer` - Fix syntax errors and parsing issues
 
-Use for: Complex multi-domain problems that need coordinated analysis and selective specialist deployment
+**Mobile Issues** (responsive design, touch interactions, mobile layout):
+- `@mobile-responsive-optimizer` - Transform to mobile-responsive design
+
+**Examples**:
+- "NFTs not showing in wallet" → Launch: project-lead + wallet integrator + state-sync debugger
+- "Convex query wrong data" → Launch: project-lead + convex architect + state-sync debugger
+- "Button layout broken on mobile" → Launch: project-lead + mobile optimizer + ui-layout debugger
+- "Messy wallet code with sync issues" → Launch: project-lead + code-modularizer + wallet integrator + state-sync debugger
+
+**Key Principle**: Be selective but guaranteed - if a domain is clearly involved, launch those agents. Don't launch agents for unrelated domains.
+
+<!--
+ORIGINAL APPROACH (preserved for reference - worked well with project-lead alone):
+
+When user types `/ultra`, activate ONLY the `@project-lead` agent. The project-lead will analyze the problem and selectively launch only the relevant specialist agents needed for the specific issue.
+
+This approach worked well because the project-lead agent is quite capable on its own and can coordinate specialists when needed. However, we're now testing a more aggressive multi-agent activation strategy to see if it produces better results.
+-->
 
 ### `/style` - Apply Industrial Design System
 When the user types `/style`, apply the global industrial design system to the current page:

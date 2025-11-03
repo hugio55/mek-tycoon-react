@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, action } from "./_generated/server";
+import { mutation, action, query } from "./_generated/server";
 import { api } from "./_generated/api";
 
 /**
@@ -134,6 +134,7 @@ export const clearInventory = mutation({
 
     return {
       success: true,
+      deleted: inventory.length + reservations.length,
       deletedInventory: inventory.length,
       deletedReservations: reservations.length,
     };
@@ -163,6 +164,99 @@ export const getInventoryStatus = mutation({
         status: i.status,
         uid: i.nftUid,
       })),
+    };
+  },
+});
+
+// Get all inventory (query for frontend)
+export const getAllInventory = query({
+  handler: async (ctx) => {
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .collect();
+
+    return inventory.map((item) => ({
+      _id: item._id,
+      nftUid: item.nftUid,
+      nftNumber: item.nftNumber,
+      name: item.name,
+      status: item.status,
+      isAvailable: item.status === "available",
+    }));
+  },
+});
+
+// Get count of available NFTs (query for frontend)
+export const getAvailableCount = query({
+  handler: async (ctx) => {
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) => q.eq(q.field("status"), "available"))
+      .collect();
+
+    return inventory.length;
+  },
+});
+
+// Initialize from CSV (for frontend test page)
+export const initializeFromCSV = action({
+  args: {
+    csvContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[CSV INIT] Parsing CSV content...');
+
+    const lines = args.csvContent.trim().split('\n');
+    const nfts = [];
+
+    // Skip header row
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const [uid, name, number] = line.split(',');
+      if (uid && name && number) {
+        nfts.push({
+          nftUid: uid.trim(),
+          name: name.trim(),
+          nftNumber: parseInt(number.trim()),
+        });
+      }
+    }
+
+    console.log('[CSV INIT] Parsed', nfts.length, 'NFTs from CSV');
+
+    // Use the existing populateInventoryManually mutation
+    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {
+      nfts,
+    });
+
+    return {
+      created: result.success ? result.count : 0,
+      skipped: result.success ? 0 : nfts.length,
+    };
+  },
+});
+
+// Add known test NFTs (for testing)
+export const addKnownNFTs = action({
+  handler: async (ctx) => {
+    console.log('[ADD KNOWN] Adding Lab Rat #1 test NFT...');
+
+    const testNFTs = [
+      {
+        nftUid: "10aec295-d9e2-47e3-9c04-e56e2df92ad5",
+        nftNumber: 1,
+        name: "Lab Rat #1",
+      },
+    ];
+
+    const result = await ctx.runMutation(api.commemorativeNFTInventorySetup.populateInventoryManually, {
+      nfts: testNFTs,
+    });
+
+    return {
+      created: result.success ? result.count : 0,
     };
   },
 });
