@@ -117,7 +117,7 @@ export default function MekNamingLightbox({
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-md mx-4"
+        className="relative z-10 w-full max-w-lg mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
@@ -136,7 +136,7 @@ export default function MekNamingLightbox({
                 <img
                   src={mekImage}
                   alt="Mek"
-                  className="w-32 h-32 object-contain border-2 border-yellow-500/30 rounded-lg bg-black/40"
+                  className="w-64 h-64 object-contain border-2 border-yellow-500/30 rounded-lg bg-black/40"
                 />
               </div>
             )}
@@ -166,7 +166,7 @@ export default function MekNamingLightbox({
             <div className="text-xs text-gray-500 bg-black/40 border border-gray-700 rounded p-3">
               <p className="mb-1 text-gray-400 font-semibold">Allowed characters:</p>
               <p>Letters, numbers, spaces, hyphens (-), apostrophes ('), and periods (.)</p>
-              <p className="mt-2 text-yellow-500/70">Names must be unique within your collection</p>
+              <p className="mt-2 text-yellow-500/70">Names must be unique globally across all players</p>
             </div>
 
             {/* Error Message */}
