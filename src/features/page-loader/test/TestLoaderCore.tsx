@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LoaderProvider, usePageLoadProgress, useLoaderContext } from '../index';
+import { LoaderProvider, usePageLoadProgress, useLoaderContext, LoadingOverlay } from '../index';
 
 function TestContent() {
   const { registerQuery, markQueryLoaded, setWalletLoaded } = useLoaderContext();
   const progress = usePageLoadProgress();
   const [simulatedQueries, setSimulatedQueries] = useState<string[]>([]);
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     console.log('[TEST] Simulating wallet load in 1 second...');
@@ -39,9 +40,26 @@ function TestContent() {
   }, [registerQuery, markQueryLoaded, setWalletLoaded]);
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-yellow-400">Page Loader Core Test</h1>
+    <>
+      {/* Loading Overlay */}
+      {!showContent && progress.canShow && (
+        <LoadingOverlay
+          percentage={progress.percentage}
+          stage={progress.stage}
+          isComplete={progress.isComplete}
+          onComplete={() => setShowContent(true)}
+        />
+      )}
+
+      {/* Page Content */}
+      <div
+        className="min-h-screen bg-black text-white p-8 transition-opacity duration-800"
+        style={{
+          opacity: showContent || !progress.canShow ? 1 : 0,
+        }}
+      >
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold text-yellow-400">Page Loader Core Test</h1>
 
         <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 space-y-4">
           <div>
@@ -140,6 +158,7 @@ function TestContent() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
