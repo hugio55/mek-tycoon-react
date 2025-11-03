@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import ConfirmationLightbox from "./ConfirmationLightbox";
 
 interface MekNamingLightboxProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function MekNamingLightbox({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameWasSet, setNameWasSet] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const setMekNameMutation = useMutation(api.goldMining.setMekName);
 
@@ -122,14 +124,17 @@ export default function MekNamingLightbox({
       return;
     }
 
-    // If no name was set, show confirmation dialog
-    const confirmed = window.confirm(
-      "You have not named your new employee. It will not be slotted. Are you sure?"
-    );
+    // If no name was set, show confirmation lightbox
+    setShowConfirmation(true);
+  };
 
-    if (confirmed) {
-      onClose();
-    }
+  const handleConfirmClose = () => {
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelClose = () => {
+    setShowConfirmation(false);
   };
 
   const modalContent = (
@@ -226,5 +231,18 @@ export default function MekNamingLightbox({
 
   if (!isOpen || !mounted) return null;
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <ConfirmationLightbox
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="WARNING"
+        message="You have not named your new employee. It will not be slotted. Are you sure?"
+        confirmText="Close Anyway"
+        cancelText="Go Back"
+      />
+    </>
+  );
 }
