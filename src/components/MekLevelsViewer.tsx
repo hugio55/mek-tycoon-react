@@ -113,12 +113,55 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
     };
   });
 
-  // Sort: upgraded Meks first (by level desc), then level 1 Meks (by mek number)
-  const sortedMeks = allMeks.sort((a, b) => {
-    if (a.currentLevel !== b.currentLevel) {
-      return b.currentLevel - a.currentLevel; // Higher levels first
+  // Handle column sorting
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
     }
-    return a.mekNumber - b.mekNumber; // Then by Mek number
+  };
+
+  // Sort Meks based on selected column and direction
+  const sortedMeks = [...allMeks].sort((a, b) => {
+    const tenureA = tenureData.get(a.assetId);
+    const tenureB = tenureData.get(b.assetId);
+
+    let comparison = 0;
+
+    switch (sortColumn) {
+      case 'mekNumber':
+        comparison = a.mekNumber - b.mekNumber;
+        break;
+      case 'level':
+        comparison = a.currentLevel - b.currentLevel;
+        break;
+      case 'baseGold':
+        comparison = a.baseGoldPerHour - b.baseGoldPerHour;
+        break;
+      case 'boost':
+        comparison = a.currentBoostPercent - b.currentBoostPercent;
+        break;
+      case 'totalGold':
+        comparison = (a.baseGoldPerHour + a.currentBoostAmount) - (b.baseGoldPerHour + b.currentBoostAmount);
+        break;
+      case 'tenure':
+        comparison = (tenureA?.currentTenure || 0) - (tenureB?.currentTenure || 0);
+        break;
+      case 'slotted':
+        const aSlotted = tenureA?.isSlotted ? 1 : 0;
+        const bSlotted = tenureB?.isSlotted ? 1 : 0;
+        comparison = aSlotted - bSlotted;
+        break;
+      case 'goldSpent':
+        comparison = a.totalGoldSpent - b.totalGoldSpent;
+        break;
+      default:
+        comparison = b.currentLevel - a.currentLevel;
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   const modalContent = (
@@ -145,15 +188,56 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
             <table className="w-full">
               <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Mek #</th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('mekNumber')}
+                  >
+                    Mek # {sortColumn === 'mekNumber' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Asset ID</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">Level</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Base Gold/hr</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Boost %</th>
+                  <th
+                    className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('level')}
+                  >
+                    Level {sortColumn === 'level' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('baseGold')}
+                  >
+                    Base Gold/hr {sortColumn === 'baseGold' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('boost')}
+                  >
+                    Boost % {sortColumn === 'boost' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Boost Gold/hr</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Total Gold/hr</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Tenure</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Gold Spent</th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('totalGold')}
+                  >
+                    Total Gold/hr {sortColumn === 'totalGold' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('tenure')}
+                  >
+                    Tenure {sortColumn === 'tenure' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('slotted')}
+                  >
+                    Slotted {sortColumn === 'slotted' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase cursor-pointer hover:text-yellow-400"
+                    onClick={() => handleSort('goldSpent')}
+                  >
+                    Gold Spent {sortColumn === 'goldSpent' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
@@ -217,6 +301,13 @@ export default function MekLevelsViewer({ walletAddress, onClose }: MekLevelsVie
                           </div>
                         ) : (
                           <span className="text-sm text-gray-500">0.0</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {tenureInfo?.isSlotted ? (
+                          <span className="text-green-400 font-semibold">✓ Yes</span>
+                        ) : (
+                          <span className="text-gray-500">No</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
