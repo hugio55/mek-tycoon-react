@@ -19,6 +19,15 @@ interface NFTImportEntry {
   name: string;
 }
 
+interface CSVImportPreview {
+  nftCount: number;
+  nfts: Array<{
+    uid: string;
+    name: string;
+    number: number;
+  }>;
+}
+
 export default function CampaignManager({
   selectedCampaignId,
   onCampaignCreated,
@@ -30,6 +39,11 @@ export default function CampaignManager({
   const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
   const [showImportForm, setShowImportForm] = useState(false);
   const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // CSV Import state
+  const [isDragging, setIsDragging] = useState(false);
+  const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
+  const [isImportingCSV, setIsImportingCSV] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -250,6 +264,134 @@ export default function CampaignManager({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // CSV Import handlers
+  const parseCSV = (csvContent: string): CSVImportPreview => {
+    const lines = csvContent.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+    const nfts: CSVImportPreview['nfts'] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const values = line.split(',');
+      const uid = values[headers.indexOf('uid')]?.trim() || '';
+      const tokenname = values[headers.indexOf('tokenname')]?.trim() || '';
+      const displayname = values[headers.indexOf('displayname')]?.trim() || '';
+      const state = values[headers.indexOf('state')]?.trim()?.toLowerCase() || '';
+
+      const name = tokenname || displayname;
+
+      // Only process "free" (available) NFTs
+      if (!uid || !name || state !== 'free') {
+        continue;
+      }
+
+      // Extract NFT number from name
+      const match = name.match(/#(\d+)/);
+      const number = match ? parseInt(match[1]) : 0;
+
+      if (number > 0) {
+        nfts.push({ uid, name, number });
+      }
+    }
+
+    return { nftCount: nfts.length, nfts };
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent, campaignId: string) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const csvFile = files.find(f => f.name.endsWith('.csv'));
+
+    if (!csvFile) {
+      setImportMessage({ type: "error", text: "Please drop a CSV file" });
+      return;
+    }
+
+    try {
+      const content = await csvFile.text();
+      const preview = parseCSV(content);
+
+      if (preview.nftCount === 0) {
+        setImportMessage({ type: "error", text: "No available NFTs found in CSV" });
+        return;
+      }
+
+      setCsvPreview(preview);
+      setImportMessage(null);
+    } catch (error) {
+      setImportMessage({
+        type: "error",
+        text: `Failed to parse CSV: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    }
+  };
+
+  const handleConfirmCSVImport = async (campaignId: string) => {
+    if (!csvPreview) return;
+
+    setIsImportingCSV(true);
+
+    try {
+      const nfts = csvPreview.nfts.map(nft => ({
+        nftUid: nft.uid,
+        nftNumber: nft.number,
+        name: nft.name,
+      }));
+
+      const result = await populateInventory({
+        campaignId: campaignId as Id<"commemorativeCampaigns">,
+        nfts,
+      });
+
+      if (result.success) {
+        setImportMessage({
+          type: "success",
+          text: `Successfully imported ${result.count} NFTs!`
+        });
+        setCsvPreview(null);
+
+        // Refresh campaign stats
+        await syncCounters({
+          campaignId: campaignId as Id<"commemorativeCampaigns">,
+        });
+
+        onCampaignUpdated?.();
+      } else {
+        setImportMessage({
+          type: "error",
+          text: result.error || "Failed to import NFTs"
+        });
+      }
+    } catch (error) {
+      setImportMessage({
+        type: "error",
+        text: `Error importing NFTs: ${error instanceof Error ? error.message : "Unknown error"}`
+      });
+    } finally {
+      setIsImportingCSV(false);
+    }
+  };
+
+  const handleCancelCSVImport = () => {
+    setCsvPreview(null);
+    setImportMessage(null);
   };
 
   if (!campaigns) {
@@ -554,6 +696,75 @@ export default function CampaignManager({
 
               {campaign.status === "active" && (
                 <div className="mb-3">
+                  {/* Import Message */}
+                  {importMessage && campaign._id === selectedCampaignId && (
+                    <div
+                      className={`p-2 rounded text-sm mb-3 ${
+                        importMessage.type === "success"
+                          ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                          : "bg-red-500/20 text-red-400 border border-red-500/50"
+                      }`}
+                    >
+                      {importMessage.text}
+                    </div>
+                  )}
+
+                  {/* CSV Drag-and-Drop Zone */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, campaign._id)}
+                    className={`border-2 border-dashed rounded p-4 mb-3 transition-colors ${
+                      isDragging
+                        ? "border-yellow-500 bg-yellow-500/10"
+                        : "border-gray-600 bg-black/30"
+                    }`}
+                  >
+                    <div className="text-center">
+                      <p className="text-sm text-gray-400 mb-1">
+                        Drag & Drop NMKR Studio CSV here
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Only "free" (available) NFTs will be imported
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CSV Preview & Confirm */}
+                  {csvPreview && (
+                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/50 rounded">
+                      <h4 className="text-sm font-semibold text-yellow-500 mb-2">
+                        CSV Preview
+                      </h4>
+                      <p className="text-sm text-gray-300 mb-2">
+                        Found {csvPreview.nftCount} available NFT{csvPreview.nftCount !== 1 ? 's' : ''}
+                      </p>
+                      <div className="max-h-40 overflow-y-auto mb-3 text-xs space-y-1">
+                        {csvPreview.nfts.map((nft, idx) => (
+                          <div key={idx} className="text-gray-400">
+                            #{nft.number} - {nft.name}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleConfirmCSVImport(campaign._id)}
+                          disabled={isImportingCSV}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex-1"
+                        >
+                          {isImportingCSV ? "Importing..." : `Import ${csvPreview.nftCount} NFTs`}
+                        </button>
+                        <button
+                          onClick={handleCancelCSVImport}
+                          disabled={isImportingCSV}
+                          className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => {
                       setShowImportForm(!showImportForm);
@@ -561,7 +772,7 @@ export default function CampaignManager({
                     }}
                     className="mek-button-secondary text-sm"
                   >
-                    {showImportForm ? "Cancel Import" : "Import NFTs"}
+                    {showImportForm ? "Cancel Manual Import" : "Import NFTs Manually"}
                   </button>
 
                   {showImportForm && campaign._id === selectedCampaignId && (
