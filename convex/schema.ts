@@ -1189,6 +1189,21 @@ export default defineSchema({
   })
     .index("by_tier_rank", ["tier", "rank"]),
 
+  // Slot configuration presets (essence slot upgrade costs)
+  slotConfigurations: defineTable({
+    name: v.string(), // User-provided name for this configuration
+    basicSlot: v.array(v.number()), // 9 tenure values for basic slot (levels 1-9)
+    advancedSlot: v.array(v.number()), // 9 tenure values for advanced slot (levels 1-9)
+    masterSlot: v.array(v.number()), // 9 tenure values for master slot (levels 1-9)
+    curveFactor: v.number(), // Exponential curve factor (0.5-3.0)
+    roundingOption: v.number(), // Rounding precision: 10 | 100 | 1000
+    isActive: v.boolean(), // Only one configuration can be active at a time
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_active", ["isActive"])
+    .index("by_created", ["createdAt"]),
+
   // Game constants and configuration
   gameConstants: defineTable({
     category: v.string(),
