@@ -18,7 +18,6 @@ export function PageLoadingOverlay() {
 
   useEffect(() => {
     if (isComplete) {
-      console.log('[PAGE LOADING] Real query-based load complete, triggering fade-out');
       setTimeout(() => {
         setIsLoading(false);
         setTimeout(() => setShowOverlay(false), 2000);
@@ -35,9 +34,6 @@ export function PageLoadingOverlay() {
       percentage={percentage}
       stage={stage}
       isComplete={isComplete}
-      onComplete={() => {
-        console.log('[PAGE LOADING] Overlay onComplete called');
-      }}
     />
   );
 }

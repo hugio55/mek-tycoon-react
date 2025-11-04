@@ -45,7 +45,10 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
       queryState.timeout = timeoutId;
       newMap.set(id, queryState);
 
-      console.log(`[PAGE LOADER] Query registered: ${id} (total: ${newMap.size})`);
+      // Only log first query registration
+      if (newMap.size === 1) {
+        console.log(`[PAGE LOADER] Query tracking started`);
+      }
       return newMap;
     });
   }, []);
@@ -62,8 +65,11 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
       const newMap = new Map(prev);
       newMap.set(id, { ...query, isLoaded: true, timeout: null });
 
+      // Only log when all queries complete
       const loadedCount = Array.from(newMap.values()).filter((q) => q.isLoaded).length;
-      console.log(`[PAGE LOADER] Query loaded: ${id} (${loadedCount}/${newMap.size})`);
+      if (loadedCount === newMap.size) {
+        console.log(`[PAGE LOADER] All queries loaded (${loadedCount}/${newMap.size})`);
+      }
 
       return newMap;
     });

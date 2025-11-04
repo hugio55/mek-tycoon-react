@@ -16,7 +16,6 @@
     "fetch-source-keys": "node scripts/fetch_source_keys.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.882.0",
     "@blockfrost/blockfrost-js": "^6.0.0",
     "@emurgo/cardano-serialization-lib-nodejs": "^15.0.1",
     "@fabianbormann/cardano-peer-connect": "^1.2.18",
