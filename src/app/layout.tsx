@@ -10,6 +10,7 @@ import GlobalBackground from "@/components/GlobalBackground";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
 import NavigationBar from "@/components/NavigationBar";
 import GlobalLightboxHandler from "@/components/GlobalLightboxHandler";
+import { PageLoadingOverlay } from "@/components/PageLoadingOverlay";
 // SessionCleanup removed - was clearing wallet sessions on every page load, causing auto-disconnect
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
           <DemoModeWrapper>
             <Providers>
               {/* SessionCleanup removed - was clearing wallet sessions on every page load */}
+              <PageLoadingOverlay />
               <NavigationBar />
               <GlobalLightboxHandler />
               {children}
