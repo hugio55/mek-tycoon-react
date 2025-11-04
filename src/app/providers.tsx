@@ -1,6 +1,6 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import UnifiedHeader from "@/components/UnifiedHeader";
@@ -10,6 +10,7 @@ import { EssenceProvider } from "@/contexts/EssenceContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { LoaderProvider, useLoaderContext } from "@/features/page-loader";
 import { TIMING } from "@/features/page-loader/config/constants";
+import { ConvexProviderWithLoader } from "@/providers/ConvexProviderWithLoader";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -52,8 +53,8 @@ export function Providers({ children }: { children: ReactNode }) {
   const showHeader = !isWelcomePage && !isTalentBuilder;
 
   return (
-    <ConvexProvider client={convex}>
-      <LoaderProvider>
+    <LoaderProvider>
+      <ConvexProviderWithLoader client={convex}>
         <DemoWalletProvider>
           <UserProvider>
             <EssenceProviderWrapper>
@@ -80,7 +81,7 @@ export function Providers({ children }: { children: ReactNode }) {
             </EssenceProviderWrapper>
           </UserProvider>
         </DemoWalletProvider>
-      </LoaderProvider>
-    </ConvexProvider>
+      </ConvexProviderWithLoader>
+    </LoaderProvider>
   );
 }
