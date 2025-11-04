@@ -11,6 +11,7 @@ import UsernameModal from "@/components/UsernameModal";
 import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
 import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
 import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
+import { useTrackedQuery } from "@/features/page-loader";
 
 // Demo wallet mock data
 const DEMO_WALLET_DATA = {
@@ -93,21 +94,24 @@ export default function HubPage() {
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   const getInitialGold = useMutation(api.goldTrackingOptimized.getInitialGoldData);
-  const getUserDisplayName = useQuery(api.usernames.getUserDisplayName, 
+  const getUserDisplayNameRaw = useQuery(api.usernames.getUserDisplayName,
     walletAddress ? { walletAddress } : "skip"
   );
+  const getUserDisplayName = useTrackedQuery(getUserDisplayNameRaw, 'hub-username');
   
   // Check blockchain verification status - MUST be declared before usage
-  const verificationStatus = useQuery(
+  const verificationStatusRaw = useQuery(
     api.goldMining.isWalletVerified,
     walletAddress && walletAddress !== "demo_wallet_123" ? { walletAddress } : "skip"
   );
+  const verificationStatus = useTrackedQuery(verificationStatusRaw, 'hub-verification');
 
   // DEBUGGING: Get goldMining data to check if level bonuses are present
-  const goldMiningData = useQuery(
+  const goldMiningDataRaw = useQuery(
     api.goldMining.getGoldMiningData,
     walletAddress ? { walletAddress } : "skip"
   );
+  const goldMiningData = useTrackedQuery(goldMiningDataRaw, 'hub-goldmining');
 
   useEffect(() => {
     // DEMO MODE: Initialize with demo data immediately
@@ -296,10 +300,11 @@ export default function HubPage() {
   }, [getUserDisplayName, walletAddress]);
 
   // Get user profile with real-time updates
-  const userProfile = useQuery(
+  const userProfileRaw = useQuery(
     api.users.getUserProfile,
     userId && walletAddress ? { walletAddress } : "skip"
   );
+  const userProfile = useTrackedQuery(userProfileRaw, 'hub-userprofile');
 
   const liveGoldData = null; // Server polling disabled for bandwidth optimization
   
