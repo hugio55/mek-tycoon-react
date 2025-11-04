@@ -1,9 +1,1 @@
-Fix wallet switching - clear old data when connecting new wallet
-
-Issue: When switching from one wallet to another, old wallet data
-was persisting (showing Vesper data after connecting Eternl).
-
-Fix: Clear all old session state at the start of connectWallet:
-- clearWalletSession() to remove localStorage data
-- Reset all wallet state (address, connected, type, meks)
-- Reset all gold state (current, cumu
+Auto-save: Mon 11/03/2025  9:04:56.22
