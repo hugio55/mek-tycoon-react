@@ -27,9 +27,10 @@ export const Tooltip = ({
     setMounted(true);
   }, []);
 
-  const calculatePosition = (clientX: number, clientY: number) => {
-    if (!contentRef.current) return { x: clientX + 12, y: clientY + 12 };
+  const calculatePosition = () => {
+    if (!containerRef.current || !contentRef.current) return { x: 0, y: 0 };
 
+    const trigger = containerRef.current.getBoundingClientRect();
     const tooltip = contentRef.current;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -38,54 +39,58 @@ export const Tooltip = ({
     const tooltipWidth = 240; // min-w-[15rem] = 240px
     const tooltipHeight = tooltip.scrollHeight || 100; // Fallback height
 
-    let finalX = clientX + 12;
-    let finalY = clientY + 12;
+    // Center tooltip horizontally over the trigger element
+    let finalX = trigger.left + trigger.width / 2 - tooltipWidth / 2;
+
+    // Position tooltip above the trigger element with 12px gap
+    let finalY = trigger.top - tooltipHeight - 12;
 
     // Check if tooltip goes beyond right edge
-    if (finalX + tooltipWidth > viewportWidth) {
-      finalX = clientX - tooltipWidth - 12;
+    if (finalX + tooltipWidth > viewportWidth - 12) {
+      finalX = viewportWidth - tooltipWidth - 12;
     }
 
     // Check if tooltip goes beyond left edge
-    if (finalX < 0) {
+    if (finalX < 12) {
       finalX = 12;
     }
 
-    // Check if tooltip goes beyond bottom edge
-    if (finalY + tooltipHeight > viewportHeight) {
-      finalY = clientY - tooltipHeight - 12;
+    // If tooltip doesn't fit above, position it below
+    if (finalY < 12) {
+      finalY = trigger.bottom + 12;
     }
 
-    // Check if tooltip goes beyond top edge
-    if (finalY < 0) {
-      finalY = 12;
+    // Check if tooltip goes beyond bottom edge (when positioned below)
+    if (finalY + tooltipHeight > viewportHeight - 12) {
+      // Last resort: position next to element
+      finalY = trigger.top;
+      finalX = trigger.right + 12;
+
+      // If that doesn't fit, try left side
+      if (finalX + tooltipWidth > viewportWidth - 12) {
+        finalX = trigger.left - tooltipWidth - 12;
+      }
     }
 
     return { x: finalX, y: finalY };
   };
 
-  const updatePosition = (clientX: number, clientY: number) => {
-    const newPosition = calculatePosition(clientX, clientY);
+  const updatePosition = () => {
+    const newPosition = calculatePosition();
     setPosition(newPosition);
   };
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseEnter = () => {
     setIsVisible(true);
-    updatePosition(e.clientX, e.clientY);
+    updatePosition();
   };
 
   const handleMouseLeave = () => {
     setIsVisible(false);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isVisible) return;
-    updatePosition(e.clientX, e.clientY);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    const touch = e.touches[0];
-    updatePosition(touch.clientX, touch.clientY);
+  const handleTouchStart = () => {
+    updatePosition();
     setIsVisible(true);
   };
 
@@ -96,26 +101,22 @@ export const Tooltip = ({
     }, 2000);
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = () => {
     // Toggle visibility on click for mobile devices
     if (window.matchMedia("(hover: none)").matches) {
-      e.preventDefault();
       if (isVisible) {
         setIsVisible(false);
       } else {
-        updatePosition(e.clientX, e.clientY);
+        updatePosition();
         setIsVisible(true);
       }
     }
   };
 
-  // Recalculate position when tooltip content changes
+  // Recalculate position when tooltip becomes visible or content changes
   useEffect(() => {
-    if (isVisible && contentRef.current && position.x !== 0) {
-      const newPosition = calculatePosition(position.x, position.y);
-      if (newPosition.x !== position.x || newPosition.y !== position.y) {
-        setPosition(newPosition);
-      }
+    if (isVisible) {
+      updatePosition();
     }
   }, [isVisible, content]);
 
@@ -155,7 +156,6 @@ export const Tooltip = ({
         className={cn("relative inline-block", containerClassName)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onClick={handleClick}
