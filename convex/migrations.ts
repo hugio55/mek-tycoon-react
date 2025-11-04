@@ -141,23 +141,115 @@ export const updateSingleMekSourceKey = mutation({
       .query("meks")
       .withIndex("by_asset_name", (q) => q.eq("assetName", args.assetName))
       .first();
-    
+
     if (!mek) {
       throw new Error(`Mek with name ${args.assetName} not found`);
     }
-    
+
     // Extract base key by removing the -B suffix
     const sourceKeyBase = args.sourceKey.replace(/-B$/i, '');
-    
+
     // Update both source keys
     await ctx.db.patch(mek._id, {
       sourceKey: args.sourceKey,
       sourceKeyBase: sourceKeyBase
     });
-    
+
     return {
       success: true,
       message: `Updated ${args.assetName} with source key ${args.sourceKey} and base ${sourceKeyBase}`
+    };
+  },
+});
+
+// Migration to sync Meks from goldMining.ownedMeks to meks table
+// This enables tenure tracking for existing Meks
+export const syncMeksFromGoldMining = mutation({
+  args: {
+    walletAddress: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log(`[MIGRATION] Starting sync for wallet: ${args.walletAddress}`);
+
+    // Get goldMining record
+    const goldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
+      .first();
+
+    if (!goldMining) {
+      throw new Error(`No goldMining record found for wallet ${args.walletAddress}`);
+    }
+
+    if (!goldMining.ownedMeks || goldMining.ownedMeks.length === 0) {
+      return {
+        success: true,
+        message: "No Meks found in goldMining.ownedMeks",
+        created: 0,
+        skipped: 0,
+        total: 0
+      };
+    }
+
+    let createdCount = 0;
+    let skippedCount = 0;
+    const createdMeks: string[] = [];
+
+    for (const ownedMek of goldMining.ownedMeks) {
+      // Check if Mek already exists in meks table
+      const existingMek = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q) => q.eq("assetId", ownedMek.assetId))
+        .first();
+
+      if (existingMek) {
+        console.log(`[MIGRATION] Mek ${ownedMek.assetName} already exists in meks table, skipping`);
+        skippedCount++;
+        continue;
+      }
+
+      // Create new Mek record
+      console.log(`[MIGRATION] Creating meks table entry for ${ownedMek.assetName}`);
+
+      await ctx.db.insert("meks", {
+        // Required fields
+        assetId: ownedMek.assetId,
+        assetName: ownedMek.assetName,
+        owner: args.walletAddress,
+        verified: true, // From goldMining, assume verified
+        headVariation: ownedMek.headVariation || "Unknown",
+        bodyVariation: ownedMek.bodyVariation || "Unknown",
+
+        // Optional fields from goldMining
+        sourceKey: ownedMek.sourceKey,
+        sourceKeyBase: ownedMek.sourceKeyBase,
+        itemVariation: ownedMek.itemVariation,
+        rarityRank: ownedMek.rarityRank,
+        goldRate: ownedMek.baseGoldPerHour || ownedMek.goldPerHour,
+
+        // Initialize tenure fields
+        tenurePoints: 0,
+        lastTenureUpdate: Date.now(),
+        isSlotted: false,
+        slotNumber: undefined,
+
+        // Metadata
+        lastUpdated: Date.now(),
+      });
+
+      createdMeks.push(ownedMek.assetName);
+      createdCount++;
+    }
+
+    console.log(`[MIGRATION] Complete. Created ${createdCount} Meks, skipped ${skippedCount}`);
+
+    return {
+      success: true,
+      message: `Synced ${createdCount} Meks to meks table. Skipped ${skippedCount} that already existed.`,
+      created: createdCount,
+      skipped: skippedCount,
+      total: goldMining.ownedMeks.length,
+      createdMeks
     };
   },
 });
