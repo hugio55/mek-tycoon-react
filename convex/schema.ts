@@ -58,8 +58,6 @@ export default defineSchema({
     .index("by_head", ["headVariation"])
     .index("by_body", ["bodyVariation"])
     .index("by_rarity", ["rarityTier"])
-    .index("by_power", ["powerScore"])
-    .index("by_level", ["level"])
     .index("by_slotted", ["isSlotted"])
     .index("by_owner_slotted", ["owner", "isSlotted"]),
 
