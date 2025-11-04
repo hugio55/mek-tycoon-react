@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 import { useState, useEffect, useRef } from "react";
 import { useLoaderContext } from "@/features/page-loader";
@@ -10,6 +10,12 @@ import { TIMING } from "@/features/page-loader/config/constants";
 
 export default function NavigationBar() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Hide navigation on root page
+  if (pathname === '/') {
+    return null;
+  }
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [currentGold, setCurrentGold] = useState(0);
   const goldAnimationRef = useRef<number | null>(null);
