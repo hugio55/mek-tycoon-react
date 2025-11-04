@@ -328,70 +328,14 @@ export const getGoldMiningData = query({
       .first();
 
     if (!data) {
-      console.log('[🔍MEKNAME] Query returned NULL - wallet not found');
       return null;
     }
-
-    devLog.log('[QUERY] ===================================');
-    devLog.log('[QUERY] getGoldMiningData called:', {
-      timestamp: new Date().toISOString(),
-      wallet: args.walletAddress.substring(0, 20) + '...',
-      storedTotalRate: data.totalGoldPerHour,
-      storedBaseRate: data.baseGoldPerHour,
-      storedBoostRate: data.boostGoldPerHour,
-      mekCount: data.ownedMeks.length
-    });
-
-    // [🔍MEKNAME] Log customName fields
-    const meksWithNames = data.ownedMeks.filter(m => m.customName);
-    console.log('[🔍MEKNAME] Query returning data:', {
-      totalMeks: data.ownedMeks.length,
-      meksWithNames: meksWithNames.length,
-      namedMeks: meksWithNames.map(m => ({
-        assetId: m.assetId,
-        customName: m.customName
-      }))
-    });
 
     // Use stored rates (updated by mutations) - no need to recalculate on every query
     // Mutations keep these synchronized, so reading them is fast and accurate
     const baseRate = data.baseGoldPerHour || 0;
     const boostRate = data.boostGoldPerHour || 0;
     const totalRate = data.totalGoldPerHour || 0;
-
-    devLog.log('[QUERY] Using stored rates (fast read):', {
-      baseRate: baseRate.toFixed(2),
-      boostRate: boostRate.toFixed(2),
-      totalRate: totalRate.toFixed(2)
-    });
-
-    // Log each Mek's contribution
-    devLog.log('[QUERY] Individual Mek rates:');
-    data.ownedMeks.forEach((mek, idx) => {
-      devLog.log(`  [${idx + 1}] ${mek.assetName}:`, {
-        goldPerHour: mek.goldPerHour,
-        baseGoldPerHour: mek.baseGoldPerHour,
-        currentLevel: mek.currentLevel,
-        levelBoostPercent: mek.levelBoostPercent,
-        levelBoostAmount: mek.levelBoostAmount,
-        effectiveGoldPerHour: mek.effectiveGoldPerHour
-      });
-    });
-
-    // Check if level boost data is missing
-    const meksWithBoosts = data.ownedMeks.filter(mek => mek.levelBoostAmount && mek.levelBoostAmount > 0);
-    const meksWithLevelField = data.ownedMeks.filter(mek => mek.currentLevel && mek.currentLevel > 1);
-
-    devLog.log('[QUERY] Level boost analysis:', {
-      totalMeks: data.ownedMeks.length,
-      meksWithBoostAmount: meksWithBoosts.length,
-      meksWithLevelField: meksWithLevelField.length,
-      meksWithBaseRate: data.ownedMeks.filter(mek => mek.baseGoldPerHour).length
-    });
-
-    if (meksWithBoosts.length === 0 && meksWithLevelField.length > 0) {
-      devLog.warn('[QUERY] ⚠️ WARNING: Meks have currentLevel > 1 but NO levelBoostAmount! This means level data is not being synced!');
-    }
 
     // VERIFICATION CHECK: Only accumulate gold if wallet is verified
     const currentGold = calculateCurrentGold({
@@ -402,7 +346,7 @@ export const getGoldMiningData = query({
       consecutiveSnapshotFailures: data.consecutiveSnapshotFailures || 0
     });
 
-    const result = {
+    return {
       ...data,
       currentGold,
       // Use stored rates (already accurate from mutations)
@@ -411,18 +355,6 @@ export const getGoldMiningData = query({
       totalGoldPerHour: totalRate,
       isVerified: data.isBlockchainVerified === true, // Add verification status to response
     };
-
-    devLog.log('[QUERY] Returning to frontend:', {
-      baseGoldPerHour: result.baseGoldPerHour.toFixed(2),
-      boostGoldPerHour: result.boostGoldPerHour.toFixed(2),
-      totalGoldPerHour: result.totalGoldPerHour.toFixed(2),
-      currentGold: result.currentGold.toFixed(2),
-      mekCount: result.ownedMeks.length
-    });
-
-    devLog.log('[QUERY] ===================================');
-
-    return result;
   },
 });
 

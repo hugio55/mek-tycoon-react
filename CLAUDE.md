@@ -395,6 +395,14 @@ taskkill /PID <specific-number> /F
 ## Project Overview
 Mek Tycoon is a web-based idle/tycoon game featuring collectible Mek NFTs. The game combines resource management, crafting, and collection mechanics with a sleek, futuristic UI.
 
+### 🏠 MAIN PAGE IDENTIFICATION
+**CRITICAL: `/home` is the MAIN PAGE of the site.**
+
+- **Main Game Page**: `/home` - The primary gameplay interface where users interact with Mekanisms
+- **When instructions say "apply to main page"**: Use `/home` page, NOT any other page
+- **Universal Guidance**: If you are ever trying to apply something to the "main page" of the site, use the `/home` page (`src/app/home/page.tsx`)
+- The `/hub` page has been removed (it was redundant)
+
 ## Naming Conventions
 **IMPORTANT**: Always use "Mek" terminology:
 - "mech" → "Mek"

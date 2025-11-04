@@ -79,16 +79,21 @@ export default function UnifiedHeader() {
 
         if (session) {
           const address = session.stakeAddress || session.walletAddress;
-          setWalletAddress(address);
-          setSessionExpiresAt(session.expiresAt || null);
+          const expiresAt = session.expiresAt || null;
+
+          // CRITICAL FIX: Only update state if values actually changed
+          // This prevents unnecessary re-renders and query re-executions
+          setWalletAddress(prevAddress => prevAddress !== address ? address : prevAddress);
+          setSessionExpiresAt(prevExpires => prevExpires !== expiresAt ? expiresAt : prevExpires);
         } else {
-          setWalletAddress(null);
-          setSessionExpiresAt(null);
+          // Only clear if not already cleared
+          setWalletAddress(prev => prev !== null ? null : prev);
+          setSessionExpiresAt(prev => prev !== null ? null : prev);
         }
       } catch (error) {
         console.error('[UnifiedHeader] Error restoring session:', error);
-        setWalletAddress(null);
-        setSessionExpiresAt(null);
+        setWalletAddress(prev => prev !== null ? null : prev);
+        setSessionExpiresAt(prev => prev !== null ? null : prev);
       }
     };
 
