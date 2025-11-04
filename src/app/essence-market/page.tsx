@@ -341,7 +341,7 @@ export default function EssenceMarketPage() {
     api.marketplace.getActiveListings,
     {
       itemType: "essence",
-      searchTerm: searchTerm || undefined,
+      searchTerm: searchTerm.length >= 2 ? searchTerm : undefined, // Only search when term is meaningful
       limit: 100,
       offset: 0,
     }
