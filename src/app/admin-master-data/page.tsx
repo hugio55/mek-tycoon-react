@@ -3166,6 +3166,55 @@ export default function AdminMasterDataPage() {
         isOpen={showGameDataLightbox}
         onClose={() => setShowGameDataLightbox(false)}
       />
+
+      {/* Slot Configuration Save Modal */}
+      {mounted && showSaveModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]"
+          onClick={() => setShowSaveModal(false)}
+        >
+          <div
+            className="bg-black/90 border-2 border-green-500/50 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg shadow-green-500/20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-green-400 mb-4 uppercase tracking-wider">Save Slot Configuration</h3>
+            <p className="text-sm text-gray-400 mb-4">
+              This will save all 3 slot types (Basic, Advanced, Master) together.
+            </p>
+            <input
+              type="text"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              placeholder="Enter configuration name..."
+              className="w-full px-4 py-3 bg-black/60 border-2 border-yellow-500/50 rounded text-yellow-300 mb-6 focus:border-yellow-500 focus:outline-none"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && saveName.trim()) {
+                  handleSaveConfiguration();
+                } else if (e.key === 'Escape') {
+                  setShowSaveModal(false);
+                }
+              }}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveConfiguration}
+                disabled={!saveName.trim()}
+                className="flex-1 px-4 py-3 bg-green-500/20 border-2 border-green-500/50 text-green-400 font-bold uppercase tracking-wider rounded hover:bg-green-500/30 hover:border-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                💾 Save
+              </button>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="flex-1 px-4 py-3 bg-gray-600/20 border-2 border-gray-500/50 text-gray-400 font-bold uppercase tracking-wider rounded hover:bg-gray-600/30 hover:border-gray-500 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
