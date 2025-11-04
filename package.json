@@ -16,9 +16,6 @@
     "fetch-source-keys": "node scripts/fetch_source_keys.js"
   },
   "dependencies": {
-    "@blockfrost/blockfrost-js": "^6.0.0",
-    "@emurgo/cardano-serialization-lib-nodejs": "^15.0.1",
-    "@fabianbormann/cardano-peer-connect": "^1.2.18",
     "@sentry/nextjs": "^10.22.0",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3",
@@ -34,11 +31,9 @@
     "clsx": "^2.1.1",
     "convex": "^1.25.4",
     "dotenv": "^17.2.1",
-    "framer-motion": "^12.23.24",
     "fs-extra": "^11.3.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.540.0",
-    "motion": "^12.23.24",
     "next": "^15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
