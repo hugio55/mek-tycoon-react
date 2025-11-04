@@ -26,6 +26,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const [canShow, setCanShow] = useState(true);
   const hasShownLoader = useRef(false);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasTriggeredCompletion = useRef(false);  // NEW: Track if completion was triggered
   const hookIdRef = useRef(Math.random().toString(36).substring(7));
 
   console.log(`[🔄LIFECYCLE] usePageLoadProgress hook ID ${hookIdRef.current} mounted`);
@@ -36,7 +37,14 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   useEffect(() => {
     console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Main effect running`);
     console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Current isComplete state: ${isComplete}`);
+    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - hasTriggeredCompletion: ${hasTriggeredCompletion.current}`);
     console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - startTime: ${startTime}, elapsed: ${Date.now() - startTime}ms`);
+
+    // CRITICAL FIX: If completion was already triggered, don't restart the effect
+    if (hasTriggeredCompletion.current) {
+      console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Completion already triggered, skipping effect`);
+      return;
+    }
 
     if (typeof window !== 'undefined') {
       const bypass = localStorage.getItem(BYPASS_STORAGE_KEY);
@@ -44,6 +52,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
         console.log('[PAGE LOADER] Bypassed via localStorage');
         setIsComplete(true);
         setCanShow(false);
+        hasTriggeredCompletion.current = true;  // Mark as completed
         return;
       }
     }
@@ -87,7 +96,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
         }
         setProgress(100);
 
-        if (!completeTimeoutRef.current) {
+        if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {
+          hasTriggeredCompletion.current = true;  // Mark completion as triggered BEFORE timeout
           completeTimeoutRef.current = setTimeout(() => {
             console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Setting isComplete to TRUE`);
             setIsComplete(true);
