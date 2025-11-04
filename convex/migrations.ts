@@ -253,3 +253,78 @@ export const syncMeksFromGoldMining = mutation({
     };
   },
 });
+
+// CRITICAL FIX: Migration to sync isSlotted state from essenceSlots to meks table
+// This fixes the issue where Meks were slotted BEFORE the migration ran,
+// so they exist in meks table with isSlotted=false even though they're in essenceSlots
+export const syncIsSlottedFromEssenceSlots = mutation({
+  args: {},
+  handler: async (ctx) => {
+    console.log('[MIGRATION] ========================================');
+    console.log('[MIGRATION] Starting isSlotted sync from essenceSlots...');
+    console.log('[MIGRATION] ========================================');
+
+    // Get ALL essence slots that have a Mek slotted
+    const allSlots = await ctx.db.query("essenceSlots").collect();
+    const slottedSlots = allSlots.filter(slot => slot.mekAssetId);
+
+    console.log(`[MIGRATION] Found ${slottedSlots.length} slotted Meks in essenceSlots table`);
+
+    let updatedCount = 0;
+    let notFoundCount = 0;
+    const updates: any[] = [];
+    const now = Date.now();
+
+    for (const slot of slottedSlots) {
+      // Find corresponding Mek in meks table
+      const mek = await ctx.db
+        .query("meks")
+        .withIndex("by_asset_id", (q) => q.eq("assetId", slot.mekAssetId!))
+        .first();
+
+      if (!mek) {
+        console.log(`[MIGRATION] ⚠️  WARNING: Mek ${slot.mekAssetId} not found in meks table!`);
+        notFoundCount++;
+        continue;
+      }
+
+      // Check if already correctly marked as slotted
+      if (mek.isSlotted && mek.slotNumber === slot.slotNumber) {
+        console.log(`[MIGRATION] ✓ Mek ${mek.assetName} already correctly marked as slotted in slot ${slot.slotNumber}`);
+        continue;
+      }
+
+      // Update the Mek to mark it as slotted
+      console.log(`[MIGRATION] 🔄 Updating ${mek.assetName}: isSlotted=false → true, slotNumber=${slot.slotNumber}`);
+
+      await ctx.db.patch(mek._id, {
+        isSlotted: true,
+        slotNumber: slot.slotNumber,
+        lastTenureUpdate: now, // Start tracking tenure from now
+        tenurePoints: mek.tenurePoints || 0, // Preserve existing tenure if any
+      });
+
+      updates.push({
+        assetName: mek.assetName,
+        slotNumber: slot.slotNumber,
+        previouslySlotted: mek.isSlotted || false
+      });
+
+      updatedCount++;
+    }
+
+    console.log('[MIGRATION] ========================================');
+    console.log(`[MIGRATION] Complete! Updated ${updatedCount} Meks`);
+    console.log(`[MIGRATION] Not found in meks table: ${notFoundCount}`);
+    console.log('[MIGRATION] ========================================');
+
+    return {
+      success: true,
+      message: `Synced isSlotted state for ${updatedCount} Meks. ${notFoundCount} not found in meks table.`,
+      totalSlotted: slottedSlots.length,
+      updated: updatedCount,
+      notFound: notFoundCount,
+      updates
+    };
+  },
+});

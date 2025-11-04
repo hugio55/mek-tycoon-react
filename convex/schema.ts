@@ -30,52 +30,25 @@ export default defineSchema({
     itemVariation: v.optional(v.string()),
     itemVariationId: v.optional(v.number()), // Reference to variationsReference.variationId
     
-    // Game stats
-    level: v.optional(v.number()),
-    experience: v.optional(v.number()),
-    health: v.optional(v.number()),
-    maxHealth: v.optional(v.number()),
-    speed: v.optional(v.number()),
-    
     // Rarity and ranking
     rarityRank: v.optional(v.number()), // Original CNFT marketplace ranking
     gameRank: v.optional(v.number()),   // Custom game ranking (genesis meks are 1-10)
     cnftRank: v.optional(v.number()),   // Backup of original CNFT rank when gameRank differs
     isGenesis: v.optional(v.boolean()), // True for special genesis meks (101-010-101, etc)
     rarityTier: v.optional(v.string()), // Common, Uncommon, Rare, Epic, Legendary
-    powerScore: v.optional(v.number()), // Overall power rating
-    
-    // Battle data
-    wins: v.optional(v.number()),
-    losses: v.optional(v.number()),
-    draws: v.optional(v.number()),
-    winStreak: v.optional(v.number()),
-    
-    // Economic data
-    scrapValue: v.optional(v.number()),
-    marketValue: v.optional(v.number()),
-    lastSalePrice: v.optional(v.number()),
-    
-    // Special attributes
-    abilities: v.optional(v.array(v.string())),
-    traits: v.optional(v.array(v.string())),
-    specialMove: v.optional(v.string()),
-    
+
+    // Gold mining
+    goldRate: v.optional(v.number()), // Gold per hour production rate
+
+    // Tenure system (essence slot tracking)
+    tenurePoints: v.optional(v.number()), // Accumulated tenure points (1 point/second when slotted)
+    lastTenureUpdate: v.optional(v.number()), // Timestamp of last tenure update
+    isSlotted: v.optional(v.boolean()), // Whether Mek is currently in an essence slot
+    slotNumber: v.optional(v.number()), // Which essence slot (1-6) if slotted
+
     // Metadata
     lastUpdated: v.optional(v.number()),
-    inBattle: v.optional(v.boolean()),
-    isStaked: v.optional(v.boolean()),
-    
-    // Employee/work status
-    isEmployee: v.optional(v.boolean()),
-    goldRate: v.optional(v.number()),
-
-    // Tenure system
-    tenurePoints: v.optional(v.number()), // Accumulated tenure points
-    tenureRate: v.optional(v.number()), // Points per hour (based on goldRate)
-    lastTenureUpdate: v.optional(v.number()), // Timestamp of last tenure update
-    isSlotted: v.optional(v.boolean()), // Whether Mek is in a gold-collecting slot
-    slotNumber: v.optional(v.number()), // Which slot (1-6) if slotted
+    isStaked: v.optional(v.boolean())
   })
     .index("by_owner", ["owner"])
     .index("by_asset_id", ["assetId"])
