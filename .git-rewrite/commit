@@ -1,0 +1,20 @@
+tree 09c63087a91ad9c897a483f15836261cff1f1fdf
+parent c0140c323dcf7925f0ee28b5df1168c8a67d4c4c
+author Ben Meyers <ben@mektycoon.com> 1759768205 -0400
+committer Ben Meyers <ben@mektycoon.com> 1759768205 -0400
+
+Increase wallet dropdown font sizes by 10% on desktop
+
+Changes:
+- Corporation name: 14px → 16px
+- Wallet address: 12px → 14px
+- Session timer: 12px → 14px
+- Labels: 12px → 14px
+- Gold amount: 18px → 20px
+- Buttons: 12px → 14px
+
+Mobile sizes unchanged for optimal touch targets.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
