@@ -72,7 +72,9 @@ const nextConfig = {
         '@fabianbormann/cardano-peer-connect',
         '@lucid-evolution/lucid',
         // 3D library (only used in specific pages with dynamic imports)
-        'three'
+        'three',
+        // AWS SDK (optional dependency of unzipper, not used in our code)
+        '@aws-sdk/client-s3'
       );
     }
 
