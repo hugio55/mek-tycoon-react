@@ -3955,25 +3955,6 @@ export default function MekRateLoggingPage() {
                 />
             </div>
 
-            {/* Mechanism Grid Lightbox Button */}
-            <div className="mb-6 flex justify-center">
-              <button
-                onClick={() => setShowMechanismGridLightbox(true)}
-                className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold uppercase tracking-wider hover:from-yellow-500 hover:to-yellow-400 transition-all duration-300 border-2 border-yellow-400/50 shadow-lg shadow-yellow-500/50"
-                style={{
-                  clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
-                  fontFamily: 'Orbitron, monospace'
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  <span>View Full Mechanism Grid</span>
-                </div>
-              </button>
-            </div>
-
             {/* Meks Grid - 4 columns wide */}
             <div className={`grid gap-6 ${
               ownedMeks.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
