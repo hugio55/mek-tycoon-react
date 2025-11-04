@@ -152,6 +152,31 @@ export default function AdminMasterDataPage() {
     advanced: [0, 0, 0, 0, 0, 0, 0, 0, 0],
     master: [0, 0, 0, 0, 0, 0, 0, 0, 0]
   });
+  const [slotRoundingOption, setSlotRoundingOption] = useState<10 | 100 | 1000>(10);
+
+  // Interpolate slot values between first and last
+  const interpolateSlotValues = () => {
+    const firstValue = slotsConfig[selectedSlotType][0];
+    const lastValue = slotsConfig[selectedSlotType][8];
+
+    const newValues = Array.from({ length: 9 }, (_, index) => {
+      if (index === 0) return firstValue;
+      if (index === 8) return lastValue;
+
+      // Linear interpolation
+      const t = index / 8; // Progress from 0 to 1
+      const interpolated = firstValue + (lastValue - firstValue) * t;
+
+      // Round to selected option
+      const rounded = Math.round(interpolated / slotRoundingOption) * slotRoundingOption;
+      return rounded;
+    });
+
+    setSlotsConfig(prev => ({
+      ...prev,
+      [selectedSlotType]: newValues
+    }));
+  };
 
   // Create ordered DATA_SYSTEMS array based on saved order
   const orderedDataSystems = useMemo(() => {
@@ -2478,6 +2503,36 @@ export default function AdminMasterDataPage() {
                     <option value="advanced">Advanced Slots</option>
                     <option value="master">Master Slots</option>
                   </select>
+                </div>
+
+                {/* Interpolation Controls */}
+                <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                  <h5 className="text-sm font-bold text-yellow-400 mb-3 uppercase tracking-wider">Auto-Fill Tool</h5>
+                  <p className="text-xs text-gray-400 mb-3">Enter values in Level 1→2 and Level 9→10, then click Interpolate to auto-fill middle values</p>
+
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                        Rounding
+                      </label>
+                      <select
+                        value={slotRoundingOption}
+                        onChange={(e) => setSlotRoundingOption(Number(e.target.value) as 10 | 100 | 1000)}
+                        className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 focus:border-yellow-500 focus:outline-none"
+                      >
+                        <option value={10}>Tens</option>
+                        <option value={100}>Hundreds</option>
+                        <option value={1000}>Thousands</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={interpolateSlotValues}
+                      className="px-6 py-2 bg-yellow-500/20 border-2 border-yellow-500/50 rounded text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/30 hover:border-yellow-500 transition-all"
+                    >
+                      Interpolate
+                    </button>
+                  </div>
                 </div>
 
                 {/* Leveling Requirements Grid */}

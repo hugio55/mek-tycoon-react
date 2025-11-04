@@ -66,10 +66,13 @@ export const Tooltip = ({
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    console.log('[TOOLTIP] Mouse entered, showing tooltip');
     setIsVisible(true);
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+    console.log('[TOOLTIP] Container rect:', rect);
+    console.log('[TOOLTIP] Mouse position:', { mouseX, mouseY, clientX: e.clientX, clientY: e.clientY });
     updateMousePosition(mouseX, mouseY);
   };
 
@@ -152,8 +155,16 @@ export const Tooltip = ({
               top: position.y,
               left: position.x,
             }}
+            ref={(el) => {
+              if (el) {
+                console.log('[TOOLTIP] Rendered at position:', position);
+                const rect = el.getBoundingClientRect();
+                console.log('[TOOLTIP] Element dimensions:', rect);
+                console.log('[TOOLTIP] Computed styles:', window.getComputedStyle(el));
+              }
+            }}
           >
-            <div className="rounded-md border-2 border-yellow-500/80 bg-black/95 backdrop-blur-md shadow-2xl shadow-yellow-500/30">
+            <div className="rounded-md border-2 border-yellow-500 bg-black backdrop-blur-md shadow-2xl shadow-yellow-500/30">
               <div
                 ref={contentRef}
                 className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
