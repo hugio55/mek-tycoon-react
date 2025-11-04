@@ -23,13 +23,13 @@ const nextConfig = {
   // Disable static optimization for large datasets
   staticPageGenerationTimeout: 120,
 
-  // Skip linting and type checking for quick deployment
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Skip type checking for quick deployment
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  // Use Turbopack (Next.js 16 default, faster than webpack)
+  turbopack: {},
 
   // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
