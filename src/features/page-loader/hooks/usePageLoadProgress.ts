@@ -62,15 +62,10 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       const snapped = snapToMilestone(combined);
 
-      console.log('[PAGE LOADER] Progress update:', {
-        elapsed: `${(elapsed / 1000).toFixed(1)}s`,
-        queries: `${loadedCount}/${totalCount}`,
-        queryProgress: Math.round(queryProgress),
-        timeProgress: Math.round(timeProgress),
-        milestoneProgress: Math.round(milestoneProgress),
-        combined: Math.round(combined),
-        snapped,
-      });
+      // Only log on significant progress changes (every 25%)
+      if (snapped !== progress && (snapped === 0 || snapped === 25 || snapped === 50 || snapped === 75 || snapped === 100)) {
+        console.log('[PAGE LOADER] Progress:', snapped + '%', `(queries: ${loadedCount}/${totalCount})`);
+      }
 
       setProgress(snapped);
 
@@ -81,25 +76,21 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       if ((allQueriesLoaded && minTimeElapsed) || noQueriesTracked || timedOut) {
         if (timedOut) {
-          console.log('[PAGE LOADER] Total timeout reached, forcing completion');
-        }
-        if (noQueriesTracked) {
-          console.log('[PAGE LOADER] No queries tracked, completing after simple timer');
+          console.log('[PAGE LOADER] Timeout reached, completing');
         }
         setProgress(100);
 
         if (!completeTimeoutRef.current) {
           completeTimeoutRef.current = setTimeout(() => {
-            console.log('[PAGE LOADER] Marking as complete');
+            console.log('[PAGE LOADER] Complete');
             setIsComplete(true);
           }, 300);
         }
       }
     };
 
-    if (getTotalCount() === 0 && Date.now() - startTime < 500) {
-      console.log('[PAGE LOADER] No queries detected yet, waiting...');
-    } else if (getTotalCount() > 0) {
+    if (getTotalCount() > 0 && !hasShownLoader.current) {
+      console.log('[PAGE LOADER] Tracking', getTotalCount(), 'queries');
       hasShownLoader.current = true;
     }
 

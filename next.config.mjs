@@ -52,7 +52,29 @@ const nextConfig = {
       type: 'webassembly/async',
     });
 
-    // Don't exclude MeshSDK packages - they need to be bundled for WASM support
+    // Externalize heavy packages for SERVER bundles only (reduces serverless function size)
+    // These packages are still available in node_modules at runtime on Vercel
+    // Client bundles still include them for WASM support
+    if (isServer) {
+      config.externals = config.externals || [];
+
+      // Ensure externals is an array we can push to
+      if (!Array.isArray(config.externals)) {
+        config.externals = [config.externals];
+      }
+
+      // Add heavy blockchain packages (only used in admin minting routes)
+      config.externals.push(
+        '@meshsdk/core',
+        '@meshsdk/react',
+        '@emurgo/cardano-serialization-lib-nodejs',
+        '@emurgo/cardano-serialization-lib-browser',
+        '@fabianbormann/cardano-peer-connect',
+        '@lucid-evolution/lucid',
+        // 3D library (only used in specific pages with dynamic imports)
+        'three'
+      );
+    }
 
     return config;
   },
