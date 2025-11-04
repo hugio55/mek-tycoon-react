@@ -6,20 +6,25 @@ const nextConfig = {
   // Standalone mode bundles everything together which may ignore externals configuration
   // output: 'standalone',
 
+  // CRITICAL: Disable source maps in production to reduce bundle size
+  productionBrowserSourceMaps: false,
+
   // Increase memory limit for build process
   experimental: {
     workerThreads: false,
-    cpus: 1
+    cpus: 1,
+    // Disable server source maps in production (saves ~45 MB)
+    serverSourceMaps: false,
   },
-  
+
   // Optimize image handling
   images: {
     unoptimized: true, // Since we're serving local images
   },
-  
+
   // Disable static optimization for large datasets
   staticPageGenerationTimeout: 120,
-  
+
   // Skip linting and type checking for quick deployment
   eslint: {
     ignoreDuringBuilds: true,
@@ -27,7 +32,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -78,7 +83,21 @@ const nextConfig = {
         // Three.js and physics engines (only used in a few experimental pages)
         'three',
         'cannon',
-        'cannon-es'
+        'cannon-es',
+        // Additional heavy packages for bundle size reduction
+        'archiver',
+        'adm-zip',
+        'jszip',
+        'fs-extra',
+        // Sentry packages (reduces bundle bloat)
+        '@sentry/node',
+        '@sentry/core',
+        // OpenTelemetry (bundled with Sentry, very large)
+        '@opentelemetry/api',
+        '@opentelemetry/core',
+        '@opentelemetry/instrumentation',
+        '@opentelemetry/sdk-trace-base',
+        '@opentelemetry/sdk-trace-node'
       );
     }
 
@@ -89,35 +108,42 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+// Conditionally enable Sentry only when explicitly enabled via environment variable
+// This prevents Sentry from bloating the Vercel deployment bundle (~16-20 MB per function)
+// To enable Sentry, set ENABLE_SENTRY=true in environment variables
+const useSentry = process.env.ENABLE_SENTRY === 'true';
 
-  org: "over-exposed",
+export default useSentry
+  ? withSentryConfig(nextConfig, {
+      // For all available options, see:
+      // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  project: "javascript-nextjs",
+      org: "over-exposed",
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+      project: "javascript-nextjs",
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+      // Only print logs for uploading source maps in CI
+      silent: !process.env.CI,
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+      // For all available options, see:
+      // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/monitoring",
+      // DISABLED: Upload a larger set of source maps (was increasing bundle size)
+      widenClientFileUpload: false,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+      // DISABLED: Route browser requests to Sentry (adds runtime overhead)
+      // tunnelRoute: "/monitoring",
 
-  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
-});
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      disableLogger: true,
+
+      // Hide source maps from bundle (don't include in deployment)
+      hideSourceMaps: true,
+
+      // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+      // See the following for more information:
+      // https://docs.sentry.io/product/crons/
+      // https://vercel.com/docs/cron-jobs
+      automaticVercelMonitors: true,
+    })
+  : nextConfig;
