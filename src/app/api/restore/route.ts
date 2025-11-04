@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs-extra';
 import path from 'path';
-import unzipper from 'unzipper';
+import AdmZip from 'adm-zip';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,9 +32,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Extract the zip file
-      await fs.createReadStream(savePath)
-        .pipe(unzipper.Extract({ path: tempDir }))
-        .promise();
+      const zip = new AdmZip(savePath);
+      zip.extractAllTo(tempDir, true);
 
       // Read metadata if exists
       const metadataPath = path.join(tempDir, 'save_metadata.json');

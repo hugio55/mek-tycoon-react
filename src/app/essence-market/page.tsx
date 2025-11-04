@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -84,6 +85,9 @@ export default function EssenceMarketPage() {
 
   // Tooltip state for insufficient funds
   const [hoveredInsufficientListing, setHoveredInsufficientListing] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ top: number; left: number } | null>(null);
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [mounted, setMounted] = useState(false);
 
   // Purchase history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -173,6 +177,11 @@ export default function EssenceMarketPage() {
       setCurrentTime(Date.now());
     }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Set mounted state for portal rendering
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   // Close dropdown when clicking outside
@@ -557,6 +566,24 @@ export default function EssenceMarketPage() {
     setSelectedListing(listing);
     setPurchaseAmount(0.1); // Set to minimum
     setShowPurchaseModal(true);
+  };
+
+  // Calculate tooltip position based on button position
+  const handleTooltipHover = (listingId: string, show: boolean) => {
+    if (show) {
+      const button = buttonRefs.current[listingId];
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        setTooltipPosition({
+          top: rect.top - 40, // Position above button
+          left: rect.left + rect.width / 2 // Center horizontally
+        });
+      }
+      setHoveredInsufficientListing(listingId);
+    } else {
+      setHoveredInsufficientListing(null);
+      setTooltipPosition(null);
+    }
   };
 
   // Handle purchase history modal
@@ -4779,12 +4806,13 @@ export default function EssenceMarketPage() {
                       ⊗ RECALL
                     </button>
                   ) : (
-                    <div className="relative">
+                    <>
                       <button
+                        ref={(el) => { buttonRefs.current[listing._id] = el; }}
                         onClick={() => canAfford && handleOpenPurchaseModal(listing)}
                         disabled={!canAfford}
-                        onMouseEnter={() => !canAfford && setHoveredInsufficientListing(listing._id)}
-                        onMouseLeave={() => setHoveredInsufficientListing(null)}
+                        onMouseEnter={() => !canAfford && handleTooltipHover(listing._id, true)}
+                        onMouseLeave={() => handleTooltipHover(listing._id, false)}
                         className={`${getSiphonButtonStyle()} ${getSiphonButtonColors(canAfford)} ${canAfford ? getSiphonHoverEffect() : ''}`}
                         style={{
                           clipPath: canAfford ? getSiphonButtonClipPath() : undefined
@@ -4802,19 +4830,7 @@ export default function EssenceMarketPage() {
                           SIPHON
                         </span>
                       </button>
-
-                      {/* Custom Tooltip for Insufficient Funds */}
-                      {!canAfford && hoveredInsufficientListing === listing._id && (
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 pointer-events-none">
-                          <div className="relative px-3 py-1.5 bg-gray-900/95 border border-yellow-500/40 rounded text-yellow-400 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                            <div className="absolute inset-0 mek-overlay-scratches opacity-10" />
-                            <span className="relative z-10">Insufficient Funds</span>
-                            {/* Arrow pointing down */}
-                            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-yellow-500/40" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    </>
                   )}
 
                   {/* Time Left - Countdown Timer (Below Button) */}
@@ -6060,6 +6076,26 @@ export default function EssenceMarketPage() {
           );
         })()}
       </div>
+
+      {/* Portal-based Tooltip for Insufficient Funds */}
+      {mounted && hoveredInsufficientListing && tooltipPosition && createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className="relative px-3 py-1.5 bg-gray-900/95 border border-yellow-500/40 rounded text-yellow-400 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+            <div className="absolute inset-0 mek-overlay-scratches opacity-10" />
+            <span className="relative z-10">Insufficient Funds</span>
+            {/* Arrow pointing down */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-yellow-500/40" />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
