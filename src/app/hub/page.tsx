@@ -1,6 +1,5 @@
 "use client";
 
-// Final rebuild with fixed env var (no newline)
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -8,63 +7,24 @@ import { Id } from "../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import UsernameModal from "@/components/UsernameModal";
-import DisconnectConfirmModal from "@/components/DisconnectConfirmModal";
-import CommemorativeNFTBanner from "@/components/CommemorativeNFTBanner";
-import { toastError, toastSuccess, toastInfo } from "@/lib/toast";
-import { useTrackedQuery } from "@/features/page-loader";
-
-// Demo wallet mock data
-const DEMO_WALLET_DATA = {
-  walletAddress: 'stake1demo_test_wallet',
-  companyName: 'Demo Industries',
-  totalGoldPerHour: 70.56,
-  accumulatedGold: 1250.75,
-  totalCumulativeGold: 8943.22,
-};
 
 export default function HubPage() {
-  // Check for demo mode via URL
-  const [isDemoMode, setIsDemoMode] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      setIsDemoMode(params.get('demo') === 'true');
-    }
-  }, []);
-
+  
   const [liveGold, setLiveGold] = useState(0);
   const [totalGold, setTotalGold] = useState(0);
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
   const [goldPerSecond, setGoldPerSecond] = useState(0);
   const [lastGoldFetch, setLastGoldFetch] = useState(Date.now());
   const [cachedGoldData, setCachedGoldData] = useState<{goldPerHour: number; goldPerSecond: number} | null>(null);
-  const [displayGold, setDisplayGold] = useState(0); // Visual display only, updated via ref
-  const [optimisticTotalGold, setOptimisticTotalGold] = useState<number | null>(null); // Optimistic gold display
-  const [isCollecting, setIsCollecting] = useState(false); // Collecting state
-  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean, direction: string, speed: number, delay: number}>>([]);
+  const [stars, setStars] = useState<Array<{id: number, left: string, top: string, size: number, opacity: number, twinkle: boolean}>>([]);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(0);
   const [initError, setInitError] = useState<string | null>(null);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
-  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | 'all'>('7d');
   const [chartMode, setChartMode] = useState<'total' | 'rate'>('total');
   const [showSlotBuffsModal, setShowSlotBuffsModal] = useState(false);
-  const [employees, setEmployees] = useState([
-    // Full gold meks first (sorted by progress: 100)
-    { id: 1234, level: 5, rate: 15.5, gold: 968, maxGold: 968, progress: 100, buffed: false, hourCap: '72h' },
-    { id: 3691, level: 7, rate: 22.8, gold: 1644, maxGold: 1644, progress: 100, buffed: true, hourCap: '96h' },
-    { id: 9052, level: 6, rate: 18.7, gold: 1346, maxGold: 1346, progress: 100, buffed: false, hourCap: '72h' },
-    { id: 7231, level: 2, rate: 9.5, gold: 684, maxGold: 684, progress: 100, buffed: true, hourCap: '120h' },
-    { id: 5612, level: 8, rate: 25.3, gold: 1820, maxGold: 1820, progress: 100, buffed: false, hourCap: '72h' },
-    // Partial progress meks
-    { id: 2468, level: 3, rate: 12.2, gold: 523, maxGold: 878, progress: 60, buffed: false, hourCap: '72h' },
-    { id: 1847, level: 4, rate: 14.1, gold: 340, maxGold: 1015, progress: 33, buffed: true, hourCap: '96h' },
-    { id: 4089, level: 3, rate: 11.8, gold: 425, maxGold: 850, progress: 50, buffed: false, hourCap: '72h' },
-    { id: null, level: 0, rate: 0, gold: 0, maxGold: 0, progress: 0, buffed: false, hourCap: '72h' }, // Empty slot
-  ]);
   
   // Chart data generation based on period
   const generateChartData = () => {
@@ -94,92 +54,35 @@ export default function HubPage() {
   // Get or create user
   const getOrCreateUser = useMutation(api.users.getOrCreateUser);
   const getInitialGold = useMutation(api.goldTrackingOptimized.getInitialGoldData);
-  const getUserDisplayNameRaw = useQuery(api.usernames.getUserDisplayName,
+  const getUserDisplayName = useQuery(api.usernames.getUserDisplayName, 
     walletAddress ? { walletAddress } : "skip"
   );
-  const getUserDisplayName = useTrackedQuery(getUserDisplayNameRaw, 'hub-username');
   
-  // Check blockchain verification status - MUST be declared before usage
-  const verificationStatusRaw = useQuery(
-    api.goldMining.isWalletVerified,
-    walletAddress && walletAddress !== "demo_wallet_123" ? { walletAddress } : "skip"
-  );
-  const verificationStatus = useTrackedQuery(verificationStatusRaw, 'hub-verification');
-
-  // DEBUGGING: Get goldMining data to check if level bonuses are present
-  const goldMiningDataRaw = useQuery(
-    api.goldMining.getGoldMiningData,
-    walletAddress ? { walletAddress } : "skip"
-  );
-  const goldMiningData = useTrackedQuery(goldMiningDataRaw, 'hub-goldmining');
-
   useEffect(() => {
-    // DEMO MODE: Initialize with demo data immediately
-    if (isDemoMode) {
-      setWalletAddress(DEMO_WALLET_DATA.walletAddress);
-      setDisplayName(DEMO_WALLET_DATA.companyName);
-      setLiveGold(DEMO_WALLET_DATA.accumulatedGold);
-      setTotalGold(DEMO_WALLET_DATA.totalCumulativeGold);
-      setGoldPerSecond(DEMO_WALLET_DATA.totalGoldPerHour / 3600);
-      setCachedGoldData({
-        goldPerHour: DEMO_WALLET_DATA.totalGoldPerHour,
-        goldPerSecond: DEMO_WALLET_DATA.totalGoldPerHour / 3600
-      });
-      setUserId("demo_user_id" as any); // Fake user ID for demo mode
-
-      // Generate stars for demo mode
-      setStars([...Array(60)].map((_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        size: Math.random() * 3 + 0.5,
-        opacity: Math.random() * 0.8 + 0.2,
-        twinkle: Math.random() > 0.5,
-        direction: Math.random() > 0.5 ? 'horizontal' : 'vertical',
-        speed: Math.random() * 60 + 120,
-        delay: Math.random() * 60,
-      })));
-      return;
-    }
-
     const initUser = async () => {
       try {
         // Get wallet from localStorage or use demo
         const storedWallet = localStorage.getItem('walletAddress') || localStorage.getItem('stakeAddress') || "demo_wallet_123";
         setWalletAddress(storedWallet);
-
-        const user = await getOrCreateUser({
-          walletAddress: storedWallet
+        
+        const user = await getOrCreateUser({ 
+          walletAddress: storedWallet 
         });
         if (user) {
           setUserId(user._id as Id<"users">);
           setTotalGold(user.gold);
-
+          
           // Fetch initial gold data once
           try {
             const goldData = await getInitialGold({ userId: user._id as Id<"users"> });
-
-            console.log('[HUB INIT] ===================================');
-            console.log('[HUB INIT] getInitialGold returned:', {
-              timestamp: new Date().toISOString(),
-              goldPerHour: goldData.goldPerHour,
-              goldPerSecond: goldData.goldPerSecond,
-              pendingGold: goldData.pendingGold,
-              totalGold: goldData.totalGold
-            });
-            console.log('[HUB INIT] ⚠️ NOTE: This data comes from users.goldPerHour, NOT goldMining.totalGoldPerHour!');
-            console.log('[HUB INIT] ===================================');
-
             setCachedGoldData(goldData);
-
-            // DON'T set goldPerSecond yet - wait for verification check
-            // setGoldPerSecond will be set by the verification useEffect
+            setGoldPerSecond(goldData.goldPerSecond);
             setLiveGold(goldData.pendingGold);
             setLastGoldFetch(Date.now());
           } catch (error) {
             console.error("Failed to fetch initial gold data:", error);
             // Set default values
-            setGoldPerSecond(0); // Start at 0 until verified
+            setGoldPerSecond(50 / 3600); // 50 gold per hour default
             setLiveGold(0);
           }
         }
@@ -189,7 +92,7 @@ export default function HubPage() {
       }
     };
     initUser();
-
+    
     // Generate stars for background (moved to useEffect to avoid hydration issues)
     setStars(prevStars => {
       if (prevStars.length > 0) return prevStars; // Only generate once
@@ -200,112 +103,27 @@ export default function HubPage() {
         size: Math.random() * 3 + 0.5,
         opacity: Math.random() * 0.8 + 0.2,
         twinkle: Math.random() > 0.5,
-        direction: Math.random() > 0.5 ? 'horizontal' : 'vertical', // Random movement direction
-        speed: Math.random() * 60 + 120, // Random speed between 120-180 seconds
-        delay: Math.random() * 60, // Random delay up to 60 seconds
       }));
     });
-  }, [getOrCreateUser, getInitialGold, isDemoMode]);
-
-  // DIAGNOSTIC LOGGING: Track goldMiningData changes
-  useEffect(() => {
-    if (!goldMiningData) return;
-
-    console.log('[HUB SYNC] =================================');
-    console.log('[HUB SYNC] goldMiningData received:', {
-      timestamp: new Date().toISOString(),
-      totalGoldPerHour: goldMiningData.totalGoldPerHour,
-      baseGoldPerHour: goldMiningData.baseGoldPerHour,
-      boostGoldPerHour: goldMiningData.boostGoldPerHour,
-      mekCount: goldMiningData.ownedMeks?.length || 0
-    });
-
-    // Check if level boost data exists in ownedMeks array
-    const meksWithBoosts = goldMiningData.ownedMeks?.filter(mek =>
-      mek.levelBoostAmount && mek.levelBoostAmount > 0
-    ) || [];
-
-    console.log('[HUB SYNC] Meks with level bonuses:', meksWithBoosts.length);
-
-    if (meksWithBoosts.length > 0) {
-      console.log('[HUB SYNC] Level bonus details:',
-        meksWithBoosts.map(mek => ({
-          assetName: mek.assetName,
-          level: mek.currentLevel,
-          baseRate: mek.baseGoldPerHour || mek.goldPerHour,
-          boostPercent: mek.levelBoostPercent,
-          boostAmount: mek.levelBoostAmount,
-          effectiveRate: mek.effectiveGoldPerHour
-        }))
-      );
-    } else {
-      console.warn('[HUB SYNC] ⚠️ NO LEVEL BONUSES FOUND in ownedMeks array!');
-      console.log('[HUB SYNC] Raw ownedMeks data:', goldMiningData.ownedMeks?.map(mek => ({
-        assetName: mek.assetName,
-        goldPerHour: mek.goldPerHour,
-        baseGoldPerHour: mek.baseGoldPerHour,
-        currentLevel: mek.currentLevel,
-        levelBoostAmount: mek.levelBoostAmount,
-        effectiveGoldPerHour: mek.effectiveGoldPerHour
-      })));
-    }
-    console.log('[HUB SYNC] =================================');
-  }, [goldMiningData]);
-
-  // CRITICAL: Enforce verification - control gold rate based on verification status
-  useEffect(() => {
-    if (!cachedGoldData) return; // Wait for gold data to load
-
-    console.log('[HUB RATE] Setting gold rate from cachedGoldData:', {
-      timestamp: new Date().toISOString(),
-      goldPerSecond: cachedGoldData.goldPerSecond,
-      goldPerHour: cachedGoldData.goldPerHour
-    });
-
-    // Demo mode: always allow gold accumulation
-    if (isDemoMode || walletAddress === "demo_wallet_123") {
-      console.log('[Hub] Demo mode - enabling gold accumulation');
-      setGoldPerSecond(cachedGoldData.goldPerSecond);
-      return;
-    }
-
-    // Real wallet: check verification status
-    if (walletAddress && verificationStatus) {
-      if (verificationStatus.isVerified) {
-        // User IS verified - enable gold accumulation
-        console.log('[Hub] Wallet verified - enabling gold accumulation');
-        setGoldPerSecond(cachedGoldData.goldPerSecond);
-      } else {
-        // User is NOT verified - freeze gold accumulation
-        console.log('[Hub] Wallet NOT verified - freezing gold accumulation at 0');
-        setGoldPerSecond(0);
-      }
-    } else if (walletAddress) {
-      // Verification status not loaded yet - keep at 0
-      console.log('[Hub] Waiting for verification status...');
-      setGoldPerSecond(0);
-    }
-  }, [verificationStatus, cachedGoldData, walletAddress, isDemoMode]);
-
+  }, [getOrCreateUser, getInitialGold]);
+  
   // Check if user has set display name
   useEffect(() => {
     if (getUserDisplayName && walletAddress && walletAddress !== "demo_wallet_123") {
       if (!getUserDisplayName.displayNameSet) {
-        // TEMPORARILY DISABLED: Auto-show username modal
-        // setShowUsernameModal(true);
+        setShowUsernameModal(true);
       } else {
         setDisplayName(getUserDisplayName.displayName || null);
       }
     }
   }, [getUserDisplayName, walletAddress]);
-
+  
   // Get user profile with real-time updates
-  const userProfileRaw = useQuery(
+  const userProfile = useQuery(
     api.users.getUserProfile,
     userId && walletAddress ? { walletAddress } : "skip"
   );
-  const userProfile = useTrackedQuery(userProfileRaw, 'hub-userprofile');
-
+  
   const liveGoldData = null; // Server polling disabled for bandwidth optimization
   
   const collectGold = useMutation(api.goldTracking.collectGold);
@@ -322,88 +140,51 @@ export default function HubPage() {
     }
   }, [liveGoldData]);
   
-  // Animate live gold counter with smooth visual updates using direct DOM manipulation
+  // Animate live gold counter with smooth visual updates
   useEffect(() => {
-    // ONLY animate if verified OR if using demo mode
-    const isVerified = verificationStatus?.isVerified || walletAddress === "demo_wallet_123" || isDemoMode;
-
-    if (goldPerSecond > 0 && isVerified && liveGold !== null) {
-      let lastTimestamp = performance.now();
-      let animationFrameId: number;
-      const goldDisplayElement = document.getElementById('live-gold-display');
-
-      const animate = (timestamp: number) => {
-        const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
-        lastTimestamp = timestamp;
-
-        const maxGold = (cachedGoldData?.goldPerHour || GAME_CONSTANTS.DEFAULT_GOLD_RATE) * GAME_CONSTANTS.MAX_GOLD_CAP_HOURS;
-        const increment = goldPerSecond * deltaTime;
-
+    if (goldPerSecond > 0) {
+      // Update visually every 100ms for smooth animation
+      const interval = setInterval(() => {
         setLiveGold(prev => {
-          const newGold = Math.min(prev + increment, maxGold);
-
-          // Update DOM directly for smooth visual updates
-          if (goldDisplayElement) {
-            goldDisplayElement.textContent = newGold.toFixed(2);
-          }
-
-          return newGold;
+          const maxGold = (cachedGoldData?.goldPerHour || GAME_CONSTANTS.DEFAULT_GOLD_RATE) * GAME_CONSTANTS.MAX_GOLD_CAP_HOURS; // 72 hour cap
+          // Add 1/10th of a second's worth of gold for smooth visual effect
+          const increment = goldPerSecond / 10;
+          return Math.min(prev + increment, maxGold);
         });
-
-        animationFrameId = requestAnimationFrame(animate);
-      };
-
-      animationFrameId = requestAnimationFrame(animate);
-      return () => cancelAnimationFrame(animationFrameId);
+      }, 100); // Update visually every 100ms for smooth counting
+      return () => clearInterval(interval);
     }
-  }, [goldPerSecond, cachedGoldData, verificationStatus, walletAddress]);
+  }, [goldPerSecond, cachedGoldData]);
   
   const collectAllGold = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!userId || isCollecting) return;
-
+    if (!userId) return;
+    
     const goldToCollect = Math.floor(liveGold);
-    if (goldToCollect === 0) return;
-
-    // OPTIMISTIC UPDATE: Update UI immediately
-    setIsCollecting(true);
-    const expectedTotalGold = totalGold + goldToCollect;
-    setOptimisticTotalGold(expectedTotalGold);
-    setLiveGold(0); // Clear collected gold immediately
-
+    
     // Animate counting up
-    animateGoldCount(totalGold, expectedTotalGold, (value) => {
+    animateGoldCount(totalGold, totalGold + goldToCollect, (value) => {
       setTotalGold(value);
     });
-
+    
     // Add animation to button
     const button = e.currentTarget;
     button.classList.add('collecting');
     setTimeout(() => {
       button.classList.remove('collecting');
     }, 500);
-
+    
     // Collect gold from server
     try {
       const result = await collectGold({ userId });
-
-      // SUCCESS: Sync with real data
-      setOptimisticTotalGold(null);
       setTotalGold(Math.floor(result.totalGold));
-
+      setLiveGold(0);
+      
       // Show popup with collected gold and XP
       showGoldPopup(Math.floor(result.collected), result.xpGained || 0, result.leveledUp || false, result.currentLevel || 1);
     } catch (error) {
       console.error("Failed to collect gold:", error);
-
-      // ROLLBACK: Restore previous state
-      setOptimisticTotalGold(null);
-      setTotalGold(totalGold);
-      setLiveGold(goldToCollect);
-
-      // Show error notification using toast
-      toastError('Failed to collect gold. Please try again.');
-    } finally {
-      setIsCollecting(false);
+      // Still show popup with estimated amount on error
+      showGoldPopup(goldToCollect, 0, false, 1);
     }
   };
   
@@ -436,26 +217,26 @@ export default function HubPage() {
     // Create popup element
     const popup = document.createElement('div');
     popup.className = 'gold-popup';
-
+    
     // Calculate XP if not provided (fallback)
     if (xpGained === 0 && amount > 0) {
       xpGained = Math.floor(amount / 10);
     }
-
+    
     // Build popup content
     let content = `<div style="text-align: center;">`;
     content += `<div style="font-size: 24px; margin-bottom: 8px;">+${amount} Gold Collected!</div>`;
-
+    
     // Always show XP (even if calculated)
     content += `<div style="font-size: 18px; color: #a855f7;">+${xpGained} XP Gained!</div>`;
-
+    
     if (leveledUp) {
       content += `<div style="font-size: 20px; color: #10b981; margin-top: 8px;">🎉 Level ${currentLevel}!</div>`;
     }
-
+    
     content += `</div>`;
     popup.innerHTML = content;
-
+    
     popup.style.cssText = `
       position: fixed;
       top: 50%;
@@ -470,39 +251,19 @@ export default function HubPage() {
       animation: goldPopup 1.5s ease-out forwards;
       box-shadow: 0 10px 40px rgba(255, 204, 0, 0.5);
     `;
-
+    
     document.body.appendChild(popup);
-
+    
     // Remove after animation
     setTimeout(() => {
       popup.remove();
     }, 1500);
   };
-
-  const handleDisconnectWallet = () => {
-    try {
-      // Clear wallet data from localStorage
-      localStorage.removeItem('walletAddress');
-      localStorage.removeItem('stakeAddress');
-      localStorage.removeItem('walletName');
-
-      // Show success toast
-      toastSuccess('Wallet disconnected successfully');
-
-      // Small delay before reload to show toast
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
-      toastError('Failed to disconnect wallet');
-    }
-  };
   
 
   if (initError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-400 text-2xl mb-4">Error Loading Hub</div>
           <div className="text-gray-400">{initError}</div>
@@ -519,7 +280,7 @@ export default function HubPage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-yellow-400 text-2xl animate-pulse">
           Initializing user...
         </div>
@@ -529,7 +290,7 @@ export default function HubPage() {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="text-yellow-400 text-2xl animate-pulse mb-4">
             Loading Hub...
@@ -543,7 +304,7 @@ export default function HubPage() {
   }
   
   return (
-    <div className="min-h-screen text-white overflow-hidden relative">
+    <div className="min-h-screen bg-black text-white overflow-hidden relative z-10">
       <style jsx>{`
         @keyframes collectGold {
           0% { transform: scale(1); }
@@ -574,21 +335,6 @@ export default function HubPage() {
           from { transform: translateX(-100px); }
           to { transform: translateX(calc(100vw + 100px)); }
         }
-        @keyframes slowDriftHorizontal {
-          from { transform: translateX(-20px); }
-          to { transform: translateX(calc(100vw + 20px)); }
-        }
-        @keyframes slowDriftVertical {
-          from { transform: translateY(-20px); }
-          to { transform: translateY(calc(100vh + 20px)); }
-        }
-        @keyframes slowFloat {
-          0% { transform: translate(0, 0) rotate(0deg); }
-          25% { transform: translate(10px, -15px) rotate(0.5deg); }
-          50% { transform: translate(-5px, -25px) rotate(-0.3deg); }
-          75% { transform: translate(-15px, -10px) rotate(0.2deg); }
-          100% { transform: translate(0, 0) rotate(0deg); }
-        }
         @keyframes goldPopup {
           0% {
             opacity: 0;
@@ -618,64 +364,34 @@ export default function HubPage() {
         />
         
         {/* Dynamic Stars */}
-        {stars.map((star) => {
-          // Determine movement animation based on direction
-          let movementAnimation = '';
-          if (star.direction === 'horizontal') {
-            movementAnimation = `slowDriftHorizontal ${star.speed}s linear infinite`;
-          } else if (star.direction === 'vertical') {
-            movementAnimation = `slowDriftVertical ${star.speed}s linear infinite`;
-          } else {
-            movementAnimation = `slowFloat ${star.speed}s ease-in-out infinite`;
-          }
-          
-          // Combine twinkle and movement animations
-          const animations = [
-            movementAnimation,
-            star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : ''
-          ].filter(Boolean).join(', ');
-          
-          return (
-            <div
-              key={star.id}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: star.left,
-                top: star.top,
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                opacity: star.opacity,
-                animation: animations,
-                animationDelay: `${star.delay}s, ${star.twinkle ? star.opacity * 2 : 0}s`,
-              }}
-            />
-          );
-        })}
+        {stars.map((star) => (
+          <div
+            key={star.id}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: star.left,
+              top: star.top,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity,
+              animation: star.twinkle ? `starTwinkle ${2 + star.size}s ease-in-out infinite` : 'none',
+              animationDelay: star.twinkle ? `${star.opacity * 2}s` : '0s',
+            }}
+          />
+        ))}
       </div>
       
       {/* Main Content */}
       <div className="relative z-10 py-6">
-
-        {/* Commemorative NFT Banner */}
-        {!isDemoMode && (
-          <div className="mx-auto max-w-7xl px-4">
-            <CommemorativeNFTBanner
-              userId={userId}
-              walletAddress={walletAddress}
-              walletApi={typeof window !== 'undefined' && (window as any).cardano?.nami}
-            />
-          </div>
-        )}
-
+        
         {/* Hub Title Section */}
-        <div
+        <div 
           className="relative mb-6 rounded-xl overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
             border: '2px solid #fab617',
             boxShadow: '0 0 20px rgba(250, 182, 23, 0.3)',
-            padding: '20px',
-            marginBottom: 'calc(1.5rem - 25px)'
+            padding: '20px'
           }}
         >
           {/* Green inner border */}
@@ -711,10 +427,20 @@ export default function HubPage() {
           <div className="relative flex items-center justify-center px-4" style={{ minHeight: '60px' }}>
             {/* Total Gold Display - Absolute positioned */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col">
-              <div className="gold-display-medium">
-                {Math.floor(optimisticTotalGold ?? totalGold).toLocaleString()}
+              <div 
+                style={{ 
+                  fontFamily: "'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif",
+                  fontSize: '40px',
+                  fontWeight: 500,
+                  color: '#fab617',
+                  letterSpacing: '-0.02em',
+                  textShadow: '0 0 10px rgba(250, 182, 23, 0.5)',
+                  lineHeight: '1'
+                }}
+              >
+                {Math.floor(totalGold).toLocaleString()}
               </div>
-              <div
+              <div 
                 style={{
                   color: '#fab617',
                   fontSize: '11px',
@@ -725,9 +451,8 @@ export default function HubPage() {
                   opacity: 0.8
                 }}
               >
-                NET GOLD
+                Total Gold
               </div>
-
             </div>
             
             {/* Hub Title - Truly centered */}
@@ -790,7 +515,12 @@ export default function HubPage() {
                 </button>
                 {walletAddress && walletAddress !== "demo_wallet_123" ? (
                   <button
-                    onClick={() => setShowDisconnectModal(true)}
+                    onClick={() => {
+                      // Disconnect wallet
+                      localStorage.removeItem('walletAddress');
+                      localStorage.removeItem('stakeAddress');
+                      window.location.href = '/';
+                    }}
                     className="px-4 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-transparent hover:bg-gray-900/30 rounded transition-all duration-200"
                     style={{
                       fontFamily: "'Inter', 'Segoe UI', sans-serif",
@@ -821,9 +551,8 @@ export default function HubPage() {
             
             {/* Live Earnings - Absolute positioned */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col text-right">
-              <div
-                id="live-gold-display"
-                style={{
+              <div 
+                style={{ 
                   fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
                   fontSize: '24px',
                   fontWeight: 200,
@@ -851,83 +580,7 @@ export default function HubPage() {
             </div>
           </div>
         </div>
-
-        {/* Commemorative NFT Banner */}
-        <CommemorativeNFTBanner
-          userId={userId?.toString()}
-          walletAddress={walletAddress || undefined}
-        />
-
-        {/* VERIFICATION WARNING - Only show if wallet exists but is NOT verified */}
-        {verificationStatus && verificationStatus.exists && !verificationStatus.isVerified && (
-          <div
-            className="mb-6 p-6 rounded-xl border-4"
-            style={{
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.25) 100%)',
-              borderColor: '#ef4444',
-              boxShadow: '0 0 30px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.1)',
-              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-            }}
-          >
-            <div className="flex items-start gap-4">
-              <div
-                className="text-4xl"
-                style={{
-                  filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.6))'
-                }}
-              >
-                ⚠️
-              </div>
-              <div className="flex-1">
-                <h3
-                  className="text-xl font-bold mb-2"
-                  style={{
-                    fontFamily: "'Orbitron', sans-serif",
-                    color: '#fef2f2',
-                    textShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  BLOCKCHAIN VERIFICATION REQUIRED
-                </h3>
-                <p
-                  className="text-base mb-4"
-                  style={{
-                    color: '#fecaca',
-                    lineHeight: '1.6'
-                  }}
-                >
-                  Your wallet is connected, but <strong>you must verify NFT ownership on the blockchain before you can start earning gold</strong>.
-                  Without verification, your gold accumulation is paused at {Math.floor(liveGold)} gold.
-                </p>
-                <Link
-                  href="/admin-master-data"
-                  className="inline-block px-6 py-3 rounded-lg font-bold transition-all duration-200"
-                  style={{
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                    color: '#ffffff',
-                    fontFamily: "'Orbitron', sans-serif",
-                    letterSpacing: '0.05em',
-                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
-                    textTransform: 'uppercase',
-                    fontSize: '14px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.6)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
-                  }}
-                >
-                  Verify NFT Ownership Now →
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         {/* Unified Stats */}
         <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-gray-800/95 to-gray-900/95 border-2 border-yellow-500/30">
           {/* Economy Status */}
@@ -1010,26 +663,34 @@ export default function HubPage() {
             <div className="flex gap-2 flex-wrap">
               <Link 
                 href="/meks" 
-                className="px-3 py-1 text-xs rounded transition-colors bg-gray-700/50 text-gray-400 hover:bg-gray-700 border border-gray-600/50"
+                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition-all duration-200 border border-gray-600"
               >
                 See All Meks
               </Link>
               <button
                 onClick={collectAllGold}
-                disabled={isCollecting || liveGold === 0}
-                className={`px-3 py-1 text-xs rounded transition-colors border border-gray-600/50 ${
-                  isCollecting || liveGold === 0
-                    ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                    : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
-                }`}
+                className="px-3 py-1.5 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-semibold rounded transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                {isCollecting ? 'Collecting...' : 'Collect All'}
+                Collect All
               </button>
             </div>
           </div>
           
           {/* Employee data */}
           {(() => {
+            const employees = [
+              // Full gold meks first (sorted by progress: 100)
+              { id: 1234, level: 5, rate: 15.5, gold: 968, maxGold: 968, progress: 100, buffed: false, hourCap: '72h' },
+              { id: 3691, level: 7, rate: 22.8, gold: 1644, maxGold: 1644, progress: 100, buffed: true, hourCap: '96h' },
+              { id: 9052, level: 6, rate: 18.7, gold: 1346, maxGold: 1346, progress: 100, buffed: false, hourCap: '72h' },
+              { id: 7231, level: 2, rate: 9.5, gold: 684, maxGold: 684, progress: 100, buffed: true, hourCap: '120h' },
+              { id: 5612, level: 8, rate: 25.3, gold: 1820, maxGold: 1820, progress: 100, buffed: false, hourCap: '72h' },
+              // Partial progress meks
+              { id: 2468, level: 3, rate: 12.2, gold: 523, maxGold: 878, progress: 60, buffed: false, hourCap: '72h' },
+              { id: 1847, level: 4, rate: 14.1, gold: 340, maxGold: 1015, progress: 33, buffed: true, hourCap: '96h' },
+              { id: 4089, level: 3, rate: 11.8, gold: 425, maxGold: 850, progress: 50, buffed: false, hourCap: '72h' },
+              { id: null, level: 0, rate: 0, gold: 0, maxGold: 0, progress: 0, buffed: false, hourCap: '72h' }, // Empty slot
+            ];
             
             const startIdx = currentEmployeePage * 5;
             const endIdx = Math.min(startIdx + 5, employees.length);
@@ -1105,15 +766,6 @@ export default function HubPage() {
                       // Collect individual mek gold
                       const mekGold = emp.gold;
                       
-                      // Update the employee's gold to 0 and recalculate progress
-                      setEmployees(prevEmployees => 
-                        prevEmployees.map(employee => 
-                          employee.id === emp.id 
-                            ? { ...employee, gold: 0, progress: 0 }
-                            : employee
-                        )
-                      );
-                      
                       // Animate counting up
                       animateGoldCount(totalGold, totalGold + mekGold, (value) => {
                         setTotalGold(value);
@@ -1133,9 +785,7 @@ export default function HubPage() {
                     className={`ml-1 px-3 py-1.5 text-sm font-medium rounded transition-all duration-200 ${
                       emp.gold === emp.maxGold 
                         ? "border-2 border-yellow-500 bg-transparent text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 pulsate-glow"
-                        : emp.gold > 0
-                        ? "border-2 border-yellow-500 bg-transparent text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
-                        : "border border-gray-600 bg-transparent text-gray-500 cursor-not-allowed"
+                        : "border-2 border-yellow-500 bg-transparent text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
                     }`}
                     disabled={emp.gold === 0}
                   >
@@ -1186,15 +836,15 @@ export default function HubPage() {
           </div>
           
           {/* Gold Stats Card - Right Column */}
-          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700 self-start">
-            <div className="mb-4">
-              <h3 className="text-lg font-bold text-center mb-3" style={{
+          <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-center flex-1" style={{
                 fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
                 letterSpacing: '0.1em',
                 color: '#fab617',
                 textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
               }}>Growth</h3>
-              <div className="flex justify-center gap-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setChartMode('total')}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
@@ -1294,8 +944,8 @@ export default function HubPage() {
                 </div>
               </div>
               
-              {/* Time Period Buttons - moved down to avoid overlapping x-axis */}
-              <div className="flex justify-center gap-2 mt-12">
+              {/* Time Period Buttons */}
+              <div className="flex justify-center gap-2 mt-4">
                 <button
                   onClick={() => setChartPeriod('7d')}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
@@ -1390,156 +1040,21 @@ export default function HubPage() {
           </div>
         </div>
         
-        {/* Recent Activity and Essence Overview - Two Column Layout */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {/* Recent Activity - Left Column */}
-          <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
-            <h3 className="text-lg font-bold mb-4" style={{
-              fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
-              letterSpacing: '0.1em',
-              color: '#fab617',
-              textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
-            }}>
-              Recent Activity
-            </h3>
-            <div className="space-y-2">
-              {/* Activity items with timestamps and gold amounts */}
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-yellow-400 mt-1.5 animate-pulse"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Collected <span className="text-yellow-400 font-semibold">247g</span> from Mek #1234</div>
-                  <div className="text-xs text-gray-500">2 minutes ago</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Listed <span className="text-green-400">Disco Head</span> for <span className="text-yellow-400 font-semibold">1,200g</span></div>
-                  <div className="text-xs text-gray-500">15 minutes ago</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Purchased <span className="text-purple-400">2x Pearls</span> for <span className="text-yellow-400 font-semibold">500g</span></div>
-                  <div className="text-xs text-gray-500">1 hour ago</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Hired <span className="text-blue-400">Mentor #2468</span> for 24 hours</div>
-                  <div className="text-xs text-gray-500">2 hours ago</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-yellow-400 mt-1.5"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Mek #5612 reached <span className="text-yellow-400">Level 8</span></div>
-                  <div className="text-xs text-gray-500">3 hours ago</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-2 rounded bg-gray-900/30 hover:bg-gray-900/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5"></div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-200">Outbid on <span className="text-red-400">Camera Head</span></div>
-                  <div className="text-xs text-gray-500">5 hours ago</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-3 border-t border-gray-700/50">
-              <button className="w-full px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded transition-all duration-200 text-sm font-medium border border-gray-600">
-                View Full History
-              </button>
-            </div>
+        {/* Recent Activity Card */}
+        <div className="mb-6 p-5 rounded-lg bg-gray-800/50 border border-gray-700">
+          <h3 className="text-xl font-bold mb-4">
+            Recent Activity
+          </h3>
+          <div className="space-y-2 text-sm text-gray-300">
+            <div>• Collected 247 gold from Mek #1234</div>
+            <div>• Listed Disco Head (C-Rank) on Auction House for 1,200g</div>
+            <div>• Purchased 2x Pearls Essence for 500g</div>
+            <div>• Hired Mentor #2468 for 24 hours</div>
           </div>
-          
-          {/* Essence at a Glance - Right Column */}
-          <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
-            <h3 className="text-lg font-bold mb-4" style={{
-              fontFamily: "'Orbitron', 'Rajdhani', 'Bebas Neue', sans-serif",
-              letterSpacing: '0.1em',
-              color: '#fab617',
-              textShadow: '0 0 10px rgba(250, 182, 23, 0.3)'
-            }}>
-              Essence Collection
-            </h3>
-            
-            {/* Top 10 Essence Grid */}
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {[
-                { name: 'Pearls', amount: 24, color: '#e0e7ff' },
-                { name: 'Disco', amount: 18, color: '#fce7f3' },
-                { name: 'Camera', amount: 15, color: '#dbeafe' },
-                { name: 'Metal', amount: 12, color: '#e5e7eb' },
-                { name: 'Crystal', amount: 10, color: '#f3e8ff' },
-                { name: 'Flame', amount: 8, color: '#fef3c7' },
-                { name: 'Ice', amount: 7, color: '#cffafe' },
-                { name: 'Nature', amount: 5, color: '#d1fae5' },
-                { name: 'Thunder', amount: 4, color: '#fef9c3' },
-                { name: 'Shadow', amount: 2, color: '#f3f4f6' },
-              ].map((essence, idx) => (
-                <div 
-                  key={idx}
-                  className="relative group cursor-pointer"
-                >
-                  <div 
-                    className="aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-200 hover:scale-110 border-2"
-                    style={{
-                      background: `linear-gradient(135deg, ${essence.color}20, ${essence.color}40)`,
-                      borderColor: essence.color + '60',
-                      boxShadow: `0 0 10px ${essence.color}30`
-                    }}
-                  >
-                    <img 
-                      src="/essence-vial.gif" 
-                      alt={essence.name}
-                      className="w-8 h-8 mb-1 mx-auto"
-                    />
-                    <div className="text-xs font-bold text-white">{essence.amount}</div>
-                  </div>
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                    {essence.name} Essence
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Essence Stats */}
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
-                <span className="text-sm text-gray-400">Total Essence Types</span>
-                <span className="text-sm font-bold text-yellow-400">27</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
-                <span className="text-sm text-gray-400">Total Essence Count</span>
-                <span className="text-sm font-bold text-yellow-400">126</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
-                <span className="text-sm text-gray-400">Essence per Day</span>
-                <span className="text-sm font-bold text-green-400">+0.100</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-900/30 rounded">
-                <span className="text-sm text-gray-400">Next Essence In</span>
-                <span className="text-sm font-bold text-blue-400">14h 23m</span>
-              </div>
-            </div>
-            
-            {/* Link to Essence Page */}
-            <Link 
-              href="/essence"
-              className="block w-full px-4 py-3 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 hover:from-yellow-500/30 hover:to-yellow-600/30 text-yellow-400 rounded transition-all duration-200 text-center font-semibold border border-yellow-500/50 hover:border-yellow-500"
-            >
-              <span className="mr-2">✨</span>
-              Manage Essence Collection
-            </Link>
+          <div className="text-center mt-4">
+            <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors border border-gray-600">
+              See More History
+            </button>
           </div>
         </div>
         
@@ -1577,14 +1092,7 @@ export default function HubPage() {
           }}
         />
       )}
-
-      {/* Disconnect Confirmation Modal */}
-      <DisconnectConfirmModal
-        isOpen={showDisconnectModal}
-        onConfirm={handleDisconnectWallet}
-        onCancel={() => setShowDisconnectModal(false)}
-      />
-
+      
     </div>
   );
 }

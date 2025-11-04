@@ -10,6 +10,7 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import MekManagementLightboxConcepts from '@/components/MekManagementLightboxConcepts';
+import { useTrackedQuery } from '@/features/page-loader';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -36,25 +37,29 @@ export default function HomePage() {
   } | null>(null);
 
   // Get user's gold mining data (includes correct Mek list)
-  const goldMiningData = useQuery(
+  const goldMiningDataRaw = useQuery(
     api.goldMining.getGoldMiningData,
     userId ? { walletAddress: userId } : "skip"
   );
+  const goldMiningData = useTrackedQuery(goldMiningDataRaw, 'home-goldmining');
 
   // Extract owned Meks from gold mining data (this is the source of truth)
   const ownedMeks = goldMiningData?.ownedMeks || [];
 
   // Load triangle overlay data from database
-  const triangleOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
+  const triangleOverlayDataRaw = useQuery(api.overlays.getOverlay, { imageKey: "variation-triangle" });
+  const triangleOverlayData = useTrackedQuery(triangleOverlayDataRaw, 'home-triangle-overlay');
 
   // Load custom slot overlay data
-  const customSlotOverlayData = useQuery(api.overlays.getOverlay, { imageKey: "slot test 1" });
+  const customSlotOverlayDataRaw = useQuery(api.overlays.getOverlay, { imageKey: "slot test 1" });
+  const customSlotOverlayData = useTrackedQuery(customSlotOverlayDataRaw, 'home-custom-slot-overlay');
 
   // Get essence slots state
-  const essenceState = useQuery(
+  const essenceStateRaw = useQuery(
     api.essence.getPlayerEssenceState,
     userId ? { walletAddress: userId } : "skip"
   );
+  const essenceState = useTrackedQuery(essenceStateRaw, 'home-essence-state');
 
   // Mutations for essence system
   const initializeEssence = useMutation(api.essence.initializeEssenceSystem);
