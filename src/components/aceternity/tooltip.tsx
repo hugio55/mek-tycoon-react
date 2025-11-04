@@ -31,33 +31,27 @@ export const Tooltip = ({
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Get tooltip dimensions
-    const tooltipWidth = 240; // min-w-[15rem] = 240px
+    const tooltipWidth = 240;
     const tooltipHeight = tooltip.scrollHeight;
 
-    // Calculate absolute position relative to viewport
     const absoluteX = containerRect.left + mouseX;
     const absoluteY = containerRect.top + mouseY;
 
     let finalX = absoluteX + 12;
     let finalY = absoluteY + 12;
 
-    // Check if tooltip goes beyond right edge
     if (finalX + tooltipWidth > viewportWidth) {
       finalX = absoluteX - tooltipWidth - 12;
     }
 
-    // Check if tooltip goes beyond left edge
     if (finalX < 0) {
       finalX = 12;
     }
 
-    // Check if tooltip goes beyond bottom edge
     if (finalY + tooltipHeight > viewportHeight) {
       finalY = absoluteY - tooltipHeight - 12;
     }
 
-    // Check if tooltip goes beyond top edge
     if (finalY < 0) {
       finalY = 12;
     }
@@ -72,13 +66,10 @@ export const Tooltip = ({
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    console.log('[TOOLTIP] Mouse entered, showing tooltip');
     setIsVisible(true);
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    console.log('[TOOLTIP] Container rect:', rect);
-    console.log('[TOOLTIP] Mouse position:', { mouseX, mouseY, clientX: e.clientX, clientY: e.clientY });
     updateMousePosition(mouseX, mouseY);
   };
 
@@ -106,7 +97,6 @@ export const Tooltip = ({
   };
 
   const handleTouchEnd = () => {
-    // Delay hiding to allow for tap interaction
     setTimeout(() => {
       setIsVisible(false);
       setMouse({ x: 0, y: 0 });
@@ -115,7 +105,6 @@ export const Tooltip = ({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Toggle visibility on click for mobile devices
     if (window.matchMedia("(hover: none)").matches) {
       e.preventDefault();
       if (isVisible) {
@@ -132,7 +121,6 @@ export const Tooltip = ({
     }
   };
 
-  // Update position when tooltip becomes visible or content changes
   useEffect(() => {
     if (isVisible && contentRef.current) {
       const newPosition = calculatePosition(mouse.x, mouse.y);
@@ -159,22 +147,19 @@ export const Tooltip = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-[20rem] rounded-md border-2 border-yellow-500 bg-black/95 backdrop-blur-sm shadow-lg shadow-yellow-500/50"
+            className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-[20rem]"
             style={{
               top: position.y,
               left: position.x,
             }}
-            ref={(el) => {
-              if (el) {
-                console.log('[TOOLTIP] Rendered at position:', position, 'Element:', el.getBoundingClientRect());
-              }
-            }}
           >
-            <div
-              ref={contentRef}
-              className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
-            >
-              {content}
+            <div className="rounded-md border-2 border-yellow-500/80 bg-black/95 backdrop-blur-md shadow-2xl shadow-yellow-500/30">
+              <div
+                ref={contentRef}
+                className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
+              >
+                {content}
+              </div>
             </div>
           </motion.div>
         )}
