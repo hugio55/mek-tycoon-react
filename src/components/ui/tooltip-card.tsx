@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const Tooltip = ({
@@ -15,6 +15,8 @@ export const Tooltip = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mouse, setMouse] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [height, setHeight] = useState(0);
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
@@ -22,82 +24,91 @@ export const Tooltip = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle client-side mounting for portal
+  // Tilt effect using Framer Motion
+  const springConfig = { stiffness: 100, damping: 5 };
+  const x = useMotionValue(0);
+  const rotate = useSpring(useTransform(x, [-100, 100], [-8, 8]), springConfig);
+  const translateX = useSpring(useTransform(x, [-100, 100], [-20, 20]), springConfig);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const calculatePosition = () => {
-    if (!containerRef.current || !contentRef.current) return { x: 0, y: 0 };
+  useEffect(() => {
+    if (isVisible && contentRef.current) {
+      setHeight(contentRef.current.scrollHeight);
+    }
+  }, [isVisible, content]);
 
-    const trigger = containerRef.current.getBoundingClientRect();
+  const calculatePosition = (clientX: number, clientY: number) => {
+    if (!contentRef.current) return { x: clientX + 12, y: clientY + 12 };
+
     const tooltip = contentRef.current;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
     // Get tooltip dimensions
     const tooltipWidth = 240; // min-w-[15rem] = 240px
-    const tooltipHeight = tooltip.scrollHeight || 100; // Fallback height
-    const gap = 8; // Gap between tooltip and trigger
+    const tooltipHeight = tooltip.scrollHeight;
 
-    // Center tooltip horizontally over the trigger element
-    let finalX = trigger.left + trigger.width / 2 - tooltipWidth / 2;
-
-    // Position tooltip above the trigger element with gap
-    let finalY = trigger.top - tooltipHeight - gap;
+    let finalX = clientX + 12;
+    let finalY = clientY + 12;
 
     // Check if tooltip goes beyond right edge
-    if (finalX + tooltipWidth > viewportWidth - 12) {
-      finalX = viewportWidth - tooltipWidth - 12;
+    if (finalX + tooltipWidth > viewportWidth) {
+      finalX = clientX - tooltipWidth - 12;
     }
 
     // Check if tooltip goes beyond left edge
-    if (finalX < 12) {
+    if (finalX < 0) {
       finalX = 12;
     }
 
-    // If tooltip doesn't fit above, position it below
-    if (finalY < 12) {
-      finalY = trigger.bottom + gap;
+    // Check if tooltip goes beyond bottom edge
+    if (finalY + tooltipHeight > viewportHeight) {
+      finalY = clientY - tooltipHeight - 12;
     }
 
-    // Check if tooltip goes beyond bottom edge (when positioned below)
-    if (finalY + tooltipHeight > viewportHeight - 12) {
-      // Last resort: position next to element (right side)
-      finalY = trigger.top;
-      finalX = trigger.right + gap;
-
-      // If that doesn't fit, try left side
-      if (finalX + tooltipWidth > viewportWidth - 12) {
-        finalX = trigger.left - tooltipWidth - gap;
-      }
-
-      // If nothing fits, just position at top of viewport
-      if (finalX < 12) {
-        finalX = 12;
-        finalY = 12;
-      }
+    // Check if tooltip goes beyond top edge
+    if (finalY < 0) {
+      finalY = 12;
     }
 
     return { x: finalX, y: finalY };
   };
 
-  const updatePosition = () => {
-    const newPosition = calculatePosition();
+  const updateMousePosition = (mouseX: number, mouseY: number) => {
+    setMouse({ x: mouseX, y: mouseY });
+    const newPosition = calculatePosition(mouseX, mouseY);
     setPosition(newPosition);
   };
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     setIsVisible(true);
-    updatePosition();
+    updateMousePosition(e.clientX, e.clientY);
   };
 
   const handleMouseLeave = () => {
+    setMouse({ x: 0, y: 0 });
+    setPosition({ x: 0, y: 0 });
     setIsVisible(false);
   };
 
-  const handleTouchStart = () => {
-    updatePosition();
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isVisible) return;
+    updateMousePosition(e.clientX, e.clientY);
+
+    // Update tilt effect
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left - rect.width / 2;
+      x.set(relativeX);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    updateMousePosition(touch.clientX, touch.clientY);
     setIsVisible(true);
   };
 
@@ -105,89 +116,73 @@ export const Tooltip = ({
     // Delay hiding to allow for tap interaction
     setTimeout(() => {
       setIsVisible(false);
+      setMouse({ x: 0, y: 0 });
+      setPosition({ x: 0, y: 0 });
     }, 2000);
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Toggle visibility on click for mobile devices
     if (window.matchMedia("(hover: none)").matches) {
+      e.preventDefault();
       if (isVisible) {
         setIsVisible(false);
+        setMouse({ x: 0, y: 0 });
+        setPosition({ x: 0, y: 0 });
       } else {
-        updatePosition();
+        updateMousePosition(e.clientX, e.clientY);
         setIsVisible(true);
       }
     }
   };
 
-  // Recalculate position when tooltip becomes visible or content changes
+  // Update position when tooltip becomes visible or content changes
   useEffect(() => {
-    if (isVisible) {
-      updatePosition();
+    if (isVisible && contentRef.current) {
+      const newPosition = calculatePosition(mouse.x, mouse.y);
+      setPosition(newPosition);
     }
-  }, [isVisible, content]);
-
-  // Handle window resize - recalculate tooltip position
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const handleResize = () => {
-      updatePosition();
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, true); // Capture scroll events
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize, true);
-    };
-  }, [isVisible]);
-
-  const tooltipContent = isVisible && (
-    <AnimatePresence>
-      <motion.div
-        key="tooltip"
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96 }}
-        transition={{
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-          mass: 0.5,
-        }}
-        className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-xs rounded-md border border-cyan-400/30 bg-black/95 shadow-lg backdrop-blur-sm ring-1 ring-cyan-400/20"
-        style={{
-          top: `${position.y}px`,
-          left: `${position.x}px`,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          ref={contentRef}
-          className="p-3 text-sm text-cyan-100"
-        >
-          {content}
-        </div>
-      </motion.div>
-    </AnimatePresence>
-  );
+  }, [isVisible, height, mouse.x, mouse.y]);
 
   return (
-    <>
-      <div
-        ref={containerRef}
-        className={cn("relative inline-block", containerClassName)}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleClick}
-      >
-        {children}
-      </div>
-      {mounted && isVisible && createPortal(tooltipContent, document.body)}
-    </>
+    <div
+      ref={containerRef}
+      className={cn("relative inline-block", containerClassName)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+    >
+      {children}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            key={String(isVisible)}
+            initial={{ height: 0, opacity: 1 }}
+            animate={{ height, opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 200,
+              damping: 20,
+            }}
+            className="pointer-events-none absolute z-50 min-w-[15rem] overflow-hidden rounded-md border border-transparent bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900 dark:shadow-white/10 dark:ring-white/5"
+            style={{
+              top: position.y,
+              left: position.x,
+            }}
+          >
+            <div
+              ref={contentRef}
+              className="p-2 text-sm text-neutral-600 md:p-4 dark:text-neutral-400"
+            >
+              {content}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

@@ -16,3 +16,1257 @@
      · clientTraceMetadata
 
    Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (185kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled successfully in 2.4min
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/90) ...
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceDistributionLightbox] Using shared context data: { hasData: false, isLoading: true, balanceCount: 0 }
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[🔍 DIAGNOSTIC-PAGE] Diagnostic result: undefined
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: 'stake1demo_test_wallet_for_ui_testing_only',
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+[EssenceContext] Provider rendering: {
+  walletAddress: null,
+  hasData: false,
+  balanceCount: 0,
+  lastCalculationTime: 'N/A',
+  essenceRates: {},
+  sampleRates: []
+}
+   Generating static pages (22/90) 
+   Generating static pages (44/90) 
+   Generating static pages (67/90) 
+ ✓ Generating static pages (90/90)
+
+> Build error occurred
+[Error: ENOENT: no such file or directory, rename 'C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging\.next\export\500.html' -> 'C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging\.next\server\pages\500.html'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: 'C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\TYCOON REACT 8-27\\mek-tycoon-react-staging\\.next\\export\\500.html',
+  dest: 'C:\\Users\\Ben Meyers\\Documents\\Mek Tycoon\\TYCOON REACT 8-27\\mek-tycoon-react-staging\\.next\\server\\pages\\500.html'
+}
