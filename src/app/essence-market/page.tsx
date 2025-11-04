@@ -7,7 +7,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
-import { Tooltip } from "@/components/ui/tooltip-card";
+import { Tooltip } from "@/components/aceternity/tooltip";
 // Removed: restoreWalletSession - using localStorage directly like hub page
 
 // Variation type categories for essence filtering
