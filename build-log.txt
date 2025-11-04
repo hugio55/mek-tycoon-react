@@ -1,0 +1,49 @@
+
+> mek-tycoon-react@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Ben Meyers\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging\package-lock.json
+
+   ▲ Next.js 15.5.4
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · cpus: 1
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+[@sentry/nextjs] Could not find `onRequestError` hook in instrumentation file. This indicates outdated configuration of the Sentry SDK. Use `Sentry.captureRequestError` to instrument the `onRequestError` hook: https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#errors-from-nested-react-server-components
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (185kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+Failed to compile.
+
+./src/instrumentation.ts:6:11
+Module not found: Can't resolve './sentry.server.config'
+  4 | ;globalThis["_sentryRewritesTunnelPath"] = "/monitoring";globalThis["SENTRY_RELEASE"] = {"id":"31439f01e2ec5c63b9637fa6e93ded638f8747b7"};globalThis["_sentryBasePath"] = undefined;globalThis["_sentryNextJsVersion"] = "15.5.4";globalThis["_sentryRewriteFramesDistDir"] = ".next";export async function register() {
+  5 |   if (process.env.NEXT_RUNTIME === 'nodejs') {
+> 6 |     await import('./sentry.server.config');
+    |           ^
+  7 |   }
+  8 |
+  9 |   if (process.env.NEXT_RUNTIME === 'edge') {
+
+https://nextjs.org/docs/messages/module-not-found
+
+./src/instrumentation.ts:10:11
+Module not found: Can't resolve './sentry.edge.config'
+   8 |
+   9 |   if (process.env.NEXT_RUNTIME === 'edge') {
+> 10 |     await import('./sentry.edge.config');
+     |           ^
+  11 |   }
+  12 | }
+  13 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+> Build failed because of webpack errors
