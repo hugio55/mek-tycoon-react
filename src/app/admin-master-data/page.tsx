@@ -27,6 +27,25 @@ import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
 
+// Helper function to format tenure as time duration
+function formatTenureDuration(tenure: number, tenurePerSecond: number): string {
+  if (tenure === 0) return '0 seconds';
+
+  const totalSeconds = tenure / tenurePerSecond;
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+  if (seconds > 0 && days === 0) parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+
+  return parts.join(' ') || '0 seconds';
+}
+
 // Story Climb Mechanics subsections
 const STORY_CLIMB_SUBSECTIONS = [
   { id: 'difficulty-subsystem', name: 'Difficulty System', icon: '⚔️' },
@@ -106,6 +125,10 @@ export default function AdminMasterDataPage() {
   const saveBuffConfiguration = useMutation(api.variationBuffs.saveBuffConfiguration);
   const buffConfig = useQuery(api.variationBuffs.getBuffConfiguration);
   const variationBuffs = useQuery(api.variationBuffs.getVariationBuffs);
+
+  // Tenure configuration query
+  const tenureBaseRateData = useQuery(api.tenureConfig.getBaseRate);
+  const tenurePerSecond = tenureBaseRateData?.baseRate || 1.0;
 
   // Navigation Preview State (must be declared before useQuery that uses it)
   const [selectedNavigationOverlay, setSelectedNavigationOverlay] = useState<string>('');
@@ -2563,7 +2586,9 @@ export default function AdminMasterDataPage() {
                           }}
                           className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"
                         />
-                        <p className="text-xs text-gray-500 mt-1 text-center">Tenure Cost</p>
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                          {formatTenureDuration(slotsConfig[selectedSlotType][index], tenurePerSecond)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -2571,9 +2596,12 @@ export default function AdminMasterDataPage() {
                   {/* Summary Display */}
                   <div className="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded p-4">
                     <h5 className="text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">Total Tenure Required</h5>
-                    <p className="text-xs text-gray-400 mb-2">To reach Level 10 from Level 1</p>
+                    <p className="text-xs text-gray-400 mb-2">To reach Level 10 from Level 1 (assumes Mek slotted entire time)</p>
                     <div className="text-2xl font-bold text-yellow-300 text-center">
                       {slotsConfig[selectedSlotType].reduce((sum, val) => sum + val, 0).toLocaleString()} Tenure
+                    </div>
+                    <div className="text-lg font-bold text-blue-400 text-center mt-2">
+                      {formatTenureDuration(slotsConfig[selectedSlotType].reduce((sum, val) => sum + val, 0), tenurePerSecond)}
                     </div>
                   </div>
                 </div>
