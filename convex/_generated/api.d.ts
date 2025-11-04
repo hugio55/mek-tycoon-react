@@ -8,11 +8,6 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
 import type * as accordionCraftingTree from "../accordionCraftingTree.js";
 import type * as actions_verifyCardanoSignature from "../actions/verifyCardanoSignature.js";
 import type * as actions_verifyCardanoSignatureSimple from "../actions/verifyCardanoSignatureSimple.js";
@@ -218,6 +213,12 @@ import type * as walletAuthentication from "../walletAuthentication.js";
 import type * as walletGroups from "../walletGroups.js";
 import type * as walletSession from "../walletSession.js";
 import type * as whitelists from "../whitelists.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -434,11 +435,15 @@ declare const fullApi: ApiFromModules<{
   walletSession: typeof walletSession;
   whitelists: typeof whitelists;
 }>;
+declare const fullApiWithMounts: typeof fullApi;
+
 export declare const api: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "internal">
 >;
+
+export declare const components: {};
