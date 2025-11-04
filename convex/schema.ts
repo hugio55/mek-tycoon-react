@@ -46,6 +46,20 @@ export default defineSchema({
     isSlotted: v.optional(v.boolean()), // Whether Mek is currently in an essence slot
     slotNumber: v.optional(v.number()), // Which essence slot (1-6) if slotted
 
+    // Legacy battle system fields (deprecated but kept for data compatibility)
+    draws: v.optional(v.number()),
+    experience: v.optional(v.number()),
+    health: v.optional(v.number()),
+    inBattle: v.optional(v.boolean()),
+    level: v.optional(v.number()),
+    losses: v.optional(v.number()),
+    maxHealth: v.optional(v.number()),
+    powerScore: v.optional(v.number()),
+    scrapValue: v.optional(v.number()),
+    speed: v.optional(v.number()),
+    winStreak: v.optional(v.number()),
+    wins: v.optional(v.number()),
+
     // Metadata
     lastUpdated: v.optional(v.number()),
     isStaked: v.optional(v.boolean())
