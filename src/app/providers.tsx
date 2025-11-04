@@ -7,6 +7,7 @@ import UnifiedHeader from "@/components/UnifiedHeader";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { DemoWalletProvider, useDemoWallet } from "@/contexts/DemoWalletContext";
 import { EssenceProvider } from "@/contexts/EssenceContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -34,26 +35,28 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ConvexProvider client={convex}>
       <DemoWalletProvider>
-        <EssenceProviderWrapper>
-          <SoundProvider>
-            <div className="min-h-screen relative">
-              {showHeader ? (
-                // Pages with header - wrapped in centered container
-                <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
-                  <UnifiedHeader />
-                  <div className="relative z-10 pt-16 sm:pt-20">
+        <UserProvider>
+          <EssenceProviderWrapper>
+            <SoundProvider>
+              <div className="min-h-screen relative">
+                {showHeader ? (
+                  // Pages with header - wrapped in centered container
+                  <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
+                    <UnifiedHeader />
+                    <div className="relative z-10 pt-16 sm:pt-20">
+                      {children}
+                    </div>
+                  </div>
+                ) : (
+                  // Pages without header - no wrapper
+                  <div className="relative z-10">
                     {children}
                   </div>
-                </div>
-              ) : (
-                // Pages without header - no wrapper
-                <div className="relative z-10">
-                  {children}
-                </div>
-              )}
-            </div>
-          </SoundProvider>
-        </EssenceProviderWrapper>
+                )}
+              </div>
+            </SoundProvider>
+          </EssenceProviderWrapper>
+        </UserProvider>
       </DemoWalletProvider>
     </ConvexProvider>
   );
