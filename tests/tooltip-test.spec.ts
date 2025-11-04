@@ -25,8 +25,8 @@ test('Tooltip visibility test', async ({ page }) => {
     console.log('=== Hovering over timer element ===');
     await timerElement.hover({ force: true });
 
-    // Wait a bit for the tooltip to appear
-    await page.waitForTimeout(500);
+    // Wait longer for the tooltip animation to complete
+    await page.waitForTimeout(1000);
 
     // Look for the tooltip popup (it should be rendered with fixed positioning and z-[9999])
     const tooltip = page.locator('div.fixed.z-\\[9999\\]').first();
@@ -66,7 +66,11 @@ test('Tooltip visibility test', async ({ page }) => {
     console.log('No timer elements found with cursor-help class');
   }
 
-  // Take a screenshot for visual verification
+  // Take a screenshot WHILE HOVERING for visual verification
+  if (exists > 0) {
+    await timerElement.hover({ force: true });
+    await page.waitForTimeout(500);
+  }
   await page.screenshot({ path: 'tooltip-test.png', fullPage: true });
   console.log('Screenshot saved to tooltip-test.png');
 });
