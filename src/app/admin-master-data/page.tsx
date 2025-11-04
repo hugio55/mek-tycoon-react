@@ -2656,6 +2656,14 @@ export default function AdminMasterDataPage() {
                             }
                           }}
                           onFocus={(e) => e.target.select()}
+                          onBlur={() => {
+                            const firstValue = slotsConfig[selectedSlotType][0];
+                            const lastValue = slotsConfig[selectedSlotType][8];
+
+                            if (firstValue > 0 && lastValue > 0) {
+                              interpolateSlotValues();
+                            }
+                          }}
                           className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"
                         />
                         <p className="text-xs text-yellow-400 mt-1 text-center font-semibold">
