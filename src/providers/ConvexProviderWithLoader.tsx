@@ -43,7 +43,7 @@ function useQueryWithTracking<Query extends FunctionReference<'query'>>(
   // Generate unique query ID on first render
   if (!queryIdRef.current) {
     queryIdCounter++;
-    const queryName = query._meta?.name || 'unknown';
+    const queryName = typeof query === 'function' ? query.name : 'query';
     queryIdRef.current = `${queryName}-${queryIdCounter}`;
   }
 
@@ -92,7 +92,7 @@ function usePaginatedQueryWithTracking<Query extends FunctionReference<'query'>>
   // Generate unique query ID on first render
   if (!queryIdRef.current) {
     queryIdCounter++;
-    const queryName = query._meta?.name || 'unknown';
+    const queryName = typeof query === 'function' ? query.name : 'query';
     queryIdRef.current = `${queryName}-paginated-${queryIdCounter}`;
   }
 

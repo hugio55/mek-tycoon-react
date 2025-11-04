@@ -20,10 +20,20 @@ interface LoaderContextValue {
 const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
+  const providerId = useRef(Math.random().toString(36).substring(7));
+  console.log(`[🔄LIFECYCLE] LoaderProvider ID ${providerId.current} mounted`);
+
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const startTimeRef = useRef(Date.now());
+
+  useEffect(() => {
+    console.log(`[🔄LIFECYCLE] LoaderProvider ID ${providerId.current} - startTime set to: ${startTimeRef.current}`);
+    return () => {
+      console.log(`[🔄LIFECYCLE] LoaderProvider ID ${providerId.current} - UNMOUNTING`);
+    };
+  }, []);
 
   const registerQuery = useCallback((id: string) => {
     setQueries((prev) => {

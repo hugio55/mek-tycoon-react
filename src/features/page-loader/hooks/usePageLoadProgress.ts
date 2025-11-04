@@ -34,6 +34,10 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
 
   useEffect(() => {
+    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Main effect running`);
+    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Current isComplete state: ${isComplete}`);
+    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - startTime: ${startTime}, elapsed: ${Date.now() - startTime}ms`);
+
     if (typeof window !== 'undefined') {
       const bypass = localStorage.getItem(BYPASS_STORAGE_KEY);
       if (bypass === 'true') {
@@ -85,7 +89,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
         if (!completeTimeoutRef.current) {
           completeTimeoutRef.current = setTimeout(() => {
-            console.log('[PAGE LOADER] Complete');
+            console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Setting isComplete to TRUE`);
             setIsComplete(true);
           }, 300);
         }
@@ -101,6 +105,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
     updateProgress();
 
     return () => {
+      console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Main effect CLEANUP running`);
       clearInterval(interval);
       if (completeTimeoutRef.current) {
         clearTimeout(completeTimeoutRef.current);
@@ -131,6 +136,11 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       setCanShow(false);
     }
   }, [getLoadedCount, getTotalCount, startTime, minDisplayTime]);
+
+  // Track isComplete changes
+  useEffect(() => {
+    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - isComplete changed to: ${isComplete}`);
+  }, [isComplete]);
 
   const stage = getStageMessage(progress, config?.messages);
 
