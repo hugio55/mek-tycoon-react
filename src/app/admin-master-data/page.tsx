@@ -2446,6 +2446,87 @@ export default function AdminMasterDataPage() {
           </div>
           )}
 
+          {/* Slots System */}
+          {activeTab === 'slots-system' && (
+          <div id="section-slots-system" className="bg-black/50 backdrop-blur border-2 border-yellow-500/30 rounded-lg shadow-lg shadow-black/50">
+            <button
+              onClick={() => toggleSection('slots-system')}
+              className="w-full p-4 flex justify-between items-center hover:bg-gray-800/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📦</span>
+                <h3 className="text-xl font-bold text-yellow-400">Slots System</h3>
+                <span className="px-2 py-1 bg-green-600/30 text-green-400 text-xs font-bold rounded">IMPLEMENTED</span>
+              </div>
+              <span className="text-gray-400">{expandedSections.has('slots-system') ? '▼' : '▶'}</span>
+            </button>
+            {expandedSections.has('slots-system') && (
+              <div className="p-4 border-t border-gray-700/50">
+                <p className="text-gray-400 mb-4">Configure tenure requirements for slot leveling across all slot types</p>
+
+                {/* Slot Type Selector */}
+                <div className="mb-6">
+                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                    Slot Type
+                  </label>
+                  <select
+                    value={selectedSlotType}
+                    onChange={(e) => setSelectedSlotType(e.target.value as 'basic' | 'advanced' | 'master')}
+                    className="w-full max-w-xs px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 focus:border-yellow-500 focus:outline-none"
+                  >
+                    <option value="basic">Basic Slots</option>
+                    <option value="advanced">Advanced Slots</option>
+                    <option value="master">Master Slots</option>
+                  </select>
+                </div>
+
+                {/* Leveling Requirements Grid */}
+                <div className="bg-black/40 border border-yellow-500/30 rounded-lg p-4">
+                  <h4 className="text-lg font-bold text-yellow-400 mb-4 uppercase tracking-wider">
+                    {selectedSlotType.charAt(0).toUpperCase() + selectedSlotType.slice(1)} Slot Leveling Requirements
+                  </h4>
+                  <p className="text-xs text-gray-400 mb-4">Tenure cost required to upgrade each level</p>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+                      <div key={index} className="bg-black/50 border border-gray-600/50 rounded p-3">
+                        <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                          Level {index + 1} → {index + 2}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={slotsConfig[selectedSlotType][index]}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value) || 0;
+                            setSlotsConfig(prev => ({
+                              ...prev,
+                              [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
+                                i === index ? newValue : val
+                              )
+                            }));
+                          }}
+                          className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-gray-500 mt-1 text-center">Tenure Cost</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Summary Display */}
+                  <div className="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded p-4">
+                    <h5 className="text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">Total Tenure Required</h5>
+                    <p className="text-xs text-gray-400 mb-2">To reach Level 10 from Level 1</p>
+                    <div className="text-2xl font-bold text-yellow-300 text-center">
+                      {slotsConfig[selectedSlotType].reduce((sum, val) => sum + val, 0).toLocaleString()} Tenure
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          )}
+
           {/* Gold Backup System */}
           {activeTab === 'gold-backup-system' && (
           <div id="section-gold-backup-system" className="bg-black/50 backdrop-blur border-2 border-green-500/30 rounded-lg shadow-lg shadow-black/50">
