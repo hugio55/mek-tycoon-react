@@ -24,6 +24,23 @@ function EssenceProviderWrapper({ children }: { children: ReactNode }) {
   );
 }
 
+// Component that wraps content and handles loading visibility
+function ContentWithLoadingState({ children }: { children: ReactNode }) {
+  const { isLoading } = useLoaderContext();
+
+  return (
+    <div
+      style={{
+        opacity: isLoading ? 0 : 1,
+        transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+        pointerEvents: isLoading ? 'none' : 'auto',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
@@ -41,22 +58,24 @@ export function Providers({ children }: { children: ReactNode }) {
           <UserProvider>
             <EssenceProviderWrapper>
               <SoundProvider>
-                <div className="min-h-screen relative">
-                  {showHeader ? (
-                    // Pages with header - wrapped in centered container
-                    <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
-                      <UnifiedHeader />
-                      <div className="relative z-10 pt-16 sm:pt-20">
+                <ContentWithLoadingState>
+                  <div className="min-h-screen relative">
+                    {showHeader ? (
+                      // Pages with header - wrapped in centered container
+                      <div className="max-w-7xl mx-auto relative px-4 sm:px-8">
+                        <UnifiedHeader />
+                        <div className="relative z-10 pt-16 sm:pt-20">
+                          {children}
+                        </div>
+                      </div>
+                    ) : (
+                      // Pages without header - no wrapper
+                      <div className="relative z-10">
                         {children}
                       </div>
-                    </div>
-                  ) : (
-                    // Pages without header - no wrapper
-                    <div className="relative z-10">
-                      {children}
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </ContentWithLoadingState>
               </SoundProvider>
             </EssenceProviderWrapper>
           </UserProvider>
