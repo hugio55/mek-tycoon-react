@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useRef } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -11,11 +11,17 @@ interface NFTInventoryTableProps {
 
 export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedNFTs, setSelectedNFTs] = useState<Set<Id<"commemorativeNFTInventory">>>(new Set());
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const inventory = useQuery(
     api.commemorativeCampaigns.getCampaignInventory,
     { campaignId }
   );
+
+  const batchUpdateImages = useMutation(api.commemorativeCampaigns.batchUpdateNFTImages);
 
   if (!inventory) {
     return (
@@ -50,6 +56,68 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
     },
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(inventory.map(nft => nft._id));
+      setSelectedNFTs(allIds);
+    } else {
+      setSelectedNFTs(new Set());
+    }
+  };
+
+  const handleSelectOne = (nftId: Id<"commemorativeNFTInventory">, checked: boolean) => {
+    const newSelected = new Set(selectedNFTs);
+    if (checked) {
+      newSelected.add(nftId);
+    } else {
+      newSelected.delete(nftId);
+    }
+    setSelectedNFTs(newSelected);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setUploadedImage(result);
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyImage = async () => {
+    if (!uploadedImage || selectedNFTs.size === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      const nftIds = Array.from(selectedNFTs);
+      await batchUpdateImages({
+        nftIds,
+        imageUrl: uploadedImage,
+      });
+
+      setUploadedImage(null);
+      setSelectedNFTs(new Set());
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Failed to apply image:', error);
+      alert('Failed to apply image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const allSelected = inventory.length > 0 && selectedNFTs.size === inventory.length;
+  const someSelected = selectedNFTs.size > 0 && selectedNFTs.size < inventory.length;
+
   return (
     <div className="mb-3">
       {/* Toggle Button */}
@@ -63,6 +131,7 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
           </h4>
           <p className="text-xs text-gray-400">
             {inventory.length} NFT{inventory.length !== 1 ? 's' : ''} in campaign
+            {selectedNFTs.size > 0 && ` • ${selectedNFTs.size} selected`}
           </p>
         </div>
         <div className="text-gray-400">
@@ -72,109 +141,189 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
 
       {/* Expanded Inventory Table */}
       {isExpanded && (
-        <div className="mt-2 border border-gray-700 rounded overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-black/50 border-b border-gray-700">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    #
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    NFT UID
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Image
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-black/20 divide-y divide-gray-700">
-                {inventory.map((nft) => {
-                  const config = statusConfig[nft.status];
-                  return (
-                    <tr key={nft._id} className="hover:bg-black/40 transition-colors">
-                      <td className="px-3 py-2 text-white font-mono">
-                        {nft.nftNumber}
-                      </td>
-                      <td className="px-3 py-2 text-white">
-                        {nft.name}
-                      </td>
-                      <td className="px-3 py-2">
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
-                        >
-                          {config.label}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <code className="text-xs text-gray-400 font-mono bg-black/50 px-2 py-1 rounded">
-                            {nft.nftUid.substring(0, 8)}...
-                          </code>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(nft.nftUid);
-                            }}
-                            className="text-gray-500 hover:text-yellow-400 transition-colors"
-                            title="Copy full UID"
+        <div className="mt-2 space-y-3">
+          {/* Image Upload Panel */}
+          {selectedNFTs.size > 0 && (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded">
+              <h5 className="text-sm font-semibold text-yellow-400 mb-3">
+                Bulk Image Assignment ({selectedNFTs.size} NFT{selectedNFTs.size !== 1 ? 's' : ''} selected)
+              </h5>
+
+              <div className="flex items-start gap-4">
+                {/* Upload Input */}
+                <div className="flex-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-yellow-500 file:text-black hover:file:bg-yellow-400 file:cursor-pointer cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select an image to assign to all selected NFTs
+                  </p>
+                </div>
+
+                {/* Image Preview */}
+                {uploadedImage && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={uploadedImage}
+                      alt="Preview"
+                      className="w-16 h-16 rounded border border-yellow-500/50 object-cover"
+                    />
+                    <button
+                      onClick={handleApplyImage}
+                      disabled={isUploading}
+                      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-black font-semibold rounded transition-colors disabled:cursor-not-allowed"
+                    >
+                      {isUploading ? 'Applying...' : `Apply to ${selectedNFTs.size} NFT${selectedNFTs.size !== 1 ? 's' : ''}`}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Clear Selection */}
+              <button
+                onClick={() => setSelectedNFTs(new Set())}
+                className="mt-3 text-xs text-gray-400 hover:text-white transition-colors underline"
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
+
+          {/* NFT Table */}
+          <div className="border border-gray-700 rounded overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-black/50 border-b border-gray-700">
+                  <tr>
+                    <th className="px-3 py-2 text-left">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate = someSelected;
+                          }
+                        }}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-600 bg-black/50 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                      />
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      NFT UID
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Image
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-black/20 divide-y divide-gray-700">
+                  {inventory.map((nft) => {
+                    const config = statusConfig[nft.status];
+                    const isSelected = selectedNFTs.has(nft._id);
+
+                    return (
+                      <tr
+                        key={nft._id}
+                        className={`hover:bg-black/40 transition-colors ${isSelected ? 'bg-yellow-500/5' : ''}`}
+                      >
+                        <td className="px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleSelectOne(nft._id, e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-600 bg-black/50 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-white font-mono">
+                          {nft.nftNumber}
+                        </td>
+                        <td className="px-3 py-2 text-white">
+                          {nft.name}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${config.bg} ${config.color} border ${config.border}`}
                           >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2">
-                        {nft.imageUrl ? (
+                            {config.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={nft.imageUrl}
-                              alt={nft.name}
-                              className="w-8 h-8 rounded border border-gray-600 object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = '/logo-big.png';
+                            <code className="text-xs text-gray-400 font-mono bg-black/50 px-2 py-1 rounded">
+                              {nft.nftUid.substring(0, 8)}...
+                            </code>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(nft.nftUid);
                               }}
-                            />
-                            <span className="text-xs text-green-400">✓</span>
+                              className="text-gray-500 hover:text-yellow-400 transition-colors"
+                              title="Copy full UID"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </button>
                           </div>
-                        ) : (
-                          <span className="text-xs text-gray-500">No image</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        <a
-                          href={nft.paymentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                        >
-                          View Payment
-                        </a>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-3 py-2">
+                          {nft.imageUrl ? (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={nft.imageUrl}
+                                alt={nft.name}
+                                className="w-8 h-8 rounded border border-gray-600 object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/logo-big.png';
+                                }}
+                              />
+                              <span className="text-xs text-green-400">✓</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-500">No image</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          <a
+                            href={nft.paymentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                          >
+                            View Payment
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

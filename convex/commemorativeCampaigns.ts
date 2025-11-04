@@ -509,6 +509,42 @@ export const getCampaignInventory = query({
 });
 
 /**
+ * Batch update image URLs for multiple NFTs
+ *
+ * Allows assigning one image to multiple NFTs at once.
+ * Useful for bulk artwork management.
+ */
+export const batchUpdateNFTImages = mutation({
+  args: {
+    nftIds: v.array(v.id("commemorativeNFTInventory")),
+    imageUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[CAMPAIGN] Batch updating', args.nftIds.length, 'NFT images');
+
+    let updated = 0;
+    for (const nftId of args.nftIds) {
+      const nft = await ctx.db.get(nftId);
+
+      if (nft) {
+        await ctx.db.patch(nftId, {
+          imageUrl: args.imageUrl,
+        });
+        updated++;
+        console.log('[CAMPAIGN] Updated image for:', nft.name);
+      }
+    }
+
+    console.log('[CAMPAIGN] Successfully updated', updated, 'NFT images');
+
+    return {
+      success: true,
+      updated,
+    };
+  },
+});
+
+/**
  * Update campaign counters based on actual inventory counts
  *
  * Called internally after inventory changes to keep counters in sync.
