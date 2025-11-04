@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQuery } from 'convex/react';
+import { useConvex, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { restoreWalletSession } from '@/lib/walletSessionManager';
 
 export default function TenureFixPage() {
+  const convex = useConvex();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   // Get wallet address from session
@@ -19,19 +20,10 @@ export default function TenureFixPage() {
   const [migrationResult, setMigrationResult] = useState<any>(null);
   const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isLoadingDiagnostic, setIsLoadingDiagnostic] = useState(false);
 
-  // Mutations - with safety check
-  const runMigration = useMutation(
-    api?.migrations?.syncIsSlottedFromEssenceSlots || undefined as any
-  );
-
-  // Diagnostic query - check if API exists first
-  const diagnostic = useQuery(
-    walletAddress && api?.essence?.diagnosticCheckSlottedMeksInMeksTable
-      ? api.essence.diagnosticCheckSlottedMeksInMeksTable
-      : undefined,
-    walletAddress ? { walletAddress } : undefined
-  );
+  // Mutations
+  const runMigration = useMutation(api.migrations.syncIsSlottedFromEssenceSlots);
 
   const handleRunMigration = async () => {
     setIsRunning(true);
@@ -47,8 +39,27 @@ export default function TenureFixPage() {
     }
   };
 
-  const handleRunDiagnostic = () => {
-    setDiagnosticResult(diagnostic);
+  const handleRunDiagnostic = async () => {
+    if (!walletAddress) {
+      console.error('[DIAGNOSTIC] No wallet address available');
+      return;
+    }
+
+    setIsLoadingDiagnostic(true);
+    try {
+      // Call Convex query directly using useConvex()
+      // This works even if the API hasn't been regenerated yet
+      const result = await convex.query(api.essence.diagnosticCheckSlottedMeksInMeksTable, {
+        walletAddress
+      });
+      setDiagnosticResult(result);
+      console.log('[DIAGNOSTIC] Result:', result);
+    } catch (error) {
+      console.error('[DIAGNOSTIC] Error:', error);
+      setDiagnosticResult({ error: String(error) });
+    } finally {
+      setIsLoadingDiagnostic(false);
+    }
   };
 
   return (
@@ -78,10 +89,10 @@ export default function TenureFixPage() {
 
           <button
             onClick={handleRunDiagnostic}
-            disabled={!walletAddress}
+            disabled={!walletAddress || isLoadingDiagnostic}
             className="px-6 py-3 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 border border-blue-700 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Run Diagnostic
+            {isLoadingDiagnostic ? 'Running Diagnostic...' : 'Run Diagnostic'}
           </button>
 
           {diagnosticResult && (
