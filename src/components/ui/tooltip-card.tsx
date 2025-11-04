@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export const Tooltip = ({
@@ -156,33 +155,27 @@ export const Tooltip = ({
       onClick={handleClick}
     >
       {children}
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            key={String(isVisible)}
-            initial={{ height: 0, opacity: 1 }}
-            animate={{ height, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
-            className="pointer-events-none absolute z-50 min-w-[15rem] overflow-hidden rounded-md border border-transparent bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900 dark:shadow-white/10 dark:ring-white/5"
-            style={{
-              top: position.y,
-              left: position.x,
-            }}
+      {isVisible && (
+        <div
+          className={cn(
+            "pointer-events-none absolute z-50 min-w-[15rem] overflow-hidden rounded-md border border-transparent bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900 dark:shadow-white/10 dark:ring-white/5",
+            "transition-all duration-200 ease-out",
+            isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+          )}
+          style={{
+            top: position.y,
+            left: position.x,
+            maxHeight: height || 'auto',
+          }}
+        >
+          <div
+            ref={contentRef}
+            className="p-2 text-sm text-neutral-600 md:p-4 dark:text-neutral-400"
           >
-            <div
-              ref={contentRef}
-              className="p-2 text-sm text-neutral-600 md:p-4 dark:text-neutral-400"
-            >
-              {content}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {content}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
