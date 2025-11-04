@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface TooltipProps {
   content: React.ReactNode;
@@ -103,29 +102,25 @@ export function Tooltip({ content, children, containerClassName = '' }: TooltipP
         {children}
       </div>
 
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="fixed pointer-events-none"
-            style={{
-              top: `${position.top}px`,
-              left: `${position.left}px`,
-              zIndex: 9999,
-            }}
-          >
-            <div className="px-3 py-2 bg-black/95 backdrop-blur-md border border-yellow-500/80 rounded shadow-lg shadow-yellow-500/30">
-              <div className="text-sm text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                {content}
-              </div>
+      {isVisible && (
+        <div
+          ref={tooltipRef}
+          className={`fixed pointer-events-none transition-all duration-150 ease-out ${
+            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
+          style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            zIndex: 9999,
+          }}
+        >
+          <div className="px-3 py-2 bg-black/95 backdrop-blur-md border border-yellow-500/80 rounded shadow-lg shadow-yellow-500/30">
+            <div className="text-sm text-yellow-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              {content}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </>
   );
 }
