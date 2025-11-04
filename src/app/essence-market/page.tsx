@@ -3163,194 +3163,22 @@ export default function EssenceMarketPage() {
             <div className="absolute inset-0 mek-overlay-metal-texture" />
           </div>
 
-          {/* OPTION 1: Current Layout - EXACT REFERENCE POINT */}
-          {headerLayout === 1 && (
-            <div className="relative">
-              <div className="flex justify-between items-center mb-4">
-                {/* Left: Title */}
-                <div>
-                  <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                    MARKET
-                  </h1>
-                </div>
-
-                {/* Center: Tagline */}
-                <div className="flex-1 text-center px-8">
-                  <p className="text-gray-300 italic text-base tracking-wider">
-                    Where fortunes are made
-                  </p>
-                </div>
-
-                {/* Right: Buttons */}
-                <div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowCreateListing(true)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>LIST ITEM</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
-                          userId: userId ? 'exists' : 'MISSING',
-                          walletAddress: walletAddress ? 'exists' : 'MISSING',
-                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
-                        });
-                        setShowMyListingsModal(true);
-                      }}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="relative bg-black/60 border border-yellow-500/30 rounded px-6 py-3 mek-overlay-diagonal-stripes">
-                  <div className="relative">
-                    <div className="mek-label-uppercase text-yellow-400/70 mb-1">CREDITS AVAILABLE</div>
-                    <div className="mek-value-primary text-3xl">
-                      {Math.floor(displayGold).toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-8 h-1 bg-yellow-500/50" />
-                      <span className="mek-label-uppercase text-yellow-400/50 text-[10px]">GOLD STANDARD</span>
-                    </div>
-                  </div>
-                </div>
+          {/* Header Layout - Compact Grid (headerLayout locked to 5) */}
+          <div className="relative">
+            <div className="flex justify-between items-center">
+              <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
+                MARKET
+              </h1>
+              <div className="flex items-center gap-4">
+                {renderHeaderButtons({
+                  onCreateListing: () => setShowCreateListing(true),
+                  onToggleMyListings: () => setShowMyListingsModal(true),
+                  showOnlyMyListings,
+                  listingCount: debugListingCount
+                })}
               </div>
             </div>
-          )}
-
-          {/* OPTION 2: Horizontal Row - Buttons + Gold on Right */}
-          {headerLayout === 2 && (
-            <div className="relative">
-              <div className="flex justify-between items-center">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>LIST ITEM</span>
-                  </button>
-                  <button
-                    onClick={() => setShowMyListingsModal(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <div className="w-px h-10 bg-yellow-500/30 mx-2" />
-                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 3: Stacked Buttons on Right */}
-          {headerLayout === 3 && (
-            <div className="relative">
-              <div className="flex justify-between items-start">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowCreateListing(true)}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>LIST ITEM</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('[🔍PROFILE] MY LISTINGS clicked - State before modal:', {
-                          userId: userId ? 'exists' : 'MISSING',
-                          walletAddress: walletAddress ? 'exists' : 'MISSING',
-                          userProfile: userProfile ? 'loaded' : 'UNDEFINED'
-                        });
-                        setShowMyListingsModal(true);
-                      }}
-                      className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                    >
-                      <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
-                    </button>
-                  </div>
-                  <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 4: Integrated Bar - Buttons + Gold in Industrial Frame */}
-          {headerLayout === 4 && (
-            <div className="relative">
-              <div className="flex justify-between items-center mb-4">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-              </div>
-              <div className="relative flex items-center gap-2 p-3 bg-black/40 border-2 border-yellow-500/30 rounded-lg mek-overlay-diagonal-stripes">
-                <div className="flex items-center gap-2 flex-1 justify-end">
-                  <button
-                    onClick={() => setShowCreateListing(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>LIST ITEM</span>
-                  </button>
-                  <button
-                    onClick={() => setShowMyListingsModal(true)}
-                    className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
-                  >
-                    <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
-                  </button>
-                  <div className="w-px h-10 bg-yellow-500/50 mx-2" />
-                  <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
-                    <div className="relative flex items-center gap-2">
-                      <div className="mek-value-primary text-2xl">
-                        {Math.floor(displayGold).toLocaleString()}
-                      </div>
-                      <span className="text-yellow-400/70 font-bold text-xl">G</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 5: Compact Grid - Gold Prominent on Right */}
-          {headerLayout === 5 && (
-            <div className="relative">
-              <div className="flex justify-between items-center">
-                <h1 className="mek-text-industrial text-5xl text-yellow-400 mek-text-shadow">
-                  MARKET
-                </h1>
-                <div className="flex items-center gap-4">
-                  {renderHeaderButtons({
-                    onCreateListing: () => setShowCreateListing(true),
-                    onToggleMyListings: () => setShowMyListingsModal(true),
-                    showOnlyMyListings,
-                    listingCount: debugListingCount
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* OFFERS VIEW */}
@@ -4749,23 +4577,8 @@ export default function EssenceMarketPage() {
                       return (
                         <>
                           <div
-                            className={`font-bold tracking-wide text-center ${
-                              essenceTitleColor === 'yellow' ? 'text-yellow-400' : 'text-white'
-                            } ${
+                            className={`font-bold tracking-wide text-center font-exo text-white ${
                               essenceTitleCase === 'uppercase' ? 'uppercase' : ''
-                            } ${
-                              essenceLabelFont === 'geist' ? 'font-sans' :
-                              essenceLabelFont === 'orbitron' ? 'font-orbitron' :
-                              essenceLabelFont === 'rajdhani' ? 'font-rajdhani' :
-                              essenceLabelFont === 'saira' ? 'font-saira' :
-                              essenceLabelFont === 'teko' ? 'font-teko' :
-                              essenceLabelFont === 'michroma' ? 'font-michroma' :
-                              essenceLabelFont === 'audiowide' ? 'font-audiowide' :
-                              essenceLabelFont === 'quantico' ? 'font-quantico' :
-                              essenceLabelFont === 'electrolize' ? 'font-electrolize' :
-                              essenceLabelFont === 'russo' ? 'font-russo' :
-                              essenceLabelFont === 'exo' ? 'font-exo' :
-                              'font-orbitron'
                             } ${lineClamp === 2 ? 'line-clamp-2' : 'line-clamp-1'} px-1`}
                             style={{
                               fontSize: `${fontSize}px`,
