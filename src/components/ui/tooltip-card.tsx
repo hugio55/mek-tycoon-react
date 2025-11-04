@@ -72,10 +72,13 @@ export const Tooltip = ({
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    console.log('[TOOLTIP] Mouse entered, showing tooltip');
     setIsVisible(true);
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+    console.log('[TOOLTIP] Container rect:', rect);
+    console.log('[TOOLTIP] Mouse position:', { mouseX, mouseY, clientX: e.clientX, clientY: e.clientY });
     updateMousePosition(mouseX, mouseY);
   };
 
@@ -149,34 +152,27 @@ export const Tooltip = ({
       onClick={handleClick}
     >
       {children}
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            key={String(isVisible)}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-              duration: 0.15,
-            }}
-            className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-[20rem] rounded-md border-2 border-yellow-500/80 bg-black/95 backdrop-blur-sm shadow-lg shadow-yellow-500/20"
-            style={{
-              top: position.y,
-              left: position.x,
-            }}
+      {isVisible && (
+        <div
+          className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-[20rem] rounded-md border-2 border-yellow-500 bg-black backdrop-blur-sm shadow-lg shadow-yellow-500/50"
+          style={{
+            top: position.y,
+            left: position.x,
+          }}
+          ref={(el) => {
+            if (el) {
+              console.log('[TOOLTIP] Rendered at position:', position, 'Element:', el.getBoundingClientRect());
+            }
+          }}
+        >
+          <div
+            ref={contentRef}
+            className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
           >
-            <div
-              ref={contentRef}
-              className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
-            >
-              {content}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {content}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
