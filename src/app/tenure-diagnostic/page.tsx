@@ -7,10 +7,14 @@ import { useUser } from "@/contexts/UserContext";
 export default function TenureDiagnosticPage() {
   const { userId } = useUser();
 
+  console.log('[🔍 DIAGNOSTIC-PAGE] userId from context:', userId);
+
   const diagnostic = useQuery(
     api.essence.diagnosticCheckSlottedMeksInMeksTable,
     userId ? { walletAddress: userId } : "skip"
   );
+
+  console.log('[🔍 DIAGNOSTIC-PAGE] Diagnostic result:', diagnostic);
 
   if (!userId) {
     return (
