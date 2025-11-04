@@ -86,12 +86,23 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getLoadedCount = useCallback(() => {
+    console.log(`[🔄LOOP-DEBUG] Provider ${providerId.current} - getLoadedCount called`);
     return Array.from(queries.values()).filter((q) => q.isLoaded).length;
   }, [queries]);
 
   const getTotalCount = useCallback(() => {
+    console.log(`[🔄LOOP-DEBUG] Provider ${providerId.current} - getTotalCount called`);
     return queries.size;
   }, [queries]);
+
+  // Track when queries change
+  const prevQueriesRef = useRef(queries);
+  useEffect(() => {
+    if (prevQueriesRef.current !== queries) {
+      console.log(`[🔄LOOP-DEBUG] Provider ${providerId.current} - queries Map changed, size: ${queries.size}`);
+      prevQueriesRef.current = queries;
+    }
+  });
 
   useEffect(() => {
     return () => {

@@ -29,20 +29,29 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const hasTriggeredCompletion = useRef(false);  // NEW: Track if completion was triggered
   const hookIdRef = useRef(Math.random().toString(36).substring(7));
 
+  // Track function reference changes
+  const prevGetLoadedCountRef = useRef(getLoadedCount);
+  const prevGetTotalCountRef = useRef(getTotalCount);
+
+  if (prevGetLoadedCountRef.current !== getLoadedCount) {
+    console.log(`[🔄LOOP-DEBUG] Hook ${hookIdRef.current} - getLoadedCount function reference CHANGED`);
+    prevGetLoadedCountRef.current = getLoadedCount;
+  }
+
+  if (prevGetTotalCountRef.current !== getTotalCount) {
+    console.log(`[🔄LOOP-DEBUG] Hook ${hookIdRef.current} - getTotalCount function reference CHANGED`);
+    prevGetTotalCountRef.current = getTotalCount;
+  }
+
   console.log(`[🔄LIFECYCLE] usePageLoadProgress hook ID ${hookIdRef.current} mounted`);
 
   const minDisplayTime = config?.minDisplayTime ?? TIMING.MIN_DISPLAY_TIME;
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
 
   useEffect(() => {
-    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Main effect running`);
-    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Current isComplete state: ${isComplete}`);
-    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - hasTriggeredCompletion: ${hasTriggeredCompletion.current}`);
-    console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - startTime: ${startTime}, elapsed: ${Date.now() - startTime}ms`);
-
     // CRITICAL FIX: If completion was already triggered, don't restart the effect
     if (hasTriggeredCompletion.current) {
-      console.log(`[🔄LIFECYCLE] Hook ${hookIdRef.current} - Completion already triggered, skipping effect`);
+      console.log(`[🔄LOOP-DEBUG] Hook ${hookIdRef.current} - Completion already triggered, skipping effect`);
       return;
     }
 
@@ -121,10 +130,9 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
         clearTimeout(completeTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     startTime,
-    getLoadedCount,
-    getTotalCount,
     isWalletLoaded,
     minDisplayTime,
     totalTimeout,
@@ -145,7 +153,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       setIsComplete(true);
       setCanShow(false);
     }
-  }, [getLoadedCount, getTotalCount, startTime, minDisplayTime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime, minDisplayTime]);
 
   // Track isComplete changes
   useEffect(() => {
