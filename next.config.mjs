@@ -1,6 +1,9 @@
 import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for optimized Vercel deployments (reduces serverless bundle size)
+  output: 'standalone',
+
   // Increase memory limit for build process
   experimental: {
     workerThreads: false,

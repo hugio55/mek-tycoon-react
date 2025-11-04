@@ -2625,19 +2625,35 @@ export default function AdminMasterDataPage() {
                           Level {index + 1} → {index + 2}
                         </label>
                         <input
-                          type="number"
-                          min="0"
-                          value={slotsConfig[selectedSlotType][index]}
+                          type="text"
+                          inputMode="numeric"
+                          value={slotsConfig[selectedSlotType][index] === 0 ? '' : slotsConfig[selectedSlotType][index].toLocaleString()}
                           onChange={(e) => {
-                            const inputValue = e.target.value;
-                            // Allow empty string while editing
-                            const newValue = inputValue === '' ? 0 : parseInt(inputValue, 10);
-                            setSlotsConfig(prev => ({
-                              ...prev,
-                              [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
-                                i === index ? newValue : val
-                              )
-                            }));
+                            const rawValue = e.target.value.replace(/,/g, '');
+
+                            if (rawValue === '') {
+                              setSlotsConfig(prev => ({
+                                ...prev,
+                                [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
+                                  i === index ? 0 : val
+                                )
+                              }));
+                              return;
+                            }
+
+                            if (!/^\d+$/.test(rawValue)) {
+                              return;
+                            }
+
+                            const numValue = parseInt(rawValue, 10);
+                            if (!isNaN(numValue)) {
+                              setSlotsConfig(prev => ({
+                                ...prev,
+                                [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
+                                  i === index ? numValue : val
+                                )
+                              }));
+                            }
                           }}
                           onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"

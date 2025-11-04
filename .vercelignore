@@ -1,14 +1,10 @@
-# Exclude large static image assets (should be served from CDN)
-public/mek-images/
-public/essence-images/
+# Exclude Convex backend (runs separately on Convex infrastructure)
+convex/
 
 # Exclude development and test directories
 JUNK/
 discord-bot/
 saves/
-
-# Exclude Convex backend (runs separately on Convex infrastructure)
-convex/
 
 # Build artifacts
 .next/
