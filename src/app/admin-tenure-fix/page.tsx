@@ -20,12 +20,14 @@ export default function TenureFixPage() {
   const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  // Mutations
-  const runMigration = useMutation(api.migrations.syncIsSlottedFromEssenceSlots);
+  // Mutations - with safety check
+  const runMigration = useMutation(
+    api?.migrations?.syncIsSlottedFromEssenceSlots || undefined as any
+  );
 
-  // Diagnostic query
+  // Diagnostic query - check if API exists first
   const diagnostic = useQuery(
-    walletAddress
+    walletAddress && api?.essence?.diagnosticCheckSlottedMeksInMeksTable
       ? api.essence.diagnosticCheckSlottedMeksInMeksTable
       : undefined,
     walletAddress ? { walletAddress } : undefined
