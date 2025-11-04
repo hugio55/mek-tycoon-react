@@ -240,7 +240,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               {/* NFT Image */}
               <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
                 <img
-                  src="/random-images/Lab%20Rat.jpg"
+                  src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
                   alt={activeReservation.nft.name}
                   className="w-full h-auto"
                   onError={(e) => {
