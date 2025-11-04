@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
@@ -177,6 +178,24 @@ export default function AdminMasterDataPage() {
   });
   const [slotRoundingOption, setSlotRoundingOption] = useState<10 | 100 | 1000>(10);
   const [slotCurveFactor, setSlotCurveFactor] = useState<number>(1.0); // 1.0 = linear, >1 = exponential
+
+  // Slot Configuration Save/Load State
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  // Query saved slot configurations
+  const savedConfigurations = useQuery(api.slotConfigurations.listSlotConfigurations);
+
+  // Mutations for save/load/delete
+  const saveConfiguration = useMutation(api.slotConfigurations.saveSlotConfiguration);
+  const loadConfiguration = useMutation(api.slotConfigurations.loadSlotConfiguration);
+  const deleteConfiguration = useMutation(api.slotConfigurations.deleteSlotConfiguration);
+
+  // Client-side mounting check for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Interpolate slot values between first and last
   const interpolateSlotValues = () => {
