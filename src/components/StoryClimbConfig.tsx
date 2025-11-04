@@ -275,30 +275,32 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
 
       {/* Mek Slots Configuration - New Section */}
       {shouldRenderSection('mekSlots') && (
-      <div className="bg-gradient-to-br from-green-900/20 via-black/50 to-cyan-900/20 rounded-lg p-4 border border-green-500/30">
+      <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden">
         <button
           onClick={() => toggleSection('mekSlots')}
-          className="w-full flex items-center justify-between text-left mb-3"
+          className="w-full flex items-center justify-between text-left"
         >
-          <h4 className="text-sm font-bold text-green-400 flex items-center gap-2">
-            <span>{sectionsCollapsed.mekSlots ? '▶' : '▼'}</span>
-            <span className="text-lg">🎰</span>
-            Mek Slots Configuration
-          </h4>
+          <div className="mek-header-industrial w-full">
+            <h4 className="mek-text-industrial text-lg font-black text-yellow-400 flex items-center gap-3 relative z-10">
+              <span>{sectionsCollapsed.mekSlots ? '▶' : '▼'}</span>
+              <span className="text-2xl">🎰</span>
+              MEK SLOTS CONFIGURATION
+            </h4>
+          </div>
         </button>
 
         {!sectionsCollapsed.mekSlots && (
-          <div className="space-y-4">
-            <p className="text-xs text-gray-400 mb-4">
-              Configure how many mek slots each node type has based on difficulty. Higher rarity nodes get more slots.
+          <div className="p-6 space-y-6 relative">
+            <p className="mek-label-uppercase text-gray-400 mb-6 relative z-10">
+              Configure deployment slot ranges for each node type based on difficulty. Higher rarity nodes unlock more slots.
             </p>
 
             {/* Normal Meks Slots */}
-            <div className="bg-black/30 rounded p-3">
-              <h5 className="text-yellow-400 text-sm font-bold mb-2">Normal Meks (350 per chapter)</h5>
-              <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="relative bg-black/40 rounded-lg p-4 border border-yellow-500/30 mek-overlay-metal-texture overflow-hidden">
+              <h5 className="mek-text-industrial text-sm font-bold text-yellow-400 mb-3 relative z-10">NORMAL MEKS <span className="text-gray-500">(350/CHAPTER)</span></h5>
+              <div className="grid grid-cols-3 gap-4 text-xs relative z-10">
                 <div>
-                  <label className="text-gray-400">Easy Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Easy Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -312,9 +314,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           easy: { ...prev.normalMeks.easy, min: parseInt(e.target.value) || 1 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-green-400/50 rounded text-green-400 font-bold text-center focus:border-green-400 focus:shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -327,7 +329,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           easy: { ...prev.normalMeks.easy, max: parseInt(e.target.value) || 2 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-green-400/50 rounded text-green-400 font-bold text-center focus:border-green-400 focus:shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -335,7 +337,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                   </div>
                 </div>
                 <div>
-                  <label className="text-gray-400">Medium Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Medium Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -349,9 +351,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           medium: { ...prev.normalMeks.medium, min: parseInt(e.target.value) || 3 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-yellow-400/50 rounded text-yellow-400 font-bold text-center focus:border-yellow-400 focus:shadow-[0_0_10px_rgba(250,204,21,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -364,7 +366,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           medium: { ...prev.normalMeks.medium, max: parseInt(e.target.value) || 6 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-yellow-400/50 rounded text-yellow-400 font-bold text-center focus:border-yellow-400 focus:shadow-[0_0_10px_rgba(250,204,21,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -372,7 +374,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                   </div>
                 </div>
                 <div>
-                  <label className="text-gray-400">Hard Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Hard Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -386,9 +388,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           hard: { ...prev.normalMeks.hard, min: parseInt(e.target.value) || 7 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-red-400/50 rounded text-red-400 font-bold text-center focus:border-red-400 focus:shadow-[0_0_10px_rgba(248,113,113,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -401,7 +403,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           hard: { ...prev.normalMeks.hard, max: parseInt(e.target.value) || 8 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-red-400/50 rounded text-red-400 font-bold text-center focus:border-red-400 focus:shadow-[0_0_10px_rgba(248,113,113,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -412,11 +414,11 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
             </div>
 
             {/* Challengers Slots */}
-            <div className="bg-black/30 rounded p-3">
-              <h5 className="text-orange-400 text-sm font-bold mb-2">Challengers (40 per chapter)</h5>
-              <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="relative bg-black/40 rounded-lg p-4 border border-orange-500/30 mek-overlay-metal-texture overflow-hidden">
+              <h5 className="mek-text-industrial text-sm font-bold text-orange-400 mb-3 relative z-10">CHALLENGERS <span className="text-gray-500">(40/CHAPTER)</span></h5>
+              <div className="grid grid-cols-3 gap-4 text-xs relative z-10">
                 <div>
-                  <label className="text-gray-400">Easy Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Easy Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -430,9 +432,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           easy: { ...prev.challengers.easy, min: parseInt(e.target.value) || 2 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-green-400/50 rounded text-green-400 font-bold text-center focus:border-green-400 focus:shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -445,7 +447,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           easy: { ...prev.challengers.easy, max: parseInt(e.target.value) || 3 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-green-400/30 rounded text-green-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-green-400/50 rounded text-green-400 font-bold text-center focus:border-green-400 focus:shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -453,7 +455,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                   </div>
                 </div>
                 <div>
-                  <label className="text-gray-400">Medium Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Medium Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -467,9 +469,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           medium: { ...prev.challengers.medium, min: parseInt(e.target.value) || 4 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-yellow-400/50 rounded text-yellow-400 font-bold text-center focus:border-yellow-400 focus:shadow-[0_0_10px_rgba(250,204,21,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -482,7 +484,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           medium: { ...prev.challengers.medium, max: parseInt(e.target.value) || 7 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-yellow-400/30 rounded text-yellow-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-yellow-400/50 rounded text-yellow-400 font-bold text-center focus:border-yellow-400 focus:shadow-[0_0_10px_rgba(250,204,21,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -490,7 +492,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                   </div>
                 </div>
                 <div>
-                  <label className="text-gray-400">Hard Mode</label>
+                  <label className="mek-label-uppercase text-gray-400 mb-1 block">Hard Mode</label>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
@@ -504,9 +506,9 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           hard: { ...prev.challengers.hard, min: parseInt(e.target.value) || 8 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-red-400/50 rounded text-red-400 font-bold text-center focus:border-red-400 focus:shadow-[0_0_10px_rgba(248,113,113,0.3)] transition-all"
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-gray-500 font-bold">→</span>
                     <input
                       type="number"
                       min="1"
@@ -519,7 +521,7 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
                           hard: { ...prev.challengers.hard, max: parseInt(e.target.value) || 10 }
                         }
                       }))}
-                      className="w-16 px-2 py-1 bg-black/50 border border-red-400/30 rounded text-red-400"
+                      className="w-16 px-3 py-2 bg-black/70 border-2 border-red-400/50 rounded text-red-400 font-bold text-center focus:border-red-400 focus:shadow-[0_0_10px_rgba(248,113,113,0.3)] transition-all"
                     />
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1">
@@ -530,13 +532,13 @@ export default function StoryClimbConfig({ activeSection }: StoryClimbConfigProp
             </div>
 
             {/* Mini-Bosses and Final Bosses Slots */}
-            <div className="bg-black/30 rounded p-3">
-              <h5 className="text-red-400 text-sm font-bold mb-3">Mini-Bosses and Final Bosses (9 + 1 per chapter)</h5>
+            <div className="relative bg-black/40 rounded-lg p-4 border border-red-500/30 mek-overlay-metal-texture overflow-hidden">
+              <h5 className="mek-text-industrial text-sm font-bold text-red-400 mb-4 relative z-10">BOSS ENCOUNTERS <span className="text-gray-500">(10/CHAPTER)</span></h5>
 
               {/* Mini-Bosses Section */}
-              <div className="mb-4">
-                <h6 className="text-orange-400 text-xs font-semibold mb-2">Mini-Bosses (9 per chapter)</h6>
-                <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="mb-6 relative z-10">
+                <h6 className="mek-label-uppercase text-orange-400 font-semibold mb-3">Mini-Bosses (9/chapter)</h6>
+                <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
                     <label className="text-gray-400">Easy Mode</label>
                     <div className="flex items-center gap-2 mt-1">
