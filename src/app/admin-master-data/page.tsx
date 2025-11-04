@@ -2576,7 +2576,9 @@ export default function AdminMasterDataPage() {
                           min="0"
                           value={slotsConfig[selectedSlotType][index]}
                           onChange={(e) => {
-                            const newValue = parseInt(e.target.value) || 0;
+                            const inputValue = e.target.value;
+                            // Allow empty string while editing
+                            const newValue = inputValue === '' ? 0 : parseInt(inputValue, 10);
                             setSlotsConfig(prev => ({
                               ...prev,
                               [selectedSlotType]: prev[selectedSlotType].map((val, i) =>
@@ -2584,6 +2586,7 @@ export default function AdminMasterDataPage() {
                               )
                             }));
                           }}
+                          onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"
                         />
                         <p className="text-xs text-gray-500 mt-1 text-center">
