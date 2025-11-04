@@ -75,7 +75,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       setProgress(snapped);
 
       const allQueriesLoaded = totalCount > 0 && loadedCount === totalCount;
-      const noQueriesTracked = totalCount === 0 && elapsed >= 1500; // No queries after 1.5s = fall back to simple timer
+      const noQueriesTracked = totalCount === 0 && elapsed >= 800; // No queries after 0.8s = fall back to simple timer
       const minTimeElapsed = elapsed >= minDisplayTime;
       const timedOut = elapsed >= totalTimeout;
 
