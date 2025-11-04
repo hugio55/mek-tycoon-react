@@ -33,6 +33,10 @@ const nextConfig = {
 
   // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
+    // TEMPORARY: Disable minification to test if this is causing the WebpackError constructor issue
+    config.optimization = config.optimization || {};
+    config.optimization.minimize = false;
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -86,16 +90,9 @@ const nextConfig = {
         'archiver',
         'adm-zip',
         'jszip',
-        'fs-extra',
-        // Sentry packages (reduces bundle bloat)
-        '@sentry/node',
-        '@sentry/core',
-        // OpenTelemetry (bundled with Sentry, very large)
-        '@opentelemetry/api',
-        '@opentelemetry/core',
-        '@opentelemetry/instrumentation',
-        '@opentelemetry/sdk-trace-base',
-        '@opentelemetry/sdk-trace-node'
+        'fs-extra'
+        // REMOVED: Sentry and OpenTelemetry externals cause webpack parsing errors
+        // These are needed at build time, can't be externalized
       );
     }
 

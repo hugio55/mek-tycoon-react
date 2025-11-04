@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;700&family=Saira+Condensed:wght@400;700&family=Teko:wght@400;700&family=Michroma&family=Audiowide&family=Quantico:wght@400;700&family=Electrolize&family=Russo+One&family=Exo+2:wght@400;700&display=swap');
+@import '../styles/global-design-system.css';
+@import '../styles/typography-system.css';
 
 @tailwind base;
 @tailwind components;
@@ -114,12 +116,6 @@ body.modal-open {
 body {
   position: relative;
 }
-
-/* Import the global design system */
-@import '../styles/global-design-system.css';
-
-/* Import the advanced typography system */
-@import '../styles/typography-system.css';
 
 /* Shimmer animation for holographic effects */
 @keyframes shimmer {
