@@ -82,54 +82,8 @@ const nextConfig = {
       );
     }
 
-    // Additional optimizations for bundle size
-    config.optimization = {
-      ...config.optimization,
-      moduleIds: 'deterministic',
-      // Split chunks more aggressively to reduce serverless function sizes
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          // Separate framework code
-          framework: {
-            name: 'framework',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-            priority: 40,
-            enforce: true,
-          },
-          // Separate Convex client
-          convex: {
-            name: 'convex',
-            test: /[\\/]node_modules[\\/]convex[\\/]/,
-            chunks: 'all',
-            priority: 30,
-          },
-          // Separate visualization libraries (three.js, recharts)
-          visualization: {
-            name: 'visualization',
-            test: /[\\/]node_modules[\\/](three|cannon|cannon-es|recharts)[\\/]/,
-            chunks: 'all',
-            priority: 25,
-          },
-          // Separate UI libraries
-          ui: {
-            name: 'ui',
-            test: /[\\/]node_modules[\\/](framer-motion|motion|lucide-react)[\\/]/,
-            chunks: 'all',
-            priority: 20,
-          },
-          // Common chunks shared by multiple pages
-          commons: {
-            name: 'commons',
-            minChunks: 2,
-            priority: 10,
-          },
-        },
-      },
-    };
+    // Keep default Next.js optimization settings
+    // Custom chunk splitting can cause "self is not defined" errors in server context
 
     return config;
   },
