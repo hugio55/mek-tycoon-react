@@ -33,10 +33,6 @@ const nextConfig = {
 
   // Fix webpack crypto and WebAssembly issues
   webpack: (config, { isServer }) => {
-    // TEMPORARY: Disable minification to test if this is causing the WebpackError constructor issue
-    config.optimization = config.optimization || {};
-    config.optimization.minimize = false;
-
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
