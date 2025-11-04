@@ -2649,6 +2649,16 @@ export default function AdminMasterDataPage() {
                   </div>
                 </div>
 
+                {/* Save Configuration Button */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowSaveModal(true)}
+                    className="w-full px-4 py-3 bg-green-500/20 border-2 border-green-500/50 rounded text-green-400 font-bold uppercase tracking-wider hover:bg-green-500/30 hover:border-green-500 transition-all"
+                  >
+                    💾 Save Configuration
+                  </button>
+                </div>
+
                 {/* Interpolation Controls */}
                 <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                   <h5 className="text-sm font-bold text-yellow-400 mb-3 uppercase tracking-wider">Auto-Fill Tool</h5>
