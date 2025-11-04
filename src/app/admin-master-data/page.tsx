@@ -176,6 +176,7 @@ export default function AdminMasterDataPage() {
     master: [0, 0, 0, 0, 0, 0, 0, 0, 0]
   });
   const [slotRoundingOption, setSlotRoundingOption] = useState<10 | 100 | 1000>(10);
+  const [slotCurveFactor, setSlotCurveFactor] = useState<number>(1.0); // 1.0 = linear, >1 = exponential
 
   // Interpolate slot values between first and last
   const interpolateSlotValues = () => {
@@ -186,9 +187,10 @@ export default function AdminMasterDataPage() {
       if (index === 0) return firstValue;
       if (index === 8) return lastValue;
 
-      // Linear interpolation
+      // Exponential interpolation based on curve factor
       const t = index / 8; // Progress from 0 to 1
-      const interpolated = firstValue + (lastValue - firstValue) * t;
+      const curvedT = Math.pow(t, slotCurveFactor); // Apply exponential curve
+      const interpolated = firstValue + (lastValue - firstValue) * curvedT;
 
       // Round to selected option
       const rounded = Math.round(interpolated / slotRoundingOption) * slotRoundingOption;
@@ -2512,20 +2514,43 @@ export default function AdminMasterDataPage() {
               <div className="p-4 border-t border-gray-700/50">
                 <p className="text-gray-400 mb-4">Configure tenure requirements for slot leveling across all slot types</p>
 
-                {/* Slot Type Selector */}
+                {/* Slot Type Selector - Button Group */}
                 <div className="mb-6">
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
                     Slot Type
                   </label>
-                  <select
-                    value={selectedSlotType}
-                    onChange={(e) => setSelectedSlotType(e.target.value as 'basic' | 'advanced' | 'master')}
-                    className="w-full max-w-xs px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 focus:border-yellow-500 focus:outline-none"
-                  >
-                    <option value="basic">Basic Slots</option>
-                    <option value="advanced">Advanced Slots</option>
-                    <option value="master">Master Slots</option>
-                  </select>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedSlotType('basic')}
+                      className={`flex-1 px-4 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedSlotType === 'basic'
+                          ? 'bg-green-500/30 border-2 border-green-500 text-green-400'
+                          : 'bg-black/50 border-2 border-gray-600/50 text-gray-400 hover:border-green-500/50'
+                      }`}
+                    >
+                      Basic
+                    </button>
+                    <button
+                      onClick={() => setSelectedSlotType('advanced')}
+                      className={`flex-1 px-4 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedSlotType === 'advanced'
+                          ? 'bg-blue-500/30 border-2 border-blue-500 text-blue-400'
+                          : 'bg-black/50 border-2 border-gray-600/50 text-gray-400 hover:border-blue-500/50'
+                      }`}
+                    >
+                      Advanced
+                    </button>
+                    <button
+                      onClick={() => setSelectedSlotType('master')}
+                      className={`flex-1 px-4 py-3 font-bold uppercase tracking-wider transition-all ${
+                        selectedSlotType === 'master'
+                          ? 'bg-purple-500/30 border-2 border-purple-500 text-purple-400'
+                          : 'bg-black/50 border-2 border-gray-600/50 text-gray-400 hover:border-purple-500/50'
+                      }`}
+                    >
+                      Master
+                    </button>
+                  </div>
                 </div>
 
                 {/* Interpolation Controls */}
@@ -2533,28 +2558,56 @@ export default function AdminMasterDataPage() {
                   <h5 className="text-sm font-bold text-yellow-400 mb-3 uppercase tracking-wider">Auto-Fill Tool</h5>
                   <p className="text-xs text-gray-400 mb-3">Enter values in Level 1→2 and Level 9→10, then click Interpolate to auto-fill middle values</p>
 
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
-                        Rounding
-                      </label>
-                      <select
-                        value={slotRoundingOption}
-                        onChange={(e) => setSlotRoundingOption(Number(e.target.value) as 10 | 100 | 1000)}
-                        className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 focus:border-yellow-500 focus:outline-none"
-                      >
-                        <option value={10}>Tens</option>
-                        <option value={100}>Hundreds</option>
-                        <option value={1000}>Thousands</option>
-                      </select>
+                  <div className="space-y-4">
+                    {/* Curve Factor Slider */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs text-gray-400 uppercase tracking-wider">
+                          Curve (Exponential Growth)
+                        </label>
+                        <span className="text-sm font-bold text-yellow-300">
+                          {slotCurveFactor.toFixed(2)}x
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="3.0"
+                        step="0.1"
+                        value={slotCurveFactor}
+                        onChange={(e) => setSlotCurveFactor(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-black/50 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>Slower Growth (0.5)</span>
+                        <span>Linear (1.0)</span>
+                        <span>Faster Growth (3.0)</span>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={interpolateSlotValues}
-                      className="px-6 py-2 bg-yellow-500/20 border-2 border-yellow-500/50 rounded text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/30 hover:border-yellow-500 transition-all"
-                    >
-                      Interpolate
-                    </button>
+                    <div className="flex gap-4 items-end">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                          Rounding
+                        </label>
+                        <select
+                          value={slotRoundingOption}
+                          onChange={(e) => setSlotRoundingOption(Number(e.target.value) as 10 | 100 | 1000)}
+                          className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 focus:border-yellow-500 focus:outline-none"
+                        >
+                          <option value={10}>Tens</option>
+                          <option value={100}>Hundreds</option>
+                          <option value={1000}>Thousands</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={interpolateSlotValues}
+                        className="px-6 py-2 bg-yellow-500/20 border-2 border-yellow-500/50 rounded text-yellow-400 font-bold uppercase tracking-wider hover:bg-yellow-500/30 hover:border-yellow-500 transition-all"
+                      >
+                        Interpolate
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -2589,7 +2642,10 @@ export default function AdminMasterDataPage() {
                           onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 bg-black/50 border border-yellow-500/50 rounded text-yellow-300 text-center font-bold focus:border-yellow-500 focus:outline-none"
                         />
-                        <p className="text-xs text-gray-500 mt-1 text-center">
+                        <p className="text-xs text-yellow-400 mt-1 text-center font-semibold">
+                          {slotsConfig[selectedSlotType][index].toLocaleString()} tenure
+                        </p>
+                        <p className="text-xs text-gray-500 text-center">
                           {formatTenureDuration(slotsConfig[selectedSlotType][index], tenurePerSecond)}
                         </p>
                       </div>
