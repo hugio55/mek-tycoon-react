@@ -75,12 +75,16 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       setProgress(snapped);
 
       const allQueriesLoaded = totalCount > 0 && loadedCount === totalCount;
+      const noQueriesTracked = totalCount === 0 && elapsed >= 1500; // No queries after 1.5s = fall back to simple timer
       const minTimeElapsed = elapsed >= minDisplayTime;
       const timedOut = elapsed >= totalTimeout;
 
-      if ((allQueriesLoaded && minTimeElapsed) || timedOut) {
+      if ((allQueriesLoaded && minTimeElapsed) || noQueriesTracked || timedOut) {
         if (timedOut) {
           console.log('[PAGE LOADER] Total timeout reached, forcing completion');
+        }
+        if (noQueriesTracked) {
+          console.log('[PAGE LOADER] No queries tracked, completing after simple timer');
         }
         setProgress(100);
 
