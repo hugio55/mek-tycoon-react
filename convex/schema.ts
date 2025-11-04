@@ -3491,27 +3491,25 @@ export default defineSchema({
 
   // Tenure buffs - bonuses granted at specific tenure levels
   tenureBuffs: defineTable({
-    tenureLevel: v.number(), // Which tenure level grants this buff
-    buffType: v.union(
-      v.literal("global_gold_rate"), // Affects all Meks in account
-      v.literal("global_xp_rate"),
-      v.literal("global_crafting_speed"),
-      v.literal("global_mission_success"),
-      v.literal("mek_gold_rate"), // Affects only the Mek that reached this level
-      v.literal("mek_xp_rate"),
-      v.literal("mek_health"),
-      v.literal("mek_speed")
-    ),
-    buffValue: v.number(), // Percentage increase (e.g., 5 = +5%)
-    isGlobal: v.boolean(), // True = affects all Meks, False = affects only this Mek
-    description: v.string(), // Human-readable description
-    isActive: v.optional(v.boolean()), // Admin toggle to enable/disable
+    // Buff identification
+    name: v.string(), // Display name (e.g., "VIP Double Tenure")
+    description: v.optional(v.string()), // What this buff does
+
+    // Buff scope
+    scope: v.union(v.literal("global"), v.literal("perMek")),
+    mekId: v.optional(v.id("meks")), // Required if scope is "perMek"
+
+    // Buff effect
+    multiplier: v.number(), // e.g., 0.5 for +50%, 1.0 for +100%
+
+    // State
+    active: v.boolean(), // Is buff currently active
+    expiresAt: v.optional(v.number()), // When buff expires (undefined = permanent)
+
+    // Timestamps
     createdAt: v.number(),
-    updatedAt: v.number(),
   })
-    .index("by_tenure_level", ["tenureLevel"])
-    .index("by_buff_type", ["buffType"])
-    .index("by_is_global", ["isGlobal"])
-    .index("by_is_active", ["isActive"])
-    .index("by_level_and_type", ["tenureLevel", "buffType"]),
+    .index("by_scope", ["scope"])
+    .index("by_mek", ["mekId"])
+    .index("by_active", ["active"]),
 });
