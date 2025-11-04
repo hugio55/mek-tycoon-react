@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function TenureDiagnosticPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
+  const [isRunningMigration, setIsRunningMigration] = useState(false);
+
+  const syncMeks = useMutation(api.migrations.syncMeksFromGoldMining);
 
   useEffect(() => {
     const initWallet = async () => {
@@ -26,6 +30,29 @@ export default function TenureDiagnosticPage() {
   );
 
   console.log('[🔍 DIAGNOSTIC-PAGE] Diagnostic result:', diagnostic);
+
+  const runMigration = async () => {
+    if (!walletAddress) return;
+
+    setIsRunningMigration(true);
+    setMigrationStatus("Running migration...");
+
+    try {
+      const result = await syncMeks({ walletAddress });
+      console.log('[🔍 MIGRATION] Result:', result);
+
+      if (result.success) {
+        setMigrationStatus(`✅ Success! Created ${result.created} Meks in meks table. Skipped ${result.skipped} that already existed.`);
+      } else {
+        setMigrationStatus(`❌ Migration failed: ${result.message}`);
+      }
+    } catch (error: any) {
+      console.error('[🔍 MIGRATION] Error:', error);
+      setMigrationStatus(`❌ Error: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsRunningMigration(false);
+    }
+  };
 
   if (!walletAddress) {
     return (
@@ -75,6 +102,37 @@ export default function TenureDiagnosticPage() {
             <div className="text-2xl font-bold text-blue-400">{diagnostic.summary.properlyConfigured}</div>
           </div>
         </div>
+
+        {diagnostic.summary.notInMeksTable > 0 && (
+          <div className="bg-yellow-900/20 border border-yellow-600 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold mb-3 text-yellow-400">⚠️ Action Required</h2>
+            <p className="text-gray-300 mb-4">
+              You have {diagnostic.summary.notInMeksTable} Mek{diagnostic.summary.notInMeksTable > 1 ? 's' : ''} that need to be migrated to the meks table to enable tenure tracking.
+            </p>
+            <button
+              onClick={runMigration}
+              disabled={isRunningMigration}
+              className={`px-6 py-3 rounded-lg font-bold transition-colors ${
+                isRunningMigration
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-yellow-600 hover:bg-yellow-700"
+              }`}
+            >
+              {isRunningMigration ? "Running Migration..." : "🔧 Run Migration Now"}
+            </button>
+            {migrationStatus && (
+              <div className={`mt-4 p-3 rounded ${
+                migrationStatus.startsWith("✅")
+                  ? "bg-green-900/50 border border-green-600 text-green-300"
+                  : migrationStatus.startsWith("❌")
+                  ? "bg-red-900/50 border border-red-600 text-red-300"
+                  : "bg-blue-900/50 border border-blue-600 text-blue-300"
+              }`}>
+                {migrationStatus}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
           <h2 className="text-xl font-bold mb-4">Detailed Results</h2>
