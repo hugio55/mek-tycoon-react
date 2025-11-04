@@ -371,8 +371,8 @@ export default function EssenceMarketPage() {
 
   // Filter to only owned essence variations with amounts
   const ownedEssenceVariationsReal = (essenceState?.balances || [])
-    .filter(b => b.accumulatedAmount > 0)
-    .map(b => ({
+    .filter((b: { accumulatedAmount: number; variationName: string }) => b.accumulatedAmount > 0)
+    .map((b: { accumulatedAmount: number; variationName: string }) => ({
       name: b.variationName,
       amount: b.accumulatedAmount
     }));
@@ -390,7 +390,7 @@ export default function EssenceMarketPage() {
 
   // Filter to essence variations the user does NOT own (for requests)
   const unownedEssenceVariations = COMPLETE_VARIATION_RARITY.filter(variation => {
-    const owned = essenceState?.balances?.find(b => b.variationName === variation.name);
+    const owned = essenceState?.balances?.find((b: { variationName: string; accumulatedAmount: number }) => b.variationName === variation.name);
     return !owned || owned.accumulatedAmount === 0;
   });
 
@@ -442,7 +442,7 @@ export default function EssenceMarketPage() {
   }, [goldMiningData?.totalGoldPerHour]);
 
   // Filter and sort listings
-  const filteredListings = listings.filter(listing => {
+  const filteredListings = listings.filter((listing: { sellerId: Id<"users">; expiresAt?: number; itemVariation?: string }) => {
     if (showOnlyMyListings && listing.sellerId !== userId) return false;
 
     // Filter out expired listings if not showing them
@@ -3201,7 +3201,7 @@ export default function EssenceMarketPage() {
                       }}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
-                      <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                      <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
                     </button>
                   </div>
                 </div>
@@ -3239,7 +3239,7 @@ export default function EssenceMarketPage() {
                     onClick={() => setShowMyListingsModal(true)}
                     className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                   >
-                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                    <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
                   </button>
                   <div className="w-px h-10 bg-yellow-500/30 mx-2" />
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2.5">
@@ -3281,7 +3281,7 @@ export default function EssenceMarketPage() {
                       }}
                       className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                     >
-                      <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                      <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
                     </button>
                   </div>
                   <div className="relative bg-black/60 border border-yellow-500/30 rounded px-5 py-2 ml-auto">
@@ -3317,7 +3317,7 @@ export default function EssenceMarketPage() {
                     onClick={() => setShowMyListingsModal(true)}
                     className={getHeaderMyListingsButtonClasses(headerButtonStyle, false)}
                   >
-                    <span>MY LISTINGS ({myListings?.filter(l => l.itemType === "essence").length || 0})</span>
+                    <span>MY LISTINGS ({myListings?.filter((l: { itemType: string }) => l.itemType === "essence").length || 0})</span>
                   </button>
                   <div className="w-px h-10 bg-yellow-500/50 mx-2" />
                   <div className="relative bg-yellow-500/10 border border-yellow-500/40 rounded px-4 py-2">
@@ -4338,7 +4338,7 @@ export default function EssenceMarketPage() {
                             }}
                           >
                             <option value="" className="bg-black">SELECT ESSENCE YOU WANT...</option>
-                            {unownedEssenceVariations.map((variation) => (
+                            {unownedEssenceVariations.map((variation: { name: string; amount: number }) => (
                               <option key={variation.name} value={variation.name} className="bg-black">
                                 {variation.name}
                               </option>
@@ -4741,7 +4741,7 @@ export default function EssenceMarketPage() {
 
                       // Convert to title case if needed
                       const displayName = essenceTitleCase === 'titlecase'
-                        ? essenceName.split(' ').map(word =>
+                        ? essenceName.split(' ').map((word: string) =>
                             word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                           ).join(' ')
                         : essenceName;
@@ -4904,7 +4904,7 @@ export default function EssenceMarketPage() {
                         }}
                       >
                         <option value="" className="bg-black">SELECT ESSENCE TYPE...</option>
-                        {ownedEssenceVariations.map((variation) => (
+                        {ownedEssenceVariations.map((variation: { name: string; amount: number }) => (
                           <option key={variation.name} value={variation.name} className="bg-black">
                             {variation.name} ({variation.amount.toFixed(2)} owned)
                           </option>
@@ -5737,7 +5737,7 @@ export default function EssenceMarketPage() {
                   <div className="max-w-7xl mx-auto px-4 py-6">
 
               {/* Active Deployments Content */}
-              {myListings && myListings.filter(l => l.itemType === "essence").length > 0 ? (
+              {myListings && myListings.filter((l: { itemType: string }) => l.itemType === "essence").length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myListings
                     .filter(l => l.itemType === "essence")
