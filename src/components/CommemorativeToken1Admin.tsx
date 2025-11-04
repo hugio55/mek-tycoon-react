@@ -6,12 +6,16 @@ import { api } from '@/convex/_generated/api';
 
 export default function CommemorativeToken1Admin() {
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string>('');
+  const [showDebug, setShowDebug] = useState(false);
 
   // Query: Get current config (shows which snapshot is active)
   const config = useQuery(api.nftEligibility.getConfig);
 
   // Query: Get all available snapshots from Whitelist Manager
   const allSnapshots = useQuery(api.whitelists.getAllWhitelistSnapshots);
+
+  // Debug query to check raw database state
+  const debugState = useQuery(api.nftEligibility.debugEligibilityState);
 
   // Mutations
   const setActiveSnapshot = useMutation(api.nftEligibility.setActiveSnapshot);
@@ -198,6 +202,25 @@ export default function CommemorativeToken1Admin() {
           <li>• <strong>Result:</strong> Any corporation stake address in the snapshot will see the "Claim NFT" button on the homepage</li>
           <li>• <strong>NMKR handles everything else:</strong> Payment processing, minting, NFT delivery</li>
         </ul>
+      </div>
+
+      {/* Debug Panel */}
+      <div className="mt-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+        <button
+          onClick={() => setShowDebug(!showDebug)}
+          className="w-full text-left text-sm font-bold text-purple-300 mb-2 flex items-center justify-between"
+        >
+          <span>🔍 Debug Database State</span>
+          <span className="text-xs">{showDebug ? '▼' : '▶'}</span>
+        </button>
+
+        {showDebug && (
+          <div className="mt-3 p-3 bg-black/50 rounded border border-purple-500/20">
+            <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">
+              {JSON.stringify(debugState, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );
