@@ -222,6 +222,83 @@ export default function AdminMasterDataPage() {
     }));
   };
 
+  // Handle save configuration
+  const handleSaveConfiguration = async () => {
+    if (!saveName.trim()) {
+      alert('Please enter a configuration name');
+      return;
+    }
+
+    try {
+      await saveConfiguration({
+        name: saveName.trim(),
+        basicSlot: slotsConfig.basic,
+        advancedSlot: slotsConfig.advanced,
+        masterSlot: slotsConfig.master,
+        curveFactor: slotCurveFactor,
+        roundingOption: slotRoundingOption,
+      });
+
+      setShowSaveModal(false);
+      setSaveName('');
+    } catch (error) {
+      console.error('Failed to save configuration:', error);
+      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle load configuration
+  const handleLoadConfiguration = async (configId: any) => {
+    try {
+      const config = savedConfigurations?.find(c => c._id === configId);
+      if (!config) {
+        alert('Configuration not found');
+        return;
+      }
+
+      // Update local state with saved values
+      setSlotsConfig({
+        basic: config.basicSlot,
+        advanced: config.advancedSlot,
+        master: config.masterSlot,
+      });
+      setSlotCurveFactor(config.curveFactor);
+      setSlotRoundingOption(config.roundingOption as 10 | 100 | 1000);
+
+      // Mark as active in database
+      await loadConfiguration({ configId });
+    } catch (error) {
+      console.error('Failed to load configuration:', error);
+      alert(`Failed to load: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle delete configuration
+  const handleDeleteConfiguration = async (configId: any, configName: string) => {
+    if (!confirm(`Are you sure you want to delete "${configName}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteConfiguration({ configId, setOtherActive: true });
+    } catch (error) {
+      console.error('Failed to delete configuration:', error);
+      alert(`Failed to delete: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Lock body scroll when save modal is open
+  useEffect(() => {
+    if (showSaveModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showSaveModal]);
+
   // Create ordered DATA_SYSTEMS array based on saved order
   const orderedDataSystems = useMemo(() => {
     return tabOrder
