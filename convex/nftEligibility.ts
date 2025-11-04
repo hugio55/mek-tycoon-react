@@ -186,3 +186,44 @@ export const getConfig = query({
     };
   },
 });
+
+/**
+ * Debug function to inspect the raw database state
+ */
+export const debugEligibilityState = query({
+  args: {},
+  handler: async (ctx) => {
+    const config = await ctx.db
+      .query("nftEligibilityConfig")
+      .first();
+
+    if (!config) {
+      return {
+        status: "No config record found in database",
+        config: null,
+        snapshot: null,
+      };
+    }
+
+    let snapshot = null;
+    if (config.activeSnapshotId) {
+      snapshot = await ctx.db.get(config.activeSnapshotId);
+    }
+
+    return {
+      status: "Config found",
+      config: {
+        id: config._id,
+        activeSnapshotId: config.activeSnapshotId,
+        createdAt: config.createdAt,
+        updatedAt: config.updatedAt,
+      },
+      snapshot: snapshot ? {
+        id: snapshot._id,
+        snapshotName: snapshot.snapshotName,
+        eligibleUsersCount: snapshot.eligibleUsers?.length || 0,
+        takenAt: snapshot.takenAt,
+      } : null,
+    };
+  },
+});
