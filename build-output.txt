@@ -9,7 +9,3 @@
      · clientTraceMetadata
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 2.0min
-   Skipping validation of types
-   Skipping linting
-   Collecting page data ...
