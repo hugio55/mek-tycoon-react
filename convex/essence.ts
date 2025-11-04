@@ -629,8 +629,17 @@ async function calculateRealTimeEssenceBalances(
   return updatedBalances;
 }
 
+// ============================================================================
+// ORIGINAL MONOLITHIC SLOT/UNSLOT FUNCTIONS (COMMENTED OUT - PRESERVED FOR REFERENCE)
+// ============================================================================
+// These are the original implementations before the separation of concerns refactor.
+// Kept here for reference and to enable easy rollback if needed.
+// Scroll down to see the new refactored versions.
+// ============================================================================
+
+/*
 // Slot a Mek into a slot
-export const slotMek = mutation({
+export const slotMek_ORIGINAL = mutation({
   args: {
     walletAddress: v.string(),
     slotNumber: v.number(),
@@ -916,9 +925,11 @@ export const slotMek = mutation({
     };
   },
 });
+*/
 
+/*
 // Unslot a Mek from a slot
-export const unslotMek = mutation({
+export const unslotMek_ORIGINAL = mutation({
   args: {
     walletAddress: v.string(),
     slotNumber: v.number(),
@@ -1014,6 +1025,137 @@ export const unslotMek = mutation({
         });
       }
     }
+
+    return { success: true };
+  },
+});
+*/
+
+// ============================================================================
+// REFACTORED SLOT/UNSLOT FUNCTIONS (New Modular Implementation)
+// ============================================================================
+// These are the new implementations using helper functions for better
+// separation of concerns, maintainability, and testability.
+// ============================================================================
+
+// Slot a Mek into a slot
+export const slotMek = mutation({
+  args: {
+    walletAddress: v.string(),
+    slotNumber: v.number(),
+    mekAssetId: v.string(),
+    // Accept Mek data directly since Meks might be in goldMining.ownedMeks
+    mekNumber: v.optional(v.number()),
+    sourceKey: v.optional(v.string()),
+    headVariationId: v.optional(v.number()),
+    headVariationName: v.optional(v.string()),
+    bodyVariationId: v.optional(v.number()),
+    bodyVariationName: v.optional(v.string()),
+    itemVariationId: v.optional(v.number()),
+    itemVariationName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // 1. Validate operation preconditions
+    const { slot, mek } = await validateSlotOperation(ctx, {
+      walletAddress: args.walletAddress,
+      slotNumber: args.slotNumber,
+      mekAssetId: args.mekAssetId,
+    });
+
+    // 2. Snapshot current essence state before making changes
+    await snapshotEssenceState(ctx, args.walletAddress);
+
+    // 3. Update slot with Mek data
+    const variationData = await updateSlotWithMek(ctx, {
+      slotId: slot._id,
+      mekData: {
+        assetId: args.mekAssetId,
+        assetName: mek.assetName,
+        sourceKey: mek.sourceKey,
+        headVariationId: mek.headVariationId,
+        headVariation: mek.headVariation,
+        bodyVariationId: mek.bodyVariationId,
+        bodyVariation: mek.bodyVariation,
+        itemVariationId: mek.itemVariationId,
+        itemVariation: mek.itemVariation,
+      },
+      passedVariationNames: {
+        head: args.headVariationName,
+        body: args.bodyVariationName,
+        item: args.itemVariationName,
+      },
+      now,
+    });
+
+    // 4. Ensure balance records exist for all variations
+    await ensureEssenceBalances(ctx, {
+      walletAddress: args.walletAddress,
+      variations: [
+        { id: variationData.headVariationId, name: variationData.headVariationName, type: 'head' },
+        { id: variationData.bodyVariationId, name: variationData.bodyVariationName, type: 'body' },
+        { id: variationData.itemVariationId, name: variationData.itemVariationName, type: 'item' },
+      ],
+    });
+
+    // 5. Update essence tracking state (activate if needed)
+    await updateEssenceTracking(ctx, {
+      walletAddress: args.walletAddress,
+      now,
+    });
+
+    // 6. Mark Mek as slotted in meks table for tenure tracking
+    const hasName = await markMekAsSlotted(ctx, {
+      walletAddress: args.walletAddress,
+      mekAssetId: args.mekAssetId,
+      slotNumber: args.slotNumber,
+      now,
+    });
+
+    return {
+      success: true,
+      shouldShowNaming: !hasName,
+    };
+  },
+});
+
+// Unslot a Mek from a slot
+export const unslotMek = mutation({
+  args: {
+    walletAddress: v.string(),
+    slotNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // 1. Validate operation preconditions
+    const { slot, mekAssetId } = await validateUnslotOperation(ctx, {
+      walletAddress: args.walletAddress,
+      slotNumber: args.slotNumber,
+    });
+
+    // 2. Snapshot current essence state before making changes
+    await snapshotEssenceState(ctx, args.walletAddress);
+
+    // 3. Mark Mek as unslotted (calculates and saves tenure)
+    await markMekAsUnslotted(ctx, {
+      mekAssetId,
+      slottedAt: slot.slottedAt || now,
+      now,
+    });
+
+    // 4. Clear slot data
+    await clearSlot(ctx, {
+      slotId: slot._id,
+      now,
+    });
+
+    // 5. Update essence tracking state (deactivate if no more slotted Meks)
+    await updateEssenceTracking(ctx, {
+      walletAddress: args.walletAddress,
+      now,
+    });
 
     return { success: true };
   },
@@ -2427,3 +2569,467 @@ export const diagnosticCheckSlottedMeksInMeksTable = query({
     };
   },
 });
+
+// ============================================================================
+// HELPER FUNCTIONS FOR SLOT OPERATIONS (Separation of Concerns Refactor)
+// ============================================================================
+// These helper functions break down the monolithic slotMek/unslotMek operations
+// into focused, single-responsibility functions for better maintainability.
+// ============================================================================
+
+/**
+ * Validates that a slot operation can proceed
+ * Checks: slot exists, is unlocked, Mek exists, Mek is owned, Mek not already slotted
+ */
+async function validateSlotOperation(
+  ctx: any,
+  args: {
+    walletAddress: string;
+    slotNumber: number;
+    mekAssetId: string;
+  }
+) {
+  const { walletAddress, slotNumber, mekAssetId } = args;
+
+  // Try to get Mek from meks table first
+  let mek = await ctx.db
+    .query("meks")
+    .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
+    .first();
+
+  // If not in meks table, check goldMining.ownedMeks
+  if (!mek) {
+    const goldMining = await ctx.db
+      .query("goldMining")
+      .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+      .first();
+
+    if (goldMining) {
+      const ownedMek = goldMining.ownedMeks?.find((m: any) => m.assetId === mekAssetId);
+      if (ownedMek) {
+        mek = ownedMek as any;
+      }
+    }
+  }
+
+  if (!mek) {
+    throw new Error("Mek not found in database or goldMining records");
+  }
+
+  // Verify ownership
+  if (mek.owner && mek.owner !== walletAddress) {
+    throw new Error("You don't own this Mek");
+  }
+
+  // Check if Mek is already slotted
+  const existingSlot = await ctx.db
+    .query("essenceSlots")
+    .withIndex("by_mek", (q: any) => q.eq("mekAssetId", mekAssetId))
+    .first();
+
+  if (existingSlot) {
+    throw new Error("This Mek is already slotted");
+  }
+
+  // Get the target slot
+  const slot = await ctx.db
+    .query("essenceSlots")
+    .withIndex("by_wallet_and_slot", (q: any) =>
+      q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
+    )
+    .first();
+
+  if (!slot) {
+    throw new Error("Slot not found");
+  }
+
+  if (!slot.isUnlocked) {
+    throw new Error("Slot is locked");
+  }
+
+  return { slot, mek };
+}
+
+/**
+ * Validates that an unslot operation can proceed
+ * Checks: slot exists and has a Mek slotted
+ */
+async function validateUnslotOperation(
+  ctx: any,
+  args: {
+    walletAddress: string;
+    slotNumber: number;
+  }
+) {
+  const { walletAddress, slotNumber } = args;
+
+  const slot = await ctx.db
+    .query("essenceSlots")
+    .withIndex("by_wallet_and_slot", (q: any) =>
+      q.eq("walletAddress", walletAddress).eq("slotNumber", slotNumber)
+    )
+    .first();
+
+  if (!slot) {
+    throw new Error("Slot not found");
+  }
+
+  if (!slot.mekAssetId) {
+    throw new Error("Slot is already empty");
+  }
+
+  return { slot, mekAssetId: slot.mekAssetId };
+}
+
+/**
+ * Snapshots current essence state before making changes
+ * This ensures no essence is lost during slot operations
+ */
+async function snapshotEssenceState(ctx: any, walletAddress: string) {
+  await calculateAndUpdateEssence(ctx, walletAddress);
+}
+
+/**
+ * Updates a slot record with Mek data
+ */
+async function updateSlotWithMek(
+  ctx: any,
+  args: {
+    slotId: any;
+    mekData: {
+      assetId: string;
+      assetName: string;
+      sourceKey: string;
+      headVariationId?: number;
+      headVariation?: string;
+      bodyVariationId?: number;
+      bodyVariation?: string;
+      itemVariationId?: number;
+      itemVariation?: string;
+    };
+    passedVariationNames: {
+      head?: string;
+      body?: string;
+      item?: string;
+    };
+    now: number;
+  }
+) {
+  const { slotId, mekData, passedVariationNames, now } = args;
+
+  // Use passed-in variation names (from frontend lookup) or fall back to Mek data
+  const headVariationName = passedVariationNames.head || mekData.headVariation;
+  const bodyVariationName = passedVariationNames.body || mekData.bodyVariation;
+  const itemVariationName = passedVariationNames.item || mekData.itemVariation;
+
+  // Look up variation IDs if not present (goldMining.ownedMeks doesn't have them)
+  let headVariationId = mekData.headVariationId;
+  let bodyVariationId = mekData.bodyVariationId;
+  let itemVariationId = mekData.itemVariationId;
+
+  if (!headVariationId && headVariationName) {
+    const headVar = await ctx.db
+      .query("variationsReference")
+      .withIndex("by_name", (q: any) => q.eq("name", headVariationName))
+      .filter((q: any) => q.eq(q.field("type"), "head"))
+      .first();
+    headVariationId = headVar?.variationId;
+  }
+
+  if (!bodyVariationId && bodyVariationName) {
+    const bodyVar = await ctx.db
+      .query("variationsReference")
+      .withIndex("by_name", (q: any) => q.eq("name", bodyVariationName))
+      .filter((q: any) => q.eq(q.field("type"), "body"))
+      .first();
+    bodyVariationId = bodyVar?.variationId;
+  }
+
+  if (!itemVariationId && itemVariationName) {
+    const itemVar = await ctx.db
+      .query("variationsReference")
+      .withIndex("by_name", (q: any) => q.eq("name", itemVariationName))
+      .filter((q: any) => q.eq(q.field("type"), "item"))
+      .first();
+    itemVariationId = itemVar?.variationId;
+  }
+
+  // Update slot
+  await ctx.db.patch(slotId, {
+    mekAssetId: mekData.assetId,
+    mekNumber: parseInt(mekData.assetName.replace("Mek #", "")),
+    mekSourceKey: mekData.sourceKey,
+    headVariationId,
+    headVariationName,
+    bodyVariationId,
+    bodyVariationName,
+    itemVariationId,
+    itemVariationName,
+    slottedAt: now,
+    lastModified: now,
+  });
+
+  return {
+    headVariationId,
+    headVariationName,
+    bodyVariationId,
+    bodyVariationName,
+    itemVariationId,
+    itemVariationName,
+  };
+}
+
+/**
+ * Clears Mek data from a slot record
+ */
+async function clearSlot(ctx: any, args: { slotId: any; now: number }) {
+  const { slotId, now } = args;
+
+  await ctx.db.patch(slotId, {
+    mekAssetId: undefined,
+    mekNumber: undefined,
+    mekSourceKey: undefined,
+    headVariationId: undefined,
+    headVariationName: undefined,
+    bodyVariationId: undefined,
+    bodyVariationName: undefined,
+    itemVariationId: undefined,
+    itemVariationName: undefined,
+    slottedAt: undefined,
+    lastModified: now,
+  });
+}
+
+/**
+ * Ensures balance records exist for new variations
+ * Creates missing balance records with zero amounts
+ */
+async function ensureEssenceBalances(
+  ctx: any,
+  args: {
+    walletAddress: string;
+    variations: Array<{
+      id: number | undefined;
+      name: string | undefined;
+      type: "head" | "body" | "item";
+    }>;
+  }
+) {
+  const { walletAddress, variations } = args;
+
+  for (const variation of variations) {
+    if (variation.id && variation.name) {
+      await getOrCreateEssenceBalance(ctx, {
+        walletAddress,
+        variationId: variation.id,
+        variationName: variation.name,
+        variationType: variation.type,
+        initialAmount: 0,
+      });
+      console.log(`✅ [SLOT MEK] Ensured balance record exists for ${variation.name} (${variation.type})`);
+    }
+  }
+}
+
+/**
+ * Updates essence tracking state (activate/deactivate generation)
+ */
+async function updateEssenceTracking(
+  ctx: any,
+  args: {
+    walletAddress: string;
+    now: number;
+  }
+) {
+  const { walletAddress, now } = args;
+
+  // Check if any slots have Meks
+  const allSlots = await ctx.db
+    .query("essenceSlots")
+    .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+    .collect();
+
+  const hasSlottedMek = allSlots.some((s: any) => s.mekAssetId);
+
+  const tracking = await ctx.db
+    .query("essenceTracking")
+    .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+    .first();
+
+  if (!tracking) {
+    return;
+  }
+
+  // Activate if we have slotted Meks and currently inactive
+  if (hasSlottedMek && !tracking.isActive) {
+    await ctx.db.patch(tracking._id, {
+      isActive: true,
+      activationTime: now,
+      lastCalculationTime: now,
+      lastModified: now,
+    });
+  }
+  // Deactivate if no slotted Meks and currently active
+  else if (!hasSlottedMek && tracking.isActive) {
+    await ctx.db.patch(tracking._id, {
+      isActive: false,
+      lastModified: now,
+    });
+  }
+}
+
+/**
+ * Marks a Mek as slotted in the meks table for tenure tracking
+ */
+async function markMekAsSlotted(
+  ctx: any,
+  args: {
+    walletAddress: string;
+    mekAssetId: string;
+    slotNumber: number;
+    now: number;
+  }
+): Promise<boolean> {
+  const { walletAddress, mekAssetId, slotNumber, now } = args;
+
+  console.log(`[🔒TENURE-DEBUG] ========================================`);
+  console.log(`[🔒TENURE-DEBUG] 🔥 TENURE UPDATE CODE BLOCK REACHED 🔥`);
+  console.log(`[🔒TENURE-DEBUG] ========================================`);
+  console.log(`[🔒TENURE-DEBUG] Step 1: About to query meks table for assetId: ${mekAssetId}`);
+
+  let hasName = false;
+
+  try {
+    const mekRecord = await ctx.db
+      .query("meks")
+      .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
+      .first();
+
+    console.log(`[🔒TENURE-DEBUG] Step 2: Query completed. mekRecord is ${mekRecord ? 'FOUND' : 'NULL'}`);
+
+    if (mekRecord) {
+      console.log(`[🔒TENURE-DEBUG] === SLOTTING MEK IN MEKS TABLE ===`);
+      console.log(`[🔒TENURE-DEBUG] Mek _id: ${mekRecord._id}`);
+      console.log(`[🔒TENURE-DEBUG] Mek assetId: ${mekAssetId}`);
+      console.log(`[🔒TENURE-DEBUG] Mek assetName: ${mekRecord.assetName}`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - tenurePoints: ${mekRecord.tenurePoints} (type: ${typeof mekRecord.tenurePoints})`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - isSlotted: ${mekRecord.isSlotted} (type: ${typeof mekRecord.isSlotted})`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - slotNumber: ${mekRecord.slotNumber}`);
+      console.log(`[🔒TENURE-DEBUG] BEFORE patch - lastTenureUpdate: ${mekRecord.lastTenureUpdate}`);
+
+      console.log(`[🔒TENURE-DEBUG] Step 3: Checking for custom name...`);
+      // Check if Mek has custom name
+      try {
+        const goldMiningRecord = await ctx.db
+          .query("goldMining")
+          .withIndex("by_wallet", (q: any) => q.eq("walletAddress", walletAddress))
+          .first();
+
+        if (goldMiningRecord && goldMiningRecord.ownedMeks) {
+          hasName = !!goldMiningRecord.ownedMeks.find((m: any) => m.assetId === mekAssetId)?.customName;
+          console.log(`[🔒TENURE-DEBUG] Custom name check: hasName = ${hasName}`);
+        } else {
+          console.log(`[🔒TENURE-DEBUG] No goldMining record or ownedMeks found`);
+        }
+      } catch (nameCheckError) {
+        console.error(`[🔒TENURE-DEBUG] ERROR checking custom name:`, nameCheckError);
+      }
+
+      console.log(`[🔒TENURE-DEBUG] Step 4: Preparing patch data...`);
+      const tenureToSave = mekRecord.tenurePoints ?? 0;
+
+      const patchData = {
+        isSlotted: true,
+        slotNumber: slotNumber,
+        lastTenureUpdate: now,
+        tenurePoints: tenureToSave,
+      };
+
+      console.log(`[🔒TENURE-DEBUG] PATCH DATA being applied:`, JSON.stringify(patchData, null, 2));
+      console.log(`[🔒TENURE-DEBUG] Patching document ID: ${mekRecord._id}`);
+
+      console.log(`[🔒TENURE-DEBUG] Step 5: Executing patch...`);
+      try {
+        await ctx.db.patch(mekRecord._id, patchData);
+        console.log(`[🔒TENURE-DEBUG] ✅ PATCH COMPLETED SUCCESSFULLY`);
+      } catch (patchError) {
+        console.error(`[🔒TENURE-DEBUG] ❌ PATCH FAILED:`, patchError);
+        throw patchError;
+      }
+
+      console.log(`[🔒TENURE-DEBUG] Step 6: Re-fetching to verify...`);
+      try {
+        const updatedMek = await ctx.db.get(mekRecord._id);
+        console.log(`[🔒TENURE-DEBUG] === AFTER PATCH VERIFICATION ===`);
+        if (updatedMek) {
+          console.log(`[🔒TENURE-DEBUG] ✅ Record found after patch`);
+          console.log(`[🔒TENURE-DEBUG] AFTER patch - tenurePoints: ${updatedMek.tenurePoints} (type: ${typeof updatedMek.tenurePoints})`);
+          console.log(`[🔒TENURE-DEBUG] AFTER patch - isSlotted: ${updatedMek.isSlotted} (type: ${typeof updatedMek.isSlotted})`);
+          console.log(`[🔒TENURE-DEBUG] AFTER patch - slotNumber: ${updatedMek.slotNumber}`);
+          console.log(`[🔒TENURE-DEBUG] AFTER patch - lastTenureUpdate: ${updatedMek.lastTenureUpdate}`);
+        } else {
+          console.error(`[🔒TENURE-DEBUG] ❌ Record NOT found after patch! This should never happen!`);
+        }
+      } catch (verifyError) {
+        console.error(`[🔒TENURE-DEBUG] ❌ VERIFICATION FAILED:`, verifyError);
+      }
+
+      console.log(`[🔒TENURE-DEBUG] === SLOTTING COMPLETE ===`);
+    } else {
+      console.error(`[🔒TENURE-DEBUG] ❌ WARNING: No mek record found in meks table for assetId ${mekAssetId}!`);
+      console.log(`[🔒TENURE-DEBUG] This means the Mek exists in goldMining.ownedMeks but NOT in the meks table.`);
+      console.log(`[🔒TENURE-DEBUG] Tenure tracking CANNOT be enabled for this Mek until it's added to meks table.`);
+    }
+  } catch (error) {
+    console.error(`[🔒TENURE-DEBUG] ❌ FATAL ERROR in tenure update block:`, error);
+    console.error(`[🔒TENURE-DEBUG] Error name: ${(error as Error).name}`);
+    console.error(`[🔒TENURE-DEBUG] Error message: ${(error as Error).message}`);
+    console.error(`[🔒TENURE-DEBUG] Error stack:`, (error as Error).stack);
+  }
+
+  console.log(`[🔒TENURE-DEBUG] ========================================`);
+  console.log(`[🔒TENURE-DEBUG] 🔥 TENURE UPDATE CODE BLOCK FINISHED 🔥`);
+  console.log(`[🔒TENURE-DEBUG] ========================================`);
+
+  return hasName;
+}
+
+/**
+ * Marks a Mek as unslotted in the meks table
+ * Calculates and saves final tenure points
+ */
+async function markMekAsUnslotted(
+  ctx: any,
+  args: {
+    mekAssetId: string;
+    slottedAt: number;
+    now: number;
+  }
+) {
+  const { mekAssetId, slottedAt, now } = args;
+
+  // Calculate tenure earned
+  const timeSlotted = (now - slottedAt) / 1000;
+  const tenureEarned = timeSlotted * 1; // 1 tenure point per second base rate
+
+  console.log(`[🔒TENURE] Unslotting Mek ${mekAssetId}: earned ${tenureEarned.toFixed(2)} tenure points (${timeSlotted.toFixed(0)}s slotted)`);
+
+  // Save tenure to meks table
+  const mekRecord = await ctx.db
+    .query("meks")
+    .withIndex("by_asset_id", (q: any) => q.eq("assetId", mekAssetId))
+    .first();
+
+  if (mekRecord) {
+    const currentTenure = mekRecord.tenurePoints || 0;
+    const newTenure = currentTenure + tenureEarned;
+    console.log(`[🔒TENURE] Saving to meks table: ${currentTenure.toFixed(2)} + ${tenureEarned.toFixed(2)} = ${newTenure.toFixed(2)}`);
+
+    await ctx.db.patch(mekRecord._id, {
+      tenurePoints: newTenure,
+      lastTenureUpdate: now,
+      isSlotted: false,
+      slotNumber: undefined,
+    });
+  }
+}
