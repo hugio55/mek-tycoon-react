@@ -26,6 +26,9 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const [canShow, setCanShow] = useState(true);
   const hasShownLoader = useRef(false);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hookIdRef = useRef(Math.random().toString(36).substring(7));
+
+  console.log(`[🔄LIFECYCLE] usePageLoadProgress hook ID ${hookIdRef.current} mounted`);
 
   const minDisplayTime = config?.minDisplayTime ?? TIMING.MIN_DISPLAY_TIME;
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
