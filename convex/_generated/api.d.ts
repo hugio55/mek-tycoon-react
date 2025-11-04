@@ -47,7 +47,6 @@ import type * as buffs from "../buffs.js";
 import type * as campaigns from "../campaigns.js";
 import type * as chipConfigurations from "../chipConfigurations.js";
 import type * as chips from "../chips.js";
-import type * as cleanInvalidSlots from "../cleanInvalidSlots.js";
 import type * as cleanupDifficultyConfigs from "../cleanupDifficultyConfigs.js";
 import type * as commemorative from "../commemorative.js";
 import type * as commemorativeCampaignMigration from "../commemorativeCampaignMigration.js";
@@ -261,7 +260,6 @@ declare const fullApi: ApiFromModules<{
   campaigns: typeof campaigns;
   chipConfigurations: typeof chipConfigurations;
   chips: typeof chips;
-  cleanInvalidSlots: typeof cleanInvalidSlots;
   cleanupDifficultyConfigs: typeof cleanupDifficultyConfigs;
   commemorative: typeof commemorative;
   commemorativeCampaignMigration: typeof commemorativeCampaignMigration;
