@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 import { useState, useEffect, useRef } from "react";
+import { useLoaderContext } from "@/features/page-loader";
 
 export default function NavigationBar() {
   const router = useRouter();
@@ -14,6 +15,16 @@ export default function NavigationBar() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const imageKeyRef = useRef<string | null>(null);
+
+  // Check if we're in a loading state (may not be in LoaderProvider)
+  let isPageLoading = false;
+  try {
+    const loaderContext = useLoaderContext();
+    isPageLoading = loaderContext?.isLoading ?? false;
+  } catch {
+    // Not in LoaderProvider, that's fine
+    isPageLoading = false;
+  }
 
   // Get wallet address from session
   useEffect(() => {

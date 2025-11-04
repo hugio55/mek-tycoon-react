@@ -13,6 +13,8 @@ interface LoaderContextValue {
   isWalletLoaded: boolean;
   setWalletLoaded: (loaded: boolean) => void;
   startTime: number;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const LoaderContext = createContext<LoaderContextValue | null>(null);
@@ -20,6 +22,7 @@ const LoaderContext = createContext<LoaderContextValue | null>(null);
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const startTimeRef = useRef(Date.now());
 
   const registerQuery = useCallback((id: string) => {
@@ -93,6 +96,8 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     isWalletLoaded,
     setWalletLoaded,
     startTime: startTimeRef.current,
+    isLoading,
+    setIsLoading,
   };
 
   return <LoaderContext.Provider value={value}>{children}</LoaderContext.Provider>;

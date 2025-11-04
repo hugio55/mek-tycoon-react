@@ -6,6 +6,7 @@ import { HexagonalSpinner } from './HexagonalSpinner';
 import { ProgressBar } from './ProgressBar';
 import { LoadingText } from './LoadingText';
 import { TIMING } from '../config/constants';
+import { useLoaderContext } from '../context/LoaderContext';
 
 interface LoadingOverlayProps {
   percentage: number;
@@ -20,6 +21,7 @@ export function LoadingOverlay({
   isComplete,
   onComplete,
 }: LoadingOverlayProps) {
+  const { setIsLoading } = useLoaderContext();
   const [mounted, setMounted] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
@@ -30,6 +32,7 @@ export function LoadingOverlay({
   useEffect(() => {
     if (isComplete && !isFadingOut) {
       setIsFadingOut(true);
+      setIsLoading(false);
 
       setTimeout(() => {
         if (onComplete) {
@@ -37,7 +40,7 @@ export function LoadingOverlay({
         }
       }, TIMING.FADE_DURATION);
     }
-  }, [isComplete, isFadingOut, onComplete]);
+  }, [isComplete, isFadingOut, onComplete, setIsLoading]);
 
   if (!mounted) return null;
 
@@ -45,7 +48,7 @@ export function LoadingOverlay({
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
         opacity: isFadingOut ? 0 : 1,
         transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
       }}
