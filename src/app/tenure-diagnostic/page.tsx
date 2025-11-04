@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { restoreWalletSession } from "@/lib/walletSession";
+import { restoreWalletSession } from "@/lib/walletSessionManager";
 
 export default function TenureDiagnosticPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
