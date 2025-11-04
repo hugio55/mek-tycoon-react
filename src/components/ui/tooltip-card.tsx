@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export const Tooltip = ({
@@ -14,19 +14,12 @@ export const Tooltip = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [mouse, setMouse] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [height, setHeight] = useState(0);
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
   });
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isVisible && contentRef.current) {
-      setHeight(contentRef.current.scrollHeight);
-    }
-  }, [isVisible, content]);
 
   const calculatePosition = (mouseX: number, mouseY: number) => {
     if (!contentRef.current || !containerRef.current)
@@ -142,7 +135,7 @@ export const Tooltip = ({
       const newPosition = calculatePosition(mouse.x, mouse.y);
       setPosition(newPosition);
     }
-  }, [isVisible, height, mouse.x, mouse.y]);
+  }, [isVisible, mouse.x, mouse.y]);
 
   return (
     <div
@@ -160,15 +153,16 @@ export const Tooltip = ({
         {isVisible && (
           <motion.div
             key={String(isVisible)}
-            initial={{ height: 0, opacity: 1 }}
-            animate={{ height, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{
               type: "spring",
-              stiffness: 200,
-              damping: 20,
+              stiffness: 300,
+              damping: 25,
+              duration: 0.15,
             }}
-            className="pointer-events-none fixed z-[9999] min-w-[15rem] overflow-hidden rounded-md border border-transparent bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900 dark:shadow-white/10 dark:ring-white/5"
+            className="pointer-events-none fixed z-[9999] min-w-[15rem] max-w-[20rem] rounded-md border-2 border-yellow-500/80 bg-black/95 backdrop-blur-sm shadow-lg shadow-yellow-500/20"
             style={{
               top: position.y,
               left: position.x,
@@ -176,7 +170,7 @@ export const Tooltip = ({
           >
             <div
               ref={contentRef}
-              className="p-2 text-sm text-neutral-600 md:p-4 dark:text-neutral-400"
+              className="p-3 text-sm text-yellow-100 md:p-4 font-['Orbitron']"
             >
               {content}
             </div>
