@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { restoreWalletSession } from "@/lib/walletSessionManager";
 import { useState, useEffect, useRef } from "react";
 import { useLoaderContext } from "@/features/page-loader";
+import { TIMING } from "@/features/page-loader/config/constants";
 
 export default function NavigationBar() {
   const router = useRouter();
@@ -339,6 +340,9 @@ export default function NavigationBar() {
         width: '100vw',
         display: 'flex',
         justifyContent: 'center',
+        opacity: isPageLoading ? 0 : 1,
+        transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+        pointerEvents: isPageLoading ? 'none' : 'auto',
       }}
     >
       <div
