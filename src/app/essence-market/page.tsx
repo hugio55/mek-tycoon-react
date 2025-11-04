@@ -4670,7 +4670,7 @@ export default function EssenceMarketPage() {
               <div className="mek-label-uppercase text-gray-500 mt-2">ADJUST SEARCH PARAMETERS OR CHECK BACK LATER</div>
             </div>
           ) : (
-            sortedListings.map((listing) => {
+            sortedListings.map((listing: any) => {
               const isOwn = listing.sellerId === userId;
               // Check affordability based on minimum purchase (0.1 essence), not full listing quantity
               const minPurchase = 0.1;
@@ -5740,8 +5740,8 @@ export default function EssenceMarketPage() {
               {myListings && myListings.filter((l: { itemType: string }) => l.itemType === "essence").length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myListings
-                    .filter(l => l.itemType === "essence")
-                    .map((listing) => {
+                    .filter((l: { itemType: string }) => l.itemType === "essence")
+                    .map((listing: any) => {
                       // ⚠️ TEMPORARY TEST DATA ⚠️
                       const mockTransactions = getMockTransactions(listing._id);
                       const originalStock = listing.quantity + 0.4; // Mock: simulate 0.4 already sold

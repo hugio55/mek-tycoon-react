@@ -2,7 +2,9 @@ import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable standalone output for optimized Vercel deployments (reduces serverless bundle size)
-  output: 'standalone',
+  // DISABLED: Testing if this prevents webpack externals from working properly
+  // Standalone mode bundles everything together which may ignore externals configuration
+  // output: 'standalone',
 
   // Increase memory limit for build process
   experimental: {
