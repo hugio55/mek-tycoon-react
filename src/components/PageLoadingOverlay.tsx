@@ -10,6 +10,14 @@ export function PageLoadingOverlay() {
   const { setIsLoading } = useLoaderContext();
   const [showOverlay, setShowOverlay] = useState(true);
 
+  // Track component mount/unmount
+  useEffect(() => {
+    console.log(`[🔄LIFECYCLE] Component ${componentId.current} MOUNTED`);
+    return () => {
+      console.log(`[🔄LIFECYCLE] Component ${componentId.current} UNMOUNTING`);
+    };
+  }, []);
+
   const { percentage, stage, isComplete, canShow } = usePageLoadProgress({
     messages: [
       'Initializing...',
