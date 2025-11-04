@@ -144,45 +144,60 @@ export const Tooltip = ({
     }
   }, [isVisible, height, mouse.x, mouse.y]);
 
-  return (
-    <div
-      ref={containerRef}
-      className={cn("relative inline-block", containerClassName)}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onClick={handleClick}
-    >
-      {children}
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            key={String(isVisible)}
-            initial={{ height: 0, opacity: 1 }}
-            animate={{ height, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{
+  const tooltipContent = (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          key={String(isVisible)}
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
               type: "spring",
-              stiffness: 200,
+              stiffness: 260,
               damping: 20,
-            }}
-            className="pointer-events-none absolute z-50 min-w-[15rem] overflow-hidden rounded-md border border-transparent bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900 dark:shadow-white/10 dark:ring-white/5"
-            style={{
-              top: position.y,
-              left: position.x,
-            }}
+            },
+          }}
+          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+          style={{
+            translateX: translateX,
+            rotate: rotate,
+            position: "fixed",
+            top: position.y,
+            left: position.x,
+            zIndex: 9999,
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-none min-w-[15rem] rounded-lg border border-neutral-200 bg-white px-4 py-2 shadow-xl dark:border-neutral-800 dark:bg-neutral-900"
+        >
+          <div
+            ref={contentRef}
+            className="text-sm text-neutral-600 dark:text-neutral-400"
           >
-            <div
-              ref={contentRef}
-              className="p-2 text-sm text-neutral-600 md:p-4 dark:text-neutral-400"
-            >
-              {content}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            {content}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className={cn("relative inline-block", containerClassName)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
+      >
+        {children}
+      </div>
+      {mounted && createPortal(tooltipContent, document.body)}
+    </>
   );
 };
