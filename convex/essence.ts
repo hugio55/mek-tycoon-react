@@ -609,7 +609,7 @@ async function calculateRealTimeEssenceBalances(
       const effectiveRate = config.essenceRate * rateMultiplier;
       const effectiveCap = config.essenceCap + capBonus;
 
-      const essenceEarned = daysElapsed * effectiveRate * data.count;
+      const essenceEarned = daysElapsedSinceLastSave * effectiveRate * data.count;
       const newAmount = clampEssenceToCap(essenceEarned, effectiveCap);
 
       // Add this as a new balance entry (in-memory only, not persisted)
@@ -1270,6 +1270,29 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
     variationsToUpdate: variationCounts.size
   });
 
+  // PERFORMANCE OPTIMIZATION: Query ALL buff sources ONCE (not per variation)
+  // This reduces N queries to 1 query
+  const allBuffSources = await ctx.db
+    .query("essenceBuffSources")
+    .withIndex("by_wallet", (q) => q.eq("walletAddress", walletAddress))
+    .filter((q) => q.eq(q.field("isActive"), true))
+    .collect();
+
+  // Filter out expired buffs
+  const activeBuffSources = allBuffSources.filter(
+    (s) => !s.expiresAt || s.expiresAt > now
+  );
+
+  // Build lookup map for fast access
+  const buffMap = new Map<number, { rateMultiplier: number; capBonus: number }>();
+  for (const source of activeBuffSources) {
+    const existing = buffMap.get(source.variationId) || { rateMultiplier: 1.0, capBonus: 0 };
+    buffMap.set(source.variationId, {
+      rateMultiplier: existing.rateMultiplier + (source.rateMultiplier - 1.0),
+      capBonus: existing.capBonus + source.capBonus,
+    });
+  }
+
   // Calculate new balances
   for (const [variationId, data] of variationCounts.entries()) {
     // Get current balance - query by NAME to prevent duplicates with different IDs
@@ -1282,14 +1305,11 @@ async function calculateAndUpdateEssence(ctx: any, walletAddress: string) {
 
     const currentAmount = balance?.accumulatedAmount || 0;
 
-    // Check for player buffs (granular system)
-    const { rateMultiplier, capBonus } = await getAggregatedBuffs(ctx, {
-      walletAddress,
-      variationId,
-    });
+    // Get buff from pre-built map (FAST - no database query)
+    const buff = buffMap.get(variationId) || { rateMultiplier: 1.0, capBonus: 0 };
 
-    const effectiveRate = config.essenceRate * rateMultiplier;
-    const effectiveCap = config.essenceCap + capBonus;
+    const effectiveRate = config.essenceRate * buff.rateMultiplier;
+    const effectiveCap = config.essenceCap + buff.capBonus;
 
     // Calculate essence earned
     const essenceEarned = daysElapsed * effectiveRate * data.count;

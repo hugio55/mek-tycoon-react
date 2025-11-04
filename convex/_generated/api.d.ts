@@ -123,6 +123,7 @@ import type * as leaderboardDiagnostics from "../leaderboardDiagnostics.js";
 import type * as leaderboardOptimized from "../leaderboardOptimized.js";
 import type * as leaderboardUpdater from "../leaderboardUpdater.js";
 import type * as levelColors from "../levelColors.js";
+import type * as lib_accumulationHelpers from "../lib/accumulationHelpers.js";
 import type * as lib_devLog from "../lib/devLog.js";
 import type * as lib_essenceCalculations from "../lib/essenceCalculations.js";
 import type * as lib_essenceHelpers from "../lib/essenceHelpers.js";
@@ -336,6 +337,7 @@ declare const fullApi: ApiFromModules<{
   leaderboardOptimized: typeof leaderboardOptimized;
   leaderboardUpdater: typeof leaderboardUpdater;
   levelColors: typeof levelColors;
+  "lib/accumulationHelpers": typeof lib_accumulationHelpers;
   "lib/devLog": typeof lib_devLog;
   "lib/essenceCalculations": typeof lib_essenceCalculations;
   "lib/essenceHelpers": typeof lib_essenceHelpers;
