@@ -182,6 +182,7 @@ import type * as seedMarketplace from "../seedMarketplace.js";
 import type * as seedMeks from "../seedMeks.js";
 import type * as seedShopListings from "../seedShopListings.js";
 import type * as sessionManagement from "../sessionManagement.js";
+import type * as slotConfigurations from "../slotConfigurations.js";
 import type * as smartContractArchitecture from "../smartContractArchitecture.js";
 import type * as snapshotCleanup from "../snapshotCleanup.js";
 import type * as snapshotHealthCheck from "../snapshotHealthCheck.js";
@@ -396,6 +397,7 @@ declare const fullApi: ApiFromModules<{
   seedMeks: typeof seedMeks;
   seedShopListings: typeof seedShopListings;
   sessionManagement: typeof sessionManagement;
+  slotConfigurations: typeof slotConfigurations;
   smartContractArchitecture: typeof smartContractArchitecture;
   snapshotCleanup: typeof snapshotCleanup;
   snapshotHealthCheck: typeof snapshotHealthCheck;
