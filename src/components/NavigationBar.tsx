@@ -12,10 +12,20 @@ export default function NavigationBar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Hide navigation on root page
+  // ============================================================
+  // 🚨 NAVIGATION BAR VISIBILITY CONTROL 🚨
+  // ============================================================
+  // Currently HIDDEN on root page (/) for public launch
+  //
+  // TO RE-ENABLE NAVIGATION ON ROOT PAGE:
+  // Simply comment out or delete lines 16-18 below (the if statement)
+  //
+  // Current state: Navigation hidden on "/"
+  // ============================================================
   if (pathname === '/') {
     return null;
   }
+  // ============================================================
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [currentGold, setCurrentGold] = useState(0);
   const goldAnimationRef = useRef<number | null>(null);
