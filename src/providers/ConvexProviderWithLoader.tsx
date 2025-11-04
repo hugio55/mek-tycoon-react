@@ -6,6 +6,7 @@ import {
   ConvexReactClient,
   useQuery as convexUseQuery,
   usePaginatedQuery as convexUsePaginatedQuery,
+  useMutation as convexUseMutation,
 } from 'convex/react';
 import type { FunctionReference, OptionalRestArgs } from 'convex/server';
 import { useLoaderContext } from '@/features/page-loader';
@@ -120,7 +121,11 @@ function usePaginatedQueryWithTracking<Query extends FunctionReference<'query'>>
 }
 
 // Export our custom hooks to replace Convex's default exports
-export { useQueryWithTracking as useQuery, usePaginatedQueryWithTracking as usePaginatedQuery };
+export {
+  useQueryWithTracking as useQuery,
+  usePaginatedQueryWithTracking as usePaginatedQuery,
+  convexUseMutation as useMutation  // Pass-through for mutations (no tracking needed)
+};
 
 // ConvexProvider wrapper that provides the client
 interface ConvexProviderWithLoaderProps {
