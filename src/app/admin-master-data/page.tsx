@@ -59,6 +59,7 @@ const DATA_SYSTEMS = [
   { id: 'market-system', name: 'Market', icon: '🏪', implemented: true },
   { id: 'offers-system', name: 'Offers System', icon: '💬', implemented: true },
   { id: 'variations', name: 'Variations', icon: '🎨', implemented: false },
+  { id: 'slots-system', name: 'Slots', icon: '📦', implemented: true },
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
   { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
@@ -143,6 +144,14 @@ export default function AdminMasterDataPage() {
   });
   const [variationSearch, setVariationSearch] = useState('');
   const [selectedVariation, setSelectedVariation] = useState<{ name: string; rank: number; category: string } | null>(null);
+
+  // Slots System State
+  const [selectedSlotType, setSelectedSlotType] = useState<'basic' | 'advanced' | 'master'>('basic');
+  const [slotsConfig, setSlotsConfig] = useState({
+    basic: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    advanced: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    master: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+  });
 
   // Create ordered DATA_SYSTEMS array based on saved order
   const orderedDataSystems = useMemo(() => {
