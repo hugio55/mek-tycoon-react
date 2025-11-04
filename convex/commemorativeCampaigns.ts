@@ -488,6 +488,27 @@ export const getUserClaimHistory = query({
 // ============================================================================
 
 /**
+ * Get detailed NFT inventory for a campaign
+ *
+ * Returns all NFTs with their status, UID, payment URL, and image URL
+ */
+export const getCampaignInventory = query({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    const inventory = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .order("asc") // Sort by nftNumber ascending
+      .collect();
+
+    // Sort by nftNumber to ensure correct ordering
+    return inventory.sort((a, b) => a.nftNumber - b.nftNumber);
+  },
+});
+
+/**
  * Update campaign counters based on actual inventory counts
  *
  * Called internally after inventory changes to keep counters in sync.

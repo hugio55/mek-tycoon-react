@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
 import type { Id } from "../../../../convex/_generated/dataModel";
+import NFTInventoryTable from "./NFTInventoryTable";
 
 interface CampaignManagerProps {
   selectedCampaignId?: string;
@@ -693,6 +694,11 @@ export default function CampaignManager({
                   </p>
                 </div>
               </div>
+
+              {/* NFT Inventory Table */}
+              {campaign.totalNFTs > 0 && (
+                <NFTInventoryTable campaignId={campaign._id} />
+              )}
 
               {campaign.status === "active" && (
                 <div className="mb-3">

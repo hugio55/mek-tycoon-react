@@ -1,22 +1,33 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useUser } from "@/contexts/UserContext";
+import { restoreWalletSession } from "@/lib/walletSession";
 
 export default function TenureDiagnosticPage() {
-  const { userId } = useUser();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
-  console.log('[🔍 DIAGNOSTIC-PAGE] userId from context:', userId);
+  useEffect(() => {
+    const initWallet = async () => {
+      const session = await restoreWalletSession();
+      if (session) {
+        const address = session.stakeAddress || session.walletAddress;
+        setWalletAddress(address);
+        console.log('[🔍 DIAGNOSTIC-PAGE] Using wallet from session:', address);
+      }
+    };
+    initWallet();
+  }, []);
 
   const diagnostic = useQuery(
     api.essence.diagnosticCheckSlottedMeksInMeksTable,
-    userId ? { walletAddress: userId } : "skip"
+    walletAddress ? { walletAddress } : "skip"
   );
 
   console.log('[🔍 DIAGNOSTIC-PAGE] Diagnostic result:', diagnostic);
 
-  if (!userId) {
+  if (!walletAddress) {
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <div className="max-w-4xl mx-auto">
