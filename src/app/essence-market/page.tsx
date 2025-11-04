@@ -390,7 +390,7 @@ export default function EssenceMarketPage() {
 
   // Filter to essence variations the user does NOT own (for requests)
   const unownedEssenceVariations = COMPLETE_VARIATION_RARITY.filter(variation => {
-    const owned = essenceState?.balances.find(b => b.variationName === variation.name);
+    const owned = essenceState?.balances?.find(b => b.variationName === variation.name);
     return !owned || owned.accumulatedAmount === 0;
   });
 
