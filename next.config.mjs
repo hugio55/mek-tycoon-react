@@ -13,8 +13,6 @@ const nextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1,
-    // Disable server source maps in production (saves ~45 MB)
-    serverSourceMaps: false,
   },
 
   // Optimize image handling
