@@ -7,6 +7,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
 import EssenceListingLightboxV6FullMarketMatch from "@/components/EssenceListingLightbox-V6-FullMarketMatch";
 import { renderHeaderButtons } from "@/lib/headerButtonVariations";
+import { Tooltip } from "@/components/ui/tooltip-card";
 // Removed: restoreWalletSession - using localStorage directly like hub page
 
 // Variation type categories for essence filtering
@@ -2572,6 +2573,19 @@ export default function EssenceMarketPage() {
     }
   };
 
+  // Helper function to get full time breakdown for tooltip
+  const getFullTimeBreakdown = (expiresAt: number) => {
+    const remaining = expiresAt - currentTime;
+    if (remaining <= 0) return "This listing has expired";
+
+    const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    return `${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+  };
+
   // Time remaining display variations
   const renderTimeRemaining = (expiresAt: number, variation: 1 | 2 | 3 | 4 | 5) => {
     const styles = getCountdownStyles(expiresAt);
@@ -2646,12 +2660,21 @@ export default function EssenceMarketPage() {
       case 5: // Clock icon + text with subtle background
         return (
           <div className="mt-3 flex items-center justify-center">
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${styles.containerClass.includes('red') ? 'bg-red-900/10' : styles.containerClass.includes('orange') ? 'bg-orange-900/10' : styles.containerClass.includes('yellow') ? 'bg-yellow-900/10' : 'bg-white/5'}`}>
-              <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
-              <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
-                {timeText}
+            <Tooltip
+              content={
+                <div className="text-center">
+                  <p className="font-semibold mb-1">Time Remaining on Listing</p>
+                  <p className="text-xs">{getFullTimeBreakdown(expiresAt)}</p>
+                </div>
+              }
+            >
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-help ${styles.containerClass.includes('red') ? 'bg-red-900/10' : styles.containerClass.includes('orange') ? 'bg-orange-900/10' : styles.containerClass.includes('yellow') ? 'bg-yellow-900/10' : 'bg-white/5'}`}>
+                <ClockIcon className={`${styles.timeClass} ${isUrgent ? 'animate-red-glow-flash' : ''}`} />
+                <div className={`${styles.timeClass} text-[11px] font-bold ${isUrgent ? 'animate-red-glow-flash' : ''}`}>
+                  {timeText}
+                </div>
               </div>
-            </div>
+            </Tooltip>
           </div>
         );
 
