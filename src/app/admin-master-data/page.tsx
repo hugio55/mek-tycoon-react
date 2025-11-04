@@ -101,6 +101,7 @@ export default function AdminMasterDataPage() {
   const [minimizedTabs, setMinimizedTabs] = useState<Set<string>>(new Set());
   const [tabOrder, setTabOrder] = useState<string[]>(DATA_SYSTEMS.map(sys => sys.id));
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
+  const [systemCompletion, setSystemCompletion] = useState<Record<string, 'incomplete' | 'in-progress' | 'complete'>>({});
 
   // Save system state
   const [isSaving, setIsSaving] = useState(false);
