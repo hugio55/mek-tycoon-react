@@ -31,6 +31,10 @@ interface MekProfileLightboxProps {
   onCardBackdropBlurChange?: (value: number) => void;
   headerGap?: number;
   onHeaderGapChange?: (value: number) => void;
+  headerBottomPadding?: number;
+  onHeaderBottomPaddingChange?: (value: number) => void;
+  contentSpacing?: number;
+  onContentSpacingChange?: (value: number) => void;
 }
 
 export default function MekProfileLightbox({
@@ -53,7 +57,9 @@ export default function MekProfileLightbox({
   cardBackdropBlur = 12,
   onCardBackdropBlurChange,
   headerGap = 32,
-  onHeaderGapChange
+  onHeaderGapChange,
+  headerBottomPadding = 15,
+  onHeaderBottomPaddingChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -160,18 +166,19 @@ export default function MekProfileLightbox({
   }, [isOpen]);
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
       {/* Backdrop - Dynamic darkness */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`
         }}
+        onClick={onClose}
       />
 
       {/* Lightbox Container - Dynamic styling based on variation with dynamic blur/darkness */}
       <div
-        className={getContainerClasses()}
+        className={`${getContainerClasses()} pointer-events-auto`}
         style={{
           backgroundColor: styleVariation === 'variation2'
             ? `rgba(88, 28, 135, ${cardDarkness / 100})`
@@ -200,7 +207,7 @@ export default function MekProfileLightbox({
                   }} />
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 py-[15px]">
+                <div className="max-w-7xl mx-auto px-4" style={{ paddingTop: `${headerBottomPadding}px`, paddingBottom: `${headerBottomPadding}px` }}>
                   <h1 className={getHeaderTitleClasses()}>
                     <span className={getPrimaryColor()}>MEK</span>{" "}
                     <span className="text-gray-400">PROFILE</span>
