@@ -197,12 +197,13 @@ export const verifyNftAvailability = action({
     }
 
     // NMKR API endpoint: /v2/GetNftDetailsById/{nftuid}
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}?apiKey=${apiKey}`;
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${apiKey}`,
           'Accept': 'application/json',
         },
       });
@@ -258,12 +259,13 @@ export const getProjectStats = action({
     // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // State: "free" to get only available NFTs (for accurate stats)
     // Count: 50 (max allowed by NMKR API)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1?apiKey=${apiKey}`;
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${apiKey}`,
           'Accept': 'application/json',
         },
       });
@@ -335,12 +337,13 @@ export const getProjectInfo = action({
     console.log("[🔨NMKR] Fetching project info for:", args.projectId);
 
     try {
-      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${args.projectId}?apiKey=${apiKey}`;
-      console.log("[🔨NMKR] Request URL:", url.replace(apiKey, "***"));
+      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${args.projectId}`;
+      console.log("[🔨NMKR] Request URL:", url);
 
       const response = await fetch(url, {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${apiKey}`,
           "Accept": "application/json",
         },
       });
@@ -387,12 +390,13 @@ export const fetchNFTsFromNMKR = action({
     console.log("[🔨NMKR] Fetching NFTs:", { projectId: args.projectId, state, count, page });
 
     try {
-      const url = `${NMKR_API_BASE}/v2/GetNfts/${args.projectId}/${state}/${count}/${page}?apiKey=${apiKey}`;
-      console.log("[🔨NMKR] Request URL:", url.replace(apiKey, "***"));
+      const url = `${NMKR_API_BASE}/v2/GetNfts/${args.projectId}/${state}/${count}/${page}`;
+      console.log("[🔨NMKR] Request URL:", url);
 
       const response = await fetch(url, {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${apiKey}`,
           "Accept": "application/json",
         },
       });
