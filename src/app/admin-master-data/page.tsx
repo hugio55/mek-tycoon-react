@@ -3331,7 +3331,12 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                    <div
+                      className="rounded-lg p-8 flex items-center justify-center min-h-[300px] relative overflow-hidden"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.6) 0px, rgba(0,0,0,0.6) 10px, rgba(30,30,35,0.6) 10px, rgba(30,30,35,0.6) 20px)'
+                      }}
+                    >
                       <MechanicalToggle />
                     </div>
 
@@ -3478,10 +3483,24 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="bg-black/80 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px]">
-                      <MechanicalToggle size="small" />
-                      <MechanicalToggle size="medium" />
-                      <MechanicalToggle size="large" />
+                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px] overflow-hidden">
+                      {/* Industrial textured background */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"></div>
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(250, 182, 23, 0.1) 2px, rgba(250, 182, 23, 0.1) 4px), repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(250, 182, 23, 0.1) 2px, rgba(250, 182, 23, 0.1) 4px)'
+                      }}></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(250,182,23,0.05),transparent_50%)]"></div>
+
+                      {/* Toggle components with relative positioning */}
+                      <div className="relative z-10">
+                        <MechanicalToggle size="small" />
+                      </div>
+                      <div className="relative z-10">
+                        <MechanicalToggle size="medium" />
+                      </div>
+                      <div className="relative z-10">
+                        <MechanicalToggle size="large" />
+                      </div>
                     </div>
 
                     {/* Component Info */}
