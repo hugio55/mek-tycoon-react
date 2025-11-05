@@ -405,7 +405,6 @@ export default function CampaignManager({
   // Sync handler
   const handleSync = async (campaignId: Id<"commemorativeCampaigns">) => {
     setIsSyncing((prev) => ({ ...prev, [campaignId]: true }));
-    setSyncResults((prev) => ({ ...prev, [campaignId]: null }));
 
     try {
       console.log("[SYNC] Starting manual sync for campaign:", campaignId);
@@ -413,6 +412,7 @@ export default function CampaignManager({
       const result = await syncCampaignAction({ campaignId });
 
       console.log("[SYNC] Sync completed successfully");
+      console.log("[SYNC] Result data:", result);
       setSyncResults((prev) => ({ ...prev, [campaignId]: result }));
       setSyncExpanded((prev) => ({ ...prev, [campaignId]: true })); // Auto-expand results
 

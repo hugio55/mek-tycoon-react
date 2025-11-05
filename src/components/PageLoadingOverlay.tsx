@@ -33,8 +33,8 @@ export function PageLoadingOverlay() {
         setIsLoading(false);
         setTimeout(() => {
           setShowOverlay(false);
-        }, 2000);
-      }, 1500);
+        }, 1000);
+      }, 750);
     }
   }, [isComplete, isBypassed, setIsLoading]);
 

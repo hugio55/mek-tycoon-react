@@ -89,7 +89,8 @@ export default function SyncResultsPanel({
 
   const hasDiscrepancies = result.discrepancies.length > 0;
   const hasUpdates = result.updatedCount > 0;
-  const hasErrors = result.failedCount > 0;
+  const hasErrors = result.failedCount > 0 || (result.nmkrErrors && result.nmkrErrors.length > 0);
+  const hasNmkrErrors = result.nmkrErrors && result.nmkrErrors.length > 0;
 
   const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp).toLocaleString("en-US", {
@@ -101,37 +102,37 @@ export default function SyncResultsPanel({
   };
 
   return (
-    <div className="mt-4 border border-yellow-500/30 rounded bg-black/30">
+    <div className="mt-6 mb-6 border-2 border-yellow-500/70 rounded-lg bg-gradient-to-br from-yellow-500/10 via-black/50 to-black/40 shadow-2xl shadow-yellow-500/30">
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-3 hover:bg-yellow-500/5 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-yellow-500/15 transition-all duration-200 rounded-t-lg"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-yellow-500">
-            Sync Results
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-bold text-yellow-400 uppercase tracking-widest">
+            📊 SYNC RESULTS
           </span>
-          <span className="text-xs text-gray-400">
-            (Last synced: {formatTimestamp(result.syncedAt)})
+          <span className="text-xs text-gray-300 font-mono bg-black/50 px-2 py-1 rounded">
+            {formatTimestamp(result.syncedAt)}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {hasDiscrepancies && (
-            <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">
-              ⚠️ {result.discrepancies.length} discrepancies
+            <span className="text-sm bg-yellow-500/30 text-yellow-200 px-3 py-1.5 rounded-md font-bold border border-yellow-500/60 shadow-sm">
+              ⚠️ {result.discrepancies.length}
             </span>
           )}
           {hasUpdates && (
-            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-              ✅ {result.updatedCount} updated
+            <span className="text-sm bg-green-500/30 text-green-200 px-3 py-1.5 rounded-md font-bold border border-green-500/60 shadow-sm">
+              ✅ {result.updatedCount}
             </span>
           )}
           {hasErrors && (
-            <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">
-              ❌ {result.failedCount} failed
+            <span className="text-sm bg-red-500/30 text-red-200 px-3 py-1.5 rounded-md font-bold border border-red-500/60 shadow-sm">
+              ❌ {result.failedCount}
             </span>
           )}
-          <span className="text-gray-400">{isExpanded ? "▼" : "▶"}</span>
+          <span className="text-yellow-400 text-xl font-bold ml-2">{isExpanded ? "▼" : "▶"}</span>
         </div>
       </button>
 
@@ -214,6 +215,22 @@ export default function SyncResultsPanel({
                     <div key={idx} className="text-xs text-gray-300">
                       <span className="font-semibold">{disc.nftName}:</span>{" "}
                       {disc.issue} (DB: {disc.dbStatus}, NMKR: {disc.nmkrStatus})
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* NMKR Errors */}
+            {hasNmkrErrors && (
+              <div className="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
+                <p className="text-xs text-red-400 font-semibold mb-1">
+                  ❌ NMKR API Errors:
+                </p>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {result.nmkrErrors!.map((error, idx) => (
+                    <div key={idx} className="text-xs text-gray-300">
+                      {error}
                     </div>
                   ))}
                 </div>
@@ -303,6 +320,31 @@ export default function SyncResultsPanel({
               <h4 className="text-sm font-semibold text-white mb-2">
                 ⛓️ Blockchain Verification
               </h4>
+
+              {/* Summary Stats */}
+              {result.blockchainSummary && (
+                <div className="mb-3 p-2 bg-blue-500/10 border border-blue-500/30 rounded">
+                  <div className="grid grid-cols-4 gap-2 text-xs text-center mb-2">
+                    <div>
+                      <p className="text-gray-400">Total</p>
+                      <p className="text-white font-semibold">{result.blockchainSummary.total}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Verified</p>
+                      <p className="text-green-400 font-semibold">{result.blockchainSummary.verified}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">In Escrow</p>
+                      <p className="text-yellow-400 font-semibold">{result.blockchainSummary.inEscrow}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Rate</p>
+                      <p className="text-blue-400 font-semibold">{result.blockchainSummary.verificationRate}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-2 mb-2">
                 <div className="bg-green-500/10 p-2 rounded text-center">
                   <p className="text-xs text-gray-400">Delivered</p>
@@ -323,30 +365,46 @@ export default function SyncResultsPanel({
                   </p>
                 </div>
               </div>
-              <div className="space-y-1 max-h-40 overflow-y-auto">
+              <div className="space-y-1 max-h-60 overflow-y-auto">
                 {result.blockchainResults.map((bcResult, idx) => (
                   <div
                     key={idx}
                     className={`text-xs p-2 rounded ${
                       bcResult.status === "delivered"
-                        ? "bg-green-500/10 text-green-300"
+                        ? "bg-green-500/10 text-green-300 border border-green-500/30"
                         : bcResult.status === "pending_delivery"
-                        ? "bg-yellow-500/10 text-yellow-300"
-                        : "bg-red-500/10 text-red-300"
+                        ? "bg-yellow-500/10 text-yellow-300 border border-yellow-500/30"
+                        : bcResult.status === "unknown"
+                        ? "bg-blue-500/10 text-blue-300 border border-blue-500/30"
+                        : "bg-red-500/10 text-red-300 border border-red-500/30"
                     }`}
                   >
-                    <div className="font-semibold">
-                      {bcResult.status === "delivered"
-                        ? "✅"
-                        : bcResult.status === "pending_delivery"
-                        ? "⚠️"
-                        : "❌"}{" "}
-                      {bcResult.nftName}
+                    <div className="flex items-start justify-between">
+                      <div className="font-semibold">
+                        {bcResult.status === "delivered"
+                          ? "✅"
+                          : bcResult.status === "pending_delivery"
+                          ? "⚠️"
+                          : bcResult.status === "unknown"
+                          ? "❓"
+                          : "❌"}{" "}
+                        {bcResult.nftName}
+                      </div>
+                      {bcResult.transactionValid !== undefined && (
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-black/30">
+                          TX: {bcResult.transactionValid ? "✓" : "✗"}
+                        </span>
+                      )}
                     </div>
                     <div className="text-gray-400 mt-1">{bcResult.message}</div>
-                    {bcResult.currentAddresses && bcResult.currentAddresses.length > 0 && (
+                    {bcResult.currentOwner && (
                       <div className="text-gray-500 mt-1 font-mono text-[10px]">
-                        Owner: {bcResult.currentAddresses[0].address.substring(0, 20)}...
+                        Owner: {bcResult.currentOwner.substring(0, 30)}...
+                      </div>
+                    )}
+                    {bcResult.assetId && (
+                      <div className="text-gray-600 mt-1 font-mono text-[10px]">
+                        Asset: {bcResult.assetId.substring(0, 40)}...
                       </div>
                     )}
                   </div>
