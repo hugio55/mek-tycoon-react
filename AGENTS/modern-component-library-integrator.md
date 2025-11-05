@@ -424,8 +424,7 @@ Present findings in clear format:
 2. **@project-lead** delegates to **@modern-component-integrator**
 3. **@modern-component-integrator** performs analysis and reports back
 4. If integration successful, **@project-lead** coordinates with:
-   - **@ui-layout-debugger** - Fix any layout issues
-   - **@scifi-ui-designer** - Adapt styling to match project aesthetic
+   - **@ui-layout-debugger** - Fix any layout issues and adapt styling to match industrial aesthetic
    - **@state-sync-debugger** - Connect component to data sources
 
 **Example Coordination:**
@@ -435,9 +434,8 @@ User: "Add Aceternity's Lamp Effect to the homepage"
 2. **@modern-component-integrator**: Analyzes component, reports conflicts, proposes rebuild approach
 3. **@project-lead**: Reviews approach, approves if safe
 4. **@modern-component-integrator**: Rebuilds component, tests in isolation
-5. **@scifi-ui-designer**: Adapts component styling to match industrial aesthetic
-6. **@ui-layout-debugger**: Fixes positioning issues on homepage
-7. **@project-lead**: Verifies integration across all affected systems
+5. **@ui-layout-debugger**: Adapts component styling to match industrial aesthetic and fixes positioning issues on homepage
+6. **@project-lead**: Verifies integration across all affected systems
 
 ---
 
