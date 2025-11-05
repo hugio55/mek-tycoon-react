@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
-export type CardInteriorStyle = 'compact' | 'spacious' | 'modern';
+export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'grid-cards' | 'inline-compact' | 'badge-style';
 export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
@@ -118,6 +118,12 @@ export default function MekProfileLightbox({
         return 'flex flex-row justify-between items-center';
       case 'modern':
         return 'flex flex-col items-center text-center';
+      case 'grid-cards':
+        return 'bg-black/50 border border-yellow-500/30 p-3 rounded flex flex-col';
+      case 'inline-compact':
+        return 'flex flex-row items-baseline gap-2';
+      case 'badge-style':
+        return 'flex flex-col items-start';
       default: // compact
         return 'flex flex-col';
     }
@@ -129,6 +135,12 @@ export default function MekProfileLightbox({
         return 'text-xs text-gray-400 uppercase tracking-wider font-normal';
       case 'modern':
         return 'text-sm text-gray-300 uppercase tracking-widest font-light mb-2';
+      case 'grid-cards':
+        return 'text-[10px] text-yellow-500 uppercase tracking-widest font-bold mb-1';
+      case 'inline-compact':
+        return 'text-xs text-gray-500 uppercase tracking-wide';
+      case 'badge-style':
+        return 'inline-block bg-yellow-500/20 border border-yellow-500/40 px-2 py-0.5 text-[9px] text-yellow-400 uppercase tracking-widest font-bold rounded mb-1';
       default: // compact
         return 'mek-label-uppercase';
     }
@@ -140,6 +152,12 @@ export default function MekProfileLightbox({
         return 'text-lg font-bold';
       case 'modern':
         return 'text-3xl font-bold tracking-wide';
+      case 'grid-cards':
+        return 'text-xl font-bold';
+      case 'inline-compact':
+        return 'text-base font-semibold';
+      case 'badge-style':
+        return 'text-2xl font-bold tracking-tight';
       default: // compact
         return '';
     }
@@ -151,6 +169,12 @@ export default function MekProfileLightbox({
         return 'space-y-3';
       case 'modern':
         return 'space-y-6';
+      case 'grid-cards':
+        return 'space-y-3';
+      case 'inline-compact':
+        return 'space-y-1';
+      case 'badge-style':
+        return 'space-y-4';
       default: // compact
         return 'space-y-2';
     }

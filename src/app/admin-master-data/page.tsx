@@ -37,6 +37,7 @@ import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import GlowToggle from '@/components/controls/GlowToggle';
 import GlassButton from '@/components/controls/GlassButton';
 import GlassButtonSharp from '@/components/controls/GlassButtonSharp';
+import IsometricSocialButton from '@/components/controls/IsometricSocialButton';
 import RadialSwitch from '@/components/RadialSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
@@ -3602,6 +3603,55 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
                       <div><span className="text-zinc-500">Features:</span> Sharp edges (border-radius: 0), glassmorphism with backdrop blur, rotating conic gradient border, linear gradient shine, 3D rotation on active</div>
+                    </div>
+                  </div>
+
+                  {/* Isometric Social Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Isometric Social Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex flex-wrap items-center justify-center gap-4 min-h-[400px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #1e293b 0px, #1e293b 20px, #0f172a 20px, #0f172a 40px)'
+                      }}
+                    >
+                      <IsometricSocialButton
+                        iconClass="fab fa-facebook"
+                        label="Facebook"
+                        onClick={() => console.log('Facebook clicked')}
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-twitter"
+                        label="Twitter"
+                        onClick={() => console.log('Twitter clicked')}
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-instagram"
+                        label="Instagram"
+                        onClick={() => console.log('Instagram clicked')}
+                      />
+                      <IsometricSocialButton
+                        iconClass="fab fa-youtube"
+                        label="Youtube"
+                        onClick={() => console.log('Youtube clicked')}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SCSS (exact transplant)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D isometric transform (perspective 1000px, rotate -30deg, skew 25deg), ::before creates left cube face (skewY -45deg), ::after creates bottom face (skewX -45deg), hover lifts button with translate(20px, -20px) and extends shadow from -20px to -50px</div>
+                      <div><span className="text-zinc-500">Note:</span> Preserves original typos: "dislpay" (display) and "scewY" (skewY) in CSS</div>
                     </div>
                   </div>
 
