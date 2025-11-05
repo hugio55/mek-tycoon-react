@@ -20,9 +20,12 @@ interface LoaderContextValue {
 const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
+  // Check if loader is bypassed at initialization
+  const isBypassed = typeof window !== 'undefined' && localStorage.getItem('disablePageLoader') === 'true';
+
   const [queries, setQueries] = useState<Map<string, QueryState>>(new Map());
   const [isWalletLoaded, setWalletLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isBypassed); // Start with false if bypassed
   const startTimeRef = useRef(Date.now());
 
   const registerQuery = useCallback((id: string) => {
