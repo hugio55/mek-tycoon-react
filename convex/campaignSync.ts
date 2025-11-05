@@ -31,8 +31,11 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
   console.log(`[SYNC] Fetching ${state} NFTs from NMKR project:`, projectId);
 
   try {
+    // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
+    const count = 1000; // Fetch up to 1000 NFTs
+    const page = 1; // First page
     const response = await fetch(
-      `${NMKR_API_BASE}/v2/GetNfts/${projectId}?state=${state}`,
+      `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`,
       {
         headers: {
           "Authorization": `Bearer ${NMKR_API_KEY}`,
@@ -42,7 +45,7 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[SYNC] Failed to fetch ${state} NFTs:`, errorText);
+      console.error(`[SYNC] Failed to fetch ${state} NFTs:`, response.status, errorText);
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
 
@@ -132,21 +135,66 @@ export const syncCampaign = internalAction({
       // ===== STEP 2: FETCH NMKR DATA =====
       console.log("[SYNC] Fetching current state from NMKR...");
 
-      const [projectStats, freeNFTs, reservedNFTs, soldNFTs] = await Promise.all([
-        fetchProjectStats(campaign.nmkrProjectId),
-        fetchNFTsFromNMKR(campaign.nmkrProjectId, "free"),
-        fetchNFTsFromNMKR(campaign.nmkrProjectId, "reserved"),
-        fetchNFTsFromNMKR(campaign.nmkrProjectId, "sold"),
-      ]);
+      let nmkrStats = null;
+      let projectStats = null;
+      let freeNFTs: any[] = [];
+      let reservedNFTs: any[] = [];
+      let soldNFTs: any[] = [];
+      const nmkrErrors: string[] = [];
 
-      const nmkrStats = {
-        total: freeNFTs.length + reservedNFTs.length + soldNFTs.length,
-        available: freeNFTs.length,
-        reserved: reservedNFTs.length,
-        sold: soldNFTs.length,
-      };
+      try {
+        const results = await Promise.allSettled([
+          fetchProjectStats(campaign.nmkrProjectId),
+          fetchNFTsFromNMKR(campaign.nmkrProjectId, "free"),
+          fetchNFTsFromNMKR(campaign.nmkrProjectId, "reserved"),
+          fetchNFTsFromNMKR(campaign.nmkrProjectId, "sold"),
+        ]);
 
-      console.log("[SYNC] NMKR stats:", nmkrStats);
+        // Extract results or capture errors
+        if (results[0].status === "fulfilled") {
+          projectStats = results[0].value;
+        } else {
+          nmkrErrors.push(`Failed to fetch project stats: ${results[0].reason}`);
+          console.error("[SYNC] Project stats error:", results[0].reason);
+        }
+
+        if (results[1].status === "fulfilled") {
+          freeNFTs = results[1].value;
+        } else {
+          nmkrErrors.push(`Failed to fetch free NFTs: ${results[1].reason}`);
+          console.error("[SYNC] Free NFTs error:", results[1].reason);
+        }
+
+        if (results[2].status === "fulfilled") {
+          reservedNFTs = results[2].value;
+        } else {
+          nmkrErrors.push(`Failed to fetch reserved NFTs: ${results[2].reason}`);
+          console.error("[SYNC] Reserved NFTs error:", results[2].reason);
+        }
+
+        if (results[3].status === "fulfilled") {
+          soldNFTs = results[3].value;
+        } else {
+          nmkrErrors.push(`Failed to fetch sold NFTs: ${results[3].reason}`);
+          console.error("[SYNC] Sold NFTs error:", results[3].reason);
+        }
+
+        nmkrStats = {
+          total: freeNFTs.length + reservedNFTs.length + soldNFTs.length,
+          available: freeNFTs.length,
+          reserved: reservedNFTs.length,
+          sold: soldNFTs.length,
+        };
+
+        console.log("[SYNC] NMKR stats:", nmkrStats);
+        if (nmkrErrors.length > 0) {
+          console.warn("[SYNC] NMKR had partial failures:", nmkrErrors);
+        }
+      } catch (error) {
+        console.error("[SYNC] Failed to fetch NMKR data:", error);
+        nmkrErrors.push("Complete NMKR API failure");
+        nmkrStats = { error: "NMKR API unavailable", total: 0, available: 0, reserved: 0, sold: 0 };
+      }
 
       // ===== STEP 3: GET DATABASE STATE =====
       const inventory = await ctx.runQuery(api.commemorativeCampaigns.getCampaignInventory, {
@@ -364,14 +412,20 @@ export const syncCampaign = internalAction({
       }
 
       // ===== STEP 9: RECORD SYNC LOG =====
+      // Combine update errors and NMKR errors
+      const allErrors = [
+        ...updateResults
+          .filter((r) => !r.success)
+          .map((r) => `${r.nftName}: ${(r as any).error}`),
+        ...nmkrErrors,
+      ];
+
       await ctx.runMutation(api.nmkrSync.recordSyncLog, {
         syncType: "manual_sync",
         nmkrProjectId: campaign.nmkrProjectId,
-        status: updateResults.every((r) => r.success) ? "success" : "partial",
+        status: allErrors.length === 0 ? "success" : "partial",
         recordsSynced: updateResults.filter((r) => r.success).length,
-        errors: updateResults
-          .filter((r) => !r.success)
-          .map((r) => `${r.nftName}: ${(r as any).error}`),
+        errors: allErrors,
         syncedData: {
           nmkrStats,
           dbStats,
@@ -392,6 +446,7 @@ export const syncCampaign = internalAction({
 
         // NMKR Comparison
         nmkrStats,
+        nmkrErrors: nmkrErrors.length > 0 ? nmkrErrors : undefined, // Include NMKR errors if any
         dbStats,
         discrepancies,
 
