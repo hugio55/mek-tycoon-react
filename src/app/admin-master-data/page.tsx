@@ -25,6 +25,7 @@ import NMKRJSONGenerator from '@/components/admin/nft/NMKRJSONGenerator';
 import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
+import CometLoader from '@/components/loaders/CometLoader';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -87,7 +88,8 @@ const DATA_SYSTEMS = [
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
-  { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true }
+  { id: 'navigation-preview', name: 'Navigation', icon: '🧭', implemented: true },
+  { id: 'components', name: 'Components', icon: '🧩', implemented: true }
 ];
 
 export default function AdminMasterDataPage() {
@@ -3205,6 +3207,46 @@ export default function AdminMasterDataPage() {
                     Select an overlay from the dropdown above to preview it as a sticky navigation bar.
                   </div>
                 )}
+              </div>
+          </div>
+          )}
+
+          {/* Components */}
+          {activeTab === 'components' && (
+          <div id="section-components" className="mek-card-industrial mek-border-sharp-gold rounded-lg shadow-lg shadow-black/50">
+            <div className="p-6 space-y-8">
+                <p className="text-zinc-300 mb-6">
+                  Transformed UI components from external libraries (CodePen, shadcn, v0.dev) converted to Mek Tycoon's industrial design system using expert transformation documents.
+                </p>
+
+                {/* Component Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                  {/* Comet Loader */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Comet Loader
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <CometLoader />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Styling:</span> Industrial Design System</div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
           </div>
           )}
