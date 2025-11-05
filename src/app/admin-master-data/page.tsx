@@ -202,6 +202,7 @@ export default function AdminMasterDataPage() {
 
   // Component demo states
   const [mechanicalToggleChecked, setMechanicalToggleChecked] = useState(false);
+  const [radialSwitchIndex, setRadialSwitchIndex] = useState(0);
 
   // Query saved slot configurations
   const savedConfigurations = useQuery(api.slotConfigurations.listSlotConfigurations);
@@ -3497,7 +3498,9 @@ export default function AdminMasterDataPage() {
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
-                      <GlowToggle />
+                      <div style={{ transform: 'scale(0.3)' }}>
+                        <GlowToggle />
+                      </div>
                     </div>
 
                     {/* Component Info */}
@@ -3521,7 +3524,11 @@ export default function AdminMasterDataPage() {
 
                     {/* Component Preview */}
                     <div className="relative rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
-                      <RadialSwitch options={['off', 'on']} />
+                      <RadialSwitch
+                        options={['off', 'on']}
+                        defaultIndex={radialSwitchIndex}
+                        onChange={(index) => setRadialSwitchIndex(index)}
+                      />
                     </div>
 
                     {/* Component Info */}
