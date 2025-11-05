@@ -267,6 +267,8 @@ export default function MekLayoutsPage() {
         onStyleVariationChange={setStyleVariation}
         cardInteriorStyle={cardInteriorStyle}
         onCardInteriorStyleChange={setCardInteriorStyle}
+        buffDetailsLayout={buffDetailsLayout}
+        onBuffDetailsLayoutChange={setBuffDetailsLayout}
         variationCardStyle={variationCardStyle}
         onVariationCardStyleChange={setVariationCardStyle}
         backdropDarkness={backdropDarkness}

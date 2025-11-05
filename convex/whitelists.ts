@@ -193,11 +193,17 @@ export const deleteWhitelist = mutation({
 // ============================================================================
 
 /**
- * Create a manual whitelist by directly providing payment addresses
+ * Create a manual whitelist by directly providing addresses
  * Used for testing and one-off NFT distributions
  *
- * CRITICAL: Only accepts payment addresses (addr1... or addr_test1...)
- * Stake addresses CANNOT receive NFTs and will be rejected
+ * Accepts BOTH payment addresses (addr1...) and stake addresses (stake1...)
+ * - Payment addresses: Used for NMKR NFT delivery
+ * - Stake addresses: Used for eligibility matching with user accounts
+ *
+ * Can provide addresses in several formats:
+ * - One per line: "addr1..."
+ * - Comma-separated: "addr1...,stake1..."
+ * - Space-separated: "addr1... stake1..."
  */
 export const createManualWhitelist = mutation({
   args: {
@@ -216,19 +222,41 @@ export const createManualWhitelist = mutation({
       throw new Error(`Whitelist with name "${args.name}" already exists`);
     }
 
-    // Validate all addresses are payment addresses
+    // Parse addresses - accept both payment and stake addresses
     const invalidAddresses: string[] = [];
-    const validUsers: Array<{ walletAddress: string; displayName?: string }> = [];
+    const validUsers: Array<{ walletAddress: string; stakeAddress?: string; displayName?: string }> = [];
 
-    for (const address of args.addresses) {
-      const trimmedAddress = address.trim();
-      if (!trimmedAddress) continue; // Skip empty lines
+    for (const line of args.addresses) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue; // Skip empty lines
 
-      // Check if it's a payment address (addr1... for mainnet, addr_test1... for testnet)
-      if (trimmedAddress.startsWith('addr1') || trimmedAddress.startsWith('addr_test1')) {
-        validUsers.push({ walletAddress: trimmedAddress });
-      } else {
-        invalidAddresses.push(trimmedAddress);
+      // Split by comma or whitespace to handle "addr1...,stake1..." or "addr1... stake1..."
+      const parts = trimmedLine.split(/[,\s]+/).map(p => p.trim()).filter(p => p);
+
+      let paymentAddr: string | undefined;
+      let stakeAddr: string | undefined;
+
+      for (const part of parts) {
+        // Check address type
+        if (part.startsWith('addr1') || part.startsWith('addr_test1')) {
+          paymentAddr = part;
+        } else if (part.startsWith('stake1') || part.startsWith('stake_test1')) {
+          stakeAddr = part;
+        } else {
+          invalidAddresses.push(part);
+        }
+      }
+
+      // At least one valid address type required
+      if (paymentAddr || stakeAddr) {
+        validUsers.push({
+          walletAddress: paymentAddr || stakeAddr!, // Prefer payment, fallback to stake
+          stakeAddress: stakeAddr,
+          displayName: undefined,
+        });
+      } else if (parts.length > 0) {
+        // Only mark as invalid if there were parts that didn't match
+        invalidAddresses.push(trimmedLine);
       }
     }
 
@@ -237,12 +265,12 @@ export const createManualWhitelist = mutation({
       const preview = invalidAddresses.slice(0, 3).join(', ');
       const more = invalidAddresses.length > 3 ? ` (+${invalidAddresses.length - 3} more)` : '';
       throw new Error(
-        `Invalid addresses found (${invalidAddresses.length}): ${preview}${more}. Only payment addresses (addr1... or addr_test1...) are allowed. Stake addresses (stake1...) CANNOT receive NFTs.`
+        `Invalid addresses found (${invalidAddresses.length}): ${preview}${more}. Only Cardano addresses (addr1..., stake1..., or testnet variants) are allowed.`
       );
     }
 
     if (validUsers.length === 0) {
-      throw new Error('No valid addresses provided. Please paste payment addresses (one per line).');
+      throw new Error('No valid addresses provided. Please paste Cardano addresses (one per line or comma-separated).');
     }
 
     // Create manual whitelist with empty rules (indicates manual type)
@@ -259,7 +287,9 @@ export const createManualWhitelist = mutation({
       updatedAt: Date.now(),
     });
 
-    console.log(`[Manual Whitelist] Created "${args.name}" with ${validUsers.length} payment addresses`);
+    const paymentCount = validUsers.filter(u => u.walletAddress.startsWith('addr')).length;
+    const stakeCount = validUsers.filter(u => u.stakeAddress).length;
+    console.log(`[Manual Whitelist] Created "${args.name}" with ${validUsers.length} users (${paymentCount} payment, ${stakeCount} stake)`);
 
     return { whitelistId, userCount: validUsers.length };
   },
@@ -287,6 +317,7 @@ export const generateWhitelist = mutation({
 
     const eligibleUsers: Array<{
       walletAddress: string;
+      stakeAddress?: string;
       displayName?: string;
     }> = [];
 
@@ -370,7 +401,8 @@ export const generateWhitelist = mutation({
 
       if (isEligible && miner.walletAddress) {
         eligibleUsers.push({
-          walletAddress: miner.walletAddress,
+          walletAddress: miner.walletAddress, // This is a stake address from goldMining
+          stakeAddress: miner.walletAddress, // Store same value in stakeAddress for consistency
           displayName: miner.companyName || undefined,
         });
       }

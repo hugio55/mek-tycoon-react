@@ -102,9 +102,16 @@ export const checkClaimEligibility = query({
     }
 
     // Check if wallet is in snapshot
-    const isInSnapshot = snapshot.eligibleUsers?.some(
-      (user: any) => user.walletAddress === args.walletAddress
-    );
+    // Match on stake address when available (for user accounts)
+    // Fallback to payment address (for NMKR delivery)
+    const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
+      // If snapshot has stakeAddress, match on that (user's corporation stake address)
+      if (user.stakeAddress) {
+        return user.stakeAddress === args.walletAddress;
+      }
+      // Otherwise match on walletAddress (payment address)
+      return user.walletAddress === args.walletAddress;
+    });
 
     if (isInSnapshot) {
       return {

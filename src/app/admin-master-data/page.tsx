@@ -36,6 +36,7 @@ import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
 import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import GlowToggle from '@/components/controls/GlowToggle';
 import GlassButton from '@/components/controls/GlassButton';
+import GlassButtonSharp from '@/components/controls/GlassButtonSharp';
 import RadialSwitch from '@/components/RadialSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';

@@ -232,11 +232,11 @@ export default function GoldGenerationDetailsLightbox({ isOpen, onClose, layout 
   );
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 pointer-events-auto"
-        style={{ backdropFilter: 'blur(2px)' }}
+        className="fixed inset-0 bg-black/40 -z-10"
+        style={{ backdropFilter: 'blur(2px)', pointerEvents: 'auto' }}
         onClick={onClose}
       />
 
