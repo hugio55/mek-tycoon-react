@@ -152,6 +152,7 @@ export default function MekLayoutsPage() {
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
         styleVariation={styleVariation}
+        onStyleVariationChange={setStyleVariation}
       />
 
       {/* Gold Generation Details Lightbox */}

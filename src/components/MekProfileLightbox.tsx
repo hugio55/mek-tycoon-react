@@ -9,9 +9,10 @@ interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
   styleVariation?: 'default' | 'variation1' | 'variation2';
+  onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
 }
 
-export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default' }: MekProfileLightboxProps) {
+export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
@@ -372,7 +373,7 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setStyleVariation('default');
+                onStyleVariationChange?.('default');
               }}
               className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
                 styleVariation === 'default'
@@ -385,7 +386,7 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setStyleVariation('variation1');
+                onStyleVariationChange?.('variation1');
               }}
               className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
                 styleVariation === 'variation1'
@@ -398,7 +399,7 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setStyleVariation('variation2');
+                onStyleVariationChange?.('variation2');
               }}
               className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
                 styleVariation === 'variation2'
