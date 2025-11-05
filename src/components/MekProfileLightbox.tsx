@@ -13,9 +13,10 @@ interface MekProfileLightboxProps {
   styleVariation?: 'default' | 'variation1' | 'variation2';
   onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
   cardInteriorStyle?: CardInteriorStyle;
+  onCardInteriorStyleChange?: (style: CardInteriorStyle) => void;
 }
 
-export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange, cardInteriorStyle = 'compact' }: MekProfileLightboxProps) {
+export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange, cardInteriorStyle = 'compact', onCardInteriorStyleChange }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
@@ -445,7 +446,10 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
             </label>
             <select
               value={cardInteriorStyle}
-              onChange={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                e.stopPropagation();
+                onCardInteriorStyleChange?.(e.target.value as CardInteriorStyle);
+              }}
               className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
             >
               <option value="compact">Classic Stack</option>

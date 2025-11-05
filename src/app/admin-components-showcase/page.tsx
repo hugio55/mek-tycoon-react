@@ -6,7 +6,6 @@ import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
-import RadialSwitch from '@/components/RadialSwitch';
 
 export default function ComponentsShowcasePage() {
   const router = useRouter();
@@ -16,7 +15,6 @@ export default function ComponentsShowcasePage() {
   const [proMode, setProMode] = useState(false);
   const [colorToggle, setColorToggle] = useState(false);
   const [dottedToggle, setDottedToggle] = useState(false);
-  const [radialSwitch, setRadialSwitch] = useState(0);
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
@@ -166,74 +164,6 @@ export default function ComponentsShowcasePage() {
   onChange={setIsEnabled}
   label="Power"
   size="medium"
-/>`}</pre>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Radial Switch Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-yellow-400">Radial Switch</h2>
-          <div className="mek-card-industrial mek-border-sharp-gold p-8 rounded-xl">
-            <p className="text-gray-400 mb-8">
-              Circular rotating switch with gradient effects and smooth rotation animations.
-              Features a rotating handle that moves in an arc pattern.
-            </p>
-
-            <div className="flex justify-center mb-8">
-              <RadialSwitch
-                options={['off', 'on']}
-                defaultIndex={radialSwitch}
-                onChange={(index) => setRadialSwitch(index)}
-              />
-            </div>
-
-            <div className="text-center text-sm mb-8">
-              State: <span className={radialSwitch === 1 ? 'text-green-400' : 'text-red-400'}>
-                {radialSwitch === 1 ? 'ON' : 'OFF'}
-              </span>
-            </div>
-
-            {/* Features List */}
-            <div className="mt-8 pt-8 border-t border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 text-yellow-400">Key Features:</h4>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-400">
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Circular design with rotating handle
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Radial and conic gradient effects
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Smooth rotation animations
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Gold accent on selected state
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Multiple option support
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">✓</span>
-                  Keyboard accessible
-                </li>
-              </ul>
-            </div>
-
-            {/* Code Example */}
-            <div className="mt-8 pt-8 border-t border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 text-yellow-400">Usage Example:</h4>
-              <div className="bg-black/60 p-4 rounded-lg border border-gray-700 font-mono text-sm text-gray-300">
-                <pre>{`<RadialSwitch
-  options={['off', 'on']}
-  defaultIndex={0}
-  onChange={(index, value) => console.log(value)}
 />`}</pre>
               </div>
             </div>

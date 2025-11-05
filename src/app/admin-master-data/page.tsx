@@ -35,6 +35,7 @@ import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
 import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import GlowToggle from '@/components/controls/GlowToggle';
+import RadialSwitch from '@/components/RadialSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3504,6 +3505,30 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External HTML/CSS (exact transplant)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
                       <div><span className="text-zinc-500">Features:</span> Sliding cyan/gray gradient track, ||| thumb with cyan radial glow when ON, gray background when OFF, 3s demo animation on load</div>
+                    </div>
+                  </div>
+
+                  {/* Radial Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Radial Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+                      <RadialSwitch options={['off', 'on']} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SASS (CodePen)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Circular rotating switch, gradient ring, animated handle</div>
                     </div>
                   </div>
 

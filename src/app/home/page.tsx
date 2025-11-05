@@ -10,6 +10,7 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import MekManagementLightboxConcepts from '@/components/MekManagementLightboxConcepts';
+import AirdropClaimBanner from '@/components/AirdropClaimBanner';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 export default function HomePage() {
@@ -439,6 +440,14 @@ export default function HomePage() {
     <Tooltip.Provider delayDuration={200}>
       <div className="min-h-screen text-white relative">
         <div className="container mx-auto px-4 py-8">
+        {/* Commemorative NFT Claim Banner */}
+        <div className="mb-8">
+          <AirdropClaimBanner
+            userId={null}
+            walletAddress={userId}
+          />
+        </div>
+
         {/* DEBUG: Owned Variations Panel */}
         <details className="mb-8 mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
           <summary className="cursor-pointer text-yellow-400 font-bold text-lg uppercase mb-2">
