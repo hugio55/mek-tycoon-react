@@ -30,6 +30,7 @@ import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import NebulaCheckbox from '@/components/controls/NebulaCheckbox';
+import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3360,6 +3361,30 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External CSS (Uiverse)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> Square→Star transform, nebula glow, sparkles</div>
+                    </div>
+                  </div>
+
+                  {/* Power Button Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Power Button Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <PowerButtonSwitch enableVibration={true} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS (by @oguzyagizkara)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Sliding button, icon transition, haptic feedback</div>
                     </div>
                   </div>
 
