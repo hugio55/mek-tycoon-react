@@ -13,7 +13,9 @@ interface SyncResult {
     available: number;
     reserved: number;
     sold: number;
+    error?: string;
   };
+  nmkrErrors?: string[];
   dbStats: {
     total: number;
     available: number;
@@ -52,10 +54,19 @@ interface SyncResult {
     nftName: string;
     nftUid: string;
     assetId?: string;
-    status: "delivered" | "pending_delivery" | "error";
+    status: "delivered" | "pending_delivery" | "error" | "unknown";
     message: string;
-    currentAddresses?: Array<{ address: string; quantity: string }>;
+    currentOwner?: string;
+    transactionValid?: boolean;
   }>;
+  blockchainSummary?: {
+    total: number;
+    verified: number;
+    delivered: number;
+    inEscrow: number;
+    failed: number;
+    verificationRate: string;
+  };
   verifiedCount: number;
   pendingCount: number;
   errorCount: number;

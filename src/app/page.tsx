@@ -2883,28 +2883,7 @@ export default function MekRateLoggingPage() {
 
       {/* Main Content - Mobile-optimized padding and overflow */}
       <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll">
-        {isAutoReconnecting && !forceNoWallet ? (
-          // Loading spinner while auto-reconnecting
-          <div className="flex flex-col items-center justify-center h-full min-h-[100vh]">
-            <div className="relative">
-              {/* Spinning border */}
-              <div className="w-24 sm:w-32 h-24 sm:h-32 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin" />
-
-              {/* Center glow */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 sm:w-16 h-12 sm:h-16 bg-yellow-500/10 rounded-full animate-pulse"
-                     style={{ boxShadow: '0 0 40px rgba(250, 182, 23, 0.4)' }} />
-              </div>
-            </div>
-
-            <p className="mt-6 sm:mt-8 text-yellow-500 font-['Orbitron'] uppercase tracking-wider animate-pulse text-sm sm:text-base text-center px-4">
-              Initializing Mek Employment Operation
-            </p>
-            <p className="mt-2 text-gray-500 font-mono text-xs sm:text-sm uppercase text-center px-4">
-              Detecting Wallet Connection...
-            </p>
-          </div>
-        ) : !walletConnected || forceNoWallet ? (
+        {!walletConnected || forceNoWallet ? (
           // Wallet Connection Screen - Mobile-optimized
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] md:h-full py-8 md:py-0">
             {/* Main connection card with corner brackets */}

@@ -658,6 +658,22 @@ export default function HomePage() {
             <div className="h-px bg-yellow-500/30 w-full" />
           </div>
 
+          {/* Global tooltip for all slots - rendered outside grid */}
+          {activeTooltip !== null && (
+            <div
+              className="fixed bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700 z-[10000] pointer-events-none"
+              style={{
+                left: `${mousePosition.x + 15}px`,
+                top: `${mousePosition.y + 15}px`,
+                transform: 'translate(0, -50%)'
+              }}
+            >
+              {activeTooltip <= 10
+                ? "You must first unlock this slot in order to assign an employee."
+                : "This is an empty employment slot. Click to hire a mechanism."}
+            </div>
+          )}
+
           {/* Six Mechanism Slots Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((slotNum) => {
@@ -747,33 +763,15 @@ export default function HomePage() {
                           >
                             🔓 DEBUG UNLOCK
                           </button>
-                          {/* Custom cursor-following tooltip */}
-                          {activeTooltip === slotNum && (
-                            <div
-                              className="fixed bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700 z-[10000] pointer-events-none"
-                              style={{
-                                left: `${mousePosition.x + 15}px`,
-                                top: `${mousePosition.y + 15}px`,
-                                transform: 'translate(0, -50%)'
-                              }}
-                            >
-                              You must first unlock this slot in order to assign an employee.
-                            </div>
-                          )}
                         </div>
                       ) : (
                         // Empty unlocked slot with tooltip
                         <div
                           onMouseMove={(e) => {
-                            console.log('[🎯TOOLTIP] Empty slot hover - slotNum:', slotNum, 'setting activeTooltip to:', slotNum + 100);
                             setMousePosition({ x: e.clientX, y: e.clientY });
-                            setActiveTooltip(slotNum + 100); // Use offset to differentiate from locked slots
-                            console.log('[🎯TOOLTIP] Mouse position:', { x: e.clientX, y: e.clientY });
+                            setActiveTooltip(slotNum + 100);
                           }}
-                          onMouseLeave={() => {
-                            console.log('[🎯TOOLTIP] Mouse left empty slot - clearing activeTooltip');
-                            setActiveTooltip(null);
-                          }}
+                          onMouseLeave={() => setActiveTooltip(null)}
                         >
                           <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-yellow-500/30 rounded-lg flex items-center justify-center group-hover:border-yellow-500/50 transition-colors">
                             <svg
@@ -796,23 +794,6 @@ export default function HomePage() {
                           <div className="text-gray-500 text-xs mt-1">
                             Click to Assign
                           </div>
-                          {/* Custom cursor-following tooltip */}
-                          {(() => {
-                            const shouldShow = activeTooltip === slotNum + 100;
-                            console.log('[🎯TOOLTIP] Render check - activeTooltip:', activeTooltip, 'target:', slotNum + 100, 'shouldShow:', shouldShow);
-                            return shouldShow && (
-                              <div
-                                className="fixed bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700 z-[10000] pointer-events-none"
-                                style={{
-                                  left: `${mousePosition.x + 15}px`,
-                                  top: `${mousePosition.y + 15}px`,
-                                  transform: 'translate(0, -50%)'
-                                }}
-                              >
-                                This is an empty employment slot. Click to hire a mechanism.
-                              </div>
-                            );
-                          })()}
                         </div>
                       )}
                     </div>
