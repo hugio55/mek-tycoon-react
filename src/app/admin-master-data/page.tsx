@@ -35,6 +35,7 @@ import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
 import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import GlowToggle from '@/components/controls/GlowToggle';
+import GlassButton from '@/components/controls/GlassButton';
 import RadialSwitch from '@/components/RadialSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
@@ -3536,6 +3537,33 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Pug/SASS (CodePen)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
                       <div><span className="text-zinc-500">Features:</span> Circular rotating switch, gradient ring, animated handle</div>
+                    </div>
+                  </div>
+
+                  {/* Glass Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glass Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] bg-gradient-to-br from-zinc-300 via-zinc-200 to-zinc-300">
+                      <GlassButton
+                        text="Generate"
+                        onClick={() => console.log('Glass button clicked')}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Glassmorphism with backdrop blur, rotating conic gradient border (hover: -75deg → -125deg), linear gradient shine on ::after, 3D rotation on active, shadow glow effect</div>
                     </div>
                   </div>
 
