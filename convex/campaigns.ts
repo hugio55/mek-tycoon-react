@@ -14,6 +14,7 @@ export const createCampaign = mutation({
     name: v.string(),
     description: v.string(),
     nmkrProjectId: v.string(),
+    policyId: v.optional(v.string()),
     maxNFTs: v.number(),
     status: v.optional(
       v.union(
@@ -31,6 +32,7 @@ export const createCampaign = mutation({
       name: args.name,
       description: args.description,
       nmkrProjectId: args.nmkrProjectId,
+      policyId: args.policyId,
       maxNFTs: args.maxNFTs,
       status: args.status || "inactive",
       totalNFTs: 0,
