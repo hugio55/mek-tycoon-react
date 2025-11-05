@@ -62,7 +62,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
         // CRITICAL: Clear the interval when completion is triggered
         if (intervalRef) {
           clearInterval(intervalRef);
-          console.log('[PAGE LOADER] Interval cleared after completion');
         }
         return;
       }
@@ -87,11 +86,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       const snapped = snapToMilestone(combined);
 
-      // Only log on significant progress changes (every 25%)
-      if (snapped !== progress && (snapped === 0 || snapped === 25 || snapped === 50 || snapped === 75 || snapped === 100)) {
-        console.log('[PAGE LOADER] Progress:', snapped + '%', `(queries: ${loadedCount}/${totalCount})`);
-      }
-
       setProgress(snapped);
 
       const allQueriesLoaded = totalCount > 0 && loadedCount === totalCount;
@@ -100,9 +94,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       const timedOut = elapsed >= totalTimeout;
 
       if ((allQueriesLoaded && minTimeElapsed) || noQueriesTracked || timedOut) {
-        if (timedOut) {
-          console.log('[PAGE LOADER] Timeout reached, completing');
-        }
         setProgress(100);
 
         if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {
@@ -111,7 +102,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
           // CRITICAL: Clear the interval immediately upon completion
           if (intervalRef) {
             clearInterval(intervalRef);
-            console.log('[PAGE LOADER] Interval cleared at completion trigger');
           }
 
           completeTimeoutRef.current = setTimeout(() => {
@@ -122,7 +112,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
     };
 
     if (getTotalCount() > 0 && !hasShownLoader.current) {
-      console.log('[PAGE LOADER] Tracking', getTotalCount(), 'queries');
       hasShownLoader.current = true;
     }
 
@@ -154,7 +143,6 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
       elapsed < minDisplayTime &&
       !hasShownLoader.current
     ) {
-      console.log('[PAGE LOADER] Fast load detected, skipping loader');
       setIsComplete(true);
       setCanShow(false);
     }

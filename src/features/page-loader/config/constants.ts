@@ -1,7 +1,7 @@
 export const FEATURE_FLAGS = {
-  ENABLED: false, // Disabled due to infinite loop bug - needs architectural fix
-  ENABLED_IN_DEV: false,
-  ENABLED_IN_PROD: false,
+  ENABLED: true,
+  ENABLED_IN_DEV: true,
+  ENABLED_IN_PROD: true,
   ENABLED_ROUTES: [] as string[],
 };
 
