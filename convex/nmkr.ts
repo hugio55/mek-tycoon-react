@@ -56,15 +56,16 @@ export const getNextAvailableNFT = action({
     // State: "free" to get only unminted/available NFTs
     // Count: 50 (max allowed by NMKR API)
     // Page: 1 (first page)
-    // NOTE: Using query parameter auth (matches getProjectInfo pattern)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1?apiKey=${apiKey}`;
+    // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
 
-    console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl.replace(apiKey, '***'));
+    console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl);
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${apiKey}`,
           'Accept': 'application/json',
         },
       });

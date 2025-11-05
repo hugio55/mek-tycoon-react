@@ -38,16 +38,17 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // NOTE: Count must be between 1 and 50 per NMKR API validation
-    // NOTE: Using query parameter authentication (matches working nmkr.ts pattern)
+    // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
     const count = 50; // Max allowed by NMKR API
     const page = 1; // First page
-    const url = `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}?apiKey=${NMKR_API_KEY}`;
+    const url = `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`;
 
-    console.log(`[SYNC] Fetching ${state} NFTs from:`, url.replace(NMKR_API_KEY, '***KEY***'));
+    console.log(`[SYNC] Fetching ${state} NFTs from:`, url);
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${NMKR_API_KEY}`,
         'Accept': 'application/json',
       },
     });
@@ -87,13 +88,14 @@ async function fetchProjectStats(projectId: string) {
   console.log("[SYNC] API Key present:", !!NMKR_API_KEY, "Length:", NMKR_API_KEY.length);
 
   try {
-    // NOTE: Using GetProjectInfo endpoint with query parameter authentication (matches working nmkr.ts pattern)
-    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${projectId}?apiKey=${NMKR_API_KEY}`;
-    console.log("[SYNC] GET request to:", url.replace(NMKR_API_KEY, '***KEY***'));
+    // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
+    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${projectId}`;
+    console.log("[SYNC] GET request to:", url);
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${NMKR_API_KEY}`,
         'Accept': 'application/json',
       },
     });

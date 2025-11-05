@@ -35,6 +35,8 @@ export default function ClaudeManagerAdmin() {
   const [expandedFile, setExpandedFile] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'command' | 'document' | 'agent' | 'config'>('all');
   const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'parent' | 'computer'>('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ path: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadFiles();
@@ -50,6 +52,37 @@ export default function ClaudeManagerAdmin() {
       console.error('Failed to load Claude files:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDelete(filePath: string, fileName: string) {
+    setDeleteConfirm({ path: filePath, name: fileName });
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirm) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch('/api/claude-files/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath: deleteConfirm.path })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Reload files after successful deletion
+        await loadFiles();
+        setDeleteConfirm(null);
+      } else {
+        alert(`Failed to delete: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+      alert('Failed to delete file');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -200,25 +233,40 @@ export default function ClaudeManagerAdmin() {
               className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden"
             >
               {/* File Header */}
-              <div
-                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
-              >
-                <div className="text-2xl">{getTypeIcon(file.type)}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-medium">
-                      {file.type === 'command' ? '/' : ''}{file.name}
-                    </span>
-                    {getLocationBadge(file.location)}
+              <div className="p-4 flex items-center gap-4">
+                <div
+                  className="flex-1 flex items-center gap-4 cursor-pointer hover:bg-gray-700/50 transition-colors -m-4 p-4"
+                  onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
+                >
+                  <div className="text-2xl">{getTypeIcon(file.type)}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-medium">
+                        {file.type === 'command' ? '/' : file.type === 'agent' ? '@' : ''}{file.name}
+                      </span>
+                      {getLocationBadge(file.location)}
+                    </div>
+                    {file.description && (
+                      <div className="text-sm text-gray-400 mt-1">{file.description}</div>
+                    )}
                   </div>
-                  {file.description && (
-                    <div className="text-sm text-gray-400 mt-1">{file.description}</div>
-                  )}
+                  <div className="text-gray-500">
+                    {expandedFile === file.path ? '▼' : '▶'}
+                  </div>
                 </div>
-                <div className="text-gray-500">
-                  {expandedFile === file.path ? '▼' : '▶'}
-                </div>
+
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(file.path, file.name);
+                  }}
+                  className="px-3 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-700 text-red-400 rounded transition-colors flex items-center gap-2"
+                  title="Delete file"
+                >
+                  <span className="text-lg">🗑️</span>
+                  <span className="text-xs">DELETE</span>
+                </button>
               </div>
 
               {/* Expanded Content */}
@@ -267,6 +315,45 @@ export default function ClaudeManagerAdmin() {
           <div><strong>Computer-Wide Files:</strong> C:\Users\Ben Meyers\.claude\ (all projects on this computer)</div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 border-2 border-red-500 rounded-lg p-6 max-w-md mx-4">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">⚠️</div>
+              <h3 className="text-xl font-bold text-red-400">Delete File?</h3>
+            </div>
+
+            <div className="bg-black/50 p-4 rounded mb-4">
+              <div className="text-gray-400 text-sm mb-1">File to delete:</div>
+              <div className="text-white font-bold">{deleteConfirm.name}</div>
+              <div className="text-gray-500 text-xs mt-2 break-all">{deleteConfirm.path}</div>
+            </div>
+
+            <div className="text-yellow-400 text-sm mb-4 text-center">
+              ⚠️ This action cannot be undone!
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors font-bold"
+              >
+                {deleting ? 'Deleting...' : 'DELETE PERMANENTLY'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
