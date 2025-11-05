@@ -3,14 +3,19 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
+import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type StyleVariation = 'default' | 'variation1' | 'variation2';
+
 export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
+  const [isEmployed, setIsEmployed] = useState(false);
+  const [styleVariation, setStyleVariation] = useState<StyleVariation>('default');
 
   // Mount portal and lock body scroll
   useEffect(() => {
@@ -75,12 +80,12 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
             <div className="max-w-7xl mx-auto px-4 py-8 pb-6">
               <div className="space-y-4 md:space-y-6 lg:space-y-8">
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
-                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold p-4">
-                  <div className="mek-label-uppercase mb-3 text-center">MEK IMAGE</div>
-                  <div className="w-full aspect-square max-w-xs mx-auto bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                    <span className="text-gray-500 text-center relative z-10">Large Mek Image<br/>400x400</span>
-                  </div>
+                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
+                  <img
+                    src="/mek-images/1000px/aa2-bl2-hn1.webp"
+                    alt="Mek Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 {/* MOBILE: Primary Info Panel (Designation with 4 fields) */}
@@ -169,16 +174,6 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                       </div>
                     </div>
                   </div>
-
-                  {/* Active Modifiers */}
-                  <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                    <div className="mek-label-uppercase mb-2">ACTIVE MODIFIERS</div>
-                    <div className="text-sm space-y-1">
-                      <div className="text-green-400">+2.5 gold/hr</div>
-                      <div className="text-green-400">+5% gold rate</div>
-                      <div className="text-green-400">+1% bank interest</div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* DESKTOP & TABLET: Three Columns */}
@@ -220,32 +215,32 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                       </div>
                     </div>
 
-                    {/* Active Status */}
+                    {/* Employment Status Toggle */}
                     <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                      <div className="mek-label-uppercase mb-2">STATUS</div>
-                      <div className="text-white">IDLE</div>
-                      <div className="mt-3 text-xs text-gray-400">Toggle Switch</div>
-                    </div>
-
-                    {/* Active Modifiers */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                      <div className="mek-label-uppercase mb-2">ACTIVE MODIFIERS</div>
-                      <div className="text-sm space-y-1">
-                        <div className="text-green-400">+2.5 gold/hr</div>
-                        <div className="text-green-400">+5% gold rate</div>
-                        <div className="text-green-400">+1% bank interest</div>
+                      <div className="mek-label-uppercase mb-3">STATUS</div>
+                      <div className="flex flex-col items-center space-y-3">
+                        <div className="text-white font-bold uppercase tracking-wider">
+                          {isEmployed ? 'EMPLOYED' : 'IDLE'}
+                        </div>
+                        <div className="scale-75">
+                          <MechanicalToggle
+                            checked={isEmployed}
+                            onChange={setIsEmployed}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-400 uppercase">Mechanical Toggle</div>
                       </div>
                     </div>
                   </div>
 
                   {/* CENTER - MEK IMAGE */}
                   <div className="lg:col-span-6 flex items-start justify-center">
-                    <div className="mek-card-industrial mek-border-sharp-gold p-8 w-full">
-                      <div className="mek-label-uppercase mb-4 text-center">MEK IMAGE AREA</div>
-                      <div className="w-full aspect-square max-w-md mx-auto bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                        <span className="text-gray-500 text-center relative z-10">Large Mek Image<br/>400x400</span>
-                      </div>
+                    <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden w-full">
+                      <img
+                        src="/mek-images/1000px/aa2-bl2-hn1.webp"
+                        alt="Mek Profile"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </div>
 

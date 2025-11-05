@@ -198,6 +198,9 @@ export default function AdminMasterDataPage() {
   const [saveName, setSaveName] = useState('');
   const [mounted, setMounted] = useState(false);
 
+  // Component demo states
+  const [mechanicalToggleChecked, setMechanicalToggleChecked] = useState(false);
+
   // Query saved slot configurations
   const savedConfigurations = useQuery(api.slotConfigurations.listSlotConfigurations);
 
@@ -3464,7 +3467,10 @@ export default function AdminMasterDataPage() {
 
                       {/* Toggle component with relative positioning */}
                       <div className="relative z-10">
-                        <MechanicalToggle />
+                        <MechanicalToggle
+                          checked={mechanicalToggleChecked}
+                          onChange={setMechanicalToggleChecked}
+                        />
                       </div>
                     </div>
 
