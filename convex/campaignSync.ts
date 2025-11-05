@@ -410,6 +410,16 @@ export const syncCampaign = internalAction({
 
         // Blockchain Verification
         blockchainResults,
+        blockchainSummary: batchSummary || {
+          total: blockchainResults.length,
+          verified: blockchainResults.filter((r) => r.status !== "error").length,
+          delivered: blockchainResults.filter((r) => r.status === "delivered").length,
+          inEscrow: blockchainResults.filter((r) => r.status === "pending_delivery").length,
+          failed: blockchainResults.filter((r) => r.status === "error").length,
+          verificationRate: blockchainResults.length > 0
+            ? ((blockchainResults.filter((r) => r.status !== "error").length / blockchainResults.length) * 100).toFixed(1) + "%"
+            : "0%",
+        },
         verifiedCount: blockchainResults.filter((r) => r.status === "delivered").length,
         pendingCount: blockchainResults.filter((r) => r.status === "pending_delivery").length,
         errorCount: blockchainResults.filter((r) => r.status === "error").length,

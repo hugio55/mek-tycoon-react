@@ -392,6 +392,18 @@ export const listActiveCampaigns = query({
 });
 
 /**
+ * Get campaign by ID
+ */
+export const getCampaignById = query({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.campaignId);
+  },
+});
+
+/**
  * Get campaign by name (useful for frontend routing)
  */
 export const getCampaignByName = query({
@@ -541,6 +553,38 @@ export const batchUpdateNFTImages = mutation({
       success: true,
       updated,
     };
+  },
+});
+
+/**
+ * Update NFT status by UID (used by sync system)
+ */
+export const updateNFTStatus = mutation({
+  args: {
+    nftUid: v.string(),
+    status: v.union(
+      v.literal("available"),
+      v.literal("reserved"),
+      v.literal("sold")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const nft = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .first();
+
+    if (!nft) {
+      throw new Error(`NFT not found: ${args.nftUid}`);
+    }
+
+    await ctx.db.patch(nft._id, {
+      status: args.status,
+    });
+
+    console.log('[CAMPAIGN] Updated NFT status:', nft.name, '→', args.status);
+
+    return { success: true };
   },
 });
 

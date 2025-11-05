@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import NFTInventoryTable from "./NFTInventoryTable";
+import SyncResultsPanel from "./SyncResultsPanel";
 
 interface CampaignManagerProps {
   selectedCampaignId?: string;
@@ -46,6 +47,11 @@ export default function CampaignManager({
   const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
 
+  // Sync state
+  const [syncResults, setSyncResults] = useState<Record<string, any>>({});
+  const [isSyncing, setIsSyncing] = useState<Record<string, boolean>>({});
+  const [syncExpanded, setSyncExpanded] = useState<Record<string, boolean>>({});
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -63,6 +69,7 @@ export default function CampaignManager({
   const deleteCampaign = useMutation(api.campaigns.deleteCampaign);
   const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
+  const syncCampaignAction = useAction(api.campaignSync.syncCampaignPublic);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
@@ -395,6 +402,30 @@ export default function CampaignManager({
     setImportMessage(null);
   };
 
+  // Sync handler
+  const handleSync = async (campaignId: Id<"commemorativeCampaigns">) => {
+    setIsSyncing((prev) => ({ ...prev, [campaignId]: true }));
+    setSyncResults((prev) => ({ ...prev, [campaignId]: null }));
+
+    try {
+      console.log("[SYNC] Starting manual sync for campaign:", campaignId);
+
+      const result = await syncCampaignAction({ campaignId });
+
+      console.log("[SYNC] Sync completed successfully");
+      setSyncResults((prev) => ({ ...prev, [campaignId]: result }));
+      setSyncExpanded((prev) => ({ ...prev, [campaignId]: true })); // Auto-expand results
+
+      // Refresh campaigns to show updated counters
+      onCampaignUpdated?.();
+    } catch (error) {
+      console.error("[SYNC] Sync failed:", error);
+      onError?.(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setIsSyncing((prev) => ({ ...prev, [campaignId]: false }));
+    }
+  };
+
   if (!campaigns) {
     return (
       <div className="mek-card-industrial">
@@ -694,6 +725,40 @@ export default function CampaignManager({
                   </p>
                 </div>
               </div>
+
+              {/* Sync Button */}
+              <div className="mb-3">
+                <button
+                  onClick={() => handleSync(campaign._id)}
+                  disabled={isSyncing[campaign._id]}
+                  className="mek-button-primary flex items-center gap-2 text-sm"
+                >
+                  {isSyncing[campaign._id] ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      🔄 Sync with NMKR
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Sync Results Panel */}
+              {syncResults[campaign._id] && (
+                <SyncResultsPanel
+                  result={syncResults[campaign._id]}
+                  isExpanded={syncExpanded[campaign._id] || false}
+                  onToggle={() =>
+                    setSyncExpanded((prev) => ({
+                      ...prev,
+                      [campaign._id]: !prev[campaign._id],
+                    }))
+                  }
+                />
+              )}
 
               {/* NFT Inventory Table */}
               {campaign.totalNFTs > 0 && (
