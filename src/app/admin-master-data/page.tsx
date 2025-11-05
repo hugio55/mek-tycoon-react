@@ -34,6 +34,7 @@ import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
 import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
 import MechanicalToggle from '@/components/controls/MechanicalToggle';
+import AnimatedTrackToggle from '@/components/controls/AnimatedTrackToggle';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3479,6 +3480,30 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External HTML/CSS (SCSS)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
                       <div><span className="text-zinc-500">Features:</span> Red knob rotation, metallic handle, gray→green base, gold accents</div>
+                    </div>
+                  </div>
+
+                  {/* Animated Track Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Animated Track Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px] text-[1.5em]">
+                      <AnimatedTrackToggle />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Rotating track sections, sliding thumb, glowing lights (off/on), complex keyframe animations</div>
                     </div>
                   </div>
 

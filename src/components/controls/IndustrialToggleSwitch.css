@@ -1,0 +1,246 @@
+.industrial-toggle {
+  --sz: 10px;
+  --on: #4ade80;
+  --of: #e11d48;
+  --gr: #334155;
+  --tr: 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  --lg: #cbd5e1;
+
+  display: inline-block;
+  position: relative;
+}
+
+.industrial-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.industrial-toggle label {
+  width: calc(var(--sz) * 6);
+  height: calc(var(--sz) * 2.5);
+  background: var(--gr);
+  display: block;
+  border-radius: calc(var(--sz) * 4);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.4s ease;
+  box-shadow: inset 0 0 calc(var(--sz) * 0.5) rgba(0, 0, 0, 0.4),
+              inset 0 calc(var(--sz) * 0.2) calc(var(--sz) * 0.4) rgba(0, 0, 0, 0.3),
+              0 calc(var(--sz) * 0.2) calc(var(--sz) * 0.4) rgba(0, 0, 0, 0.2);
+}
+
+.industrial-toggle .track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: calc(var(--sz) * 4);
+}
+
+.industrial-toggle .track-top,
+.industrial-toggle .track-bot {
+  position: absolute;
+  display: flex;
+  gap: calc(var(--sz) * 0.8);
+  transform-origin: center;
+}
+
+.industrial-toggle .track-top {
+  top: 25%;
+}
+
+.industrial-toggle .track-bot {
+  bottom: 25%;
+}
+
+.industrial-toggle .track-top span,
+.industrial-toggle .track-bot span {
+  width: calc(var(--sz) * 0.3);
+  height: calc(var(--sz) * 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  box-shadow: 0 0 calc(var(--sz) * 0.2) rgba(255, 255, 255, 0.1);
+}
+
+.industrial-toggle .thumb {
+  width: calc(var(--sz) * 2);
+  height: calc(var(--sz) * 2);
+  background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
+  position: absolute;
+  left: calc(var(--sz) * 0.25);
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  transition: var(--tr);
+  box-shadow: 0 calc(var(--sz) * 0.2) calc(var(--sz) * 0.4) rgba(0, 0, 0, 0.3),
+              inset 0 calc(var(--sz) * 0.1) calc(var(--sz) * 0.2) rgba(255, 255, 255, 0.5),
+              inset 0 calc(var(--sz) * -0.1) calc(var(--sz) * 0.2) rgba(0, 0, 0, 0.2);
+}
+
+.industrial-toggle .thumb::before {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent);
+  border-radius: 50%;
+  top: 10%;
+  left: 10%;
+  animation: shine-thumb-off 2s ease-in-out infinite;
+}
+
+.industrial-toggle .thumb::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 calc(var(--sz) * 0.5) transparent;
+  transition: var(--tr);
+}
+
+.industrial-toggle .lights {
+  position: absolute;
+  bottom: calc(var(--sz) * -1.5);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: calc(var(--sz) * 3);
+}
+
+.industrial-toggle .light-off,
+.industrial-toggle .light-on {
+  width: calc(var(--sz) * 0.6);
+  height: calc(var(--sz) * 0.6);
+  border-radius: 50%;
+  transition: var(--tr);
+}
+
+.industrial-toggle .light-off {
+  background: radial-gradient(circle at 30% 30%, #dc2626, #991b1b);
+  box-shadow: 0 0 calc(var(--sz) * 0.5) var(--of),
+              inset 0 calc(var(--sz) * 0.1) calc(var(--sz) * 0.1) rgba(255, 255, 255, 0.3);
+}
+
+.industrial-toggle .light-on {
+  background: radial-gradient(circle at 30% 30%, #64748b, #475569);
+  box-shadow: inset 0 calc(var(--sz) * 0.1) calc(var(--sz) * 0.1) rgba(0, 0, 0, 0.3);
+}
+
+/* Checked state */
+.industrial-toggle input[type="checkbox"]:checked + label {
+  background: var(--gr);
+}
+
+.industrial-toggle input[type="checkbox"]:checked + label .thumb {
+  left: calc(100% - var(--sz) * 2.25);
+  animation: move-thumb 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.industrial-toggle input[type="checkbox"]:checked + label .thumb::before {
+  animation: shine-thumb-on 2s ease-in-out infinite;
+}
+
+.industrial-toggle input[type="checkbox"]:checked + label .thumb::after {
+  box-shadow: 0 0 calc(var(--sz) * 1) var(--on);
+}
+
+.industrial-toggle input[type="checkbox"]:checked + label .track-top {
+  animation: t-top-r 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transform: rotate(-5deg);
+}
+
+.industrial-toggle input[type="checkbox"]:checked + label .track-bot {
+  animation: t-bot-r 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transform: rotate(5deg);
+}
+
+.industrial-toggle input[type="checkbox"]:checked ~ .lights .light-off {
+  background: radial-gradient(circle at 30% 30%, #64748b, #475569);
+  box-shadow: inset 0 calc(var(--sz) * 0.1) calc(var(--sz) * 0.1) rgba(0, 0, 0, 0.3);
+}
+
+.industrial-toggle input[type="checkbox"]:checked ~ .lights .light-on {
+  background: radial-gradient(circle at 30% 30%, #22c55e, #16a34a);
+  box-shadow: 0 0 calc(var(--sz) * 0.5) var(--on),
+              inset 0 calc(var(--sz) * 0.1) calc(var(--sz) * 0.1) rgba(255, 255, 255, 0.3);
+}
+
+/* Unchecked animations */
+.industrial-toggle input[type="checkbox"]:not(:checked) + label .track-top {
+  animation: t-top-l 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transform: rotate(5deg);
+}
+
+.industrial-toggle input[type="checkbox"]:not(:checked) + label .track-bot {
+  animation: t-bot-l 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transform: rotate(-5deg);
+}
+
+/* Keyframe animations */
+@keyframes move-thumb {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(0.9);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+@keyframes shine-thumb-on {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes shine-thumb-off {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes t-top-r {
+  0% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes t-top-l {
+  0% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes t-bot-r {
+  0% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes t-bot-l {
+  0% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(-5deg);
+  }
+}

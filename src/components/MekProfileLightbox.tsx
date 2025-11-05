@@ -8,14 +8,57 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
+  styleVariation?: 'default' | 'variation1' | 'variation2';
 }
 
-type StyleVariation = 'default' | 'variation1' | 'variation2';
-
-export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightboxProps) {
+export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default' }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
-  const [styleVariation, setStyleVariation] = useState<StyleVariation>('default');
+
+  // Define style classes based on variation
+  const getContainerClasses = () => {
+    switch (styleVariation) {
+      case 'variation1': // Cyber Tech
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/30 backdrop-blur-md border-2 border-blue-500/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col';
+      case 'variation2': // Neon Fusion
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-lg border-2 border-purple-500/50 rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 flex flex-col';
+      default: // Industrial
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col';
+    }
+  };
+
+  const getHeaderTitleClasses = () => {
+    switch (styleVariation) {
+      case 'variation1':
+        return 'text-5xl font-bold tracking-wider text-center mb-1';
+      case 'variation2':
+        return 'text-5xl font-bold tracking-wider text-center mb-1 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent';
+      default:
+        return 'text-5xl font-bold font-orbitron tracking-wider text-center mb-1';
+    }
+  };
+
+  const getPrimaryColor = () => {
+    switch (styleVariation) {
+      case 'variation1':
+        return 'text-blue-400';
+      case 'variation2':
+        return 'text-purple-400';
+      default:
+        return 'text-yellow-400';
+    }
+  };
+
+  const getCardClasses = () => {
+    switch (styleVariation) {
+      case 'variation1':
+        return 'bg-black/40 backdrop-blur-sm border-2 border-blue-500/40 rounded-xl p-4';
+      case 'variation2':
+        return 'bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm border border-purple-500/50 rounded-lg p-4 shadow-lg shadow-purple-500/10';
+      default:
+        return 'mek-card-industrial mek-border-sharp-gold p-4';
+    }
+  };
 
   // Mount portal and lock body scroll
   useEffect(() => {
@@ -37,9 +80,9 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
         onClick={onClose}
       />
 
-      {/* Lightbox Container - Matching EssenceDistributionLightbox styling */}
+      {/* Lightbox Container - Dynamic styling based on variation */}
       <div
-        className="relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col"
+        className={getContainerClasses()}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -47,7 +90,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
           onClick={onClose}
           className="absolute top-4 right-4 z-50 flex items-center justify-center hover:scale-110 transition-transform"
         >
-          <span className="text-yellow-400 text-3xl font-bold" style={{ textShadow: '0 0 10px rgba(250, 182, 23, 0.5)' }}>×</span>
+          <span className={`${getPrimaryColor()} text-3xl font-bold`} style={{ textShadow: `0 0 10px ${styleVariation === 'variation1' ? 'rgba(59, 130, 246, 0.5)' : styleVariation === 'variation2' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(250, 182, 23, 0.5)'}` }}>×</span>
         </button>
 
         {/* Scrollable Content */}
@@ -63,8 +106,8 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 py-[15px]">
-                  <h1 className="text-5xl font-bold font-orbitron tracking-wider text-center mb-1">
-                    <span className="text-yellow-400">MEK</span>{" "}
+                  <h1 className={getHeaderTitleClasses()}>
+                    <span className={getPrimaryColor()}>MEK</span>{" "}
                     <span className="text-gray-400">PROFILE</span>
                   </h1>
                   <p className="text-center text-gray-400 text-xs max-w-2xl mx-auto" style={{
@@ -182,7 +225,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                   {/* LEFT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
                     {/* Designation Section - All 4 fields grouped */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-3">DESIGNATION</div>
                       <div className="space-y-3">
                         {/* Mekanism Number */}
@@ -216,7 +259,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                     </div>
 
                     {/* Employment Status Toggle */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-3">STATUS</div>
                       <div className="flex flex-col items-center space-y-3">
                         <div className="text-white font-bold uppercase tracking-wider">
@@ -235,7 +278,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
                   {/* CENTER - MEK IMAGE */}
                   <div className="lg:col-span-6 flex items-start justify-center">
-                    <div className="mek-card-industrial mek-border-sharp-gold overflow-hidden w-full">
+                    <div className={`${getCardClasses()} overflow-hidden w-full`}>
                       <img
                         src="/mek-images/1000px/aa2-bl2-hn1.webp"
                         alt="Mek Profile"
@@ -247,7 +290,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                   {/* RIGHT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
                     {/* Level Progress */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-2">LEVEL PROGRESS</div>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-400">LEVEL 1</span>
@@ -262,7 +305,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                     </div>
 
                     {/* Gold Generation */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-2">GOLD GENERATION</div>
                       <div className="space-y-2">
                         <div>
@@ -277,7 +320,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                     </div>
 
                     {/* Gold Produced */}
-                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-2">GOLD PRODUCED</div>
                       <div className="space-y-2">
                         <div>
@@ -313,6 +356,95 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Debug Panel - Fixed to right side, high z-index */}
+      <div className="fixed top-4 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-4">
+          <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
+            Style Variations
+          </h3>
+
+          {/* Variation Selector Buttons */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setStyleVariation('default');
+              }}
+              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
+                styleVariation === 'default'
+                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
+                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
+              }`}
+            >
+              Default
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setStyleVariation('variation1');
+              }}
+              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
+                styleVariation === 'variation1'
+                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
+                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
+              }`}
+            >
+              Var 1
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setStyleVariation('variation2');
+              }}
+              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
+                styleVariation === 'variation2'
+                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
+                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
+              }`}
+            >
+              Var 2
+            </button>
+          </div>
+
+          {/* Default Style Preview */}
+          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
+            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Default: Industrial Yellow</div>
+            <div className="text-xs text-gray-400 space-y-1">
+              <div>• Font: Orbitron</div>
+              <div>• Accent: Yellow/Gold (#fab617)</div>
+              <div>• Style: Sharp edges, glass-morphism</div>
+              <div>• Layout: Three-column desktop</div>
+            </div>
+          </div>
+
+          {/* Variation 1 Preview */}
+          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
+            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Variation 1: Cyberpunk Cyan</div>
+            <div className="text-xs text-gray-400 space-y-1">
+              <div>• Font: Rajdhani (condensed)</div>
+              <div>• Accent: Cyan/Blue (#00d9ff)</div>
+              <div>• Style: Neon glow, rounded corners</div>
+              <div>• Layout: Centered single column</div>
+            </div>
+          </div>
+
+          {/* Variation 2 Preview */}
+          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
+            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Variation 2: Military Green</div>
+            <div className="text-xs text-gray-400 space-y-1">
+              <div>• Font: Share Tech Mono</div>
+              <div>• Accent: Olive/Green (#9acd32)</div>
+              <div>• Style: Tactical camo, hexagons</div>
+              <div>• Layout: Asymmetric grid</div>
+            </div>
+          </div>
+
+          <div className="text-xs text-cyan-500/70 italic text-center pt-2 border-t border-cyan-500/20">
+            Click variation buttons to preview styles
           </div>
         </div>
       </div>

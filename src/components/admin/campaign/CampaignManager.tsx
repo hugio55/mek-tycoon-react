@@ -147,6 +147,7 @@ export default function CampaignManager({
     setName(campaign.name);
     setDescription(campaign.description);
     setNmkrProjectId(campaign.nmkrProjectId);
+    setPolicyId(campaign.policyId || "");
     setMaxNFTs(campaign.maxNFTs.toString());
     setStatus(campaign.status);
     setShowCreateForm(false);
@@ -634,6 +635,20 @@ export default function CampaignManager({
                       value={nmkrProjectId}
                       onChange={(e) => setNmkrProjectId(e.target.value)}
                       className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      Cardano Policy ID <span className="text-gray-500">(optional - enables blockchain verification)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={policyId}
+                      onChange={(e) => setPolicyId(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                      placeholder="e.g., 9c8e9da...f4e5d6c (56 characters)"
                       disabled={isSubmitting}
                     />
                   </div>
