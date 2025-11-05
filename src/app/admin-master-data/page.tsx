@@ -3555,7 +3555,7 @@ export default function AdminMasterDataPage() {
                     <div
                       className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]"
                       style={{
-                        background: 'repeating-linear-gradient(45deg, #d4d4d8 0px, #d4d4d8 20px, #a1a1aa 20px, #a1a1aa 40px)'
+                        background: 'repeating-linear-gradient(45deg, #27272a 0px, #27272a 20px, #fab617 20px, #fab617 40px)'
                       }}
                     >
                       <GlassButton
