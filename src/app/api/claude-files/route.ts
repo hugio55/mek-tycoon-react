@@ -5,6 +5,7 @@ import matter from 'gray-matter';
 
 // Paths to scan
 const PROJECT_CLAUDE_DIR = path.join(process.cwd(), '.claude');
+const PROJECT_ROOT_DIR = process.cwd(); // For root-level reference docs
 const PARENT_CLAUDE_DIR = path.join('C:', 'Users', 'Ben Meyers', 'Documents', 'Mek Tycoon', '.claude');
 const COMPUTER_CLAUDE_DIR = path.join('C:', 'Users', 'Ben Meyers', '.claude');
 
@@ -18,7 +19,7 @@ interface ClaudeFile {
   frontmatter?: Record<string, any>;
 }
 
-async function scanDirectory(dir: string, location: 'project' | 'parent' | 'computer'): Promise<ClaudeFile[]> {
+async function scanDirectory(dir: string, location: 'project' | 'parent' | 'computer', rootLevelOnly: boolean = false): Promise<ClaudeFile[]> {
   const files: ClaudeFile[] = [];
 
   try {
@@ -40,6 +41,10 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
             const relPath = path.join(relativePath, entry.name);
 
             if (entry.isDirectory()) {
+              // If root-level only mode, skip ALL subdirectories
+              if (rootLevelOnly) {
+                continue;
+              }
               // Skip node_modules and hidden directories except .claude
               if (entry.name === 'node_modules' || (entry.name.startsWith('.') && entry.name !== '.claude')) {
                 continue;
@@ -104,13 +109,14 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
 
 export async function GET() {
   try {
-    const [projectFiles, parentFiles, computerFiles] = await Promise.all([
+    const [projectClaudeFiles, projectRootFiles, parentFiles, computerFiles] = await Promise.all([
       scanDirectory(PROJECT_CLAUDE_DIR, 'project'),
+      scanDirectory(PROJECT_ROOT_DIR, 'project', true), // rootLevelOnly = true
       scanDirectory(PARENT_CLAUDE_DIR, 'parent'),
       scanDirectory(COMPUTER_CLAUDE_DIR, 'computer')
     ]);
 
-    const allFiles = [...projectFiles, ...parentFiles, ...computerFiles];
+    const allFiles = [...projectClaudeFiles, ...projectRootFiles, ...parentFiles, ...computerFiles];
 
     return NextResponse.json({
       success: true,

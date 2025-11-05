@@ -32,20 +32,18 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
     throw new Error("NMKR_API_KEY not configured - check Convex dashboard environment variables");
   }
 
-  // NMKR API requires project IDs without hyphens
-  const cleanProjectId = projectId.replace(/-/g, '');
+  // NMKR API uses standard UUID format with hyphens
   console.log(`[SYNC] Fetching ${state} NFTs from NMKR project:`, projectId);
-  console.log(`[SYNC] Cleaned project ID (hyphens removed):`, cleanProjectId);
   console.log("[SYNC] API Key loaded successfully, length:", NMKR_API_KEY.length);
 
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // NOTE: Count must be between 1 and 50 per NMKR API validation
     // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
-    // NOTE: Project ID must NOT contain hyphens
+    // NOTE: Project ID must be in standard UUID format with hyphens
     const count = 50; // Max allowed by NMKR API
     const page = 1; // First page
-    const url = `${NMKR_API_BASE}/v2/GetNfts/${cleanProjectId}/${state}/${count}/${page}`;
+    const url = `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`;
 
     console.log(`[SYNC] Fetching ${state} NFTs from:`, url);
 
@@ -88,16 +86,14 @@ async function fetchProjectStats(projectId: string) {
     throw new Error("NMKR_API_KEY not configured");
   }
 
-  // NMKR API requires project IDs without hyphens
-  const cleanProjectId = projectId.replace(/-/g, '');
+  // NMKR API uses standard UUID format with hyphens
   console.log("[SYNC] Fetching project stats from NMKR:", projectId);
-  console.log("[SYNC] Cleaned project ID (hyphens removed):", cleanProjectId);
   console.log("[SYNC] API Key present:", !!NMKR_API_KEY, "Length:", NMKR_API_KEY.length);
 
   try {
     // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
-    // NOTE: Project ID must NOT contain hyphens
-    const url = `${NMKR_API_BASE}/v2/GetProject/${cleanProjectId}`;
+    // NOTE: Project ID must be in standard UUID format with hyphens
+    const url = `${NMKR_API_BASE}/v2/GetProject/${projectId}`;
     console.log("[SYNC] GET request to:", url);
 
     const response = await fetch(url, {
