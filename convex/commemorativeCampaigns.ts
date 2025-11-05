@@ -626,3 +626,25 @@ export const syncCampaignCounters = mutation({
 // SYNC-RELATED QUERIES AND MUTATIONS
 // ============================================================================
 // Note: getCampaignById and updateNFTStatus are already defined above
+
+// ============================================================================
+// ADMIN / DIAGNOSTICS QUERIES
+// ============================================================================
+
+/**
+ * Get all campaigns (for admin tools)
+ */
+export const getAllCampaigns = query({
+  handler: async (ctx) => {
+    return await ctx.db.query("commemorativeCampaigns").collect();
+  },
+});
+
+/**
+ * Get all inventory items across all campaigns (for diagnostics)
+ */
+export const getAllInventoryForDiagnostics = query({
+  handler: async (ctx) => {
+    return await ctx.db.query("commemorativeNFTInventory").collect();
+  },
+});

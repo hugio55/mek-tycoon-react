@@ -198,6 +198,102 @@ export const getAvailableCount = query({
   },
 });
 
+// FIX: Repair malformed payment URLs in existing inventory
+// This fixes the bug where projectId was empty in payment URLs
+export const repairPaymentUrls = mutation({
+  args: {
+    campaignId: v.optional(v.id("commemorativeCampaigns")),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔧FIX] Starting payment URL repair...');
+
+    // Get all inventory items (optionally filter by campaign)
+    let inventoryQuery = ctx.db.query("commemorativeNFTInventory");
+
+    if (args.campaignId) {
+      inventoryQuery = inventoryQuery.withIndex("by_campaign", (q) =>
+        q.eq("campaignId", args.campaignId)
+      );
+    }
+
+    const inventory = await inventoryQuery.collect();
+
+    console.log('[🔧FIX] Found', inventory.length, 'inventory items to check');
+
+    const NMKR_NETWORK = process.env.NEXT_PUBLIC_NMKR_NETWORK || "mainnet";
+    const basePaymentUrl = NMKR_NETWORK === "mainnet"
+      ? "https://pay.nmkr.io"
+      : "https://pay.preprod.nmkr.io";
+
+    let repairedCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+
+    for (const item of inventory) {
+      try {
+        // Check if URL is malformed (missing project ID)
+        const isMalformed = item.paymentUrl.includes('/?p=&n=') ||
+                           item.paymentUrl.includes('?p=&n=');
+
+        if (!isMalformed) {
+          console.log('[🔧FIX] Skipping (already correct):', item.name);
+          skippedCount++;
+          continue;
+        }
+
+        // Get the correct project ID
+        let projectId = item.projectId;
+
+        // If projectId is also empty in the record, try to get it from the campaign
+        if (!projectId && item.campaignId) {
+          const campaign = await ctx.db.get(item.campaignId);
+          if (campaign) {
+            projectId = campaign.nmkrProjectId;
+          }
+        }
+
+        // If still no project ID, we can't fix this item
+        if (!projectId) {
+          console.error('[🔧FIX] ❌ Cannot fix - no project ID available for:', item.name);
+          errorCount++;
+          continue;
+        }
+
+        // Construct correct payment URL
+        const correctPaymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${item.nftUid}`;
+
+        // Update the item
+        await ctx.db.patch(item._id, {
+          paymentUrl: correctPaymentUrl,
+          projectId: projectId, // Also update projectId if it was missing
+        });
+
+        console.log('[🔧FIX] ✅ Repaired:', item.name);
+        console.log('[🔧FIX]    Old URL:', item.paymentUrl);
+        console.log('[🔧FIX]    New URL:', correctPaymentUrl);
+        repairedCount++;
+      } catch (error) {
+        console.error('[🔧FIX] ❌ Error fixing', item.name, ':', error);
+        errorCount++;
+      }
+    }
+
+    console.log('[🔧FIX] === Repair Complete ===');
+    console.log('[🔧FIX] Total items:', inventory.length);
+    console.log('[🔧FIX] Repaired:', repairedCount);
+    console.log('[🔧FIX] Already correct:', skippedCount);
+    console.log('[🔧FIX] Errors:', errorCount);
+
+    return {
+      success: true,
+      totalItems: inventory.length,
+      repairedCount,
+      skippedCount,
+      errorCount,
+    };
+  },
+});
+
 // Initialize from CSV (for frontend test page)
 export const initializeFromCSV = action({
   args: {
