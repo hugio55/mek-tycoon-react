@@ -71,6 +71,7 @@ import type * as deployedNodeData from "../deployedNodeData.js";
 import type * as devToolbar from "../devToolbar.js";
 import type * as diagnosticAllEssenceWallets from "../diagnosticAllEssenceWallets.js";
 import type * as diagnosticBlockfrostUsage from "../diagnosticBlockfrostUsage.js";
+import type * as diagnosticCampaigns from "../diagnosticCampaigns.js";
 import type * as diagnosticCorruptedGold from "../diagnosticCorruptedGold.js";
 import type * as diagnosticMekBoosts from "../diagnosticMekBoosts.js";
 import type * as diagnosticNothingDuplicates from "../diagnosticNothingDuplicates.js";
@@ -298,6 +299,7 @@ declare const fullApi: ApiFromModules<{
   devToolbar: typeof devToolbar;
   diagnosticAllEssenceWallets: typeof diagnosticAllEssenceWallets;
   diagnosticBlockfrostUsage: typeof diagnosticBlockfrostUsage;
+  diagnosticCampaigns: typeof diagnosticCampaigns;
   diagnosticCorruptedGold: typeof diagnosticCorruptedGold;
   diagnosticMekBoosts: typeof diagnosticMekBoosts;
   diagnosticNothingDuplicates: typeof diagnosticNothingDuplicates;

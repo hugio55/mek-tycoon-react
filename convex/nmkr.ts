@@ -56,16 +56,16 @@ export const getNextAvailableNFT = action({
     // State: "free" to get only unminted/available NFTs
     // Count: 50 (max allowed by NMKR API)
     // Page: 1 (first page)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
+    // NOTE: Using query parameter auth (matches getProjectInfo pattern)
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1?apiKey=${apiKey}`;
 
-    console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl);
+    console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl.replace(apiKey, '***'));
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json',
         },
       });
 
@@ -196,14 +196,13 @@ export const verifyNftAvailability = action({
     }
 
     // NMKR API endpoint: /v2/GetNftDetailsById/{nftuid}
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}`;
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}?apiKey=${apiKey}`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json',
         },
       });
 
@@ -258,14 +257,13 @@ export const getProjectStats = action({
     // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // State: "free" to get only available NFTs (for accurate stats)
     // Count: 50 (max allowed by NMKR API)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1?apiKey=${apiKey}`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json',
         },
       });
 
