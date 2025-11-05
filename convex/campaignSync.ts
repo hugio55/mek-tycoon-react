@@ -64,29 +64,31 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
 
 async function fetchProjectStats(projectId: string) {
   if (!NMKR_API_KEY) {
+    console.error("[SYNC] NMKR_API_KEY not found in environment");
     throw new Error("NMKR_API_KEY not configured");
   }
 
   console.log("[SYNC] Fetching project stats from NMKR:", projectId);
+  console.log("[SYNC] API Key present:", !!NMKR_API_KEY, "Length:", NMKR_API_KEY.length);
 
   try {
-    const response = await fetch(
-      `${NMKR_API_BASE}/v2/GetProject/${projectId}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${NMKR_API_KEY}`,
-        },
-      }
-    );
+    // NOTE: GetProjectInfo uses query parameter for API key, not header
+    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${projectId}?apiKey=${NMKR_API_KEY}`;
+    console.log("[SYNC] GET request to:", url.replace(NMKR_API_KEY, "***KEY***"));
+
+    const response = await fetch(url);
+
+    console.log("[SYNC] Response status:", response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[SYNC] Failed to fetch project stats:", errorText);
+      console.error("[SYNC] Full URL was:", url);
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
 
     const project = await response.json();
-    console.log("[SYNC] Project stats fetched:", {
+    console.log("[SYNC] Project stats fetched successfully:", {
       name: project.projectname,
       nftsSold: project.nftsSold,
       nftsReserved: project.nftsReserved,
