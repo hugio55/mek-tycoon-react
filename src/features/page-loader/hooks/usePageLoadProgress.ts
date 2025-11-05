@@ -165,7 +165,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   }, [startTime, minDisplayTime]);
 
 
-  const stage = getStageMessage(progress, config?.messages);
+  // Only show "READY" when truly complete, not just when progress hits 100
+  const stage = isComplete ? 'READY' : getStageMessage(progress, config?.messages);
 
   return {
     percentage: progress,
