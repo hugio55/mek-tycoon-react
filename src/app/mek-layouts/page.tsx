@@ -58,9 +58,109 @@ export default function MekLayoutsPage() {
 // LAYOUT 1: Three-Column with Sidebars (Like the screenshot)
 function ThreeColumnLayout() {
   return (
-    <div className="space-y-8">
-      {/* Top Section: Three Columns on Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <div className="space-y-4 md:space-y-6 lg:space-y-8">
+      {/* MOBILE: Mek Image Hero (only visible on mobile) */}
+      <div className="lg:hidden border-4 border-blue-500 bg-gray-900/50 p-4">
+        <div className="text-xs text-blue-500 font-bold mb-3 text-center">MEK IMAGE</div>
+        <div className="w-full aspect-square max-w-xs mx-auto border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
+          <span className="text-gray-500 text-center">Large Mek Image<br/>400x400</span>
+        </div>
+      </div>
+
+      {/* MOBILE: Primary Info Panel (Designation + Rank + Operator grouped) */}
+      <div className="lg:hidden border-2 border-yellow-500 bg-gray-900/50 p-4">
+        <div className="text-xs text-yellow-500 font-bold mb-3">MEK INFORMATION</div>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Designation */}
+          <div className="col-span-2 border border-yellow-500/30 bg-gray-800/50 p-3">
+            <div className="text-xs text-yellow-500 font-bold mb-1">DESIGNATION</div>
+            <div className="text-white font-bold">Mekanism #1234</div>
+          </div>
+
+          {/* Rank */}
+          <div className="border border-yellow-500/30 bg-gray-800/50 p-3">
+            <div className="text-xs text-yellow-500 font-bold mb-1">RANK</div>
+            <div className="text-white text-xl font-bold">2985</div>
+          </div>
+
+          {/* Active Status */}
+          <div className="border border-cyan-500/30 bg-gray-800/50 p-3">
+            <div className="text-xs text-cyan-500 font-bold mb-1">STATUS</div>
+            <div className="text-white">IDLE</div>
+          </div>
+
+          {/* Operator */}
+          <div className="col-span-2 border border-yellow-500/30 bg-gray-800/50 p-3">
+            <div className="text-xs text-yellow-500 font-bold mb-1">OPERATOR</div>
+            <div className="text-white text-sm break-all">staked9...egjf8r</div>
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE: Level & Gold Panel (grouped together) */}
+      <div className="lg:hidden space-y-3">
+        {/* Level Progress */}
+        <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
+          <div className="text-xs text-purple-500 font-bold mb-2">LEVEL PROGRESS</div>
+          <div className="flex justify-between text-xs mb-1">
+            <span>LEVEL 1</span>
+            <span>LEVEL 2</span>
+          </div>
+          <div className="w-full h-4 border border-gray-600 bg-gray-800 mb-2">
+            <div className="h-full w-3/4 bg-yellow-500"></div>
+          </div>
+          <div className="text-xs text-gray-400 text-center">6,720 / 10,000 XP</div>
+        </div>
+
+        {/* Gold Stats Combined */}
+        <div className="border-2 border-green-500 bg-gray-900/50 p-4">
+          <div className="text-xs text-green-500 font-bold mb-3">GOLD STATS</div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Gold Generation */}
+            <div>
+              <div className="text-xs text-gray-400 mb-2">GENERATION</div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Base:</span>
+                  <span className="text-white">20.0/hr</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-green-400 font-bold">Effective:</span>
+                  <span className="text-green-400 font-bold">24.0/hr</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gold Produced */}
+            <div>
+              <div className="text-xs text-gray-400 mb-2">PRODUCED</div>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <div className="text-xs text-gray-400">Current:</div>
+                  <div className="text-white">12,869</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400">All Time:</div>
+                  <div className="text-white">458,414</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Modifiers */}
+        <div className="border-2 border-green-500 bg-gray-900/50 p-4">
+          <div className="text-xs text-green-500 font-bold mb-2">ACTIVE MODIFIERS</div>
+          <div className="text-sm space-y-1">
+            <div className="text-green-400">+2.5 gold/hr</div>
+            <div className="text-green-400">+5% gold rate</div>
+            <div className="text-green-400">+1% bank interest</div>
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP & TABLET: Three Columns */}
+      <div className="hidden lg:grid lg:grid-cols-12 gap-4">
 
         {/* LEFT SIDEBAR */}
         <div className="lg:col-span-3 space-y-4">
@@ -79,7 +179,7 @@ function ThreeColumnLayout() {
           {/* Operator/Corporation */}
           <div className="border-2 border-yellow-500 bg-gray-900/50 p-4">
             <div className="text-xs text-yellow-500 font-bold mb-2">OPERATOR</div>
-            <div className="text-white text-sm">staked9...egjf8r</div>
+            <div className="text-white text-sm break-all">staked9...egjf8r</div>
           </div>
 
           {/* Active Status */}
@@ -104,7 +204,7 @@ function ThreeColumnLayout() {
           <div className="border-4 border-blue-500 bg-gray-900/50 p-8 w-full">
             <div className="text-xs text-blue-500 font-bold mb-4 text-center">MEK IMAGE AREA</div>
             <div className="w-full aspect-square max-w-md mx-auto border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
-              <span className="text-gray-500">Large Mek Image<br/>400x400</span>
+              <span className="text-gray-500 text-center">Large Mek Image<br/>400x400</span>
             </div>
           </div>
         </div>
@@ -156,10 +256,10 @@ function ThreeColumnLayout() {
         </div>
       </div>
 
-      {/* Variation Cards */}
+      {/* Variation Cards - Responsive Grid */}
       <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
         <div className="text-xs text-purple-500 font-bold mb-3">VARIATION CARDS</div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <VariationCard title="HEAD VARIATION" />
           <VariationCard title="BODY VARIATION" />
           <VariationCard title="TRAIT VARIATION" />
@@ -169,7 +269,7 @@ function ThreeColumnLayout() {
       {/* Abilities Tree */}
       <div className="border-2 border-red-500 bg-gray-900/50 p-4">
         <div className="text-xs text-red-500 font-bold mb-3">ABILITIES TREE</div>
-        <div className="w-full h-96 border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
+        <div className="w-full h-64 md:h-80 lg:h-96 border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
           <span className="text-gray-500">Node Tree / Talent Tree Area</span>
         </div>
       </div>
