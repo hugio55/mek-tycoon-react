@@ -32,8 +32,8 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
 
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
-    // NOTE: Count must be between 1 and 100 per NMKR API validation
-    const count = 100; // Max allowed by NMKR API
+    // NOTE: Count must be between 1 and 50 per NMKR API validation
+    const count = 50; // Max allowed by NMKR API
     const page = 1; // First page
     const response = await fetch(
       `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`,
