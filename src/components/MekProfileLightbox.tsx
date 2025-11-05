@@ -736,7 +736,7 @@ function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title
             <img
               src={imagePath}
               alt={title}
-              className="w-full h-48 object-contain"
+              className="w-full h-48 object-contain scale-[0.7]"
               style={{
                 filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
               }}
