@@ -27,6 +27,7 @@ import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
 import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
+import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -86,6 +87,7 @@ const DATA_SYSTEMS = [
   { id: 'gold-backup-system', name: 'Gold Backup System', icon: '💾', implemented: true },
   { id: 'wallet-management', name: 'Player Management', icon: '👥', implemented: true },
   { id: 'sourcekey-migration', name: 'SourceKey Migration', icon: '🔧', implemented: true },
+  { id: 'claude-manager', name: 'Claude Manager', icon: '🤖', implemented: true },
   { id: 'notification-system', name: 'Notification System', icon: '🔔', implemented: false },
   { id: 'nft-admin', name: 'NFT', icon: '🎨', implemented: true },
   { id: 'overlay-editor', name: 'Overlay Editor', icon: '🎯', implemented: true },
@@ -2901,6 +2903,19 @@ export default function AdminMasterDataPage() {
                 </p>
 
                 <SourceKeyMigrationAdmin />
+              </div>
+          </div>
+          )}
+
+          {/* Claude Manager */}
+          {activeTab === 'claude-manager' && (
+          <div id="section-claude-manager" className="bg-black/50 backdrop-blur border-2 border-purple-500/30 rounded-lg shadow-lg shadow-black/50">
+            <div className="p-4">
+                <p className="text-gray-400 mb-4">
+                  View and manage Claude Code agents, slash commands, and markdown documents. See both project-specific and computer-wide Claude files.
+                </p>
+
+                <ClaudeManagerAdmin />
               </div>
           </div>
           )}
