@@ -10,11 +10,11 @@ import { useState } from 'react';
  *
  * Features:
  * - Pill-shaped container with inset shadow
- * - Sliding button that translates left/right
- * - Icon transition: Circle (off) → Line (on)
- * - Gradient background on button
- * - Color shift: Gray → Purple when active
- * - Smooth cubic-bezier transitions
+ * - Button slides left (OFF) → right (ON)
+ * - OFF: Gray container, white circle icon (glowing), gray line
+ * - ON: Purple container, purple circle icon, white line (glowing)
+ * - Gradient background on sliding button
+ * - Smooth transitions
  * - Optional audio feedback
  * - Haptic vibration (if supported)
  *
@@ -22,7 +22,7 @@ import { useState } from 'react';
  * - HTML → React JSX with state management
  * - CSS → Tailwind utilities + inline styles
  * - SCSS variables → Inline color values
- * - Preserved all animations and shadows
+ * - Preserved sliding animation and color transitions
  */
 
 interface PowerButtonSwitchProps {
@@ -92,11 +92,11 @@ export default function PowerButtonSwitch({
           boxShadow: 'inset 0 0 0.5em rgba(0, 0, 0, 0.4)'
         }}
       >
-        {/* Button Inside (stays in place, only colors change) */}
+        {/* Sliding Button Inside */}
         <div
-          className="inline-flex gap-4 relative rounded-[inherit] p-3"
+          className="inline-flex gap-4 relative rounded-[inherit] p-3 transition-transform duration-200"
           style={{
-            transform: 'translateX(-0.375em)',
+            transform: isChecked ? 'translateX(0.375em)' : 'translateX(-0.375em)',
             backgroundImage: 'linear-gradient(90deg, #c5c9d3 48%, #d5d7dd 52%)',
             boxShadow: `
               inset 0.0625em 0 0.0625em rgba(255, 255, 255, 0.4),
