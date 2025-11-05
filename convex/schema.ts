@@ -3316,9 +3316,11 @@ export default defineSchema({
     ),
 
     // Cached eligible users (regenerated when rules change)
+    // IMPORTANT: Uses stake addresses ONLY (stake1... or stake_test1...)
+    // NMKR collects payment addresses during checkout for NFT delivery
     eligibleUsers: v.array(v.object({
       userId: v.optional(v.id("players")), // Reference to player
-      walletAddress: v.string(), // Cardano wallet address
+      stakeAddress: v.string(), // Cardano stake address (stake1... or stake_test1...)
       displayName: v.optional(v.string()), // User's name if available
     })),
     userCount: v.number(), // Quick count without loading array
@@ -3344,9 +3346,10 @@ export default defineSchema({
     description: v.optional(v.string()), // Optional notes about this snapshot
 
     // Frozen eligibility list (never changes after creation)
+    // IMPORTANT: Uses stake addresses ONLY (stake1... or stake_test1...)
+    // NMKR collects payment addresses during checkout for NFT delivery
     eligibleUsers: v.array(v.object({
-      walletAddress: v.string(), // Payment address (addr1...) - used for NFT delivery
-      stakeAddress: v.optional(v.string()), // Stake address (stake1...) - used for eligibility matching
+      stakeAddress: v.string(), // Cardano stake address (stake1... or stake_test1...)
       displayName: v.optional(v.string()),
     })),
     userCount: v.number(), // Count of eligible users

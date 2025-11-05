@@ -72,14 +72,14 @@ export default function MekLayoutsPage() {
       {/* Debug Toggle Button - Fixed Position */}
       <button
         onClick={() => setShowDebugPanel(!showDebugPanel)}
-        className="fixed top-4 right-4 z-[99999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
+        className="fixed top-4 right-4 z-[999999] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all pointer-events-auto"
       >
         <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Style Variations</span>
       </button>
 
       {/* Debug Panel - Fixed Position with Style Dropdowns */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[99999] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed top-16 right-4 z-[999999] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[85vh] overflow-y-auto pointer-events-auto">
           <div className="p-4">
             <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
               Style Controls
