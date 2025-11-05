@@ -11,6 +11,11 @@ export default function MekLayoutsPage() {
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
   const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
+  const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent'>('clean-frames');
+  const [backdropDarkness, setBackdropDarkness] = useState(40);
+  const [cardDarkness, setCardDarkness] = useState(20);
+  const [backdropBlur, setBackdropBlur] = useState(2);
+  const [cardBackdropBlur, setCardBackdropBlur] = useState(12);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -73,7 +78,7 @@ export default function MekLayoutsPage() {
 
       {/* Debug Panel - Fixed Position with Style Dropdowns */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl">
+        <div className="fixed top-16 right-4 z-[10000] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[85vh] overflow-y-auto">
           <div className="p-4">
             <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
               Style Controls
@@ -128,6 +133,85 @@ export default function MekLayoutsPage() {
               </select>
             </div>
 
+            {/* Dropdown 4: Variation Cards Style */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Variation Cards Style
+              </label>
+              <select
+                value={variationCardStyle}
+                onChange={(e) => setVariationCardStyle(e.target.value as 'clean-frames' | 'image-focus' | 'subtle-accent')}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="clean-frames">Clean Frames</option>
+                <option value="image-focus">Image Focus</option>
+                <option value="subtle-accent">Subtle Accent</option>
+              </select>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-cyan-500/30 my-3"></div>
+
+            {/* Slider 1: Backdrop Darkness */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Backdrop Darkness: {backdropDarkness}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={backdropDarkness}
+                onChange={(e) => setBackdropDarkness(Number(e.target.value))}
+                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
+
+            {/* Slider 2: Card Darkness */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Card Darkness: {cardDarkness}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={cardDarkness}
+                onChange={(e) => setCardDarkness(Number(e.target.value))}
+                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
+
+            {/* Slider 3: Backdrop Blur */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Backdrop Blur: {backdropBlur}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="20"
+                value={backdropBlur}
+                onChange={(e) => setBackdropBlur(Number(e.target.value))}
+                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
+
+            {/* Slider 4: Card Backdrop Blur */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Card Backdrop Blur: {cardBackdropBlur}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="20"
+                value={cardBackdropBlur}
+                onChange={(e) => setCardBackdropBlur(Number(e.target.value))}
+                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
+
             {/* Current Selection Display */}
             <div className="pt-2 border-t border-cyan-500/30">
               <div className="text-[10px] text-gray-500 mb-1">Active:</div>
@@ -148,6 +232,11 @@ export default function MekLayoutsPage() {
                   {buffDetailsLayout === 'detailed-cards' && 'Detailed Cards'}
                   {buffDetailsLayout === 'minimal' && 'Minimal List'}
                 </div>
+                <div>
+                  {variationCardStyle === 'clean-frames' && 'Clean Frames'}
+                  {variationCardStyle === 'image-focus' && 'Image Focus'}
+                  {variationCardStyle === 'subtle-accent' && 'Subtle Accent'}
+                </div>
               </div>
             </div>
           </div>
@@ -162,6 +251,16 @@ export default function MekLayoutsPage() {
         onStyleVariationChange={setStyleVariation}
         cardInteriorStyle={cardInteriorStyle}
         onCardInteriorStyleChange={setCardInteriorStyle}
+        variationCardStyle={variationCardStyle}
+        onVariationCardStyleChange={setVariationCardStyle}
+        backdropDarkness={backdropDarkness}
+        onBackdropDarknessChange={setBackdropDarkness}
+        cardDarkness={cardDarkness}
+        onCardDarknessChange={setCardDarkness}
+        backdropBlur={backdropBlur}
+        onBackdropBlurChange={setBackdropBlur}
+        cardBackdropBlur={cardBackdropBlur}
+        onCardBackdropBlurChange={setCardBackdropBlur}
       />
 
       {/* Gold Generation Details Lightbox */}
