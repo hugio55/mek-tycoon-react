@@ -9,6 +9,7 @@ export default function MekLayoutsPage() {
   const [isGoldDetailsOpen, setIsGoldDetailsOpen] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(true);
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
+  const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -69,79 +70,59 @@ export default function MekLayoutsPage() {
         <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Style Variations</span>
       </button>
 
-      {/* Debug Panel - Fixed Position with Style Variations */}
+      {/* Debug Panel - Fixed Position with Style Dropdowns */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-          <h3 className="text-cyan-400 text-lg font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
-            Profile Style Variations
+        <div className="fixed top-16 right-4 z-[10000] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-5 shadow-2xl">
+          <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
+            Style Controls
           </h3>
-          <p className="text-xs text-gray-400 mb-4">
-            Click buttons to see different styling approaches for the Mek Profile lightbox
-          </p>
 
-          {/* Variation Buttons */}
-          <div className="space-y-3">
-            {/* Option 1: Current Industrial (Default) */}
-            <button
-              onClick={() => setStyleVariation('default')}
-              className={`w-full text-left p-4 rounded border-2 transition-all ${
-                styleVariation === 'default'
-                  ? 'border-yellow-500 bg-yellow-500/20'
-                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
-              }`}
+          {/* Dropdown 1: Page Styling */}
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Overall Theme
+            </label>
+            <select
+              value={styleVariation}
+              onChange={(e) => setStyleVariation(e.target.value as 'default' | 'variation1' | 'variation2')}
+              className="w-full bg-black/60 border-2 border-cyan-500/50 rounded px-3 py-2 text-cyan-300 text-sm font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
             >
-              <div className="font-bold text-yellow-400 mb-1">OPTION 1: Industrial</div>
-              <div className="text-xs text-gray-400">
-                Current style: Yellow/gold accents, Orbitron font, sharp borders, grunge overlays
-              </div>
-            </button>
-
-            {/* Option 2: Alternative Font/Layout */}
-            <button
-              onClick={() => setStyleVariation('variation1')}
-              className={`w-full text-left p-4 rounded border-2 transition-all ${
-                styleVariation === 'variation1'
-                  ? 'border-blue-500 bg-blue-500/20'
-                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
-              }`}
-            >
-              <div className="font-bold text-blue-400 mb-1">OPTION 2: Cyber Tech</div>
-              <div className="text-xs text-gray-400">
-                Blue/cyan accents, rounded corners, softer shadows, tech-focused
-              </div>
-            </button>
-
-            {/* Option 3: Different Color Scheme */}
-            <button
-              onClick={() => setStyleVariation('variation2')}
-              className={`w-full text-left p-4 rounded border-2 transition-all ${
-                styleVariation === 'variation2'
-                  ? 'border-purple-500 bg-purple-500/20'
-                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
-              }`}
-            >
-              <div className="font-bold text-purple-400 mb-1">OPTION 3: Neon Fusion</div>
-              <div className="text-xs text-gray-400">
-                Purple/magenta gradient, glowing effects, modern minimalist
-              </div>
-            </button>
+              <option value="default">Industrial Yellow</option>
+              <option value="variation1">Cyberpunk Cyan</option>
+              <option value="variation2">Military Green</option>
+            </select>
           </div>
 
-          {/* Active Style Info */}
-          <div className="mt-6 pt-4 border-t border-cyan-500/30">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Currently Active:</div>
-            <div className="text-sm font-bold">
-              {styleVariation === 'default' && <span className="text-yellow-400">Industrial Style</span>}
-              {styleVariation === 'variation1' && <span className="text-blue-400">Cyber Tech Style</span>}
-              {styleVariation === 'variation2' && <span className="text-purple-400">Neon Fusion Style</span>}
-            </div>
+          {/* Dropdown 2: Card Interior Styling */}
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Card Layout
+            </label>
+            <select
+              value={cardInteriorStyle}
+              onChange={(e) => setCardInteriorStyle(e.target.value as 'compact' | 'spacious' | 'modern')}
+              className="w-full bg-black/60 border-2 border-cyan-500/50 rounded px-3 py-2 text-cyan-300 text-sm font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+            >
+              <option value="compact">Classic Stack</option>
+              <option value="spacious">Side-by-Side</option>
+              <option value="modern">Minimal Centered</option>
+            </select>
           </div>
 
-          {/* Implementation Note */}
-          <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded">
-            <div className="text-xs text-cyan-400">
-              <span className="font-bold">Note:</span> Style variations are for visual comparison only.
-              Click options to see how different approaches would look.
+          {/* Current Selection Display */}
+          <div className="pt-3 border-t border-cyan-500/30">
+            <div className="text-xs text-gray-400 mb-1">Active Styles:</div>
+            <div className="text-xs text-cyan-300 space-y-1">
+              <div>Theme: <span className="font-bold">
+                {styleVariation === 'default' && 'Industrial Yellow'}
+                {styleVariation === 'variation1' && 'Cyberpunk Cyan'}
+                {styleVariation === 'variation2' && 'Military Green'}
+              </span></div>
+              <div>Layout: <span className="font-bold">
+                {cardInteriorStyle === 'compact' && 'Classic Stack'}
+                {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
+                {cardInteriorStyle === 'modern' && 'Minimal Centered'}
+              </span></div>
             </div>
           </div>
         </div>
@@ -153,6 +134,7 @@ export default function MekLayoutsPage() {
         onClose={() => setIsLightboxOpen(false)}
         styleVariation={styleVariation}
         onStyleVariationChange={setStyleVariation}
+        cardInteriorStyle={cardInteriorStyle}
       />
 
       {/* Gold Generation Details Lightbox */}

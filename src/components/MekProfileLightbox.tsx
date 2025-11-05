@@ -5,14 +5,17 @@ import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
+export type CardInteriorStyle = 'compact' | 'spacious' | 'modern';
+
 interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
   styleVariation?: 'default' | 'variation1' | 'variation2';
   onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
+  cardInteriorStyle?: CardInteriorStyle;
 }
 
-export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange }: MekProfileLightboxProps) {
+export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange, cardInteriorStyle = 'compact' }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
@@ -58,6 +61,51 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
         return 'bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm border border-purple-500/50 rounded-lg p-4 shadow-lg shadow-purple-500/10';
       default:
         return 'mek-card-industrial mek-border-sharp-gold p-4';
+    }
+  };
+
+  // Card Interior Style Functions
+  const getCardInteriorClasses = () => {
+    switch (cardInteriorStyle) {
+      case 'spacious':
+        return 'flex flex-row justify-between items-center';
+      case 'modern':
+        return 'flex flex-col items-center text-center';
+      default: // compact
+        return 'flex flex-col';
+    }
+  };
+
+  const getLabelClasses = () => {
+    switch (cardInteriorStyle) {
+      case 'spacious':
+        return 'text-xs text-gray-400 uppercase tracking-wider font-normal';
+      case 'modern':
+        return 'text-sm text-gray-300 uppercase tracking-widest font-light mb-2';
+      default: // compact
+        return 'mek-label-uppercase';
+    }
+  };
+
+  const getValueClasses = () => {
+    switch (cardInteriorStyle) {
+      case 'spacious':
+        return 'text-lg font-bold';
+      case 'modern':
+        return 'text-3xl font-bold tracking-wide';
+      default: // compact
+        return '';
+    }
+  };
+
+  const getCardSpacing = () => {
+    switch (cardInteriorStyle) {
+      case 'spacious':
+        return 'space-y-3';
+      case 'modern':
+        return 'space-y-6';
+      default: // compact
+        return 'space-y-2';
     }
   };
 
@@ -190,14 +238,14 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                       {/* Gold Generation */}
                       <div>
                         <div className="mek-label-uppercase mb-2">GENERATION</div>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Base:</span>
-                            <span className="text-white">20.0/hr</span>
+                        <div className={`text-sm ${getCardSpacing()}`}>
+                          <div className={getCardInteriorClasses()}>
+                            <span className={getLabelClasses()}>Base:</span>
+                            <span className={`text-white ${getValueClasses()}`}>20.0/hr</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="mek-label-uppercase">Effective:</span>
-                            <span className="text-green-400 font-bold">24.0/hr</span>
+                          <div className={getCardInteriorClasses()}>
+                            <span className={getLabelClasses()}>Effective:</span>
+                            <span className={`text-green-400 font-bold ${getValueClasses()}`}>24.0/hr</span>
                           </div>
                         </div>
                       </div>
@@ -205,14 +253,14 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                       {/* Gold Produced */}
                       <div>
                         <div className="mek-label-uppercase mb-2">PRODUCED</div>
-                        <div className="space-y-1 text-sm">
-                          <div>
-                            <div className="mek-label-uppercase">Current:</div>
-                            <div className="mek-value-primary">12,869</div>
+                        <div className={`text-sm ${getCardSpacing()}`}>
+                          <div className={getCardInteriorClasses()}>
+                            <div className={getLabelClasses()}>Current:</div>
+                            <div className={`mek-value-primary ${getValueClasses()}`}>12,869</div>
                           </div>
-                          <div>
-                            <div className="mek-label-uppercase">All Time:</div>
-                            <div className="text-white">458,414</div>
+                          <div className={getCardInteriorClasses()}>
+                            <div className={getLabelClasses()}>All Time:</div>
+                            <div className={`text-white ${getValueClasses()}`}>458,414</div>
                           </div>
                         </div>
                       </div>
@@ -308,14 +356,14 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                     {/* Gold Generation */}
                     <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-2">GOLD GENERATION</div>
-                      <div className="space-y-2">
-                        <div>
-                          <div className="mek-label-uppercase">BASE</div>
-                          <div className="text-white">20.0/hr</div>
+                      <div className={getCardSpacing()}>
+                        <div className={getCardInteriorClasses()}>
+                          <div className={getLabelClasses()}>BASE</div>
+                          <div className={`text-white ${getValueClasses()}`}>20.0/hr</div>
                         </div>
-                        <div>
-                          <div className="mek-label-uppercase">EFFECTIVE</div>
-                          <div className="text-green-400 font-bold">24.0/hr</div>
+                        <div className={getCardInteriorClasses()}>
+                          <div className={getLabelClasses()}>EFFECTIVE</div>
+                          <div className={`text-green-400 font-bold ${getValueClasses()}`}>24.0/hr</div>
                         </div>
                       </div>
                     </div>
@@ -323,14 +371,14 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                     {/* Gold Produced */}
                     <div className={getCardClasses()}>
                       <div className="mek-label-uppercase mb-2">GOLD PRODUCED</div>
-                      <div className="space-y-2">
-                        <div>
-                          <div className="mek-label-uppercase">CURRENT OWNER</div>
-                          <div className="mek-value-primary">12,869.015</div>
+                      <div className={getCardSpacing()}>
+                        <div className={getCardInteriorClasses()}>
+                          <div className={getLabelClasses()}>CURRENT OWNER</div>
+                          <div className={`mek-value-primary ${getValueClasses()}`}>12,869.015</div>
                         </div>
-                        <div>
-                          <div className="mek-label-uppercase">ALL TIME</div>
-                          <div className="text-white">458,414.324</div>
+                        <div className={getCardInteriorClasses()}>
+                          <div className={getLabelClasses()}>ALL TIME</div>
+                          <div className={`text-white ${getValueClasses()}`}>458,414.324</div>
                         </div>
                       </div>
                     </div>
