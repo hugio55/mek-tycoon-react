@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import * as Switch from '@radix-ui/react-switch';
 import MasterRangeSystem from '@/components/MasterRangeSystem';
 import GameDataLightbox from '@/components/GameDataLightbox';
 import StoryClimbConfig from '@/components/StoryClimbConfig';
@@ -819,19 +820,22 @@ export default function AdminMasterDataPage() {
           </div>
         </div>
 
-        {/* Page Loader Toggle */}
+        {/* Page Loader Toggle - Radix UI Switch */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2 mb-6 inline-flex items-center gap-3">
-          <h2 className="text-sm font-bold text-blue-400">Page Loader</h2>
-          <button
-            onClick={handleTogglePageLoader}
-            className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-              pageLoaderDisabled
-                ? 'bg-red-900/50 border border-red-500/50 text-red-300 hover:bg-red-900/70'
-                : 'bg-green-900/50 border border-green-500/50 text-green-300 hover:bg-green-900/70'
-            }`}
+          <label htmlFor="page-loader-switch" className="text-sm font-bold text-blue-400 cursor-pointer">
+            Page Loader
+          </label>
+          <Switch.Root
+            id="page-loader-switch"
+            checked={!pageLoaderDisabled}
+            onCheckedChange={handleTogglePageLoader}
+            className="w-11 h-6 bg-gray-700 rounded-full relative data-[state=checked]:bg-green-600 transition-colors"
           >
+            <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px]" />
+          </Switch.Root>
+          <span className={`text-xs font-bold ${pageLoaderDisabled ? 'text-red-400' : 'text-green-400'}`}>
             {pageLoaderDisabled ? 'OFF' : 'ON'}
-          </button>
+          </span>
         </div>
 
         {/* Tab Navigation for All Systems */}
