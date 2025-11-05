@@ -12,10 +12,11 @@ export default function MekLayoutsPage() {
   const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent'>('clean-frames');
-  const [backdropDarkness, setBackdropDarkness] = useState(40);
-  const [cardDarkness, setCardDarkness] = useState(20);
-  const [backdropBlur, setBackdropBlur] = useState(2);
-  const [cardBackdropBlur, setCardBackdropBlur] = useState(12);
+  const [backdropDarkness, setBackdropDarkness] = useState(22);
+  const [cardDarkness, setCardDarkness] = useState(7);
+  const [backdropBlur, setBackdropBlur] = useState(0);
+  const [cardBackdropBlur, setCardBackdropBlur] = useState(9);
+  const [slidersCollapsed, setSlidersCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -152,64 +153,79 @@ export default function MekLayoutsPage() {
             {/* Divider */}
             <div className="border-t border-cyan-500/30 my-3"></div>
 
-            {/* Slider 1: Backdrop Darkness */}
+            {/* Opacity & Blur Controls - Collapsible */}
             <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Backdrop Darkness: {backdropDarkness}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={backdropDarkness}
-                onChange={(e) => setBackdropDarkness(Number(e.target.value))}
-                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
-            </div>
+              <button
+                onClick={() => setSlidersCollapsed(!slidersCollapsed)}
+                className="w-full flex items-center justify-between text-[10px] text-cyan-400 uppercase tracking-wider font-bold mb-2 hover:text-cyan-300 transition-colors"
+              >
+                <span>Opacity & Blur</span>
+                <span className="text-xs">{slidersCollapsed ? '▼' : '▲'}</span>
+              </button>
 
-            {/* Slider 2: Card Darkness */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Card Darkness: {cardDarkness}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={cardDarkness}
-                onChange={(e) => setCardDarkness(Number(e.target.value))}
-                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
-            </div>
+              {!slidersCollapsed && (
+                <div className="space-y-3">
+                  {/* Slider 1: Backdrop Darkness */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Backdrop Darkness: {backdropDarkness}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={backdropDarkness}
+                      onChange={(e) => setBackdropDarkness(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
 
-            {/* Slider 3: Backdrop Blur */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Backdrop Blur: {backdropBlur}px
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="20"
-                value={backdropBlur}
-                onChange={(e) => setBackdropBlur(Number(e.target.value))}
-                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
-            </div>
+                  {/* Slider 2: Card Darkness */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Card Darkness: {cardDarkness}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={cardDarkness}
+                      onChange={(e) => setCardDarkness(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
 
-            {/* Slider 4: Card Backdrop Blur */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Card Backdrop Blur: {cardBackdropBlur}px
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="20"
-                value={cardBackdropBlur}
-                onChange={(e) => setCardBackdropBlur(Number(e.target.value))}
-                className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
+                  {/* Slider 3: Backdrop Blur */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Backdrop Blur: {backdropBlur}px
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={backdropBlur}
+                      onChange={(e) => setBackdropBlur(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+
+                  {/* Slider 4: Card Backdrop Blur */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Card Backdrop Blur: {cardBackdropBlur}px
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={cardBackdropBlur}
+                      onChange={(e) => setCardBackdropBlur(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Current Selection Display */}
