@@ -200,6 +200,7 @@ export default function CampaignManager({
     setName("");
     setDescription("");
     setNmkrProjectId("");
+    setPolicyId("");
     setMaxNFTs("");
     setStatus("inactive");
   };
