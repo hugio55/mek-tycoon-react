@@ -29,12 +29,15 @@ function EssenceProviderWrapper({ children }: { children: ReactNode }) {
 function ContentWithLoadingState({ children }: { children: ReactNode }) {
   const { isLoading } = useLoaderContext();
 
+  // Check if loader is bypassed
+  const isBypassed = typeof window !== 'undefined' && localStorage.getItem('disablePageLoader') === 'true';
+
   return (
     <div
       style={{
-        opacity: isLoading ? 0 : 1,
-        transition: `opacity ${TIMING.FADE_DURATION}ms ease-out`,
-        pointerEvents: isLoading ? 'none' : 'auto',
+        opacity: isBypassed ? 1 : (isLoading ? 0 : 1),
+        transition: isBypassed ? 'none' : `opacity ${TIMING.FADE_DURATION}ms ease-out`,
+        pointerEvents: isBypassed ? 'auto' : (isLoading ? 'none' : 'auto'),
       }}
     >
       {children}
