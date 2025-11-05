@@ -1208,7 +1208,7 @@ function ManualWhitelistModal({
               setValidationResult(null); // Clear validation on edit
             }}
             placeholder="Paste payment addresses here (one per line)&#10;addr_test1qz04lcdw53xuhq89lw93m293e6tk82xtwzplyl66p7ajxgsaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qzm7v40&#10;addr_test1qpq3w8lqspr0vxa89n64kpq5urqvfuwvazggkvgulumgxssaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qgntca8k"
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-64 font-mono text-xs"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white h-64 font-mono text-xs focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
