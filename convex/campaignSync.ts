@@ -33,15 +33,11 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // NOTE: Count must be between 1 and 50 per NMKR API validation
+    // NOTE: API key goes in query string (lowercase 'apikey'), NOT Bearer token header
     const count = 50; // Max allowed by NMKR API
     const page = 1; // First page
     const response = await fetch(
-      `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${NMKR_API_KEY}`,
-        },
-      }
+      `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}?apikey=${NMKR_API_KEY}`
     );
 
     if (!response.ok) {
