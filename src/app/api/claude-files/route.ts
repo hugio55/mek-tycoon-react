@@ -5,19 +5,20 @@ import matter from 'gray-matter';
 
 // Paths to scan
 const PROJECT_CLAUDE_DIR = path.join(process.cwd(), '.claude');
+const PARENT_CLAUDE_DIR = path.join('C:', 'Users', 'Ben Meyers', 'Documents', 'Mek Tycoon', '.claude');
 const COMPUTER_CLAUDE_DIR = path.join('C:', 'Users', 'Ben Meyers', '.claude');
 
 interface ClaudeFile {
   name: string;
   path: string;
   type: 'command' | 'document' | 'agent' | 'config';
-  location: 'project' | 'computer';
+  location: 'project' | 'parent' | 'computer';
   description?: string;
   content: string;
   frontmatter?: Record<string, any>;
 }
 
-async function scanDirectory(dir: string, location: 'project' | 'computer'): Promise<ClaudeFile[]> {
+async function scanDirectory(dir: string, location: 'project' | 'parent' | 'computer'): Promise<ClaudeFile[]> {
   const files: ClaudeFile[] = [];
 
   try {
@@ -79,12 +80,13 @@ async function scanDirectory(dir: string, location: 'project' | 'computer'): Pro
 
 export async function GET() {
   try {
-    const [projectFiles, computerFiles] = await Promise.all([
+    const [projectFiles, parentFiles, computerFiles] = await Promise.all([
       scanDirectory(PROJECT_CLAUDE_DIR, 'project'),
+      scanDirectory(PARENT_CLAUDE_DIR, 'parent'),
       scanDirectory(COMPUTER_CLAUDE_DIR, 'computer')
     ]);
 
-    const allFiles = [...projectFiles, ...computerFiles];
+    const allFiles = [...projectFiles, ...parentFiles, ...computerFiles];
 
     return NextResponse.json({
       success: true,
@@ -92,6 +94,7 @@ export async function GET() {
       stats: {
         total: allFiles.length,
         project: projectFiles.length,
+        parent: parentFiles.length,
         computer: computerFiles.length,
         byType: {
           commands: allFiles.filter(f => f.type === 'command').length,

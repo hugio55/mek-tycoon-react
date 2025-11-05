@@ -31,6 +31,7 @@ import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
 import NebulaCheckbox from '@/components/controls/NebulaCheckbox';
 import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
+import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
