@@ -229,7 +229,22 @@ export default function MekLayoutsPage() {
                     />
                   </div>
 
-                  {/* Slider 5: Header Gap (Top Padding) */}
+                  {/* Slider 5: Header Bottom Padding */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Header Bottom Padding: {headerBottomPadding}px
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="40"
+                      value={headerBottomPadding}
+                      onChange={(e) => setHeaderBottomPadding(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+
+                  {/* Slider 6: Header Gap (Top Padding) */}
                   <div>
                     <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
                       Content Top Padding: {headerGap}px
@@ -244,7 +259,7 @@ export default function MekLayoutsPage() {
                     />
                   </div>
 
-                  {/* Slider 6: Content Spacing (space-y gap) */}
+                  {/* Slider 7: Content Spacing (space-y gap) */}
                   <div>
                     <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
                       Content Card Spacing: {contentSpacing}px
@@ -316,6 +331,8 @@ export default function MekLayoutsPage() {
         onCardBackdropBlurChange={setCardBackdropBlur}
         headerGap={headerGap}
         onHeaderGapChange={setHeaderGap}
+        headerBottomPadding={headerBottomPadding}
+        onHeaderBottomPaddingChange={setHeaderBottomPadding}
         contentSpacing={contentSpacing}
         onContentSpacingChange={setContentSpacing}
       />
