@@ -306,23 +306,23 @@ export default function MekManagementLightbox({
 
                   {/* Real-time Availability Feedback */}
                   {tempName.trim().length >= 1 && !error && (
-                    <div className="mt-2 text-sm text-center">
+                    <div className="mt-3 text-sm text-center">
                       {isTyping ? (
-                        <div className="text-yellow-400 flex items-center justify-center gap-2">
-                          <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                          Checking availability...
+                        <div className="text-yellow-400 flex items-center justify-center gap-2 font-medium">
+                          <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="uppercase tracking-wider text-xs">Checking availability...</span>
                         </div>
                       ) : checkAvailability === undefined ? (
-                        <div className="text-yellow-400 flex items-center justify-center gap-2">
-                          <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                          Checking availability...
+                        <div className="text-yellow-400 flex items-center justify-center gap-2 font-medium">
+                          <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="uppercase tracking-wider text-xs">Checking availability...</span>
                         </div>
                       ) : checkAvailability.available ? (
-                        <div className="text-green-400">
+                        <div className="text-green-400 font-medium bg-green-500/10 border border-green-500/30 rounded py-2 px-3">
                           ✓ "{tempName.trim()}" is available
                         </div>
                       ) : (
-                        <div className="text-red-400">
+                        <div className="text-red-400 font-medium bg-red-500/10 border border-red-500/30 rounded py-2 px-3">
                           ✗ {checkAvailability.error}
                         </div>
                       )}

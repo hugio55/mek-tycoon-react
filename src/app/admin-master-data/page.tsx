@@ -3389,6 +3389,32 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
+                  {/* Color Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Color Toggle Switch
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center gap-3 min-h-[300px] text-[2em]">
+                      <ColorToggleSwitch color="red" />
+                      <ColorToggleSwitch color="yellow" />
+                      <ColorToggleSwitch color="blue" />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS (SCSS)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> 3D ball, radial gradients, 3 color variants</div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
           </div>
