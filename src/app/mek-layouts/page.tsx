@@ -1,56 +1,33 @@
 'use client';
 
 import { useState } from 'react';
+import MekProfileLightbox from '@/components/MekProfileLightbox';
 
 export default function MekLayoutsPage() {
-  const [activeLayout, setActiveLayout] = useState<1 | 2 | 3>(1);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <div className="text-center">
         {/* Page Title */}
-        <h1 className="text-3xl font-bold mb-4 text-center">Mek Detail Page - Wireframe Options</h1>
+        <h1 className="text-4xl font-bold mb-6 text-yellow-400 uppercase tracking-wider font-orbitron">
+          Mek Profile
+        </h1>
 
-        {/* Layout Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-8 flex-wrap">
-          <button
-            onClick={() => setActiveLayout(1)}
-            className={`px-6 py-3 rounded ${
-              activeLayout === 1
-                ? 'bg-yellow-500 text-black font-bold'
-                : 'bg-gray-800 text-white border border-gray-600'
-            }`}
-          >
-            Layout 1: Three-Column (Sidebars)
-          </button>
-          <button
-            onClick={() => setActiveLayout(2)}
-            className={`px-6 py-3 rounded ${
-              activeLayout === 2
-                ? 'bg-yellow-500 text-black font-bold'
-                : 'bg-gray-800 text-white border border-gray-600'
-            }`}
-          >
-            Layout 2: Two-Column Asymmetric
-          </button>
-          <button
-            onClick={() => setActiveLayout(3)}
-            className={`px-6 py-3 rounded ${
-              activeLayout === 3
-                ? 'bg-yellow-500 text-black font-bold'
-                : 'bg-gray-800 text-white border border-gray-600'
-            }`}
-          >
-            Layout 3: Current (Full-Width Stack)
-          </button>
-        </div>
-
-        {/* Render Active Layout */}
-        {activeLayout === 1 && <ThreeColumnLayout />}
-        {activeLayout === 2 && <TwoColumnAsymmetricLayout />}
-        {activeLayout === 3 && <FullWidthStackLayout />}
-
+        {/* Open Lightbox Button */}
+        <button
+          onClick={() => setIsLightboxOpen(true)}
+          className="mek-button-primary px-8 py-4 text-lg font-bold uppercase tracking-wider"
+        >
+          View Mek Details
+        </button>
       </div>
+
+      {/* Lightbox Modal */}
+      <MekProfileLightbox
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+      />
     </div>
   );
 }

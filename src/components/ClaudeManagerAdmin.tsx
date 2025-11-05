@@ -6,7 +6,7 @@ interface ClaudeFile {
   name: string;
   path: string;
   type: 'command' | 'document' | 'agent' | 'config';
-  location: 'project' | 'computer';
+  location: 'project' | 'parent' | 'computer';
   description?: string;
   content: string;
   frontmatter?: Record<string, any>;
@@ -18,6 +18,7 @@ interface ClaudeFilesResponse {
   stats: {
     total: number;
     project: number;
+    parent: number;
     computer: number;
     byType: {
       commands: number;
@@ -33,7 +34,7 @@ export default function ClaudeManagerAdmin() {
   const [loading, setLoading] = useState(true);
   const [expandedFile, setExpandedFile] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'command' | 'document' | 'agent' | 'config'>('all');
-  const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'computer'>('all');
+  const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'parent' | 'computer'>('all');
 
   useEffect(() => {
     loadFiles();
@@ -69,9 +70,13 @@ export default function ClaudeManagerAdmin() {
   };
 
   const getLocationBadge = (location: string) => {
-    return location === 'project'
-      ? <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded">Project</span>
-      : <span className="px-2 py-1 text-xs bg-purple-500/20 text-purple-300 rounded">Computer-Wide</span>;
+    if (location === 'project') {
+      return <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded">Project</span>;
+    } else if (location === 'parent') {
+      return <span className="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded">Mek Tycoon</span>;
+    } else {
+      return <span className="px-2 py-1 text-xs bg-purple-500/20 text-purple-300 rounded">Computer-Wide</span>;
+    }
   };
 
   if (loading) {
@@ -93,7 +98,7 @@ export default function ClaudeManagerAdmin() {
   return (
     <div className="p-8 space-y-6">
       {/* Header Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
           <div className="text-gray-400 text-sm">Total Files</div>
           <div className="text-2xl font-bold text-white">{data.stats.total}</div>
@@ -101,6 +106,10 @@ export default function ClaudeManagerAdmin() {
         <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
           <div className="text-blue-400 text-sm">Project Files</div>
           <div className="text-2xl font-bold text-blue-300">{data.stats.project}</div>
+        </div>
+        <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
+          <div className="text-green-400 text-sm">Mek Tycoon</div>
+          <div className="text-2xl font-bold text-green-300">{data.stats.parent}</div>
         </div>
         <div className="bg-purple-900/20 border border-purple-700 rounded-lg p-4">
           <div className="text-purple-400 text-sm">Computer-Wide</div>
@@ -155,6 +164,12 @@ export default function ClaudeManagerAdmin() {
             className={`px-3 py-1 text-sm rounded ${filterLocation === 'project' ? 'bg-blue-500 text-black' : 'bg-gray-700 text-gray-300'}`}
           >
             Project
+          </button>
+          <button
+            onClick={() => setFilterLocation('parent')}
+            className={`px-3 py-1 text-sm rounded ${filterLocation === 'parent' ? 'bg-green-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            Mek Tycoon
           </button>
           <button
             onClick={() => setFilterLocation('computer')}
@@ -246,9 +261,10 @@ export default function ClaudeManagerAdmin() {
       <div className="mt-8 p-4 bg-blue-900/10 border border-blue-700/30 rounded-lg">
         <div className="text-sm text-blue-300 space-y-2">
           <div><strong>Slash Commands:</strong> Type <code className="bg-black/30 px-2 py-1 rounded">/command-name</code> in Claude to use</div>
-          <div><strong>Project Files:</strong> {PROJECT_CLAUDE_DIR}</div>
-          <div><strong>Computer-Wide Files:</strong> C:\Users\Ben Meyers\.claude\</div>
-          <div><strong>Note:</strong> Computer-wide files are available to ALL Claude sessions on this computer</div>
+          <div><strong>Agents:</strong> Type <code className="bg-black/30 px-2 py-1 rounded">@agent-name</code> in Claude to use (or launch via Task tool)</div>
+          <div><strong>Project Files:</strong> .claude/ (this project only)</div>
+          <div><strong>Mek Tycoon Files:</strong> C:\Users\Ben Meyers\Documents\Mek Tycoon\.claude\ (shared across staging & main)</div>
+          <div><strong>Computer-Wide Files:</strong> C:\Users\Ben Meyers\.claude\ (all projects on this computer)</div>
         </div>
       </div>
     </div>
