@@ -3628,21 +3628,25 @@ export default function AdminMasterDataPage() {
                         iconClass="fab fa-facebook"
                         label="Facebook"
                         onClick={() => console.log('Facebook clicked')}
+                        mekImage="/mek-images/500px/ht2-bi1-lg2.webp"
                       />
                       <IsometricSocialButton
                         iconClass="fab fa-twitter"
                         label="Twitter"
                         onClick={() => console.log('Twitter clicked')}
+                        mekImage="/mek-images/500px/cl3-jg1-nm1.webp"
                       />
                       <IsometricSocialButton
                         iconClass="fab fa-instagram"
                         label="Instagram"
                         onClick={() => console.log('Instagram clicked')}
+                        mekImage="/mek-images/500px/ki3-cb1-ji1.webp"
                       />
                       <IsometricSocialButton
                         iconClass="fab fa-youtube"
                         label="Youtube"
                         onClick={() => console.log('Youtube clicked')}
+                        mekImage="/mek-images/500px/ed3-dc1-il1.webp"
                       />
                     </div>
 

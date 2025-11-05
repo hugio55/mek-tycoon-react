@@ -476,6 +476,226 @@ function MekManagementConcept5({ onClose }: { onClose: () => void }) {
   return createPortal(modalContent, document.body);
 }
 
+// CONCEPT 7: Compact Designation Cards
+// Multiple creative single-card layouts combining all 4 fields
+function MekManagementConcept7({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [cardVariant, setCardVariant] = useState<1 | 2 | 3 | 4>(1);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Modal Card */}
+      <div
+        className="relative z-10 w-full max-w-4xl mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-black/80 backdrop-blur-md border-2 border-yellow-500/50 rounded-xl shadow-2xl p-8">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-20"
+          >
+            <span className="text-yellow-400 text-3xl font-bold">×</span>
+          </button>
+
+          {/* Header */}
+          <h2 className="text-center text-yellow-400 text-2xl font-bold uppercase tracking-wider mb-6">
+            DESIGNATION CARD CONCEPTS
+          </h2>
+
+          {/* Variant Selector */}
+          <div className="flex justify-center gap-2 mb-6">
+            {[1, 2, 3, 4].map((v) => (
+              <button
+                key={v}
+                onClick={() => setCardVariant(v as 1 | 2 | 3 | 4)}
+                className={`px-4 py-2 text-sm font-bold uppercase rounded transition-all ${
+                  cardVariant === v
+                    ? 'bg-yellow-500 text-black'
+                    : 'bg-black/60 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20'
+                }`}
+              >
+                Layout {v}
+              </button>
+            ))}
+          </div>
+
+          {/* Card Variants Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* LAYOUT 1: Split Hero - Rank dominant on left */}
+            {cardVariant === 1 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 1: Split Hero</div>
+                <div className="grid grid-cols-[auto_1fr] gap-4">
+                  {/* Left: Giant Rank */}
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-l-4 border-yellow-500 rounded-lg px-6 py-4">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Rank</div>
+                    <div className="text-yellow-400 text-5xl font-bold leading-none">2985</div>
+                  </div>
+                  {/* Right: Other 3 fields stacked */}
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Mekanism</div>
+                      <div className="text-white text-lg font-bold">#1234</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Corporation</div>
+                      <div className="text-cyan-400 text-sm">Apex Industries</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wider">Employee ID</div>
+                      <div className="text-yellow-400 text-sm">Golden Striker</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 2: Badge Cluster - Small compact badges */}
+            {cardVariant === 2 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 2: Badge Cluster</div>
+                <div className="space-y-2">
+                  {/* Rank - Full width highlight */}
+                  <div className="bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-transparent border-l-4 border-yellow-500 px-4 py-3 rounded">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider mr-3">Rank</span>
+                    <span className="text-yellow-400 text-2xl font-bold">2985</span>
+                  </div>
+                  {/* Other fields as inline badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="bg-black/60 border border-gray-600/50 rounded px-3 py-2">
+                      <span className="text-[9px] text-gray-400 uppercase tracking-wider mr-2">Mek</span>
+                      <span className="text-white font-bold">#1234</span>
+                    </div>
+                    <div className="bg-cyan-500/10 border border-cyan-500/30 rounded px-3 py-2">
+                      <span className="text-[9px] text-cyan-400 uppercase tracking-wider mr-2">Corp</span>
+                      <span className="text-cyan-400 font-bold">Apex Industries</span>
+                    </div>
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded px-3 py-2">
+                      <span className="text-[9px] text-yellow-400 uppercase tracking-wider mr-2">ID</span>
+                      <span className="text-yellow-400 font-bold">Golden Striker</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 3: 2x2 Grid - Rank takes upper-left, others fill remaining */}
+            {cardVariant === 3 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg p-6">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-4 text-center">Layout 3: 2×2 Grid</div>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Top-left: Rank (larger) */}
+                  <div className="row-span-2 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-lg flex flex-col items-center justify-center p-4">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Rank</div>
+                    <div className="text-yellow-400 text-6xl font-bold leading-none">2985</div>
+                  </div>
+                  {/* Top-right: Mek # */}
+                  <div className="bg-black/60 border border-gray-600/50 rounded-lg p-3">
+                    <div className="text-[9px] text-gray-400 uppercase tracking-wider">Mekanism</div>
+                    <div className="text-white text-xl font-bold">#1234</div>
+                  </div>
+                  {/* Bottom-right: Corp + ID stacked */}
+                  <div className="bg-black/60 border border-gray-600/50 rounded-lg p-3 space-y-2">
+                    <div>
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider">Corp</div>
+                      <div className="text-cyan-400 text-xs font-bold">Apex Ind.</div>
+                    </div>
+                    <div>
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider">ID</div>
+                      <div className="text-yellow-400 text-xs font-bold">G. Striker</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LAYOUT 4: Horizontal Strip - Yellow label strip with data below */}
+            {cardVariant === 4 && (
+              <div className="bg-black/60 border-2 border-yellow-500/40 rounded-lg overflow-hidden">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-0 text-center p-2 bg-black/40">Layout 4: Label Strip</div>
+                {/* Yellow label strip */}
+                <div className="bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-yellow-500/30 border-y-2 border-yellow-500/40 py-2 px-4 flex items-center justify-between">
+                  <span className="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">RANK</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">MEKANISM</span>
+                  <span className="text-[10px] text-cyan-400 uppercase tracking-wider font-bold">CORPORATION</span>
+                  <span className="text-[10px] text-yellow-400 uppercase tracking-wider font-bold">EMPLOYEE</span>
+                </div>
+                {/* Data row */}
+                <div className="py-4 px-4 flex items-center justify-between">
+                  <div className="text-yellow-400 text-3xl font-bold">2985</div>
+                  <div className="text-white text-xl font-bold">#1234</div>
+                  <div className="text-cyan-400 text-sm font-bold">Apex Ind.</div>
+                  <div className="text-yellow-400 text-sm font-bold">G. Striker</div>
+                </div>
+              </div>
+            )}
+
+            {/* Right side: Implementation example */}
+            <div className="bg-gray-900/60 border border-gray-700/50 rounded-lg p-6">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-4">Tailwind Classes Used</div>
+              <div className="text-[11px] font-mono text-gray-300 space-y-3">
+                {cardVariant === 1 && (
+                  <>
+                    <div><span className="text-yellow-400">Container:</span> grid grid-cols-[auto_1fr] gap-4</div>
+                    <div><span className="text-yellow-400">Rank Box:</span> bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-l-4 border-yellow-500</div>
+                    <div><span className="text-yellow-400">Right Column:</span> space-y-3</div>
+                  </>
+                )}
+                {cardVariant === 2 && (
+                  <>
+                    <div><span className="text-yellow-400">Rank Bar:</span> bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-transparent border-l-4 border-yellow-500</div>
+                    <div><span className="text-yellow-400">Badge Row:</span> flex flex-wrap gap-2</div>
+                    <div><span className="text-yellow-400">Badge:</span> bg-black/60 border border-gray-600/50 rounded px-3 py-2</div>
+                  </>
+                )}
+                {cardVariant === 3 && (
+                  <>
+                    <div><span className="text-yellow-400">Container:</span> grid grid-cols-2 gap-3</div>
+                    <div><span className="text-yellow-400">Rank Cell:</span> row-span-2 (spans 2 rows)</div>
+                    <div><span className="text-yellow-400">Other Cells:</span> Single row spans</div>
+                  </>
+                )}
+                {cardVariant === 4 && (
+                  <>
+                    <div><span className="text-yellow-400">Label Strip:</span> bg-gradient-to-r from-yellow-500/30 via-yellow-500/20 to-yellow-500/30 border-y-2</div>
+                    <div><span className="text-yellow-400">Data Row:</span> flex items-center justify-between</div>
+                    <div><span className="text-yellow-400">Typography:</span> Different sizes for visual hierarchy</div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-700/50">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Design Notes</div>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  {cardVariant === 1 && "Split layout emphasizes Rank with a dominant left panel. Creates strong visual hierarchy with the most important data (Rank) taking center stage."}
+                  {cardVariant === 2 && "Badge cluster uses small, compact components. Rank gets highlight bar treatment while other fields become inline badges. Very space-efficient."}
+                  {cardVariant === 3 && "2×2 grid gives Rank prominent position (upper-left, double height). Other fields fill remaining cells. Balanced and symmetrical."}
+                  {cardVariant === 4 && "Horizontal strip uses label row above data row. All fields get equal visual weight. Clean and organized like a data table."}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
+}
+
 // CONCEPT 6: Neon Holographic (Cyan/Magenta Theme)
 // Futuristic holographic aesthetic with neon glows, scan lines, and animated effects
 function MekManagementConcept6({ onClose }: { onClose: () => void }) {
@@ -660,7 +880,7 @@ function MekManagementConcept6({ onClose }: { onClose: () => void }) {
 // Main component with toggle controls
 export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
-  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6>(3);
+  const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(3);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -745,6 +965,16 @@ export default function MekManagementLightboxConcepts() {
               }`}
             >
               Concept 6: Neon
+            </button>
+            <button
+              onClick={() => setActiveConcept(7)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                activeConcept === 7
+                  ? 'bg-orange-500 text-black border-2 border-orange-400'
+                  : 'bg-black/80 text-orange-400 border-2 border-orange-500/50 hover:bg-orange-500/20'
+              }`}
+            >
+              Concept 7: Cards
             </button>
           </div>
         )}

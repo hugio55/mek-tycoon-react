@@ -59,3 +59,18 @@
   color: rgba(256, 256, 256, 1);
   font-size: 30pt;
 }
+
+.isometric-social .mek-image-container {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.isometric-social .mek-image {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
