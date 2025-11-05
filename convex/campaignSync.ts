@@ -73,8 +73,8 @@ async function fetchProjectStats(projectId: string) {
   console.log("[SYNC] API Key present:", !!NMKR_API_KEY, "Length:", NMKR_API_KEY.length);
 
   try {
-    // NOTE: GetProjectInfo uses query parameter for API key, not header
-    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${projectId}?apiKey=${NMKR_API_KEY}`;
+    // NOTE: Correct endpoint is GetProject (not GetProjectInfo), lowercase apikey
+    const url = `${NMKR_API_BASE}/v2/GetProject/${projectId}?apikey=${NMKR_API_KEY}`;
     console.log("[SYNC] GET request to:", url.replace(NMKR_API_KEY, "***KEY***"));
 
     const response = await fetch(url);
