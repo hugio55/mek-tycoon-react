@@ -62,15 +62,21 @@
 
 .isometric-social .mek-image-container {
   position: absolute;
-  top: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
 }
 
 .isometric-social .mek-image {
   display: block;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }

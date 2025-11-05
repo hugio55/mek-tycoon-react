@@ -422,42 +422,39 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
               <div className="mb-6">
                 <h2 className="text-3xl font-bold mb-6" style={{
                   fontFamily: 'Inter, sans-serif',
-                  background: 'linear-gradient(135deg, #ddd6fe 0%, #bfdbfe 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#e0f2fe',
                   letterSpacing: '-0.01em'
                 }}>
                   Your NFT Reserved
                 </h2>
 
-                <div className="relative w-full max-w-[400px] mx-auto mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-900/30 to-blue-900/30 backdrop-blur-md border border-violet-400/30 shadow-2xl shadow-violet-500/20">
+                <div className="relative w-full max-w-[400px] mx-auto mb-6 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                   <img
                     src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
                     alt={activeReservation.nft.name}
                     className="w-full h-auto"
                     onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-violet-900/50 via-transparent to-transparent pointer-events-none"></div>
                 </div>
 
-                <div className="mb-6 p-5 bg-gradient-to-br from-violet-500/10 to-blue-500/10 border border-violet-400/20 rounded-2xl backdrop-blur-md">
-                  <h3 className="text-4xl font-bold mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0e7ff', letterSpacing: '-0.02em' }}>
+                <div className="mb-6 p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
+                  <h3 className="text-4xl font-bold mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
                     {activeReservation.nft.name}
                   </h3>
-                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#c7d2fe', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
                     You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
                   </p>
 
                   <div className={`mt-5 p-4 rounded-xl backdrop-blur-sm ${
                     isInGracePeriod ? 'bg-red-500/20 border border-red-400/50' :
                     activeReservation.isPaymentWindowOpen ? 'bg-blue-500/20 border border-blue-400/50' :
-                    'bg-violet-500/20 border border-violet-400/50'
+                    'bg-cyan-500/20 border border-cyan-400/50'
                   }`}>
                     <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: '#d4d4d8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                       {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
                     </div>
                     <div className={`font-mono text-4xl font-bold ${
-                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-violet-300'
+                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-cyan-300'
                     }`}>
                       {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
                     </div>
@@ -476,9 +473,9 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 className="w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 hover:brightness-110"
                 style={{
                   fontFamily: 'Inter, sans-serif',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
                   color: '#ffffff',
-                  boxShadow: '0 6px 24px rgba(139, 92, 246, 0.4)',
+                  boxShadow: '0 6px 24px rgba(6, 182, 212, 0.4)',
                   border: 'none',
                   letterSpacing: '0.02em'
                 }}
@@ -623,19 +620,56 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
         {/* Modal container */}
         <div
-          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
+          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
+          style={{
+            borderColor: lightboxVariation === "modern" ? 'rgba(34, 211, 238, 0.5)' :
+                         lightboxVariation === "elegant" ? 'rgba(245, 158, 11, 0.5)' :
+                         'rgba(234, 179, 8, 0.5)',
+            boxShadow: lightboxVariation === "modern" ? '0 0 30px rgba(6, 182, 212, 0.3)' :
+                       lightboxVariation === "elegant" ? '0 0 30px rgba(251, 191, 36, 0.3)' :
+                       '0 0 30px rgba(234, 179, 8, 0.3)'
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Industrial corner accents */}
-          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/70"></div>
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/70"></div>
+          <div
+            className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2"
+            style={{
+              borderColor: lightboxVariation === "modern" ? 'rgba(34, 211, 238, 0.7)' :
+                           lightboxVariation === "elegant" ? 'rgba(245, 158, 11, 0.7)' :
+                           'rgba(234, 179, 8, 0.7)'
+            }}
+          ></div>
+          <div
+            className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2"
+            style={{
+              borderColor: lightboxVariation === "modern" ? 'rgba(34, 211, 238, 0.7)' :
+                           lightboxVariation === "elegant" ? 'rgba(245, 158, 11, 0.7)' :
+                           'rgba(234, 179, 8, 0.7)'
+            }}
+          ></div>
 
           {renderContent()}
 
           {/* Close button */}
           <button
             onClick={handleCancel}
-            className="absolute top-2 right-2 text-gray-500 hover:text-yellow-400 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 hover:border-yellow-500/50 bg-black/80 backdrop-blur-sm rounded"
+            className="absolute top-2 right-2 text-gray-500 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 bg-black/80 backdrop-blur-sm rounded"
+            style={{
+              color: '#9ca3af',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = lightboxVariation === "modern" ? '#22d3ee' :
+                                             lightboxVariation === "elegant" ? '#f59e0b' :
+                                             '#eab308';
+              e.currentTarget.style.borderColor = lightboxVariation === "modern" ? 'rgba(34, 211, 238, 0.5)' :
+                                                   lightboxVariation === "elegant" ? 'rgba(245, 158, 11, 0.5)' :
+                                                   'rgba(234, 179, 8, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#9ca3af';
+              e.currentTarget.style.borderColor = 'rgb(75, 85, 99)';
+            }}
             title="Cancel and close"
           >
             <svg

@@ -998,6 +998,7 @@ export default function MekManagementLightboxConcepts() {
           {activeConcept === 4 && <MekManagementConcept4 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 5 && <MekManagementConcept5 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 6 && <MekManagementConcept6 onClose={() => setShowConcepts(false)} />}
+          {activeConcept === 7 && <MekManagementConcept7 onClose={() => setShowConcepts(false)} />}
         </>
       )}
     </>
