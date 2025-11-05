@@ -82,32 +82,36 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                   </div>
                 </div>
 
-                {/* MOBILE: Primary Info Panel (Designation + Rank + Operator grouped) */}
-                <div className="lg:hidden border-2 border-yellow-500 bg-gray-900/50 p-4">
-                  <div className="text-xs text-yellow-500 font-bold mb-3">MEK INFORMATION</div>
+                {/* MOBILE: Primary Info Panel (Designation with 4 fields) */}
+                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold p-4">
+                  <div className="mek-label-uppercase mb-3">MEK INFORMATION</div>
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Designation */}
-                    <div className="col-span-2 border border-yellow-500/30 bg-gray-800/50 p-3">
-                      <div className="text-xs text-yellow-500 font-bold mb-1">DESIGNATION</div>
-                      <div className="text-white font-bold">Mekanism #1234</div>
+                    {/* Mekanism Number */}
+                    <div className="col-span-2 bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <div className="mek-label-uppercase mb-1">MEKANISM</div>
+                      <div className="text-white font-bold relative z-10">#1234</div>
                     </div>
 
                     {/* Rank */}
-                    <div className="border border-yellow-500/30 bg-gray-800/50 p-3">
-                      <div className="text-xs text-yellow-500 font-bold mb-1">RANK</div>
-                      <div className="text-white text-xl font-bold">2985</div>
+                    <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <div className="mek-label-uppercase mb-1">RANK</div>
+                      <div className="mek-value-primary text-xl relative z-10">2985</div>
                     </div>
 
-                    {/* Active Status */}
-                    <div className="border border-cyan-500/30 bg-gray-800/50 p-3">
-                      <div className="text-xs text-cyan-500 font-bold mb-1">STATUS</div>
-                      <div className="text-white">IDLE</div>
+                    {/* Corporation */}
+                    <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <div className="mek-label-uppercase mb-1">CORP</div>
+                      <div className="text-white text-sm relative z-10">Apex Ind.</div>
                     </div>
 
-                    {/* Operator */}
-                    <div className="col-span-2 border border-yellow-500/30 bg-gray-800/50 p-3">
-                      <div className="text-xs text-yellow-500 font-bold mb-1">OPERATOR</div>
-                      <div className="text-white text-sm break-all">staked9...egjf8r</div>
+                    {/* Employee ID / Custom Name */}
+                    <div className="col-span-2 bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                      <div className="mek-label-uppercase mb-1">EMPLOYEE ID</div>
+                      <div className="text-white text-sm break-all relative z-10">Golden Striker</div>
                     </div>
                   </div>
                 </div>
@@ -115,32 +119,34 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 {/* MOBILE: Level & Gold Panel (grouped together) */}
                 <div className="lg:hidden space-y-3">
                   {/* Level Progress */}
-                  <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
-                    <div className="text-xs text-purple-500 font-bold mb-2">LEVEL PROGRESS</div>
+                  <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className="mek-label-uppercase mb-2">LEVEL PROGRESS</div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span>LEVEL 1</span>
-                      <span>LEVEL 2</span>
+                      <span className="text-gray-400">LEVEL 1</span>
+                      <span className="text-gray-400">LEVEL 2</span>
                     </div>
-                    <div className="w-full h-4 border border-gray-600 bg-gray-800 mb-2">
-                      <div className="h-full w-3/4 bg-yellow-500"></div>
+                    <div className="relative w-full h-4 bg-black/60 border border-yellow-500/30 mb-2 overflow-hidden">
+                      <div className="h-full w-3/4 bg-gradient-to-r from-yellow-500 to-yellow-600" style={{
+                        boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
+                      }}></div>
                     </div>
                     <div className="text-xs text-gray-400 text-center">6,720 / 10,000 XP</div>
                   </div>
 
                   {/* Gold Stats Combined */}
-                  <div className="border-2 border-green-500 bg-gray-900/50 p-4">
-                    <div className="text-xs text-green-500 font-bold mb-3">GOLD STATS</div>
+                  <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className="mek-label-uppercase mb-3">GOLD STATS</div>
                     <div className="grid grid-cols-2 gap-4">
                       {/* Gold Generation */}
                       <div>
-                        <div className="text-xs text-gray-400 mb-2">GENERATION</div>
+                        <div className="mek-label-uppercase mb-2">GENERATION</div>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-400">Base:</span>
                             <span className="text-white">20.0/hr</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-green-400 font-bold">Effective:</span>
+                            <span className="mek-label-uppercase">Effective:</span>
                             <span className="text-green-400 font-bold">24.0/hr</span>
                           </div>
                         </div>
@@ -148,14 +154,14 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
                       {/* Gold Produced */}
                       <div>
-                        <div className="text-xs text-gray-400 mb-2">PRODUCED</div>
+                        <div className="mek-label-uppercase mb-2">PRODUCED</div>
                         <div className="space-y-1 text-sm">
                           <div>
-                            <div className="text-xs text-gray-400">Current:</div>
-                            <div className="text-white">12,869</div>
+                            <div className="mek-label-uppercase">Current:</div>
+                            <div className="mek-value-primary">12,869</div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-400">All Time:</div>
+                            <div className="mek-label-uppercase">All Time:</div>
                             <div className="text-white">458,414</div>
                           </div>
                         </div>
@@ -164,8 +170,8 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                   </div>
 
                   {/* Active Modifiers */}
-                  <div className="border-2 border-green-500 bg-gray-900/50 p-4">
-                    <div className="text-xs text-green-500 font-bold mb-2">ACTIVE MODIFIERS</div>
+                  <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                    <div className="mek-label-uppercase mb-2">ACTIVE MODIFIERS</div>
                     <div className="text-sm space-y-1">
                       <div className="text-green-400">+2.5 gold/hr</div>
                       <div className="text-green-400">+5% gold rate</div>
@@ -179,33 +185,50 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
                   {/* LEFT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* Designation */}
-                    <div className="border-2 border-yellow-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-yellow-500 font-bold mb-2">DESIGNATION</div>
-                      <div className="text-white font-bold">Mekanism #1234</div>
-                    </div>
+                    {/* Designation Section - All 4 fields grouped */}
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-3">DESIGNATION</div>
+                      <div className="space-y-3">
+                        {/* Mekanism Number */}
+                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                          <div className="mek-label-uppercase mb-1">MEKANISM</div>
+                          <div className="text-white font-bold relative z-10">#1234</div>
+                        </div>
 
-                    {/* Rank */}
-                    <div className="border-2 border-yellow-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-yellow-500 font-bold mb-2">RANK</div>
-                      <div className="text-white text-2xl font-bold">2985</div>
-                    </div>
+                        {/* Rank */}
+                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                          <div className="mek-label-uppercase mb-1">RANK</div>
+                          <div className="mek-value-primary text-2xl relative z-10">2985</div>
+                        </div>
 
-                    {/* Operator/Corporation */}
-                    <div className="border-2 border-yellow-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-yellow-500 font-bold mb-2">OPERATOR</div>
-                      <div className="text-white text-sm break-all">staked9...egjf8r</div>
+                        {/* Corporation */}
+                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                          <div className="mek-label-uppercase mb-1">CORPORATION</div>
+                          <div className="text-white text-sm relative z-10">Apex Industries</div>
+                        </div>
+
+                        {/* Employee ID / Custom Name */}
+                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                          <div className="mek-label-uppercase mb-1">EMPLOYEE ID</div>
+                          <div className="text-white text-sm relative z-10">Golden Striker</div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Active Status */}
-                    <div className="border-2 border-cyan-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-cyan-500 font-bold mb-2">IDLE</div>
-                      <div className="text-white">Toggle Switch</div>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-2">STATUS</div>
+                      <div className="text-white">IDLE</div>
+                      <div className="mt-3 text-xs text-gray-400">Toggle Switch</div>
                     </div>
 
                     {/* Active Modifiers */}
-                    <div className="border-2 border-green-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-green-500 font-bold mb-2">ACTIVE MODIFIERS</div>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-2">ACTIVE MODIFIERS</div>
                       <div className="text-sm space-y-1">
                         <div className="text-green-400">+2.5 gold/hr</div>
                         <div className="text-green-400">+5% gold rate</div>
@@ -216,10 +239,11 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
                   {/* CENTER - MEK IMAGE */}
                   <div className="lg:col-span-6 flex items-start justify-center">
-                    <div className="border-4 border-blue-500 bg-gray-900/50 p-8 w-full">
-                      <div className="text-xs text-blue-500 font-bold mb-4 text-center">MEK IMAGE AREA</div>
-                      <div className="w-full aspect-square max-w-md mx-auto border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
-                        <span className="text-gray-500 text-center">Large Mek Image<br/>400x400</span>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-8 w-full">
+                      <div className="mek-label-uppercase mb-4 text-center">MEK IMAGE AREA</div>
+                      <div className="w-full aspect-square max-w-md mx-auto bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                        <span className="text-gray-500 text-center relative z-10">Large Mek Image<br/>400x400</span>
                       </div>
                     </div>
                   </div>
@@ -227,43 +251,45 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                   {/* RIGHT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
                     {/* Level Progress */}
-                    <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-purple-500 font-bold mb-2">LEVEL PROGRESS</div>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-2">LEVEL PROGRESS</div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>LEVEL 1</span>
-                        <span>LEVEL 2</span>
+                        <span className="text-gray-400">LEVEL 1</span>
+                        <span className="text-gray-400">LEVEL 2</span>
                       </div>
-                      <div className="w-full h-4 border border-gray-600 bg-gray-800 mb-2">
-                        <div className="h-full w-3/4 bg-yellow-500"></div>
+                      <div className="relative w-full h-4 bg-black/60 border border-yellow-500/30 mb-2 overflow-hidden">
+                        <div className="h-full w-3/4 bg-gradient-to-r from-yellow-500 to-yellow-600" style={{
+                          boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
+                        }}></div>
                       </div>
                       <div className="text-xs text-gray-400 text-center">6,720 / 10,000 XP</div>
                     </div>
 
                     {/* Gold Generation */}
-                    <div className="border-2 border-green-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-green-500 font-bold mb-2">GOLD GENERATION</div>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-2">GOLD GENERATION</div>
                       <div className="space-y-2">
                         <div>
-                          <div className="text-xs text-gray-400">BASE</div>
+                          <div className="mek-label-uppercase">BASE</div>
                           <div className="text-white">20.0/hr</div>
                         </div>
                         <div>
-                          <div className="text-xs text-green-400 font-bold">EFFECTIVE</div>
+                          <div className="mek-label-uppercase">EFFECTIVE</div>
                           <div className="text-green-400 font-bold">24.0/hr</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Gold Produced */}
-                    <div className="border-2 border-yellow-500 bg-gray-900/50 p-4">
-                      <div className="text-xs text-yellow-500 font-bold mb-2">GOLD PRODUCED</div>
+                    <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                      <div className="mek-label-uppercase mb-2">GOLD PRODUCED</div>
                       <div className="space-y-2">
                         <div>
-                          <div className="text-xs text-gray-400">CURRENT OWNER</div>
-                          <div className="text-white">12,869.015</div>
+                          <div className="mek-label-uppercase">CURRENT OWNER</div>
+                          <div className="mek-value-primary">12,869.015</div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-400">ALL TIME</div>
+                          <div className="mek-label-uppercase">ALL TIME</div>
                           <div className="text-white">458,414.324</div>
                         </div>
                       </div>
@@ -272,8 +298,8 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 </div>
 
                 {/* Variation Cards - Responsive Grid */}
-                <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
-                  <div className="text-xs text-purple-500 font-bold mb-3">VARIATION CARDS</div>
+                <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                  <div className="mek-label-uppercase mb-3">VARIATION CARDS</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <VariationCard title="HEAD VARIATION" imagePath="/variation-images-art-400px/ae1-gn3-ev1.png" />
                     <VariationCard title="BODY VARIATION" imagePath="/variation-images-art-400px/ak3-aa5-mo1.png" />
@@ -282,10 +308,11 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 </div>
 
                 {/* Abilities Tree */}
-                <div className="border-2 border-red-500 bg-gray-900/50 p-4">
-                  <div className="text-xs text-red-500 font-bold mb-3">ABILITIES TREE</div>
-                  <div className="w-full h-64 md:h-80 lg:h-96 border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
-                    <span className="text-gray-500">Node Tree / Talent Tree Area</span>
+                <div className="mek-card-industrial mek-border-sharp-gold p-4">
+                  <div className="mek-label-uppercase mb-3">ABILITIES TREE</div>
+                  <div className="w-full h-64 md:h-80 lg:h-96 bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                    <span className="text-gray-500 relative z-10">Node Tree / Talent Tree Area</span>
                   </div>
                 </div>
               </div>
