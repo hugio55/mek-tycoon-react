@@ -3373,6 +3373,7 @@ export default defineSchema({
     name: v.string(), // Display name (e.g., "Lab Rat", "Pilot Program")
     description: v.string(), // Campaign description for users
     nmkrProjectId: v.string(), // NMKR project ID for this campaign
+    policyId: v.optional(v.string()), // Cardano policy ID for blockchain verification
     status: v.union(
       v.literal("active"),    // Currently claimable
       v.literal("inactive")   // Not yet active or closed

@@ -56,6 +56,7 @@ export default function CampaignManager({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [nmkrProjectId, setNmkrProjectId] = useState("");
+  const [policyId, setPolicyId] = useState("");
   const [maxNFTs, setMaxNFTs] = useState("");
   const [status, setStatus] = useState<CampaignStatus>("inactive");
 
@@ -96,6 +97,7 @@ export default function CampaignManager({
         name: name.trim(),
         description: description.trim(),
         nmkrProjectId: nmkrProjectId.trim(),
+        policyId: policyId.trim() || undefined,
         maxNFTs: maxNFTsNum,
         status,
       });
@@ -498,6 +500,20 @@ export default function CampaignManager({
                 onChange={(e) => setNmkrProjectId(e.target.value)}
                 className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
                 placeholder="c68dc0e9b2ca4e0eb9c4a57ef85a794d"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">
+                Cardano Policy ID <span className="text-gray-500">(optional - enables blockchain verification)</span>
+              </label>
+              <input
+                type="text"
+                value={policyId}
+                onChange={(e) => setPolicyId(e.target.value)}
+                className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
+                placeholder="e.g., 9c8e9da...f4e5d6c (56 characters)"
                 disabled={isSubmitting}
               />
             </div>
