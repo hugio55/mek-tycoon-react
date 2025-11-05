@@ -58,6 +58,7 @@ import type * as commemorativeTokenCounters from "../commemorativeTokenCounters.
 import type * as commemorativeTokens from "../commemorativeTokens.js";
 import type * as componentLibraryFunctions from "../componentLibraryFunctions.js";
 import type * as componentLibrarySchema from "../componentLibrarySchema.js";
+import type * as componentTransformations from "../componentTransformations.js";
 import type * as comprehensiveWalletFix from "../comprehensiveWalletFix.js";
 import type * as contracts from "../contracts.js";
 import type * as crafting from "../crafting.js";
@@ -284,6 +285,7 @@ declare const fullApi: ApiFromModules<{
   commemorativeTokens: typeof commemorativeTokens;
   componentLibraryFunctions: typeof componentLibraryFunctions;
   componentLibrarySchema: typeof componentLibrarySchema;
+  componentTransformations: typeof componentTransformations;
   comprehensiveWalletFix: typeof comprehensiveWalletFix;
   contracts: typeof contracts;
   crafting: typeof crafting;

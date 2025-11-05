@@ -3527,4 +3527,45 @@ export default defineSchema({
     .index("by_scope", ["scope"])
     .index("by_mek", ["mekId"])
     .index("by_active", ["active"]),
+
+  // Transformed UI components (conversational workflow)
+  transformedComponents: defineTable({
+    name: v.string(), // Component name (e.g., "IndustrialButton", "MekCard")
+    code: v.string(), // Full React/TypeScript component code
+    props: v.optional(v.string()), // TypeScript interface for props
+    tags: v.array(v.string()), // Searchable tags: ["button", "industrial", "interactive"]
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_tags", ["tags"]),
+
+  // Design preferences learned from transformations
+  designPreferences: defineTable({
+    key: v.string(), // Preference key (e.g., "primary-yellow", "button-style")
+    value: v.string(), // The value (e.g., "#fab617", "mek-button-primary")
+    context: v.optional(v.string()), // Where/why it's used
+    confidence: v.number(), // 0-1, how confident we are this is correct
+    category: v.optional(v.string()), // "color", "typography", "spacing", "pattern"
+    lastUsed: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_category", ["category"])
+    .index("by_confidence", ["confidence"]),
+
+  // Transformation rules (patterns to auto-apply)
+  transformationRules: defineTable({
+    name: v.string(), // Rule name (e.g., "Generic button to industrial")
+    pattern: v.string(), // What to look for (e.g., "bg-blue-500 text-white px-4 py-2")
+    replacement: v.string(), // What to replace with (e.g., "mek-button-primary")
+    autoApply: v.boolean(), // Should this be applied automatically
+    confidence: v.number(), // 0-1, how reliable this rule is
+    timesApplied: v.number(), // Usage counter
+    lastApplied: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_autoApply", ["autoApply"])
+    .index("by_confidence", ["confidence"]),
 });

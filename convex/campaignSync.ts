@@ -313,11 +313,14 @@ export const syncCampaign = internalAction({
       let blockchainResults = [];
       let batchSummary = null;
 
-      // Get policy ID from project
-      const policyId = projectStats.policyId;
+      // Get policy ID from project (safely handle null projectStats)
+      const policyId = projectStats?.policyId;
 
       if (!policyId) {
         console.warn("[SYNC] No policy ID found for project, skipping blockchain verification");
+        if (!projectStats) {
+          console.warn("[SYNC] Project stats unavailable - NMKR API may have failed");
+        }
       } else if (soldInventory.length === 0) {
         console.log("[SYNC] No sold NFTs to verify");
       } else {
