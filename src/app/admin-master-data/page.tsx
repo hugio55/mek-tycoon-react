@@ -27,6 +27,7 @@ import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
 import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
+import ProModeToggle from '@/components/controls/ProModeToggle';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3285,6 +3286,30 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> Pug/SCSS/Compass</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript</div>
                       <div><span className="text-zinc-500">Features:</span> Polygon clip-path, screen blend mode</div>
+                    </div>
+                  </div>
+
+                  {/* Pro Mode Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Pro Mode Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/60 rounded-lg p-8 flex items-center justify-center min-h-[300px]">
+                      <ProModeToggle />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
+                      <div><span className="text-zinc-500">Features:</span> Safety guard, 3D transforms, hazard stripes</div>
                     </div>
                   </div>
 

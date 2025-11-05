@@ -279,14 +279,14 @@ export default function ProfilePage() {
       <div className="relative p-5">
         
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Top Controls */}
-          <div className="flex justify-between items-center mb-6">
+          {/* Top Controls - Responsive: Stack on mobile */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center mb-6 gap-3">
             {/* View Toggle */}
-            <div className="flex items-center gap-3 bg-gray-900 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 bg-opacity-60">
-              <span className="text-sm text-gray-400">View as:</span>
+            <div className="flex items-center gap-2 md:gap-3 bg-gray-900 backdrop-blur-sm border border-gray-700 rounded-lg px-3 md:px-4 py-2 bg-opacity-60">
+              <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap">View as:</span>
               <button
                 onClick={() => setIsOwnProfile(true)}
-                className={`px-3 py-1 rounded text-sm transition-all ${
+                className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-all whitespace-nowrap ${
                   isOwnProfile ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
@@ -294,22 +294,22 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setIsOwnProfile(false)}
-                className={`px-3 py-1 rounded text-sm transition-all ${
+                className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm transition-all whitespace-nowrap ${
                   !isOwnProfile ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 Other Player
               </button>
             </div>
-            
-            {/* Prestige Toggle */}
-            <div className="flex items-center gap-2 bg-gray-900 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 bg-opacity-60">
-              <span className="text-sm text-gray-400">Prestige:</span>
+
+            {/* Prestige Toggle - Scrollable on mobile */}
+            <div className="flex items-center gap-1 md:gap-2 bg-gray-900 backdrop-blur-sm border border-gray-700 rounded-lg px-3 md:px-4 py-2 bg-opacity-60 overflow-x-auto scrollbar-hide">
+              <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap mr-1">Prestige:</span>
               {[0, 1, 2, 3, 4, 5, 6, 7].map(level => (
                 <button
                   key={level}
                   onClick={() => setPrestigeLevel(level)}
-                  className={`px-2 py-1 rounded text-xs transition-all ${
+                  className={`px-2 py-1 rounded text-xs transition-all flex-shrink-0 ${
                     prestigeLevel === level ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
@@ -354,9 +354,9 @@ export default function ProfilePage() {
                   </div>
                 )}
                 
-                {/* Username & Prestige */}
-                <div className="text-center mb-4 px-6 pt-4">
-                  <h1 className="text-3xl font-bold text-yellow-400 mb-3">{userData.username}</h1>
+                {/* Username & Prestige - Responsive sizing */}
+                <div className="text-center mb-4 px-4 md:px-6 pt-4">
+                  <h1 className="text-2xl md:text-3xl font-bold text-yellow-400 mb-3">{userData.username}</h1>
                   
                   {/* Prestige Level */}
                   <div className="inline-block relative">
@@ -385,30 +385,30 @@ export default function ProfilePage() {
                   <div className="text-xs text-gray-500 mt-3">Joined {userData.joinDate}</div>
                 </div>
                 
-                {/* Stats */}
-                <div className="space-y-3 px-6 pb-6 pt-4 border-t border-gray-700">
+                {/* Stats - Responsive sizing */}
+                <div className="space-y-2 md:space-y-3 px-4 md:px-6 pb-4 md:pb-6 pt-3 md:pt-4 border-t border-gray-700">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Total Gold</span>
-                    <span className="text-xl font-bold text-yellow-400">
+                    <span className="text-sm md:text-base text-gray-400">Total Gold</span>
+                    <span className="text-lg md:text-xl font-bold text-yellow-400">
                       {userData.totalGold.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Gold/Hour</span>
-                    <span className="text-xl font-bold text-yellow-400">
-                      {(userData.meks.reduce((sum, m) => sum + m.goldPerHour, 0) + 
+                    <span className="text-sm md:text-base text-gray-400">Gold/Hour</span>
+                    <span className="text-lg md:text-xl font-bold text-yellow-400">
+                      {(userData.meks.reduce((sum, m) => sum + m.goldPerHour, 0) +
                         userData.frames.reduce((sum, f) => sum + f.goldPerHour, 0)).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Essence Owned</span>
-                    <span className="text-xl font-bold text-purple-400">
+                    <span className="text-sm md:text-base text-gray-400">Essence Owned</span>
+                    <span className="text-lg md:text-xl font-bold text-purple-400">
                       {userData.essences.reduce((sum, e) => sum + e.quantity, 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Meks Owned</span>
-                    <span className="text-xl font-bold text-cyan-400">
+                    <span className="text-sm md:text-base text-gray-400">Meks Owned</span>
+                    <span className="text-lg md:text-xl font-bold text-cyan-400">
                       {userData.meks.length}
                     </span>
                   </div>
@@ -418,11 +418,11 @@ export default function ProfilePage() {
 
             {/* Right Column - Content Tabs */}
             <div className="col-span-1 lg:col-span-8">
-              {/* Tab Navigation */}
-              <div className="flex gap-0">
+              {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+              <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                 <button
                   onClick={() => setActiveTab('meks')}
-                  className={`px-6 py-3 font-bold transition-all ${
+                  className={`px-4 md:px-6 py-2 md:py-3 font-bold transition-all whitespace-nowrap snap-start text-sm md:text-base ${
                     activeTab === 'meks'
                       ? 'bg-gray-900 border-t-2 border-l-2 border-r-2 border-yellow-500 text-yellow-400 relative z-10 bg-opacity-60'
                       : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-300 bg-opacity-30'
@@ -432,7 +432,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('essence')}
-                  className={`px-6 py-3 font-bold transition-all ${
+                  className={`px-4 md:px-6 py-2 md:py-3 font-bold transition-all whitespace-nowrap snap-start text-sm md:text-base ${
                     activeTab === 'essence'
                       ? 'bg-gray-900 border-t-2 border-l-2 border-r-2 border-yellow-500 text-yellow-400 relative z-10 bg-opacity-60'
                       : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-300 bg-opacity-30'
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('inventory')}
-                  className={`px-6 py-3 font-bold transition-all ${
+                  className={`px-4 md:px-6 py-2 md:py-3 font-bold transition-all whitespace-nowrap snap-start text-sm md:text-base ${
                     activeTab === 'inventory'
                       ? 'bg-gray-900 border-t-2 border-l-2 border-r-2 border-yellow-500 text-yellow-400 relative z-10 bg-opacity-60'
                       : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-300 bg-opacity-30'
@@ -452,7 +452,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('frames')}
-                  className={`px-6 py-3 font-bold transition-all ${
+                  className={`px-4 md:px-6 py-2 md:py-3 font-bold transition-all whitespace-nowrap snap-start text-sm md:text-base ${
                     activeTab === 'frames'
                       ? 'bg-gray-900 border-t-2 border-l-2 border-r-2 border-yellow-500 text-yellow-400 relative z-10 bg-opacity-60'
                       : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-300 bg-opacity-30'
@@ -476,9 +476,9 @@ export default function ProfilePage() {
                     <div>
                       <h3 className="text-xl font-bold text-yellow-400 mb-3">Owned Meks</h3>
 
-                      {/* Search Bar and Sort Controls Row */}
-                      <div className="flex gap-3 items-end">
-                        {/* Search Bar - Left Side */}
+                      {/* Search Bar and Sort Controls - Responsive stacking */}
+                      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-end">
+                        {/* Search Bar - Full width on mobile */}
                         <div className="flex-1">
                           <div className="relative">
                             <input
@@ -489,7 +489,7 @@ export default function ProfilePage() {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                               }}
-                              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
+                              className="w-full px-3 md:px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm md:text-base text-white placeholder-gray-500 focus:border-yellow-500 focus:outline-none"
                             />
                             {searchTerm && (
                               <button
@@ -497,22 +497,22 @@ export default function ProfilePage() {
                                   setSearchTerm('');
                                   setCurrentPage(1);
                                 }}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 min-w-[44px] min-h-[44px] flex items-center justify-center"
                               >
                                 ✕
                               </button>
                             )}
                           </div>
                           <div className="text-xs text-gray-500 mt-1 px-1">
-                            Search by Mek # or variation (e.g., bumblebee, seafoam)
+                            Search by Mek # or variation
                           </div>
                         </div>
 
-                        {/* Sort Dropdown - Right Side */}
-                        <div className="flex gap-2 mb-[30px]">
+                        {/* Sort Buttons - Horizontal on mobile, aligned on desktop */}
+                        <div className="flex gap-2">
                           <button
                             onClick={() => setMekSortBy('level')}
-                            className={`px-4 py-2 text-sm rounded transition-all ${
+                            className={`flex-1 md:flex-initial px-3 md:px-4 py-2 text-xs md:text-sm rounded transition-all whitespace-nowrap ${
                               mekSortBy === 'level'
                                 ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
                                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
@@ -522,7 +522,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={() => setMekSortBy('goldPerHour')}
-                            className={`px-4 py-2 text-sm rounded transition-all ${
+                            className={`flex-1 md:flex-initial px-3 md:px-4 py-2 text-xs md:text-sm rounded transition-all whitespace-nowrap ${
                               mekSortBy === 'goldPerHour'
                                 ? 'bg-yellow-500 border-2 border-yellow-400 text-black font-bold shadow-lg'
                                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 bg-opacity-50'
@@ -534,8 +534,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     
-                    {/* Mek Grid - Tighter spacing */}
-                    <div className="grid grid-cols-5 gap-1">
+                    {/* Mek Grid - Responsive columns: 2 mobile, 3 tablet, 4 laptop, 5 desktop */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-1">
                       {paginatedMeks.map(mek => (
                         <button
                           key={mek.id}
@@ -568,17 +568,18 @@ export default function ProfilePage() {
                       ))}
                     </div>
                     
-                    {/* Pagination */}
+                    {/* Pagination - Touch-optimized */}
                     {totalPages > 1 && (
-                      <div className="flex justify-center gap-2">
+                      <div className="flex justify-center gap-1 md:gap-2">
                         <button
                           onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 text-sm"
+                          className="px-2 md:px-3 py-2 md:py-1 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 text-xs md:text-sm min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
                         >
-                          Previous
+                          <span className="hidden md:inline">Previous</span>
+                          <span className="md:hidden">‹</span>
                         </button>
-                        
+
                         <div className="flex items-center gap-1">
                           {[...Array(Math.min(5, totalPages))].map((_, idx) => {
                             const pageNum = idx + 1;
@@ -586,9 +587,9 @@ export default function ProfilePage() {
                               <button
                                 key={idx}
                                 onClick={() => setCurrentPage(pageNum)}
-                                className={`px-2 py-1 rounded text-sm ${
-                                  currentPage === pageNum 
-                                    ? "bg-yellow-400 text-black" 
+                                className={`px-2 py-2 md:py-1 rounded text-xs md:text-sm min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 ${
+                                  currentPage === pageNum
+                                    ? "bg-yellow-400 text-black font-bold"
                                     : "bg-gray-700 hover:bg-gray-600"
                                 }`}
                               >
@@ -601,9 +602,10 @@ export default function ProfilePage() {
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                           disabled={currentPage === totalPages}
-                          className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 text-sm"
+                          className="px-2 md:px-3 py-2 md:py-1 bg-gray-700 rounded disabled:opacity-50 hover:bg-gray-600 text-xs md:text-sm min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
                         >
-                          Next
+                          <span className="hidden md:inline">Next</span>
+                          <span className="md:hidden">›</span>
                         </button>
                       </div>
                     )}
@@ -647,8 +649,8 @@ export default function ProfilePage() {
                     {/* Inventory Content */}
                     {inventorySubTab === 'universal_chips' && (
                       <div>
-                        <h3 className="text-xl font-bold text-yellow-400 mb-4">Universal Chips</h3>
-                        <div className="grid grid-cols-3 gap-4">
+                        <h3 className="text-lg md:text-xl font-bold text-yellow-400 mb-4">Universal Chips</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                           {[
                             { id: 'chip1', name: 'Common Power Chip', rarity: 'common', quantity: 12, icon: '💾' },
                             { id: 'chip2', name: 'Rare Power Chip', rarity: 'rare', quantity: 3, icon: '💎' },
@@ -679,9 +681,9 @@ export default function ProfilePage() {
                 
                 {/* Frames Tab */}
                 {activeTab === 'frames' && (
-                  <div className="space-y-6">
-                    <h3 className="text-xl font-bold text-yellow-400 mb-4">Frame Collection</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-4 md:space-y-6">
+                    <h3 className="text-lg md:text-xl font-bold text-yellow-400 mb-4">Frame Collection</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {userData.frames.map(frame => (
                         <div key={frame.id} className="relative p-4 overflow-hidden hover:scale-105 transition-transform" style={{
                           background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%)',
