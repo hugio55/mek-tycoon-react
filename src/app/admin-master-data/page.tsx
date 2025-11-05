@@ -34,8 +34,7 @@ import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
 import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
 import MechanicalToggle from '@/components/controls/MechanicalToggle';
-import GlowTrackToggle from '@/components/controls/GlowTrackToggle';
-import CyanSlideToggle from '@/components/controls/CyanSlideToggle';
+import SlideTrackToggle from '@/components/controls/SlideTrackToggle';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3484,35 +3483,11 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
-                  {/* Glow Track Toggle */}
+                  {/* Slide Track Toggle */}
                   <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
                       <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
-                        Glow Track Toggle
-                      </h3>
-                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
-                        Control
-                      </span>
-                    </div>
-
-                    {/* Component Preview */}
-                    <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px] text-[1.5em]">
-                      <GlowTrackToggle />
-                    </div>
-
-                    {/* Component Info */}
-                    <div className="text-xs text-zinc-400 space-y-1">
-                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS (exact transplant)</div>
-                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
-                      <div><span className="text-zinc-500">Features:</span> Sliding track gradient (cyan/gray), glowing thumb on ON, ||| indicator, ON/OFF text labels</div>
-                    </div>
-                  </div>
-
-                  {/* Cyan Slide Toggle */}
-                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
-                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
-                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
-                        Cyan Slide Toggle
+                        Slide Track Toggle
                       </h3>
                       <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
                         Control
@@ -3521,14 +3496,14 @@ export default function AdminMasterDataPage() {
 
                     {/* Component Preview */}
                     <div className="bg-black/60 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
-                      <CyanSlideToggle />
+                      <SlideTrackToggle />
                     </div>
 
                     {/* Component Info */}
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External HTML/CSS (exact transplant)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
-                      <div><span className="text-zinc-500">Features:</span> Sliding cyan/gray gradient track, ||| thumb with radial glow when ON, dark industrial theme, initial demo animation (3s)</div>
+                      <div><span className="text-zinc-500">Features:</span> Sliding cyan/gray gradient track, ||| thumb with radial glow when ON, dark industrial theme, 3s demo animation</div>
                     </div>
                   </div>
 

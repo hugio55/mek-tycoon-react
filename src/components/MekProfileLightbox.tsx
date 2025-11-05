@@ -410,90 +410,62 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
       </div>
 
       {/* Debug Panel - Fixed to right side, high z-index */}
-      <div className="fixed top-4 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl">
         <div className="p-4">
-          <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
-            Style Variations
+          <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
+            Style Controls
           </h3>
 
-          {/* Variation Selector Buttons */}
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={(e) => {
+          {/* Dropdown 1: Page Styling */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Overall Theme
+            </label>
+            <select
+              value={styleVariation}
+              onChange={(e) => {
                 e.stopPropagation();
-                onStyleVariationChange?.('default');
+                onStyleVariationChange?.(e.target.value as 'default' | 'variation1' | 'variation2');
               }}
-              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
-                styleVariation === 'default'
-                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
-                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
-              }`}
+              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
             >
-              Default
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onStyleVariationChange?.('variation1');
-              }}
-              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
-                styleVariation === 'variation1'
-                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
-                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
-              }`}
+              <option value="default">Industrial Yellow</option>
+              <option value="variation1">Cyberpunk Cyan</option>
+              <option value="variation2">Military Green</option>
+            </select>
+          </div>
+
+          {/* Dropdown 2: Card Interior Styling */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Card Layout
+            </label>
+            <select
+              value={cardInteriorStyle}
+              onChange={(e) => e.stopPropagation()}
+              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
             >
-              Var 1
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onStyleVariationChange?.('variation2');
-              }}
-              className={`flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-all ${
-                styleVariation === 'variation2'
-                  ? 'bg-cyan-500/30 border-cyan-500 text-cyan-300'
-                  : 'bg-black/50 border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10'
-              }`}
-            >
-              Var 2
-            </button>
+              <option value="compact">Classic Stack</option>
+              <option value="spacious">Side-by-Side</option>
+              <option value="modern">Minimal Centered</option>
+            </select>
           </div>
 
-          {/* Default Style Preview */}
-          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
-            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Default: Industrial Yellow</div>
-            <div className="text-xs text-gray-400 space-y-1">
-              <div>• Font: Orbitron</div>
-              <div>• Accent: Yellow/Gold (#fab617)</div>
-              <div>• Style: Sharp edges, glass-morphism</div>
-              <div>• Layout: Three-column desktop</div>
+          {/* Current Selection Display */}
+          <div className="pt-2 border-t border-cyan-500/30">
+            <div className="text-[10px] text-gray-500 mb-1">Active:</div>
+            <div className="text-[10px] text-cyan-300 space-y-0.5">
+              <div>
+                {styleVariation === 'default' && 'Industrial Yellow'}
+                {styleVariation === 'variation1' && 'Cyberpunk Cyan'}
+                {styleVariation === 'variation2' && 'Military Green'}
+              </div>
+              <div>
+                {cardInteriorStyle === 'compact' && 'Classic Stack'}
+                {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
+                {cardInteriorStyle === 'modern' && 'Minimal Centered'}
+              </div>
             </div>
-          </div>
-
-          {/* Variation 1 Preview */}
-          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
-            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Variation 1: Cyberpunk Cyan</div>
-            <div className="text-xs text-gray-400 space-y-1">
-              <div>• Font: Rajdhani (condensed)</div>
-              <div>• Accent: Cyan/Blue (#00d9ff)</div>
-              <div>• Style: Neon glow, rounded corners</div>
-              <div>• Layout: Centered single column</div>
-            </div>
-          </div>
-
-          {/* Variation 2 Preview */}
-          <div className="mb-4 border border-cyan-500/30 rounded p-3 bg-black/50">
-            <div className="text-xs text-cyan-400 uppercase font-bold mb-2">Variation 2: Military Green</div>
-            <div className="text-xs text-gray-400 space-y-1">
-              <div>• Font: Share Tech Mono</div>
-              <div>• Accent: Olive/Green (#9acd32)</div>
-              <div>• Style: Tactical camo, hexagons</div>
-              <div>• Layout: Asymmetric grid</div>
-            </div>
-          </div>
-
-          <div className="text-xs text-cyan-500/70 italic text-center pt-2 border-t border-cyan-500/20">
-            Click variation buttons to preview styles
           </div>
         </div>
       </div>
