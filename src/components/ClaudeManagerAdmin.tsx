@@ -40,6 +40,7 @@ export default function ClaudeManagerAdmin() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    console.log('[CLAUDE_ADMIN] Component mounted, loading files...');
     loadFiles();
   }, []);
 

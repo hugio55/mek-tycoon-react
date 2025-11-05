@@ -25,48 +25,72 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
     const exists = await fs.access(dir).then(() => true).catch(() => false);
     if (!exists) return files;
 
-    async function scanRecursive(currentDir: string, relativePath: string = '') {
-      const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    async function scanRecursive(currentDir: string, relativePath: string = '', depth: number = 0) {
+      // Prevent infinite recursion
+      if (depth > 10) {
+        return;
+      }
 
-      for (const entry of entries) {
-        const fullPath = path.join(currentDir, entry.name);
-        const relPath = path.join(relativePath, entry.name);
+      try {
+        const entries = await fs.readdir(currentDir, { withFileTypes: true });
 
-        if (entry.isDirectory()) {
-          await scanRecursive(fullPath, relPath);
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
-          const content = await fs.readFile(fullPath, 'utf-8');
-
-          // Parse frontmatter if exists
-          let frontmatter: Record<string, any> = {};
-          let description: string | undefined;
-
+        for (const entry of entries) {
           try {
-            const parsed = matter(content);
-            frontmatter = parsed.data;
-            description = frontmatter.description || frontmatter.name;
-          } catch {
-            // No frontmatter, try to extract first line as description
-            const firstLine = content.split('\n').find(line => line.trim().length > 0);
-            description = firstLine?.replace(/^#+\s*/, '').substring(0, 100);
+            const fullPath = path.join(currentDir, entry.name);
+            const relPath = path.join(relativePath, entry.name);
+
+            if (entry.isDirectory()) {
+              // Skip node_modules and hidden directories except .claude
+              if (entry.name === 'node_modules' || (entry.name.startsWith('.') && entry.name !== '.claude')) {
+                continue;
+              }
+              await scanRecursive(fullPath, relPath, depth + 1);
+            } else if (entry.isFile() && entry.name.endsWith('.md')) {
+              // Check file size first - skip files larger than 1MB to avoid hanging
+              const stats = await fs.stat(fullPath);
+              if (stats.size > 1024 * 1024) {
+                continue;
+              }
+
+              const content = await fs.readFile(fullPath, 'utf-8');
+
+              // Parse frontmatter if exists
+              let frontmatter: Record<string, any> = {};
+              let description: string | undefined;
+
+              try {
+                const parsed = matter(content);
+                frontmatter = parsed.data;
+                description = frontmatter.description || frontmatter.name;
+              } catch {
+                // No frontmatter, try to extract first line as description
+                const firstLine = content.split('\n').find(line => line.trim().length > 0);
+                description = firstLine?.replace(/^#+\s*/, '').substring(0, 100);
+              }
+
+              // Determine type based on path
+              let type: ClaudeFile['type'] = 'document';
+              if (relPath.startsWith('commands')) type = 'command';
+              else if (relPath.startsWith('agents')) type = 'agent';
+              else if (relPath.startsWith('config')) type = 'config';
+
+              files.push({
+                name: entry.name.replace('.md', ''),
+                path: fullPath,
+                type,
+                location,
+                description,
+                content,
+                frontmatter
+              });
+            }
+          } catch (entryError) {
+            console.error(`[CLAUDE_API] Error processing entry ${entry.name}:`, entryError);
+            // Continue with other entries
           }
-
-          // Determine type based on path
-          let type: ClaudeFile['type'] = 'document';
-          if (relPath.startsWith('commands')) type = 'command';
-          else if (relPath.startsWith('agents')) type = 'agent';
-          else if (relPath.startsWith('config')) type = 'config';
-
-          files.push({
-            name: entry.name.replace('.md', ''),
-            path: fullPath,
-            type,
-            location,
-            description,
-            content,
-            frontmatter
-          });
         }
+      } catch (readError) {
+        console.error(`[CLAUDE_API] Error reading directory ${currentDir}:`, readError);
       }
     }
 
@@ -80,26 +104,15 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
 
 export async function GET() {
   try {
-    console.log('[CLAUDE_API] Starting to scan directories...');
-    console.log('[CLAUDE_API] Project dir:', PROJECT_CLAUDE_DIR);
-    console.log('[CLAUDE_API] Parent dir:', PARENT_CLAUDE_DIR);
-    console.log('[CLAUDE_API] Computer dir:', COMPUTER_CLAUDE_DIR);
-
     const [projectFiles, parentFiles, computerFiles] = await Promise.all([
       scanDirectory(PROJECT_CLAUDE_DIR, 'project'),
       scanDirectory(PARENT_CLAUDE_DIR, 'parent'),
       scanDirectory(COMPUTER_CLAUDE_DIR, 'computer')
     ]);
 
-    console.log('[CLAUDE_API] Scan complete:', {
-      project: projectFiles.length,
-      parent: parentFiles.length,
-      computer: computerFiles.length
-    });
-
     const allFiles = [...projectFiles, ...parentFiles, ...computerFiles];
 
-    const response = {
+    return NextResponse.json({
       success: true,
       files: allFiles,
       stats: {
@@ -114,10 +127,7 @@ export async function GET() {
           config: allFiles.filter(f => f.type === 'config').length
         }
       }
-    };
-
-    console.log('[CLAUDE_API] Returning response with', allFiles.length, 'files');
-    return NextResponse.json(response);
+    });
   } catch (error) {
     console.error('[CLAUDE_API] Error fetching Claude files:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
