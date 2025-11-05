@@ -29,12 +29,20 @@ function EssenceProviderWrapper({ children }: { children: ReactNode }) {
 function ContentWithLoadingState({ children }: { children: ReactNode }) {
   const { isLoading } = useLoaderContext();
   const [isBypassed, setIsBypassed] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   // Check if loader is bypassed (client-only, after hydration)
   useEffect(() => {
+    setHasMounted(true);
     setIsBypassed(localStorage.getItem('disablePageLoader') === 'true');
   }, []);
 
+  // Render children without wrapper during SSR to avoid hydration mismatch
+  if (!hasMounted) {
+    return <>{children}</>;
+  }
+
+  // After hydration, apply loading state wrapper
   return (
     <div
       style={{
