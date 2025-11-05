@@ -32,7 +32,8 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
 
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
-    const count = 1000; // Fetch up to 1000 NFTs
+    // NOTE: Count must be between 1 and 100 per NMKR API validation
+    const count = 100; // Max allowed by NMKR API
     const page = 1; // First page
     const response = await fetch(
       `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`,
@@ -374,7 +375,7 @@ export const syncCampaign = internalAction({
             // Use batch verification with rate limiting
             const batchResult = await ctx.runAction(api.blockfrost.verifyNFTBatch, {
               nfts: nftsToVerify,
-              nmkrWalletAddress: projectStats.payinAddress, // NMKR escrow wallet
+              nmkrWalletAddress: projectStats?.payinAddress, // NMKR escrow wallet (safely handle null)
             });
 
             batchSummary = batchResult.summary;
