@@ -3384,7 +3384,7 @@ export default function AdminMasterDataPage() {
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External CSS (by @oguzyagizkara)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
-                      <div><span className="text-zinc-500">Features:</span> Sliding button, icon transition, haptic feedback</div>
+                      <div><span className="text-zinc-500">Features:</span> Sliding button, icon transitions, haptic feedback</div>
                     </div>
                   </div>
 
