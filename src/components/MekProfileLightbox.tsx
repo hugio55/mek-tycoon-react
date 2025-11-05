@@ -410,7 +410,10 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
       </div>
 
       {/* Debug Panel - Fixed to right side, high z-index */}
-      <div className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl">
+      <div
+        className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-4">
           <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
             Style Controls

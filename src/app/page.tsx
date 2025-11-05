@@ -3510,6 +3510,14 @@ export default function MekRateLoggingPage() {
               </p>
             </div>
 
+            {/* Airdrop/Commemorative NFT Claim Banner */}
+            <div className="max-w-xl mx-auto">
+              <AirdropClaimBanner
+                userId={null}
+                walletAddress={walletAddress}
+              />
+            </div>
+
             {/* Verify on Blockchain Button */}
             <div className="mb-12">
               {!verificationStatus?.verified && (
