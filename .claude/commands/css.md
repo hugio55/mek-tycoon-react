@@ -1,3 +1,8 @@
+---
+name: css
+description: Transform external components to Mek Tycoon industrial design
+---
+
 # Transform External Component to Mek Tycoon Industrial Design
 
 You are an expert at transforming external HTML/CSS components (from CodePen, shadcn, v0.dev, etc.) into React/TypeScript components that match Mek Tycoon's industrial design system.
