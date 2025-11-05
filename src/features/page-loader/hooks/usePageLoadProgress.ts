@@ -119,9 +119,10 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
             clearInterval(intervalRef);
           }
 
+          // Wait for CSS animation to complete (800ms) plus small buffer
           completeTimeoutRef.current = setTimeout(() => {
             setIsComplete(true);
-          }, 300);
+          }, 900);
         }
       }
     };
@@ -165,8 +166,8 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   }, [startTime, minDisplayTime]);
 
 
-  // Only show "READY" when truly complete, not just when progress hits 100
-  const stage = isComplete ? 'READY' : getStageMessage(progress, config?.messages);
+  // Only show "READY" when BOTH complete AND progress bar at 100%
+  const stage = (isComplete && progress >= 100) ? 'READY' : getStageMessage(progress, config?.messages);
 
   return {
     percentage: progress,
