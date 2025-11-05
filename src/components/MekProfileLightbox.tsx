@@ -6,7 +6,7 @@ import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern';
-export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent';
+export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 
@@ -29,6 +29,8 @@ interface MekProfileLightboxProps {
   onBackdropBlurChange?: (value: number) => void;
   cardBackdropBlur?: number;
   onCardBackdropBlurChange?: (value: number) => void;
+  headerGap?: number;
+  onHeaderGapChange?: (value: number) => void;
 }
 
 export default function MekProfileLightbox({
@@ -49,14 +51,12 @@ export default function MekProfileLightbox({
   backdropBlur = 2,
   onBackdropBlurChange,
   cardBackdropBlur = 12,
-  onCardBackdropBlurChange
+  onCardBackdropBlurChange,
+  headerGap = 32,
+  onHeaderGapChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
-
-  // Debug slider for title-to-content gap
-  const [showDebugSlider, setShowDebugSlider] = useState(true);
-  const [contentTopGap, setContentTopGap] = useState(32); // Default 32px (py-8 = 2rem)
 
   // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
@@ -163,11 +163,10 @@ export default function MekProfileLightbox({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop - Dynamic darkness */}
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 pointer-events-none"
         style={{
           backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`
         }}
-        onClick={onClose}
       />
 
       {/* Lightbox Container - Dynamic styling based on variation with dynamic blur/darkness */}
@@ -216,7 +215,7 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Main Content - Layout 1 (Three-Column) */}
-            <div className="max-w-7xl mx-auto px-4 pb-6" style={{ paddingTop: `${contentTopGap}px` }}>
+            <div className="max-w-7xl mx-auto px-4 pb-6" style={{ paddingTop: `${headerGap}px` }}>
               <div className="space-y-4 md:space-y-6 lg:space-y-8">
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
                 <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
