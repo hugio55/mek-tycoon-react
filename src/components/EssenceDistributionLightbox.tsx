@@ -569,8 +569,8 @@ export default function EssenceDistributionLightbox({ isOpen, onClose }: Essence
   };
 
   const getBackdropBlurStyle = () => {
-    if (backdropBlur === 0) return {};
-    return { backdropFilter: `blur(${backdropBlur}px)` };
+    // Backdrop blur removed to prevent blocking debug panel visibility
+    return {};
   };
 
   const getCardDarknessClass = () => {

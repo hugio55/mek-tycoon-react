@@ -16,7 +16,7 @@ export default function GlassButtonSharp({
 
   const handleClick = () => {
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 400);
+    setTimeout(() => setIsAnimating(false), 125);
     onClick?.();
   };
 

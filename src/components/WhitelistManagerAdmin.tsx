@@ -74,9 +74,9 @@ export default function WhitelistManagerAdmin() {
     }
 
     const csv = [
-      ['Wallet Address', 'Display Name'],
+      ['Stake Address', 'Display Name'],
       ...whitelist.eligibleUsers.map((u: any) => [
-        u.walletAddress,
+        u.stakeAddress,
         u.displayName || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
@@ -387,7 +387,7 @@ export default function WhitelistManagerAdmin() {
                           className="bg-black/30 rounded p-3 text-sm"
                         >
                           <div className="text-white font-mono text-xs truncate">
-                            {user.walletAddress}
+                            {user.stakeAddress}
                           </div>
                           {user.displayName && (
                             <div className="text-gray-400 text-xs mt-1">{user.displayName}</div>
@@ -807,13 +807,13 @@ function WhitelistTableModal({
     companyNameInput.length >= 2 ? { searchTerm: companyNameInput } : "skip"
   );
 
-  const handleRemoveUser = async (walletAddress: string, displayName?: string) => {
-    if (!confirm(`Remove "${displayName || walletAddress}" from this whitelist?`)) return;
+  const handleRemoveUser = async (stakeAddress: string, displayName?: string) => {
+    if (!confirm(`Remove "${displayName || stakeAddress}" from this whitelist?`)) return;
 
     try {
       await removeUserFromWhitelist({
         whitelistId: whitelist._id,
-        walletAddress,
+        stakeAddress,
       });
       alert('User removed successfully!');
     } catch (error: any) {
@@ -827,14 +827,14 @@ function WhitelistTableModal({
   };
 
   const handleAddUser = async () => {
-    // Check if using manual wallet address or company name lookup
+    // Check if using manual stake address or company name lookup
     if (manualWalletInput.trim()) {
-      // Adding by manual wallet address
+      // Adding by manual stake address
       setIsAdding(true);
       try {
         await addUserToWhitelistByAddress({
           whitelistId: whitelist._id,
-          walletAddress: manualWalletInput.trim(),
+          stakeAddress: manualWalletInput.trim(),
           displayName: manualDisplayNameInput.trim() || undefined,
         });
         alert(`User added successfully!`);
@@ -862,7 +862,7 @@ function WhitelistTableModal({
         setIsAdding(false);
       }
     } else {
-      alert('Please enter either a corporation name or wallet address');
+      alert('Please enter either a corporation name or stake address');
     }
   };
 
@@ -961,9 +961,9 @@ function WhitelistTableModal({
             <div className="flex-1 border-t border-gray-700"></div>
           </div>
 
-          {/* Option 2: Manual Wallet Address */}
+          {/* Option 2: Manual Stake Address */}
           <div className="mb-4">
-            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Wallet Address Directly</label>
+            <label className="block text-xs text-gray-400 mb-2">Option 2: Enter Stake Address Directly</label>
             <div className="flex gap-3 mb-2">
               <div className="flex-1">
                 <input
@@ -973,7 +973,7 @@ function WhitelistTableModal({
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') handleAddUser();
                   }}
-                  placeholder="addr1... or addr_test1..."
+                  placeholder="stake1... or stake_test1..."
                   className="w-full bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-white font-mono text-sm placeholder-gray-600"
                   disabled={isAdding || !!companyNameInput.trim()}
                 />
@@ -1017,7 +1017,7 @@ function WhitelistTableModal({
               <thead className="sticky top-0 bg-gray-900">
                 <tr className="border-b-2 border-cyan-500/30">
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">#</th>
-                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Wallet Address</th>
+                  <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Stake Address</th>
                   <th className="text-left py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Display Name</th>
                   <th className="text-right py-3 px-4 text-cyan-300 font-bold uppercase tracking-wider">Actions</th>
                 </tr>
@@ -1030,14 +1030,14 @@ function WhitelistTableModal({
                   >
                     <td className="py-3 px-4 text-gray-400">{index + 1}</td>
                     <td className="py-3 px-4 text-white font-mono text-xs">
-                      {user.walletAddress}
+                      {user.stakeAddress}
                     </td>
                     <td className="py-3 px-4 text-gray-300">
                       {user.displayName || <span className="text-gray-600 italic">No name</span>}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button
-                        onClick={() => handleRemoveUser(user.walletAddress, user.displayName)}
+                        onClick={() => handleRemoveUser(user.stakeAddress, user.displayName)}
                         className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded"
                       >
                         Delete
@@ -1158,10 +1158,12 @@ function ManualWhitelistModal({
 
         {/* Info Banner */}
         <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4 mb-6 text-sm">
-          <div className="font-bold text-yellow-400 mb-2">⚠️ IMPORTANT: Payment Addresses Only</div>
+          <div className="font-bold text-yellow-400 mb-2">⚠️ IMPORTANT: Stake Addresses Only</div>
           <div className="text-gray-300">
-            <div>• Only paste <span className="font-mono text-green-400">payment addresses</span> (addr1... or addr_test1...)</div>
-            <div>• <span className="font-mono text-red-400">Stake addresses</span> (stake1...) <span className="font-bold">CANNOT</span> receive NFTs and will be rejected</div>
+            <div>• Only paste <span className="font-mono text-green-400">stake addresses</span> (stake1... or stake_test1...)</div>
+            <div>• <span className="font-mono text-red-400">Payment addresses</span> (addr1...) will be <span className="font-bold">REJECTED</span></div>
+            <div>• Stake addresses define eligibility (who can see the claim button)</div>
+            <div>• NMKR collects payment addresses during checkout for NFT delivery</div>
             <div>• One address per line</div>
             <div>• Empty lines will be skipped</div>
           </div>

@@ -73,12 +73,16 @@ export const setActiveSnapshot = mutation({
 });
 
 /**
- * Check if a wallet is eligible to see the claim button
+ * Check if a stake address is eligible to see the claim button
  * This is called by AirdropClaimBanner.tsx on the homepage
+ *
+ * IMPORTANT: Matches ONLY on stake addresses (stake1... or stake_test1...)
+ * Snapshots contain stake addresses for eligibility checking
+ * NMKR collects payment addresses during checkout for NFT delivery
  */
 export const checkClaimEligibility = query({
   args: {
-    walletAddress: v.string(),
+    walletAddress: v.string(), // Actually a stake address (keeping param name for backward compatibility)
   },
   handler: async (ctx, args) => {
     // Get active snapshot
@@ -101,29 +105,23 @@ export const checkClaimEligibility = query({
       };
     }
 
-    // Check if wallet is in snapshot
-    // Match on stake address when available (for user accounts)
-    // Fallback to payment address (for NMKR delivery)
+    // Check if stake address is in snapshot
+    // Snapshots only contain stake addresses (no payment addresses)
     const isInSnapshot = snapshot.eligibleUsers?.some((user: any) => {
-      // If snapshot has stakeAddress, match on that (user's corporation stake address)
-      if (user.stakeAddress) {
-        return user.stakeAddress === args.walletAddress;
-      }
-      // Otherwise match on walletAddress (payment address)
-      return user.walletAddress === args.walletAddress;
+      return user.stakeAddress === args.walletAddress;
     });
 
     if (isInSnapshot) {
       return {
         eligible: true,
-        reason: "Wallet is in active snapshot",
+        reason: "Stake address is in active snapshot",
         snapshotName: snapshot.snapshotName,
       };
     }
 
     return {
       eligible: false,
-      reason: "Wallet not in active snapshot",
+      reason: "Stake address not in active snapshot",
     };
   },
 });
