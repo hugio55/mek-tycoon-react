@@ -203,9 +203,9 @@ export default function MekManagementLightbox({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
-      {/* Backdrop - industrial dark with blur */}
-      <div className="fixed inset-0 bg-black/40" style={{ backdropFilter: 'blur(2px)' }} onClick={onClose} />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
+      {/* Backdrop - industrial dark */}
+      <div className="fixed inset-0 bg-black/60" onClick={onClose} />
 
       {/* Modal Card */}
       <div

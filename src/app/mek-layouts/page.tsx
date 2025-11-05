@@ -16,6 +16,7 @@ export default function MekLayoutsPage() {
   const [cardDarkness, setCardDarkness] = useState(7);
   const [backdropBlur, setBackdropBlur] = useState(0);
   const [cardBackdropBlur, setCardBackdropBlur] = useState(9);
+  const [headerGap, setHeaderGap] = useState(32);
   const [slidersCollapsed, setSlidersCollapsed] = useState(false);
 
   return (
@@ -144,9 +145,9 @@ export default function MekLayoutsPage() {
                 onChange={(e) => setVariationCardStyle(e.target.value as 'clean-frames' | 'image-focus' | 'subtle-accent')}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
-                <option value="clean-frames">Clean Frames</option>
-                <option value="image-focus">Image Focus</option>
-                <option value="subtle-accent">Subtle Accent</option>
+                <option value="clean-frames">Elevated Float</option>
+                <option value="image-focus">Centered Overlay</option>
+                <option value="subtle-accent">Borderless Float</option>
               </select>
             </div>
 
@@ -249,9 +250,9 @@ export default function MekLayoutsPage() {
                   {buffDetailsLayout === 'minimal' && 'Minimal List'}
                 </div>
                 <div>
-                  {variationCardStyle === 'clean-frames' && 'Clean Frames'}
-                  {variationCardStyle === 'image-focus' && 'Image Focus'}
-                  {variationCardStyle === 'subtle-accent' && 'Subtle Accent'}
+                  {variationCardStyle === 'clean-frames' && 'Elevated Float'}
+                  {variationCardStyle === 'image-focus' && 'Centered Overlay'}
+                  {variationCardStyle === 'subtle-accent' && 'Borderless Float'}
                 </div>
               </div>
             </div>

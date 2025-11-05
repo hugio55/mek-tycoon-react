@@ -54,6 +54,10 @@ export default function MekProfileLightbox({
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
+  // Debug slider for title-to-content gap
+  const [showDebugSlider, setShowDebugSlider] = useState(true);
+  const [contentTopGap, setContentTopGap] = useState(32); // Default 32px (py-8 = 2rem)
+
   // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
     switch (styleVariation) {
@@ -157,12 +161,11 @@ export default function MekProfileLightbox({
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      {/* Backdrop - Dynamic darkness and blur */}
+      {/* Backdrop - Dynamic darkness */}
       <div
         className="fixed inset-0"
         style={{
-          backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`,
-          backdropFilter: `blur(${backdropBlur}px)`
+          backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`
         }}
         onClick={onClose}
       />
@@ -213,7 +216,7 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Main Content - Layout 1 (Three-Column) */}
-            <div className="max-w-7xl mx-auto px-4 py-8 pb-6">
+            <div className="max-w-7xl mx-auto px-4 pb-6" style={{ paddingTop: `${contentTopGap}px` }}>
               <div className="space-y-4 md:space-y-6 lg:space-y-8">
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
                 <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
@@ -473,29 +476,37 @@ export default function MekProfileLightbox({
 }
 
 // Reusable Variation Card Component with 3 Style Options
+// All styles now have images floating directly on the base card, no inner containers
 function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title: string; imagePath?: string; cardStyle?: VariationCardStyle }) {
 
-  // Option 1: Clean Frames - Thin borders, minimal padding, let images breathe
+  // Option 1: Elevated Float - Image overlays card with drop shadow, creating floating effect
   if (cardStyle === 'clean-frames') {
     return (
-      <div className="bg-black/20 border border-yellow-500/30 p-3 relative overflow-hidden">
-        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10">{title}</div>
+      <div className="bg-black/30 border-2 border-yellow-500/40 p-4 relative overflow-visible">
+        {/* Scratches overlay on base card */}
+        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
 
-        {/* Image with thin border */}
-        <div className="w-full h-40 border border-yellow-500/20 flex items-center justify-center mb-2 overflow-hidden relative bg-black/30">
+        {/* Image floating ON the card with drop shadow */}
+        <div className="relative -mt-2 mb-3">
           {imagePath ? (
             <img
               src={imagePath}
               alt={title}
-              className="w-full h-full object-contain relative z-10"
+              className="w-full h-44 object-contain relative z-20"
+              style={{
+                filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7))'
+              }}
             />
           ) : (
-            <span className="text-gray-500 text-xs relative z-10">Image</span>
+            <div className="w-full h-44 flex items-center justify-center">
+              <span className="text-gray-500 text-xs">Image</span>
+            </div>
           )}
         </div>
 
+        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10">{title}</div>
         <div className="text-white text-sm mb-1 relative z-10">Variation Name</div>
-        <div className="text-gray-400 text-xs mb-2 relative z-10">3 of 4000</div>
+        <div className="text-gray-400 text-xs mb-3 relative z-10">3 of 4000</div>
 
         <div className="space-y-1 text-xs relative z-10">
           <div className="flex justify-between">
@@ -515,28 +526,34 @@ function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title
     );
   }
 
-  // Option 2: Image Focus - No container boxes, image with title/stats below
+  // Option 2: Centered Overlay - Image positioned in center of card with glow
   if (cardStyle === 'image-focus') {
     return (
-      <div className="relative overflow-hidden">
-        {/* Large prominent image */}
-        <div className="w-full h-48 flex items-center justify-center mb-3 overflow-hidden relative bg-gradient-to-b from-transparent to-black/40">
+      <div className="bg-gradient-to-b from-black/20 via-black/40 to-black/20 border border-yellow-500/30 p-4 relative overflow-hidden min-h-[360px] flex flex-col">
+        {/* Hazard stripe accent at top */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
+
+        {/* Image positioned directly on card with glow */}
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           {imagePath ? (
             <img
               src={imagePath}
               alt={title}
-              className="w-full h-full object-contain relative z-10"
+              className="w-full max-w-[85%] h-auto object-contain"
+              style={{
+                filter: 'drop-shadow(0 0 20px rgba(250, 182, 23, 0.4))'
+              }}
             />
           ) : (
-            <span className="text-gray-500 text-xs relative z-10">Image</span>
+            <span className="text-gray-500 text-xs">Image</span>
           )}
         </div>
 
-        {/* Info below image */}
-        <div className="relative z-10">
-          <div className="mek-label-uppercase mb-2 text-center text-[10px]">{title}</div>
+        {/* Info at bottom of card */}
+        <div className="mt-auto relative z-20 bg-black/60 backdrop-blur-sm p-3 -m-4 border-t border-yellow-500/30">
+          <div className="mek-label-uppercase mb-1 text-[10px] text-center">{title}</div>
           <div className="text-white text-sm mb-1 text-center">Variation Name</div>
-          <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
+          <div className="text-gray-400 text-xs mb-2 text-center">3 of 4000</div>
 
           <div className="space-y-1 text-xs">
             <div className="flex justify-between">
@@ -557,40 +574,43 @@ function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title
     );
   }
 
-  // Option 3: Subtle Accent - Very subtle background/border, light styling
+  // Option 3: Borderless Float - Minimal card with image sitting directly on surface
   if (cardStyle === 'subtle-accent') {
     return (
-      <div className="bg-black/10 border border-yellow-500/10 p-3 relative overflow-hidden rounded">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none"></div>
-        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10 text-yellow-400/70">{title}</div>
+      <div className="bg-black/15 backdrop-blur-sm border border-yellow-500/15 p-3 relative overflow-hidden rounded-lg">
+        {/* Subtle gradient wash */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/3 via-transparent to-black/20 pointer-events-none"></div>
 
-        {/* Image with very subtle border */}
-        <div className="w-full h-40 border border-yellow-500/10 flex items-center justify-center mb-2 overflow-hidden relative bg-black/20 rounded">
+        {/* Image sits directly on card surface, no container */}
+        <div className="relative mb-3">
           {imagePath ? (
             <img
               src={imagePath}
               alt={title}
-              className="w-full h-full object-contain relative z-10"
+              className="w-full h-40 object-contain relative z-10 opacity-95"
             />
           ) : (
-            <span className="text-gray-500 text-xs relative z-10">Image</span>
+            <div className="w-full h-40 flex items-center justify-center">
+              <span className="text-gray-500 text-xs">Image</span>
+            </div>
           )}
         </div>
 
+        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10 text-yellow-400/60">{title}</div>
         <div className="text-white/90 text-sm mb-1 relative z-10">Variation Name</div>
-        <div className="text-gray-400/70 text-xs mb-2 relative z-10">3 of 4000</div>
+        <div className="text-gray-400/60 text-xs mb-3 relative z-10">3 of 4000</div>
 
         <div className="space-y-1 text-xs relative z-10">
           <div className="flex justify-between">
-            <span className="text-gray-400/70">Base:</span>
+            <span className="text-gray-400/60">Base:</span>
             <span className="text-white/90">100</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400/70">Bonus:</span>
-            <span className="text-green-400/90">+25</span>
+            <span className="text-gray-400/60">Bonus:</span>
+            <span className="text-green-400/80">+25</span>
           </div>
-          <div className="flex justify-between border-t border-yellow-500/10 pt-1 mt-1">
-            <span className="text-gray-400/70">Total:</span>
+          <div className="flex justify-between border-t border-yellow-500/15 pt-1 mt-1">
+            <span className="text-gray-400/60">Total:</span>
             <span className="text-yellow-400/90 font-bold">125</span>
           </div>
         </div>
