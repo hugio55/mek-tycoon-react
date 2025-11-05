@@ -27,6 +27,7 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
   const hasShownLoader = useRef(false);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasTriggeredCompletion = useRef(false);
+  const minimumProgressTime = useRef(1200); // Minimum time to show progress animation (ms)
 
   const minDisplayTime = config?.minDisplayTime ?? TIMING.MIN_DISPLAY_TIME;
   const totalTimeout = config?.totalTimeout ?? TIMING.TOTAL_TIMEOUT;
@@ -86,14 +87,28 @@ export function usePageLoadProgress(config?: LoaderConfig): LoadingProgress {
 
       const snapped = snapToMilestone(combined);
 
-      setProgress(snapped);
+      // CRITICAL: Enforce minimum progress time to ensure visible animation
+      // Even if everything loads instantly, pace the progress over minimum time
+      const minimumTimeProgress = Math.min(
+        (elapsed / minimumProgressTime.current) * 90,
+        90
+      );
+
+      // Don't allow progress to exceed minimum time-based progress until minimum time has elapsed
+      const cappedProgress = elapsed < minimumProgressTime.current
+        ? Math.min(snapped, minimumTimeProgress)
+        : snapped;
+
+      setProgress(cappedProgress);
 
       const allQueriesLoaded = totalCount > 0 && loadedCount === totalCount;
       const noQueriesTracked = totalCount === 0 && elapsed >= 800;
       const minTimeElapsed = elapsed >= minDisplayTime;
+      const minimumAnimationTimeElapsed = elapsed >= minimumProgressTime.current;
       const timedOut = elapsed >= totalTimeout;
 
-      if ((allQueriesLoaded && minTimeElapsed) || noQueriesTracked || timedOut) {
+      // Only allow completion if minimum animation time has elapsed
+      if (((allQueriesLoaded || noQueriesTracked) && minTimeElapsed && minimumAnimationTimeElapsed) || timedOut) {
         setProgress(100);
 
         if (!completeTimeoutRef.current && !hasTriggeredCompletion.current) {
