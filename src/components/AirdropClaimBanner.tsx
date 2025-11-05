@@ -59,6 +59,12 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
 
   // Update status based on eligibility
   useEffect(() => {
+    console.log('[🎯CLAIM] AirdropClaimBanner state:', {
+      walletAddress,
+      eligibility,
+      claimStatus
+    });
+
     if (!walletAddress) {
       setClaimStatus("idle");
       return;

@@ -10,6 +10,7 @@ export default function MekLayoutsPage() {
   const [showDebugPanel, setShowDebugPanel] = useState(true);
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
   const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
+  const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -110,6 +111,23 @@ export default function MekLayoutsPage() {
               </select>
             </div>
 
+            {/* Dropdown 3: Buff Details Layout */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Buff Details Layout
+              </label>
+              <select
+                value={buffDetailsLayout}
+                onChange={(e) => setBuffDetailsLayout(e.target.value as 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal')}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="classic">Classic Stack</option>
+                <option value="compact-grid">Compact Grid</option>
+                <option value="detailed-cards">Detailed Cards</option>
+                <option value="minimal">Minimal List</option>
+              </select>
+            </div>
+
             {/* Current Selection Display */}
             <div className="pt-2 border-t border-cyan-500/30">
               <div className="text-[10px] text-gray-500 mb-1">Active:</div>
@@ -124,6 +142,12 @@ export default function MekLayoutsPage() {
                   {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
                   {cardInteriorStyle === 'modern' && 'Minimal Centered'}
                 </div>
+                <div>
+                  {buffDetailsLayout === 'classic' && 'Classic Stack'}
+                  {buffDetailsLayout === 'compact-grid' && 'Compact Grid'}
+                  {buffDetailsLayout === 'detailed-cards' && 'Detailed Cards'}
+                  {buffDetailsLayout === 'minimal' && 'Minimal List'}
+                </div>
               </div>
             </div>
           </div>
@@ -137,12 +161,14 @@ export default function MekLayoutsPage() {
         styleVariation={styleVariation}
         onStyleVariationChange={setStyleVariation}
         cardInteriorStyle={cardInteriorStyle}
+        onCardInteriorStyleChange={setCardInteriorStyle}
       />
 
       {/* Gold Generation Details Lightbox */}
       <GoldGenerationDetailsLightbox
         isOpen={isGoldDetailsOpen}
         onClose={() => setIsGoldDetailsOpen(false)}
+        layout={buffDetailsLayout}
       />
     </div>
   );
