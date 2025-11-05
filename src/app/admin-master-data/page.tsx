@@ -33,6 +33,7 @@ import NebulaCheckbox from '@/components/controls/NebulaCheckbox';
 import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
 import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
 import DottedToggleSwitch from '@/components/controls/DottedToggleSwitch';
+import MechanicalToggle from '@/components/controls/MechanicalToggle';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3438,6 +3439,32 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External CSS</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
                       <div><span className="text-zinc-500">Features:</span> 12-dot grip pattern, 3D shadows, beige theme</div>
+                    </div>
+                  </div>
+
+                  {/* Mechanical Toggle Switch */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Mechanical Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black/80 rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px]">
+                      <MechanicalToggle size="small" />
+                      <MechanicalToggle size="medium" />
+                      <MechanicalToggle size="large" />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS (SCSS)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
+                      <div><span className="text-zinc-500">Features:</span> Red knob rotation, metallic handle, gray→green base, gold accents</div>
                     </div>
                   </div>
 

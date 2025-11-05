@@ -52,12 +52,17 @@ export const getNextAvailableNFT = action({
       };
     }
 
+    // NMKR API requires project IDs without hyphens
+    const cleanProjectId = args.projectId.replace(/-/g, '');
+    console.log('[🔨NMKR] Cleaned project ID (hyphens removed):', cleanProjectId);
+
     // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // State: "free" to get only unminted/available NFTs
     // Count: 50 (max allowed by NMKR API)
     // Page: 1 (first page)
     // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
+    // NOTE: Project ID must NOT contain hyphens
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${cleanProjectId}/free/50/1`;
 
     console.log('[🔨NMKR] 📡 Fetching NFTs from NMKR Studio:', apiUrl);
 
@@ -197,6 +202,7 @@ export const verifyNftAvailability = action({
     }
 
     // NMKR API endpoint: /v2/GetNftDetailsById/{nftuid}
+    // Note: NFT UIDs don't need hyphen removal (they're already in correct format)
     const apiUrl = `https://studio-api.nmkr.io/v2/GetNftDetailsById/${args.nftUid}`;
 
     try {
@@ -256,10 +262,15 @@ export const getProjectStats = action({
       };
     }
 
+    // NMKR API requires project IDs without hyphens
+    const cleanProjectId = args.projectId.replace(/-/g, '');
+    console.log('[🔨NMKR] Project stats - cleaned project ID:', cleanProjectId);
+
     // NMKR API endpoint: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // State: "free" to get only available NFTs (for accurate stats)
     // Count: 50 (max allowed by NMKR API)
-    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${args.projectId}/free/50/1`;
+    // NOTE: Project ID must NOT contain hyphens
+    const apiUrl = `https://studio-api.nmkr.io/v2/GetNfts/${cleanProjectId}/free/50/1`;
 
     try {
       const response = await fetch(apiUrl, {
@@ -334,10 +345,13 @@ export const getProjectInfo = action({
       throw new Error("NMKR_API_KEY is required");
     }
 
+    // NMKR API requires project IDs without hyphens
+    const cleanProjectId = args.projectId.replace(/-/g, '');
     console.log("[🔨NMKR] Fetching project info for:", args.projectId);
+    console.log("[🔨NMKR] Cleaned project ID (hyphens removed):", cleanProjectId);
 
     try {
-      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${args.projectId}`;
+      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${cleanProjectId}`;
       console.log("[🔨NMKR] Request URL:", url);
 
       const response = await fetch(url, {
@@ -387,10 +401,12 @@ export const fetchNFTsFromNMKR = action({
     const count = args.count || 50;
     const page = args.page || 1;
 
-    console.log("[🔨NMKR] Fetching NFTs:", { projectId: args.projectId, state, count, page });
+    // NMKR API requires project IDs without hyphens
+    const cleanProjectId = args.projectId.replace(/-/g, '');
+    console.log("[🔨NMKR] Fetching NFTs:", { projectId: args.projectId, cleanProjectId, state, count, page });
 
     try {
-      const url = `${NMKR_API_BASE}/v2/GetNfts/${args.projectId}/${state}/${count}/${page}`;
+      const url = `${NMKR_API_BASE}/v2/GetNfts/${cleanProjectId}/${state}/${count}/${page}`;
       console.log("[🔨NMKR] Request URL:", url);
 
       const response = await fetch(url, {

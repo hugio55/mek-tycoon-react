@@ -24,7 +24,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
   }, [isOpen]);
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40"
@@ -34,7 +34,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
       {/* Lightbox Container - Same width as EssenceDistributionLightbox */}
       <div
-        className="relative w-[960px] max-w-[95vw] h-auto max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl"
+        className="relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -46,7 +46,7 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
         </button>
 
         {/* Scrollable Content */}
-        <div className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
             {/* Industrial Header */}
             <div className="w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
@@ -275,9 +275,9 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
                 <div className="border-2 border-purple-500 bg-gray-900/50 p-4">
                   <div className="text-xs text-purple-500 font-bold mb-3">VARIATION CARDS</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <VariationCard title="HEAD VARIATION" />
-                    <VariationCard title="BODY VARIATION" />
-                    <VariationCard title="TRAIT VARIATION" />
+                    <VariationCard title="HEAD VARIATION" imagePath="/variation-images-art-400px/ae1-gn3-ev1.png" />
+                    <VariationCard title="BODY VARIATION" imagePath="/variation-images-art-400px/ak3-aa5-mo1.png" />
+                    <VariationCard title="TRAIT VARIATION" imagePath="/variation-images-art-400px/ar1-at1-nm1.png" />
                   </div>
                 </div>
 
@@ -302,13 +302,21 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 }
 
 // Reusable Variation Card Component
-function VariationCard({ title }: { title: string }) {
+function VariationCard({ title, imagePath }: { title: string; imagePath?: string }) {
   return (
     <div className="border-2 border-gray-600 bg-gray-800 p-4">
       <div className="text-sm text-yellow-500 mb-3 font-bold">{title}</div>
 
-      <div className="w-full h-32 border border-gray-600 bg-gray-700 flex items-center justify-center mb-3">
-        <span className="text-gray-500 text-xs">Image</span>
+      <div className="w-full h-32 border border-gray-600 bg-gray-700 flex items-center justify-center mb-3 overflow-hidden">
+        {imagePath ? (
+          <img
+            src={imagePath}
+            alt={title}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className="text-gray-500 text-xs">Image</span>
+        )}
       </div>
 
       <div className="text-white mb-2">Variation Name</div>
