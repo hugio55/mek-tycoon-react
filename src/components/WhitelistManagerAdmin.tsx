@@ -1102,7 +1102,7 @@ function ManualWhitelistModal({
       const trimmed = line.trim();
       if (!trimmed) continue; // Skip empty lines
 
-      if (trimmed.startsWith('addr1') || trimmed.startsWith('addr_test1')) {
+      if (trimmed.startsWith('stake1') || trimmed.startsWith('stake_test1')) {
         valid++;
       } else {
         invalid++;
@@ -1128,7 +1128,7 @@ function ManualWhitelistModal({
       .filter(line => line.length > 0);
 
     if (addresses.length === 0) {
-      alert('Please paste at least one payment address');
+      alert('Please paste at least one stake address');
       return;
     }
 
@@ -1139,7 +1139,7 @@ function ManualWhitelistModal({
         description: description.trim() || undefined,
         addresses,
       });
-      alert(`Manual whitelist created! ${result.userCount} payment addresses added.`);
+      alert(`Manual whitelist created! ${result.userCount} stake addresses added.`);
       onClose();
     } catch (error: any) {
       alert(`Error: ${error.message}`);
@@ -1195,7 +1195,7 @@ function ManualWhitelistModal({
         {/* Addresses Textarea */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm text-green-300">Payment Addresses</label>
+            <label className="block text-sm text-green-300">Stake Addresses</label>
             <button
               onClick={handleValidate}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded"
@@ -1209,7 +1209,7 @@ function ManualWhitelistModal({
               setAddressesText(e.target.value);
               setValidationResult(null); // Clear validation on edit
             }}
-            placeholder="Paste payment addresses here (one per line)&#10;addr_test1qz04lcdw53xuhq89lw93m293e6tk82xtwzplyl66p7ajxgsaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qzm7v40&#10;addr_test1qpq3w8lqspr0vxa89n64kpq5urqvfuwvazggkvgulumgxssaqtsv4ju9gl6rducnhv5u83ke4fxpwmtun2yh0melw28qgntca8k"
+            placeholder="Paste stake addresses here (one per line)&#10;stake_test1uzpq2pktgvn7n6qd3vd23jyy5ekgt4mhpggngz52cxw7zyclhw28g&#10;stake_test1uqx5w8r4km2eshaa4w09v74ruw5dpfnkz7qx8mnkj7pqnwcz4nfr2"
             className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white h-64 font-mono text-xs focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
@@ -1224,7 +1224,7 @@ function ManualWhitelistModal({
             </div>
             <div className="text-sm space-y-1">
               <div>• Total addresses: <span className="font-bold">{validationResult.total}</span></div>
-              <div className="text-green-400">• Valid payment addresses: <span className="font-bold">{validationResult.valid}</span></div>
+              <div className="text-green-400">• Valid stake addresses: <span className="font-bold">{validationResult.valid}</span></div>
               {validationResult.invalid > 0 && (
                 <div className="text-red-400">• Invalid addresses: <span className="font-bold">{validationResult.invalid}</span></div>
               )}
@@ -1232,6 +1232,8 @@ function ManualWhitelistModal({
             {validationResult.invalid > 0 && (
               <div className="mt-3 text-xs text-red-300">
                 Invalid addresses will be rejected when you create the whitelist. Please remove or fix them.
+                <br/>
+                <span className="font-bold">Remember: Only stake addresses (stake1... or stake_test1...) are allowed.</span>
               </div>
             )}
           </div>
