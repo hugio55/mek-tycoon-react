@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -9,7 +9,7 @@ export default function MekLayoutsPage() {
   const [isGoldDetailsOpen, setIsGoldDetailsOpen] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(true);
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
-  const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
+  const [cardInteriorStyle, setCardInteriorStyle] = useState<CardInteriorStyle>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
   const [backdropDarkness, setBackdropDarkness] = useState(22);
@@ -111,12 +111,15 @@ export default function MekLayoutsPage() {
               </label>
               <select
                 value={cardInteriorStyle}
-                onChange={(e) => setCardInteriorStyle(e.target.value as 'compact' | 'spacious' | 'modern')}
+                onChange={(e) => setCardInteriorStyle(e.target.value as CardInteriorStyle)}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
                 <option value="compact">Classic Stack</option>
                 <option value="spacious">Side-by-Side</option>
                 <option value="modern">Minimal Centered</option>
+                <option value="grid-cards">Grid Cards</option>
+                <option value="inline-compact">Inline Compact</option>
+                <option value="badge-style">Badge Labels</option>
               </select>
             </div>
 
@@ -290,6 +293,9 @@ export default function MekLayoutsPage() {
                   {cardInteriorStyle === 'compact' && 'Classic Stack'}
                   {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
                   {cardInteriorStyle === 'modern' && 'Minimal Centered'}
+                  {cardInteriorStyle === 'grid-cards' && 'Grid Cards'}
+                  {cardInteriorStyle === 'inline-compact' && 'Inline Compact'}
+                  {cardInteriorStyle === 'badge-style' && 'Badge Labels'}
                 </div>
                 <div>
                   {buffDetailsLayout === 'classic' && 'Classic Stack'}
