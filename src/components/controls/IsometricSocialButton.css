@@ -16,9 +16,12 @@
 }
 
 .isometric-social a {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(0, 0, 0, 1);
-  padding: 20px;
+  width: 80px;
+  height: 80px;
   position: relative;
   transform: perspective(1000px) rotate(-30deg) skew(25deg) translate(0,0);
   box-shadow: -20px 20px 10px rgba(0, 0, 0, 0.5);
