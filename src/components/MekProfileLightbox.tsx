@@ -75,10 +75,11 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
             <div className="max-w-7xl mx-auto px-4 py-8 pb-6">
               <div className="space-y-4 md:space-y-6 lg:space-y-8">
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
-                <div className="lg:hidden border-4 border-blue-500 bg-gray-900/50 p-4">
-                  <div className="text-xs text-blue-500 font-bold mb-3 text-center">MEK IMAGE</div>
-                  <div className="w-full aspect-square max-w-xs mx-auto border-2 border-gray-600 bg-gray-800 flex items-center justify-center">
-                    <span className="text-gray-500 text-center">Large Mek Image<br/>400x400</span>
+                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold p-4">
+                  <div className="mek-label-uppercase mb-3 text-center">MEK IMAGE</div>
+                  <div className="w-full aspect-square max-w-xs mx-auto bg-black/40 border border-yellow-500/20 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+                    <span className="text-gray-500 text-center relative z-10">Large Mek Image<br/>400x400</span>
                   </div>
                 </div>
 
@@ -331,25 +332,27 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 // Reusable Variation Card Component
 function VariationCard({ title, imagePath }: { title: string; imagePath?: string }) {
   return (
-    <div className="border-2 border-gray-600 bg-gray-800 p-4">
-      <div className="text-sm text-yellow-500 mb-3 font-bold">{title}</div>
+    <div className="bg-black/30 border border-yellow-500/30 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
+      <div className="mek-label-uppercase mb-3 relative z-10">{title}</div>
 
-      <div className="w-full h-32 border border-gray-600 bg-gray-700 flex items-center justify-center mb-3 overflow-hidden">
+      <div className="w-full h-32 bg-black/40 border border-yellow-500/20 flex items-center justify-center mb-3 overflow-hidden relative">
+        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
         {imagePath ? (
           <img
             src={imagePath}
             alt={title}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain relative z-10"
           />
         ) : (
-          <span className="text-gray-500 text-xs">Image</span>
+          <span className="text-gray-500 text-xs relative z-10">Image</span>
         )}
       </div>
 
-      <div className="text-white mb-2">Variation Name</div>
-      <div className="text-gray-400 text-sm mb-3">3 of 4000</div>
+      <div className="text-white mb-2 relative z-10">Variation Name</div>
+      <div className="text-gray-400 text-sm mb-3 relative z-10">3 of 4000</div>
 
-      <div className="space-y-1 text-sm">
+      <div className="space-y-1 text-sm relative z-10">
         <div className="flex justify-between">
           <span className="text-gray-400">Base Essence:</span>
           <span className="text-white">100</span>
@@ -358,9 +361,9 @@ function VariationCard({ title, imagePath }: { title: string; imagePath?: string
           <span className="text-gray-400">Bonus Essence:</span>
           <span className="text-green-400">+25</span>
         </div>
-        <div className="flex justify-between border-t border-gray-600 pt-1">
+        <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
           <span className="text-gray-400">Total Essence:</span>
-          <span className="text-yellow-500 font-bold">125</span>
+          <span className="mek-value-primary font-bold">125</span>
         </div>
       </div>
     </div>
