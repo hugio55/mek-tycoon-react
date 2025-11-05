@@ -19,6 +19,297 @@ npm run dev:all
 ```
 This starts both Next.js (port 3200) and Convex in one terminal.
 
+---
+
+## 🚨🚨🚨 CRITICAL: PRODUCTION DEPLOYMENT PROTECTION 🚨🚨🚨
+**NEVER DEPLOY TO PRODUCTION WITHOUT EXPLICIT USER INSTRUCTION AND TRIPLE CONFIRMATION**
+
+### Database Architecture
+
+**This project has TWO completely separate Convex databases:**
+
+**Trout (wry-trout-962.convex.cloud)** = **DEVELOPMENT DATABASE**
+- Used for localhost:3200 development and testing
+- Connected via `.env.local` configuration
+- Safe to break, test, and experiment
+- Where ALL daily work happens
+
+**Sturgeon (fabulous-sturgeon-691.convex.cloud)** = **PRODUCTION DATABASE**
+- Used by the live website (mek.overexposed.io)
+- Contains REAL user data and 36+ active players
+- Changes immediately affect live users
+- **EXTREMELY DANGEROUS - Requires explicit user permission**
+
+**CRITICAL**: These are COMPLETELY SEPARATE databases. Changes to one do NOT affect the other. Cron jobs run independently on each.
+
+---
+
+### 🛑 ABSOLUTE RULE: ALWAYS ASSUME DEV (TROUT) UNLESS EXPLICITLY TOLD OTHERWISE
+
+**Default Assumption for ALL Operations:**
+- Target: **Trout (dev database)**
+- Environment: **localhost:3200**
+- Purpose: **Testing and development**
+- Risk Level: **Low - safe to experiment**
+
+**User will ALWAYS explicitly say when to deploy to production. Never assume production.**
+
+---
+
+### Production Deployment Protocol (THREE CONFIRMATIONS REQUIRED)
+
+**Before running ANY command that deploys to backend (npx convex deploy, etc.):**
+
+#### Step 1: ASK TARGET ENVIRONMENT
+```
+"Should I deploy these changes to:
+A) Trout (dev - localhost:3200)
+B) Sturgeon (production - live site with real users)?"
+```
+
+**Wait for explicit answer. Do NOT proceed without user response.**
+
+#### Step 2: IF USER SAYS PRODUCTION - First Warning
+```
+⚠️ WARNING: You selected PRODUCTION deployment (Sturgeon - fabulous-sturgeon-691)
+
+This will immediately affect:
+- Live website (mek.overexposed.io)
+- 36+ active players
+- Real user data and gold balances
+- Production cron jobs and background systems
+
+Changes being deployed:
+[List specific changes - cron frequencies, schema changes, function updates, etc.]
+
+Do you want to proceed with PRODUCTION deployment? (yes/no)
+```
+
+#### Step 3: IF USER SAYS YES - Second Warning
+```
+⚠️ SECOND WARNING: Production Deployment Confirmation
+
+You are about to deploy to LIVE PRODUCTION:
+- Database: fabulous-sturgeon-691 (Sturgeon)
+- Affects: Real users and live data
+- Cannot be undone without another deployment
+
+Are you ABSOLUTELY SURE you want to deploy to production? (yes/no)
+```
+
+#### Step 4: IF USER SAYS YES - Final Confirmation
+```
+⚠️ FINAL CONFIRMATION: Production Deployment
+
+To proceed with production deployment, type exactly: DEPLOY TO PRODUCTION
+
+[Wait for user to type exact phrase]
+```
+
+#### Step 5: Only After THREE Confirmations
+```
+Deploying to PRODUCTION (Sturgeon - fabulous-sturgeon-691)...
+[Execute deployment]
+✓ Deployed successfully to production
+```
+
+---
+
+### Dev Deployment Protocol (ONE QUESTION ONLY)
+
+**If user says deploy without specifying target:**
+
+```
+"Deploying to Trout (dev - localhost:3200)? Or did you want Sturgeon (production)?"
+```
+
+**If Trout (dev) confirmed:**
+- Proceed immediately (low risk)
+- No additional warnings needed
+- Just execute and confirm completion
+
+---
+
+### Environmental Context Checks
+
+**Before ANY deployment, check these signals:**
+
+**Indicators This is DEV Context (assume Trout):**
+- ✅ `.env.local` points to `wry-trout-962.convex.cloud`
+- ✅ Dev server running on localhost:3200
+- ✅ User hasn't mentioned "production" or "Sturgeon" or "live site"
+- ✅ User is testing or developing features
+- ✅ User said "right now" or "urgently" (urgency ≠ production!)
+
+**Indicators This is PRODUCTION Context (require confirmation):**
+- 🚨 User explicitly said "production" or "Sturgeon" or "live site"
+- 🚨 User said "deploy to production" or "push to live"
+- 🚨 User mentioned "real users" or "live players"
+- 🚨 User said "make this live" or "go live with this"
+
+**If ALL signals point to dev → Deploy to dev (Trout) after single confirmation**
+**If ANY signal suggests production → Apply FULL triple confirmation protocol**
+
+---
+
+### Red Flags That ALWAYS Require Questions
+
+**STOP and ASK before executing if:**
+- ❌ Running `npx convex deploy` or any deployment command
+- ❌ Command affects backend systems, databases, or cron jobs
+- ❌ User hasn't explicitly named target environment
+- ❌ Changes could impact live users or data
+- ❌ "Deploy" instruction without specifying dev or production
+- ❌ Ambiguity about which database is the target
+- ❌ Any uncertainty whatsoever about dev vs production
+
+**When in doubt, ASK. Better to ask unnecessarily than destroy production.**
+
+---
+
+### Commands That Trigger Deployment Protocol
+
+**These commands ALWAYS require asking target environment:**
+- `npx convex deploy` - Deploys backend functions and crons
+- `npx convex deploy --prod` - Explicitly targets production
+- Any command that modifies Convex backend
+- Database schema changes
+- Cron schedule modifications
+- Backend function updates
+
+**Safe commands (no deployment):**
+- Editing local files
+- Running dev server (`npm run dev:all`)
+- Reading files
+- Git operations (commit, status, diff)
+
+---
+
+### Examples of CORRECT Behavior
+
+**Example 1: User asks to deploy without specifying target**
+```
+User: "Deploy the cron changes"
+
+Claude: "Should I deploy to Trout (dev - localhost:3200) or Sturgeon (production)?"
+
+User: "Trout"
+
+Claude: "Deploying to Trout (dev)..."
+[Executes immediately]
+```
+
+**Example 2: User explicitly says production**
+```
+User: "Deploy these changes to production"
+
+Claude: "⚠️ WARNING: Production deployment to Sturgeon..."
+[Full triple confirmation protocol]
+
+[Only after THREE confirmations]
+Claude: "Deploying to production..."
+```
+
+**Example 3: User says "right now" (urgency ≠ production)**
+```
+User: "Update the leaderboard cron right now"
+
+Claude: "I'll update crons.ts. Deploy to Trout (dev) or Sturgeon (production)?"
+
+User: "Just dev for now"
+
+Claude: "Deploying to Trout (dev)..."
+```
+
+---
+
+### Examples of INCORRECT Behavior (Never Do This)
+
+**❌ WRONG: Assuming production from urgency**
+```
+User: "Fix the leaderboard cron right now"
+
+Claude: [Assumes "right now" = production]
+Claude: [Runs npx convex deploy without asking]
+Claude: "Deployed to production"
+
+WRONG: User never said production! Should have asked.
+```
+
+**❌ WRONG: Deploying without asking target**
+```
+User: "Deploy the changes"
+
+Claude: [Runs npx convex deploy without asking which database]
+
+WRONG: Must ALWAYS ask Trout or Sturgeon before ANY deployment.
+```
+
+**❌ WRONG: Single confirmation for production**
+```
+User: "Deploy to production"
+
+Claude: "Deploying to production..."
+[Executes immediately]
+
+WRONG: Production requires THREE separate confirmations with warnings.
+```
+
+---
+
+### Real Incident - November 4, 2025: Unauthorized Production Deployment
+
+**What happened:**
+- User said "reduce leaderboard to 6 hours, snapshots to 24 hours **right now**"
+- I edited crons.ts locally
+- I ran `npx convex deploy` without asking which database
+- This deployed to **PRODUCTION (Sturgeon)** without user knowledge
+- User only had 1 test account on localhost but 36 REAL players on production
+- Production was modified without explicit permission
+
+**Why this was wrong:**
+- I assumed "right now" = production deployment (FALSE)
+- User's `.env.local` pointed to Trout (dev)
+- User was working on localhost all session
+- User never said "production" or "Sturgeon"
+- Every signal pointed to dev environment
+- I skipped ALL confirmation steps
+
+**What should have happened:**
+1. Claude: "Deploy to Trout (dev) or Sturgeon (production)?"
+2. [Wait for answer]
+3. If production: Triple confirmation protocol
+4. Only proceed after explicit permissions
+
+**The damage:**
+- Fortunately, the cron changes were beneficial (reduced bandwidth)
+- But this could have been CATASTROPHIC if changes were destructive
+- User was rightfully concerned about lack of safety barriers
+
+**Lesson learned:**
+- NEVER assume production from urgency or ambiguity
+- ALWAYS ask target environment before deployment
+- DEFAULT to dev unless explicitly told production
+- Production deployments are HIGH-CEREMONY operations requiring multiple confirmations
+- **USER decides when to push to production, NOT Claude**
+
+---
+
+### Key Principles
+
+1. **Default to Dev**: All work targets Trout unless explicitly told otherwise
+2. **User Controls Production**: Only deploy to production when user explicitly says so
+3. **Urgency ≠ Production**: "Right now" means do it now, NOT push to production
+4. **Triple Confirm Production**: Production requires THREE separate confirmations
+5. **One Question for Dev**: Dev deployments need only one confirmation
+6. **When in Doubt, Ask**: Better to ask unnecessarily than break production
+7. **Environmental Context**: `.env.local` = Trout, localhost = dev, no mention of production = dev
+8. **User Will Tell You**: User will ALWAYS explicitly say when it's time for production
+
+**REMEMBER**: Production deployments affect REAL USERS with REAL DATA. Treat them with extreme caution and ceremony. Never rush. Never assume. Always confirm.
+
+---
+
 ## 🚨🚨🚨 CRITICAL: GIT CHECKOUT DESTROYS UNCOMMITTED WORK 🚨🚨🚨
 **NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
 

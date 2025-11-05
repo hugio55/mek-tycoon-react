@@ -17,18 +17,23 @@ import { Id } from "./_generated/dataModel";
  */
 
 const NMKR_API_BASE = "https://studio-api.nmkr.io";
-const NMKR_API_KEY = process.env.NMKR_API_KEY;
 
 // ==========================================
 // HELPER: FETCH NFTs FROM NMKR BY STATUS
 // ==========================================
 
 async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" | "sold") {
+  // Access environment variable inside the function (Convex requirement)
+  const NMKR_API_KEY = process.env.NMKR_API_KEY;
+
   if (!NMKR_API_KEY) {
-    throw new Error("NMKR_API_KEY not configured");
+    console.error("[SYNC] NMKR_API_KEY is undefined - environment variable not accessible");
+    console.error("[SYNC] Available env vars:", Object.keys(process.env || {}));
+    throw new Error("NMKR_API_KEY not configured - check Convex dashboard environment variables");
   }
 
   console.log(`[SYNC] Fetching ${state} NFTs from NMKR project:`, projectId);
+  console.log("[SYNC] API Key loaded successfully, length:", NMKR_API_KEY.length);
 
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
@@ -50,6 +55,15 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[SYNC] Failed to fetch ${state} NFTs:`, response.status, errorText);
+      console.error("[SYNC] Request URL was:", url.replace(NMKR_API_KEY || '', '***KEY***'));
+      console.error("[SYNC] Response headers:", Object.fromEntries(response.headers.entries()));
+
+      // Check if it's specifically the API key error
+      if (errorText.includes("apikey") || errorText.includes("api key") || errorText.includes("apiKey")) {
+        console.error("[SYNC] ⚠️ API KEY ERROR DETECTED - The API key may not be properly formatted in the URL");
+        console.error("[SYNC] Expected URL format: .../page?apiKey=YOUR_KEY");
+      }
+
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
 
@@ -67,6 +81,9 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
 // ==========================================
 
 async function fetchProjectStats(projectId: string) {
+  // Access environment variable inside the function (Convex requirement)
+  const NMKR_API_KEY = process.env.NMKR_API_KEY;
+
   if (!NMKR_API_KEY) {
     console.error("[SYNC] NMKR_API_KEY not found in environment");
     throw new Error("NMKR_API_KEY not configured");
@@ -92,7 +109,15 @@ async function fetchProjectStats(projectId: string) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[SYNC] Failed to fetch project stats:", errorText);
-      console.error("[SYNC] Full URL was:", url);
+      console.error("[SYNC] Full URL was:", url.replace(NMKR_API_KEY || '', '***KEY***'));
+      console.error("[SYNC] Response headers:", Object.fromEntries(response.headers.entries()));
+
+      // Check if it's specifically the API key error
+      if (errorText.includes("apikey") || errorText.includes("api key") || errorText.includes("apiKey")) {
+        console.error("[SYNC] ⚠️ API KEY ERROR DETECTED - The API key may not be properly formatted in the URL");
+        console.error("[SYNC] Expected URL format: .../projectId?apiKey=YOUR_KEY");
+      }
+
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
 

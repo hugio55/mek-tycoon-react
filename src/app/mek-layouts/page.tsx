@@ -496,7 +496,6 @@ function FullWidthStackLayout() {
             <span className="text-gray-500">Node Tree / Talent Tree Area</span>
           </div>
         </div>
-      </div>
     </div>
   );
 }
