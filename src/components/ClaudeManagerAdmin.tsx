@@ -1,0 +1,259 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface ClaudeFile {
+  name: string;
+  path: string;
+  type: 'command' | 'document' | 'agent' | 'config';
+  location: 'project' | 'computer';
+  description?: string;
+  content: string;
+  frontmatter?: Record<string, any>;
+}
+
+interface ClaudeFilesResponse {
+  success: boolean;
+  files: ClaudeFile[];
+  stats: {
+    total: number;
+    project: number;
+    computer: number;
+    byType: {
+      commands: number;
+      documents: number;
+      agents: number;
+      config: number;
+    };
+  };
+}
+
+export default function ClaudeManagerAdmin() {
+  const [data, setData] = useState<ClaudeFilesResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedFile, setExpandedFile] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'command' | 'document' | 'agent' | 'config'>('all');
+  const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'computer'>('all');
+
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  async function loadFiles() {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/claude-files');
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error('Failed to load Claude files:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredFiles = data?.files.filter(file => {
+    if (filterType !== 'all' && file.type !== filterType) return false;
+    if (filterLocation !== 'all' && file.location !== filterLocation) return false;
+    return true;
+  }) || [];
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'command': return '⚡';
+      case 'document': return '📄';
+      case 'agent': return '🤖';
+      case 'config': return '⚙️';
+      default: return '📝';
+    }
+  };
+
+  const getLocationBadge = (location: string) => {
+    return location === 'project'
+      ? <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded">Project</span>
+      : <span className="px-2 py-1 text-xs bg-purple-500/20 text-purple-300 rounded">Computer-Wide</span>;
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-400">
+        Loading Claude files...
+      </div>
+    );
+  }
+
+  if (!data || !data.success) {
+    return (
+      <div className="p-8 text-center text-red-400">
+        Failed to load Claude files
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-6">
+      {/* Header Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+          <div className="text-gray-400 text-sm">Total Files</div>
+          <div className="text-2xl font-bold text-white">{data.stats.total}</div>
+        </div>
+        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+          <div className="text-blue-400 text-sm">Project Files</div>
+          <div className="text-2xl font-bold text-blue-300">{data.stats.project}</div>
+        </div>
+        <div className="bg-purple-900/20 border border-purple-700 rounded-lg p-4">
+          <div className="text-purple-400 text-sm">Computer-Wide</div>
+          <div className="text-2xl font-bold text-purple-300">{data.stats.computer}</div>
+        </div>
+        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
+          <div className="text-yellow-400 text-sm">Slash Commands</div>
+          <div className="text-2xl font-bold text-yellow-300">{data.stats.byType.commands}</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex gap-2">
+          <span className="text-gray-400 text-sm">Type:</span>
+          <button
+            onClick={() => setFilterType('all')}
+            className={`px-3 py-1 text-sm rounded ${filterType === 'all' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            All ({data.stats.total})
+          </button>
+          <button
+            onClick={() => setFilterType('command')}
+            className={`px-3 py-1 text-sm rounded ${filterType === 'command' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            ⚡ Commands ({data.stats.byType.commands})
+          </button>
+          <button
+            onClick={() => setFilterType('document')}
+            className={`px-3 py-1 text-sm rounded ${filterType === 'document' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            📄 Documents ({data.stats.byType.documents})
+          </button>
+          <button
+            onClick={() => setFilterType('agent')}
+            className={`px-3 py-1 text-sm rounded ${filterType === 'agent' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            🤖 Agents ({data.stats.byType.agents})
+          </button>
+        </div>
+
+        <div className="flex gap-2">
+          <span className="text-gray-400 text-sm">Location:</span>
+          <button
+            onClick={() => setFilterLocation('all')}
+            className={`px-3 py-1 text-sm rounded ${filterLocation === 'all' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilterLocation('project')}
+            className={`px-3 py-1 text-sm rounded ${filterLocation === 'project' ? 'bg-blue-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            Project
+          </button>
+          <button
+            onClick={() => setFilterLocation('computer')}
+            className={`px-3 py-1 text-sm rounded ${filterLocation === 'computer' ? 'bg-purple-500 text-black' : 'bg-gray-700 text-gray-300'}`}
+          >
+            Computer-Wide
+          </button>
+        </div>
+
+        <button
+          onClick={loadFiles}
+          className="ml-auto px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-400 transition-colors"
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Files List */}
+      <div className="space-y-3">
+        {filteredFiles.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            No files found matching filters
+          </div>
+        ) : (
+          filteredFiles.map((file) => (
+            <div
+              key={file.path}
+              className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden"
+            >
+              {/* File Header */}
+              <div
+                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
+              >
+                <div className="text-2xl">{getTypeIcon(file.type)}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium">
+                      {file.type === 'command' ? '/' : ''}{file.name}
+                    </span>
+                    {getLocationBadge(file.location)}
+                  </div>
+                  {file.description && (
+                    <div className="text-sm text-gray-400 mt-1">{file.description}</div>
+                  )}
+                </div>
+                <div className="text-gray-500">
+                  {expandedFile === file.path ? '▼' : '▶'}
+                </div>
+              </div>
+
+              {/* Expanded Content */}
+              {expandedFile === file.path && (
+                <div className="border-t border-gray-700 p-4 bg-gray-900/50">
+                  {/* Frontmatter */}
+                  {file.frontmatter && Object.keys(file.frontmatter).length > 0 && (
+                    <div className="mb-4 p-3 bg-gray-800 rounded">
+                      <div className="text-sm text-gray-400 mb-2">Metadata:</div>
+                      <div className="space-y-1">
+                        {Object.entries(file.frontmatter).map(([key, value]) => (
+                          <div key={key} className="text-sm">
+                            <span className="text-blue-400">{key}:</span>{' '}
+                            <span className="text-gray-300">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File Path */}
+                  <div className="mb-3 text-xs text-gray-500 font-mono">
+                    {file.path}
+                  </div>
+
+                  {/* Content */}
+                  <div className="bg-black/30 rounded p-4 max-h-96 overflow-y-auto">
+                    <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
+                      {file.content}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Helper Info */}
+      <div className="mt-8 p-4 bg-blue-900/10 border border-blue-700/30 rounded-lg">
+        <div className="text-sm text-blue-300 space-y-2">
+          <div><strong>Slash Commands:</strong> Type <code className="bg-black/30 px-2 py-1 rounded">/command-name</code> in Claude to use</div>
+          <div><strong>Project Files:</strong> {PROJECT_CLAUDE_DIR}</div>
+          <div><strong>Computer-Wide Files:</strong> C:\Users\Ben Meyers\.claude\</div>
+          <div><strong>Note:</strong> Computer-wide files are available to ALL Claude sessions on this computer</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Export the project path for reference
+const PROJECT_CLAUDE_DIR = '.claude';

@@ -319,18 +319,18 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-12 gap-6">
-            
+          {/* Responsive Layout: Single column mobile, two-column desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
             {/* Left Column - Profile & Stats */}
-            <div className="col-span-4">
+            <div className="col-span-1 lg:col-span-4">
               <div className="relative rounded-lg overflow-hidden group" style={{
                 background: 'rgba(255, 255, 255, 0.005)',
                 backdropFilter: 'blur(1px)',
                 border: '1px solid rgba(255, 255, 255, 0.015)',
                 boxShadow: '0 0 20px rgba(0, 0, 0, 0.2) inset',
               }}>
-                {/* Avatar */}
+                {/* Avatar - Responsive sizing */}
                 <div className="relative">
                   <div className="w-full aspect-square bg-gray-800 overflow-hidden">
                     <MekImage
@@ -417,7 +417,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Right Column - Content Tabs */}
-            <div className="col-span-8">
+            <div className="col-span-1 lg:col-span-8">
               {/* Tab Navigation */}
               <div className="flex gap-0">
                 <button
