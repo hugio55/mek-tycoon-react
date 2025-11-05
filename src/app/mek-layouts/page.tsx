@@ -11,7 +11,7 @@ export default function MekLayoutsPage() {
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
   const [cardInteriorStyle, setCardInteriorStyle] = useState<'compact' | 'spacious' | 'modern'>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
-  const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'direct-on-lightbox'>('clean-frames');
+  const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
   const [backdropBlur, setBackdropBlur] = useState(0);
@@ -142,13 +142,13 @@ export default function MekLayoutsPage() {
               </label>
               <select
                 value={variationCardStyle}
-                onChange={(e) => setVariationCardStyle(e.target.value as 'clean-frames' | 'image-focus' | 'subtle-accent' | 'direct-on-lightbox')}
+                onChange={(e) => setVariationCardStyle(e.target.value as 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct')}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
                 <option value="clean-frames">Elevated Float</option>
                 <option value="image-focus">Centered Overlay</option>
                 <option value="subtle-accent">Borderless Float</option>
-                <option value="direct-on-lightbox">Direct on Lightbox</option>
+                <option value="no-cards-direct">Direct on Lightbox</option>
               </select>
             </div>
 
@@ -269,7 +269,7 @@ export default function MekLayoutsPage() {
                   {variationCardStyle === 'clean-frames' && 'Elevated Float'}
                   {variationCardStyle === 'image-focus' && 'Centered Overlay'}
                   {variationCardStyle === 'subtle-accent' && 'Borderless Float'}
-                  {variationCardStyle === 'direct-on-lightbox' && 'Direct on Lightbox'}
+                  {variationCardStyle === 'no-cards-direct' && 'Direct on Lightbox'}
                 </div>
               </div>
             </div>

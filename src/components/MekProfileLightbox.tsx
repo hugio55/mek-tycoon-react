@@ -617,5 +617,51 @@ function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title
     );
   }
 
+  // Option 4: No Cards Direct - Images and text float directly on lightbox base layer, NO card containers
+  if (cardStyle === 'no-cards-direct') {
+    return (
+      <div className="flex flex-col items-center relative">
+        {/* Image floating directly on lightbox background - no card wrapper at all */}
+        <div className="relative mb-3">
+          {imagePath ? (
+            <img
+              src={imagePath}
+              alt={title}
+              className="w-full h-48 object-contain"
+              style={{
+                filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
+              }}
+            />
+          ) : (
+            <div className="w-full h-48 flex items-center justify-center">
+              <span className="text-gray-500 text-xs">Image</span>
+            </div>
+          )}
+        </div>
+
+        {/* All text content sitting directly on lightbox surface - no card background */}
+        <div className="mek-label-uppercase mb-1 text-[10px] text-center text-yellow-400">{title}</div>
+        <div className="text-white text-sm mb-1 text-center">Variation Name</div>
+        <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
+
+        {/* Stats section - minimal styling, floating on lightbox */}
+        <div className="space-y-1 text-xs w-full max-w-[200px]">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Base:</span>
+            <span className="text-white">100</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Bonus:</span>
+            <span className="text-green-400">+25</span>
+          </div>
+          <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
+            <span className="text-gray-400">Total:</span>
+            <span className="text-yellow-400 font-bold">125</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return null;
 }
