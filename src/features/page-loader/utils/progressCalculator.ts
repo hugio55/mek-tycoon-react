@@ -58,6 +58,6 @@ export function getStageMessage(progress: number, customMessages?: string[]): st
   if (progress < 25) return messages[0];
   if (progress < 50) return messages[1] || messages[0];
   if (progress < 75) return messages[2] || messages[1] || messages[0];
-  if (progress < 100) return messages[3] || messages[2] || messages[0];
-  return 'READY';
+  // Stay at "ALMOST READY..." even at 100% - "READY" is handled separately
+  return messages[3] || messages[2] || messages[0];
 }
