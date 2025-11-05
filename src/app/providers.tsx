@@ -37,18 +37,16 @@ function ContentWithLoadingState({ children }: { children: ReactNode }) {
     setIsBypassed(localStorage.getItem('disablePageLoader') === 'true');
   }, []);
 
-  // Render children without wrapper during SSR to avoid hydration mismatch
-  if (!hasMounted) {
-    return <>{children}</>;
-  }
+  // CRITICAL: Always render with wrapper to prevent FOUC
+  // Start with opacity 0 and only show after mounting and checking bypass
+  const shouldShow = hasMounted && (isBypassed || !isLoading);
 
-  // After hydration, apply loading state wrapper
   return (
     <div
       style={{
-        opacity: isBypassed ? 1 : (isLoading ? 0 : 1),
-        transition: isBypassed ? 'none' : `opacity ${TIMING.FADE_DURATION}ms ease-out`,
-        pointerEvents: isBypassed ? 'auto' : (isLoading ? 'none' : 'auto'),
+        opacity: shouldShow ? 1 : 0,
+        transition: hasMounted && !isBypassed ? `opacity ${TIMING.FADE_DURATION}ms ease-out` : 'none',
+        pointerEvents: shouldShow ? 'auto' : 'none',
       }}
     >
       {children}
