@@ -12,7 +12,7 @@ const COMPUTER_CLAUDE_DIR = path.join('C:', 'Users', 'Ben Meyers', '.claude');
 interface ClaudeFile {
   name: string;
   path: string;
-  type: 'command' | 'document' | 'agent' | 'config';
+  type: 'command' | 'document' | 'agent' | 'config' | 'reference';
   location: 'project' | 'parent' | 'computer';
   description?: string;
   content: string;
@@ -73,11 +73,21 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
                 description = firstLine?.replace(/^#+\s*/, '').substring(0, 100);
               }
 
-              // Determine type based on path
+              // Determine type based on path and filename patterns
               let type: ClaudeFile['type'] = 'document';
               if (relPath.startsWith('commands')) type = 'command';
               else if (relPath.startsWith('agents')) type = 'agent';
               else if (relPath.startsWith('config')) type = 'config';
+              // Root-level files with specific patterns = reference docs
+              else if (rootLevelOnly && (
+                entry.name.includes('PATTERN') ||
+                entry.name.includes('REFERENCE') ||
+                entry.name.includes('GUIDE') ||
+                entry.name.includes('SPECIALIST') ||
+                entry.name === 'MEK_DESIGN_PATTERNS.md'
+              )) {
+                type = 'reference';
+              }
 
               files.push({
                 name: entry.name.replace('.md', ''),
@@ -123,14 +133,15 @@ export async function GET() {
       files: allFiles,
       stats: {
         total: allFiles.length,
-        project: projectFiles.length,
+        project: projectClaudeFiles.length + projectRootFiles.length,
         parent: parentFiles.length,
         computer: computerFiles.length,
         byType: {
           commands: allFiles.filter(f => f.type === 'command').length,
           documents: allFiles.filter(f => f.type === 'document').length,
           agents: allFiles.filter(f => f.type === 'agent').length,
-          config: allFiles.filter(f => f.type === 'config').length
+          config: allFiles.filter(f => f.type === 'config').length,
+          reference: allFiles.filter(f => f.type === 'reference').length
         }
       }
     });
