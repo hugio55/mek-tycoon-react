@@ -20,6 +20,10 @@ export default function HomePage() {
   const customSlotRef = useRef<HTMLImageElement>(null);
   const [customSlotSize, setCustomSlotSize] = useState({ width: 0, height: 0 });
 
+  // Mouse position for cursor-following tooltips
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
+
   // Mek naming lightbox state
   const [showNamingLightbox, setShowNamingLightbox] = useState(false);
   const [namingMekAssetId, setNamingMekAssetId] = useState<string | null>(null);
@@ -720,75 +724,87 @@ export default function HomePage() {
                         </div>
                       ) : isLocked ? (
                         // Locked slot with tooltip
-                        <Tooltip.Root>
-                          <Tooltip.Trigger asChild>
-                            <div>
-                              <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-600/30 rounded-lg flex items-center justify-center">
-                                <span className="text-4xl">🔒</span>
-                              </div>
-                              <div className="text-gray-600 text-sm mb-3">
-                                Unlock Required
-                              </div>
-                              {/* DEBUG: Unlock button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDebugUnlockSlot(slotNum);
-                                }}
-                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
-                              >
-                                🔓 DEBUG UNLOCK
-                              </button>
-                            </div>
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Content
-                              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700"
-                              sideOffset={5}
+                        <div
+                          onMouseMove={(e) => {
+                            setMousePosition({ x: e.clientX, y: e.clientY });
+                            setActiveTooltip(slotNum);
+                          }}
+                          onMouseLeave={() => setActiveTooltip(null)}
+                        >
+                          <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-600/30 rounded-lg flex items-center justify-center">
+                            <span className="text-4xl">🔒</span>
+                          </div>
+                          <div className="text-gray-600 text-sm mb-3">
+                            Unlock Required
+                          </div>
+                          {/* DEBUG: Unlock button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDebugUnlockSlot(slotNum);
+                            }}
+                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                          >
+                            🔓 DEBUG UNLOCK
+                          </button>
+                          {/* Custom cursor-following tooltip */}
+                          {activeTooltip === slotNum && (
+                            <div
+                              className="fixed bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700 z-[10000] pointer-events-none"
+                              style={{
+                                left: `${mousePosition.x + 15}px`,
+                                top: `${mousePosition.y + 15}px`,
+                                transform: 'translate(0, -50%)'
+                              }}
                             >
                               You must first unlock this slot in order to assign an employee.
-                              <Tooltip.Arrow className="fill-gray-900" />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         // Empty unlocked slot with tooltip
-                        <Tooltip.Root>
-                          <Tooltip.Trigger asChild>
-                            <div>
-                              <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-yellow-500/30 rounded-lg flex items-center justify-center group-hover:border-yellow-500/50 transition-colors">
-                                <svg
-                                  className="w-12 h-12 text-yellow-500/20 group-hover:text-yellow-500/40 transition-colors"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 4v16m8-8H4"
-                                  />
-                                </svg>
-                              </div>
-                              <div className="text-yellow-400/50 text-sm font-bold uppercase tracking-wider">
-                                Empty Slot
-                              </div>
-                              <div className="text-gray-500 text-xs mt-1">
-                                Click to Assign
-                              </div>
-                            </div>
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Content
-                              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700"
-                              sideOffset={5}
+                        <div
+                          onMouseMove={(e) => {
+                            setMousePosition({ x: e.clientX, y: e.clientY });
+                            setActiveTooltip(slotNum + 100); // Use offset to differentiate from locked slots
+                          }}
+                          onMouseLeave={() => setActiveTooltip(null)}
+                        >
+                          <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-yellow-500/30 rounded-lg flex items-center justify-center group-hover:border-yellow-500/50 transition-colors">
+                            <svg
+                              className="w-12 h-12 text-yellow-500/20 group-hover:text-yellow-500/40 transition-colors"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                              />
+                            </svg>
+                          </div>
+                          <div className="text-yellow-400/50 text-sm font-bold uppercase tracking-wider">
+                            Empty Slot
+                          </div>
+                          <div className="text-gray-500 text-xs mt-1">
+                            Click to Assign
+                          </div>
+                          {/* Custom cursor-following tooltip */}
+                          {activeTooltip === slotNum + 100 && (
+                            <div
+                              className="fixed bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700 z-[10000] pointer-events-none"
+                              style={{
+                                left: `${mousePosition.x + 15}px`,
+                                top: `${mousePosition.y + 15}px`,
+                                transform: 'translate(0, -50%)'
+                              }}
                             >
                               This is an empty employment slot. Click to hire a mechanism.
-                              <Tooltip.Arrow className="fill-gray-900" />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
 
