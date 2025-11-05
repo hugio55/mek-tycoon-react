@@ -72,57 +72,59 @@ export default function MekLayoutsPage() {
 
       {/* Debug Panel - Fixed Position with Style Dropdowns */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[10000] w-72 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-5 shadow-2xl">
-          <h3 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
-            Style Controls
-          </h3>
+        <div className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl">
+          <div className="p-4">
+            <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
+              Style Controls
+            </h3>
 
-          {/* Dropdown 1: Page Styling */}
-          <div className="mb-4">
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
-              Overall Theme
-            </label>
-            <select
-              value={styleVariation}
-              onChange={(e) => setStyleVariation(e.target.value as 'default' | 'variation1' | 'variation2')}
-              className="w-full bg-black/60 border-2 border-cyan-500/50 rounded px-3 py-2 text-cyan-300 text-sm font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-            >
-              <option value="default">Industrial Yellow</option>
-              <option value="variation1">Cyberpunk Cyan</option>
-              <option value="variation2">Military Green</option>
-            </select>
-          </div>
+            {/* Dropdown 1: Page Styling */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Overall Theme
+              </label>
+              <select
+                value={styleVariation}
+                onChange={(e) => setStyleVariation(e.target.value as 'default' | 'variation1' | 'variation2')}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="default">Industrial Yellow</option>
+                <option value="variation1">Cyberpunk Cyan</option>
+                <option value="variation2">Military Green</option>
+              </select>
+            </div>
 
-          {/* Dropdown 2: Card Interior Styling */}
-          <div className="mb-4">
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
-              Card Layout
-            </label>
-            <select
-              value={cardInteriorStyle}
-              onChange={(e) => setCardInteriorStyle(e.target.value as 'compact' | 'spacious' | 'modern')}
-              className="w-full bg-black/60 border-2 border-cyan-500/50 rounded px-3 py-2 text-cyan-300 text-sm font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-            >
-              <option value="compact">Classic Stack</option>
-              <option value="spacious">Side-by-Side</option>
-              <option value="modern">Minimal Centered</option>
-            </select>
-          </div>
+            {/* Dropdown 2: Card Interior Styling */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Card Layout
+              </label>
+              <select
+                value={cardInteriorStyle}
+                onChange={(e) => setCardInteriorStyle(e.target.value as 'compact' | 'spacious' | 'modern')}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="compact">Classic Stack</option>
+                <option value="spacious">Side-by-Side</option>
+                <option value="modern">Minimal Centered</option>
+              </select>
+            </div>
 
-          {/* Current Selection Display */}
-          <div className="pt-3 border-t border-cyan-500/30">
-            <div className="text-xs text-gray-400 mb-1">Active Styles:</div>
-            <div className="text-xs text-cyan-300 space-y-1">
-              <div>Theme: <span className="font-bold">
-                {styleVariation === 'default' && 'Industrial Yellow'}
-                {styleVariation === 'variation1' && 'Cyberpunk Cyan'}
-                {styleVariation === 'variation2' && 'Military Green'}
-              </span></div>
-              <div>Layout: <span className="font-bold">
-                {cardInteriorStyle === 'compact' && 'Classic Stack'}
-                {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
-                {cardInteriorStyle === 'modern' && 'Minimal Centered'}
-              </span></div>
+            {/* Current Selection Display */}
+            <div className="pt-2 border-t border-cyan-500/30">
+              <div className="text-[10px] text-gray-500 mb-1">Active:</div>
+              <div className="text-[10px] text-cyan-300 space-y-0.5">
+                <div>
+                  {styleVariation === 'default' && 'Industrial Yellow'}
+                  {styleVariation === 'variation1' && 'Cyberpunk Cyan'}
+                  {styleVariation === 'variation2' && 'Military Green'}
+                </div>
+                <div>
+                  {cardInteriorStyle === 'compact' && 'Classic Stack'}
+                  {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
+                  {cardInteriorStyle === 'modern' && 'Minimal Centered'}
+                </div>
+              </div>
             </div>
           </div>
         </div>

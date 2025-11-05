@@ -1,19 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import './CyanSlideToggle.css';
+import './SlideTrackToggle.css';
 
-interface CyanSlideToggleProps {
+interface SlideTrackToggleProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   disabled?: boolean;
+  id?: string;
 }
 
-export default function CyanSlideToggle({
+export default function SlideTrackToggle({
   checked = false,
   onChange,
-  disabled = false
-}: CyanSlideToggleProps) {
+  disabled = false,
+  id = 'slide-track-toggle'
+}: SlideTrackToggleProps) {
   const [isChecked, setIsChecked] = useState(checked);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,16 +26,16 @@ export default function CyanSlideToggle({
   };
 
   return (
-    <div className="cyan-slide-toggle">
+    <div className="slide-track-toggle-wrapper">
       <div className="toggle">
         <input
           type="checkbox"
-          id="cyan-toggle-btn"
+          id={id}
           checked={isChecked}
           onChange={handleChange}
           disabled={disabled}
         />
-        <label htmlFor="cyan-toggle-btn">
+        <label htmlFor={id}>
           <span className="track">
             <span className="txt"></span>
           </span>
