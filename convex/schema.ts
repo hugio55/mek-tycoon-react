@@ -3345,7 +3345,8 @@ export default defineSchema({
 
     // Frozen eligibility list (never changes after creation)
     eligibleUsers: v.array(v.object({
-      walletAddress: v.string(),
+      walletAddress: v.string(), // Payment address (addr1...) - used for NFT delivery
+      stakeAddress: v.optional(v.string()), // Stake address (stake1...) - used for eligibility matching
       displayName: v.optional(v.string()),
     })),
     userCount: v.number(), // Count of eligible users
