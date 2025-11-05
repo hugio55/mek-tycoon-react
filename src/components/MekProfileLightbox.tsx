@@ -25,14 +25,14 @@ export default function MekProfileLightbox({ isOpen, onClose }: MekProfileLightb
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      {/* Backdrop */}
+      {/* Backdrop - Matching EssenceDistributionLightbox */}
       <div
         className="fixed inset-0 bg-black/40"
         style={{ backdropFilter: 'blur(2px)' }}
         onClick={onClose}
       />
 
-      {/* Lightbox Container - Same width as EssenceDistributionLightbox */}
+      {/* Lightbox Container - Matching EssenceDistributionLightbox styling */}
       <div
         className="relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
