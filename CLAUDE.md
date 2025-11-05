@@ -1,18 +1,23 @@
 # Mek Tycoon - Project Instructions
 
-## Quick Start Command
-**CRITICAL: We are ONLY working in the STAGING directory now.**
+## 🎯 PRIMARY WORKING DIRECTORY
+**THIS IS THE MAIN DIRECTORY FOR ALL WORK - NOT A "STAGING" OR "SECONDARY" ENVIRONMENT**
 
+The directory `mek-tycoon-react-staging` is the PRIMARY and MAIN working directory for this project. When referring to "the main directory" or "the project directory", this is what we mean:
+
+- **Primary Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
+- **Do NOT use**: The `mek-tycoon-react` directory exists but is NOT used for current work
+- **Database**: `wry-trout-962.convex.cloud` (isolated staging database)
+- **Port**: localhost:3200
+
+**Naming note**: Despite the word "staging" in the directory name, this is our primary development environment where ALL current work happens.
+
+## Quick Start Command
 When user says "start it up" or similar, run:
 ```bash
 npm run dev:all
 ```
 This starts both Next.js (port 3200) and Convex in one terminal.
-
-**Current Working Directory**: `C:\Users\Ben Meyers\Documents\Mek Tycoon\TYCOON REACT 8-27\mek-tycoon-react-staging`
-**Database**: `wry-trout-962.convex.cloud` (staging database - isolated from production)
-**Port**: localhost:3200
-**DO NOT use the main `mek-tycoon-react` directory - ONLY use staging!**
 
 ## 🚨🚨🚨 CRITICAL: GIT CHECKOUT DESTROYS UNCOMMITTED WORK 🚨🚨🚨
 **NEVER EVER RUN `git checkout <filename>` UNLESS EXPLICITLY APPROVED BY USER**
@@ -666,9 +671,8 @@ npx tsc --noEmit   # TypeScript type checking
 ## Slash Commands
 
 ### `/ui-team` - Activate all UI agents
-When user types `/ui-team`, activate these three agents together:
+When user types `/ui-team`, activate these two agents together:
 - `@ui-layout-debugger` - Debug layout issues
-- `@scifi-ui-designer` - Apply sci-fi aesthetic
 - `@visual-test` - Test visual changes
 
 ### `/ultra` - Multi-agent coordination with guaranteed specialist activation
