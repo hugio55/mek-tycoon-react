@@ -12,6 +12,7 @@ interface NMKRPayLightboxProps {
 }
 
 type LightboxState = 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error';
+type LightboxVariation = "industrial" | "elegant" | "modern";
 
 export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -19,6 +20,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTReservations"> | null>(null);
+  const [lightboxVariation, setLightboxVariation] = useState<LightboxVariation>("industrial");
+  const [showVariationPicker, setShowVariationPicker] = useState(false);
 
   // Mutations
   const createReservation = useMutation(api.commemorativeNFTReservations.createReservation);
@@ -47,6 +50,20 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Load lightbox variation from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('lightbox_variation');
+    if (saved === 'industrial' || saved === 'elegant' || saved === 'modern') {
+      setLightboxVariation(saved);
+    }
+  }, []);
+
+  // Save lightbox variation to localStorage when changed
+  const handleVariationChange = (variation: LightboxVariation) => {
+    setLightboxVariation(variation);
+    localStorage.setItem('lightbox_variation', variation);
+  };
 
   // Create reservation on mount
   useEffect(() => {
@@ -194,6 +211,46 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     return null;
   }
 
+  // Render variation selector (debug dropdown on right side)
+  const renderVariationSelector = () => (
+    <div className="fixed top-32 right-4 z-[99999]">
+      <button
+        onClick={() => setShowVariationPicker(!showVariationPicker)}
+        className="bg-black/80 border border-gray-600 text-gray-300 px-3 py-2 rounded text-xs hover:bg-black/90 transition-colors"
+      >
+        Lightbox Style ▼
+      </button>
+      {showVariationPicker && (
+        <div className="absolute top-full right-0 mt-1 bg-black/95 border border-gray-600 rounded shadow-xl min-w-[180px]">
+          <button
+            onClick={() => handleVariationChange("industrial")}
+            className={`block w-full text-left px-4 py-2 text-xs hover:bg-yellow-500/20 transition-colors ${
+              lightboxVariation === "industrial" ? "bg-yellow-500/30 text-yellow-300" : "text-gray-300"
+            }`}
+          >
+            Industrial (Orbitron)
+          </button>
+          <button
+            onClick={() => handleVariationChange("elegant")}
+            className={`block w-full text-left px-4 py-2 text-xs hover:bg-amber-500/20 transition-colors ${
+              lightboxVariation === "elegant" ? "bg-amber-500/30 text-amber-300" : "text-gray-300"
+            }`}
+          >
+            Elegant (Serif)
+          </button>
+          <button
+            onClick={() => handleVariationChange("modern")}
+            className={`block w-full text-left px-4 py-2 text-xs hover:bg-blue-500/20 transition-colors ${
+              lightboxVariation === "modern" ? "bg-blue-500/30 text-blue-300" : "text-gray-300"
+            }`}
+          >
+            Modern (Sans)
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   const renderContent = () => {
     switch (state) {
       case 'creating':
@@ -229,76 +286,210 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
         const GRACE_PERIOD = 30 * 1000;
         const isInGracePeriod = remainingMs === 0 && (now - activeReservation.expiresAt) < GRACE_PERIOD;
 
-        return (
-          <div className="text-center">
-            {/* NFT Preview */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                Your NFT Reserved
-              </h2>
+        // VARIATION 1: Industrial (Current)
+        if (lightboxVariation === "industrial") {
+          return (
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-yellow-400 mb-6 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  Your NFT Reserved
+                </h2>
 
-              {/* NFT Image */}
-              <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
-                <img
-                  src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
-                  alt={activeReservation.nft.name}
-                  className="w-full h-auto"
-                  onError={(e) => {
-                    e.currentTarget.src = '/logo-big.png';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
-              </div>
+                <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
+                  <img
+                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft.name}
+                    className="w-full h-auto"
+                    onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                </div>
 
-              {/* NFT Details with Timer */}
-              <div className="mb-6 p-4 bg-black/60 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
-                <h3 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                  {activeReservation.nft.name}
-                </h3>
-                <p className="text-green-400 text-base mb-4 font-medium">
-                  You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
-                </p>
+                <div className="mb-6 p-4 bg-black/60 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
+                  <h3 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                    {activeReservation.nft.name}
+                  </h3>
+                  <p className="text-green-400 text-base mb-4 font-medium">
+                    You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
+                  </p>
 
-                {/* Countdown Timer */}
-                <div className={`mt-4 p-3 rounded backdrop-blur-sm ${
-                  isInGracePeriod
-                    ? 'bg-red-500/20 border-2 border-red-500'
-                    : activeReservation.isPaymentWindowOpen
-                      ? 'bg-blue-500/20 border-2 border-blue-500/50'
-                      : 'bg-gray-500/20 border-2 border-gray-500/50'
-                }`}>
-                  <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
-                    {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
-                  </div>
-                  <div className={`text-3xl font-bold font-mono ${
-                    isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-400' : 'text-gray-300'
+                  <div className={`mt-4 p-3 rounded backdrop-blur-sm ${
+                    isInGracePeriod ? 'bg-red-500/20 border-2 border-red-500' :
+                    activeReservation.isPaymentWindowOpen ? 'bg-blue-500/20 border-2 border-blue-500/50' :
+                    'bg-gray-500/20 border-2 border-gray-500/50'
                   }`}>
-                    {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                    <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
+                      {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
+                    </div>
+                    <div className={`text-3xl font-bold font-mono ${
+                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-400' : 'text-gray-300'
+                    }`}>
+                      {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                    </div>
+                    {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
+                      <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">Payment window open - timer continues</div>
+                    )}
+                    {isInGracePeriod && (
+                      <div className="text-xs text-red-400 mt-2 uppercase tracking-wide">⚠️ Final chance to complete payment</div>
+                    )}
                   </div>
-                  {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
-                    <div className="text-xs text-blue-400 mt-2 uppercase tracking-wide">
-                      Payment window open - timer continues
-                    </div>
-                  )}
-                  {isInGracePeriod && (
-                    <div className="text-xs text-red-400 mt-2 uppercase tracking-wide">
-                      ⚠️ Final chance to complete payment
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Open Payment Button */}
-            <button
-              onClick={handleOpenPayment}
-              className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-            >
-              Open Payment Window
-            </button>
-          </div>
-        );
+              <button
+                onClick={handleOpenPayment}
+                className="w-full px-8 py-4 bg-yellow-500/20 border-3 border-yellow-500 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all font-bold uppercase tracking-wider text-lg shadow-lg shadow-yellow-500/50 hover:shadow-yellow-500/70"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                Open Payment Window
+              </button>
+            </div>
+          );
+        }
+
+        // VARIATION 2: Elegant (Serif)
+        if (lightboxVariation === "elegant") {
+          return (
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-3xl mb-6" style={{ fontFamily: 'Cinzel, serif', color: '#fef3c7', letterSpacing: '0.1em', fontWeight: 700 }}>
+                  Your NFT Reserved
+                </h2>
+
+                <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-amber-500/60 rounded-md overflow-hidden bg-gradient-to-b from-amber-900/20 to-black/50 backdrop-blur-sm shadow-xl shadow-amber-500/30">
+                  <img
+                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft.name}
+                    className="w-full h-auto"
+                    onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-amber-900/40 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+
+                <div className="mb-6 p-5 bg-gradient-to-br from-amber-900/20 to-black/40 border border-amber-500/40 rounded-md backdrop-blur-sm">
+                  <h3 className="text-4xl mb-4" style={{ fontFamily: 'Cinzel, serif', color: '#fde68a', letterSpacing: '0.05em', fontWeight: 700 }}>
+                    {activeReservation.nft.name}
+                  </h3>
+                  <p style={{ fontFamily: 'Lora, serif', color: '#d4af37', fontSize: '1rem', lineHeight: '1.7', fontStyle: 'italic' }}>
+                    You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
+                  </p>
+
+                  <div className={`mt-5 p-4 rounded-md ${
+                    isInGracePeriod ? 'bg-red-900/30 border-2 border-red-500' :
+                    activeReservation.isPaymentWindowOpen ? 'bg-blue-900/30 border-2 border-blue-500/60' :
+                    'bg-amber-900/20 border-2 border-amber-500/50'
+                  }`}>
+                    <div style={{ fontFamily: 'Lora, serif', fontSize: '0.75rem', color: '#d4d4d4', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                      {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
+                    </div>
+                    <div className={`font-mono text-4xl font-bold ${
+                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-amber-300'
+                    }`}>
+                      {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                    </div>
+                    {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
+                      <div style={{ fontFamily: 'Lora, serif', fontSize: '0.75rem', color: '#93c5fd', marginTop: '0.75rem' }}>Payment window open - timer continues</div>
+                    )}
+                    {isInGracePeriod && (
+                      <div style={{ fontFamily: 'Lora, serif', fontSize: '0.75rem', color: '#fca5a5', marginTop: '0.75rem' }}>⚠️ Final chance to complete payment</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleOpenPayment}
+                className="w-full py-4 px-8 rounded-md font-semibold text-lg transition-all duration-300 hover:scale-105"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#1a1a1a',
+                  boxShadow: '0 4px 20px rgba(251, 191, 36, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.3)',
+                  border: '2px solid #fbbf24',
+                  letterSpacing: '0.12em'
+                }}
+              >
+                OPEN PAYMENT WINDOW
+              </button>
+            </div>
+          );
+        }
+
+        // VARIATION 3: Modern (Sans)
+        if (lightboxVariation === "modern") {
+          return (
+            <div className="text-center">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold mb-6" style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'linear-gradient(135deg, #ddd6fe 0%, #bfdbfe 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '-0.01em'
+                }}>
+                  Your NFT Reserved
+                </h2>
+
+                <div className="relative w-full max-w-[400px] mx-auto mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-900/30 to-blue-900/30 backdrop-blur-md border border-violet-400/30 shadow-2xl shadow-violet-500/20">
+                  <img
+                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft.name}
+                    className="w-full h-auto"
+                    onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-violet-900/50 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+
+                <div className="mb-6 p-5 bg-gradient-to-br from-violet-500/10 to-blue-500/10 border border-violet-400/20 rounded-2xl backdrop-blur-md">
+                  <h3 className="text-4xl font-bold mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0e7ff', letterSpacing: '-0.02em' }}>
+                    {activeReservation.nft.name}
+                  </h3>
+                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#c7d2fe', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
+                    You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
+                  </p>
+
+                  <div className={`mt-5 p-4 rounded-xl backdrop-blur-sm ${
+                    isInGracePeriod ? 'bg-red-500/20 border border-red-400/50' :
+                    activeReservation.isPaymentWindowOpen ? 'bg-blue-500/20 border border-blue-400/50' :
+                    'bg-violet-500/20 border border-violet-400/50'
+                  }`}>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: '#d4d4d8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                      {isInGracePeriod ? 'Grace Period' : 'Time Remaining'}
+                    </div>
+                    <div className={`font-mono text-4xl font-bold ${
+                      isInGracePeriod ? 'text-red-400 animate-pulse' : activeReservation.isPaymentWindowOpen ? 'text-blue-300' : 'text-violet-300'
+                    }`}>
+                      {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}
+                    </div>
+                    {activeReservation.isPaymentWindowOpen && !isInGracePeriod && (
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#93c5fd', marginTop: '0.75rem' }}>Payment window open - timer continues</div>
+                    )}
+                    {isInGracePeriod && (
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#fca5a5', marginTop: '0.75rem' }}>⚠️ Final chance to complete payment</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleOpenPayment}
+                className="w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 hover:brightness-110"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 6px 24px rgba(139, 92, 246, 0.4)',
+                  border: 'none',
+                  letterSpacing: '0.02em'
+                }}
+              >
+                Open Payment Window
+              </button>
+            </div>
+          );
+        }
+
+        return null;
 
       case 'payment':
         if (!activeReservation) return null;
@@ -420,46 +611,50 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   };
 
   const modalContent = (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
-      onClick={handleCancel}
-    >
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+    <>
+      {renderVariationSelector()}
 
-      {/* Modal container */}
       <div
-        className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
+        onClick={handleCancel}
       >
-        {/* Industrial corner accents */}
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/70"></div>
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/70"></div>
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
 
-        {renderContent()}
-
-        {/* Close button */}
-        <button
-          onClick={handleCancel}
-          className="absolute top-2 right-2 text-gray-500 hover:text-yellow-400 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 hover:border-yellow-500/50 bg-black/80 backdrop-blur-sm rounded"
-          title="Cancel and close"
+        {/* Modal container */}
+        <div
+          className={`relative w-full ${state === 'reserved' ? 'max-w-2xl' : 'max-w-md'} bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl p-8 transition-all duration-300`}
+          onClick={(e) => e.stopPropagation()}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          {/* Industrial corner accents */}
+          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-yellow-500/70"></div>
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-yellow-500/70"></div>
+
+          {renderContent()}
+
+          {/* Close button */}
+          <button
+            onClick={handleCancel}
+            className="absolute top-2 right-2 text-gray-500 hover:text-yellow-400 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 hover:border-yellow-500/50 bg-black/80 backdrop-blur-sm rounded"
+            title="Cancel and close"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 
   return createPortal(modalContent, document.body);

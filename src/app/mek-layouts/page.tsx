@@ -117,9 +117,9 @@ export default function MekLayoutsPage() {
                 <option value="compact">Classic Stack</option>
                 <option value="spacious">Side-by-Side</option>
                 <option value="modern">Minimal Centered</option>
-                <option value="grid-cards">Grid Cards</option>
-                <option value="inline-compact">Inline Compact</option>
-                <option value="badge-style">Badge Labels</option>
+                <option value="tech-badge">Tech Badge</option>
+                <option value="cyber-compact">Cyber Compact</option>
+                <option value="tactical-display">Tactical Display</option>
               </select>
             </div>
 
@@ -293,9 +293,9 @@ export default function MekLayoutsPage() {
                   {cardInteriorStyle === 'compact' && 'Classic Stack'}
                   {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
                   {cardInteriorStyle === 'modern' && 'Minimal Centered'}
-                  {cardInteriorStyle === 'grid-cards' && 'Grid Cards'}
-                  {cardInteriorStyle === 'inline-compact' && 'Inline Compact'}
-                  {cardInteriorStyle === 'badge-style' && 'Badge Labels'}
+                  {cardInteriorStyle === 'tech-badge' && 'Tech Badge'}
+                  {cardInteriorStyle === 'cyber-compact' && 'Cyber Compact'}
+                  {cardInteriorStyle === 'tactical-display' && 'Tactical Display'}
                 </div>
                 <div>
                   {buffDetailsLayout === 'classic' && 'Classic Stack'}

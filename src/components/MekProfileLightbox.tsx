@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
-export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'grid-cards' | 'inline-compact' | 'badge-style';
+export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
@@ -118,12 +118,12 @@ export default function MekProfileLightbox({
         return 'flex flex-row justify-between items-center';
       case 'modern':
         return 'flex flex-col items-center text-center';
-      case 'grid-cards':
-        return 'bg-black/50 border border-yellow-500/30 p-3 rounded flex flex-col';
-      case 'inline-compact':
-        return 'flex flex-row items-baseline gap-2';
-      case 'badge-style':
-        return 'flex flex-col items-start';
+      case 'tech-badge':
+        return 'flex flex-row items-center justify-between bg-gradient-to-r from-yellow-500/5 to-transparent border-l-2 border-yellow-500/40 pl-3 pr-2 py-1.5';
+      case 'cyber-compact':
+        return 'flex flex-row items-center justify-between border border-cyan-500/30 bg-black/40 px-3 py-2 rounded-sm';
+      case 'tactical-display':
+        return 'relative bg-black/60 border-t border-b border-yellow-500/20 py-2 px-3 flex flex-row items-center justify-between';
       default: // compact
         return 'flex flex-col';
     }
@@ -135,12 +135,12 @@ export default function MekProfileLightbox({
         return 'text-xs text-gray-400 uppercase tracking-wider font-normal';
       case 'modern':
         return 'text-sm text-gray-300 uppercase tracking-widest font-light mb-2';
-      case 'grid-cards':
-        return 'text-[10px] text-yellow-500 uppercase tracking-widest font-bold mb-1';
-      case 'inline-compact':
-        return 'text-xs text-gray-500 uppercase tracking-wide';
-      case 'badge-style':
-        return 'inline-block bg-yellow-500/20 border border-yellow-500/40 px-2 py-0.5 text-[9px] text-yellow-400 uppercase tracking-widest font-bold rounded mb-1';
+      case 'tech-badge':
+        return 'inline-block bg-yellow-500/20 border border-yellow-500/50 px-2 py-0.5 text-[9px] text-yellow-300 uppercase tracking-widest font-black rounded-sm shadow-sm';
+      case 'cyber-compact':
+        return 'text-[10px] text-cyan-400 uppercase tracking-wider font-bold font-mono';
+      case 'tactical-display':
+        return 'text-[11px] text-gray-300 uppercase tracking-widest font-bold bg-yellow-500/10 px-2 py-0.5 border-l-2 border-yellow-500/60';
       default: // compact
         return 'mek-label-uppercase';
     }
@@ -152,12 +152,12 @@ export default function MekProfileLightbox({
         return 'text-lg font-bold';
       case 'modern':
         return 'text-3xl font-bold tracking-wide';
-      case 'grid-cards':
-        return 'text-xl font-bold';
-      case 'inline-compact':
-        return 'text-base font-semibold';
-      case 'badge-style':
-        return 'text-2xl font-bold tracking-tight';
+      case 'tech-badge':
+        return 'text-xl font-black tracking-tight text-white';
+      case 'cyber-compact':
+        return 'text-base font-bold font-mono text-cyan-300';
+      case 'tactical-display':
+        return 'text-lg font-bold tracking-wider text-white font-mono';
       default: // compact
         return '';
     }
@@ -169,12 +169,12 @@ export default function MekProfileLightbox({
         return 'space-y-3';
       case 'modern':
         return 'space-y-6';
-      case 'grid-cards':
-        return 'space-y-3';
-      case 'inline-compact':
+      case 'tech-badge':
+        return 'space-y-2';
+      case 'cyber-compact':
+        return 'space-y-1.5';
+      case 'tactical-display':
         return 'space-y-1';
-      case 'badge-style':
-        return 'space-y-4';
       default: // compact
         return 'space-y-2';
     }
