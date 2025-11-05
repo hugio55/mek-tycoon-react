@@ -151,6 +151,7 @@ export const updateCampaign = mutation({
     description: v.optional(v.string()),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
+    nmkrProjectId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const campaign = await ctx.db.get(args.campaignId);
@@ -167,6 +168,7 @@ export const updateCampaign = mutation({
     if (args.description !== undefined) updates.description = args.description;
     if (args.startDate !== undefined) updates.startDate = args.startDate;
     if (args.endDate !== undefined) updates.endDate = args.endDate;
+    if (args.nmkrProjectId !== undefined) updates.nmkrProjectId = args.nmkrProjectId;
 
     await ctx.db.patch(args.campaignId, updates);
 

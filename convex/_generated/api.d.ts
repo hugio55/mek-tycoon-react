@@ -92,6 +92,7 @@ import type * as files from "../files.js";
 import type * as finalDuplicateCleanup from "../finalDuplicateCleanup.js";
 import type * as finalWalletFix from "../finalWalletFix.js";
 import type * as fixBadSnapshots from "../fixBadSnapshots.js";
+import type * as fixCampaignProjectId from "../fixCampaignProjectId.js";
 import type * as fixCorruptedGold from "../fixCorruptedGold.js";
 import type * as fixDiscordGroupData from "../fixDiscordGroupData.js";
 import type * as fixGoldRateCalculation from "../fixGoldRateCalculation.js";
@@ -320,6 +321,7 @@ declare const fullApi: ApiFromModules<{
   finalDuplicateCleanup: typeof finalDuplicateCleanup;
   finalWalletFix: typeof finalWalletFix;
   fixBadSnapshots: typeof fixBadSnapshots;
+  fixCampaignProjectId: typeof fixCampaignProjectId;
   fixCorruptedGold: typeof fixCorruptedGold;
   fixDiscordGroupData: typeof fixDiscordGroupData;
   fixGoldRateCalculation: typeof fixGoldRateCalculation;
