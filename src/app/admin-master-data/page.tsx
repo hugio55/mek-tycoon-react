@@ -3454,7 +3454,7 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center gap-8 min-h-[300px] overflow-hidden">
+                    <div className="relative rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] overflow-hidden">
                       {/* Industrial textured background */}
                       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"></div>
                       <div className="absolute inset-0 opacity-10" style={{
@@ -3462,15 +3462,9 @@ export default function AdminMasterDataPage() {
                       }}></div>
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(250,182,23,0.05),transparent_50%)]"></div>
 
-                      {/* Toggle components with relative positioning */}
+                      {/* Toggle component with relative positioning */}
                       <div className="relative z-10">
-                        <MechanicalToggle size="small" />
-                      </div>
-                      <div className="relative z-10">
-                        <MechanicalToggle size="medium" />
-                      </div>
-                      <div className="relative z-10">
-                        <MechanicalToggle size="large" />
+                        <MechanicalToggle />
                       </div>
                     </div>
 
