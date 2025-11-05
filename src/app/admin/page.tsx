@@ -53,6 +53,14 @@ export default function AdminPage() {
       icon: '🌳',
       route: '/admin-story-tree',
       color: 'from-amber-500 to-orange-600'
+    },
+    {
+      id: 'components',
+      title: 'Component Showcase',
+      description: 'Interactive UI components and toggle switches',
+      icon: '🎨',
+      route: '/admin-components-showcase',
+      color: 'from-yellow-500 to-yellow-600'
     }
   ];
   
