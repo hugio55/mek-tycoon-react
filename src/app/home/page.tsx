@@ -10,6 +10,7 @@ import { getVariationInfoFromFullKey } from '@/lib/variationNameLookup';
 import MekNamingLightbox from '@/components/MekNamingLightbox';
 import MekManagementLightbox from '@/components/MekManagementLightbox';
 import MekManagementLightboxConcepts from '@/components/MekManagementLightboxConcepts';
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -431,8 +432,9 @@ export default function HomePage() {
   }, [essenceState]);
 
   return (
-    <div className="min-h-screen text-white relative">
-      <div className="container mx-auto px-4 py-8">
+    <Tooltip.Provider delayDuration={200}>
+      <div className="min-h-screen text-white relative">
+        <div className="container mx-auto px-4 py-8">
         {/* DEBUG: Owned Variations Panel */}
         <details className="mb-8 mek-card-industrial mek-border-sharp-gold p-4 rounded-lg">
           <summary className="cursor-pointer text-yellow-400 font-bold text-lg uppercase mb-2">
@@ -717,25 +719,38 @@ export default function HomePage() {
                           </button>
                         </div>
                       ) : isLocked ? (
-                        // Locked slot
-                        <div>
-                          <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-600/30 rounded-lg flex items-center justify-center">
-                            <span className="text-4xl">🔒</span>
-                          </div>
-                          <div className="text-gray-600 text-sm mb-3">
-                            Unlock Required
-                          </div>
-                          {/* DEBUG: Unlock button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDebugUnlockSlot(slotNum);
-                            }}
-                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
-                          >
-                            🔓 DEBUG UNLOCK
-                          </button>
-                        </div>
+                        // Locked slot with tooltip
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <div>
+                              <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-600/30 rounded-lg flex items-center justify-center">
+                                <span className="text-4xl">🔒</span>
+                              </div>
+                              <div className="text-gray-600 text-sm mb-3">
+                                Unlock Required
+                              </div>
+                              {/* DEBUG: Unlock button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDebugUnlockSlot(slotNum);
+                                }}
+                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                              >
+                                🔓 DEBUG UNLOCK
+                              </button>
+                            </div>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content
+                              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm max-w-xs shadow-lg border border-gray-700"
+                              sideOffset={5}
+                            >
+                              You must first unlock this slot in order to assign an employee.
+                              <Tooltip.Arrow className="fill-gray-900" />
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
                       ) : (
                         // Empty unlocked slot
                         <div>
@@ -948,7 +963,8 @@ export default function HomePage() {
 
         {/* DEBUG: Lightbox Concepts Comparison */}
         <MekManagementLightboxConcepts />
+        </div>
       </div>
-    </div>
+    </Tooltip.Provider>
   );
 }
