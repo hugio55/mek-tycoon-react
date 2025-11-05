@@ -17,6 +17,8 @@ export default function MekLayoutsPage() {
   const [backdropBlur, setBackdropBlur] = useState(0);
   const [cardBackdropBlur, setCardBackdropBlur] = useState(9);
   const [headerGap, setHeaderGap] = useState(32);
+  const [headerBottomPadding, setHeaderBottomPadding] = useState(15);
+  const [contentSpacing, setContentSpacing] = useState(16);
   const [slidersCollapsed, setSlidersCollapsed] = useState(false);
 
   return (
@@ -227,10 +229,10 @@ export default function MekLayoutsPage() {
                     />
                   </div>
 
-                  {/* Slider 5: Header Gap */}
+                  {/* Slider 5: Header Gap (Top Padding) */}
                   <div>
                     <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                      Header Gap: {headerGap}px
+                      Content Top Padding: {headerGap}px
                     </label>
                     <input
                       type="range"
@@ -238,6 +240,21 @@ export default function MekLayoutsPage() {
                       max="80"
                       value={headerGap}
                       onChange={(e) => setHeaderGap(Number(e.target.value))}
+                      className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+
+                  {/* Slider 6: Content Spacing (space-y gap) */}
+                  <div>
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                      Content Card Spacing: {contentSpacing}px
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="64"
+                      value={contentSpacing}
+                      onChange={(e) => setContentSpacing(Number(e.target.value))}
                       className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                     />
                   </div>
@@ -299,6 +316,8 @@ export default function MekLayoutsPage() {
         onCardBackdropBlurChange={setCardBackdropBlur}
         headerGap={headerGap}
         onHeaderGapChange={setHeaderGap}
+        contentSpacing={contentSpacing}
+        onContentSpacingChange={setContentSpacing}
       />
 
       {/* Gold Generation Details Lightbox */}
