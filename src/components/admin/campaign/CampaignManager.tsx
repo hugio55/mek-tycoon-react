@@ -177,6 +177,7 @@ export default function CampaignManager({
         name: name.trim(),
         description: description.trim(),
         nmkrProjectId: nmkrProjectId.trim(),
+        policyId: policyId.trim() || undefined,
         maxNFTs: maxNFTsNum,
         status,
       });
