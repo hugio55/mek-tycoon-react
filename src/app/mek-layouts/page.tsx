@@ -7,7 +7,8 @@ import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLig
 export default function MekLayoutsPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isGoldDetailsOpen, setIsGoldDetailsOpen] = useState(false);
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(true);
+  const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -65,123 +66,82 @@ export default function MekLayoutsPage() {
         onClick={() => setShowDebugPanel(!showDebugPanel)}
         className="fixed top-4 right-4 z-[10000] px-4 py-2 bg-black/80 border-2 border-cyan-500/50 rounded hover:bg-cyan-500/20 hover:border-cyan-500 transition-all"
       >
-        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Debug Panel</span>
+        <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Style Variations</span>
       </button>
 
-      {/* Debug Panel - Fixed Position */}
+      {/* Debug Panel - Fixed Position with Style Variations */}
       {showDebugPanel && (
-        <div className="fixed top-16 right-4 z-[10000] w-96 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-16 right-4 z-[10000] w-80 bg-black/95 border-2 border-cyan-500/50 rounded-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
           <h3 className="text-cyan-400 text-lg font-bold uppercase tracking-wider mb-4 border-b border-cyan-500/30 pb-2">
-            Button Design Variations
+            Profile Style Variations
           </h3>
+          <p className="text-xs text-gray-400 mb-4">
+            Click buttons to see different styling approaches for the Mek Profile lightbox
+          </p>
 
-          {/* Variation 1: Compact Corner Position */}
-          <div className="mb-6 border border-cyan-500/30 rounded-lg p-4 bg-black/50">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-bold">
-              Variation 1: Compact Corner
-            </div>
-            <div className="w-full max-w-sm bg-black/30 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-yellow-400/60" />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-yellow-400/60" />
-
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-bold font-orbitron text-yellow-400 uppercase tracking-wider">
-                  Gold Generation
-                </h3>
+          {/* Variation Buttons */}
+          <div className="space-y-3">
+            {/* Option 1: Current Industrial (Default) */}
+            <button
+              onClick={() => setStyleVariation('default')}
+              className={`w-full text-left p-4 rounded border-2 transition-all ${
+                styleVariation === 'default'
+                  ? 'border-yellow-500 bg-yellow-500/20'
+                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
+              }`}
+            >
+              <div className="font-bold text-yellow-400 mb-1">OPTION 1: Industrial</div>
+              <div className="text-xs text-gray-400">
+                Current style: Yellow/gold accents, Orbitron font, sharp borders, grunge overlays
               </div>
+            </button>
 
-              <div className="space-y-2 mb-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Base:</span>
-                  <span className="text-base font-bold text-yellow-400">20.0 g/hr</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Effective:</span>
-                  <span className="text-lg font-bold text-green-400">24.0 g/hr</span>
-                </div>
+            {/* Option 2: Alternative Font/Layout */}
+            <button
+              onClick={() => setStyleVariation('variation1')}
+              className={`w-full text-left p-4 rounded border-2 transition-all ${
+                styleVariation === 'variation1'
+                  ? 'border-blue-500 bg-blue-500/20'
+                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
+              }`}
+            >
+              <div className="font-bold text-blue-400 mb-1">OPTION 2: Cyber Tech</div>
+              <div className="text-xs text-gray-400">
+                Blue/cyan accents, rounded corners, softer shadows, tech-focused
               </div>
+            </button>
 
-              {/* Small button in corner */}
-              <div className="flex justify-end">
-                <button
-                  className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-all rounded"
-                >
-                  Details
-                </button>
+            {/* Option 3: Different Color Scheme */}
+            <button
+              onClick={() => setStyleVariation('variation2')}
+              className={`w-full text-left p-4 rounded border-2 transition-all ${
+                styleVariation === 'variation2'
+                  ? 'border-purple-500 bg-purple-500/20'
+                  : 'border-gray-600 bg-black/40 hover:border-gray-500'
+              }`}
+            >
+              <div className="font-bold text-purple-400 mb-1">OPTION 3: Neon Fusion</div>
+              <div className="text-xs text-gray-400">
+                Purple/magenta gradient, glowing effects, modern minimalist
               </div>
+            </button>
+          </div>
+
+          {/* Active Style Info */}
+          <div className="mt-6 pt-4 border-t border-cyan-500/30">
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Currently Active:</div>
+            <div className="text-sm font-bold">
+              {styleVariation === 'default' && <span className="text-yellow-400">Industrial Style</span>}
+              {styleVariation === 'variation1' && <span className="text-blue-400">Cyber Tech Style</span>}
+              {styleVariation === 'variation2' && <span className="text-purple-400">Neon Fusion Style</span>}
             </div>
           </div>
 
-          {/* Variation 2: Icon Button with Hover Info */}
-          <div className="mb-6 border border-cyan-500/30 rounded-lg p-4 bg-black/50">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-bold">
-              Variation 2: Icon + Hover Tooltip
-            </div>
-            <div className="w-full max-w-sm bg-black/30 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-4 relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-yellow-400/60" />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-yellow-400/60" />
-
-              {/* Info icon in top-right */}
-              <button className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 hover:bg-yellow-500/40 transition-all">
-                <span className="text-sm font-bold">i</span>
-              </button>
-
-              {/* Tooltip on hover */}
-              <div className="absolute top-10 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/95 border border-yellow-500/50 rounded px-2 py-1 text-xs text-yellow-400 whitespace-nowrap pointer-events-none">
-                Click for buff breakdown
-              </div>
-
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-bold font-orbitron text-yellow-400 uppercase tracking-wider">
-                  Gold Generation
-                </h3>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Base:</span>
-                  <span className="text-base font-bold text-yellow-400">20.0 g/hr</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Effective:</span>
-                  <span className="text-lg font-bold text-green-400">24.0 g/hr</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Variation 3: Large Prominent Button */}
-          <div className="border border-cyan-500/30 rounded-lg p-4 bg-black/50">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-bold">
-              Variation 3: Large Prominent
-            </div>
-            <div className="w-full max-w-sm bg-black/30 backdrop-blur-sm border-2 border-yellow-500/50 rounded-lg p-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-yellow-400/60" />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-yellow-400/60" />
-
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-bold font-orbitron text-yellow-400 uppercase tracking-wider">
-                  Gold Generation
-                </h3>
-              </div>
-
-              <div className="space-y-2 mb-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Base:</span>
-                  <span className="text-base font-bold text-yellow-400">20.0 g/hr</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Effective:</span>
-                  <span className="text-lg font-bold text-green-400">24.0 g/hr</span>
-                </div>
-              </div>
-
-              {/* Full width button */}
-              <button
-                className="w-full mek-button-secondary px-4 py-3 text-sm font-bold uppercase tracking-wider"
-              >
-                View Buff Details
-              </button>
+          {/* Implementation Note */}
+          <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded">
+            <div className="text-xs text-cyan-400">
+              <span className="font-bold">Note:</span> Style variations are for visual comparison only.
+              Click options to see how different approaches would look.
             </div>
           </div>
         </div>
@@ -191,6 +151,7 @@ export default function MekLayoutsPage() {
       <MekProfileLightbox
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
+        styleVariation={styleVariation}
       />
 
       {/* Gold Generation Details Lightbox */}
