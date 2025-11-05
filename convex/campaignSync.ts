@@ -38,18 +38,17 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
   try {
     // NMKR API expects path parameters: /v2/GetNfts/{projectId}/{state}/{count}/{page}
     // NOTE: Count must be between 1 and 50 per NMKR API validation
-    // NOTE: NMKR v2 API requires Bearer token authentication (per official docs)
+    // NOTE: Using query parameter authentication (matches working nmkr.ts pattern)
     const count = 50; // Max allowed by NMKR API
     const page = 1; // First page
-    const url = `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}`;
+    const url = `${NMKR_API_BASE}/v2/GetNfts/${projectId}/${state}/${count}/${page}?apiKey=${NMKR_API_KEY}`;
 
-    console.log(`[SYNC] Fetching ${state} NFTs from:`, url);
+    console.log(`[SYNC] Fetching ${state} NFTs from:`, url.replace(NMKR_API_KEY, '***KEY***'));
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'accept': 'text/plain',
-        'Authorization': `Bearer ${NMKR_API_KEY}`,
+        'Accept': 'application/json',
       },
     });
 
@@ -58,12 +57,6 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
       console.error(`[SYNC] Failed to fetch ${state} NFTs:`, response.status, errorText);
       console.error("[SYNC] Request URL was:", url.replace(NMKR_API_KEY || '', '***KEY***'));
       console.error("[SYNC] Response headers:", Object.fromEntries(response.headers.entries()));
-
-      // Check if it's specifically the API key error
-      if (errorText.includes("apikey") || errorText.includes("api key") || errorText.includes("apiKey")) {
-        console.error("[SYNC] ⚠️ API KEY ERROR DETECTED - The API key may not be properly formatted in the URL");
-        console.error("[SYNC] Expected URL format: .../page?apiKey=YOUR_KEY");
-      }
 
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
@@ -94,15 +87,14 @@ async function fetchProjectStats(projectId: string) {
   console.log("[SYNC] API Key present:", !!NMKR_API_KEY, "Length:", NMKR_API_KEY.length);
 
   try {
-    // NOTE: Correct endpoint is GetProject (not GetProjectInfo), uses Bearer token auth
-    const url = `${NMKR_API_BASE}/v2/GetProject/${projectId}`;
-    console.log("[SYNC] GET request to:", url);
+    // NOTE: Using GetProjectInfo endpoint with query parameter authentication (matches working nmkr.ts pattern)
+    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${projectId}?apiKey=${NMKR_API_KEY}`;
+    console.log("[SYNC] GET request to:", url.replace(NMKR_API_KEY, '***KEY***'));
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'accept': 'text/plain',
-        'Authorization': `Bearer ${NMKR_API_KEY}`,
+        'Accept': 'application/json',
       },
     });
 
@@ -114,21 +106,14 @@ async function fetchProjectStats(projectId: string) {
       console.error("[SYNC] Full URL was:", url.replace(NMKR_API_KEY || '', '***KEY***'));
       console.error("[SYNC] Response headers:", Object.fromEntries(response.headers.entries()));
 
-      // Check if it's specifically the API key error
-      if (errorText.includes("apikey") || errorText.includes("api key") || errorText.includes("apiKey")) {
-        console.error("[SYNC] ⚠️ API KEY ERROR DETECTED - The API key may not be properly formatted in the URL");
-        console.error("[SYNC] Expected URL format: .../projectId?apiKey=YOUR_KEY");
-      }
-
       throw new Error(`NMKR API error: ${response.status} - ${errorText}`);
     }
 
     const project = await response.json();
     console.log("[SYNC] Project stats fetched successfully:", {
-      name: project.projectname,
-      nftsSold: project.nftsSold,
-      nftsReserved: project.nftsReserved,
-      nftsFree: project.nftsFree,
+      name: project.projectName,
+      nftCount: project.nftCount,
+      soldCount: project.soldCount,
     });
 
     return project;
