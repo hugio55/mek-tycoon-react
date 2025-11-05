@@ -1,6 +1,6 @@
 // Force cache bust: fabulous-sturgeon-691 deployment
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Orbitron, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Orbitron, Inter, Cinzel, Lora } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import "@/styles/special-buttons.css";
@@ -36,6 +36,19 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
   title: "Mek Employment",
   description: "This website is for testing a core mechanic of a future Over Exposed product. It is not an actual game and it offers no rewards. Bugs or comments? Head here: https://discord.gg/kHkvnPbfmm",
@@ -65,7 +78,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} antialiased min-h-screen overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${inter.variable} ${cinzel.variable} ${lora.variable} antialiased min-h-screen overflow-x-hidden`}
         style={{ backgroundColor: '#0a0a0a', width: '100vw', maxWidth: '100vw', margin: 0, padding: 0 }}
       >
         {/* Global background with animated stars and particles */}
