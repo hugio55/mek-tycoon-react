@@ -39,6 +39,80 @@ export default function ClaudeManagerAdmin() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ path: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // FileCard component for rendering individual files
+  const FileCard = ({ file }: { file: ClaudeFile }) => (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+      {/* File Header */}
+      <div className="p-4 flex items-center gap-4">
+        <div
+          className="flex-1 flex items-center gap-4 cursor-pointer hover:bg-gray-700/50 transition-colors -m-4 p-4"
+          onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
+        >
+          <div className="text-2xl">{getTypeIcon(file.type)}</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-medium">
+                {file.type === 'command' ? '/' : file.type === 'agent' ? '@' : ''}{file.name}
+              </span>
+              {getLocationBadge(file.location)}
+            </div>
+            {file.description && (
+              <div className="text-sm text-gray-400 mt-1">{file.description}</div>
+            )}
+          </div>
+          <div className="text-gray-500">
+            {expandedFile === file.path ? '▼' : '▶'}
+          </div>
+        </div>
+
+        {/* Delete Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(file.path, file.name);
+          }}
+          className="px-3 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-700 text-red-400 rounded transition-colors flex items-center gap-2"
+          title="Delete file"
+        >
+          <span className="text-lg">🗑️</span>
+          <span className="text-xs">DELETE</span>
+        </button>
+      </div>
+
+      {/* Expanded Content */}
+      {expandedFile === file.path && (
+        <div className="border-t border-gray-700 p-4 bg-gray-900/50">
+          {/* Frontmatter */}
+          {file.frontmatter && Object.keys(file.frontmatter).length > 0 && (
+            <div className="mb-4 p-3 bg-gray-800 rounded">
+              <div className="text-sm text-gray-400 mb-2">Metadata:</div>
+              <div className="space-y-1">
+                {Object.entries(file.frontmatter).map(([key, value]) => (
+                  <div key={key} className="text-sm">
+                    <span className="text-blue-400">{key}:</span>{' '}
+                    <span className="text-gray-300">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* File Path */}
+          <div className="mb-3 text-xs text-gray-500 font-mono">
+            {file.path}
+          </div>
+
+          {/* Content */}
+          <div className="bg-black/30 rounded p-4 max-h-96 overflow-y-auto">
+            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
+              {file.content}
+            </pre>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   useEffect(() => {
     console.log('[CLAUDE_ADMIN] Component mounted, loading files...');
     loadFiles();
@@ -291,88 +365,86 @@ export default function ClaudeManagerAdmin() {
         </button>
       </div>
 
-      {/* Files List */}
-      <div className="space-y-3">
+      {/* Files List - Organized by Type */}
+      <div className="space-y-8">
         {filteredFiles.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             No files found matching filters
           </div>
         ) : (
-          filteredFiles.map((file) => (
-            <div
-              key={file.path}
-              className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden"
-            >
-              {/* File Header */}
-              <div className="p-4 flex items-center gap-4">
-                <div
-                  className="flex-1 flex items-center gap-4 cursor-pointer hover:bg-gray-700/50 transition-colors -m-4 p-4"
-                  onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
-                >
-                  <div className="text-2xl">{getTypeIcon(file.type)}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">
-                        {file.type === 'command' ? '/' : file.type === 'agent' ? '@' : ''}{file.name}
-                      </span>
-                      {getLocationBadge(file.location)}
-                    </div>
-                    {file.description && (
-                      <div className="text-sm text-gray-400 mt-1">{file.description}</div>
-                    )}
-                  </div>
-                  <div className="text-gray-500">
-                    {expandedFile === file.path ? '▼' : '▶'}
+          <>
+            {/* Slash Commands Section */}
+            {filteredFiles.some(f => f.type === 'command') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">⚡</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-yellow-400">Slash Commands</h3>
+                    <p className="text-sm text-gray-400">Type /command-name in Claude to activate</p>
                   </div>
                 </div>
-
-                {/* Delete Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(file.path, file.name);
-                  }}
-                  className="px-3 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-700 text-red-400 rounded transition-colors flex items-center gap-2"
-                  title="Delete file"
-                >
-                  <span className="text-lg">🗑️</span>
-                  <span className="text-xs">DELETE</span>
-                </button>
+                <div className="space-y-3">
+                  {filteredFiles.filter(f => f.type === 'command').map((file) => (
+                    <FileCard key={file.path} file={file} />
+                  ))}
+                </div>
               </div>
+            )}
 
-              {/* Expanded Content */}
-              {expandedFile === file.path && (
-                <div className="border-t border-gray-700 p-4 bg-gray-900/50">
-                  {/* Frontmatter */}
-                  {file.frontmatter && Object.keys(file.frontmatter).length > 0 && (
-                    <div className="mb-4 p-3 bg-gray-800 rounded">
-                      <div className="text-sm text-gray-400 mb-2">Metadata:</div>
-                      <div className="space-y-1">
-                        {Object.entries(file.frontmatter).map(([key, value]) => (
-                          <div key={key} className="text-sm">
-                            <span className="text-blue-400">{key}:</span>{' '}
-                            <span className="text-gray-300">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* File Path */}
-                  <div className="mb-3 text-xs text-gray-500 font-mono">
-                    {file.path}
-                  </div>
-
-                  {/* Content */}
-                  <div className="bg-black/30 rounded p-4 max-h-96 overflow-y-auto">
-                    <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
-                      {file.content}
-                    </pre>
+            {/* Agents Section */}
+            {filteredFiles.some(f => f.type === 'agent') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">🤖</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-blue-400">Specialist Agents</h3>
+                    <p className="text-sm text-gray-400">Type @agent-name in Claude or launch via Task tool</p>
                   </div>
                 </div>
-              )}
-            </div>
-          ))
+                <div className="space-y-3">
+                  {filteredFiles.filter(f => f.type === 'agent').map((file) => (
+                    <FileCard key={file.path} file={file} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reference Documents Section */}
+            {filteredFiles.some(f => f.type === 'document') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">📄</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-green-400">Reference Documents</h3>
+                    <p className="text-sm text-gray-400">Specialist knowledge bases and pattern guides</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {filteredFiles.filter(f => f.type === 'document').map((file) => (
+                    <FileCard key={file.path} file={file} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Config Files Section */}
+            {filteredFiles.some(f => f.type === 'config') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">⚙️</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-purple-400">Configuration Files</h3>
+                    <p className="text-sm text-gray-400">Claude configuration and settings</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {filteredFiles.filter(f => f.type === 'config').map((file) => (
+                    <FileCard key={file.path} file={file} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

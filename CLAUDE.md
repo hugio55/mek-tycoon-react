@@ -52,6 +52,12 @@ This starts both Next.js (port 3200) and Convex in one terminal.
 - Purpose: **Testing and development**
 - Risk Level: **Low - safe to experiment**
 
+**🎯 DEPLOYMENT DEFAULT: ALWAYS TROUT**
+- **ALL deployments target Trout (dev) unless user explicitly says otherwise**
+- If user says "deploy", "push changes", or similar → ASSUME TROUT
+- User will ALWAYS explicitly say "production" or "Sturgeon" when needed
+- When in doubt → ASK, but default assumption is ALWAYS Trout
+
 **User will ALWAYS explicitly say when to deploy to production. Never assume production.**
 
 ---
