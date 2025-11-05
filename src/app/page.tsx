@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { getMekDataByNumber, getMekImageUrl, parseMekNumber } from "@/lib/mekNumberToVariation";
 import { getVariationInfoFromFullKey } from "@/lib/variationNameLookup";
 import BlockchainVerificationPanel from "@/components/BlockchainVerificationPanel";
-import HolographicButton from "@/components/ui/SciFiButtons/HolographicButton";
+import HolographicButton from "@/components/ui/IndustrialButtons/HolographicButton";
 import { ensureBech32StakeAddress } from "@/lib/cardanoAddressConverter";
 // MekLevelUpgrade component removed - using inline upgrade UI from demo
 import GoldLeaderboard from "@/components/GoldLeaderboard";
