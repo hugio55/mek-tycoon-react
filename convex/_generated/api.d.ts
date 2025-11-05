@@ -99,6 +99,7 @@ import type * as fixGoldRateCalculation from "../fixGoldRateCalculation.js";
 import type * as fixLightningId from "../fixLightningId.js";
 import type * as fixMek3412To000 from "../fixMek3412To000.js";
 import type * as fixNothingDuplicates from "../fixNothingDuplicates.js";
+import type * as fixProjectIdFormat from "../fixProjectIdFormat.js";
 import type * as fixWalletDuplicates from "../fixWalletDuplicates.js";
 import type * as fixWalletSnapshot from "../fixWalletSnapshot.js";
 import type * as gameConfigs from "../gameConfigs.js";
@@ -328,6 +329,7 @@ declare const fullApi: ApiFromModules<{
   fixLightningId: typeof fixLightningId;
   fixMek3412To000: typeof fixMek3412To000;
   fixNothingDuplicates: typeof fixNothingDuplicates;
+  fixProjectIdFormat: typeof fixProjectIdFormat;
   fixWalletDuplicates: typeof fixWalletDuplicates;
   fixWalletSnapshot: typeof fixWalletSnapshot;
   gameConfigs: typeof gameConfigs;
