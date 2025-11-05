@@ -1,7 +1,7 @@
 "use client";
 
 import { ConvexReactClient } from "convex/react";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import UnifiedHeader from "@/components/UnifiedHeader";
 import { SoundProvider } from "@/contexts/SoundContext";
@@ -28,9 +28,12 @@ function EssenceProviderWrapper({ children }: { children: ReactNode }) {
 // Component that wraps content and handles loading visibility
 function ContentWithLoadingState({ children }: { children: ReactNode }) {
   const { isLoading } = useLoaderContext();
+  const [isBypassed, setIsBypassed] = useState(false);
 
-  // Check if loader is bypassed
-  const isBypassed = typeof window !== 'undefined' && localStorage.getItem('disablePageLoader') === 'true';
+  // Check if loader is bypassed (client-only, after hydration)
+  useEffect(() => {
+    setIsBypassed(localStorage.getItem('disablePageLoader') === 'true');
+  }, []);
 
   return (
     <div
