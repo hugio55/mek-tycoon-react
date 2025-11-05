@@ -97,7 +97,7 @@ async function fetchProjectStats(projectId: string) {
   try {
     // NOTE: Using Bearer token authentication (official NMKR API v2 standard)
     // NOTE: Project ID must NOT contain hyphens
-    const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${cleanProjectId}`;
+    const url = `${NMKR_API_BASE}/v2/GetProject/${cleanProjectId}`;
     console.log("[SYNC] GET request to:", url);
 
     const response = await fetch(url, {

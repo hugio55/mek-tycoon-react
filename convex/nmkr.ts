@@ -351,7 +351,7 @@ export const getProjectInfo = action({
     console.log("[🔨NMKR] Cleaned project ID (hyphens removed):", cleanProjectId);
 
     try {
-      const url = `${NMKR_API_BASE}/v2/GetProjectInfo/${cleanProjectId}`;
+      const url = `${NMKR_API_BASE}/v2/GetProject/${cleanProjectId}`;
       console.log("[🔨NMKR] Request URL:", url);
 
       const response = await fetch(url, {

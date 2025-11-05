@@ -32,6 +32,7 @@ interface ClaudeFilesResponse {
 export default function ClaudeManagerAdmin() {
   const [data, setData] = useState<ClaudeFilesResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedFile, setExpandedFile] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'command' | 'document' | 'agent' | 'config'>('all');
   const [filterLocation, setFilterLocation] = useState<'all' | 'project' | 'parent' | 'computer'>('all');
@@ -44,12 +45,25 @@ export default function ClaudeManagerAdmin() {
 
   async function loadFiles() {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/claude-files');
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error from API');
+      }
+
       setData(result);
-    } catch (error) {
-      console.error('Failed to load Claude files:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('[CLAUDE_ADMIN] Failed to load Claude files:', err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,16 +128,72 @@ export default function ClaudeManagerAdmin() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-gray-400">
-        Loading Claude files...
+      <div className="p-8 text-center">
+        <div className="inline-flex items-center gap-3 text-yellow-400">
+          <div className="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading Claude files...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 space-y-4">
+        <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">⚠️</div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-red-400 mb-2">Failed to Load Claude Files</h3>
+              <p className="text-red-300 mb-4">{error}</p>
+
+              <div className="bg-black/30 p-4 rounded text-sm text-gray-300 mb-4">
+                <div className="font-bold mb-2">Troubleshooting:</div>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Is the dev server running? (npm run dev:all)</li>
+                  <li>Check browser console for detailed error messages</li>
+                  <li>Verify the API route exists: /api/claude-files</li>
+                  <li>Check server logs for backend errors</li>
+                </ul>
+              </div>
+
+              <button
+                onClick={loadFiles}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+              >
+                🔄 Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+          <div className="text-sm text-gray-400">
+            <strong className="text-white">Expected file locations:</strong>
+            <ul className="mt-2 space-y-1 font-mono text-xs">
+              <li>• Project: .claude/ (this project)</li>
+              <li>• Mek Tycoon: C:\Users\Ben Meyers\Documents\Mek Tycoon\.claude\</li>
+              <li>• Computer: C:\Users\Ben Meyers\.claude\</li>
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!data || !data.success) {
     return (
-      <div className="p-8 text-center text-red-400">
-        Failed to load Claude files
+      <div className="p-8 text-center">
+        <div className="bg-orange-900/20 border border-orange-500 rounded-lg p-6 inline-block">
+          <div className="text-4xl mb-3">📭</div>
+          <p className="text-orange-400">No data available</p>
+          <button
+            onClick={loadFiles}
+            className="mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded transition-colors"
+          >
+            🔄 Reload
+          </button>
+        </div>
       </div>
     );
   }

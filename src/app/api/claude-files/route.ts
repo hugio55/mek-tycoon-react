@@ -80,15 +80,26 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
 
 export async function GET() {
   try {
+    console.log('[CLAUDE_API] Starting to scan directories...');
+    console.log('[CLAUDE_API] Project dir:', PROJECT_CLAUDE_DIR);
+    console.log('[CLAUDE_API] Parent dir:', PARENT_CLAUDE_DIR);
+    console.log('[CLAUDE_API] Computer dir:', COMPUTER_CLAUDE_DIR);
+
     const [projectFiles, parentFiles, computerFiles] = await Promise.all([
       scanDirectory(PROJECT_CLAUDE_DIR, 'project'),
       scanDirectory(PARENT_CLAUDE_DIR, 'parent'),
       scanDirectory(COMPUTER_CLAUDE_DIR, 'computer')
     ]);
 
+    console.log('[CLAUDE_API] Scan complete:', {
+      project: projectFiles.length,
+      parent: parentFiles.length,
+      computer: computerFiles.length
+    });
+
     const allFiles = [...projectFiles, ...parentFiles, ...computerFiles];
 
-    return NextResponse.json({
+    const response = {
       success: true,
       files: allFiles,
       stats: {
@@ -103,11 +114,15 @@ export async function GET() {
           config: allFiles.filter(f => f.type === 'config').length
         }
       }
-    });
+    };
+
+    console.log('[CLAUDE_API] Returning response with', allFiles.length, 'files');
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching Claude files:', error);
+    console.error('[CLAUDE_API] Error fetching Claude files:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch Claude files' },
+      { success: false, error: `Failed to fetch Claude files: ${errorMessage}` },
       { status: 500 }
     );
   }
