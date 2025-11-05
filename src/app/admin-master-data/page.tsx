@@ -26,6 +26,7 @@ import CampaignManager from '@/components/admin/campaign/CampaignManager';
 import EssenceMarketAdmin from '@/components/EssenceMarketAdmin';
 import OverlayEditor from '@/components/OverlayEditor';
 import CometLoader from '@/components/loaders/CometLoader';
+import TriangleKaleidoscope from '@/components/loaders/TriangleKaleidoscope';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
 import { getVariationTrueRank, VARIATION_MEK_RANKS } from '@/lib/variationRarityMekRanks';
@@ -3242,7 +3243,33 @@ export default function AdminMasterDataPage() {
                     <div className="text-xs text-zinc-400 space-y-1">
                       <div><span className="text-zinc-500">Source:</span> External CSS</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind</div>
-                      <div><span className="text-zinc-500">Styling:</span> Industrial Design System</div>
+                      <div><span className="text-zinc-500">Colors:</span> Gold & Lime</div>
+                    </div>
+                  </div>
+
+                  {/* Triangle Kaleidoscope */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Triangle Kaleidoscope
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Loader
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div className="bg-black rounded-lg flex items-center justify-center min-h-[400px] overflow-hidden">
+                      <div className="w-full h-[400px]">
+                        <TriangleKaleidoscope />
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> Pug/SCSS/Compass</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript</div>
+                      <div><span className="text-zinc-500">Features:</span> Polygon clip-path, screen blend mode</div>
                     </div>
                   </div>
 
