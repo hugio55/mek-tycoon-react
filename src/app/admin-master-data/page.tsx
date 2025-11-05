@@ -193,9 +193,19 @@ export default function AdminMasterDataPage() {
   const loadConfiguration = useMutation(api.slotConfigurations.loadSlotConfiguration);
   const deleteConfiguration = useMutation(api.slotConfigurations.deleteSlotConfiguration);
 
+  // Page Loader Toggle State
+  const [pageLoaderDisabled, setPageLoaderDisabled] = useState(false);
+  const [loaderStatusMessage, setLoaderStatusMessage] = useState<{ type: 'success' | 'info', text: string } | null>(null);
+
   // Client-side mounting check for portal
   useEffect(() => {
     setMounted(true);
+
+    // Load page loader preference from localStorage
+    if (typeof window !== 'undefined') {
+      const storedValue = localStorage.getItem('disablePageLoader');
+      setPageLoaderDisabled(storedValue === 'true');
+    }
   }, []);
 
   // Interpolate slot values between first and last
@@ -713,6 +723,27 @@ export default function AdminMasterDataPage() {
     });
   };
 
+  const handleTogglePageLoader = () => {
+    const newValue = !pageLoaderDisabled;
+    setPageLoaderDisabled(newValue);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('disablePageLoader', newValue.toString());
+    }
+
+    setLoaderStatusMessage({
+      type: 'success',
+      text: newValue
+        ? 'Page loader DISABLED. Refresh the page to see the change.'
+        : 'Page loader ENABLED. Refresh the page to see the change.'
+    });
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setLoaderStatusMessage(null);
+    }, 5000);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
@@ -785,6 +816,63 @@ export default function AdminMasterDataPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Page Loader Toggle */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-blue-400 mb-1">Page Loader Control</h2>
+              <p className="text-xs text-gray-400 mb-2">
+                Toggle the animated loading screen that appears when navigating between pages
+              </p>
+              {loaderStatusMessage && (
+                <div className={`text-xs px-3 py-1.5 rounded inline-block ${
+                  loaderStatusMessage.type === 'success'
+                    ? 'bg-green-900/20 border border-green-500/50 text-green-400'
+                    : 'bg-blue-900/20 border border-blue-500/50 text-blue-400'
+                }`}>
+                  {loaderStatusMessage.text}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Status Badge */}
+              <div className={`px-4 py-2 rounded-lg font-bold text-sm ${
+                pageLoaderDisabled
+                  ? 'bg-red-900/30 border-2 border-red-500/50 text-red-300'
+                  : 'bg-green-900/30 border-2 border-green-500/50 text-green-300'
+              }`}>
+                <span className="mr-2">{pageLoaderDisabled ? '⛔' : '✅'}</span>
+                {pageLoaderDisabled ? 'DISABLED' : 'ENABLED'}
+              </div>
+
+              {/* Toggle Button */}
+              <button
+                onClick={handleTogglePageLoader}
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  pageLoaderDisabled
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/30 hover:scale-105'
+                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-red-500/30 hover:scale-105'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span>{pageLoaderDisabled ? '▶️' : '⏸️'}</span>
+                  <span>{pageLoaderDisabled ? 'ENABLE' : 'DISABLE'}</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-3 pt-3 border-t border-gray-700/50">
+            <p className="text-xs text-gray-500">
+              <span className="font-bold text-gray-400">Note:</span> Changes take effect after page refresh.
+              The page loader shows progress while loading user data and assets.
+              Disabling it will skip directly to the page content.
+            </p>
           </div>
         </div>
 
