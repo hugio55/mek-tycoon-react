@@ -3552,7 +3552,12 @@ export default function AdminMasterDataPage() {
                     </div>
 
                     {/* Component Preview */}
-                    <div className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px] bg-gradient-to-br from-zinc-300 via-zinc-200 to-zinc-300">
+                    <div
+                      className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #d4d4d8 0px, #d4d4d8 20px, #a1a1aa 20px, #a1a1aa 40px)'
+                      }}
+                    >
                       <GlassButton
                         text="Generate"
                         onClick={() => console.log('Glass button clicked')}

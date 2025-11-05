@@ -6,6 +6,7 @@ import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern';
+export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent';
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -14,21 +15,48 @@ interface MekProfileLightboxProps {
   onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
   cardInteriorStyle?: CardInteriorStyle;
   onCardInteriorStyleChange?: (style: CardInteriorStyle) => void;
+  variationCardStyle?: VariationCardStyle;
+  onVariationCardStyleChange?: (style: VariationCardStyle) => void;
+  backdropDarkness?: number;
+  onBackdropDarknessChange?: (value: number) => void;
+  cardDarkness?: number;
+  onCardDarknessChange?: (value: number) => void;
+  backdropBlur?: number;
+  onBackdropBlurChange?: (value: number) => void;
+  cardBackdropBlur?: number;
+  onCardBackdropBlurChange?: (value: number) => void;
 }
 
-export default function MekProfileLightbox({ isOpen, onClose, styleVariation = 'default', onStyleVariationChange, cardInteriorStyle = 'compact', onCardInteriorStyleChange }: MekProfileLightboxProps) {
+export default function MekProfileLightbox({
+  isOpen,
+  onClose,
+  styleVariation = 'default',
+  onStyleVariationChange,
+  cardInteriorStyle = 'compact',
+  onCardInteriorStyleChange,
+  variationCardStyle = 'clean-frames',
+  onVariationCardStyleChange,
+  backdropDarkness = 40,
+  onBackdropDarknessChange,
+  cardDarkness = 20,
+  onCardDarknessChange,
+  backdropBlur = 2,
+  onBackdropBlurChange,
+  cardBackdropBlur = 12,
+  onCardBackdropBlurChange
+}: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
 
-  // Define style classes based on variation
+  // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
     switch (styleVariation) {
       case 'variation1': // Cyber Tech
-        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/30 backdrop-blur-md border-2 border-blue-500/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col';
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-blue-500/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col';
       case 'variation2': // Neon Fusion
-        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-lg border-2 border-purple-500/50 rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 flex flex-col';
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-purple-500/50 rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 flex flex-col';
       default: // Industrial
-        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] bg-black/20 backdrop-blur-md border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col';
+        return 'relative w-[960px] max-w-[95vw] max-h-[90vh] border-2 border-yellow-500/50 rounded-lg overflow-hidden shadow-2xl flex flex-col';
     }
   };
 
@@ -123,16 +151,25 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      {/* Backdrop - Matching EssenceDistributionLightbox */}
+      {/* Backdrop - Dynamic darkness and blur */}
       <div
-        className="fixed inset-0 bg-black/40"
-        style={{ backdropFilter: 'blur(2px)' }}
+        className="fixed inset-0"
+        style={{
+          backgroundColor: `rgba(0, 0, 0, ${backdropDarkness / 100})`,
+          backdropFilter: `blur(${backdropBlur}px)`
+        }}
         onClick={onClose}
       />
 
-      {/* Lightbox Container - Dynamic styling based on variation */}
+      {/* Lightbox Container - Dynamic styling based on variation with dynamic blur/darkness */}
       <div
         className={getContainerClasses()}
+        style={{
+          backgroundColor: styleVariation === 'variation2'
+            ? `rgba(88, 28, 135, ${cardDarkness / 100})`
+            : `rgba(0, 0, 0, ${cardDarkness / 100})`,
+          backdropFilter: `blur(${cardBackdropBlur}px)`
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -390,9 +427,21 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                 <div className="mek-card-industrial mek-border-sharp-gold p-4">
                   <div className="mek-label-uppercase mb-3">VARIATION CARDS</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <VariationCard title="HEAD VARIATION" imagePath="/variation-images-art-400px/ae1-gn3-ev1.png" />
-                    <VariationCard title="BODY VARIATION" imagePath="/variation-images-art-400px/ak3-aa5-mo1.png" />
-                    <VariationCard title="TRAIT VARIATION" imagePath="/variation-images-art-400px/ar1-at1-nm1.png" />
+                    <VariationCard
+                      title="HEAD VARIATION"
+                      imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
+                      cardStyle={variationCardStyle}
+                    />
+                    <VariationCard
+                      title="BODY VARIATION"
+                      imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
+                      cardStyle={variationCardStyle}
+                    />
+                    <VariationCard
+                      title="TRAIT VARIATION"
+                      imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
+                      cardStyle={variationCardStyle}
+                    />
                   </div>
                 </div>
 
@@ -458,6 +507,97 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
             </select>
           </div>
 
+          {/* Dropdown 3: Variation Cards Style */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Variation Cards Style
+            </label>
+            <select
+              value={variationCardStyle}
+              onChange={(e) => {
+                e.stopPropagation();
+                onVariationCardStyleChange?.(e.target.value as VariationCardStyle);
+              }}
+              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+            >
+              <option value="clean-frames">Clean Frames</option>
+              <option value="image-focus">Image Focus</option>
+              <option value="subtle-accent">Subtle Accent</option>
+            </select>
+          </div>
+
+          {/* Slider 1: Backdrop Darkness */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Backdrop Darkness: {backdropDarkness}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={backdropDarkness}
+              onChange={(e) => {
+                e.stopPropagation();
+                onBackdropDarknessChange?.(Number(e.target.value));
+              }}
+              className="w-full accent-cyan-500"
+            />
+          </div>
+
+          {/* Slider 2: Card Darkness */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Card Darkness: {cardDarkness}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={cardDarkness}
+              onChange={(e) => {
+                e.stopPropagation();
+                onCardDarknessChange?.(Number(e.target.value));
+              }}
+              className="w-full accent-cyan-500"
+            />
+          </div>
+
+          {/* Slider 3: Backdrop Blur */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Backdrop Blur: {backdropBlur}px
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              value={backdropBlur}
+              onChange={(e) => {
+                e.stopPropagation();
+                onBackdropBlurChange?.(Number(e.target.value));
+              }}
+              className="w-full accent-cyan-500"
+            />
+          </div>
+
+          {/* Slider 4: Card Backdrop Blur */}
+          <div className="mb-3">
+            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+              Card Backdrop Blur: {cardBackdropBlur}px
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              value={cardBackdropBlur}
+              onChange={(e) => {
+                e.stopPropagation();
+                onCardBackdropBlurChange?.(Number(e.target.value));
+              }}
+              className="w-full accent-cyan-500"
+            />
+          </div>
+
           {/* Current Selection Display */}
           <div className="pt-2 border-t border-cyan-500/30">
             <div className="text-[10px] text-gray-500 mb-1">Active:</div>
@@ -472,6 +612,11 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
                 {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
                 {cardInteriorStyle === 'modern' && 'Minimal Centered'}
               </div>
+              <div>
+                {variationCardStyle === 'clean-frames' && 'Clean Frames'}
+                {variationCardStyle === 'image-focus' && 'Image Focus'}
+                {variationCardStyle === 'subtle-accent' && 'Subtle Accent'}
+              </div>
             </div>
           </div>
         </div>
@@ -484,43 +629,131 @@ export default function MekProfileLightbox({ isOpen, onClose, styleVariation = '
   return createPortal(modalContent, document.body);
 }
 
-// Reusable Variation Card Component
-function VariationCard({ title, imagePath }: { title: string; imagePath?: string }) {
-  return (
-    <div className="bg-black/30 border border-yellow-500/30 p-4 relative overflow-hidden">
-      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-      <div className="mek-label-uppercase mb-3 relative z-10">{title}</div>
+// Reusable Variation Card Component with 3 Style Options
+function VariationCard({ title, imagePath, cardStyle = 'clean-frames' }: { title: string; imagePath?: string; cardStyle?: VariationCardStyle }) {
 
-      <div className="w-full h-32 bg-black/40 border border-yellow-500/20 flex items-center justify-center mb-3 overflow-hidden relative">
-        <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-        {imagePath ? (
-          <img
-            src={imagePath}
-            alt={title}
-            className="w-full h-full object-contain relative z-10"
-          />
-        ) : (
-          <span className="text-gray-500 text-xs relative z-10">Image</span>
-        )}
+  // Option 1: Clean Frames - Thin borders, minimal padding, let images breathe
+  if (cardStyle === 'clean-frames') {
+    return (
+      <div className="bg-black/20 border border-yellow-500/30 p-3 relative overflow-hidden">
+        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10">{title}</div>
+
+        {/* Image with thin border */}
+        <div className="w-full h-40 border border-yellow-500/20 flex items-center justify-center mb-2 overflow-hidden relative bg-black/30">
+          {imagePath ? (
+            <img
+              src={imagePath}
+              alt={title}
+              className="w-full h-full object-contain relative z-10"
+            />
+          ) : (
+            <span className="text-gray-500 text-xs relative z-10">Image</span>
+          )}
+        </div>
+
+        <div className="text-white text-sm mb-1 relative z-10">Variation Name</div>
+        <div className="text-gray-400 text-xs mb-2 relative z-10">3 of 4000</div>
+
+        <div className="space-y-1 text-xs relative z-10">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Base:</span>
+            <span className="text-white">100</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Bonus:</span>
+            <span className="text-green-400">+25</span>
+          </div>
+          <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
+            <span className="text-gray-400">Total:</span>
+            <span className="mek-value-primary font-bold">125</span>
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      <div className="text-white mb-2 relative z-10">Variation Name</div>
-      <div className="text-gray-400 text-sm mb-3 relative z-10">3 of 4000</div>
+  // Option 2: Image Focus - No container boxes, image with title/stats below
+  if (cardStyle === 'image-focus') {
+    return (
+      <div className="relative overflow-hidden">
+        {/* Large prominent image */}
+        <div className="w-full h-48 flex items-center justify-center mb-3 overflow-hidden relative bg-gradient-to-b from-transparent to-black/40">
+          {imagePath ? (
+            <img
+              src={imagePath}
+              alt={title}
+              className="w-full h-full object-contain relative z-10"
+            />
+          ) : (
+            <span className="text-gray-500 text-xs relative z-10">Image</span>
+          )}
+        </div>
 
-      <div className="space-y-1 text-sm relative z-10">
-        <div className="flex justify-between">
-          <span className="text-gray-400">Base Essence:</span>
-          <span className="text-white">100</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Bonus Essence:</span>
-          <span className="text-green-400">+25</span>
-        </div>
-        <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
-          <span className="text-gray-400">Total Essence:</span>
-          <span className="mek-value-primary font-bold">125</span>
+        {/* Info below image */}
+        <div className="relative z-10">
+          <div className="mek-label-uppercase mb-2 text-center text-[10px]">{title}</div>
+          <div className="text-white text-sm mb-1 text-center">Variation Name</div>
+          <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
+
+          <div className="space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Base:</span>
+              <span className="text-white">100</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Bonus:</span>
+              <span className="text-green-400">+25</span>
+            </div>
+            <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
+              <span className="text-gray-400">Total:</span>
+              <span className="mek-value-primary font-bold">125</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Option 3: Subtle Accent - Very subtle background/border, light styling
+  if (cardStyle === 'subtle-accent') {
+    return (
+      <div className="bg-black/10 border border-yellow-500/10 p-3 relative overflow-hidden rounded">
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none"></div>
+        <div className="mek-label-uppercase mb-2 text-[10px] relative z-10 text-yellow-400/70">{title}</div>
+
+        {/* Image with very subtle border */}
+        <div className="w-full h-40 border border-yellow-500/10 flex items-center justify-center mb-2 overflow-hidden relative bg-black/20 rounded">
+          {imagePath ? (
+            <img
+              src={imagePath}
+              alt={title}
+              className="w-full h-full object-contain relative z-10"
+            />
+          ) : (
+            <span className="text-gray-500 text-xs relative z-10">Image</span>
+          )}
+        </div>
+
+        <div className="text-white/90 text-sm mb-1 relative z-10">Variation Name</div>
+        <div className="text-gray-400/70 text-xs mb-2 relative z-10">3 of 4000</div>
+
+        <div className="space-y-1 text-xs relative z-10">
+          <div className="flex justify-between">
+            <span className="text-gray-400/70">Base:</span>
+            <span className="text-white/90">100</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400/70">Bonus:</span>
+            <span className="text-green-400/90">+25</span>
+          </div>
+          <div className="flex justify-between border-t border-yellow-500/10 pt-1 mt-1">
+            <span className="text-gray-400/70">Total:</span>
+            <span className="text-yellow-400/90 font-bold">125</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
