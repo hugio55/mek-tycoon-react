@@ -259,36 +259,73 @@ export default function MekProfileLightbox({
                   />
                 </div>
 
-                {/* MOBILE: Primary Info Panel (Designation with 4 fields) */}
-                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold p-4">
-                  <div className="mek-label-uppercase mb-3">MEK INFORMATION</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Mekanism Number */}
-                    <div className="col-span-2 bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                      <div className="mek-label-uppercase mb-1">MEKANISM</div>
-                      <div className="text-white font-bold relative z-10">#1234</div>
+                {/* MOBILE: Primary Info Panel (Designation - Industrial ID Card) */}
+                <div className="lg:hidden mek-card-industrial mek-border-sharp-gold">
+                  <div className="relative overflow-hidden">
+                    {/* Hazard stripe header */}
+                    <div className="h-8 relative overflow-hidden mb-4" style={{
+                      backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, #000 10px, #000 20px)',
+                    }}>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-black font-black text-xs tracking-widest bg-yellow-400/90 px-3 py-0.5">
+                          MEK DESIGNATION
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Rank */}
-                    <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                    {/* Main content area with scratches overlay */}
+                    <div className="relative px-4 pb-4">
                       <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                      <div className="mek-label-uppercase mb-1">RANK</div>
-                      <div className="mek-value-primary text-xl relative z-10">2985</div>
-                    </div>
 
-                    {/* Corporation */}
-                    <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                      <div className="mek-label-uppercase mb-1">CORP</div>
-                      <div className="text-white text-sm relative z-10">Apex Ind.</div>
-                    </div>
+                      {/* Top row: Mekanism # and Rank side-by-side */}
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {/* Mekanism Number - Badge Style */}
+                        <div className="bg-black/60 border-l-4 border-yellow-500 p-2 relative">
+                          <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-0.5">
+                            UNIT
+                          </div>
+                          <div className="text-white font-bold text-base font-mono">
+                            #1234
+                          </div>
+                        </div>
 
-                    {/* Employee ID / Custom Name */}
-                    <div className="col-span-2 bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                      <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                      <div className="mek-label-uppercase mb-1">EMPLOYEE ID</div>
-                      <div className="text-white text-sm break-all relative z-10">Golden Striker</div>
+                        {/* Rank - Prominent Badge */}
+                        <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-2 border-yellow-500/50 p-2 relative">
+                          <div className="text-[9px] text-yellow-300 uppercase tracking-widest font-bold mb-0.5">
+                            RANK
+                          </div>
+                          <div className="text-yellow-400 font-black text-xl leading-none font-mono" style={{
+                            textShadow: '0 0 10px rgba(250, 182, 23, 0.5)'
+                          }}>
+                            2985
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Corporation - Full width bar */}
+                      <div className="bg-black/40 border border-yellow-500/30 border-dashed p-2 mb-3 relative">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
+                            CORPORATION
+                          </div>
+                          <div className="text-white text-sm font-semibold">
+                            Apex Industries
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Employee ID - Name plate style */}
+                      <div className="relative">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                        <div className="bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20 p-2.5 pl-3">
+                          <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-1">
+                            EMPLOYEE ID
+                          </div>
+                          <div className="text-white font-bold text-sm tracking-wide">
+                            Golden Striker
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -352,36 +389,73 @@ export default function MekProfileLightbox({
 
                   {/* LEFT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* Designation Section - All 4 fields grouped */}
+                    {/* Designation Section - Industrial ID Card Design */}
                     <div className={getCardClasses()}>
-                      <div className="mek-label-uppercase mb-3">DESIGNATION</div>
-                      <div className="space-y-3">
-                        {/* Mekanism Number */}
-                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                          <div className="mek-label-uppercase mb-1">MEKANISM</div>
-                          <div className="text-white font-bold relative z-10">#1234</div>
+                      <div className="relative overflow-hidden">
+                        {/* Hazard stripe header */}
+                        <div className="h-8 relative overflow-hidden mb-4" style={{
+                          backgroundImage: 'repeating-linear-gradient(45deg, #fab617 0, #fab617 10px, #000 10px, #000 20px)',
+                        }}>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-black font-black text-xs tracking-widest bg-yellow-400/90 px-3 py-0.5">
+                              MEK DESIGNATION
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Rank */}
-                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
+                        {/* Main content area with scratches overlay */}
+                        <div className="relative">
                           <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                          <div className="mek-label-uppercase mb-1">RANK</div>
-                          <div className="mek-value-primary text-2xl relative z-10">2985</div>
-                        </div>
 
-                        {/* Corporation */}
-                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                          <div className="mek-label-uppercase mb-1">CORPORATION</div>
-                          <div className="text-white text-sm relative z-10">Apex Industries</div>
-                        </div>
+                          {/* Top row: Mekanism # and Rank side-by-side */}
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            {/* Mekanism Number - Badge Style */}
+                            <div className="bg-black/60 border-l-4 border-yellow-500 p-2 relative">
+                              <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-0.5">
+                                UNIT
+                              </div>
+                              <div className="text-white font-bold text-base font-mono">
+                                #1234
+                              </div>
+                            </div>
 
-                        {/* Employee ID / Custom Name */}
-                        <div className="bg-black/40 border border-yellow-500/20 p-3 relative overflow-hidden">
-                          <div className="absolute inset-0 mek-overlay-scratches opacity-5 pointer-events-none"></div>
-                          <div className="mek-label-uppercase mb-1">EMPLOYEE ID</div>
-                          <div className="text-white text-sm relative z-10">Golden Striker</div>
+                            {/* Rank - Prominent Badge */}
+                            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-2 border-yellow-500/50 p-2 relative">
+                              <div className="text-[9px] text-yellow-300 uppercase tracking-widest font-bold mb-0.5">
+                                RANK
+                              </div>
+                              <div className="text-yellow-400 font-black text-2xl leading-none font-mono" style={{
+                                textShadow: '0 0 10px rgba(250, 182, 23, 0.5)'
+                              }}>
+                                2985
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Corporation - Full width bar */}
+                          <div className="bg-black/40 border border-yellow-500/30 border-dashed p-2 mb-3 relative">
+                            <div className="flex items-center justify-between">
+                              <div className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
+                                CORPORATION
+                              </div>
+                              <div className="text-white text-sm font-semibold">
+                                Apex Industries
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Employee ID - Name plate style */}
+                          <div className="relative">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                            <div className="bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20 p-2.5 pl-3">
+                              <div className="text-[9px] text-yellow-400 uppercase tracking-widest font-bold mb-1">
+                                EMPLOYEE ID
+                              </div>
+                              <div className="text-white font-bold text-sm tracking-wide">
+                                Golden Striker
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -465,8 +539,10 @@ export default function MekProfileLightbox({
                 </div>
 
                 {/* Variation Cards - Responsive Grid */}
-                <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                  <div className="mek-label-uppercase mb-3">VARIATION CARDS</div>
+                <div className={variationCardStyle === 'no-cards-direct' ? '' : 'mek-card-industrial mek-border-sharp-gold p-4'}>
+                  {variationCardStyle !== 'no-cards-direct' && (
+                    <div className="mek-label-uppercase mb-3">VARIATION CARDS</div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <VariationCard
                       title="HEAD VARIATION"
