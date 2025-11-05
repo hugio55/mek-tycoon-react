@@ -59,7 +59,9 @@ export default function MekProfileLightbox({
   headerGap = 32,
   onHeaderGapChange,
   headerBottomPadding = 15,
-  onHeaderBottomPaddingChange
+  onHeaderBottomPaddingChange,
+  contentSpacing = 16,
+  onContentSpacingChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -223,7 +225,7 @@ export default function MekProfileLightbox({
 
             {/* Main Content - Layout 1 (Three-Column) */}
             <div className="max-w-7xl mx-auto px-4 pb-6" style={{ paddingTop: `${headerGap}px` }}>
-              <div className="space-y-4 md:space-y-6 lg:space-y-8">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: `${contentSpacing}px` }}>
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
                 <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
                   <img
