@@ -1,25 +1,22 @@
 'use client';
 
-import React from 'react';
 import './GlassButton.css';
 
 interface GlassButtonProps {
+  text?: string;
   onClick?: () => void;
-  children?: React.ReactNode;
-  disabled?: boolean;
 }
 
-export default function GlassButton({ onClick, children, disabled }: GlassButtonProps) {
+export default function GlassButton({
+  text = 'Generate',
+  onClick
+}: GlassButtonProps) {
   return (
-    <div className="glass-button-wrap">
-      <button
-        className="glass-button"
-        onClick={onClick}
-        disabled={disabled}
-      >
-        <span>{children || 'Generate'}</span>
+    <div className="button-wrap">
+      <button onClick={onClick}>
+        <span>{text}</span>
       </button>
-      <div className="glass-button-shadow"></div>
+      <div className="button-shadow"></div>
     </div>
   );
 }
