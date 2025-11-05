@@ -4,12 +4,12 @@ import { api } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Check all wallets every 6 hours and update Mek ownership snapshots
+// Check all wallets every 24 hours and update Mek ownership snapshots
 // This prevents cheating by detecting when Meks move between wallets
 crons.interval(
   "wallet snapshot checks",
   {
-    hours: 6
+    hours: 24
   },
   api.goldMiningSnapshot.triggerSnapshot
 );
@@ -23,11 +23,11 @@ crons.interval(
   api.goldBackups.triggerManualDailyBackup
 );
 
-// Update pre-computed leaderboard rankings every 15 minutes (reduced from 5 to save bandwidth)
+// Update pre-computed leaderboard rankings every 6 hours (reduced from 15 minutes to save bandwidth)
 crons.interval(
   "update leaderboard rankings",
   {
-    minutes: 15
+    hours: 6
   },
   internal.leaderboardUpdater.updateGoldLeaderboard
 );
@@ -50,11 +50,11 @@ crons.interval(
   internal.walletAuthentication.cleanupExpiredLockouts
 );
 
-// Auto-fix asset overlaps every 6 hours (right after snapshots run)
+// Auto-fix asset overlaps every 24 hours (right after snapshots run)
 crons.interval(
   "auto-fix asset overlaps",
   {
-    hours: 6
+    hours: 24
   },
   internal.duplicateWalletDetection.autoFixAssetOverlaps
 );
