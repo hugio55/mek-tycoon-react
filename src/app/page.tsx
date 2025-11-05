@@ -2800,28 +2800,6 @@ export default function MekRateLoggingPage() {
     };
   }, [walletConnected, walletAddress, goldMiningData?.isVerified]); // Added isVerified to restart when verification status changes
 
-  // Save on page unload
-  useEffect(() => {
-    // Guard against SSR
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const handleUnload = (e: BeforeUnloadEvent) => {
-      // Only save on natural page close, NOT during disconnect
-      // (disconnect already calls updateLastActive)
-      if (walletAddress && !isDisconnecting) {
-        // Use synchronous approach - queue the save without awaiting
-        // This prevents the "Are you sure you want to leave?" warning
-        updateLastActive({
-          walletAddress
-        }).catch(err => console.error('[Unload] Failed to save:', err));
-      }
-    };
-
-    window.addEventListener('beforeunload', handleUnload);
-    return () => window.removeEventListener('beforeunload', handleUnload);
-  }, [walletAddress, currentGold, isDisconnecting]);
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
