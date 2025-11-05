@@ -1175,7 +1175,7 @@ function ManualWhitelistModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Test Whitelist - Oct 25"
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
@@ -1186,7 +1186,7 @@ function ManualWhitelistModal({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Notes about this whitelist..."
-            className="w-full bg-black/50 border border-green-500/30 rounded px-3 py-2 text-white h-20"
+            className="w-full bg-black/50 border border-green-500/30 px-3 py-2 text-white h-20 focus:border-green-500/60 focus:outline-none transition-colors"
           />
         </div>
 
