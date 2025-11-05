@@ -3573,6 +3573,38 @@ export default function AdminMasterDataPage() {
                     </div>
                   </div>
 
+                  {/* Glass Button Sharp */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Glass Button Sharp
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, #27272a 0px, #27272a 20px, #fab617 20px, #fab617 40px)'
+                      }}
+                    >
+                      <GlassButtonSharp
+                        text="Generate"
+                        onClick={() => console.log('Glass button sharp clicked')}
+                      />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> Sharp edges (border-radius: 0), glassmorphism with backdrop blur, rotating conic gradient border, linear gradient shine, 3D rotation on active</div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
           </div>
