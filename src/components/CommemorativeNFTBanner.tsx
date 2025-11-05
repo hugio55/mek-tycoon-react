@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 import { extractPaymentAddress, getWalletApi } from '@/lib/walletAddressExtraction';
 
 interface CommemorativeNFTBannerProps {

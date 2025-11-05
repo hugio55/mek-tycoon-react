@@ -15,7 +15,7 @@ import { DifficultyLevel, DifficultyConfig, calculateRewards, calculateMekSlots 
 import { StoryModeTitleCard } from '@/components/StoryModeTitleCards';
 import '@/styles/story-title-cards.css';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
-import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 import { createPortal } from 'react-dom';
 import MissionCountdown from '@/components/MissionCountdown';
 import CancelMissionLightbox from '@/components/CancelMissionLightbox';

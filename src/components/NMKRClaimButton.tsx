@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import NMKRPayLightbox from './NMKRPayLightbox';
-import HolographicButton from './ui/SciFiButtons/HolographicButton';
+import HolographicButton from './ui/IndustrialButtons/HolographicButton';
 
 interface NMKRClaimButtonProps {
   walletAddress: string | null;

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import HolographicButton from '@/components/ui/SciFiButtons/HolographicButton';
+import HolographicButton from '@/components/ui/IndustrialButtons/HolographicButton';
 import { TIER_COLORS, MODIFIER_COLORS } from '@/lib/chipRewardCalculator';
 import SuccessMeterV2 from '@/components/SuccessMeterV2';
 import { renderDifficultyButton } from './StoryMissionCard-buttonStyles';
