@@ -8,6 +8,8 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern';
 export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent';
 
+export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
+
 interface MekProfileLightboxProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,6 +17,8 @@ interface MekProfileLightboxProps {
   onStyleVariationChange?: (variation: 'default' | 'variation1' | 'variation2') => void;
   cardInteriorStyle?: CardInteriorStyle;
   onCardInteriorStyleChange?: (style: CardInteriorStyle) => void;
+  buffDetailsLayout?: BuffDetailsLayout;
+  onBuffDetailsLayoutChange?: (layout: BuffDetailsLayout) => void;
   variationCardStyle?: VariationCardStyle;
   onVariationCardStyleChange?: (style: VariationCardStyle) => void;
   backdropDarkness?: number;
@@ -34,6 +38,8 @@ export default function MekProfileLightbox({
   onStyleVariationChange,
   cardInteriorStyle = 'compact',
   onCardInteriorStyleChange,
+  buffDetailsLayout = 'classic',
+  onBuffDetailsLayoutChange,
   variationCardStyle = 'clean-frames',
   onVariationCardStyleChange,
   backdropDarkness = 40,
@@ -453,169 +459,6 @@ export default function MekProfileLightbox({
                     <span className="text-gray-500 relative z-10">Node Tree / Talent Tree Area</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Debug Panel - Fixed to right side, high z-index */}
-      <div
-        className="fixed top-16 right-4 z-[10000] w-64 bg-black/95 border-2 border-cyan-500/50 rounded-lg shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-4">
-          <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3 border-b border-cyan-500/30 pb-2">
-            Style Controls
-          </h3>
-
-          {/* Dropdown 1: Page Styling */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Overall Theme
-            </label>
-            <select
-              value={styleVariation}
-              onChange={(e) => {
-                e.stopPropagation();
-                onStyleVariationChange?.(e.target.value as 'default' | 'variation1' | 'variation2');
-              }}
-              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-            >
-              <option value="default">Industrial Yellow</option>
-              <option value="variation1">Cyberpunk Cyan</option>
-              <option value="variation2">Military Green</option>
-            </select>
-          </div>
-
-          {/* Dropdown 2: Card Interior Styling */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Card Layout
-            </label>
-            <select
-              value={cardInteriorStyle}
-              onChange={(e) => {
-                e.stopPropagation();
-                onCardInteriorStyleChange?.(e.target.value as CardInteriorStyle);
-              }}
-              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-            >
-              <option value="compact">Classic Stack</option>
-              <option value="spacious">Side-by-Side</option>
-              <option value="modern">Minimal Centered</option>
-            </select>
-          </div>
-
-          {/* Dropdown 3: Variation Cards Style */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Variation Cards Style
-            </label>
-            <select
-              value={variationCardStyle}
-              onChange={(e) => {
-                e.stopPropagation();
-                onVariationCardStyleChange?.(e.target.value as VariationCardStyle);
-              }}
-              className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
-            >
-              <option value="clean-frames">Clean Frames</option>
-              <option value="image-focus">Image Focus</option>
-              <option value="subtle-accent">Subtle Accent</option>
-            </select>
-          </div>
-
-          {/* Slider 1: Backdrop Darkness */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Backdrop Darkness: {backdropDarkness}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={backdropDarkness}
-              onChange={(e) => {
-                e.stopPropagation();
-                onBackdropDarknessChange?.(Number(e.target.value));
-              }}
-              className="w-full accent-cyan-500"
-            />
-          </div>
-
-          {/* Slider 2: Card Darkness */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Card Darkness: {cardDarkness}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={cardDarkness}
-              onChange={(e) => {
-                e.stopPropagation();
-                onCardDarknessChange?.(Number(e.target.value));
-              }}
-              className="w-full accent-cyan-500"
-            />
-          </div>
-
-          {/* Slider 3: Backdrop Blur */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Backdrop Blur: {backdropBlur}px
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="20"
-              value={backdropBlur}
-              onChange={(e) => {
-                e.stopPropagation();
-                onBackdropBlurChange?.(Number(e.target.value));
-              }}
-              className="w-full accent-cyan-500"
-            />
-          </div>
-
-          {/* Slider 4: Card Backdrop Blur */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Card Backdrop Blur: {cardBackdropBlur}px
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="20"
-              value={cardBackdropBlur}
-              onChange={(e) => {
-                e.stopPropagation();
-                onCardBackdropBlurChange?.(Number(e.target.value));
-              }}
-              className="w-full accent-cyan-500"
-            />
-          </div>
-
-          {/* Current Selection Display */}
-          <div className="pt-2 border-t border-cyan-500/30">
-            <div className="text-[10px] text-gray-500 mb-1">Active:</div>
-            <div className="text-[10px] text-cyan-300 space-y-0.5">
-              <div>
-                {styleVariation === 'default' && 'Industrial Yellow'}
-                {styleVariation === 'variation1' && 'Cyberpunk Cyan'}
-                {styleVariation === 'variation2' && 'Military Green'}
-              </div>
-              <div>
-                {cardInteriorStyle === 'compact' && 'Classic Stack'}
-                {cardInteriorStyle === 'spacious' && 'Side-by-Side'}
-                {cardInteriorStyle === 'modern' && 'Minimal Centered'}
-              </div>
-              <div>
-                {variationCardStyle === 'clean-frames' && 'Clean Frames'}
-                {variationCardStyle === 'image-focus' && 'Image Focus'}
-                {variationCardStyle === 'subtle-accent' && 'Subtle Accent'}
               </div>
             </div>
           </div>
