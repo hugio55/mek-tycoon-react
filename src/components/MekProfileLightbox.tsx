@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
@@ -103,6 +105,9 @@ export default function MekProfileLightbox({
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
+
+  // Query level colors from database
+  const levelColors = useQuery(api.levelColors.getLevelColors) || DEFAULT_LEVEL_COLORS;
 
   // Define style classes based on variation (base classes only, opacity/blur applied inline)
   const getContainerClasses = () => {
@@ -3052,7 +3057,7 @@ export default function MekProfileLightbox({
                       const displayLevel = currentLevel <= 10 ? currentLevel : 10;
                       const isActive = barLevel <= displayLevel;
                       const isCurrent = barLevel === displayLevel;
-                      const levelColor = DEFAULT_LEVEL_COLORS[barLevel - 1] || '#FFFFFF';
+                      const levelColor = levelColors[barLevel - 1] || '#FFFFFF';
 
                       return (
                         <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
@@ -3202,7 +3207,7 @@ export default function MekProfileLightbox({
                           const displayLevel = currentLevel <= 10 ? currentLevel : 10;
                           const isActive = barLevel <= displayLevel;
                           const isCurrent = barLevel === displayLevel;
-                          const levelColor = DEFAULT_LEVEL_COLORS[barLevel - 1] || '#FFFFFF';
+                          const levelColor = levelColors[barLevel - 1] || '#FFFFFF';
 
                           return (
                             <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
