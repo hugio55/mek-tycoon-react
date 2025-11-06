@@ -627,6 +627,34 @@ export const markInventoryAsSoldByName = mutation({
   },
 });
 
+// DEBUG: Query to inspect Lab Rat NFT records
+export const debugLabRatRecords = query({
+  handler: async (ctx) => {
+    const labRats = await ctx.db
+      .query("commemorativeNFTInventory")
+      .filter((q) => q.or(
+        q.eq(q.field("name"), "Lab Rat #1"),
+        q.eq(q.field("name"), "Lab Rat #2"),
+        q.eq(q.field("name"), "Lab Rat #3")
+      ))
+      .collect();
+
+    const results = labRats.map((nft) => ({
+      name: nft.name,
+      nftNumber: nft.nftNumber,
+      nftUid: nft.nftUid,
+      projectId: nft.projectId || "(empty/undefined)",
+      paymentUrl: nft.paymentUrl,
+      status: nft.status,
+      createdAt: nft.createdAt,
+      _id: nft._id,
+    }));
+
+    console.log('[🔍DEBUG] Lab Rat Records:', results);
+    return results;
+  },
+});
+
 /**
  * EXAMPLE USAGE:
  *
