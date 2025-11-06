@@ -6,6 +6,7 @@ import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
 import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
+import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal' | 'holographic-overlay' | 'cyber-minimal' | 'tech-frame' | 'neon-edge' | 'matrix-grid';
@@ -13,7 +14,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
-export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split';
+export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit';
 
 export { LevelProgressStyle };
 
