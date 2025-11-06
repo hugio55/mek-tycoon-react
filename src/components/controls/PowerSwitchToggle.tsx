@@ -85,7 +85,7 @@ export default function PowerSwitchToggle({
             className={`
               transition-opacity duration-200
               ${checked
-                ? 'opacity-0'
+                ? 'opacity-0 animate-power-line'
                 : 'opacity-20'
               }
             `}
@@ -97,7 +97,6 @@ export default function PowerSwitchToggle({
             r="35"
             className={`
               origin-[75px_80px]
-              transition-all
               ${checked
                 ? 'opacity-100'
                 : 'opacity-20'
@@ -105,11 +104,12 @@ export default function PowerSwitchToggle({
             `}
             style={{
               strokeDasharray: 220,
-              strokeDashoffset: 40,
-              transform: checked ? 'rotate(302deg)' : 'rotate(-58deg)',
-              transitionProperty: 'transform, stroke-dashoffset',
-              transitionDuration: checked ? '0.4s' : '1s',
-              transitionDelay: checked ? '0.2s' : '0s'
+              strokeDashoffset: checked ? 40 : 220,
+              transform: 'rotate(-58deg)',
+              opacity: checked ? 1 : 0.2,
+              transitionProperty: 'stroke-dashoffset, opacity',
+              transitionDuration: checked ? '0s' : '1s',
+              transitionDelay: '0s'
             }}
           />
         </svg>
@@ -136,12 +136,16 @@ export default function PowerSwitchToggle({
             x2="75"
             y2="58"
             className={`
-              transition-opacity
               ${checked
-                ? 'opacity-100 duration-50 delay-[550ms] animate-power-line'
+                ? 'opacity-100 animate-power-line'
                 : 'opacity-0'
               }
             `}
+            style={{
+              transitionProperty: 'opacity',
+              transitionDuration: checked ? '0.05s' : '0.2s',
+              transitionDelay: checked ? '0.55s' : '0s'
+            }}
           />
           {/* Circle (partial circle around center) */}
           <circle
@@ -154,9 +158,9 @@ export default function PowerSwitchToggle({
             style={{
               strokeDasharray: 220,
               strokeDashoffset: checked ? 40 : 220,
-              transform: checked ? 'rotate(302deg)' : 'rotate(-58deg)',
+              transform: checked ? 'rotate(302deg)' : 'rotate(302deg)',
               opacity: checked ? 1 : 0,
-              transitionProperty: 'transform, stroke-dashoffset, opacity',
+              transitionProperty: checked ? 'transform, stroke-dashoffset, opacity' : 'stroke-dashoffset, opacity',
               transitionDuration: checked ? '0.4s' : '1s',
               transitionDelay: checked ? '0.2s' : '0s'
             }}
