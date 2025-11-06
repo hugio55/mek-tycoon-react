@@ -1477,39 +1477,6 @@ export default function MekProfileLightbox({
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
-            {/* Forward Blur Mask Overlay - Only shown when useForwardBlur is true */}
-            {useForwardBlur && (
-              <div
-                className="fixed inset-0 pointer-events-none z-30"
-                style={{
-                  background: `linear-gradient(to bottom,
-                    rgba(0, 0, 0, 0) 0%,
-                    rgba(0, 0, 0, 0) calc(140px - ${headerBlur * 3}px),
-                    rgba(0, 0, 0, ${headerDarkness / 100}) 140px)`,
-                  backdropFilter: `blur(0px)`,
-                  WebkitBackdropFilter: `blur(0px)`,
-                  maskImage: `linear-gradient(to bottom,
-                    black 0px,
-                    black calc(140px - ${headerBlur * 3}px),
-                    transparent 140px,
-                    transparent 100%)`,
-                  WebkitMaskImage: `linear-gradient(to bottom,
-                    black 0px,
-                    black calc(140px - ${headerBlur * 3}px),
-                    transparent 140px,
-                    transparent 100%)`
-                }}
-              >
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backdropFilter: `blur(${headerBlur}px)`,
-                    WebkitBackdropFilter: `blur(${headerBlur}px)`
-                  }}
-                />
-              </div>
-            )}
-
             {/* Industrial Header - Made Sticky with Dynamic Blur & Darkness */}
             <div
               className="sticky top-0 z-40 w-full"
@@ -1557,6 +1524,42 @@ export default function MekProfileLightbox({
                 </div>
               </div>
             </div>
+
+            {/* Forward Blur Mask - Positioned just below header */}
+            {useForwardBlur && (
+              <div
+                className="sticky z-30 pointer-events-none"
+                style={{
+                  top: '140px',
+                  height: `${headerBlur * 6}px`,
+                  marginTop: '-140px',
+                  background: `linear-gradient(to bottom,
+                    rgba(0, 0, 0, ${headerDarkness / 150}) 0%,
+                    transparent 100%)`,
+                  backdropFilter: `blur(${headerBlur}px) contrast(1.2) saturate(0.5)`,
+                  WebkitBackdropFilter: `blur(${headerBlur}px) contrast(1.2) saturate(0.5)`,
+                  isolation: 'isolate',
+                  willChange: 'backdrop-filter',
+                  transform: 'translateZ(0)'
+                }}
+              >
+                {/* Multiple blur layers for stronger effect */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backdropFilter: `blur(${headerBlur * 0.7}px)`,
+                    WebkitBackdropFilter: `blur(${headerBlur * 0.7}px)`
+                  }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backdropFilter: `blur(${headerBlur * 0.3}px) brightness(0.95)`,
+                    WebkitBackdropFilter: `blur(${headerBlur * 0.3}px) brightness(0.95)`
+                  }}
+                />
+              </div>
+            )}
 
             {/* Main Content - Layout 1 (Three-Column) */}
             <div className="max-w-7xl mx-auto px-4 pb-6" style={{ paddingTop: `${headerGap}px` }}>
