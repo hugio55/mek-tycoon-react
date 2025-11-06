@@ -87,7 +87,9 @@ export const populateInventoryManually = mutation({
 
     // Insert all NFTs
     for (const nft of args.nfts) {
-      const paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${nft.nftUid}`;
+      // CRITICAL FIX: Strip dashes from UUID - NMKR expects dashless format
+      const dashlessUid = nft.nftUid.replace(/-/g, '');
+      const paymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
 
       await ctx.db.insert("commemorativeNFTInventory", {
         nftUid: nft.nftUid,
@@ -260,9 +262,10 @@ export const repairPaymentUrls = mutation({
 
     for (const item of inventory) {
       try {
-        // Check if URL is malformed (missing project ID)
+        // Check if URL is malformed (missing project ID OR has dashes in UID)
         const isMalformed = item.paymentUrl.includes('/?p=&n=') ||
-                           item.paymentUrl.includes('?p=&n=');
+                           item.paymentUrl.includes('?p=&n=') ||
+                           (item.paymentUrl.includes('&n=') && /&n=[a-f0-9-]{36}/.test(item.paymentUrl));
 
         if (!isMalformed) {
           console.log('[🔧FIX] Skipping (already correct):', item.name);
@@ -307,7 +310,9 @@ export const repairPaymentUrls = mutation({
         }
 
         // Construct correct payment URL
-        const correctPaymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${item.nftUid}`;
+        // CRITICAL FIX: Strip dashes from UUID - NMKR expects dashless format
+        const dashlessUid = item.nftUid.replace(/-/g, '');
+        const correctPaymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
 
         console.log('[🔧FIX]    Building correct URL with project ID:', projectId);
 
