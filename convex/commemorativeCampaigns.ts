@@ -918,15 +918,16 @@ export const analyzeDuplicateNFTs = query({
 });
 
 /**
- * Clean up duplicate NFT records
+ * Clean up duplicate NFT records (SAFE VERSION - preserves "sold" status)
  *
  * Strategy:
  * 1. For records with same nftUid, keep the "best" one based on priority:
  *    - Has imageUrl (populated from NMKR) = highest priority
  *    - Has "sold" status = second priority
  *    - Newest record (_creationTime) = third priority
- * 2. Delete all other duplicates
- * 3. Return summary of what was deleted
+ * 2. BEFORE deleting, transfer "sold" status from any duplicate to the kept record
+ * 3. Delete all other duplicates
+ * 4. Return summary of what was deleted
  *
  * IMPORTANT: This mutation is DESTRUCTIVE. Run analyzeDuplicateNFTs first!
  */
@@ -958,11 +959,13 @@ export const cleanupDuplicateNFTs = mutation({
     }
 
     let totalDeleted = 0;
+    let statusTransfers = 0;
     const deletionLog: Array<{
       nftUid: string;
       name: string;
       keptRecordId: string;
       deletedRecordIds: string[];
+      statusTransferred: boolean;
       reason: string;
     }> = [];
 
@@ -990,9 +993,21 @@ export const cleanupDuplicateNFTs = mutation({
       const keepRecord = sorted[0];
       const deleteRecords = sorted.slice(1);
 
+      // CRITICAL FIX: Check if any duplicate has "sold" status but the kept record doesn't
+      const hasSoldDuplicate = deleteRecords.some(r => r.status === "sold");
+      const needsStatusTransfer = hasSoldDuplicate && keepRecord.status !== "sold";
+
+      if (needsStatusTransfer) {
+        console.log('[🧹CLEANUP] ⚠️  TRANSFERRING "sold" status to kept record');
+        if (!dryRun) {
+          await ctx.db.patch(keepRecord._id, { status: "sold" });
+        }
+        statusTransfers++;
+      }
+
       console.log('[🧹CLEANUP] Keeping record:', keepRecord._id, keepRecord.name, {
         hasImage: !!keepRecord.imageUrl,
-        status: keepRecord.status,
+        status: needsStatusTransfer ? "sold (transferred)" : keepRecord.status,
       });
 
       const deletedIds: string[] = [];
@@ -1015,7 +1030,8 @@ export const cleanupDuplicateNFTs = mutation({
         name: keepRecord.name,
         keptRecordId: keepRecord._id,
         deletedRecordIds: deletedIds,
-        reason: `Kept: ${keepRecord.imageUrl ? 'has image' : 'no image'}, status=${keepRecord.status}`,
+        statusTransferred: needsStatusTransfer,
+        reason: `Kept: ${keepRecord.imageUrl ? 'has image' : 'no image'}, status=${needsStatusTransfer ? 'sold (transferred)' : keepRecord.status}`,
       });
     }
 
@@ -1036,15 +1052,17 @@ export const cleanupDuplicateNFTs = mutation({
     }
 
     console.log('[🧹CLEANUP] Cleanup complete. Deleted:', totalDeleted, 'records');
+    console.log('[🧹CLEANUP] Status transfers:', statusTransfers);
 
     return {
       success: true,
       dryRun,
       totalDeleted,
+      statusTransfers,
       deletionLog,
       message: dryRun
-        ? `Dry run: Would delete ${totalDeleted} duplicate records`
-        : `Deleted ${totalDeleted} duplicate records successfully`,
+        ? `Dry run: Would delete ${totalDeleted} duplicates and transfer ${statusTransfers} sold statuses`
+        : `Deleted ${totalDeleted} duplicates and transferred ${statusTransfers} sold statuses successfully`,
     };
   },
 });
