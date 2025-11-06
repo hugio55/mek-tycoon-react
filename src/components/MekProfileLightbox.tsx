@@ -1328,6 +1328,314 @@ export default function MekProfileLightbox({
       );
     }
 
+    if (combinedGoldCardStyle === 'hero-emphasis') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-4">
+            {/* Hero: Total Rate - Massive and glowing */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-6xl leading-none mb-2`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                  letterSpacing: '0.1em'
+                }}
+              >
+                {formatGoldRate(goldGenData.total)}
+              </div>
+              <div
+                className={`text-[10px] ${accentColorDim} uppercase tracking-[0.3em]`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                TOTAL RATE
+              </div>
+            </div>
+
+            {/* Horizontal divider with glow */}
+            <div className="relative h-px">
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                style={{ filter: 'blur(1px)' }}
+              />
+            </div>
+
+            {/* Rate breakdown in grid */}
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div
+                  className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  BASE
+                </div>
+                <div
+                  className="text-white text-sm"
+                  style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                >
+                  {formatGoldRate(goldGenData.base)}
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[9px] text-green-400/60 uppercase mb-1 tracking-[0.2em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  BONUS
+                </div>
+                <div
+                  className="text-green-400 text-sm"
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 300,
+                    textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                  }}
+                >
+                  +{formatGoldRate(goldGenData.bonus)}
+                </div>
+              </div>
+            </div>
+
+            {/* Second divider */}
+            <div className="relative h-px">
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                style={{ filter: 'blur(1px)' }}
+              />
+            </div>
+
+            {/* Cumulative section */}
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div
+                  className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CURRENT CORP
+                </div>
+                <div
+                  className={`${accentColor} text-2xl`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                  }}
+                >
+                  {formatGold(currentOwnerGold)}
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  ALL-TIME
+                </div>
+                <div
+                  className="text-white text-base"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  {formatGold(allTimeGold)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (combinedGoldCardStyle === 'elegant-split') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-4">
+            {/* Title */}
+            <div
+              className={`text-[10px] ${accentColorDim} uppercase tracking-[0.3em] text-center`}
+              style={{ fontFamily: 'Inter', fontWeight: 400 }}
+            >
+              ◆ GOLD OVERVIEW ◆
+            </div>
+
+            {/* Main content: Two-column layout */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* LEFT COLUMN: Rate Section */}
+              <div className="space-y-4">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  RATE
+                </div>
+
+                {/* Base */}
+                <div className="text-center">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BASE
+                  </div>
+                  <div
+                    className="text-white text-lg"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}
+                  >
+                    {formatGoldRate(goldGenData.base)}
+                  </div>
+                </div>
+
+                {/* Bonus */}
+                <div className="text-center">
+                  <div
+                    className="text-[9px] text-green-400/60 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BONUS
+                  </div>
+                  <div
+                    className="text-green-400 text-lg"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                    }}
+                  >
+                    +{formatGoldRate(goldGenData.bonus)}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="relative h-px mx-4">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                    style={{ filter: 'blur(1px)' }}
+                  />
+                </div>
+
+                {/* Total */}
+                <div className="text-center">
+                  <div
+                    className={`text-[9px] ${accentColor} uppercase mb-1 tracking-[0.2em]`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TOTAL
+                  </div>
+                  <div
+                    className={`${accentColor} text-2xl`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {formatGoldRate(goldGenData.total)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical divider */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* RIGHT COLUMN: Cumulative Section */}
+              <div className="space-y-4">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CUMULATIVE
+                </div>
+
+                {/* Current Corp */}
+                <div className="text-center pt-8">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    CURRENT CORP
+                  </div>
+                  <div
+                    className={`${accentColor} text-3xl`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {formatGold(currentOwnerGold)}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="relative h-px mx-4">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                    style={{ filter: 'blur(1px)' }}
+                  />
+                </div>
+
+                {/* All-Time */}
+                <div className="text-center">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    ALL-TIME
+                  </div>
+                  <div
+                    className="text-white text-xl"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    {formatGold(allTimeGold)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -1534,6 +1842,65 @@ export default function MekProfileLightbox({
                   />
                 </div>
 
+                {/* MOBILE: 10-Bar Level Indicator */}
+                <div className="lg:hidden">
+                  <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const barLevel = i + 1;
+                      const currentLevel = 12;
+                      const displayLevel = currentLevel <= 10 ? currentLevel : 10;
+                      const isActive = barLevel <= displayLevel;
+                      const isCurrent = barLevel === displayLevel;
+                      const levelColor = useYellowGlow ? '#fab617' : '#22d3ee';
+
+                      return (
+                        <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
+                          <div
+                            className="w-full flex-1 transition-all duration-500 rounded-sm relative overflow-hidden"
+                            style={{
+                              backgroundColor: isActive ? levelColor : '#1a1a1a',
+                              backgroundImage: isActive
+                                ? 'none'
+                                : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                              border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                              boxShadow: isActive
+                                ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
+                                : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
+                              opacity: isActive ? 1 : 0.5,
+                            }}
+                          >
+                            {isActive && (
+                              <>
+                                <div
+                                  className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                                  style={{
+                                    height: '100%',
+                                    background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
+                                  }}
+                                />
+                                <div
+                                  className="absolute top-0 left-0 right-0 h-1/4"
+                                  style={{
+                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
+                                  }}
+                                />
+                              </>
+                            )}
+                          </div>
+                          {isCurrent && (
+                            <div
+                              className="text-[9px] font-bold uppercase tracking-wider"
+                              style={{ color: levelColor, fontFamily: 'Inter, sans-serif' }}
+                            >
+                              LVL{currentLevel}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* MOBILE: Primary Info Panel (Designation - Dynamic Style) */}
                 <div className="lg:hidden">
                   {renderDesignationCard()}
@@ -1616,13 +1983,72 @@ export default function MekProfileLightbox({
                   </div>
 
                   {/* CENTER - MEK IMAGE */}
-                  <div className="lg:col-span-6 flex items-start justify-center">
+                  <div className="lg:col-span-6 flex flex-col items-start justify-center gap-4">
                     <div className={`${getCardClasses()} overflow-hidden w-full !p-0`}>
                       <img
                         src="/mek-images/1000px/aa2-bl2-hn1.webp"
                         alt="Mek Profile"
                         className="w-full h-full object-cover"
                       />
+                    </div>
+
+                    {/* DESKTOP: 10-Bar Level Indicator */}
+                    <div className="w-full">
+                      <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
+                        {Array.from({ length: 10 }, (_, i) => {
+                          const barLevel = i + 1;
+                          const currentLevel = 12;
+                          const displayLevel = currentLevel <= 10 ? currentLevel : 10;
+                          const isActive = barLevel <= displayLevel;
+                          const isCurrent = barLevel === displayLevel;
+                          const levelColor = useYellowGlow ? '#fab617' : '#22d3ee';
+
+                          return (
+                            <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
+                              <div
+                                className="w-full flex-1 transition-all duration-500 rounded-sm relative overflow-hidden"
+                                style={{
+                                  backgroundColor: isActive ? levelColor : '#1a1a1a',
+                                  backgroundImage: isActive
+                                    ? 'none'
+                                    : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                                  border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                                  boxShadow: isActive
+                                    ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
+                                    : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
+                                  opacity: isActive ? 1 : 0.5,
+                                }}
+                              >
+                                {isActive && (
+                                  <>
+                                    <div
+                                      className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                                      style={{
+                                        height: '100%',
+                                        background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
+                                      }}
+                                    />
+                                    <div
+                                      className="absolute top-0 left-0 right-0 h-1/4"
+                                      style={{
+                                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
+                                      }}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                              {isCurrent && (
+                                <div
+                                  className="text-[9px] font-bold uppercase tracking-wider"
+                                  style={{ color: levelColor, fontFamily: 'Inter, sans-serif' }}
+                                >
+                                  LVL{currentLevel}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 

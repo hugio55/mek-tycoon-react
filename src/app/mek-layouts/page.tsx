@@ -377,6 +377,8 @@ export default function MekLayoutsPage() {
                 <option value="vertical-stacked">Vertical Stacked</option>
                 <option value="side-by-side">Side by Side</option>
                 <option value="dashboard-grid">Dashboard Grid</option>
+                <option value="hero-emphasis">Hero Emphasis</option>
+                <option value="elegant-split">Elegant Split</option>
               </select>
             </div>
 
