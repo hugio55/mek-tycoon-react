@@ -19,6 +19,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTReservations"> | null>(null);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
   // Mutations
   const createReservation = useMutation(api.commemorativeNFTReservations.createReservation);
@@ -185,13 +186,43 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     };
   }, [paymentWindow]);
 
-  // Handle manual cancellation
-  const handleCancel = async () => {
+  // Attempt to cancel - show confirmation first
+  const attemptCancel = () => {
+    // Don't show confirmation if already in success or error state
+    if (state === 'success' || state === 'error') {
+      onClose();
+      return;
+    }
+
+    // For reserved, payment, or processing states, show confirmation
+    if (state === 'reserved' || state === 'payment' || state === 'processing') {
+      setShowCancelConfirmation(true);
+      return;
+    }
+
+    // For creating state, just close
+    onClose();
+  };
+
+  // Handle confirmed cancellation
+  const handleConfirmCancel = async () => {
+    setShowCancelConfirmation(false);
+
+    // Close payment window if open
+    if (paymentWindow && !paymentWindow.closed) {
+      paymentWindow.close();
+    }
+
     if (reservationId) {
       console.log('[🎟️RESERVE] User cancelled reservation');
       await releaseReservation({ reservationId, reason: 'cancelled' });
     }
     onClose();
+  };
+
+  // Handle cancel of cancellation (go back)
+  const handleCancelCancel = () => {
+    setShowCancelConfirmation(false);
   };
 
   // Only render on client-side after mount
@@ -335,6 +366,19 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
                 </div>
               </div>
             </div>
+
+            {/* Cancel Button */}
+            <button
+              onClick={attemptCancel}
+              className="w-full py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border border-gray-600 hover:border-red-500/50 hover:bg-red-500/10"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                background: 'rgba(0, 0, 0, 0.3)',
+                color: '#d1d5db',
+              }}
+            >
+              Cancel Transaction
+            </button>
           </div>
         );
 
@@ -426,7 +470,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
     <>
       <div
         className="fixed inset-0 z-[9999] flex items-center justify-center overflow-auto p-4"
-        onClick={handleCancel}
+        onClick={attemptCancel}
       >
         {/* Backdrop */}
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
@@ -454,7 +498,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
           {/* Close button */}
           <button
-            onClick={handleCancel}
+            onClick={attemptCancel}
             className="absolute top-2 right-2 text-gray-500 transition-colors z-[10000] w-8 h-8 flex items-center justify-center border border-gray-600 bg-black/80 backdrop-blur-sm rounded"
             style={{
               color: '#9ca3af',
