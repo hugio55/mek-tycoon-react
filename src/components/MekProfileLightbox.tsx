@@ -49,6 +49,7 @@ interface MekProfileLightboxProps {
   useForwardBlur?: boolean;
   variationGlowIntensity?: number;
   variationGlowSize?: number;
+  variationNoiseIntensity?: number;
 }
 
 export default function MekProfileLightbox({
@@ -86,7 +87,8 @@ export default function MekProfileLightbox({
   headerBlur = 8,
   useForwardBlur = false,
   variationGlowIntensity = 0.6,
-  variationGlowSize = 25
+  variationGlowSize = 25,
+  variationNoiseIntensity = 0.15
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -1385,6 +1387,21 @@ export default function MekProfileLightbox({
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
+            {/* Forward Blur Overlay - Alternative to backdrop-filter */}
+            {useForwardBlur && (
+              <div
+                className="absolute top-0 left-0 right-0 pointer-events-none z-30"
+                style={{
+                  height: '200px',
+                  background: `linear-gradient(to bottom, rgba(0,0,0,${headerDarkness / 100}) 0%, transparent 100%)`,
+                  filter: `blur(${headerBlur}px)`,
+                  WebkitFilter: `blur(${headerBlur}px)`,
+                  maskImage: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 60px, rgba(255,255,255,0.3) 120px, rgba(255,255,255,0) 200px)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 60px, rgba(255,255,255,0.3) 120px, rgba(255,255,255,0) 200px)'
+                }}
+              />
+            )}
+
             {/* Industrial Header - Made Sticky with Dynamic Blur & Darkness */}
             <div
               className="sticky top-0 z-40 w-full"
@@ -1433,19 +1450,25 @@ export default function MekProfileLightbox({
               </div>
             </div>
 
-            {/* Opacity Fade Mask - Fades content to black as it approaches header */}
+            {/* Forward Blur Overlay - Actually blurs text using filter: blur() */}
             {useForwardBlur && (
               <div
-                className="sticky z-30 pointer-events-none"
+                className="absolute top-0 left-0 right-0 pointer-events-none z-30"
                 style={{
-                  top: '140px',
-                  height: `${headerBlur * 8}px`,
-                  marginTop: '-140px',
-                  background: `linear-gradient(to bottom,
-                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.95}) 0%,
-                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.7}) 30%,
-                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.4}) 60%,
-                    transparent 100%)`
+                  height: '200px',
+                  background: `rgba(0, 0, 0, ${headerDarkness / 100})`,
+                  filter: `blur(${headerBlur}px)`,
+                  WebkitFilter: `blur(${headerBlur}px)`,
+                  maskImage: `linear-gradient(to bottom,
+                    rgba(255, 255, 255, 1) 0%,
+                    rgba(255, 255, 255, 0.8) 60px,
+                    rgba(255, 255, 255, 0.3) 120px,
+                    rgba(255, 255, 255, 0) 200px)`,
+                  WebkitMaskImage: `linear-gradient(to bottom,
+                    rgba(255, 255, 255, 1) 0%,
+                    rgba(255, 255, 255, 0.8) 60px,
+                    rgba(255, 255, 255, 0.3) 120px,
+                    rgba(255, 255, 255, 0) 200px)`
                 }}
               />
             )}
@@ -1590,18 +1613,21 @@ export default function MekProfileLightbox({
                     imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    noiseIntensity={variationNoiseIntensity}
                   />
                   <VariationCard
                     title="BODY VARIATION"
                     imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    noiseIntensity={variationNoiseIntensity}
                   />
                   <VariationCard
                     title="TRAIT VARIATION"
                     imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    noiseIntensity={variationNoiseIntensity}
                   />
                 </div>
 
@@ -1632,32 +1658,46 @@ function VariationCard({
   title,
   imagePath,
   glowSize = 25,
-  glowIntensity = 0.6
+  glowIntensity = 0.6,
+  noiseIntensity = 0.15
 }: {
   title: string;
   imagePath?: string;
   glowSize?: number;
   glowIntensity?: number;
+  noiseIntensity?: number;
 }) {
   return (
     <div className="flex flex-col items-center relative">
       {/* Image floating directly on lightbox background with yellow glow behind */}
       <div className="relative mb-3">
         {imagePath ? (
-          <img
-            src={imagePath}
-            alt={title}
-            className="w-full h-48 object-contain scale-[0.7]"
-            style={{
-              filter: `
-                drop-shadow(0 0 ${glowSize * 0.5}px rgba(250, 182, 23, ${glowIntensity}))
-                drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity * 0.8}))
-                drop-shadow(0 0 ${glowSize * 1.3}px rgba(250, 182, 23, ${glowIntensity * 0.6}))
-                drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.4}))
-                drop-shadow(0 0 ${glowSize * 2}px rgba(250, 182, 23, ${glowIntensity * 0.2}))
-              `.trim()
-            }}
-          />
+          <div className="relative w-full h-48">
+            <img
+              src={imagePath}
+              alt={title}
+              className="w-full h-48 object-contain scale-[0.7]"
+              style={{
+                filter: `
+                  drop-shadow(0 0 ${glowSize * 0.5}px rgba(250, 182, 23, ${glowIntensity}))
+                  drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity * 0.8}))
+                  drop-shadow(0 0 ${glowSize * 1.3}px rgba(250, 182, 23, ${glowIntensity * 0.6}))
+                  drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.4}))
+                  drop-shadow(0 0 ${glowSize * 2}px rgba(250, 182, 23, ${glowIntensity * 0.2}))
+                `.trim()
+              }}
+            />
+            {/* Noise overlay to reduce gradient banding */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                opacity: noiseIntensity,
+                mixBlendMode: 'overlay',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                backgroundSize: 'cover'
+              }}
+            />
+          </div>
         ) : (
           <div className="w-full h-48 flex items-center justify-center">
             <span className="text-gray-500 text-xs">Image</span>
