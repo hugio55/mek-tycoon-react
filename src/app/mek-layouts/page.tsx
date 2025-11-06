@@ -13,6 +13,7 @@ export default function MekLayoutsPage() {
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
   const [variationCardStyle, setVariationCardStyle] = useState<'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct'>('clean-frames');
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
+  const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
   const [backdropBlur, setBackdropBlur] = useState(0);
@@ -172,6 +173,23 @@ export default function MekLayoutsPage() {
                 <option value="split-hud">Split HUD</option>
                 <option value="data-terminal">Data Terminal</option>
               </select>
+            </div>
+
+            {/* Toggle: Glow Color */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Glow Color
+              </label>
+              <button
+                onClick={() => setUseYellowGlow(!useYellowGlow)}
+                className={`w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
+                  useYellowGlow
+                    ? 'bg-yellow-500/20 border-2 border-yellow-500 text-yellow-400'
+                    : 'bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400'
+                }`}
+              >
+                {useYellowGlow ? '⚡ Industrial Yellow' : '💠 Cyber Cyan'}
+              </button>
             </div>
 
             {/* Divider */}
@@ -351,6 +369,7 @@ export default function MekLayoutsPage() {
         onVariationCardStyleChange={setVariationCardStyle}
         designationCardStyle={designationCardStyle}
         onDesignationCardStyleChange={setDesignationCardStyle}
+        useYellowGlow={useYellowGlow}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
         cardDarkness={cardDarkness}

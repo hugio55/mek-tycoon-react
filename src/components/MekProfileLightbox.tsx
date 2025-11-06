@@ -38,6 +38,7 @@ interface MekProfileLightboxProps {
   onHeaderBottomPaddingChange?: (value: number) => void;
   contentSpacing?: number;
   onContentSpacingChange?: (value: number) => void;
+  useYellowGlow?: boolean;
 }
 
 export default function MekProfileLightbox({
@@ -66,7 +67,8 @@ export default function MekProfileLightbox({
   headerBottomPadding = 15,
   onHeaderBottomPaddingChange,
   contentSpacing = 16,
-  onContentSpacingChange
+  onContentSpacingChange,
+  useYellowGlow = false
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -194,39 +196,47 @@ export default function MekProfileLightbox({
       employeeId: 'Golden Striker'
     };
 
-    // Option 1: Corner Brackets - Angular framing with glowing cyan borders
+    // Dynamic colors based on useYellowGlow
+    const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+    const accentColorDim = useYellowGlow ? 'text-yellow-400/60' : 'text-cyan-400/60';
+    const borderColor = useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50';
+    const glowRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)';
+    const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
+    const textShadowGlow = useYellowGlow ? '0 0 15px rgba(250, 182, 23, 0.8)' : '0 0 15px rgba(0, 212, 255, 0.8)';
+
+    // Option 1: Corner Brackets - Angular framing with glowing borders
     if (designationCardStyle === 'corner-brackets') {
       return (
         <div className="relative p-6 bg-black/40 backdrop-blur-sm">
           {/* Corner Bracket SVG Elements */}
-          <svg className="absolute top-0 left-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+          <svg className={`absolute top-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
             <path d="M 0 8 L 0 0 L 8 0" stroke="currentColor" strokeWidth="2" fill="none" />
             <path d="M 0 0 L 8 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
           </svg>
-          <svg className="absolute top-0 right-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+          <svg className={`absolute top-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
             <path d="M 32 8 L 32 0 L 24 0" stroke="currentColor" strokeWidth="2" fill="none" />
             <path d="M 32 0 L 24 8" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
           </svg>
-          <svg className="absolute bottom-0 left-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+          <svg className={`absolute bottom-0 left-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
             <path d="M 0 24 L 0 32 L 8 32" stroke="currentColor" strokeWidth="2" fill="none" />
             <path d="M 0 32 L 8 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
           </svg>
-          <svg className="absolute bottom-0 right-0 w-8 h-8 text-cyan-400" viewBox="0 0 32 32">
+          <svg className={`absolute bottom-0 right-0 w-8 h-8 ${accentColor}`} viewBox="0 0 32 32">
             <path d="M 32 24 L 32 32 L 24 32" stroke="currentColor" strokeWidth="2" fill="none" />
             <path d="M 32 32 L 24 24" stroke="currentColor" strokeWidth="1" opacity="0.3" fill="none" />
           </svg>
 
           {/* Border glow effect */}
           <div
-            className="absolute inset-0 border border-cyan-400/50 pointer-events-none"
-            style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)' }}
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            style={{ boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}` }}
           />
 
           {/* Content Grid */}
           <div className="relative z-10 grid grid-cols-2 gap-3">
             {/* Mekanism Number */}
             <div>
-              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
                 MEKANISM
               </div>
               <div className="text-white text-xl font-mono font-bold">
@@ -236,12 +246,12 @@ export default function MekProfileLightbox({
 
             {/* Rank - Prominent with glow */}
             <div className="text-right">
-              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
                 RANK
               </div>
               <div
-                className="text-cyan-400 text-2xl font-mono font-black"
-                style={{ textShadow: '0 0 15px rgba(0, 212, 255, 0.8)' }}
+                className={`${accentColor} text-2xl font-mono font-black`}
+                style={{ textShadow: textShadowGlow }}
               >
                 {mekData.rank}
               </div>
@@ -249,7 +259,7 @@ export default function MekProfileLightbox({
 
             {/* Corporation */}
             <div className="col-span-2">
-              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
                 CORPORATION
               </div>
               <div className="text-white text-sm font-semibold">
@@ -259,7 +269,7 @@ export default function MekProfileLightbox({
 
             {/* Employee ID */}
             <div className="col-span-2">
-              <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest font-mono mb-1">
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}>
                 EMPLOYEE ID
               </div>
               <div className="text-white text-base font-bold tracking-wide">
@@ -273,38 +283,49 @@ export default function MekProfileLightbox({
 
     // Option 2: Split HUD - Left side large rank, right side stacked data
     if (designationCardStyle === 'split-hud') {
+      const borderLeftColor = useYellowGlow ? 'border-yellow-500' : 'border-cyan-500';
+      const bgGradientFrom = useYellowGlow ? 'from-yellow-500/20' : 'from-cyan-500/20';
+      const bgGradientTo = useYellowGlow ? 'to-yellow-700/10' : 'to-cyan-700/10';
+      const textGradientFrom = useYellowGlow ? 'from-yellow-400' : 'from-cyan-400';
+      const textGradientTo = useYellowGlow ? 'to-yellow-600' : 'to-cyan-600';
+      const dividerColor = useYellowGlow ? 'via-yellow-500/50' : 'via-cyan-500/50';
+      const dividerShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
+      const rankShadow = useYellowGlow ? '0 0 20px rgba(250, 182, 23, 0.6)' : '0 0 20px rgba(0, 212, 255, 0.6)';
+
       return (
-        <div className="relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border border-purple-500/30">
+        <div className={`relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border ${borderColor}`}>
           {/* Background grid pattern */}
           <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: 'linear-gradient(rgba(123, 47, 247, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(123, 47, 247, 0.3) 1px, transparent 1px)',
+            backgroundImage: useYellowGlow
+              ? 'linear-gradient(rgba(250, 182, 23, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.3) 1px, transparent 1px)'
+              : 'linear-gradient(rgba(0, 212, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.3) 1px, transparent 1px)',
             backgroundSize: '20px 20px'
           }} />
 
           <div className="relative z-10 flex gap-4">
             {/* Left: Large Rank Display */}
-            <div className="flex-shrink-0 flex flex-col items-center justify-center px-6 py-4 bg-gradient-to-br from-purple-500/20 to-purple-700/10 border-l-4 border-purple-500">
-              <div className="text-[9px] text-purple-400 uppercase tracking-widest font-mono mb-2">
+            <div className={`flex-shrink-0 flex flex-col items-center justify-center px-6 py-4 bg-gradient-to-br ${bgGradientFrom} ${bgGradientTo} border-l-4 ${borderLeftColor}`}>
+              <div className={`text-[9px] ${accentColor} uppercase tracking-widest font-mono mb-2`}>
                 RANK
               </div>
               <div
-                className="text-5xl font-mono font-black bg-gradient-to-b from-purple-400 to-purple-600 bg-clip-text text-transparent"
-                style={{ textShadow: '0 0 20px rgba(123, 47, 247, 0.6)' }}
+                className={`text-5xl font-mono font-black bg-gradient-to-b ${textGradientFrom} ${textGradientTo} bg-clip-text text-transparent`}
+                style={{ textShadow: rankShadow }}
               >
                 {mekData.rank}
               </div>
             </div>
 
             {/* Vertical Divider with glow */}
-            <div className="w-px bg-gradient-to-b from-transparent via-purple-500/50 to-transparent"
-                 style={{ boxShadow: '0 0 10px rgba(123, 47, 247, 0.5)' }}
+            <div className={`w-px bg-gradient-to-b from-transparent ${dividerColor} to-transparent`}
+                 style={{ boxShadow: dividerShadow }}
             />
 
             {/* Right: Stacked Technical Data */}
             <div className="flex-1 space-y-3 py-2">
               {/* Mekanism */}
               <div className="flex items-baseline gap-2">
-                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono w-24`}>
                   MEKANISM
                 </div>
                 <div className="text-white text-lg font-mono font-bold">
@@ -314,7 +335,7 @@ export default function MekProfileLightbox({
 
               {/* Corporation */}
               <div className="flex items-baseline gap-2">
-                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono w-24`}>
                   CORP
                 </div>
                 <div className="text-white text-sm font-semibold">
@@ -324,7 +345,7 @@ export default function MekProfileLightbox({
 
               {/* Employee ID */}
               <div className="flex items-baseline gap-2">
-                <div className="text-[9px] text-purple-400/70 uppercase tracking-widest font-mono w-24">
+                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono w-24`}>
                   EMPLOYEE
                 </div>
                 <div className="text-white text-sm font-bold">
