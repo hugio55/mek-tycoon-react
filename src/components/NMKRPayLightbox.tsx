@@ -529,6 +529,82 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
           </button>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showCancelConfirmation && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCancelCancel();
+          }}
+        >
+          {/* Darker backdrop */}
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md" />
+
+          {/* Confirmation modal */}
+          <div
+            className="relative w-full max-w-md bg-black/40 backdrop-blur-lg border-2 border-red-500/50 rounded-xl overflow-hidden shadow-2xl p-6"
+            style={{
+              boxShadow: '0 0 40px rgba(239, 68, 68, 0.4)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Warning icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-bold text-center mb-3" style={{
+              fontFamily: 'Inter, sans-serif',
+              color: '#fca5a5'
+            }}>
+              Cancel Transaction?
+            </h3>
+
+            <p className="text-center mb-6" style={{
+              fontFamily: 'Inter, sans-serif',
+              color: '#d1d5db',
+              fontSize: '0.95rem',
+              lineHeight: '1.6'
+            }}>
+              Are you sure you want to cancel this transaction? Doing so will not guarantee the same edition number.
+            </p>
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelCancel}
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)',
+                  border: 'none'
+                }}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="flex-1 py-3 px-6 rounded-xl font-semibold text-base transition-all duration-200 border-2 border-red-500/50 hover:bg-red-500/20"
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#fca5a5'
+                }}
+              >
+                Confirm Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 
