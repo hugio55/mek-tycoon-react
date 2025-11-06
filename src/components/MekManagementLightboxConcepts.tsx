@@ -964,6 +964,24 @@ export default function MekManagementLightboxConcepts() {
                 <option value="data-terminal">Data Terminal</option>
               </select>
             </div>
+
+            {/* Status Card Style Selector */}
+            <div className="mt-4 pt-4 border-t border-gray-600/50">
+              <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2 px-2">
+                Status Card Style
+              </div>
+              <select
+                value={statusCardStyle}
+                onChange={(e) => setStatusCardStyle(e.target.value as StatusCardStyle)}
+                className="w-full px-3 py-2 text-xs font-bold uppercase bg-black/80 text-purple-400 border-2 border-purple-500/50 rounded hover:border-purple-400 transition-all cursor-pointer"
+              >
+                <option value="compact-minimal">Compact Minimal</option>
+                <option value="wide-badge">Wide Badge</option>
+                <option value="vertical-stack">Vertical Stack</option>
+                <option value="tech-panel">Tech Panel</option>
+                <option value="holographic-glow">Holographic Glow</option>
+              </select>
+            </div>
           </div>
         )}
       </div>

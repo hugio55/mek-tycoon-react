@@ -12,7 +12,6 @@ interface NMKRPayLightboxProps {
 }
 
 type LightboxState = 'creating' | 'reserved' | 'payment' | 'processing' | 'success' | 'error';
-type LightboxVariation = "industrial" | "elegant" | "modern";
 
 export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLightboxProps) {
   const [mounted, setMounted] = useState(false);
@@ -20,8 +19,6 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [reservationId, setReservationId] = useState<Id<"commemorativeNFTReservations"> | null>(null);
-  const [lightboxVariation, setLightboxVariation] = useState<LightboxVariation>("industrial");
-  const [showVariationPicker, setShowVariationPicker] = useState(false);
 
   // Mutations
   const createReservation = useMutation(api.commemorativeNFTReservations.createReservation);
