@@ -8,14 +8,14 @@ test.describe('Atmospheric Effect Layers Inspection', () => {
     // Wait for page to load
     await page.waitForLoadState('networkidle');
 
-    console.log('[🔍ATMOSPHERIC] Page loaded, looking for Mek cards...');
+    console.log('[🔍ATMOSPHERIC] Page loaded, looking for VIEW MEK DETAILS button...');
 
-    // Click on the first Mek to open the profile lightbox
-    const firstMek = page.locator('.mek-card-industrial').first();
-    await firstMek.waitFor({ state: 'visible', timeout: 10000 });
-    await firstMek.click();
+    // Click "VIEW MEK DETAILS" button to open the lightbox
+    const viewDetailsButton = page.locator('button:has-text("VIEW MEK DETAILS")');
+    await viewDetailsButton.waitFor({ state: 'visible', timeout: 10000 });
+    await viewDetailsButton.click();
 
-    console.log('[🔍ATMOSPHERIC] Clicked Mek, waiting for lightbox...');
+    console.log('[🔍ATMOSPHERIC] Clicked VIEW MEK DETAILS, waiting for lightbox...');
 
     // Wait for lightbox to appear
     await page.waitForSelector('.fixed.inset-0.z-\\[9999\\]', { timeout: 10000 });

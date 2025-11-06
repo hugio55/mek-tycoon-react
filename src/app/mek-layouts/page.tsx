@@ -176,6 +176,9 @@ export default function MekLayoutsPage() {
               <option value="segmented">Segmented</option>
               <option value="orbital">Orbital</option>
               <option value="diagonal">Diagonal</option>
+              <option value="segmented-vertical">Segmented Vertical</option>
+              <option value="segmented-hex">Segmented Hex</option>
+              <option value="segmented-dual-row">Segmented Dual Row</option>
             </select>
           </div>
 
