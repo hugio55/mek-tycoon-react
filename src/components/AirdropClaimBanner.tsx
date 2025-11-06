@@ -370,17 +370,18 @@ export default function AirdropClaimBanner({ userId, walletAddress }: AirdropCla
         <div className="w-full max-w-xs mx-auto">
           <button
             onClick={handleClaim}
-            className="w-full py-3.5 px-6 rounded-xl font-semibold text-base transition-all duration-200 hover:brightness-110 active:scale-98"
+            disabled={alreadyClaimed}
+            className={`w-full py-3.5 px-6 rounded-xl font-semibold text-base transition-all duration-200 ${alreadyClaimed ? 'cursor-not-allowed opacity-60' : 'hover:brightness-110 active:scale-98'}`}
             style={{
               fontFamily: "'Inter', sans-serif",
-              background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
-              color: '#ffffff',
-              boxShadow: '0 4px 20px rgba(168, 85, 247, 0.5)',
-              border: 'none',
+              background: alreadyClaimed ? '#4b5563' : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+              color: alreadyClaimed ? '#9ca3af' : '#ffffff',
+              boxShadow: alreadyClaimed ? 'none' : '0 4px 20px rgba(168, 85, 247, 0.5)',
+              border: alreadyClaimed ? '1px solid #6b7280' : 'none',
               letterSpacing: '0.03em'
             }}
           >
-            Claim Your NFT
+            {alreadyClaimed ? 'ALREADY CLAIMED' : 'Claim Your NFT'}
           </button>
         </div>
       </div>

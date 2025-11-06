@@ -1363,6 +1363,9 @@ export default function MekProfileLightbox({
     if(goldGenerationStyle==='inline-metrics'){return(<div className="relative p-2 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="flex items-center justify-between divide-x divide-gray-700/50"><div className="flex-1 px-2 text-center"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-xs"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><div className="flex-1 px-2 text-center"><div className="text-[9px] text-green-400 uppercase tracking-wider mb-0.5"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className="text-green-400 text-xs"style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:'0 0 8px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</div></div><div className="flex-1 px-2 text-center"><div className={`text-[9px] ${accentColor} uppercase tracking-wider mb-0.5 font-bold`}style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-sm font-bold`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 8px ${useYellowGlow?'rgba(250, 182, 23, 0.5)':'rgba(0, 212, 255, 0.5)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
     if(goldGenerationStyle==='dense-grid'){return(<div className="relative p-2 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="grid grid-cols-2 gap-2"><div className="p-2 bg-black/30 border border-gray-700/30"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-xs"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><div className="p-2 bg-green-500/10 border border-green-500/30"><div className="text-[9px] text-green-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className="text-green-400 text-xs"style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:'0 0 8px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</div></div><div className={`col-span-2 p-2 ${useYellowGlow?'bg-yellow-500/10 border border-yellow-500/30':'bg-cyan-500/10 border border-cyan-500/30'}`}><div className={`text-[9px] ${accentColor} uppercase tracking-wider mb-1 font-bold`}style={{fontFamily:'Inter',fontWeight:400}}>Total Output</div><div className={`${accentColor} text-sm font-bold`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 8px ${useYellowGlow?'rgba(250, 182, 23, 0.5)':'rgba(0, 212, 255, 0.5)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
     if(goldGenerationStyle==='stat-bar'){return(<div className="relative bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="flex divide-x divide-gray-700/50"><div className="flex-1 px-3 py-2"><div className="flex items-baseline justify-between"><span className="text-[9px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Base</span><span className="text-white text-sm ml-2"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</span></div></div><div className="flex-1 px-3 py-2 bg-green-500/5"><div className="flex items-baseline justify-between"><span className="text-[9px] text-green-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</span><span className="text-green-400 text-sm ml-2"style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:'0 0 8px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</span></div></div></div><div className={`px-3 py-2 border-t-2 ${useYellowGlow?'border-yellow-500/50 bg-yellow-500/5':'border-cyan-500/50 bg-cyan-500/5'}`}><div className="flex items-baseline justify-between"><span className={`text-[10px] ${accentColor} uppercase tracking-wider font-bold`}style={{fontFamily:'Inter',fontWeight:400}}>Total Output</span><span className={`${accentColor} text-base font-bold ml-2`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 10px ${useYellowGlow?'rgba(250, 182, 23, 0.6)':'rgba(0, 212, 255, 0.6)'}`}}>{formatGold(goldGenData.total)}</span></div></div></div>);}
+    if(goldGenerationStyle==='compact-table-v2'){return(<div className="relative p-3 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="space-y-2"><div className="flex justify-between items-center py-1 border-b border-gray-700/30"><span className="text-[10px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Base</span><span className="text-white text-sm"style={{fontFamily:'Inter',fontWeight:400}}>{formatGold(goldGenData.base)}</span></div><div className="flex justify-between items-center py-1 border-b border-gray-700/30"><span className="text-[10px] text-green-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</span><span className="text-green-400 text-sm"style={{fontFamily:'Inter',fontWeight:400,textShadow:'0 0 10px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</span></div><div className="flex justify-between items-center py-2 pt-3"><span className={`text-[10px] ${accentColor} uppercase tracking-wider font-bold`}style={{fontFamily:'Inter',fontWeight:400}}>Total</span><span className={`${accentColor} text-xl font-bold`}style={{fontFamily:'Inter',fontWeight:400,textShadow:`0 0 12px ${useYellowGlow?'rgba(250, 182, 23, 0.7)':'rgba(0, 212, 255, 0.7)'}`}}>{formatGold(goldGenData.total)}</span></div></div></div>);}
+    if(goldGenerationStyle==='compact-table-v3'){return(<div className="relative p-3 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="space-y-3"><div className="grid grid-cols-2 gap-3"><div className="text-center py-1 border-r border-gray-700/30"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-sm"style={{fontFamily:'Inter',fontWeight:400}}>{formatGold(goldGenData.base)}</div></div><div className="text-center py-1"><div className="text-[9px] text-green-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className="text-green-400 text-sm"style={{fontFamily:'Inter',fontWeight:400,textShadow:'0 0 10px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</div></div></div><div className={`text-center py-2 border-t-2 ${useYellowGlow?'border-yellow-500/50':'border-cyan-500/50'}`}><div className={`text-[10px] ${accentColor} uppercase tracking-wider font-bold mb-1`}style={{fontFamily:'Inter',fontWeight:400}}>Total Output</div><div className={`${accentColor} text-2xl font-bold`}style={{fontFamily:'Inter',fontWeight:400,textShadow:`0 0 15px ${useYellowGlow?'rgba(250, 182, 23, 0.8)':'rgba(0, 212, 255, 0.8)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
+    if(goldGenerationStyle==='compact-table-v4'){return(<div className="relative p-3 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="space-y-3"><div className="flex justify-between items-center"><div className="flex-1"><div className="text-[9px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-xs"style={{fontFamily:'Inter',fontWeight:400}}>{formatGold(goldGenData.base)}</div></div><div className="flex-1 text-right"><div className="text-[9px] text-green-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className="text-green-400 text-xs"style={{fontFamily:'Inter',fontWeight:400,textShadow:'0 0 8px rgba(0, 255, 0, 0.6)'}}>+{formatGold(goldGenData.bonus)}</div></div></div><div className={`text-center py-3 border-t-2 ${useYellowGlow?'border-yellow-500/60 bg-yellow-500/5':'border-cyan-500/60 bg-cyan-500/5'}`}><div className={`text-[9px] ${accentColor} uppercase tracking-widest font-bold mb-2`}style={{fontFamily:'Inter',fontWeight:400}}>Total Output</div><div className={`${accentColor} text-3xl font-bold`}style={{fontFamily:'Inter',fontWeight:400,textShadow:`0 0 20px ${useYellowGlow?'rgba(250, 182, 23, 1)':'rgba(0, 212, 255, 1)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
 
     return null;
   };
@@ -1660,71 +1663,82 @@ function VariationCard({
       <div className="relative mb-3">
         {imagePath ? (
           <div className="relative w-full h-48">
+            {/* Background glow layer - replaces drop-shadow so we can apply noise to it */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `
+                  radial-gradient(ellipse 60% 60% at 50% 50%,
+                    rgba(250, 182, 23, ${glowIntensity}) 0%,
+                    rgba(250, 182, 23, ${glowIntensity * 0.8}) ${glowSize * 0.5}px,
+                    rgba(250, 182, 23, ${glowIntensity * 0.6}) ${glowSize}px,
+                    rgba(250, 182, 23, ${glowIntensity * 0.4}) ${glowSize * 1.3}px,
+                    rgba(250, 182, 23, ${glowIntensity * 0.2}) ${glowSize * 1.6}px,
+                    rgba(250, 182, 23, 0) ${glowSize * 2}px
+                  )
+                `,
+                transform: 'scale(0.7)'
+              }}
+            >
+              {/* Multi-layer atmospheric effect to reduce gradient banding */}
+
+              {/* Layer 1: Dithering pattern */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: noiseIntensity * 0.3,
+                  mixBlendMode: 'overlay',
+                  backgroundImage: `
+                    repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px),
+                    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px)
+                  `
+                }}
+              />
+
+              {/* Layer 2: Radial gradient atmospheric haze */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: noiseIntensity * 0.4,
+                  mixBlendMode: 'multiply',
+                  background: `
+                    radial-gradient(circle at 30% 40%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)
+                  `
+                }}
+              />
+
+              {/* Layer 3: Stronger grain texture */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: noiseIntensity * 1.5,
+                  mixBlendMode: 'overlay',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
+                  backgroundSize: '200px 200px'
+                }}
+              />
+
+              {/* Layer 4: Energy field shimmer (subtle variation) */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  opacity: noiseIntensity * 0.2,
+                  mixBlendMode: 'screen',
+                  background: `
+                    radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.05) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.03) 0%, transparent 50%)
+                  `
+                }}
+              />
+            </div>
+
+            {/* Image on top of glow */}
             <img
               src={imagePath}
               alt={title}
-              className="w-full h-48 object-contain scale-[0.7]"
-              style={{
-                filter: `
-                  drop-shadow(0 0 ${glowSize * 0.5}px rgba(250, 182, 23, ${glowIntensity}))
-                  drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity * 0.8}))
-                  drop-shadow(0 0 ${glowSize * 1.3}px rgba(250, 182, 23, ${glowIntensity * 0.6}))
-                  drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.4}))
-                  drop-shadow(0 0 ${glowSize * 2}px rgba(250, 182, 23, ${glowIntensity * 0.2}))
-                `.trim()
-              }}
-            />
-            {/* Multi-layer atmospheric effect to reduce gradient banding */}
-
-            {/* Layer 1: Dithering pattern */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                opacity: noiseIntensity * 0.3,
-                mixBlendMode: 'overlay',
-                backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px),
-                  repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px)
-                `
-              }}
-            />
-
-            {/* Layer 2: Radial gradient atmospheric haze */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                opacity: noiseIntensity * 0.4,
-                mixBlendMode: 'multiply',
-                background: `
-                  radial-gradient(circle at 30% 40%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 60%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 50% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)
-                `
-              }}
-            />
-
-            {/* Layer 3: Stronger grain texture */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                opacity: noiseIntensity * 1.5,
-                mixBlendMode: 'overlay',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
-                backgroundSize: '200px 200px'
-              }}
-            />
-
-            {/* Layer 4: Energy field shimmer (subtle variation) */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                opacity: noiseIntensity * 0.2,
-                mixBlendMode: 'screen',
-                background: `
-                  radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.05) 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.03) 0%, transparent 50%)
-                `
-              }}
+              className="relative w-full h-48 object-contain scale-[0.7]"
             />
           </div>
         ) : (
