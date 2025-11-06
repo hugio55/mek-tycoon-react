@@ -39,6 +39,7 @@ import GlassButton from '@/components/controls/GlassButton';
 import GlassButtonSharp from '@/components/controls/GlassButtonSharp';
 import IsometricSocialButton from '@/components/controls/IsometricSocialButton';
 import RadialSwitch from '@/components/RadialSwitch';
+import CloseButton from '@/components/controls/CloseButton';
 import ClaudeManagerAdmin from '@/components/ClaudeManagerAdmin';
 import { VARIATIONS_BY_TYPE } from '@/lib/completeVariationRarity';
 import { variationsData } from '@/lib/variationsData';
@@ -3656,6 +3657,35 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
                       <div><span className="text-zinc-500">Features:</span> 3D isometric transform (perspective 1000px, rotate -30deg, skew 25deg), ::before creates left cube face (skewY -45deg), ::after creates bottom face (skewX -45deg), hover lifts button with translate(20px, -20px) and extends shadow from -20px to -50px</div>
                       <div><span className="text-zinc-500">Note:</span> Preserves original typos: "dislpay" (display) and "scewY" (skewY) in CSS</div>
+                    </div>
+                  </div>
+
+                  {/* Close Button */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Close Button
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview */}
+                    <div
+                      className="rounded-lg p-8 flex items-center justify-center min-h-[300px]"
+                      style={{
+                        background: '#1E272D'
+                      }}
+                    >
+                      <CloseButton onClick={() => console.log('Close button clicked')} />
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> HTML/SCSS (exact CSS transplant)</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS</div>
+                      <div><span className="text-zinc-500">Features:</span> X made from two 4px × 50px bars rotated 45deg/-45deg, hover rotates bars in opposite direction (-45deg/45deg), color changes from soft orange (#F4A259) to tomato red (#F25C66), "close" label fades in (opacity 0→1), all transitions 300ms ease-in</div>
                     </div>
                   </div>
 
