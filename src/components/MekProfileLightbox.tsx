@@ -243,6 +243,448 @@ export default function MekProfileLightbox({
     }
   };
 
+  // Render Status Card based on selected style
+  const renderStatusCard = () => {
+    // Neon edge color variables
+    const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+    const accentColorDim = useYellowGlow ? 'text-yellow-400/60' : 'text-cyan-400/60';
+    const borderColor = useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50';
+    const glowRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)';
+    const glowRgbaInset = useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)';
+    const gradientColor = useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)';
+    const textShadowColor = useYellowGlow
+      ? '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.5)'
+      : '0 0 20px rgba(0, 212, 255, 1), 0 0 40px rgba(0, 212, 255, 0.5)';
+
+    // Mock data for Tenure and Rate
+    const tenure = "24d 3h";
+    const rate = "10 T/h";
+
+    switch (statusCardStyle) {
+      case 'compact-minimal':
+        return (
+          <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+            {/* Glowing border */}
+            <div
+              className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+              style={{
+                boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+                filter: 'blur(0.5px)'
+              }}
+            />
+
+            {/* Gradient overlay */}
+            <div
+              className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+              style={{
+                background: `linear-gradient(180deg, ${gradientColor} 0%, transparent 100%)`
+              }}
+            />
+
+            <div className="relative z-10 grid grid-cols-2 gap-6">
+              {/* LEFT: Stats */}
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TENURE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {tenure}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    RATE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {rate}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: Power Switch with Labels */}
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <div
+                  className={`text-[9px] uppercase tracking-[0.2em] ${!isEmployed ? 'text-white/40' : 'text-white/20'}`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  IDLE
+                </div>
+                <PowerSwitch
+                  enabled={isEmployed}
+                  onChange={setIsEmployed}
+                />
+                <div
+                  className={`text-[9px] uppercase tracking-[0.2em] ${isEmployed ? accentColor : 'text-white/20'}`}
+                  style={{
+                    fontFamily: 'Inter',
+                    fontWeight: 400,
+                    textShadow: isEmployed ? textShadowColor : 'none'
+                  }}
+                >
+                  EMPLOYED
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'wide-badge':
+        return (
+          <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+            {/* Glowing border */}
+            <div
+              className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+              style={{
+                boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+                filter: 'blur(0.5px)'
+              }}
+            />
+
+            {/* Gradient overlay */}
+            <div
+              className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+              style={{
+                background: `linear-gradient(180deg, ${gradientColor} 0%, transparent 100%)`
+              }}
+            />
+
+            <div className="relative z-10 space-y-4">
+              {/* Top: Stats in badges */}
+              <div className="flex gap-3 justify-center">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 bg-black/60 border ${borderColor} rounded-sm`}>
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TENURE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {tenure}
+                  </div>
+                </div>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 bg-black/60 border ${borderColor} rounded-sm`}>
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    RATE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {rate}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom: Power Switch */}
+              <div className="flex flex-col items-center space-y-2">
+                <div
+                  className={`text-[9px] uppercase tracking-[0.2em] ${!isEmployed ? 'text-white/40' : 'text-white/20'}`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  IDLE
+                </div>
+                <PowerSwitch
+                  enabled={isEmployed}
+                  onChange={setIsEmployed}
+                />
+                <div
+                  className={`text-[9px] uppercase tracking-[0.2em] ${isEmployed ? accentColor : 'text-white/20'}`}
+                  style={{
+                    fontFamily: 'Inter',
+                    fontWeight: 400,
+                    textShadow: isEmployed ? textShadowColor : 'none'
+                  }}
+                >
+                  EMPLOYED
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'vertical-stack':
+        return (
+          <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+            {/* Glowing border */}
+            <div
+              className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+              style={{
+                boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+                filter: 'blur(0.5px)'
+              }}
+            />
+
+            {/* Gradient overlay */}
+            <div
+              className="absolute top-0 left-0 right-0 h-32 opacity-20 pointer-events-none"
+              style={{
+                background: `linear-gradient(180deg, ${gradientColor} 0%, transparent 100%)`
+              }}
+            />
+
+            <div className="relative z-10 space-y-5 text-center">
+              {/* Status Label at Top */}
+              <div
+                className={`text-2xl uppercase tracking-wider ${isEmployed ? accentColor : 'text-white/40'}`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  letterSpacing: '0.1em',
+                  textShadow: isEmployed ? textShadowColor : 'none'
+                }}
+              >
+                {isEmployed ? 'EMPLOYED' : 'IDLE'}
+              </div>
+
+              {/* Power Switch */}
+              <div className="flex justify-center">
+                <PowerSwitch
+                  enabled={isEmployed}
+                  onChange={setIsEmployed}
+                />
+              </div>
+
+              {/* Stats at Bottom */}
+              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+                <div className="space-y-1">
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TENURE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {tenure}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div
+                    className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    RATE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {rate}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'tech-panel':
+        return (
+          <div className="relative p-5 bg-black/40 backdrop-blur-sm overflow-hidden">
+            {/* Glowing border */}
+            <div
+              className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+              style={{
+                boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`,
+                filter: 'blur(0.5px)'
+              }}
+            />
+
+            {/* Scan lines effect */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-10"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)'
+              }}
+            />
+
+            <div className="relative z-10">
+              {/* Header with status */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                <div
+                  className="text-[10px] text-white/40 uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  STATUS
+                </div>
+                <div
+                  className={`text-xs uppercase tracking-wider ${isEmployed ? accentColor : 'text-white/40'}`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 300,
+                    textShadow: isEmployed ? textShadowColor : 'none'
+                  }}
+                >
+                  {isEmployed ? 'EMPLOYED' : 'IDLE'}
+                </div>
+              </div>
+
+              {/* Grid layout */}
+              <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
+                {/* Left: Stats */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <div
+                      className="text-[8px] text-white/40 uppercase tracking-[0.3em] w-16"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      TENURE
+                    </div>
+                    <div
+                      className="text-white text-xs"
+                      style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                    >
+                      {tenure}
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <div
+                      className="text-[8px] text-white/40 uppercase tracking-[0.3em] w-16"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      RATE
+                    </div>
+                    <div
+                      className="text-white text-xs"
+                      style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                    >
+                      {rate}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Power Switch */}
+                <div className="flex flex-col items-center space-y-1">
+                  <PowerSwitch
+                    enabled={isEmployed}
+                    onChange={setIsEmployed}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'holographic-glow':
+        return (
+          <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+            {/* Intense glowing border */}
+            <div
+              className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+              style={{
+                boxShadow: `0 0 40px ${glowRgba}, 0 0 60px ${glowRgba}, inset 0 0 40px ${glowRgbaInset}`,
+                filter: 'blur(1px)'
+              }}
+            />
+
+            {/* Strong gradient overlay */}
+            <div
+              className="absolute top-0 left-0 right-0 h-32 opacity-30 pointer-events-none"
+              style={{
+                background: `linear-gradient(180deg, ${gradientColor} 0%, transparent 100%)`
+              }}
+            />
+
+            {/* Radial glow from center */}
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full pointer-events-none opacity-20"
+              style={{
+                background: `radial-gradient(circle, ${gradientColor} 0%, transparent 70%)`
+              }}
+            />
+
+            <div className="relative z-10 space-y-4">
+              {/* Hero status display */}
+              <div className="text-center space-y-2">
+                <div
+                  className={`text-4xl uppercase tracking-wider ${isEmployed ? accentColor : 'text-white/40'}`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    letterSpacing: '0.15em',
+                    textShadow: isEmployed ? `0 0 30px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 60px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}` : 'none'
+                  }}
+                >
+                  {isEmployed ? 'EMPLOYED' : 'IDLE'}
+                </div>
+              </div>
+
+              {/* Power Switch */}
+              <div className="flex justify-center">
+                <PowerSwitch
+                  enabled={isEmployed}
+                  onChange={setIsEmployed}
+                />
+              </div>
+
+              {/* Stats with intense glow */}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="text-center space-y-1">
+                  <div
+                    className={`text-[10px] uppercase tracking-[0.3em] ${accentColorDim}`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TENURE
+                  </div>
+                  <div
+                    className={`text-sm ${accentColor}`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 300,
+                      textShadow: `0 0 10px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                    }}
+                  >
+                    {tenure}
+                  </div>
+                </div>
+                <div className="text-center space-y-1">
+                  <div
+                    className={`text-[10px] uppercase tracking-[0.3em] ${accentColorDim}`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    RATE
+                  </div>
+                  <div
+                    className={`text-sm ${accentColor}`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 300,
+                      textShadow: `0 0 10px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
+                    }}
+                  >
+                    {rate}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return renderStatusCard(); // Fallback to compact-minimal
+    }
+  };
+
   // Render Designation Card based on selected style
   const renderDesignationCard = () => {
     const mekData = {
@@ -4751,22 +5193,8 @@ export default function MekProfileLightbox({
                       </AnimatedBorderButton>
                     </div>
 
-                    {/* Employment Status Toggle */}
-                    <div className={getCardClasses()}>
-                      <div className="mek-label-uppercase mb-3">STATUS</div>
-                      <div className="flex flex-col items-center space-y-3">
-                        <div className="text-white font-bold uppercase tracking-wider">
-                          {isEmployed ? 'EMPLOYED' : 'IDLE'}
-                        </div>
-                        <div className="scale-150">
-                          <DottedToggleSwitch
-                            checked={isEmployed}
-                            onChange={setIsEmployed}
-                          />
-                        </div>
-                        <div className="text-xs text-gray-400 uppercase">Dotted Toggle</div>
-                      </div>
-                    </div>
+                    {/* Employment Status - PowerSwitch */}
+                    {renderStatusCard()}
                   </div>
 
                   {/* CENTER - MEK IMAGE */}
