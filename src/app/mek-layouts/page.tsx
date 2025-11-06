@@ -145,33 +145,6 @@ export default function MekLayoutsPage() {
           {/* Separator */}
           <div className="my-4 border-t border-purple-500/30" />
           <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
-            Level
-          </h4>
-
-          {/* Dropdown: Level Progress Style */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Progress Display
-            </label>
-            <select
-              value={levelProgressStyle}
-              onChange={(e) => setLevelProgressStyle(e.target.value as LevelProgressStyle)}
-              className="w-full bg-black/60 border border-purple-500/50 rounded px-2 py-1.5 text-purple-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-purple-500 focus:outline-none focus:border-purple-400 transition-all"
-            >
-              <option value="flat-bar">Flat Bar</option>
-              <option value="arch">Arch</option>
-              <option value="segmented">Segmented</option>
-              <option value="orbital">Orbital</option>
-              <option value="diagonal">Diagonal</option>
-              <option value="segmented-vertical">Segmented Vertical</option>
-              <option value="segmented-hex">Segmented Hex</option>
-              <option value="segmented-dual-row">Segmented Dual Row</option>
-            </select>
-          </div>
-
-          {/* Separator */}
-          <div className="my-4 border-t border-purple-500/30" />
-          <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
             Variation PNG Glow
           </h4>
 
