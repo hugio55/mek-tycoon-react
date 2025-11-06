@@ -33,6 +33,7 @@ import { useActivityTracking } from '@/hooks/useActivityTracking';
 import MechanismGridLightbox from "@/components/MechanismGridLightbox";
 import MeksTriangleLightbox from "@/components/MeksTriangleLightbox";
 import { COMPLETE_VARIATION_RARITY } from "@/lib/completeVariationRarity";
+import NoMekanismsLightbox from "@/components/NoMekanismsLightbox";
 
 // Animated Number Component with smooth counting animation
 function AnimatedNumber({ value, decimals = 1, threshold = 0.01 }: { value: number; decimals?: number; threshold?: number }) {
