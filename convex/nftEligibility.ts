@@ -111,17 +111,34 @@ export const checkClaimEligibility = query({
       return user.stakeAddress === args.walletAddress;
     });
 
-    if (isInSnapshot) {
+    if (!isInSnapshot) {
       return {
-        eligible: true,
-        reason: "Stake address is in active snapshot",
-        snapshotName: snapshot.snapshotName,
+        eligible: false,
+        reason: "Stake address not in active snapshot",
       };
     }
 
+    // User is on whitelist, but check if they've already claimed
+    // Check old reservation system (commemorativeNFTReservations)
+    const completedReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .first();
+
+    if (completedReservation) {
+      return {
+        eligible: false,
+        reason: "You have already claimed your commemorative NFT",
+        alreadyClaimed: true,
+      };
+    }
+
+    // All checks passed - user is eligible
     return {
-      eligible: false,
-      reason: "Stake address not in active snapshot",
+      eligible: true,
+      reason: "Stake address is in active snapshot and has not yet claimed",
+      snapshotName: snapshot.snapshotName,
     };
   },
 });

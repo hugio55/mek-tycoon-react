@@ -65,6 +65,21 @@ export const createReservation = mutation({
       };
     }
 
+    // Check if user has already completed a claim (CRITICAL: Prevent duplicate claims)
+    const completedReservation = await ctx.db
+      .query("commemorativeNFTReservations")
+      .withIndex("by_reserved_by", (q) => q.eq("reservedBy", args.walletAddress))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .first();
+
+    if (completedReservation) {
+      console.log('[RESERVATION] User has already claimed an NFT:', completedReservation.nftNumber);
+      return {
+        success: false,
+        error: "You have already claimed your commemorative NFT. Only one NFT per wallet is allowed.",
+      };
+    }
+
     // Create the reservation
     const expiresAt = now + RESERVATION_TIMEOUT;
     const reservationId = await ctx.db.insert("commemorativeNFTReservations", {

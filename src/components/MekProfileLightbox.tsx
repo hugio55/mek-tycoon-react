@@ -1448,16 +1448,14 @@ export default function MekProfileLightbox({
             </div>
 
             {/* Main Content - Layout 1 (Three-Column) */}
-            <div
-              className="max-w-7xl mx-auto px-4 pb-6"
-              style={{
-                paddingTop: `${headerGap}px`,
-                ...(useForwardBlur && {
-                  filter: `blur(${headerBlur}px)`,
-                  WebkitFilter: `blur(${headerBlur}px)`
-                })
-              }}
-            >
+            <div className="relative">
+              {/* Base content layer (always visible, never blurred) */}
+              <div
+                className="max-w-7xl mx-auto px-4 pb-6"
+                style={{
+                  paddingTop: `${headerGap}px`
+                }}
+              >
               <div style={{ display: 'flex', flexDirection: 'column', gap: `${contentSpacing}px` }}>
                 {/* MOBILE: Mek Image Hero (only visible on mobile) */}
                 <div className="lg:hidden mek-card-industrial mek-border-sharp-gold overflow-hidden">
