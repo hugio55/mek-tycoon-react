@@ -2970,41 +2970,28 @@ export default function MekProfileLightbox({
     // Layout: Two badge-style elements in a centered row
     if (combinedGoldCardStyle === 'badge-pair') {
       return (
-        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+        <div className="relative p-3 bg-black/40 backdrop-blur-sm overflow-hidden">
           {/* Glowing border effect */}
           <div
-            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
             style={{
-              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
-              filter: 'blur(0.5px)'
+              boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`
             }}
           />
 
-          {/* Gradient overlay accent */}
-          <div
-            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
-            style={{
-              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
-            }}
-          />
-
-          <div className="relative z-10 space-y-4">
-            {/* Total Rate Badge */}
+          <div className="relative z-10 space-y-2">
+            {/* Income Rate Badge */}
             <div className="flex justify-center">
-              <div className={`inline-flex flex-col items-center gap-3 px-6 py-4 bg-black/60 border ${borderColor} rounded-sm min-w-[200px]`}>
+              <div className={`inline-flex flex-col items-center gap-1 px-4 py-2 bg-black/60 border ${borderColor} min-w-[180px]`}>
                 <div
-                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
-                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono`}
                 >
-                  TOTAL RATE
+                  INCOME RATE
                 </div>
                 <div
-                  className={`${accentColor} text-4xl leading-none`}
+                  className={`${accentColor} text-2xl font-mono font-black leading-none`}
                   style={{
-                    fontFamily: 'Saira Condensed',
-                    fontWeight: 200,
-                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                    letterSpacing: '0.05em'
+                    textShadow: `0 0 15px ${textShadowPrimary}`
                   }}
                 >
                   {formatGoldRate(goldGenData.total)}
@@ -3012,22 +2999,18 @@ export default function MekProfileLightbox({
               </div>
             </div>
 
-            {/* Current Corp Badge */}
+            {/* Cumulative Badge */}
             <div className="flex justify-center">
-              <div className={`inline-flex flex-col items-center gap-3 px-6 py-4 bg-black/60 border ${borderColor} rounded-sm min-w-[200px]`}>
+              <div className={`inline-flex flex-col items-center gap-1 px-4 py-2 bg-black/60 border ${borderColor} min-w-[180px]`}>
                 <div
-                  className="text-[9px] text-white/40 uppercase tracking-[0.3em]"
-                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono`}
                 >
-                  CURRENT CORP
+                  CUMULATIVE
                 </div>
                 <div
-                  className={`${accentColor} text-4xl leading-none`}
+                  className={`${accentColor} text-2xl font-mono font-black leading-none`}
                   style={{
-                    fontFamily: 'Saira Condensed',
-                    fontWeight: 200,
-                    textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
-                    letterSpacing: '0.05em'
+                    textShadow: `0 0 15px ${textShadowPrimary}`
                   }}
                 >
                   {formatGold(currentOwnerGold)}
@@ -3401,19 +3384,20 @@ export default function MekProfileLightbox({
 
                     {/* DESKTOP: 10-Bar Level Indicator */}
                     <div className="w-full">
-                      <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
-                        {Array.from({ length: 10 }, (_, i) => {
-                          const barLevel = i + 1;
-                          const currentLevel = 8;
-                          const displayLevel = currentLevel <= 10 ? currentLevel : 10;
-                          const isActive = barLevel <= displayLevel;
-                          const isCurrent = barLevel === displayLevel;
-                          const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
+                      <div className="flex flex-col gap-2">
+                        {/* Bars container with fixed height */}
+                        <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
+                          {Array.from({ length: 10 }, (_, i) => {
+                            const barLevel = i + 1;
+                            const currentLevel = 8;
+                            const displayLevel = currentLevel <= 10 ? currentLevel : 10;
+                            const isActive = barLevel <= displayLevel;
+                            const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
-                          return (
-                            <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
+                            return (
                               <div
-                                className="w-full flex-1 transition-all duration-500 rounded-sm relative overflow-hidden"
+                                key={barLevel}
+                                className="flex-1 transition-all duration-500 rounded-sm relative overflow-hidden"
                                 style={{
                                   backgroundColor: isActive ? levelColor : '#1a1a1a',
                                   backgroundImage: isActive
@@ -3444,17 +3428,18 @@ export default function MekProfileLightbox({
                                   </>
                                 )}
                               </div>
-                              {isCurrent && (
-                                <div
-                                  className="text-[9px] font-bold uppercase tracking-wider"
-                                  style={{ color: levelColor, fontFamily: 'Inter, sans-serif' }}
-                                >
-                                  LVL{currentLevel}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                        {/* Label positioned below bars */}
+                        <div className="flex justify-center">
+                          <div
+                            className="text-[9px] font-bold uppercase tracking-wider"
+                            style={{ color: levelColors[7] || '#FFFFFF', fontFamily: 'Inter, sans-serif' }}
+                          >
+                            LVL8
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
