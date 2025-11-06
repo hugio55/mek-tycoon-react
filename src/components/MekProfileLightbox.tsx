@@ -3620,37 +3620,52 @@ export default function MekProfileLightbox({
     }
 
     // HERO LEVEL V2: Bold Tech Display with Color Bar Accent
-    // Concept: Level number in Orbitron with color bar underneath, heavy glow
-    // NO TENURE - Bars extend to left edge
+    // Concept: Bars on top, inset card with level below - clean separation
+    // NO TENURE - Bars extend to full width
     if (tenureLevelStyle === 'hero-level-v2') {
       return (
-        <div className="flex items-center gap-3">
-          {/* Bars - Start from left edge */}
-          {renderBars()}
+        <div className="flex flex-col gap-3">
+          {/* Bars - Full width, full height */}
+          <div className="h-12 sm:h-10">
+            {renderBars()}
+          </div>
 
-          {/* Level - Bold tech display with number on top, label below */}
-          <div className="flex flex-col items-center justify-center shrink-0 h-12 sm:h-10">
-            {/* Large level number on top */}
+          {/* Inset Card - Centered below bars */}
+          <div className="flex justify-center">
             <div
-              className="font-bold leading-none text-center"
+              className="flex flex-col items-center justify-center px-6 py-3 rounded-lg border-2"
               style={{
-                fontSize: '2rem',
-                fontFamily: 'Orbitron',
-                fontWeight: 700,
-                color: levelColor,
-                textShadow: `
-                  0 0 15px ${levelColor}dd,
-                  0 0 30px ${levelColor}88,
-                  0 0 45px ${levelColor}44,
-                  2px 2px 6px rgba(0,0,0,0.9)
+                background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%)`,
+                boxShadow: `
+                  inset 0 2px 8px rgba(0,0,0,0.6),
+                  inset 0 -2px 4px rgba(255,255,255,0.05),
+                  0 2px 8px rgba(0,0,0,0.3)
                 `,
-                letterSpacing: '-0.05em'
+                borderColor: levelColor
               }}
             >
-              {levelValue}
+              {/* Large level number */}
+              <div
+                className="font-bold leading-none text-center"
+                style={{
+                  fontSize: '2rem',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `
+                    0 0 15px ${levelColor}dd,
+                    0 0 30px ${levelColor}88,
+                    0 0 45px ${levelColor}44,
+                    2px 2px 6px rgba(0,0,0,0.9)
+                  `,
+                  letterSpacing: '-0.05em'
+                }}
+              >
+                {levelValue}
+              </div>
+              {/* LVL label below */}
+              <div className="text-gray-400 text-[8px] uppercase tracking-[0.2em] font-mono mt-1 text-center">LVL</div>
             </div>
-            {/* LVL label below */}
-            <div className="text-gray-400 text-[8px] uppercase tracking-[0.2em] font-mono mt-0.5 text-center">LVL</div>
           </div>
         </div>
       );
