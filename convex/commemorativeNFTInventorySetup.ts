@@ -276,8 +276,9 @@ export const repairPaymentUrls = mutation({
         const urlMatch = item.paymentUrl.match(/[?&]p=([a-f0-9]+)/);
         const existingProjectId = urlMatch ? urlMatch[1] : '';
 
-        // Get the correct project ID (from item record or fallback)
-        const correctProjectId = item.projectId || fallbackProjectId;
+        // CRITICAL FIX: Always use fallback (env var) as source of truth
+        // Don't trust database projectId field - it may be corrupted
+        const correctProjectId = fallbackProjectId;
         const correctProjectIdDashless = correctProjectId.replace(/-/g, '');
 
         // Check if URL is malformed:
@@ -304,44 +305,16 @@ export const repairPaymentUrls = mutation({
 
         console.log('[🔧FIX] 🔍 Attempting to fix:', item.name);
         console.log('[🔧FIX]    Current projectId in record:', item.projectId || '(empty)');
-        console.log('[🔧FIX]    CampaignId in record:', item.campaignId || '(none)');
+        console.log('[🔧FIX]    Correct projectId from env:', correctProjectId);
 
-        // Get the correct project ID with multiple fallback strategies
-        let projectId = item.projectId;
-
-        // Strategy 1: If projectId is empty/undefined in the record, try to get it from the campaign
-        if (!projectId && item.campaignId) {
-          console.log('[🔧FIX]    Strategy 1: Looking up campaign...');
-          const campaign = await ctx.db.get(item.campaignId);
-          if (campaign?.nmkrProjectId) {
-            projectId = campaign.nmkrProjectId;
-            console.log('[🔧FIX]    ✅ Found project ID from campaign:', projectId);
-          } else {
-            console.log('[🔧FIX]    ❌ Campaign lookup failed or no project ID in campaign');
-          }
-        }
-
-        // Strategy 2: Use environment variable fallback
-        if (!projectId && fallbackProjectId) {
-          console.log('[🔧FIX]    Strategy 2: Using fallback from environment variable');
-          projectId = fallbackProjectId;
-          console.log('[🔧FIX]    ✅ Using fallback project ID:', projectId);
-        }
-
-        // If still no project ID, we can't fix this item
-        if (!projectId) {
-          console.error('[🔧FIX] ❌ Cannot fix - no project ID available for:', item.name);
-          console.error('[🔧FIX]    - No projectId in record');
-          console.error('[🔧FIX]    - No campaignId or campaign has no projectId');
-          console.error('[🔧FIX]    - No NMKR_PROJECT_ID environment variable');
-          errorCount++;
-          continue;
-        }
+        // Use the correctProjectId we already determined from environment variable
+        const projectId = correctProjectId;
 
         // Construct correct payment URL
         // CRITICAL FIX: Strip dashes from UUID - NMKR expects dashless format
         const dashlessUid = item.nftUid.replace(/-/g, '');
-        const correctPaymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${dashlessUid}`;
+        const dashlessProjectId = projectId.replace(/-/g, '');
+        const correctPaymentUrl = `${basePaymentUrl}/?p=${dashlessProjectId}&n=${dashlessUid}`;
 
         console.log('[🔧FIX]    Building correct URL with project ID:', projectId);
 
