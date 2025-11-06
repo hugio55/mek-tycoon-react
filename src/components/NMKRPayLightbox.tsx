@@ -106,8 +106,13 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
       await markPaymentWindowOpened({ reservationId });
 
       // Open NMKR payment URL from reservation
-      const paymentUrl = activeReservation.nft.paymentUrl;
+      const paymentUrl = activeReservation.nft?.paymentUrl;
       console.log('[💰PAY] Payment URL:', paymentUrl);
+
+      if (!paymentUrl) {
+        setErrorMessage('Payment URL not found. Please contact support.');
+        return;
+      }
 
       const popup = window.open(
         paymentUrl,
@@ -430,8 +435,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="relative w-full max-w-[400px] mx-auto mb-6 rounded-2xl overflow-hidden bg-black/50 backdrop-blur-md border border-cyan-400/30 shadow-2xl shadow-cyan-500/20">
                   <img
-                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
-                    alt={activeReservation.nft.name}
+                    src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft?.name || "NFT"}
                     className="w-full h-auto"
                     onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
                   />
@@ -439,7 +444,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="mb-6 p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-2xl backdrop-blur-md">
                   <h3 className="text-4xl font-bold mb-3" style={{ fontFamily: 'Inter, sans-serif', color: '#e0f2fe', letterSpacing: '-0.02em' }}>
-                    {activeReservation.nft.name}
+                    {activeReservation.nft?.name || "NFT"}
                   </h3>
                   <p style={{ fontFamily: 'Inter, sans-serif', color: '#bae6fd', fontSize: '0.95rem', lineHeight: '1.6', fontWeight: 400 }}>
                     You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
