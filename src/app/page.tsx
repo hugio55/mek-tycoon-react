@@ -311,6 +311,7 @@ export default function MekRateLoggingPage() {
   const [companyNameModalMode, setCompanyNameModalMode] = useState<'initial' | 'edit'>('initial');
   const [showMechanismGridLightbox, setShowMechanismGridLightbox] = useState(false);
   const [showMeksTriangle, setShowMeksTriangle] = useState(false);
+  const [showNoMekanismsLightbox, setShowNoMekanismsLightbox] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // Search functionality
 
   // Add Wallet modal states
@@ -3669,6 +3670,11 @@ export default function MekRateLoggingPage() {
                         text={isVerifyingBlockchain ? "VERIFYING ON BLOCKFROST..." : isProcessingSignature ? "VERIFYING..." : "Initiate"}
                         onClick={() => {
                           if (!isProcessingSignature && !isVerifyingBlockchain) {
+                            // Check if user has any mekanisms
+                            if (ownedMeks.length === 0) {
+                              setShowNoMekanismsLightbox(true);
+                              return;
+                            }
                             const verifyButton = document.querySelector('[data-verify-blockchain]');
                             if (verifyButton) {
                               (verifyButton as HTMLElement).click();
@@ -4782,6 +4788,12 @@ export default function MekRateLoggingPage() {
 
       {/* Meks Triangle Lightbox */}
       {showMeksTriangle && <MeksTriangleLightbox onClose={() => setShowMeksTriangle(false)} ownedMeks={ownedMeks} />}
+
+      {/* No Mekanisms Lightbox */}
+      <NoMekanismsLightbox
+        isOpen={showNoMekanismsLightbox}
+        onClose={() => setShowNoMekanismsLightbox(false)}
+      />
 
       {/* Add Wallet Modal - Multi-Step with Signature Verification */}
       {addWalletModalOpen && (
