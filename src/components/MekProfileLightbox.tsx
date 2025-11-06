@@ -18,6 +18,7 @@ export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-sty
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
 export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
+export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered';
 
 export { LevelProgressStyle };
 
@@ -65,6 +66,8 @@ interface MekProfileLightboxProps {
   onVariationTextStyleChange?: (style: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge') => void;
   statsLayoutStyle?: StatsLayoutStyle;
   onStatsLayoutStyleChange?: (style: StatsLayoutStyle) => void;
+  tenureLevelStyle?: TenureLevelStyle;
+  onTenureLevelStyleChange?: (style: TenureLevelStyle) => void;
 }
 
 export default function MekProfileLightbox({
@@ -110,7 +113,9 @@ export default function MekProfileLightbox({
   variationTextStyle = 'hero-focus',
   onVariationTextStyleChange,
   statsLayoutStyle = 'inline-dot',
-  onStatsLayoutStyleChange
+  onStatsLayoutStyleChange,
+  tenureLevelStyle = 'classic-side-labels',
+  onTenureLevelStyleChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -3184,6 +3189,162 @@ export default function MekProfileLightbox({
     return null;
   };
 
+  // Render Tenure/Level Display with 10 bars - 5 Creative Variations
+  const renderTenureLevelDisplay = () => {
+    const currentLevel = 8;
+    const displayLevel = currentLevel <= 10 ? currentLevel : 10;
+    const tenureRate = "10.0/h";
+    const levelValue = "5";
+
+    // Generate the 10 bars (shared across all styles)
+    const renderBars = () => (
+      <div className="flex gap-1 sm:gap-1.5 flex-1">
+        {Array.from({ length: 10 }, (_, i) => {
+          const barLevel = i + 1;
+          const isActive = barLevel <= displayLevel;
+          const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
+
+          return (
+            <div key={barLevel} className="flex-1">
+              <div
+                className="h-10 sm:h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
+                style={{
+                  backgroundColor: isActive ? levelColor : '#1a1a1a',
+                  backgroundImage: isActive
+                    ? 'none'
+                    : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                  border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                  boxShadow: isActive
+                    ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
+                    : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
+                  opacity: isActive ? 1 : 0.5,
+                }}
+              >
+                {isActive && (
+                  <>
+                    <div
+                      className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                      style={{
+                        height: '100%',
+                        background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
+                      }}
+                    />
+                    <div
+                      className="absolute top-0 left-0 right-0 h-1/4"
+                      style={{
+                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+
+    // Style 1: Classic Side Labels (Original)
+    if (tenureLevelStyle === 'classic-side-labels') {
+      return (
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
+            <div className="mek-label-uppercase text-[9px]">TENURE</div>
+            <div className="text-white text-sm font-bold">{tenureRate}</div>
+          </div>
+          {renderBars()}
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
+            <div className="mek-label-uppercase text-[9px]">LEVEL</div>
+            <div className="text-white text-sm font-bold">{levelValue}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 2: Stacked Compact (Labels above bars)
+    if (tenureLevelStyle === 'stacked-compact') {
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="mek-label-uppercase text-[9px]">TENURE</span>
+              <span className="text-white text-sm font-bold">{tenureRate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="mek-label-uppercase text-[9px]">LEVEL</span>
+              <span className="text-white text-sm font-bold">{levelValue}</span>
+            </div>
+          </div>
+          {renderBars()}
+        </div>
+      );
+    }
+
+    // Style 3: Inline Badges (Horizontal layout with badge styling)
+    if (tenureLevelStyle === 'inline-badges') {
+      return (
+        <div className="space-y-3">
+          {renderBars()}
+          <div className="flex items-center justify-center gap-4">
+            <div className="px-3 py-1.5 bg-black/60 border border-yellow-500/30 rounded-sm">
+              <div className="flex items-center gap-2">
+                <span className="mek-label-uppercase text-[8px] text-gray-400">TENURE</span>
+                <span className="text-yellow-400 text-sm font-bold">{tenureRate}</span>
+              </div>
+            </div>
+            <div className="px-3 py-1.5 bg-black/60 border border-cyan-500/30 rounded-sm">
+              <div className="flex items-center gap-2">
+                <span className="mek-label-uppercase text-[8px] text-gray-400">LEVEL</span>
+                <span className="text-cyan-400 text-sm font-bold">{levelValue}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 4: Vertical Emphasis (Larger values, vertical stack)
+    if (tenureLevelStyle === 'vertical-emphasis') {
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-white text-2xl font-bold mb-1">{tenureRate}</div>
+              <div className="mek-label-uppercase text-[9px]">TENURE</div>
+            </div>
+            <div>
+              <div className="text-white text-2xl font-bold mb-1">{levelValue}</div>
+              <div className="mek-label-uppercase text-[9px]">LEVEL</div>
+            </div>
+          </div>
+          {renderBars()}
+        </div>
+      );
+    }
+
+    // Style 5: Minimal Centered (Simple centered layout)
+    if (tenureLevelStyle === 'minimal-centered') {
+      return (
+        <div className="space-y-2">
+          {renderBars()}
+          <div className="flex items-center justify-center gap-6 text-center">
+            <div>
+              <div className="text-white text-xs font-bold">{tenureRate}</div>
+              <div className="mek-label-uppercase text-[8px] text-gray-500">TENURE</div>
+            </div>
+            <div className="h-4 w-px bg-gray-700"></div>
+            <div>
+              <div className="text-white text-xs font-bold">{levelValue}</div>
+              <div className="mek-label-uppercase text-[8px] text-gray-500">LEVEL</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Mount portal and lock body scroll
   useEffect(() => {
     setMounted(true);
@@ -3283,68 +3444,7 @@ export default function MekProfileLightbox({
 
                 {/* MOBILE: 10-Bar Level Indicator */}
                 <div className="lg:hidden">
-                  <div className="flex items-center justify-between gap-2 sm:gap-3">
-                    {/* Left Label: TENURE */}
-                    <div className="flex flex-col items-center gap-0.5 shrink-0">
-                      <div className="mek-label-uppercase text-[9px]">TENURE</div>
-                      <div className="text-white text-sm font-bold">10/h</div>
-                    </div>
-
-                    {/* Middle: 10 Bars */}
-                    <div className="flex gap-1 sm:gap-1.5 flex-1">
-                      {Array.from({ length: 10 }, (_, i) => {
-                        const barLevel = i + 1;
-                        const currentLevel = 8;
-                        const displayLevel = currentLevel <= 10 ? currentLevel : 10;
-                        const isActive = barLevel <= displayLevel;
-                        const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
-
-                        return (
-                          <div key={barLevel} className="flex-1">
-                            {/* Bar with fixed height */}
-                            <div
-                              className="h-10 sm:h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
-                              style={{
-                                backgroundColor: isActive ? levelColor : '#1a1a1a',
-                                backgroundImage: isActive
-                                  ? 'none'
-                                  : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
-                                border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
-                                boxShadow: isActive
-                                  ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
-                                  : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
-                                opacity: isActive ? 1 : 0.5,
-                              }}
-                            >
-                              {isActive && (
-                                <>
-                                  <div
-                                    className="absolute bottom-0 left-0 right-0 transition-all duration-500"
-                                    style={{
-                                      height: '100%',
-                                      background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
-                                    }}
-                                  />
-                                  <div
-                                    className="absolute top-0 left-0 right-0 h-1/4"
-                                    style={{
-                                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
-                                    }}
-                                  />
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Right Label: LEVEL */}
-                    <div className="flex flex-col items-center gap-0.5 shrink-0">
-                      <div className="mek-label-uppercase text-[9px]">LEVEL</div>
-                      <div className="text-white text-sm font-bold">5</div>
-                    </div>
-                  </div>
+                  {renderTenureLevelDisplay()}
                 </div>
 
                 {/* MOBILE: Primary Info Panel (Designation - Dynamic Style) */}
