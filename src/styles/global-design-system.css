@@ -890,3 +890,105 @@
 .neon-edge-badge-cyan {
   @apply border border-cyan-400/50;
 }
+
+/* ===========================
+   ANIMATED BORDER BUTTON
+   =========================== */
+
+.mek-animated-border-button {
+  @apply relative px-8 py-3 font-bold text-yellow-400
+         bg-black/60 backdrop-blur-sm
+         transition-all duration-300 uppercase tracking-wider;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.mek-animated-border-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #fab617;
+  opacity: 0;
+  animation: border-sequence-top 4s linear infinite;
+}
+
+.mek-animated-border-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #fab617;
+  opacity: 0;
+  animation: border-sequence-bottom 4s linear infinite;
+  animation-delay: 2s;
+}
+
+@keyframes border-sequence-top {
+  0% {
+    border-color: transparent;
+    border-top-color: #fab617;
+    opacity: 1;
+  }
+  12.5% {
+    border-color: transparent;
+    border-top-color: #fab617;
+    border-right-color: #fab617;
+    opacity: 1;
+  }
+  25% {
+    border-color: transparent;
+    border-right-color: #fab617;
+    opacity: 1;
+  }
+  37.5% {
+    border-color: transparent;
+    opacity: 0;
+  }
+  100% {
+    border-color: transparent;
+    opacity: 0;
+  }
+}
+
+@keyframes border-sequence-bottom {
+  0% {
+    border-color: transparent;
+    border-bottom-color: #fab617;
+    opacity: 1;
+  }
+  12.5% {
+    border-color: transparent;
+    border-bottom-color: #fab617;
+    border-left-color: #fab617;
+    opacity: 1;
+  }
+  25% {
+    border-color: transparent;
+    border-left-color: #fab617;
+    opacity: 1;
+  }
+  37.5% {
+    border-color: transparent;
+    opacity: 0;
+  }
+  100% {
+    border-color: transparent;
+    opacity: 0;
+  }
+}
+
+.mek-animated-border-button:hover {
+  @apply bg-yellow-400/10;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(250, 182, 23, 0.3);
+}
+
+.mek-animated-border-button span {
+  position: relative;
+  z-index: 1;
+}

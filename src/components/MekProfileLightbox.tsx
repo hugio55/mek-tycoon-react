@@ -9,6 +9,7 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
 import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
 import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
+import AnimatedBorderButton from "@/components/loaders/AnimatedBorderButton";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal' | 'holographic-overlay' | 'cyber-minimal' | 'tech-frame' | 'neon-edge' | 'matrix-grid';
@@ -4255,6 +4256,16 @@ export default function MekProfileLightbox({
                   {renderDesignationCard()}
                 </div>
 
+                {/* MOBILE: Animated Details Button */}
+                <div className="lg:hidden flex justify-center">
+                  <AnimatedBorderButton
+                    className="w-full max-w-sm text-base py-4 px-8"
+                    onClick={() => console.log('Details clicked')}
+                  >
+                    DETAILS
+                  </AnimatedBorderButton>
+                </div>
+
                 {/* MOBILE: Level & Gold Panel (grouped together) */}
                 <div className="lg:hidden space-y-3">
                   {/* Level Progress */}
@@ -4312,6 +4323,16 @@ export default function MekProfileLightbox({
                   <div className="lg:col-span-3 space-y-4">
                     {/* Designation Section - Dynamic Style */}
                     {renderDesignationCard()}
+
+                    {/* Animated Details Button */}
+                    <div className="flex justify-center">
+                      <AnimatedBorderButton
+                        className="w-full text-sm py-3 px-6"
+                        onClick={() => console.log('Details clicked')}
+                      >
+                        DETAILS
+                      </AnimatedBorderButton>
+                    </div>
 
                     {/* Employment Status Toggle */}
                     <div className={getCardClasses()}>
