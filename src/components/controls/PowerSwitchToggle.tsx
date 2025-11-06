@@ -95,20 +95,14 @@ export default function PowerSwitchToggle({
             cx="75"
             cy="80"
             r="35"
-            className={`
-              origin-[75px_80px]
-              ${checked
-                ? 'opacity-100'
-                : 'opacity-20'
-              }
-            `}
+            className="origin-[75px_80px]"
             style={{
               strokeDasharray: 220,
-              strokeDashoffset: checked ? 40 : 220,
+              strokeDashoffset: 220,
               transform: 'rotate(-58deg)',
-              opacity: checked ? 1 : 0.2,
-              transitionProperty: 'stroke-dashoffset, opacity',
-              transitionDuration: checked ? '0s' : '1s',
+              opacity: 0.2,
+              transitionProperty: 'none',
+              transitionDuration: '0s',
               transitionDelay: '0s'
             }}
           />
@@ -158,9 +152,9 @@ export default function PowerSwitchToggle({
             style={{
               strokeDasharray: 220,
               strokeDashoffset: checked ? 40 : 220,
-              transform: checked ? 'rotate(302deg)' : 'rotate(302deg)',
+              transform: checked ? 'rotate(302deg)' : 'rotate(-58deg)',
               opacity: checked ? 1 : 0,
-              transitionProperty: checked ? 'transform, stroke-dashoffset, opacity' : 'stroke-dashoffset, opacity',
+              transitionProperty: checked ? 'stroke-dashoffset, opacity' : 'transform, stroke-dashoffset, opacity',
               transitionDuration: checked ? '0.4s' : '1s',
               transitionDelay: checked ? '0.2s' : '0s'
             }}
