@@ -847,6 +847,406 @@ export default function MekProfileLightbox({
       );
     }
 
+    if (combinedGoldCardStyle === 'cascade-accumulation') {
+      // DESIGN 1: CASCADE ACCUMULATION
+      // Visual Metaphor: Gold rate flows down like water cascading into cumulative pools
+      // Flow Narrative: Rate pours from top → cascades down visual channels → accumulates into cumulative totals
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            {/* RATE SECTION - Source at top (water source) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ INCOME RATE ◆
+              </div>
+
+              {/* Rate components in horizontal flow */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BASE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {formatGoldRate(goldGenData.base)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className="text-[9px] text-green-400/60 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BONUS
+                  </div>
+                  <div
+                    className="text-green-400 text-sm"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 300,
+                      textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                    }}
+                  >
+                    +{formatGoldRate(goldGenData.bonus)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className={`text-[9px] ${accentColor} uppercase mb-1 tracking-[0.2em]`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TOTAL
+                  </div>
+                  <div
+                    className={`${accentColor} text-xl`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                    }}
+                  >
+                    {formatGoldRate(goldGenData.total)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CASCADE VISUAL - Three vertical flow lines connecting rate to cumulative */}
+            <div className="relative h-12 flex items-center justify-center">
+              {/* Left cascade line */}
+              <div className="absolute left-[16.66%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Center cascade line (brightest) */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b ${useYellowGlow ? 'from-yellow-400' : 'from-cyan-400'} to-transparent`}
+                  style={{ filter: 'blur(2px)' }}
+                />
+              </div>
+
+              {/* Right cascade line */}
+              <div className="absolute left-[83.33%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Flow direction indicator (chevron pointing down) */}
+              <div className={`${accentColor} text-xl opacity-60`} style={{ fontFamily: 'Saira Condensed' }}>
+                ▼
+              </div>
+            </div>
+
+            {/* CUMULATIVE SECTION - Reservoir at bottom (water pools) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ ACCUMULATED ◆
+              </div>
+
+              {/* Cumulative pools side by side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Current Corp pool (main reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    CURRENT CORP
+                  </div>
+                  <div
+                    className={`${accentColor} text-6xl leading-none`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                      letterSpacing: '0.1em'
+                    }}
+                  >
+                    {formatGold(currentOwnerGold)}
+                  </div>
+                </div>
+
+                {/* All-Time pool (overflow reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    ALL-TIME
+                  </div>
+                  <div
+                    className="text-white text-3xl leading-none"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {formatGold(allTimeGold)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (combinedGoldCardStyle === 'energy-conduit') {
+      // DESIGN 2: ENERGY CONDUIT
+      // Visual Metaphor: Rate is energy flowing through conduits that charge cumulative capacitors
+      // Flow Narrative: Rate metrics connect via glowing energy lines → feed into cumulative displays as charging batteries
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* HORIZONTAL LAYOUT: Left (Rate) → Center (Conduit) → Right (Cumulative) */}
+            <div className="grid grid-cols-[1fr_80px_1fr] gap-4 items-center">
+
+              {/* LEFT: RATE SECTION (Energy Source) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  ENERGY SOURCE
+                </div>
+
+                {/* Rate breakdown vertically stacked */}
+                <div className="space-y-3 bg-black/30 p-4 rounded-sm border border-white/10">
+                  {/* Base */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BASE
+                    </div>
+                    <div
+                      className="text-white text-sm"
+                      style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                    >
+                      {formatGoldRate(goldGenData.base)}
+                    </div>
+                  </div>
+
+                  {/* Bonus */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-green-400/60 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BONUS
+                    </div>
+                    <div
+                      className="text-green-400 text-sm"
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 300,
+                        textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                      }}
+                    >
+                      +{formatGoldRate(goldGenData.bonus)}
+                    </div>
+                  </div>
+
+                  {/* Divider with pulse */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                      style={{ filter: 'blur(1px)' }}
+                    />
+                  </div>
+
+                  {/* Total (output) */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className={`text-[9px] ${accentColor} uppercase tracking-[0.2em]`}
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      OUTPUT
+                    </div>
+                    <div
+                      className={`${accentColor} text-xl`}
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 200,
+                        textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                      }}
+                    >
+                      {formatGoldRate(goldGenData.total)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CENTER: ENERGY CONDUIT (Visual connection) */}
+              <div className="flex flex-col items-center justify-center h-full py-4">
+                {/* Horizontal energy flow lines */}
+                <div className="relative w-full h-full flex flex-col justify-center space-y-4">
+                  {/* Top conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+
+                  {/* Center conduit (main flow - brightest) */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
+                      style={{ filter: 'blur(2px)', boxShadow: `0 0 10px ${glowRgba}` }}
+                    />
+                  </div>
+
+                  {/* Bottom conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Flow direction indicator */}
+                <div className={`${accentColor} text-2xl mt-2`} style={{ fontFamily: 'Saira Condensed' }}>
+                  ▶
+                </div>
+              </div>
+
+              {/* RIGHT: CUMULATIVE SECTION (Energy Storage) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CAPACITORS
+                </div>
+
+                {/* Cumulative values vertically stacked like battery levels */}
+                <div className="space-y-4">
+                  {/* Current Corp capacitor (primary charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator (filled background) */}
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        background: `linear-gradient(to right, ${useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)'} 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        CURRENT CORP
+                      </div>
+                      <div
+                        className={`${accentColor} text-6xl leading-none`}
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                          letterSpacing: '0.1em'
+                        }}
+                      >
+                        {formatGold(currentOwnerGold)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All-Time capacitor (total charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator */}
+                    <div
+                      className="absolute inset-0 opacity-5"
+                      style={{
+                        background: `linear-gradient(to right, rgba(255, 255, 255, 0.2) 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        ALL-TIME TOTAL
+                      </div>
+                      <div
+                        className="text-white text-3xl leading-none"
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        {formatGold(allTimeGold)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+
     return null;
   };
 
@@ -1265,6 +1665,406 @@ export default function MekProfileLightbox({
       );
     }
 
+    if (combinedGoldCardStyle === 'cascade-accumulation') {
+      // DESIGN 1: CASCADE ACCUMULATION
+      // Visual Metaphor: Gold rate flows down like water cascading into cumulative pools
+      // Flow Narrative: Rate pours from top → cascades down visual channels → accumulates into cumulative totals
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            {/* RATE SECTION - Source at top (water source) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ INCOME RATE ◆
+              </div>
+
+              {/* Rate components in horizontal flow */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BASE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {formatGoldRate(goldGenData.base)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className="text-[9px] text-green-400/60 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BONUS
+                  </div>
+                  <div
+                    className="text-green-400 text-sm"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 300,
+                      textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                    }}
+                  >
+                    +{formatGoldRate(goldGenData.bonus)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className={`text-[9px] ${accentColor} uppercase mb-1 tracking-[0.2em]`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TOTAL
+                  </div>
+                  <div
+                    className={`${accentColor} text-xl`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                    }}
+                  >
+                    {formatGoldRate(goldGenData.total)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CASCADE VISUAL - Three vertical flow lines connecting rate to cumulative */}
+            <div className="relative h-12 flex items-center justify-center">
+              {/* Left cascade line */}
+              <div className="absolute left-[16.66%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Center cascade line (brightest) */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b ${useYellowGlow ? 'from-yellow-400' : 'from-cyan-400'} to-transparent`}
+                  style={{ filter: 'blur(2px)' }}
+                />
+              </div>
+
+              {/* Right cascade line */}
+              <div className="absolute left-[83.33%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Flow direction indicator (chevron pointing down) */}
+              <div className={`${accentColor} text-xl opacity-60`} style={{ fontFamily: 'Saira Condensed' }}>
+                ▼
+              </div>
+            </div>
+
+            {/* CUMULATIVE SECTION - Reservoir at bottom (water pools) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ ACCUMULATED ◆
+              </div>
+
+              {/* Cumulative pools side by side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Current Corp pool (main reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    CURRENT CORP
+                  </div>
+                  <div
+                    className={`${accentColor} text-6xl leading-none`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                      letterSpacing: '0.1em'
+                    }}
+                  >
+                    {formatGold(currentOwnerGold)}
+                  </div>
+                </div>
+
+                {/* All-Time pool (overflow reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    ALL-TIME
+                  </div>
+                  <div
+                    className="text-white text-3xl leading-none"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {formatGold(allTimeGold)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (combinedGoldCardStyle === 'energy-conduit') {
+      // DESIGN 2: ENERGY CONDUIT
+      // Visual Metaphor: Rate is energy flowing through conduits that charge cumulative capacitors
+      // Flow Narrative: Rate metrics connect via glowing energy lines → feed into cumulative displays as charging batteries
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* HORIZONTAL LAYOUT: Left (Rate) → Center (Conduit) → Right (Cumulative) */}
+            <div className="grid grid-cols-[1fr_80px_1fr] gap-4 items-center">
+
+              {/* LEFT: RATE SECTION (Energy Source) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  ENERGY SOURCE
+                </div>
+
+                {/* Rate breakdown vertically stacked */}
+                <div className="space-y-3 bg-black/30 p-4 rounded-sm border border-white/10">
+                  {/* Base */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BASE
+                    </div>
+                    <div
+                      className="text-white text-sm"
+                      style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                    >
+                      {formatGoldRate(goldGenData.base)}
+                    </div>
+                  </div>
+
+                  {/* Bonus */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-green-400/60 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BONUS
+                    </div>
+                    <div
+                      className="text-green-400 text-sm"
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 300,
+                        textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                      }}
+                    >
+                      +{formatGoldRate(goldGenData.bonus)}
+                    </div>
+                  </div>
+
+                  {/* Divider with pulse */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                      style={{ filter: 'blur(1px)' }}
+                    />
+                  </div>
+
+                  {/* Total (output) */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className={`text-[9px] ${accentColor} uppercase tracking-[0.2em]`}
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      OUTPUT
+                    </div>
+                    <div
+                      className={`${accentColor} text-xl`}
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 200,
+                        textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                      }}
+                    >
+                      {formatGoldRate(goldGenData.total)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CENTER: ENERGY CONDUIT (Visual connection) */}
+              <div className="flex flex-col items-center justify-center h-full py-4">
+                {/* Horizontal energy flow lines */}
+                <div className="relative w-full h-full flex flex-col justify-center space-y-4">
+                  {/* Top conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+
+                  {/* Center conduit (main flow - brightest) */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
+                      style={{ filter: 'blur(2px)', boxShadow: `0 0 10px ${glowRgba}` }}
+                    />
+                  </div>
+
+                  {/* Bottom conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Flow direction indicator */}
+                <div className={`${accentColor} text-2xl mt-2`} style={{ fontFamily: 'Saira Condensed' }}>
+                  ▶
+                </div>
+              </div>
+
+              {/* RIGHT: CUMULATIVE SECTION (Energy Storage) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CAPACITORS
+                </div>
+
+                {/* Cumulative values vertically stacked like battery levels */}
+                <div className="space-y-4">
+                  {/* Current Corp capacitor (primary charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator (filled background) */}
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        background: `linear-gradient(to right, ${useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)'} 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        CURRENT CORP
+                      </div>
+                      <div
+                        className={`${accentColor} text-6xl leading-none`}
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                          letterSpacing: '0.1em'
+                        }}
+                      >
+                        {formatGold(currentOwnerGold)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All-Time capacitor (total charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator */}
+                    <div
+                      className="absolute inset-0 opacity-5"
+                      style={{
+                        background: `linear-gradient(to right, rgba(255, 255, 255, 0.2) 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        ALL-TIME TOTAL
+                      </div>
+                      <div
+                        className="text-white text-3xl leading-none"
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        {formatGold(allTimeGold)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+
     return null;
   };
 
@@ -1636,6 +2436,406 @@ export default function MekProfileLightbox({
         </div>
       );
     }
+
+    if (combinedGoldCardStyle === 'cascade-accumulation') {
+      // DESIGN 1: CASCADE ACCUMULATION
+      // Visual Metaphor: Gold rate flows down like water cascading into cumulative pools
+      // Flow Narrative: Rate pours from top → cascades down visual channels → accumulates into cumulative totals
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            {/* RATE SECTION - Source at top (water source) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ INCOME RATE ◆
+              </div>
+
+              {/* Rate components in horizontal flow */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BASE
+                  </div>
+                  <div
+                    className="text-white text-sm"
+                    style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                  >
+                    {formatGoldRate(goldGenData.base)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className="text-[9px] text-green-400/60 uppercase mb-1 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    BONUS
+                  </div>
+                  <div
+                    className="text-green-400 text-sm"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 300,
+                      textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                    }}
+                  >
+                    +{formatGoldRate(goldGenData.bonus)}
+                  </div>
+                </div>
+
+                <div>
+                  <div
+                    className={`text-[9px] ${accentColor} uppercase mb-1 tracking-[0.2em]`}
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    TOTAL
+                  </div>
+                  <div
+                    className={`${accentColor} text-xl`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                    }}
+                  >
+                    {formatGoldRate(goldGenData.total)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CASCADE VISUAL - Three vertical flow lines connecting rate to cumulative */}
+            <div className="relative h-12 flex items-center justify-center">
+              {/* Left cascade line */}
+              <div className="absolute left-[16.66%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Center cascade line (brightest) */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b ${useYellowGlow ? 'from-yellow-400' : 'from-cyan-400'} to-transparent`}
+                  style={{ filter: 'blur(2px)' }}
+                />
+              </div>
+
+              {/* Right cascade line */}
+              <div className="absolute left-[83.33%] top-0 bottom-0 w-px">
+                <div
+                  className={`absolute inset-0 bg-gradient-to-b from-white ${useYellowGlow ? 'via-yellow-400/60' : 'via-cyan-400/60'} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
+                />
+              </div>
+
+              {/* Flow direction indicator (chevron pointing down) */}
+              <div className={`${accentColor} text-xl opacity-60`} style={{ fontFamily: 'Saira Condensed' }}>
+                ▼
+              </div>
+            </div>
+
+            {/* CUMULATIVE SECTION - Reservoir at bottom (water pools) */}
+            <div className="space-y-4">
+              <div
+                className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center`}
+                style={{ fontFamily: 'Inter', fontWeight: 400 }}
+              >
+                ◆ ACCUMULATED ◆
+              </div>
+
+              {/* Cumulative pools side by side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Current Corp pool (main reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    CURRENT CORP
+                  </div>
+                  <div
+                    className={`${accentColor} text-6xl leading-none`}
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                      letterSpacing: '0.1em'
+                    }}
+                  >
+                    {formatGold(currentOwnerGold)}
+                  </div>
+                </div>
+
+                {/* All-Time pool (overflow reservoir) */}
+                <div className="text-center bg-black/30 p-4 rounded-sm border border-white/10">
+                  <div
+                    className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                    style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                  >
+                    ALL-TIME
+                  </div>
+                  <div
+                    className="text-white text-3xl leading-none"
+                    style={{
+                      fontFamily: 'Saira Condensed',
+                      fontWeight: 200,
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {formatGold(allTimeGold)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (combinedGoldCardStyle === 'energy-conduit') {
+      // DESIGN 2: ENERGY CONDUIT
+      // Visual Metaphor: Rate is energy flowing through conduits that charge cumulative capacitors
+      // Flow Narrative: Rate metrics connect via glowing energy lines → feed into cumulative displays as charging batteries
+
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* HORIZONTAL LAYOUT: Left (Rate) → Center (Conduit) → Right (Cumulative) */}
+            <div className="grid grid-cols-[1fr_80px_1fr] gap-4 items-center">
+
+              {/* LEFT: RATE SECTION (Energy Source) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  ENERGY SOURCE
+                </div>
+
+                {/* Rate breakdown vertically stacked */}
+                <div className="space-y-3 bg-black/30 p-4 rounded-sm border border-white/10">
+                  {/* Base */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-white/40 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BASE
+                    </div>
+                    <div
+                      className="text-white text-sm"
+                      style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}
+                    >
+                      {formatGoldRate(goldGenData.base)}
+                    </div>
+                  </div>
+
+                  {/* Bonus */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="text-[9px] text-green-400/60 uppercase tracking-[0.2em]"
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      BONUS
+                    </div>
+                    <div
+                      className="text-green-400 text-sm"
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 300,
+                        textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+                      }}
+                    >
+                      +{formatGoldRate(goldGenData.bonus)}
+                    </div>
+                  </div>
+
+                  {/* Divider with pulse */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`}
+                      style={{ filter: 'blur(1px)' }}
+                    />
+                  </div>
+
+                  {/* Total (output) */}
+                  <div className="flex justify-between items-center">
+                    <div
+                      className={`text-[9px] ${accentColor} uppercase tracking-[0.2em]`}
+                      style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                    >
+                      OUTPUT
+                    </div>
+                    <div
+                      className={`${accentColor} text-xl`}
+                      style={{
+                        fontFamily: 'Saira Condensed',
+                        fontWeight: 200,
+                        textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`
+                      }}
+                    >
+                      {formatGoldRate(goldGenData.total)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CENTER: ENERGY CONDUIT (Visual connection) */}
+              <div className="flex flex-col items-center justify-center h-full py-4">
+                {/* Horizontal energy flow lines */}
+                <div className="relative w-full h-full flex flex-col justify-center space-y-4">
+                  {/* Top conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+
+                  {/* Center conduit (main flow - brightest) */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
+                      style={{ filter: 'blur(2px)', boxShadow: `0 0 10px ${glowRgba}` }}
+                    />
+                  </div>
+
+                  {/* Bottom conduit */}
+                  <div className="relative h-px">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${useYellowGlow ? 'from-yellow-400/60 via-yellow-400 to-yellow-400/60' : 'from-cyan-400/60 via-cyan-400 to-cyan-400/60'}`}
+                      style={{ filter: 'blur(1.5px)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Flow direction indicator */}
+                <div className={`${accentColor} text-2xl mt-2`} style={{ fontFamily: 'Saira Condensed' }}>
+                  ▶
+                </div>
+              </div>
+
+              {/* RIGHT: CUMULATIVE SECTION (Energy Storage) */}
+              <div className="space-y-3">
+                <div
+                  className={`text-[10px] ${accentColor} uppercase tracking-[0.3em] text-center pb-2`}
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                >
+                  CAPACITORS
+                </div>
+
+                {/* Cumulative values vertically stacked like battery levels */}
+                <div className="space-y-4">
+                  {/* Current Corp capacitor (primary charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator (filled background) */}
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        background: `linear-gradient(to right, ${useYellowGlow ? 'rgba(250, 182, 23, 0.3)' : 'rgba(0, 212, 255, 0.3)'} 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        CURRENT CORP
+                      </div>
+                      <div
+                        className={`${accentColor} text-6xl leading-none`}
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          textShadow: `0 0 20px ${textShadowPrimary}, 0 0 40px ${textShadowSecondary}`,
+                          letterSpacing: '0.1em'
+                        }}
+                      >
+                        {formatGold(currentOwnerGold)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All-Time capacitor (total charge) */}
+                  <div className="bg-black/30 p-4 rounded-sm border border-white/10 relative overflow-hidden">
+                    {/* Charge level indicator */}
+                    <div
+                      className="absolute inset-0 opacity-5"
+                      style={{
+                        background: `linear-gradient(to right, rgba(255, 255, 255, 0.2) 0%, transparent 100%)`
+                      }}
+                    />
+
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="text-[9px] text-white/40 uppercase mb-2 tracking-[0.2em]"
+                        style={{ fontFamily: 'Inter', fontWeight: 400 }}
+                      >
+                        ALL-TIME TOTAL
+                      </div>
+                      <div
+                        className="text-white text-3xl leading-none"
+                        style={{
+                          fontFamily: 'Saira Condensed',
+                          fontWeight: 200,
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        {formatGold(allTimeGold)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
 
     return null;
   };
