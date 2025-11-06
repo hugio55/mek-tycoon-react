@@ -780,3 +780,113 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(250, 182, 23, 0.8) rgba(0, 0, 0, 0.5);
 }
+
+/* ===========================
+   NEON EDGE DESIGN SYSTEM
+   =========================== */
+
+/* NEON EDGE Card Base */
+.neon-edge-card {
+  @apply relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden;
+}
+
+/* NEON EDGE Border Layer */
+.neon-edge-border {
+  @apply absolute inset-0 border-2 pointer-events-none;
+  filter: blur(0.5px);
+}
+
+.neon-edge-border-yellow {
+  @apply border-yellow-400/50;
+  box-shadow:
+    0 0 30px rgba(250, 182, 23, 0.3),
+    inset 0 0 30px rgba(250, 182, 23, 0.1);
+}
+
+.neon-edge-border-cyan {
+  @apply border-cyan-400/50;
+  box-shadow:
+    0 0 30px rgba(0, 212, 255, 0.3),
+    inset 0 0 30px rgba(0, 212, 255, 0.1);
+}
+
+/* NEON EDGE Gradient Overlay */
+.neon-edge-gradient-yellow {
+  @apply absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none;
+  background: linear-gradient(180deg, rgba(250, 182, 23, 0.4) 0%, transparent 100%);
+}
+
+.neon-edge-gradient-cyan {
+  @apply absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none;
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.4) 0%, transparent 100%);
+}
+
+/* NEON EDGE Hero Rank Text */
+.neon-edge-hero-rank-yellow {
+  @apply text-yellow-400 text-6xl leading-none;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 20px rgba(250, 182, 23, 1),
+    0 0 40px rgba(250, 182, 23, 0.5);
+}
+
+.neon-edge-hero-rank-cyan {
+  @apply text-cyan-400 text-6xl leading-none;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 20px rgba(0, 212, 255, 1),
+    0 0 40px rgba(0, 212, 255, 0.5);
+}
+
+/* NEON EDGE Label Text */
+.neon-edge-label {
+  @apply text-white/40 uppercase;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+
+.neon-edge-label-xs {
+  @apply text-[9px];
+  letter-spacing: 0.3em;
+}
+
+.neon-edge-label-sm {
+  @apply text-[10px];
+  letter-spacing: 0.2em;
+}
+
+/* NEON EDGE Data Text */
+.neon-edge-data {
+  @apply text-white;
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 300;
+}
+
+/* NEON EDGE Divider Line */
+.neon-edge-divider-yellow {
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400 to-transparent;
+  filter: blur(1px);
+}
+
+.neon-edge-divider-cyan {
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent;
+  filter: blur(1px);
+}
+
+/* NEON EDGE Badge/Pill Container */
+.neon-edge-badge {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-black/60 rounded-sm;
+}
+
+.neon-edge-badge-yellow {
+  @apply border border-yellow-400/50;
+}
+
+.neon-edge-badge-cyan {
+  @apply border border-cyan-400/50;
+}

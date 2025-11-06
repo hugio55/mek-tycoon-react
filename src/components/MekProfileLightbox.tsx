@@ -51,10 +51,8 @@ interface MekProfileLightboxProps {
   useYellowGlow?: boolean;
   headerDarkness?: number;
   headerBlur?: number;
-  useForwardBlur?: boolean;
   variationGlowIntensity?: number;
   variationGlowSize?: number;
-  variationNoiseIntensity?: number;
 }
 
 export default function MekProfileLightbox({
@@ -92,10 +90,8 @@ export default function MekProfileLightbox({
   useYellowGlow = false,
   headerDarkness = 50,
   headerBlur = 8,
-  useForwardBlur = false,
   variationGlowIntensity = 0.6,
-  variationGlowSize = 25,
-  variationNoiseIntensity = 0.15
+  variationGlowSize = 25
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
@@ -1411,23 +1407,19 @@ export default function MekProfileLightbox({
               className="sticky top-0 z-40 w-full"
               style={{
                 backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
-                ...(!useForwardBlur && {
-                  backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
-                  WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
-                })
+                backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
+                WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
               }}
             >
-              {/* Additional blur overlay layer - only for backdrop filter mode */}
-              {!useForwardBlur && (
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                    WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
-                    zIndex: -1
-                  }}
-                />
-              )}
+              {/* Additional blur overlay layer for stronger effect */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                  WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                  zIndex: -1
+                }}
+              />
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
@@ -1458,19 +1450,7 @@ export default function MekProfileLightbox({
             <div
               className="max-w-7xl mx-auto px-4 pb-6"
               style={{
-                paddingTop: `${headerGap}px`,
-                ...(useForwardBlur && {
-                  filter: `blur(${headerBlur}px)`,
-                  WebkitFilter: `blur(${headerBlur}px)`,
-                  maskImage: `linear-gradient(to bottom,
-                    black 0px,
-                    black 180px,
-                    transparent 280px)`,
-                  WebkitMaskImage: `linear-gradient(to bottom,
-                    black 0px,
-                    black 180px,
-                    transparent 280px)`
-                })
+                paddingTop: `${headerGap}px`
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: `${contentSpacing}px` }}>
@@ -1603,21 +1583,18 @@ export default function MekProfileLightbox({
                     imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
-                    noiseIntensity={variationNoiseIntensity}
                   />
                   <VariationCard
                     title="BODY VARIATION"
                     imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
-                    noiseIntensity={variationNoiseIntensity}
                   />
                   <VariationCard
                     title="TRAIT VARIATION"
                     imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
-                    noiseIntensity={variationNoiseIntensity}
                   />
                 </div>
 
@@ -1648,14 +1625,12 @@ function VariationCard({
   title,
   imagePath,
   glowSize = 25,
-  glowIntensity = 0.6,
-  noiseIntensity = 0.15
+  glowIntensity = 0.6
 }: {
   title: string;
   imagePath?: string;
   glowSize?: number;
   glowIntensity?: number;
-  noiseIntensity?: number;
 }) {
   return (
     <div className="flex flex-col items-center relative">
@@ -1679,60 +1654,7 @@ function VariationCard({
                 `,
                 transform: 'scale(0.7)'
               }}
-            >
-              {/* Multi-layer atmospheric effect to reduce gradient banding */}
-
-              {/* Layer 1: Dithering pattern */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  opacity: noiseIntensity * 2.0,
-                  mixBlendMode: 'overlay',
-                  backgroundImage: `
-                    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px),
-                    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)
-                  `
-                }}
-              />
-
-              {/* Layer 2: Radial gradient atmospheric haze */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  opacity: noiseIntensity * 2.5,
-                  mixBlendMode: 'multiply',
-                  background: `
-                    radial-gradient(circle at 30% 40%, rgba(0,0,0,0.25) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.25) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 80%, rgba(0,0,0,0.3) 0%, transparent 40%)
-                  `
-                }}
-              />
-
-              {/* Layer 3: Stronger grain texture */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  opacity: noiseIntensity * 4.0,
-                  mixBlendMode: 'overlay',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
-                  backgroundSize: '200px 200px'
-                }}
-              />
-
-              {/* Layer 4: Energy field shimmer (subtle variation) */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  opacity: noiseIntensity * 1.5,
-                  mixBlendMode: 'screen',
-                  background: `
-                    radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.15) 0%, transparent 60%),
-                    radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.1) 0%, transparent 50%)
-                  `
-                }}
-              />
-            </div>
+            />
 
             {/* Image on top of glow */}
             <img

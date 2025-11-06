@@ -28,10 +28,8 @@ export default function MekLayoutsPage() {
   const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
   const [headerDarkness, setHeaderDarkness] = useState(80);
   const [headerBlur, setHeaderBlur] = useState(12);
-  const [useForwardBlur, setUseForwardBlur] = useState(false);
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
   const [variationGlowSize, setVariationGlowSize] = useState(25);
-  const [variationNoiseIntensity, setVariationNoiseIntensity] = useState(0.15);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -138,23 +136,6 @@ export default function MekLayoutsPage() {
             />
           </div>
 
-          {/* Toggle: Header Readability Method */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Readability Method
-            </label>
-            <button
-              onClick={() => setUseForwardBlur(!useForwardBlur)}
-              className={`w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
-                useForwardBlur
-                  ? 'bg-purple-500/20 border-2 border-purple-500 text-purple-400'
-                  : 'bg-gray-500/20 border-2 border-gray-500 text-gray-400'
-              }`}
-            >
-              {useForwardBlur ? '🌑 Opacity Fade' : '🔙 Backdrop Blur'}
-            </button>
-          </div>
-
           {/* Separator */}
           <div className="my-4 border-t border-purple-500/30" />
           <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
@@ -215,22 +196,6 @@ export default function MekLayoutsPage() {
               max="60"
               value={variationGlowSize}
               onChange={(e) => setVariationGlowSize(Number(e.target.value))}
-              className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-            />
-          </div>
-
-          {/* Slider 5: Variation Noise/Grain Intensity */}
-          <div className="mb-3">
-            <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Atmospheric Noise: {(variationNoiseIntensity * 100).toFixed(0)}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="0.5"
-              step="0.01"
-              value={variationNoiseIntensity}
-              onChange={(e) => setVariationNoiseIntensity(Number(e.target.value))}
               className="w-full h-1 bg-black/60 rounded-lg appearance-none cursor-pointer accent-yellow-500"
             />
           </div>
@@ -607,10 +572,8 @@ export default function MekLayoutsPage() {
         onContentSpacingChange={setContentSpacing}
         headerDarkness={headerDarkness}
         headerBlur={headerBlur}
-        useForwardBlur={useForwardBlur}
         variationGlowIntensity={variationGlowIntensity}
         variationGlowSize={variationGlowSize}
-        variationNoiseIntensity={variationNoiseIntensity}
       />
 
       {/* Gold Generation Details Lightbox */}
