@@ -277,7 +277,7 @@ export default function MekLayoutsPage() {
               <option value="vertical-emphasis">Vertical Emphasis</option>
               <option value="minimal-centered">Minimal Centered</option>
               <option value="hero-level-v1">Hero Level V1 (Massive Glow)</option>
-              <option value="hero-level-v2">Hero Level V2 (Bold Tech)</option>
+              <option value="hero-level-v2">LVL Display</option>
               <option value="hero-level-v3">Hero Level V3 (Asymmetric)</option>
             </select>
           </div>
