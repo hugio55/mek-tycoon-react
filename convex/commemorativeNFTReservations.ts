@@ -80,24 +80,48 @@ export const createReservation = mutation({
       };
     }
 
-    // Create the reservation
+    // Create the reservation with optimistic locking to prevent double-booking
     const expiresAt = now + RESERVATION_TIMEOUT;
-    const reservationId = await ctx.db.insert("commemorativeNFTReservations", {
-      nftInventoryId: availableNFT._id,
-      nftUid: availableNFT.nftUid,
-      nftNumber: availableNFT.nftNumber,
-      reservedBy: args.walletAddress,
-      reservedAt: now,
-      expiresAt,
-      status: "active",
-    });
+    let reservationId: any;
 
-    // Update NFT inventory status to reserved
-    await ctx.db.patch(availableNFT._id, {
-      status: "reserved",
-    });
+    try {
+      // CRITICAL SECURITY FIX: Check NFT status right before reservation
+      // This prevents race condition where two users try to reserve same NFT
+      const currentNFT = await ctx.db.get(availableNFT._id);
 
-    console.log('[RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber);
+      if (!currentNFT || currentNFT.status !== "available") {
+        console.log('[🛡️RESERVATION] NFT status changed during reservation:', currentNFT?.status);
+        return {
+          success: false,
+          error: "This NFT was just claimed by another user. Please try again.",
+        };
+      }
+
+      // First create reservation
+      reservationId = await ctx.db.insert("commemorativeNFTReservations", {
+        nftInventoryId: availableNFT._id,
+        nftUid: availableNFT.nftUid,
+        nftNumber: availableNFT.nftNumber,
+        reservedBy: args.walletAddress,
+        reservedAt: now,
+        expiresAt,
+        status: "active",
+      });
+
+      // Then update NFT inventory status to reserved (atomic operation)
+      await ctx.db.patch(availableNFT._id, {
+        status: "reserved",
+      });
+
+      console.log('[RESERVATION] Created reservation:', reservationId, 'for NFT:', availableNFT.nftNumber);
+    } catch (error) {
+      // Rollback: If inventory update failed, delete the reservation
+      if (reservationId) {
+        console.log('[🛡️RESERVATION] Rolling back reservation due to error:', error);
+        await ctx.db.delete(reservationId);
+      }
+      throw new Error('Failed to create reservation: ' + error);
+    }
 
     return {
       success: true,
