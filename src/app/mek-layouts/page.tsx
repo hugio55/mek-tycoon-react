@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle, CombinedGoldCardStyle, LevelProgressStyle, StatsLayoutStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -33,6 +33,7 @@ export default function MekLayoutsPage() {
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
   const [variationGlowSize, setVariationGlowSize] = useState(25);
   const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('hero-focus');
+  const [statsLayoutStyle, setStatsLayoutStyle] = useState<StatsLayoutStyle>('inline-dot');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -226,6 +227,32 @@ export default function MekLayoutsPage() {
               <option value="compact-badge">Compact Badge</option>
             </select>
           </div>
+
+          {/* Dropdown: Stats Layout (only shows for minimal-labels) */}
+          {variationTextStyle === 'minimal-labels' && (
+            <>
+              <div className="my-3 border-t border-purple-500/30" />
+              <h4 className="text-purple-400 text-[9px] font-bold uppercase tracking-wider mb-3">
+                Stats Layout (Minimal Labels)
+              </h4>
+              <div className="mb-3">
+                <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                  Two-Column Style
+                </label>
+                <select
+                  value={statsLayoutStyle}
+                  onChange={(e) => setStatsLayoutStyle(e.target.value as StatsLayoutStyle)}
+                  className="w-full bg-black/60 border border-purple-500/50 rounded px-2 py-1.5 text-purple-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-purple-500 focus:outline-none focus:border-purple-400 transition-all"
+                >
+                  <option value="inline-dot">Inline Dot</option>
+                  <option value="vertical-divider">Vertical Divider</option>
+                  <option value="badge-pills">Badge Pills</option>
+                  <option value="label-above">Label Above</option>
+                  <option value="glow-separator">Glow Separator</option>
+                </select>
+              </div>
+            </>
+          )}
         </div>
         </div>
       )}
