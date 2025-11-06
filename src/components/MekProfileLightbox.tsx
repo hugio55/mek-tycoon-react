@@ -1546,7 +1546,7 @@ export default function MekProfileLightbox({
 
                   {/* CENTER - MEK IMAGE */}
                   <div className="lg:col-span-6 flex items-start justify-center">
-                    <div className={`${getCardClasses()} overflow-hidden w-full`}>
+                    <div className={`${getCardClasses()} overflow-hidden w-full p-0`}>
                       <img
                         src="/mek-images/1000px/aa2-bl2-hn1.webp"
                         alt="Mek Profile"
