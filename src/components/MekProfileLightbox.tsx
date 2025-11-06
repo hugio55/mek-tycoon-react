@@ -17,6 +17,7 @@ export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
 export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair';
+export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
 
 export { LevelProgressStyle };
 
@@ -62,6 +63,8 @@ interface MekProfileLightboxProps {
   variationGlowSize?: number;
   variationTextStyle?: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge';
   onVariationTextStyleChange?: (style: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge') => void;
+  statsLayoutStyle?: StatsLayoutStyle;
+  onStatsLayoutStyleChange?: (style: StatsLayoutStyle) => void;
 }
 
 export default function MekProfileLightbox({
@@ -105,7 +108,9 @@ export default function MekProfileLightbox({
   variationGlowIntensity = 0.6,
   variationGlowSize = 25,
   variationTextStyle = 'hero-focus',
-  onVariationTextStyleChange
+  onVariationTextStyleChange,
+  statsLayoutStyle = 'inline-dot',
+  onStatsLayoutStyleChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
