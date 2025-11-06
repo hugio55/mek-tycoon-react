@@ -7,7 +7,7 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
-export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal';
+export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal' | 'holographic-overlay' | 'cyber-minimal' | 'tech-frame' | 'neon-edge' | 'matrix-grid';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
