@@ -7,6 +7,7 @@ import MechanicalToggle from "@/components/controls/MechanicalToggle";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type VariationCardStyle = 'clean-frames' | 'image-focus' | 'subtle-accent' | 'no-cards-direct';
+export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal';
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 
@@ -21,6 +22,8 @@ interface MekProfileLightboxProps {
   onBuffDetailsLayoutChange?: (layout: BuffDetailsLayout) => void;
   variationCardStyle?: VariationCardStyle;
   onVariationCardStyleChange?: (style: VariationCardStyle) => void;
+  designationCardStyle?: DesignationCardStyle;
+  onDesignationCardStyleChange?: (style: DesignationCardStyle) => void;
   backdropDarkness?: number;
   onBackdropDarknessChange?: (value: number) => void;
   cardDarkness?: number;
@@ -48,6 +51,8 @@ export default function MekProfileLightbox({
   onBuffDetailsLayoutChange,
   variationCardStyle = 'clean-frames',
   onVariationCardStyleChange,
+  designationCardStyle = 'corner-brackets',
+  onDesignationCardStyleChange,
   backdropDarkness = 40,
   onBackdropDarknessChange,
   cardDarkness = 20,

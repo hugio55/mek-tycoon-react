@@ -225,6 +225,9 @@ export const repairPaymentUrls = mutation({
       ? "https://pay.nmkr.io"
       : "https://pay.preprod.nmkr.io";
 
+    // Get project ID from environment variable as fallback
+    const fallbackProjectId = process.env.NMKR_PROJECT_ID || "";
+
     let repairedCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
@@ -241,26 +244,46 @@ export const repairPaymentUrls = mutation({
           continue;
         }
 
-        // Get the correct project ID
+        console.log('[🔧FIX] 🔍 Attempting to fix:', item.name);
+        console.log('[🔧FIX]    Current projectId in record:', item.projectId || '(empty)');
+        console.log('[🔧FIX]    CampaignId in record:', item.campaignId || '(none)');
+
+        // Get the correct project ID with multiple fallback strategies
         let projectId = item.projectId;
 
-        // If projectId is also empty in the record, try to get it from the campaign
+        // Strategy 1: If projectId is empty/undefined in the record, try to get it from the campaign
         if (!projectId && item.campaignId) {
+          console.log('[🔧FIX]    Strategy 1: Looking up campaign...');
           const campaign = await ctx.db.get(item.campaignId);
-          if (campaign) {
+          if (campaign?.nmkrProjectId) {
             projectId = campaign.nmkrProjectId;
+            console.log('[🔧FIX]    ✅ Found project ID from campaign:', projectId);
+          } else {
+            console.log('[🔧FIX]    ❌ Campaign lookup failed or no project ID in campaign');
           }
+        }
+
+        // Strategy 2: Use environment variable fallback
+        if (!projectId && fallbackProjectId) {
+          console.log('[🔧FIX]    Strategy 2: Using fallback from environment variable');
+          projectId = fallbackProjectId;
+          console.log('[🔧FIX]    ✅ Using fallback project ID:', projectId);
         }
 
         // If still no project ID, we can't fix this item
         if (!projectId) {
           console.error('[🔧FIX] ❌ Cannot fix - no project ID available for:', item.name);
+          console.error('[🔧FIX]    - No projectId in record');
+          console.error('[🔧FIX]    - No campaignId or campaign has no projectId');
+          console.error('[🔧FIX]    - No NMKR_PROJECT_ID environment variable');
           errorCount++;
           continue;
         }
 
         // Construct correct payment URL
         const correctPaymentUrl = `${basePaymentUrl}/?p=${projectId}&n=${item.nftUid}`;
+
+        console.log('[🔧FIX]    Building correct URL with project ID:', projectId);
 
         // Update the item
         await ctx.db.patch(item._id, {
@@ -274,6 +297,7 @@ export const repairPaymentUrls = mutation({
         repairedCount++;
       } catch (error) {
         console.error('[🔧FIX] ❌ Error fixing', item.name, ':', error);
+        console.error('[🔧FIX]    Error details:', error instanceof Error ? error.message : String(error));
         errorCount++;
       }
     }
