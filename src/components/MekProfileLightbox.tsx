@@ -18,7 +18,7 @@ export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-sty
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
 export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
-export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered';
+export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3';
 
 export { LevelProgressStyle };
 
@@ -3336,6 +3336,153 @@ export default function MekProfileLightbox({
             <div>
               <div className="text-white text-xs font-bold">{levelValue}</div>
               <div className="mek-label-uppercase text-[8px] text-gray-500">LEVEL</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ========== NEW HERO LEVEL VARIATIONS ==========
+    // Get current level color for dynamic styling
+    const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
+
+    // HERO LEVEL V1: Massive Level Number with Dramatic Glow
+    // Concept: Extra-large level number (4x size of tenure) with matching color glow
+    if (tenureLevelStyle === 'hero-level-v1') {
+      return (
+        <div className="flex items-center justify-between gap-3">
+          {/* Tenure - Small and subdued on left */}
+          <div className="flex flex-col items-start gap-0.5 shrink-0">
+            <div className="text-gray-500 text-[8px] uppercase tracking-wider font-mono">TENURE</div>
+            <div className="text-white/80 text-xs font-semibold">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Center */}
+          {renderBars()}
+
+          {/* Level - MASSIVE and prominent on right */}
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <div className="text-gray-500 text-[8px] uppercase tracking-wider font-mono">LEVEL</div>
+            <div
+              className="font-bold leading-none"
+              style={{
+                fontSize: '3rem',
+                fontFamily: 'Saira Condensed',
+                fontWeight: 200,
+                color: levelColor,
+                textShadow: `
+                  0 0 20px ${levelColor}aa,
+                  0 0 40px ${levelColor}66,
+                  0 0 60px ${levelColor}33,
+                  0 2px 8px rgba(0,0,0,0.8)
+                `
+              }}
+            >
+              {levelValue}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // HERO LEVEL V2: Bold Tech Display with Color Bar Accent
+    // Concept: Level number in Orbitron with color bar underneath, heavy glow
+    if (tenureLevelStyle === 'hero-level-v2') {
+      return (
+        <div className="flex items-center justify-between gap-3">
+          {/* Tenure - Minimal left side */}
+          <div className="flex flex-col items-start gap-0.5 shrink-0 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-[0.15em] font-mono">TENURE</div>
+            <div className="text-white text-[11px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Center */}
+          {renderBars()}
+
+          {/* Level - Bold tech display */}
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <div className="text-gray-400 text-[7px] uppercase tracking-[0.2em] font-mono">LEVEL</div>
+            <div className="flex flex-col items-end">
+              {/* Large level number */}
+              <div
+                className="font-bold leading-none"
+                style={{
+                  fontSize: '2.75rem',
+                  fontFamily: 'Orbitron',
+                  fontWeight: 700,
+                  color: levelColor,
+                  textShadow: `
+                    0 0 15px ${levelColor}dd,
+                    0 0 30px ${levelColor}88,
+                    0 0 45px ${levelColor}44,
+                    2px 2px 6px rgba(0,0,0,0.9)
+                  `,
+                  letterSpacing: '-0.05em'
+                }}
+              >
+                {levelValue}
+              </div>
+              {/* Color bar accent */}
+              <div
+                className="w-full h-1 mt-1 rounded-full"
+                style={{
+                  backgroundColor: levelColor,
+                  boxShadow: `0 0 8px ${levelColor}cc, 0 0 16px ${levelColor}66`
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // HERO LEVEL V3: Asymmetric Dramatic - Level Dominates
+    // Concept: Tiny tenure, absolutely massive level with stacked glow layers
+    if (tenureLevelStyle === 'hero-level-v3') {
+      return (
+        <div className="flex items-center justify-between gap-2">
+          {/* Tenure - Tiny and tucked away */}
+          <div className="flex items-center gap-1.5 shrink-0 opacity-60">
+            <div className="text-gray-500 text-[7px] uppercase tracking-[0.1em] font-mono">TEN</div>
+            <div className="text-white/70 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Center */}
+          {renderBars()}
+
+          {/* Level - ABSOLUTELY MASSIVE with multi-layer glow */}
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            <div className="text-gray-400 text-[7px] uppercase tracking-[0.25em] font-mono opacity-50">LVL</div>
+            <div className="relative">
+              {/* Background glow layers */}
+              <div
+                className="absolute inset-0 blur-xl opacity-60"
+                style={{
+                  background: `radial-gradient(circle, ${levelColor} 0%, transparent 70%)`,
+                  transform: 'scale(1.5)'
+                }}
+              />
+              {/* The number itself */}
+              <div
+                className="relative font-bold leading-none"
+                style={{
+                  fontSize: '3.5rem',
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  color: levelColor,
+                  textShadow: `
+                    0 0 10px ${levelColor}ff,
+                    0 0 20px ${levelColor}dd,
+                    0 0 40px ${levelColor}88,
+                    0 0 60px ${levelColor}44,
+                    0 0 80px ${levelColor}22,
+                    0 3px 10px rgba(0,0,0,0.9)
+                  `,
+                  WebkitTextStroke: `0.5px ${levelColor}33`
+                }}
+              >
+                {levelValue}
+              </div>
             </div>
           </div>
         </div>

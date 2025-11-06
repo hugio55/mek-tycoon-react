@@ -302,8 +302,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-yellow-500/50 rounded-lg overflow-hidden bg-black/50 backdrop-blur-sm">
                   <img
-                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
-                    alt={activeReservation.nft.name}
+                    src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft?.name || "NFT"}
                     className="w-full h-auto"
                     onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
                   />
@@ -312,7 +312,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="mb-6 p-4 bg-black/60 border-2 border-yellow-500/30 rounded backdrop-blur-sm">
                   <h3 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-                    {activeReservation.nft.name}
+                    {activeReservation.nft?.name || "NFT"}
                   </h3>
                   <p className="text-green-400 text-base mb-4 font-medium">
                     You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
@@ -363,8 +363,8 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="relative w-full max-w-[400px] mx-auto mb-6 border-2 border-amber-500/60 rounded-md overflow-hidden bg-gradient-to-b from-amber-900/20 to-black/50 backdrop-blur-sm shadow-xl shadow-amber-500/30">
                   <img
-                    src={activeReservation.nft.imageUrl || "/random-images/Lab%20Rat.jpg"}
-                    alt={activeReservation.nft.name}
+                    src={activeReservation.nft?.imageUrl || "/random-images/Lab%20Rat.jpg"}
+                    alt={activeReservation.nft?.name || "NFT"}
                     className="w-full h-auto"
                     onError={(e) => { e.currentTarget.src = '/logo-big.png'; }}
                   />
@@ -373,7 +373,7 @@ export default function NMKRPayLightbox({ walletAddress, onClose }: NMKRPayLight
 
                 <div className="mb-6 p-5 bg-gradient-to-br from-amber-900/20 to-black/40 border border-amber-500/40 rounded-md backdrop-blur-sm">
                   <h3 className="text-4xl mb-4" style={{ fontFamily: 'Cinzel, serif', color: '#fde68a', letterSpacing: '0.05em', fontWeight: 700 }}>
-                    {activeReservation.nft.name}
+                    {activeReservation.nft?.name || "NFT"}
                   </h3>
                   <p style={{ fontFamily: 'Lora, serif', color: '#d4af37', fontSize: '1rem', lineHeight: '1.7', fontStyle: 'italic' }}>
                     You are currently reserving edition number {activeReservation.nftNumber}. This will last for 10 minutes, and then that edition will be released.
