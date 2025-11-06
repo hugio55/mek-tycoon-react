@@ -83,9 +83,9 @@ export default function PowerSwitchToggle({
             x2="75"
             y2="58"
             className={`
-              transition-opacity
+              transition-opacity duration-200
               ${checked
-                ? 'opacity-0 duration-300 delay-1000'
+                ? 'opacity-0'
                 : 'opacity-20'
               }
             `}
