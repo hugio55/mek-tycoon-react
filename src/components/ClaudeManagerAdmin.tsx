@@ -10,6 +10,7 @@ interface ClaudeFile {
   description?: string;
   content: string;
   frontmatter?: Record<string, any>;
+  lastModified?: number;
 }
 
 interface ClaudeFilesResponse {
@@ -180,7 +181,26 @@ export default function ClaudeManagerAdmin() {
   const filteredFiles = data?.files.filter(file => {
     if (filterType !== 'all' && file.type !== filterType) return false;
     if (filterLocation !== 'all' && file.location !== filterLocation) return false;
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const nameMatch = file.name.toLowerCase().includes(query);
+      const descMatch = file.description?.toLowerCase().includes(query);
+      if (!nameMatch && !descMatch) return false;
+    }
+
     return true;
+  }).sort((a, b) => {
+    // Apply sorting
+    if (sortOrder === 'newest') {
+      return (b.lastModified || 0) - (a.lastModified || 0);
+    } else if (sortOrder === 'oldest') {
+      return (a.lastModified || 0) - (b.lastModified || 0);
+    } else {
+      // Sort by name
+      return a.name.localeCompare(b.name);
+    }
   }) || [];
 
   const getTypeIcon = (type: string) => {
@@ -421,6 +441,32 @@ export default function ClaudeManagerAdmin() {
                     <p className="text-sm text-gray-400">Specialist knowledge bases and pattern guides</p>
                   </div>
                 </div>
+
+                {/* Search and Sort Controls */}
+                <div className="flex gap-3 mb-4">
+                  {/* Search Bar */}
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="🔍 Search documents..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-500 focus:border-green-400 focus:outline-none transition-colors"
+                    />
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest' | 'name')}
+                    className="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-green-400 focus:outline-none transition-colors cursor-pointer"
+                  >
+                    <option value="newest">📅 Newest First</option>
+                    <option value="oldest">📅 Oldest First</option>
+                    <option value="name">🔤 Name (A-Z)</option>
+                  </select>
+                </div>
+
                 <div className="space-y-3">
                   {filteredFiles.filter(f => f.type === 'document').map((file) => (
                     <FileCard key={file.path} file={file} />
