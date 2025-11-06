@@ -17,6 +17,7 @@ interface ClaudeFile {
   description?: string;
   content: string;
   frontmatter?: Record<string, any>;
+  lastModified?: number;
 }
 
 async function scanDirectory(dir: string, location: 'project' | 'parent' | 'computer', rootLevelOnly: boolean = false): Promise<ClaudeFile[]> {
@@ -96,7 +97,8 @@ async function scanDirectory(dir: string, location: 'project' | 'parent' | 'comp
                 location,
                 description,
                 content,
-                frontmatter
+                frontmatter,
+                lastModified: stats.mtimeMs
               });
             }
           } catch (entryError) {
