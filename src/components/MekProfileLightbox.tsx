@@ -5121,7 +5121,7 @@ export default function MekProfileLightbox({
                     className="w-full max-w-sm text-base py-4 px-8"
                     onClick={() => console.log('Details clicked')}
                   >
-                    DETAILS
+                    DEEP SCAN
                   </AnimatedBorderButton>
                 </div>
 
@@ -5189,7 +5189,7 @@ export default function MekProfileLightbox({
                         className="w-full text-sm py-3 px-6"
                         onClick={() => console.log('Details clicked')}
                       >
-                        DETAILS
+                        DEEP SCAN
                       </AnimatedBorderButton>
                     </div>
 
