@@ -3540,68 +3540,7 @@ export default function MekProfileLightbox({
 
                     {/* DESKTOP: 10-Bar Level Indicator */}
                     <div className="w-full">
-                      <div className="flex items-center justify-between gap-2 sm:gap-3">
-                        {/* Left Label: TENURE */}
-                        <div className="flex flex-col items-center gap-0.5 shrink-0">
-                          <div className="mek-label-uppercase text-[9px]">TENURE</div>
-                          <div className="text-white text-sm font-bold">10/h</div>
-                        </div>
-
-                        {/* Middle: 10 Bars */}
-                        <div className="flex gap-1 sm:gap-1.5 flex-1">
-                          {Array.from({ length: 10 }, (_, i) => {
-                            const barLevel = i + 1;
-                            const currentLevel = 8;
-                            const displayLevel = currentLevel <= 10 ? currentLevel : 10;
-                            const isActive = barLevel <= displayLevel;
-                            const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
-
-                            return (
-                              <div key={barLevel} className="flex-1">
-                                {/* Bar with fixed height */}
-                                <div
-                                  className="h-10 sm:h-8 transition-all duration-500 rounded-sm relative overflow-hidden"
-                                  style={{
-                                    backgroundColor: isActive ? levelColor : '#1a1a1a',
-                                    backgroundImage: isActive
-                                      ? 'none'
-                                      : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
-                                    border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
-                                    boxShadow: isActive
-                                      ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
-                                      : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
-                                    opacity: isActive ? 1 : 0.5,
-                                  }}
-                                >
-                                  {isActive && (
-                                    <>
-                                      <div
-                                        className="absolute bottom-0 left-0 right-0 transition-all duration-500"
-                                        style={{
-                                          height: '100%',
-                                          background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
-                                        }}
-                                      />
-                                      <div
-                                        className="absolute top-0 left-0 right-0 h-1/4"
-                                        style={{
-                                          background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
-                                        }}
-                                      />
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Right Label: LEVEL */}
-                        <div className="flex flex-col items-center gap-0.5 shrink-0">
-                          <div className="mek-label-uppercase text-[9px]">LEVEL</div>
-                          <div className="text-white text-sm font-bold">5</div>
-                        </div>
-                      </div>
+                      {renderTenureLevelDisplay()}
                     </div>
                   </div>
 
