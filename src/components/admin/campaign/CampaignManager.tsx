@@ -490,7 +490,7 @@ export default function CampaignManager({
                 value={nmkrProjectId}
                 onChange={(e) => setNmkrProjectId(e.target.value)}
                 className="w-full bg-black/50 border border-gray-700 rounded p-2 font-mono text-sm"
-                placeholder="c68dc0e9b2ca4e0eb9c4a57ef85a794d"
+                placeholder="c68dc0e9-b2ca-4e0e-b9c4-a57ef85a794d"
                 disabled={isSubmitting}
               />
             </div>
