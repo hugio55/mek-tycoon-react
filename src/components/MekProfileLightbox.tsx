@@ -3284,19 +3284,21 @@ export default function MekProfileLightbox({
 
                 {/* MOBILE: 10-Bar Level Indicator */}
                 <div className="lg:hidden">
-                  <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
-                    {Array.from({ length: 10 }, (_, i) => {
-                      const barLevel = i + 1;
-                      const currentLevel = 8;
-                      const displayLevel = currentLevel <= 10 ? currentLevel : 10;
-                      const isActive = barLevel <= displayLevel;
-                      const isCurrent = barLevel === displayLevel;
-                      const levelColor = levelColors[barLevel - 1] || '#FFFFFF';
+                  <div className="flex flex-col gap-2">
+                    {/* Bars container with fixed height */}
+                    <div className="flex gap-1 sm:gap-1.5 h-10 sm:h-8">
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const barLevel = i + 1;
+                        const currentLevel = 8;
+                        const displayLevel = currentLevel <= 10 ? currentLevel : 10;
+                        const isActive = barLevel <= displayLevel;
+                        const isCurrent = barLevel === displayLevel;
+                        const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
-                      return (
-                        <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
+                        return (
                           <div
-                            className="w-full flex-1 transition-all duration-500 rounded-sm relative overflow-hidden"
+                            key={barLevel}
+                            className="w-full h-full transition-all duration-500 rounded-sm relative overflow-hidden"
                             style={{
                               backgroundColor: isActive ? levelColor : '#1a1a1a',
                               backgroundImage: isActive
@@ -3327,17 +3329,18 @@ export default function MekProfileLightbox({
                               </>
                             )}
                           </div>
-                          {isCurrent && (
-                            <div
-                              className="text-[9px] font-bold uppercase tracking-wider"
-                              style={{ color: levelColor, fontFamily: 'Inter, sans-serif' }}
-                            >
-                              LVL{currentLevel}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                    {/* Label positioned below bars */}
+                    <div className="flex justify-center">
+                      <div
+                        className="text-[9px] font-bold uppercase tracking-wider"
+                        style={{ color: levelColors[7] || '#FFFFFF', fontFamily: 'Inter, sans-serif' }}
+                      >
+                        LVL8
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3441,7 +3444,7 @@ export default function MekProfileLightbox({
                           const displayLevel = currentLevel <= 10 ? currentLevel : 10;
                           const isActive = barLevel <= displayLevel;
                           const isCurrent = barLevel === displayLevel;
-                          const levelColor = levelColors[barLevel - 1] || '#FFFFFF';
+                          const levelColor = levelColors[currentLevel - 1] || '#FFFFFF';
 
                           return (
                             <div key={barLevel} className="flex-1 flex flex-col items-center gap-1">
@@ -3527,18 +3530,24 @@ export default function MekProfileLightbox({
                     imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    variationTextStyle={variationTextStyle}
+                    useYellowGlow={useYellowGlow}
                   />
                   <VariationCard
                     title="BODY VARIATION"
                     imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    variationTextStyle={variationTextStyle}
+                    useYellowGlow={useYellowGlow}
                   />
                   <VariationCard
                     title="TRAIT VARIATION"
                     imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
                     glowSize={variationGlowSize}
                     glowIntensity={variationGlowIntensity}
+                    variationTextStyle={variationTextStyle}
+                    useYellowGlow={useYellowGlow}
                   />
                 </div>
 
@@ -3569,13 +3578,191 @@ function VariationCard({
   title,
   imagePath,
   glowSize = 25,
-  glowIntensity = 0.6
+  glowIntensity = 0.6,
+  variationTextStyle = 'hero-focus',
+  useYellowGlow = true
 }: {
   title: string;
   imagePath?: string;
   glowSize?: number;
   glowIntensity?: number;
+  variationTextStyle?: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge';
+  useYellowGlow?: boolean;
 }) {
+  // Mock data (replace with real data later)
+  const name = 'Variation Name';
+  const count = 3;
+  const total = 4000;
+  const base = 100;
+  const bonus = 25;
+  const totalValue = base + bonus;
+
+  // NEON EDGE color variables
+  const accentColor = useYellowGlow ? 'text-yellow-400' : 'text-cyan-400';
+  const textShadowColor = useYellowGlow
+    ? '0 0 20px rgba(250, 182, 23, 1), 0 0 40px rgba(250, 182, 23, 0.5)'
+    : '0 0 20px rgba(0, 212, 255, 1), 0 0 40px rgba(0, 212, 255, 0.5)';
+
+  // Render text based on selected style
+  const renderTextVariation = () => {
+    switch (variationTextStyle) {
+      case 'hero-focus':
+        // Style 1: Large glowing name, minimal supporting info
+        return (
+          <div className="text-center w-full">
+            {/* Hero name with massive glow */}
+            <div
+              className={`${accentColor} text-4xl leading-none mb-2`}
+              style={{
+                fontFamily: 'Saira Condensed',
+                fontWeight: 200,
+                textShadow: textShadowColor,
+                letterSpacing: '0.1em'
+              }}
+            >
+              {name}
+            </div>
+            {/* Minimal category label */}
+            <div
+              className="text-[9px] text-white/40 uppercase mb-3"
+              style={{ fontFamily: 'Inter', fontWeight: 400, letterSpacing: '0.2em' }}
+            >
+              {title}
+            </div>
+            {/* Count and total inline */}
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <span className="text-white/60" style={{ fontFamily: 'Inter' }}>{count} of {total}</span>
+              <span className="text-white/40">•</span>
+              <span className={`${accentColor} font-bold`} style={{ fontFamily: 'Saira Condensed' }}>
+                {totalValue}
+              </span>
+            </div>
+          </div>
+        );
+
+      case 'tech-readout':
+        // Style 2: Clean terminal/data display
+        return (
+          <div className="w-full font-mono text-left space-y-1" style={{ fontFamily: 'JetBrains Mono' }}>
+            <div className="text-[10px] text-white/40 uppercase tracking-wider">{title}</div>
+            <div className={`text-xl ${accentColor} font-bold mb-2`} style={{ letterSpacing: '0.05em' }}>
+              {name}
+            </div>
+            <div className="text-xs text-white/60 space-y-0.5">
+              <div className="flex justify-between">
+                <span>OWNED:</span>
+                <span className="text-white">{count}/{total}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>BASE:</span>
+                <span className="text-white">{base}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>BONUS:</span>
+                <span className="text-green-400">+{bonus}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/20 pt-0.5 mt-0.5">
+                <span>TOTAL:</span>
+                <span className={accentColor}>{totalValue}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'minimal-labels':
+        // Style 3: Ultra-compact with tiny labels
+        return (
+          <div className="text-center w-full space-y-2">
+            <div className="text-lg text-white font-semibold" style={{ fontFamily: 'Inter' }}>
+              {name}
+            </div>
+            <div
+              className="text-[8px] text-white/40 uppercase tracking-widest"
+              style={{ fontFamily: 'Inter', letterSpacing: '0.3em' }}
+            >
+              {title}
+            </div>
+            <div className="text-[10px] text-white/60">{count} of {total}</div>
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-white/40">{base}</span>
+              <span className="text-green-400 text-xs">+{bonus}</span>
+              <span className={`${accentColor} text-lg font-bold`} style={{ textShadow: textShadowColor }}>
+                {totalValue}
+              </span>
+            </div>
+          </div>
+        );
+
+      case 'data-grid':
+        // Style 4: Structured grid with all data
+        return (
+          <div className="w-full">
+            <div className="text-center mb-3">
+              <div className="text-[9px] text-white/40 uppercase tracking-widest mb-1" style={{ letterSpacing: '0.3em' }}>
+                {title}
+              </div>
+              <div className="text-xl text-white font-bold" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                {name}
+              </div>
+              <div className="text-xs text-white/60 mt-1">{count} of {total}</div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div>
+                <div className="text-[9px] text-white/40 uppercase mb-1">Base</div>
+                <div className="text-white font-bold">{base}</div>
+              </div>
+              <div>
+                <div className="text-[9px] text-white/40 uppercase mb-1">Bonus</div>
+                <div className="text-green-400 font-bold">+{bonus}</div>
+              </div>
+              <div>
+                <div className="text-[9px] text-white/40 uppercase mb-1">Total</div>
+                <div className={`${accentColor} font-bold text-base`}>{totalValue}</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'compact-badge':
+        // Style 5: Horizontal inline badges
+        return (
+          <div className="w-full space-y-2">
+            <div className="text-center">
+              <div className="text-lg text-white font-semibold mb-1" style={{ fontFamily: 'Saira Condensed' }}>
+                {name}
+              </div>
+              <div className="text-[9px] text-white/40 uppercase tracking-wider">
+                {title}
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-black/40 border border-white/20 rounded-sm text-[10px]">
+                <span className="text-white/40">COUNT</span>
+                <span className="text-white">{count}/{total}</span>
+              </div>
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-black/40 border border-white/20 rounded-sm text-[10px]">
+                <span className="text-white/40">BASE</span>
+                <span className="text-white">{base}</span>
+              </div>
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-black/40 border border-green-400/30 rounded-sm text-[10px]">
+                <span className="text-green-400/60">BONUS</span>
+                <span className="text-green-400">+{bonus}</span>
+              </div>
+              <div
+                className={`inline-flex items-center gap-1 px-2 py-1 bg-black/60 border-2 ${useYellowGlow ? 'border-yellow-400/50' : 'border-cyan-400/50'} rounded-sm text-xs`}
+              >
+                <span className="text-white/60">TOTAL</span>
+                <span className={`${accentColor} font-bold`}>{totalValue}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col items-center relative">
       {/* Image floating directly on lightbox background with yellow glow behind */}
@@ -3602,26 +3789,8 @@ function VariationCard({
         )}
       </div>
 
-      {/* All text content sitting directly on lightbox surface - no card background */}
-      <div className="mek-label-uppercase mb-1 text-[10px] text-center text-yellow-400">{title}</div>
-      <div className="text-white text-sm mb-1 text-center">Variation Name</div>
-      <div className="text-gray-400 text-xs mb-3 text-center">3 of 4000</div>
-
-      {/* Stats section - minimal styling, floating on lightbox */}
-      <div className="space-y-1 text-xs w-full max-w-[200px]">
-        <div className="flex justify-between">
-          <span className="text-gray-400">Base:</span>
-          <span className="text-white">100</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Bonus:</span>
-          <span className="text-green-400">+25</span>
-        </div>
-        <div className="flex justify-between border-t border-yellow-500/20 pt-1 mt-1">
-          <span className="text-gray-400">Total:</span>
-          <span className="text-yellow-400 font-bold">125</span>
-        </div>
-      </div>
+      {/* Text content with NEON EDGE style variations */}
+      {renderTextVariation()}
     </div>
   );
 }
