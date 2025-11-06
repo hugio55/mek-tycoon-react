@@ -2849,12 +2849,21 @@ export default function MekProfileLightbox({
     // Layout: Horizontal side-by-side, total rate left, current corp right
     if (combinedGoldCardStyle === 'clean-horizontal') {
       return (
-        <div className="relative p-3 bg-black/40 backdrop-blur-sm overflow-hidden">
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
           {/* Glowing border effect */}
           <div
-            className={`absolute inset-0 border ${borderColor} pointer-events-none`}
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
             style={{
-              boxShadow: `0 0 20px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${gradientColor} 0%, transparent 100%)`
             }}
           />
 
@@ -2864,14 +2873,17 @@ export default function MekProfileLightbox({
               {/* LEFT: Income Rate */}
               <div className="text-center">
                 <div
-                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
+                  className="text-[10px] text-white/40 uppercase tracking-[0.3em] mb-1"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
                 >
                   INCOME RATE
                 </div>
                 <div
-                  className={`${accentColor} text-3xl font-mono font-black leading-none`}
+                  className={`${accentColor} text-4xl leading-none`}
                   style={{
-                    textShadow: `0 0 15px ${textShadowPrimary}`
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
                   }}
                 >
                   {formatGoldRate(goldGenData.total)}
@@ -2879,23 +2891,27 @@ export default function MekProfileLightbox({
               </div>
 
               {/* Vertical divider */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 opacity-30">
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2">
                 <div
-                  className={`absolute inset-0 ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`}
+                  className={`absolute inset-0 bg-gradient-to-b from-transparent ${viaColor} to-transparent`}
+                  style={{ filter: 'blur(1px)' }}
                 />
               </div>
 
               {/* RIGHT: Cumulative */}
               <div className="text-center">
                 <div
-                  className={`text-[10px] ${accentColorDim} uppercase tracking-widest font-mono mb-1`}
+                  className="text-[10px] text-white/40 uppercase tracking-[0.3em] mb-1"
+                  style={{ fontFamily: 'Inter', fontWeight: 400 }}
                 >
                   CUMULATIVE
                 </div>
                 <div
-                  className={`${accentColor} text-3xl font-mono font-black leading-none`}
+                  className={`${accentColor} text-4xl leading-none`}
                   style={{
-                    textShadow: `0 0 15px ${textShadowPrimary}`
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`
                   }}
                 >
                   {formatGold(currentOwnerGold)}
@@ -3620,6 +3636,7 @@ function VariationCard({
 
       case 'minimal-labels':
         // Style 3: Ultra-compact with tiny labels
+        const percentage = ((count / total) * 100).toFixed(3);
         return (
           <div className="text-center w-full space-y-2">
             <div className="text-lg text-white font-semibold" style={{ fontFamily: 'Inter' }}>
@@ -3631,13 +3648,28 @@ function VariationCard({
             >
               {title}
             </div>
-            <div className="text-[10px] text-white/60">{count} of {total}</div>
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <span className="text-white/40">{base}</span>
-              <span className="text-green-400 text-xs">+{bonus}</span>
-              <span className={`${accentColor} text-lg font-bold`} style={{ textShadow: textShadowColor }}>
-                {totalValue}
-              </span>
+            <div className="text-sm text-white/80" style={{ fontFamily: 'Saira Condensed' }}>
+              {percentage}%
+            </div>
+            <div className="text-[10px] text-white/60">Total Copies: {count}</div>
+            <div className="flex flex-col items-center justify-center gap-1 mt-3">
+              <div
+                className={`${accentColor} text-4xl font-bold`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: textShadowColor,
+                  letterSpacing: '0.05em'
+                }}
+              >
+                0.1
+              </div>
+              <div
+                className="text-[9px] text-white/50 uppercase tracking-widest"
+                style={{ fontFamily: 'Inter', letterSpacing: '0.2em' }}
+              >
+                Essence per day
+              </div>
             </div>
           </div>
         );
