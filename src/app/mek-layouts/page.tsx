@@ -388,6 +388,9 @@ export default function MekLayoutsPage() {
                 <option value="inline-metrics">Inline Metrics</option>
                 <option value="dense-grid">Dense Grid</option>
                 <option value="stat-bar">Stat Bar</option>
+                <option value="compact-table-v2">Compact Table V2</option>
+                <option value="compact-table-v3">Compact Table V3</option>
+                <option value="compact-table-v4">Compact Table V4</option>
               </select>
             </div>
 
