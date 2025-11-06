@@ -31,6 +31,7 @@ import PreLoader from '@/components/loaders/PreLoader';
 import AnimatedBorderButton from '@/components/loaders/AnimatedBorderButton';
 import ProModeToggle from '@/components/controls/ProModeToggle';
 import PowerSwitch from '@/components/controls/PowerSwitch';
+import PowerSwitchToggle from '@/components/controls/PowerSwitchToggle';
 import NebulaCheckbox from '@/components/controls/NebulaCheckbox';
 import PowerButtonSwitch from '@/components/controls/PowerButtonSwitch';
 import ColorToggleSwitch from '@/components/controls/ColorToggleSwitch';
@@ -208,6 +209,7 @@ export default function AdminMasterDataPage() {
 
   // Component demo states
   const [mechanicalToggleChecked, setMechanicalToggleChecked] = useState(false);
+  const [powerSwitchToggleChecked, setPowerSwitchToggleChecked] = useState(false);
   const [radialSwitchIndex, setRadialSwitchIndex] = useState(0);
 
   // Query saved slot configurations
@@ -3541,6 +3543,47 @@ export default function AdminMasterDataPage() {
                       <div><span className="text-zinc-500">Source:</span> External HTML/CSS (SCSS)</div>
                       <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/CSS Module</div>
                       <div><span className="text-zinc-500">Features:</span> Red knob rotation, metallic handle, gray→green base, gold accents</div>
+                    </div>
+                  </div>
+
+                  {/* Power Switch Toggle */}
+                  <div className="mek-card-industrial mek-border-sharp-gold rounded-lg p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-700/50 pb-3">
+                      <h3 className="font-orbitron text-lg font-bold text-yellow-400 uppercase tracking-wider">
+                        Power Switch Toggle
+                      </h3>
+                      <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                        Control
+                      </span>
+                    </div>
+
+                    {/* Component Preview - showing both OFF and ON states */}
+                    <div className="bg-black/60 rounded-lg p-8 space-y-8">
+                      {/* OFF state (static, unchecked) */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider">OFF State (Gray)</div>
+                        <PowerSwitchToggle checked={false} />
+                      </div>
+
+                      {/* ON state (interactive) */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider">Interactive Toggle</div>
+                        <PowerSwitchToggle
+                          checked={powerSwitchToggleChecked}
+                          onChange={setPowerSwitchToggleChecked}
+                        />
+                        <div className="text-xs text-yellow-400">
+                          Status: {powerSwitchToggleChecked ? 'ON (Glowing)' : 'OFF (Gray)'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Component Info */}
+                    <div className="text-xs text-zinc-400 space-y-1">
+                      <div><span className="text-zinc-500">Source:</span> External HTML/CSS/SVG</div>
+                      <div><span className="text-zinc-500">Transformed:</span> React/TypeScript/Tailwind v3</div>
+                      <div><span className="text-zinc-500">Features:</span> Click animation, line bounce, circle rotation (partial→full), radial glow when ON</div>
+                      <div><span className="text-zinc-500">Colors:</span> White → Gold (#fab617)</div>
                     </div>
                   </div>
 
