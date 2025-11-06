@@ -218,6 +218,7 @@ import type * as walletAuth from "../walletAuth.js";
 import type * as walletAuthentication from "../walletAuthentication.js";
 import type * as walletGroups from "../walletGroups.js";
 import type * as walletSession from "../walletSession.js";
+import type * as webhooks from "../webhooks.js";
 import type * as whitelists from "../whitelists.js";
 
 import type {
@@ -445,6 +446,7 @@ declare const fullApi: ApiFromModules<{
   walletAuthentication: typeof walletAuthentication;
   walletGroups: typeof walletGroups;
   walletSession: typeof walletSession;
+  webhooks: typeof webhooks;
   whitelists: typeof whitelists;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

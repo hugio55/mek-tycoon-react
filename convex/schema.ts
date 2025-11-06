@@ -3476,6 +3476,20 @@ export default defineSchema({
     .index("by_campaign_and_wallet", ["campaignId", "reservedBy"])
     .index("by_wallet_and_status", ["reservedBy", "status"]),
 
+  // Webhook Processing Tracking - Prevents duplicate webhook processing
+  // Records all processed webhooks to ensure idempotency
+  processedWebhooks: defineTable({
+    transactionHash: v.string(), // Blockchain transaction hash (unique per webhook)
+    stakeAddress: v.string(), // Buyer's stake address
+    nftUid: v.string(), // NFT UID from NMKR
+    reservationId: v.optional(v.id("commemorativeNFTReservations")), // Link to reservation if exists
+    processedAt: v.number(), // When webhook was processed
+    eventType: v.optional(v.string()), // transactionconfirmed, transactionfinished, etc.
+  })
+    .index("by_tx_hash", ["transactionHash"])
+    .index("by_stake_address", ["stakeAddress"])
+    .index("by_processed_at", ["processedAt"]),
+
   // ===== SIMPLE NFT ELIGIBILITY SYSTEM (NMKR) =====
   // Replaces the complex custom minting system above
   // Just stores which snapshot controls who sees the "Claim NFT" button
