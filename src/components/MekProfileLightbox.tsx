@@ -1686,11 +1686,11 @@ function VariationCard({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  opacity: noiseIntensity * 0.3,
+                  opacity: noiseIntensity * 2.0,
                   mixBlendMode: 'overlay',
                   backgroundImage: `
-                    repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px),
-                    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px)
+                    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px),
+                    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)
                   `
                 }}
               />
@@ -1699,12 +1699,12 @@ function VariationCard({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  opacity: noiseIntensity * 0.4,
+                  opacity: noiseIntensity * 2.5,
                   mixBlendMode: 'multiply',
                   background: `
-                    radial-gradient(circle at 30% 40%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)
+                    radial-gradient(circle at 30% 40%, rgba(0,0,0,0.25) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.25) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 80%, rgba(0,0,0,0.3) 0%, transparent 40%)
                   `
                 }}
               />
@@ -1713,7 +1713,7 @@ function VariationCard({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  opacity: noiseIntensity * 1.5,
+                  opacity: noiseIntensity * 4.0,
                   mixBlendMode: 'overlay',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 -0.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E")`,
                   backgroundSize: '200px 200px'
@@ -1724,11 +1724,11 @@ function VariationCard({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  opacity: noiseIntensity * 0.2,
+                  opacity: noiseIntensity * 1.5,
                   mixBlendMode: 'screen',
                   background: `
-                    radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.05) 0%, transparent 60%),
-                    radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.03) 0%, transparent 50%)
+                    radial-gradient(ellipse at 40% 30%, rgba(250, 182, 23, 0.15) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 70%, rgba(250, 182, 23, 0.1) 0%, transparent 50%)
                   `
                 }}
               />
