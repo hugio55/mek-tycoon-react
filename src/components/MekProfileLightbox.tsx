@@ -3542,6 +3542,7 @@ export default function MekProfileLightbox({
                     glowIntensity={variationGlowIntensity}
                     variationTextStyle={variationTextStyle}
                     useYellowGlow={useYellowGlow}
+                    statsLayoutStyle={statsLayoutStyle}
                   />
                   <VariationCard
                     title="BODY VARIATION"
@@ -3550,6 +3551,7 @@ export default function MekProfileLightbox({
                     glowIntensity={variationGlowIntensity}
                     variationTextStyle={variationTextStyle}
                     useYellowGlow={useYellowGlow}
+                    statsLayoutStyle={statsLayoutStyle}
                   />
                   <VariationCard
                     title="TRAIT VARIATION"
@@ -3558,6 +3560,7 @@ export default function MekProfileLightbox({
                     glowIntensity={variationGlowIntensity}
                     variationTextStyle={variationTextStyle}
                     useYellowGlow={useYellowGlow}
+                    statsLayoutStyle={statsLayoutStyle}
                   />
                 </div>
 
@@ -3590,7 +3593,8 @@ function VariationCard({
   glowSize = 25,
   glowIntensity = 0.6,
   variationTextStyle = 'hero-focus',
-  useYellowGlow = true
+  useYellowGlow = true,
+  statsLayoutStyle = 'inline-dot'
 }: {
   title: string;
   imagePath?: string;
@@ -3598,6 +3602,7 @@ function VariationCard({
   glowIntensity?: number;
   variationTextStyle?: 'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge';
   useYellowGlow?: boolean;
+  statsLayoutStyle?: 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
 }) {
   // Mock data (replace with real data later)
   const name = 'Variation Name';
