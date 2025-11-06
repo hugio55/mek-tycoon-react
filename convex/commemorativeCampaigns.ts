@@ -810,3 +810,241 @@ export const diagnoseNFTByUid = query({
     };
   },
 });
+
+// ============================================================================
+// DUPLICATE DETECTION AND CLEANUP
+// ============================================================================
+
+/**
+ * Analyze inventory for duplicate NFT records
+ *
+ * Returns detailed comparison of all NFTs grouped by name to identify duplicates.
+ * Use this before running cleanup to understand what duplicates exist.
+ */
+export const analyzeDuplicateNFTs = query({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔍ANALYZE] Analyzing duplicates for campaign:', args.campaignId);
+
+    const allRecords = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    console.log('[🔍ANALYZE] Total records found:', allRecords.length);
+
+    // Group by nftUid to find duplicates
+    const groupedByUid: Record<string, typeof allRecords> = {};
+    for (const record of allRecords) {
+      if (!groupedByUid[record.nftUid]) {
+        groupedByUid[record.nftUid] = [];
+      }
+      groupedByUid[record.nftUid].push(record);
+    }
+
+    // Also group by name for analysis
+    const groupedByName: Record<string, typeof allRecords> = {};
+    for (const record of allRecords) {
+      if (!groupedByName[record.name]) {
+        groupedByName[record.name] = [];
+      }
+      groupedByName[record.name].push(record);
+    }
+
+    // Find duplicates
+    const duplicatesByUid = Object.entries(groupedByUid)
+      .filter(([_, records]) => records.length > 1)
+      .map(([uid, records]) => ({
+        nftUid: uid,
+        count: records.length,
+        records: records.map(r => ({
+          _id: r._id,
+          name: r.name,
+          nftNumber: r.nftNumber,
+          status: r.status,
+          hasImage: !!r.imageUrl,
+          _creationTime: r._creationTime,
+          createdAt: r.createdAt,
+        }))
+      }));
+
+    const duplicatesByName = Object.entries(groupedByName)
+      .filter(([_, records]) => records.length > 1)
+      .map(([name, records]) => ({
+        name: name,
+        count: records.length,
+        records: records.map(r => ({
+          _id: r._id,
+          nftUid: r.nftUid,
+          nftNumber: r.nftNumber,
+          status: r.status,
+          hasImage: !!r.imageUrl,
+          _creationTime: r._creationTime,
+          createdAt: r.createdAt,
+        }))
+      }));
+
+    // Detailed breakdown of all records
+    const allRecordsDetails = allRecords.map(r => ({
+      _id: r._id,
+      name: r.name,
+      nftUid: r.nftUid,
+      nftNumber: r.nftNumber,
+      status: r.status,
+      hasImage: !!r.imageUrl,
+      imageUrl: r.imageUrl?.substring(0, 50) + '...' || null,
+      _creationTime: r._creationTime,
+      createdAt: r.createdAt,
+      projectId: r.projectId,
+    }));
+
+    console.log('[🔍ANALYZE] Duplicates by UID:', duplicatesByUid.length);
+    console.log('[🔍ANALYZE] Duplicates by name:', duplicatesByName.length);
+
+    return {
+      totalRecords: allRecords.length,
+      duplicatesByUid,
+      duplicatesByName,
+      allRecordsDetails,
+      summary: {
+        hasDuplicates: duplicatesByUid.length > 0 || duplicatesByName.length > 0,
+        duplicateUidCount: duplicatesByUid.length,
+        duplicateNameCount: duplicatesByName.length,
+      }
+    };
+  },
+});
+
+/**
+ * Clean up duplicate NFT records
+ *
+ * Strategy:
+ * 1. For records with same nftUid, keep the "best" one based on priority:
+ *    - Has imageUrl (populated from NMKR) = highest priority
+ *    - Has "sold" status = second priority
+ *    - Newest record (_creationTime) = third priority
+ * 2. Delete all other duplicates
+ * 3. Return summary of what was deleted
+ *
+ * IMPORTANT: This mutation is DESTRUCTIVE. Run analyzeDuplicateNFTs first!
+ */
+export const cleanupDuplicateNFTs = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    dryRun: v.optional(v.boolean()), // If true, don't actually delete (just report what would be deleted)
+  },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun ?? false;
+
+    console.log('[🧹CLEANUP] Starting cleanup for campaign:', args.campaignId);
+    console.log('[🧹CLEANUP] Dry run mode:', dryRun);
+
+    const allRecords = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    console.log('[🧹CLEANUP] Total records found:', allRecords.length);
+
+    // Group by nftUid
+    const groupedByUid: Record<string, typeof allRecords> = {};
+    for (const record of allRecords) {
+      if (!groupedByUid[record.nftUid]) {
+        groupedByUid[record.nftUid] = [];
+      }
+      groupedByUid[record.nftUid].push(record);
+    }
+
+    let totalDeleted = 0;
+    const deletionLog: Array<{
+      nftUid: string;
+      name: string;
+      keptRecordId: string;
+      deletedRecordIds: string[];
+      reason: string;
+    }> = [];
+
+    // Process each group
+    for (const [nftUid, records] of Object.entries(groupedByUid)) {
+      if (records.length <= 1) {
+        // No duplicates, skip
+        continue;
+      }
+
+      console.log('[🧹CLEANUP] Found', records.length, 'records for UID:', nftUid);
+
+      // Sort records by priority:
+      // 1. Has imageUrl (1 = yes, 0 = no)
+      // 2. Status is "sold" (1 = yes, 0 = no)
+      // 3. Newest _creationTime (higher = newer)
+      const sorted = records.sort((a, b) => {
+        const aScore = (a.imageUrl ? 100 : 0) + (a.status === "sold" ? 10 : 0);
+        const bScore = (b.imageUrl ? 100 : 0) + (b.status === "sold" ? 10 : 0);
+
+        if (aScore !== bScore) return bScore - aScore; // Higher score first
+        return b._creationTime - a._creationTime; // Newer first
+      });
+
+      const keepRecord = sorted[0];
+      const deleteRecords = sorted.slice(1);
+
+      console.log('[🧹CLEANUP] Keeping record:', keepRecord._id, keepRecord.name, {
+        hasImage: !!keepRecord.imageUrl,
+        status: keepRecord.status,
+      });
+
+      const deletedIds: string[] = [];
+      for (const record of deleteRecords) {
+        console.log('[🧹CLEANUP] Deleting record:', record._id, record.name, {
+          hasImage: !!record.imageUrl,
+          status: record.status,
+        });
+
+        if (!dryRun) {
+          await ctx.db.delete(record._id);
+        }
+
+        deletedIds.push(record._id);
+        totalDeleted++;
+      }
+
+      deletionLog.push({
+        nftUid,
+        name: keepRecord.name,
+        keptRecordId: keepRecord._id,
+        deletedRecordIds: deletedIds,
+        reason: `Kept: ${keepRecord.imageUrl ? 'has image' : 'no image'}, status=${keepRecord.status}`,
+      });
+    }
+
+    // Update campaign counters after cleanup (only if not dry run)
+    if (!dryRun && totalDeleted > 0) {
+      const remainingInventory = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+        .collect();
+
+      await ctx.db.patch(args.campaignId, {
+        totalNFTs: remainingInventory.length,
+        availableNFTs: remainingInventory.filter((i) => i.status === "available").length,
+        reservedNFTs: remainingInventory.filter((i) => i.status === "reserved").length,
+        soldNFTs: remainingInventory.filter((i) => i.status === "sold").length,
+        updatedAt: Date.now(),
+      });
+    }
+
+    console.log('[🧹CLEANUP] Cleanup complete. Deleted:', totalDeleted, 'records');
+
+    return {
+      success: true,
+      dryRun,
+      totalDeleted,
+      deletionLog,
+      message: dryRun
+        ? `Dry run: Would delete ${totalDeleted} duplicate records`
+        : `Deleted ${totalDeleted} duplicate records successfully`,
+    };
+  },
+});
