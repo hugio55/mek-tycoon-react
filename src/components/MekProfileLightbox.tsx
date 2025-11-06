@@ -439,6 +439,386 @@ export default function MekProfileLightbox({
       );
     }
 
+    // Style 4: Holographic Overlay - Translucent panels with scan lines
+    if (designationCardStyle === 'holographic-overlay') {
+      return (
+        <div className="relative p-6 bg-black/30 backdrop-blur-md border border-white/10 overflow-hidden">
+          {/* Animated scanline effect */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px)`,
+              animation: 'scanline 6s linear infinite'
+            }}
+          />
+
+          {/* Holographic shimmer */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              background: `linear-gradient(45deg, transparent 30%, ${useYellowGlow ? 'rgba(250, 182, 23, 0.1)' : 'rgba(0, 212, 255, 0.1)'} 50%, transparent 70%)`,
+              animation: 'shimmer 3s ease-in-out infinite'
+            }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 space-y-4">
+            {/* Top row: Mekanism and Rank */}
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  MEKANISM
+                </div>
+                <div className="text-white text-xl" style={{ fontFamily: 'Saira Condensed', fontWeight: 200 }}>
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  RANK
+                </div>
+                <div
+                  className={`${accentColor} text-3xl`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: textShadowGlow
+                  }}
+                >
+                  {mekData.rank}
+                </div>
+              </div>
+            </div>
+
+            {/* Divider line with glow */}
+            <div className={`h-px bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400/50' : 'via-cyan-400/50'} to-transparent`} />
+
+            {/* Corporation */}
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                CORPORATION
+              </div>
+              <div className="text-white text-sm" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                {mekData.corporation}
+              </div>
+            </div>
+
+            {/* Employee ID */}
+            <div>
+              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                EMPLOYEE ID
+              </div>
+              <div className="text-white text-base tracking-wide" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                {mekData.employeeId}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 5: Cyber Minimal - Ultra-clean, sharp corners
+    if (designationCardStyle === 'cyber-minimal') {
+      return (
+        <div className={`relative p-5 bg-black/60 border-2 ${borderColor}`}>
+          {/* Sharp corner accents */}
+          <div className={`absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 ${borderColor}`} />
+          <div className={`absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 ${borderColor}`} />
+          <div className={`absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 ${borderColor}`} />
+          <div className={`absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 ${borderColor}`} />
+
+          <div className="space-y-3">
+            {/* Rank - Hero element */}
+            <div className="text-center pb-3 border-b border-white/10">
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-[0.2em] mb-2`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                RANK
+              </div>
+              <div
+                className={`${accentColor} text-5xl`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: textShadowGlow,
+                  letterSpacing: '0.05em'
+                }}
+              >
+                {mekData.rank}
+              </div>
+            </div>
+
+            {/* Data grid */}
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div>
+                <div className="text-[9px] text-white/30 uppercase mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  MEKANISM
+                </div>
+                <div className="text-white text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+              <div>
+                <div className="text-[9px] text-white/30 uppercase mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  CORP
+                </div>
+                <div className="text-white text-xs" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  {mekData.corporation}
+                </div>
+              </div>
+            </div>
+
+            {/* Employee ID - full width */}
+            <div className="text-center pt-2 border-t border-white/10">
+              <div className="text-[9px] text-white/30 uppercase mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                ID
+              </div>
+              <div className="text-white text-base tracking-wider" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                {mekData.employeeId}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 6: Tech Frame - Industrial frame with corner bolts
+    if (designationCardStyle === 'tech-frame') {
+      return (
+        <div className="relative p-6 bg-gradient-to-br from-black/70 to-black/50 border border-gray-700/50">
+          {/* Corner bolt indicators */}
+          <div className={`absolute top-2 left-2 w-2 h-2 rounded-full ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ boxShadow: `0 0 8px ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}` }} />
+          <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ boxShadow: `0 0 8px ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}` }} />
+          <div className={`absolute bottom-2 left-2 w-2 h-2 rounded-full ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ boxShadow: `0 0 8px ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}` }} />
+          <div className={`absolute bottom-2 right-2 w-2 h-2 rounded-full ${useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ boxShadow: `0 0 8px ${useYellowGlow ? 'rgba(250, 182, 23, 0.6)' : 'rgba(0, 212, 255, 0.6)'}` }} />
+
+          {/* Metal frame bars */}
+          <div className={`absolute top-0 left-6 right-6 h-px ${useYellowGlow ? 'bg-yellow-400/30' : 'bg-cyan-400/30'}`} />
+          <div className={`absolute bottom-0 left-6 right-6 h-px ${useYellowGlow ? 'bg-yellow-400/30' : 'bg-cyan-400/30'}`} />
+          <div className={`absolute left-0 top-6 bottom-6 w-px ${useYellowGlow ? 'bg-yellow-400/30' : 'bg-cyan-400/30'}`} />
+          <div className={`absolute right-0 top-6 bottom-6 w-px ${useYellowGlow ? 'bg-yellow-400/30' : 'bg-cyan-400/30'}`} />
+
+          <div className="space-y-3">
+            {/* Rank bar - prominent */}
+            <div className={`flex items-center gap-3 p-3 bg-black/40 border-l-4 ${useYellowGlow ? 'border-yellow-400' : 'border-cyan-400'}`}>
+              <div className="flex-1">
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  RANK
+                </div>
+                <div
+                  className={`${accentColor} text-3xl`}
+                  style={{
+                    fontFamily: 'Saira Condensed',
+                    fontWeight: 200,
+                    textShadow: textShadowGlow
+                  }}
+                >
+                  {mekData.rank}
+                </div>
+              </div>
+            </div>
+
+            {/* Mekanism */}
+            <div className="flex items-center gap-3 p-3 bg-black/20">
+              <div className="flex-1">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  MEKANISM
+                </div>
+                <div className="text-white text-lg" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+            </div>
+
+            {/* Corporation */}
+            <div className="flex items-center gap-3 p-3 bg-black/20">
+              <div className="flex-1">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  CORPORATION
+                </div>
+                <div className="text-white text-sm" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  {mekData.corporation}
+                </div>
+              </div>
+            </div>
+
+            {/* Employee ID */}
+            <div className="flex items-center gap-3 p-3 bg-black/20">
+              <div className="flex-1">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  EMPLOYEE ID
+                </div>
+                <div className="text-white text-base tracking-wide" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  {mekData.employeeId}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 7: Neon Edge - Glowing borders with gradient overlays
+    if (designationCardStyle === 'neon-edge') {
+      return (
+        <div className="relative p-6 bg-black/40 backdrop-blur-sm overflow-hidden">
+          {/* Glowing border effect */}
+          <div
+            className={`absolute inset-0 border-2 ${borderColor} pointer-events-none`}
+            style={{
+              boxShadow: `0 0 30px ${glowRgba}, inset 0 0 30px ${glowRgbaInset}`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+
+          {/* Gradient overlay accent */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 opacity-20 pointer-events-none"
+            style={{
+              background: `linear-gradient(180deg, ${useYellowGlow ? 'rgba(250, 182, 23, 0.4)' : 'rgba(0, 212, 255, 0.4)'} 0%, transparent 100%)`
+            }}
+          />
+
+          <div className="relative z-10 space-y-4">
+            {/* Rank - Massive and glowing */}
+            <div className="text-center">
+              <div
+                className={`${accentColor} text-6xl leading-none mb-2`}
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: `0 0 20px ${useYellowGlow ? 'rgba(250, 182, 23, 1)' : 'rgba(0, 212, 255, 1)'}, 0 0 40px ${useYellowGlow ? 'rgba(250, 182, 23, 0.5)' : 'rgba(0, 212, 255, 0.5)'}`,
+                  letterSpacing: '0.1em'
+                }}
+              >
+                {mekData.rank}
+              </div>
+              <div className={`text-[10px] ${accentColorDim} uppercase tracking-[0.3em]`} style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                RANK
+              </div>
+            </div>
+
+            {/* Horizontal divider with glow */}
+            <div className="relative h-px">
+              <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${useYellowGlow ? 'via-yellow-400' : 'via-cyan-400'} to-transparent`} style={{ filter: 'blur(1px)' }} />
+            </div>
+
+            {/* Data fields in grid */}
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-[9px] text-white/40 uppercase mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  MEK
+                </div>
+                <div className="text-white text-sm" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  #{mekData.mekNumber}
+                </div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-[9px] text-white/40 uppercase mb-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  CORPORATION
+                </div>
+                <div className="text-white text-xs" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  {mekData.corporation}
+                </div>
+              </div>
+            </div>
+
+            {/* Employee ID badge */}
+            <div className="flex justify-center">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 bg-black/60 border ${borderColor} rounded-sm`}>
+                <div className="text-[9px] text-white/40 uppercase" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  ID
+                </div>
+                <div className="text-white text-sm tracking-wider" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  {mekData.employeeId}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Style 8: Matrix Grid - Grid-based data display
+    if (designationCardStyle === 'matrix-grid') {
+      return (
+        <div className="relative p-5 bg-black/50 backdrop-blur-sm border border-green-500/30 overflow-hidden">
+          {/* Matrix-style background pattern */}
+          <div
+            className="absolute inset-0 opacity-10 pointer-events-none"
+            style={{
+              backgroundImage: `repeating-linear-gradient(90deg, transparent 0px, rgba(0, 255, 65, 0.1) 1px, transparent 2px, transparent 20px),
+                                repeating-linear-gradient(0deg, transparent 0px, rgba(0, 255, 65, 0.1) 1px, transparent 2px, transparent 20px)`
+            }}
+          />
+
+          <div className="relative z-10">
+            {/* Header with rank */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-green-500/20">
+              <div className="text-[10px] text-green-400/60 uppercase tracking-[0.2em]" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                DESIGNATION
+              </div>
+              <div
+                className="text-green-400 text-3xl"
+                style={{
+                  fontFamily: 'Saira Condensed',
+                  fontWeight: 200,
+                  textShadow: '0 0 10px rgba(0, 255, 65, 0.6)'
+                }}
+              >
+                {mekData.rank}
+              </div>
+            </div>
+
+            {/* Data matrix grid */}
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-3">
+                <div className="text-[9px] text-green-400/40 uppercase w-24" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  MEK_NUM:
+                </div>
+                <div className="text-green-300 text-sm flex-1" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  {mekData.mekNumber}
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <div className="text-[9px] text-green-400/40 uppercase w-24" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  CORP_ID:
+                </div>
+                <div className="text-green-300 text-xs flex-1" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  {mekData.corporation}
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <div className="text-[9px] text-green-400/40 uppercase w-24" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  EMP_ID:
+                </div>
+                <div className="text-green-300 text-sm flex-1 tracking-wide" style={{ fontFamily: 'Saira Condensed', fontWeight: 300 }}>
+                  {mekData.employeeId}
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <div className="text-[9px] text-green-400/40 uppercase w-24" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                  RANK:
+                </div>
+                <div className="text-green-400 text-lg flex-1" style={{ fontFamily: 'Saira Condensed', fontWeight: 200, textShadow: '0 0 8px rgba(0, 255, 65, 0.4)' }}>
+                  {mekData.rank}
+                </div>
+              </div>
+            </div>
+
+            {/* Status indicator */}
+            <div className="mt-4 pt-3 border-t border-green-500/20 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" style={{ boxShadow: '0 0 8px rgba(0, 255, 65, 0.8)' }} />
+              <div className="text-[9px] text-green-400/60 uppercase tracking-wider" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+                ACTIVE
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
