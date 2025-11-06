@@ -419,30 +419,6 @@ export default function CampaignManager({
     setImportMessage(null);
   };
 
-  // Sync handler
-  const handleSync = async (campaignId: Id<"commemorativeCampaigns">) => {
-    setIsSyncing((prev) => ({ ...prev, [campaignId]: true }));
-
-    try {
-      console.log("[SYNC] Starting manual sync for campaign:", campaignId);
-
-      const result = await syncCampaignAction({ campaignId });
-
-      console.log("[SYNC] Sync completed successfully");
-      console.log("[SYNC] Result data:", result);
-      setSyncResults((prev) => ({ ...prev, [campaignId]: result }));
-      setSyncExpanded((prev) => ({ ...prev, [campaignId]: true })); // Auto-expand results
-
-      // Refresh campaigns to show updated counters
-      onCampaignUpdated?.();
-    } catch (error) {
-      console.error("[SYNC] Sync failed:", error);
-      onError?.(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setIsSyncing((prev) => ({ ...prev, [campaignId]: false }));
-    }
-  };
-
   if (!campaigns) {
     return (
       <div className="mek-card-industrial">
@@ -770,40 +746,6 @@ export default function CampaignManager({
                   </p>
                 </div>
               </div>
-
-              {/* Sync Button */}
-              <div className="mb-3">
-                <button
-                  onClick={() => handleSync(campaign._id)}
-                  disabled={isSyncing[campaign._id]}
-                  className="mek-button-primary flex items-center gap-2 text-sm"
-                >
-                  {isSyncing[campaign._id] ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    <>
-                      🔄 Sync with NMKR
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Sync Results Panel */}
-              {syncResults[campaign._id] && (
-                <SyncResultsPanel
-                  result={syncResults[campaign._id]}
-                  isExpanded={syncExpanded[campaign._id] || false}
-                  onToggle={() =>
-                    setSyncExpanded((prev) => ({
-                      ...prev,
-                      [campaign._id]: !prev[campaign._id],
-                    }))
-                  }
-                />
-              )}
 
               {/* NFT Inventory Table */}
               {campaign.totalNFTs > 0 && (

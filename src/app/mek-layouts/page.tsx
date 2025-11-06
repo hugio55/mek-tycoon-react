@@ -136,10 +136,10 @@ export default function MekLayoutsPage() {
             />
           </div>
 
-          {/* Toggle: Forward Blur Mask */}
+          {/* Toggle: Header Readability Method */}
           <div className="mb-3">
             <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-              Blur Method
+              Readability Method
             </label>
             <button
               onClick={() => setUseForwardBlur(!useForwardBlur)}
@@ -149,7 +149,7 @@ export default function MekLayoutsPage() {
                   : 'bg-gray-500/20 border-2 border-gray-500 text-gray-400'
               }`}
             >
-              {useForwardBlur ? '🎯 Forward Blur Mask' : '🔙 Backdrop Filter'}
+              {useForwardBlur ? '🌑 Opacity Fade' : '🔙 Backdrop Blur'}
             </button>
           </div>
 

@@ -1339,104 +1339,12 @@ export default function MekProfileLightbox({
       );
     }
 
-    // Style 2: Interactive Cards - Three cards side-by-side, Bonus lifts on hover
-    if (goldGenerationStyle === 'interactive-cards') {
-      const borderLeftColor = useYellowGlow ? 'border-yellow-500' : 'border-cyan-500';
-      const bgGradientFrom = useYellowGlow ? 'from-yellow-500/20' : 'from-cyan-500/20';
-      const bgGradientTo = useYellowGlow ? 'to-yellow-700/10' : 'to-cyan-700/10';
-      const dividerColor = useYellowGlow ? 'via-yellow-500/50' : 'via-cyan-500/50';
-      const dividerShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
-
-      return (
-        <div className={`relative p-4 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-sm border ${borderColor}`}>
-          {/* Background grid pattern */}
-          <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: useYellowGlow
-              ? 'linear-gradient(rgba(250, 182, 23, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.3) 1px, transparent 1px)'
-              : 'linear-gradient(rgba(0, 212, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.3) 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
-          }} />
-
-          <div className="relative z-10 flex gap-4 items-center">
-            {/* Left: Current Owner */}
-            <div className={`flex-1 px-4 py-3 bg-gradient-to-br ${bgGradientFrom} ${bgGradientTo} border-l-4 ${borderLeftColor}`}>
-              <div className={`text-[9px] ${accentColor} uppercase tracking-widest font-mono mb-2`}>
-                CURRENT OWNER
-              </div>
-              <div className={`${accentColor} text-2xl font-mono font-black`} style={{ textShadow: textShadowGlow }}>
-                {goldData.currentOwner}
-              </div>
-            </div>
-
-            {/* Vertical Divider with glow */}
-            <div className={`w-px h-16 bg-gradient-to-b from-transparent ${dividerColor} to-transparent`}
-                 style={{ boxShadow: dividerShadow }}
-            />
-
-            {/* Right: All Time */}
-            <div className="flex-1 px-4 py-3">
-              <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-2`}>
-                ALL TIME
-              </div>
-              <div className="text-white text-xl font-mono font-bold">
-                {goldData.allTime}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Option 3: Data Terminal
-    if (designationCardStyle === 'data-terminal') {
-      const borderBottomColor = useYellowGlow ? 'border-yellow-500/20' : 'border-cyan-500/20';
-      const accentBgColor = useYellowGlow ? 'bg-yellow-400' : 'bg-cyan-400';
-      const hoverBgFrom = useYellowGlow ? 'from-yellow-500/10' : 'from-cyan-500/10';
-      const hoverBgHover = useYellowGlow ? 'hover:from-yellow-500/15' : 'hover:from-cyan-500/15';
-      const accentBarShadow = useYellowGlow ? '0 0 10px rgba(250, 182, 23, 0.5)' : '0 0 10px rgba(0, 212, 255, 0.5)';
-      const scanlineRgba = useYellowGlow ? 'rgba(250, 182, 23, 0.03)' : 'rgba(0, 212, 255, 0.03)';
-
-      return (
-        <div className={`relative p-0 bg-black/50 backdrop-blur-sm border ${borderColor} overflow-hidden`}>
-          {/* Scanline overlay effect */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            backgroundImage: `repeating-linear-gradient(0deg, ${scanlineRgba} 0px, transparent 1px, transparent 2px, ${scanlineRgba} 3px)`,
-            animation: 'scanline 8s linear infinite'
-          }} />
-
-          <div className="relative z-10">
-            {/* Current Owner Bar - Emphasized */}
-            <div className={`flex items-center border-b ${borderBottomColor} px-4 py-3 bg-gradient-to-r ${hoverBgFrom} to-transparent ${hoverBgHover} transition-colors`}>
-              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
-              <div className="flex-1">
-                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
-                  CURRENT OWNER
-                </div>
-                <div
-                  className={`${accentColor} text-2xl font-mono font-black`}
-                  style={{ textShadow: textShadowGlow }}
-                >
-                  {goldData.currentOwner}
-                </div>
-              </div>
-            </div>
-
-            {/* All Time Bar */}
-            <div className={`flex items-center px-4 py-3 bg-black/20 ${useYellowGlow ? 'hover:bg-yellow-500/5' : 'hover:bg-cyan-500/5'} transition-colors`}>
-              <div className={`w-1 h-8 ${accentBgColor} mr-3`} style={{ boxShadow: accentBarShadow }} />
-              <div className="flex-1">
-                <div className={`text-[9px] ${accentColorDim} uppercase tracking-widest font-mono mb-0.5`}>
-                  ALL TIME
-                </div>
-                <div className="text-white text-xl font-mono font-bold">
-                  {goldData.allTime}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+    if(goldGenerationStyle==='interactive-cards'){return(<div className="relative p-4 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="flex gap-3"><div className="flex-1 p-3 bg-black/60 border border-gray-600/50"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-lg"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><button className={`flex-1 p-3 bg-gradient-to-br ${useYellowGlow?'from-yellow-500/30 to-yellow-600/10':'from-cyan-500/30 to-cyan-600/10'} border-2 ${borderColor} cursor-pointer transition-all hover:-translate-y-2 hover:shadow-2xl active:translate-y-0`}style={{boxShadow:`0 4px 20px ${glowRgba}`,transitionDuration:'200ms'}}><div className="text-center"><div className={`text-[9px] ${accentColor} uppercase tracking-wider mb-1`}style={{fontFamily:'Inter',fontWeight:400}}>Bonus ✦</div><div className={`${accentColor} text-2xl mb-1`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:textShadowGlow}}>+{formatGold(goldGenData.bonus)}</div><div className={`text-[8px] ${accentColorDim} uppercase tracking-widest`}style={{fontFamily:'Inter',fontWeight:400}}>CLICK ME</div></div></button><div className="flex-1 p-3 bg-black/60 border border-gray-600/50"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-lg`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 8px ${useYellowGlow?'rgba(250, 182, 23, 0.5)':'rgba(0, 212, 255, 0.5)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
+    if(goldGenerationStyle==='progress-bar'){const basePercent=(goldGenData.base/goldGenData.total)*100;const bonusPercent=(goldGenData.bonus/goldGenData.total)*100;return(<div className="relative p-6 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="flex justify-between mb-4"><div><div className="text-[9px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-sm"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><div className="text-center"><div className={`text-[9px] ${accentColor} uppercase tracking-wider`}style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className={`${accentColor} text-sm`}style={{fontFamily:'Saira Condensed',fontWeight:200}}>+{formatGold(goldGenData.bonus)}</div></div><div className="text-right"><div className="text-[9px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-sm`}style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.total)}</div></div></div><div className="relative h-16 bg-black/60 border border-gray-600/50 overflow-hidden"><div className="absolute left-0 top-0 bottom-0 bg-gray-600/40"style={{width:`${basePercent}%`}}/><button className={`absolute top-0 bottom-0 bg-gradient-to-r ${useYellowGlow?'from-yellow-500/50 to-yellow-400/30':'from-cyan-500/50 to-cyan-400/30'} border-x-2 ${borderColor} cursor-pointer transition-all hover:brightness-125 active:brightness-90 group`}style={{left:`${basePercent}%`,width:`${bonusPercent}%`,boxShadow:`0 0 20px ${glowRgba}, inset 0 0 15px ${glowRgbaInset}`}}><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><div className={`${accentColor} text-xl group-hover:scale-110 transition-transform`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:textShadowGlow}}>+{formatGold(goldGenData.bonus)}</div><div className={`text-[8px] ${accentColor} uppercase tracking-widest opacity-80`}style={{fontFamily:'Inter',fontWeight:400}}>▸ TAP ◂</div></div></div></button></div></div>);}
+    if(goldGenerationStyle==='floating-panel'){return(<div className="relative p-6 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="grid grid-cols-2 gap-4 mb-6"><div className="p-3 bg-black/60"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-lg"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><div className="p-3 bg-black/60"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-1"style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-lg`}style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.total)}</div></div></div><button className={`w-full p-5 bg-gradient-to-br ${useYellowGlow?'from-yellow-500/40 via-yellow-600/20 to-yellow-700/10':'from-cyan-500/40 via-cyan-600/20 to-cyan-700/10'} border-2 ${borderColor} cursor-pointer transition-all hover:scale-105 hover:-translate-y-1 active:scale-100 active:translate-y-0`}style={{boxShadow:`0 8px 32px ${glowRgba}, 0 0 40px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`,transform:'translateZ(20px)'}}><div className="text-center"><div className={`text-[10px] ${accentColor} uppercase tracking-widest mb-2 opacity-80`}style={{fontFamily:'Inter',fontWeight:400}}>✦ Bonus ✦</div><div className={`${accentColor} text-4xl mb-2`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 20px ${useYellowGlow?'rgba(250, 182, 23, 1)':'rgba(0, 212, 255, 1)'}`}}>+{formatGold(goldGenData.bonus)}</div><div className={`text-[10px] ${accentColor} uppercase tracking-widest flex items-center justify-center gap-2`}style={{fontFamily:'Inter',fontWeight:400}}><span>▸</span><span>VIEW BREAKDOWN</span><span>◂</span></div></div></button></div>);}
+    if(goldGenerationStyle==='tech-grid'){return(<div className="relative p-5 bg-black/40 backdrop-blur-sm border border-gray-700/50"><div className="absolute inset-0 opacity-5"style={{backgroundImage:useYellowGlow?'linear-gradient(rgba(250, 182, 23, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 182, 23, 0.4) 1px, transparent 1px)':'linear-gradient(rgba(0, 212, 255, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.4) 1px, transparent 1px)',backgroundSize:'15px 15px'}}/><div className="relative z-10 grid grid-cols-3 gap-4"><div className="p-4 bg-black/60 border border-gray-600/50"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-lg"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><button className={`p-4 bg-gradient-to-br ${useYellowGlow?'from-yellow-500/30 to-yellow-700/10':'from-cyan-500/30 to-cyan-700/10'} border-2 cursor-pointer transition-all hover:scale-110 active:scale-105 relative overflow-hidden`}style={{borderColor:useYellowGlow?'#fab617':'#00d4ff',boxShadow:`0 0 25px ${glowRgba}`}}><div className={`absolute top-0 left-0 w-3 h-3 border-t-4 border-l-4 ${borderColor}`}style={{animation:'pulse 1.5s ease-in-out infinite'}}/><div className={`absolute top-0 right-0 w-3 h-3 border-t-4 border-r-4 ${borderColor}`}style={{animation:'pulse 1.5s ease-in-out infinite 0.3s'}}/><div className={`absolute bottom-0 left-0 w-3 h-3 border-b-4 border-l-4 ${borderColor}`}style={{animation:'pulse 1.5s ease-in-out infinite 0.6s'}}/><div className={`absolute bottom-0 right-0 w-3 h-3 border-b-4 border-r-4 ${borderColor}`}style={{animation:'pulse 1.5s ease-in-out infinite 0.9s'}}/><div className="text-center"><div className={`text-[9px] ${accentColor} uppercase tracking-wider mb-2`}style={{fontFamily:'Inter',fontWeight:400}}>Bonus</div><div className={`${accentColor} text-xl`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:textShadowGlow}}>+{formatGold(goldGenData.bonus)}</div><div className={`text-[7px] ${accentColorDim} uppercase tracking-widest mt-1`}style={{fontFamily:'Inter',fontWeight:400}}>ANALYZE</div></div></button><div className="p-4 bg-black/60 border border-gray-600/50"><div className="text-[9px] text-gray-400 uppercase tracking-wider mb-2"style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-lg`}style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
+    if(goldGenerationStyle==='command-line'){return(<div className="relative p-5 bg-black/60 backdrop-blur-sm border border-gray-700/50 font-mono"><div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-700/50"><div className="w-3 h-3 rounded-full bg-red-500/50"/><div className="w-3 h-3 rounded-full bg-yellow-500/50"/><div className="w-3 h-3 rounded-full bg-green-500/50"/><div className="text-[9px] text-gray-500 uppercase tracking-wider ml-2"style={{fontFamily:'Inter',fontWeight:400}}>Gold Generation Terminal</div></div><div className="space-y-3"><div className="flex items-center gap-3"><span className="text-green-500 text-xs">$</span><span className="text-gray-400 text-xs"style={{fontFamily:'Inter',fontWeight:400}}>BASE_RATE:</span><span className="text-white text-sm"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</span></div><button className={`w-full flex items-center gap-3 px-3 py-2 bg-gradient-to-r ${useYellowGlow?'from-yellow-500/20 to-transparent':'from-cyan-500/20 to-transparent'} border-l-4 ${borderColor} cursor-pointer transition-all hover:pl-5 hover:brightness-125 active:brightness-90 group`}style={{boxShadow:`0 0 15px ${glowRgba}`}}><span className={`${accentColor} text-xs group-hover:animate-pulse`}>❯</span><span className={`${accentColor} text-xs`}style={{fontFamily:'Inter',fontWeight:400}}>BONUS_RATE:</span><span className={`${accentColor} text-sm`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:textShadowGlow}}>+{formatGold(goldGenData.bonus)}</span><span className={`${accentColorDim} text-[8px] uppercase tracking-wider ml-auto`}style={{fontFamily:'Inter',fontWeight:400}}>[EXECUTE]</span></button><div className="flex items-center gap-3 pt-2 border-t border-gray-700/50"><span className="text-green-500 text-xs">$</span><span className="text-gray-400 text-xs"style={{fontFamily:'Inter',fontWeight:400}}>TOTAL_OUTPUT:</span><span className={`${accentColor} text-sm`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 8px ${useYellowGlow?'rgba(250, 182, 23, 0.5)':'rgba(0, 212, 255, 0.5)'}`}}>{formatGold(goldGenData.total)}</span></div></div></div>);}
+    if(goldGenerationStyle==='matrix-badge'){return(<div className="relative p-6 bg-black/50 backdrop-blur-sm border border-gray-700/50 overflow-hidden"><div className="absolute inset-0 opacity-5 pointer-events-none"style={{backgroundImage:useYellowGlow?'repeating-linear-gradient(0deg, rgba(250, 182, 23, 0.2) 0px, transparent 2px, transparent 4px, rgba(250, 182, 23, 0.2) 6px)':'repeating-linear-gradient(0deg, rgba(0, 212, 255, 0.2) 0px, transparent 2px, transparent 4px, rgba(0, 212, 255, 0.2) 6px)',animation:'matrixRain 3s linear infinite'}}/><div className="relative z-10 space-y-5"><div className="flex justify-between items-center px-3 py-2 bg-black/40"><div className="text-[10px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Base</div><div className="text-white text-lg"style={{fontFamily:'Saira Condensed',fontWeight:200}}>{formatGold(goldGenData.base)}</div></div><button className={`w-full relative p-4 bg-gradient-to-br ${useYellowGlow?'from-yellow-500/30 via-yellow-600/15 to-black/40':'from-cyan-500/30 via-cyan-600/15 to-black/40'} border-2 ${borderColor} cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] group`}style={{boxShadow:`0 0 30px ${glowRgba}, inset 0 0 20px ${glowRgbaInset}`}}><div className={`absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 ${borderColor}`}/><div className={`absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 ${borderColor}`}/><div className={`absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 ${borderColor}`}/><div className={`absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 ${borderColor}`}/><div className="text-center"><div className={`text-[10px] ${accentColorDim} uppercase tracking-widest mb-2`}style={{fontFamily:'Inter',fontWeight:400}}>Bonus Generation</div><div className={`${accentColor} text-3xl mb-3`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:textShadowGlow}}>+{formatGold(goldGenData.bonus)}</div><div className={`inline-block px-4 py-1.5 bg-gradient-to-r ${useYellowGlow?'from-yellow-400 to-yellow-500':'from-cyan-400 to-cyan-500'} text-black text-[9px] uppercase tracking-widest font-bold group-hover:scale-105 transition-transform`}style={{fontFamily:'Inter',fontWeight:700,boxShadow:`0 0 20px ${useYellowGlow?'rgba(250, 182, 23, 0.8)':'rgba(0, 212, 255, 0.8)'}`}}>▸ ACCESS DETAILS ◂</div></div></button><div className="flex justify-between items-center px-3 py-2 bg-black/40 border-t-2 border-gray-700/50"><div className="text-[10px] text-gray-400 uppercase tracking-wider"style={{fontFamily:'Inter',fontWeight:400}}>Total</div><div className={`${accentColor} text-xl`}style={{fontFamily:'Saira Condensed',fontWeight:200,textShadow:`0 0 10px ${useYellowGlow?'rgba(250, 182, 23, 0.6)':'rgba(0, 212, 255, 0.6)'}`}}>{formatGold(goldGenData.total)}</div></div></div></div>);}
 
     return null;
   };
@@ -1525,40 +1433,21 @@ export default function MekProfileLightbox({
               </div>
             </div>
 
-            {/* Forward Blur Mask - Positioned just below header */}
+            {/* Opacity Fade Mask - Fades content to black as it approaches header */}
             {useForwardBlur && (
               <div
                 className="sticky z-30 pointer-events-none"
                 style={{
                   top: '140px',
-                  height: `${headerBlur * 6}px`,
+                  height: `${headerBlur * 8}px`,
                   marginTop: '-140px',
                   background: `linear-gradient(to bottom,
-                    rgba(0, 0, 0, ${headerDarkness / 150}) 0%,
-                    transparent 100%)`,
-                  backdropFilter: `blur(${headerBlur}px) contrast(1.2) saturate(0.5)`,
-                  WebkitBackdropFilter: `blur(${headerBlur}px) contrast(1.2) saturate(0.5)`,
-                  isolation: 'isolate',
-                  willChange: 'backdrop-filter',
-                  transform: 'translateZ(0)'
+                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.95}) 0%,
+                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.7}) 30%,
+                    rgba(0, 0, 0, ${(headerDarkness / 100) * 0.4}) 60%,
+                    transparent 100%)`
                 }}
-              >
-                {/* Multiple blur layers for stronger effect */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backdropFilter: `blur(${headerBlur * 0.7}px)`,
-                    WebkitBackdropFilter: `blur(${headerBlur * 0.7}px)`
-                  }}
-                />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backdropFilter: `blur(${headerBlur * 0.3}px) brightness(0.95)`,
-                    WebkitBackdropFilter: `blur(${headerBlur * 0.3}px) brightness(0.95)`
-                  }}
-                />
-              </div>
+              />
             )}
 
             {/* Main Content - Layout 1 (Three-Column) */}
@@ -1772,7 +1661,13 @@ function VariationCard({
             alt={title}
             className="w-full h-48 object-contain scale-[0.7]"
             style={{
-              filter: `drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity})) drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.5}))`
+              filter: `
+                drop-shadow(0 0 ${glowSize * 0.5}px rgba(250, 182, 23, ${glowIntensity}))
+                drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity * 0.8}))
+                drop-shadow(0 0 ${glowSize * 1.3}px rgba(250, 182, 23, ${glowIntensity * 0.6}))
+                drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.4}))
+                drop-shadow(0 0 ${glowSize * 2}px rgba(250, 182, 23, ${glowIntensity * 0.2}))
+              `.trim()
             }}
           />
         ) : (
