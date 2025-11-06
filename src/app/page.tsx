@@ -1975,7 +1975,7 @@ export default function MekRateLoggingPage() {
         console.warn('[Wallet Connect] No payment addresses found in wallet');
         setPaymentAddress('');
       } else {
-        primaryPaymentAddress = hexToBech32(paymentAddressHex);
+        primaryPaymentAddress = await hexToBech32(paymentAddressHex);
         setPaymentAddress(primaryPaymentAddress);
         console.log('[Wallet Connect] Stored payment address for verification:', primaryPaymentAddress.substring(0, 20) + '...');
       }
