@@ -22,7 +22,7 @@ const NMKR_API_BASE = "https://studio-api.nmkr.io";
 // HELPER: FETCH NFTs FROM NMKR BY STATUS
 // ==========================================
 
-async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" | "sold") {
+async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" | "sold" | "minted") {
   // Access environment variable inside the function (Convex requirement)
   const NMKR_API_KEY = process.env.NMKR_API_KEY;
 
@@ -71,6 +71,35 @@ async function fetchNFTsFromNMKR(projectId: string, state: "free" | "reserved" |
     console.error(`[SYNC] Error fetching ${state} NFTs:`, error);
     throw error;
   }
+}
+
+// ==========================================
+// HELPER: COMBINE SOLD AND MINTED NFTs
+// ==========================================
+
+/**
+ * Combines sold and minted NFTs, prioritizing minted data for tokenname.
+ * Minted NFTs have tokenname, which is required for blockchain verification.
+ */
+function combineSoldAndMintedNFTs(soldNFTs: any[], mintedNFTs: any[]) {
+  const nftMap = new Map();
+
+  // Add sold NFTs first
+  soldNFTs.forEach(nft => nftMap.set(nft.uid, nft));
+
+  // Overlay minted NFTs (overwrites with minted data if uid matches)
+  // This ensures we get tokenname from minted NFTs
+  mintedNFTs.forEach(nft => {
+    if (nftMap.has(nft.uid)) {
+      // Merge: keep sold data but add tokenname from minted
+      nftMap.set(nft.uid, { ...nftMap.get(nft.uid), ...nft });
+    } else {
+      // Pure minted NFT (was minted but not in sold list)
+      nftMap.set(nft.uid, nft);
+    }
+  });
+
+  return Array.from(nftMap.values());
 }
 
 // ==========================================
@@ -169,6 +198,7 @@ export const syncCampaign = internalAction({
       let freeNFTs: any[] = [];
       let reservedNFTs: any[] = [];
       let soldNFTs: any[] = [];
+      let mintedNFTs: any[] = [];
       const nmkrErrors: string[] = [];
 
       try {
@@ -177,6 +207,7 @@ export const syncCampaign = internalAction({
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "free"),
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "reserved"),
           fetchNFTsFromNMKR(campaign.nmkrProjectId, "sold"),
+          fetchNFTsFromNMKR(campaign.nmkrProjectId, "minted"),
         ]);
 
         // Extract results or capture errors
@@ -207,6 +238,28 @@ export const syncCampaign = internalAction({
           nmkrErrors.push(`Failed to fetch sold NFTs: ${results[3].reason}`);
           console.error("[SYNC] Sold NFTs error:", results[3].reason);
         }
+
+        // Handle minted NFTs - 406 error means no minted NFTs (treat as empty, not error)
+        if (results[4].status === "fulfilled") {
+          mintedNFTs = results[4].value;
+          console.log(`[SYNC] Found ${mintedNFTs.length} minted NFTs`);
+        } else {
+          const error = String(results[4].reason);
+          if (error.includes("406")) {
+            console.log("[SYNC] No minted NFTs (406) - treating as empty array");
+            mintedNFTs = [];
+          } else {
+            nmkrErrors.push(`Failed to fetch minted NFTs: ${error}`);
+            console.error("[SYNC] Minted NFTs error:", results[4].reason);
+          }
+        }
+
+        // Combine sold and minted NFTs (minted has priority for tokenname)
+        const allSoldNFTs = combineSoldAndMintedNFTs(soldNFTs, mintedNFTs);
+        console.log(`[SYNC] Combined ${soldNFTs.length} sold + ${mintedNFTs.length} minted = ${allSoldNFTs.length} total sold NFTs`);
+
+        // Replace soldNFTs with combined data for rest of sync
+        soldNFTs = allSoldNFTs;
 
         nmkrStats = {
           total: freeNFTs.length + reservedNFTs.length + soldNFTs.length,

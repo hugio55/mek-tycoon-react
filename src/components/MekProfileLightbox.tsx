@@ -1062,16 +1062,11 @@ export default function MekProfileLightbox({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <div className="absolute top-4 right-4 z-50">
-          <CloseButton onClick={onClose} className="!mt-0" />
-        </div>
-
         {/* Scrollable Content */}
         <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="relative text-white">
-            {/* Industrial Header */}
-            <div className="w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
+            {/* Industrial Header - Made Sticky */}
+            <div className="sticky top-0 z-40 w-full bg-gradient-to-b from-black via-gray-900/50 to-transparent">
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
@@ -1080,6 +1075,11 @@ export default function MekProfileLightbox({
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4" style={{ paddingTop: `${headerBottomPadding}px`, paddingBottom: `${headerBottomPadding}px` }}>
+                  {/* Close Button - Inside scrollable content at top right */}
+                  <div className="absolute top-4 right-4 z-50">
+                    <CloseButton onClick={onClose} className="!mt-0 scale-75" />
+                  </div>
+
                   <h1 className={getHeaderTitleClasses()}>
                     <span className={getPrimaryColor()}>MEK</span>{" "}
                     <span className="text-gray-400">PROFILE</span>
