@@ -13,6 +13,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream' | 'compact-table' | 'inline-metrics' | 'dense-grid' | 'stat-bar' | 'compact-table-v2' | 'compact-table-v3' | 'compact-table-v4';
+export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid';
 
 export { LevelProgressStyle };
 
@@ -32,6 +33,9 @@ interface MekProfileLightboxProps {
   cumulativeGoldFont?: string;
   goldGenerationStyle?: GoldGenerationStyle;
   onGoldGenerationStyleChange?: (style: GoldGenerationStyle) => void;
+  combinedGoldCardStyle?: CombinedGoldCardStyle;
+  onCombinedGoldCardStyleChange?: (style: CombinedGoldCardStyle) => void;
+  showCombinedGoldCard?: boolean;
   levelProgressStyle?: LevelProgressStyle;
   onLevelProgressStyleChange?: (style: LevelProgressStyle) => void;
   backdropDarkness?: number;
@@ -71,6 +75,9 @@ export default function MekProfileLightbox({
   cumulativeGoldFont = 'Orbitron',
   goldGenerationStyle = 'matrix-badge',
   onGoldGenerationStyleChange,
+  combinedGoldCardStyle = 'vertical-stacked',
+  onCombinedGoldCardStyleChange,
+  showCombinedGoldCard = false,
   levelProgressStyle = 'flat-bar',
   onLevelProgressStyleChange,
   backdropDarkness = 40,
@@ -87,7 +94,7 @@ export default function MekProfileLightbox({
   onHeaderBottomPaddingChange,
   contentSpacing = 16,
   onContentSpacingChange,
-  useYellowGlow = false,
+  useYellowGlow = true,
   headerDarkness = 50,
   headerBlur = 8,
   variationGlowIntensity = 0.6,
