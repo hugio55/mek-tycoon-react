@@ -11,7 +11,7 @@ export default function MekLayoutsPage() {
   const [styleVariation, setStyleVariation] = useState<'default' | 'variation1' | 'variation2'>('default');
   const [cardInteriorStyle, setCardInteriorStyle] = useState<CardInteriorStyle>('compact');
   const [buffDetailsLayout, setBuffDetailsLayout] = useState<'classic' | 'compact-grid' | 'detailed-cards' | 'minimal'>('classic');
-  const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
+  const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('neon-edge');
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
   const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('matrix-badge');
