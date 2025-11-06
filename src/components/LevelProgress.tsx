@@ -8,7 +8,11 @@ export type LevelProgressStyle =
   | 'diagonal'
   | 'segmented-vertical'
   | 'segmented-hex'
-  | 'segmented-dual-row';
+  | 'segmented-dual-row'
+  | 'slide-up-card'
+  | 'floating-badge'
+  | 'recessed-panel'
+  | 'tech-plate';
 
 interface LevelProgressProps {
   currentLevel: number;
@@ -471,6 +475,211 @@ export default function LevelProgress({
     );
   };
 
+  // Slide-Up Card Style - Card slides up from behind bars with shadow
+  const renderSlideUpCard = () => {
+    const segments = 10;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="relative">
+        {/* Full-width segmented bars */}
+        <div className="flex gap-1">
+          {Array.from({ length: segments }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex-1 h-4 ${borderColor} border transition-all duration-300`}
+              style={{
+                backgroundColor: i < filledSegments
+                  ? primaryHex
+                  : 'rgba(0, 0, 0, 0.6)',
+                boxShadow: i < filledSegments
+                  ? `0 0 8px rgba(${primaryRGB}, 0.5)`
+                  : 'none'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Card emerging from behind with slide-up effect */}
+        <div
+          className="relative -mt-2 mx-auto w-20 bg-black/80 backdrop-blur-sm border-2 border-gray-700/50 py-1 px-2 transition-all duration-300 hover:-translate-y-1"
+          style={{
+            boxShadow: `0 4px 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(${primaryRGB}, 0.2)`
+          }}
+        >
+          <div className="text-center">
+            <div className={`${numberFont} text-3xl font-thin ${textColor} leading-none`}>
+              {currentLevel}
+            </div>
+            <div className={`${labelFont} text-[10px] text-gray-400 uppercase tracking-widest`}>
+              LVL
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Floating Badge Style - Card floats with heavy shadow and glow
+  const renderFloatingBadge = () => {
+    const segments = 12;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="relative">
+        {/* Full-width segmented bars */}
+        <div className="flex gap-0.5">
+          {Array.from({ length: segments }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex-1 h-3 transition-all duration-300`}
+              style={{
+                backgroundColor: i < filledSegments
+                  ? primaryHex
+                  : 'rgba(0, 0, 0, 0.5)',
+                boxShadow: i < filledSegments
+                  ? `0 0 6px rgba(${primaryRGB}, 0.4)`
+                  : 'none'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Floating badge with intense shadow and glow */}
+        <div
+          className="relative -mt-3 mx-auto w-24 bg-gradient-to-b from-gray-900 to-black border-2 rounded-sm py-1.5 px-3 transition-all duration-300"
+          style={{
+            borderColor: primaryHex,
+            boxShadow: `
+              0 8px 24px rgba(0, 0, 0, 0.9),
+              0 0 40px rgba(${primaryRGB}, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1)
+            `
+          }}
+        >
+          <div className="text-center">
+            <div className={`${numberFont} text-4xl font-thin ${textColor} leading-none`}
+              style={{ textShadow: `0 0 12px rgba(${primaryRGB}, 0.6)` }}
+            >
+              {currentLevel}
+            </div>
+            <div className={`${labelFont} text-[9px] ${textColor} uppercase tracking-[0.2em] opacity-70`}>
+              LVL
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Recessed Panel Style - Card looks embedded/inset into surface
+  const renderRecessedPanel = () => {
+    const segments = 10;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="relative">
+        {/* Full-width segmented bars with subtle gaps */}
+        <div className="flex gap-1">
+          {Array.from({ length: segments }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex-1 h-4 border ${borderColor} transition-all duration-300`}
+              style={{
+                backgroundColor: i < filledSegments
+                  ? primaryHex
+                  : 'rgba(0, 0, 0, 0.7)',
+                boxShadow: i < filledSegments
+                  ? `0 0 8px rgba(${primaryRGB}, 0.5)`
+                  : 'inset 0 2px 4px rgba(0, 0, 0, 0.5)'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Recessed panel with inset shadow effect */}
+        <div
+          className="relative -mt-2 mx-auto w-20 bg-black/90 border border-gray-800 py-1 px-2"
+          style={{
+            boxShadow: `
+              inset 0 2px 6px rgba(0, 0, 0, 0.8),
+              inset 0 -1px 2px rgba(255, 255, 255, 0.05),
+              0 4px 8px rgba(0, 0, 0, 0.6)
+            `
+          }}
+        >
+          <div className="text-center">
+            <div className={`${numberFont} text-3xl font-thin ${textColor} leading-none`}>
+              {currentLevel}
+            </div>
+            <div className={`${labelFont} text-[10px] text-gray-500 uppercase tracking-widest`}>
+              LVL
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Tech Plate Style - Card with angular cuts and metallic industrial look
+  const renderTechPlate = () => {
+    const segments = 8;
+    const filledSegments = Math.floor((progress / 100) * segments);
+
+    return (
+      <div className="relative">
+        {/* Full-width thick bars with sharp edges */}
+        <div className="flex gap-1.5">
+          {Array.from({ length: segments }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex-1 h-5 border-2 transition-all duration-300`}
+              style={{
+                borderColor: i < filledSegments ? primaryHex : 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: i < filledSegments
+                  ? primaryHex
+                  : 'rgba(0, 0, 0, 0.8)',
+                boxShadow: i < filledSegments
+                  ? `0 0 12px rgba(${primaryRGB}, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2)`
+                  : 'inset 0 2px 4px rgba(0, 0, 0, 0.6)'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Tech plate with angular design */}
+        <div
+          className="relative -mt-3 mx-auto w-28 bg-gradient-to-br from-gray-800 via-gray-900 to-black border-2 py-2 px-3"
+          style={{
+            borderColor: primaryHex,
+            clipPath: 'polygon(8% 0%, 92% 0%, 100% 20%, 100% 100%, 0% 100%, 0% 20%)',
+            boxShadow: `
+              0 6px 16px rgba(0, 0, 0, 0.9),
+              0 0 30px rgba(${primaryRGB}, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.5)
+            `
+          }}
+        >
+          {/* Corner accent lines */}
+          <div className="absolute top-0 left-2 w-6 h-px opacity-50" style={{ background: primaryHex }} />
+          <div className="absolute top-0 right-2 w-6 h-px opacity-50" style={{ background: primaryHex }} />
+
+          <div className="text-center">
+            <div className={`${numberFont} text-4xl font-thin ${textColor} leading-none tracking-wider`}
+              style={{ textShadow: `0 0 10px rgba(${primaryRGB}, 0.5), 0 2px 4px rgba(0, 0, 0, 0.8)` }}
+            >
+              {currentLevel}
+            </div>
+            <div className={`${labelFont} text-[10px] ${textColor} uppercase tracking-[0.3em] opacity-60 font-bold`}>
+              LVL
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render based on style prop
   switch (style) {
     case 'arch':
@@ -487,6 +696,14 @@ export default function LevelProgress({
       return renderSegmentedHex();
     case 'segmented-dual-row':
       return renderSegmentedDualRow();
+    case 'slide-up-card':
+      return renderSlideUpCard();
+    case 'floating-badge':
+      return renderFloatingBadge();
+    case 'recessed-panel':
+      return renderRecessedPanel();
+    case 'tech-plate':
+      return renderTechPlate();
     case 'flat-bar':
     default:
       return renderFlatBar();
