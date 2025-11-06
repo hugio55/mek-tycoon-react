@@ -14,7 +14,7 @@ export default function MekLayoutsPage() {
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
-  const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('pulsing-button');
+  const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('matrix-badge');
   const [levelProgressStyle, setLevelProgressStyle] = useState<LevelProgressStyle>('flat-bar');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
@@ -377,13 +377,13 @@ export default function MekLayoutsPage() {
                 onChange={(e) => setGoldGenerationStyle(e.target.value as GoldGenerationStyle)}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
-                <option value="pulsing-button">Pulsing Button</option>
-                <option value="interactive-cards">Interactive Cards</option>
-                <option value="progress-bar">Progress Bar</option>
-                <option value="floating-panel">Floating Panel</option>
-                <option value="tech-grid">Tech Grid</option>
-                <option value="command-line">Command Line</option>
                 <option value="matrix-badge">Matrix Badge</option>
+                <option value="command-line">Command Line</option>
+                <option value="energy-display">Energy Display</option>
+                <option value="split-panels">Split Panels</option>
+                <option value="holographic-readout">Holographic Readout</option>
+                <option value="tech-metrics">Tech Metrics</option>
+                <option value="data-stream">Data Stream</option>
               </select>
             </div>
 

@@ -246,9 +246,6 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Image
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-black/20 divide-y divide-gray-700">
@@ -326,16 +323,6 @@ export default function NFTInventoryTable({ campaignId }: NFTInventoryTableProps
                           ) : (
                             <span className="text-xs text-gray-500">No image</span>
                           )}
-                        </td>
-                        <td className="px-3 py-2">
-                          <a
-                            href={nft.paymentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                          >
-                            View Payment
-                          </a>
                         </td>
                       </tr>
                     );
