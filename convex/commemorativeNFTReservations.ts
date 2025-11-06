@@ -14,7 +14,7 @@ import { Id } from "./_generated/dataModel";
  */
 
 const RESERVATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
-const GRACE_PERIOD = 30 * 1000; // 30 seconds
+const GRACE_PERIOD = 5 * 60 * 1000; // 5 minutes (extended for payment processing)
 
 // Create a new reservation for the next available NFT
 export const createReservation = mutation({
@@ -326,10 +326,18 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
   const expiredReservations = await ctx.db
     .query("commemorativeNFTReservations")
     .withIndex("by_status", (q) => q.eq("status", "active"))
-    .filter((q: any) => q.lt(q.field("expiresAt"), now - GRACE_PERIOD)) // 30 seconds grace
+    .filter((q: any) => q.lt(q.field("expiresAt"), now - GRACE_PERIOD)) // 5 minutes grace
     .collect();
 
+  let cleanedCount = 0;
+
   for (const reservation of expiredReservations) {
+    // CRITICAL SECURITY FIX: Don't expire if payment window is currently open
+    if (reservation.paymentWindowOpenedAt && !reservation.paymentWindowClosedAt) {
+      console.log('[🛡️CLEANUP] Skipping reservation with open payment window:', reservation._id, 'NFT:', reservation.nftNumber);
+      continue; // Skip this one - user is actively trying to pay
+    }
+
     console.log('[RESERVATION] Auto-expiring reservation:', reservation._id, 'NFT:', reservation.nftNumber);
 
     // Mark as expired
@@ -344,10 +352,12 @@ async function cleanupExpiredReservations(ctx: any, now: number) {
         status: "available",
       });
     }
+
+    cleanedCount++;
   }
 
-  if (expiredReservations.length > 0) {
-    console.log('[RESERVATION] Cleaned up', expiredReservations.length, 'expired reservations');
+  if (cleanedCount > 0) {
+    console.log('[RESERVATION] Cleaned up', cleanedCount, 'expired reservations');
   }
 }
 
