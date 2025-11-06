@@ -1993,7 +1993,7 @@ export default function MekRateLoggingPage() {
           walletAddress: stakeAddress,
           stakeAddress,
           walletType: wallet.name.toLowerCase(),
-          paymentAddresses: paymentAddresses // Pass payment addresses for fallback
+          paymentAddresses: primaryPaymentAddress ? [primaryPaymentAddress] : undefined // Pass payment address for fallback
         });
 
         if (initResult.success) {
@@ -2044,7 +2044,7 @@ export default function MekRateLoggingPage() {
           await initializeGoldMining({
             walletAddress: stakeAddress,
             walletType: wallet.name.toLowerCase(),
-            paymentAddresses: paymentAddresses, // Pass payment addresses for Blockfrost fallback
+            paymentAddresses: primaryPaymentAddress ? [primaryPaymentAddress] : undefined, // Pass payment address for Blockfrost fallback
             ownedMeks: meks.map(mek => ({
               assetId: mek.assetId,
               policyId: mek.policyId,
