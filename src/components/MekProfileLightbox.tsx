@@ -3708,6 +3708,105 @@ export default function MekProfileLightbox({
       );
     }
 
+    // HERO LEVEL V4: Aligned Bars & Stacked Level Display
+    // Concept: Bars and level display have EXACTLY the same height - bars (48px) match number (32px) + label (16px)
+    if (tenureLevelStyle === 'hero-level-v4') {
+      return (
+        <div className="flex items-stretch gap-3">
+          {/* Tenure - Left side, minimal */}
+          <div className="flex flex-col justify-center gap-0.5 shrink-0 opacity-70">
+            <div className="text-gray-400 text-[7px] uppercase tracking-wider font-mono">TEN</div>
+            <div className="text-white/80 text-[10px] font-medium">{tenureRate}</div>
+          </div>
+
+          {/* Bars - Increased height to h-12 (48px) */}
+          <div className="flex gap-1 sm:gap-1.5 flex-1">
+            {Array.from({ length: 10 }, (_, i) => {
+              const barLevel = i + 1;
+              const isActive = barLevel <= displayLevel;
+
+              return (
+                <div key={barLevel} className="flex-1">
+                  <div
+                    className="h-12 transition-all duration-500 rounded-sm relative overflow-hidden"
+                    style={{
+                      backgroundColor: isActive ? levelColor : '#1a1a1a',
+                      backgroundImage: isActive
+                        ? 'none'
+                        : 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(102, 102, 102, 0.1) 2px, rgba(102, 102, 102, 0.1) 4px)',
+                      border: isActive ? `1px solid ${levelColor}` : '1px solid #666',
+                      boxShadow: isActive
+                        ? `0 0 12px ${levelColor}80, inset 0 -4px 8px rgba(0,0,0,0.4)`
+                        : 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(102, 102, 102, 0.2)',
+                      opacity: isActive ? 1 : 0.5,
+                    }}
+                  >
+                    {isActive && (
+                      <>
+                        <div
+                          className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                          style={{
+                            height: '100%',
+                            background: `linear-gradient(to top, ${levelColor}, ${levelColor}80 50%, transparent)`,
+                          }}
+                        />
+                        <div
+                          className="absolute top-0 left-0 right-0 h-1/4"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Level Display - RIGHT SIDE - Stacked number + label = 48px total height */}
+          <div className="flex flex-col justify-center items-center shrink-0" style={{ height: '48px' }}>
+            {/* Level Number - 32px */}
+            <div
+              className="font-bold leading-none"
+              style={{
+                fontSize: '32px',
+                height: '32px',
+                fontFamily: 'Saira Condensed',
+                fontWeight: 200,
+                color: levelColor,
+                textShadow: `
+                  0 0 15px ${levelColor}dd,
+                  0 0 30px ${levelColor}88,
+                  0 2px 6px rgba(0,0,0,0.8)
+                `,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {levelValue}
+            </div>
+            {/* LEVEL Label - 16px */}
+            <div
+              className="uppercase tracking-widest font-mono"
+              style={{
+                fontSize: '9px',
+                height: '16px',
+                color: '#9ca3af',
+                letterSpacing: '0.15em',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              LEVEL
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
