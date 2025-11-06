@@ -156,6 +156,11 @@ export default function MekLayoutsPage() {
                 <option value="corner-brackets">Corner Brackets</option>
                 <option value="split-hud">Split HUD</option>
                 <option value="data-terminal">Data Terminal</option>
+                <option value="holographic-overlay">Holographic Overlay</option>
+                <option value="cyber-minimal">Cyber Minimal</option>
+                <option value="tech-frame">Tech Frame</option>
+                <option value="neon-edge">Neon Edge</option>
+                <option value="matrix-grid">Matrix Grid</option>
               </select>
             </div>
 
