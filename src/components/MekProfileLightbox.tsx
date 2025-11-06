@@ -5545,19 +5545,19 @@ export default function MekProfileLightbox({
                   {renderTenureLevelDisplay()}
                 </div>
 
-                {/* MOBILE: Primary Info Panel (Designation - Dynamic Style) */}
-                <div className="lg:hidden">
-                  {renderDesignationCard()}
-                </div>
-
-                {/* MOBILE: Animated Details Button */}
+                {/* MOBILE: Animated Details Button - Wider & Shorter (Pancake Shape) */}
                 <div className="lg:hidden flex justify-center">
                   <AnimatedBorderButton
-                    className="w-full max-w-sm text-base py-4 px-8"
+                    className="w-full text-sm py-1.5 px-8"
                     onClick={() => console.log('Details clicked')}
                   >
                     DEEP SCAN
                   </AnimatedBorderButton>
+                </div>
+
+                {/* MOBILE: Primary Info Panel (Designation - Dynamic Style) */}
+                <div className="lg:hidden">
+                  {renderDesignationCard()}
                 </div>
 
                 {/* MOBILE: Level & Gold Panel (grouped together) */}
@@ -5618,16 +5618,6 @@ export default function MekProfileLightbox({
                     {/* Designation Section - Dynamic Style */}
                     {renderDesignationCard()}
 
-                    {/* Animated Details Button */}
-                    <div className="flex justify-center">
-                      <AnimatedBorderButton
-                        className="w-full text-sm py-3 px-6"
-                        onClick={() => console.log('Details clicked')}
-                      >
-                        DEEP SCAN
-                      </AnimatedBorderButton>
-                    </div>
-
                     {/* Employment Status - PowerSwitch */}
                     {renderStatusCard()}
                   </div>
@@ -5645,6 +5635,16 @@ export default function MekProfileLightbox({
                     {/* DESKTOP: 10-Bar Level Indicator */}
                     <div className="w-full">
                       {renderTenureLevelDisplay()}
+                    </div>
+
+                    {/* DESKTOP: Animated Details Button - Wider & Shorter (Pancake Shape) */}
+                    <div className="w-full flex justify-center">
+                      <AnimatedBorderButton
+                        className="w-full text-sm py-1.5 px-8"
+                        onClick={() => console.log('Details clicked')}
+                      >
+                        DEEP SCAN
+                      </AnimatedBorderButton>
                     </div>
                   </div>
 

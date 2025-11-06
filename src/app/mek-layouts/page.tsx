@@ -15,8 +15,8 @@ export default function MekLayoutsPage() {
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
   const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('matrix-badge');
-  const [combinedGoldCardStyle, setCombinedGoldCardStyle] = useState<CombinedGoldCardStyle>('vertical-stacked');
-  const [showCombinedGoldCard, setShowCombinedGoldCard] = useState(false);
+  const [combinedGoldCardStyle, setCombinedGoldCardStyle] = useState<CombinedGoldCardStyle>('compact-density-v3-layout2');
+  const [showCombinedGoldCard, setShowCombinedGoldCard] = useState(true);
   const [levelProgressStyle, setLevelProgressStyle] = useState<LevelProgressStyle>('flat-bar');
   const [useYellowGlow, setUseYellowGlow] = useState(true);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
@@ -507,23 +507,6 @@ export default function MekLayoutsPage() {
                 <option value="compact-density-v3-layout4">CD V3 Layout 4 (Split Layout)</option>
                 <option value="compact-density-v3-layout5">CD V3 Layout 5 (Vertical Emphasis)</option>
               </select>
-            </div>
-
-            {/* Toggle: Show Combined vs Individual Cards */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-                Gold Card Display
-              </label>
-              <button
-                onClick={() => setShowCombinedGoldCard(!showCombinedGoldCard)}
-                className={`w-full px-3 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
-                  showCombinedGoldCard
-                    ? 'bg-purple-500/20 border-2 border-purple-500 text-purple-400'
-                    : 'bg-gray-500/20 border-2 border-gray-500 text-gray-400'
-                }`}
-              >
-                {showCombinedGoldCard ? '🔗 Combined Card' : '📊 Individual Cards'}
-              </button>
             </div>
 
             {/* Toggle: Glow Color */}
