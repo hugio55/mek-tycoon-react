@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
@@ -73,6 +73,25 @@ export default function CampaignManager({
   const syncCampaignAction = useAction(api.campaignSync.syncCampaignPublic);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
+
+  // DEBUG: Log when campaign data changes
+  useEffect(() => {
+    if (campaigns && selectedCampaignId) {
+      const selectedCampaign = campaigns.find(c => c._id === selectedCampaignId);
+      if (selectedCampaign) {
+        const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+        console.log(`[🔄CAMPAIGN-UI ${timestamp}] Campaign data received:`, {
+          name: selectedCampaign.name,
+          stats: {
+            total: selectedCampaign.totalNFTs,
+            available: selectedCampaign.availableNFTs,
+            reserved: selectedCampaign.reservedNFTs,
+            sold: selectedCampaign.soldNFTs,
+          }
+        });
+      }
+    }
+  }, [campaigns, selectedCampaignId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

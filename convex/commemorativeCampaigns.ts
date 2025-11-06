@@ -697,6 +697,66 @@ export const getAllInventoryForDiagnostics = query({
 });
 
 /**
+ * Link orphaned NFTs to a campaign
+ * Use this to fix NFTs that have no campaignId
+ */
+export const linkOrphanedNFTsToCampaign = mutation({
+  args: {
+    campaignId: v.id("commemorativeCampaigns"),
+    nftUids: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔧FIX] Linking orphaned NFTs to campaign:', args.campaignId);
+    console.log('[🔧FIX] NFT UIDs:', args.nftUids);
+
+    let linked = 0;
+    let notFound = 0;
+    let alreadyLinked = 0;
+
+    for (const nftUid of args.nftUids) {
+      const nft = await ctx.db
+        .query("commemorativeNFTInventory")
+        .withIndex("by_uid", (q) => q.eq("nftUid", nftUid))
+        .first();
+
+      if (!nft) {
+        console.log('[🔧FIX] ❌ NFT not found:', nftUid);
+        notFound++;
+        continue;
+      }
+
+      if (nft.campaignId) {
+        console.log('[🔧FIX] ⚠️ NFT already linked to campaign:', nft.name, nft.campaignId);
+        alreadyLinked++;
+        continue;
+      }
+
+      await ctx.db.patch(nft._id, {
+        campaignId: args.campaignId,
+      });
+
+      linked++;
+      console.log('[🔧FIX] ✅ Linked NFT to campaign:', nft.name);
+    }
+
+    console.log('[🔧FIX] Summary - Linked:', linked, 'Already linked:', alreadyLinked, 'Not found:', notFound);
+
+    // Refresh campaign counters
+    await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_campaign", (q) => q.eq("campaignId", args.campaignId))
+      .collect();
+
+    return {
+      success: true,
+      linked,
+      alreadyLinked,
+      notFound,
+    };
+  },
+});
+
+/**
  * Detailed diagnostic query for a specific NFT by UID
  * Use this to debug status persistence issues
  */
@@ -726,8 +786,8 @@ export const diagnoseNFTByUid = query({
       creationTime: nft._creationTime,
     });
 
-    // Also get the campaign info
-    const campaign = await ctx.db.get(nft.campaignId);
+    // Also get the campaign info (handle undefined campaignId)
+    const campaign = nft.campaignId ? await ctx.db.get(nft.campaignId) : null;
 
     return {
       found: true,
