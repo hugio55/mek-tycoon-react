@@ -272,15 +272,34 @@ export const repairPaymentUrls = mutation({
 
     for (const item of inventory) {
       try {
-        // Check if URL is malformed (missing project ID OR has dashes in UID)
+        // CRITICAL: Extract project ID from existing URL to compare
+        const urlMatch = item.paymentUrl.match(/[?&]p=([a-f0-9]+)/);
+        const existingProjectId = urlMatch ? urlMatch[1] : '';
+
+        // Get the correct project ID (from item record or fallback)
+        const correctProjectId = item.projectId || fallbackProjectId;
+        const correctProjectIdDashless = correctProjectId.replace(/-/g, '');
+
+        // Check if URL is malformed:
+        // 1. Missing project ID
+        // 2. Has dashes in UID
+        // 3. Project ID doesn't match expected
         const isMalformed = item.paymentUrl.includes('/?p=&n=') ||
                            item.paymentUrl.includes('?p=&n=') ||
-                           (item.paymentUrl.includes('&n=') && /&n=[a-f0-9-]{36}/.test(item.paymentUrl));
+                           (item.paymentUrl.includes('&n=') && /&n=[a-f0-9-]{36}/.test(item.paymentUrl)) ||
+                           (existingProjectId !== correctProjectIdDashless);
 
         if (!isMalformed) {
           console.log('[🔧FIX] Skipping (already correct):', item.name);
           skippedCount++;
           continue;
+        }
+
+        // Log why it's being fixed
+        if (existingProjectId !== correctProjectIdDashless) {
+          console.log('[🔧FIX] ⚠️ WRONG PROJECT ID detected in URL for:', item.name);
+          console.log('[🔧FIX]    Existing:', existingProjectId);
+          console.log('[🔧FIX]    Expected:', correctProjectIdDashless);
         }
 
         console.log('[🔧FIX] 🔍 Attempting to fix:', item.name);
