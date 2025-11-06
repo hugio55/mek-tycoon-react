@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import MekProfileLightbox, { DesignationCardStyle } from "@/components/MekProfileLightbox";
+import MekProfileLightbox, { DesignationCardStyle, StatusCardStyle } from "@/components/MekProfileLightbox";
 
 // Mock data for demonstration
 const mockMekData = {
@@ -228,12 +228,14 @@ function MekManagementConcept2({ onClose }: { onClose: () => void }) {
 // CONCEPT 3: Centered Minimalism (User's Current Favorite - IMPROVED)
 // Clean, centered, balanced design with medium transparency
 // Now uses MekProfileLightbox with designation card style selection
-function MekManagementConcept3({ onClose, designationCardStyle }: { onClose: () => void; designationCardStyle?: DesignationCardStyle }) {
+function MekManagementConcept3({ onClose, designationCardStyle, statusCardStyle }: { onClose: () => void; designationCardStyle?: DesignationCardStyle; statusCardStyle?: StatusCardStyle }) {
   return (
     <MekProfileLightbox
       isOpen={true}
       onClose={onClose}
       designationCardStyle={designationCardStyle || 'corner-brackets'}
+      statusCardStyle={statusCardStyle || 'compact-minimal'}
+      onStatusCardStyleChange={() => {}}
     />
   );
 }
@@ -850,6 +852,7 @@ export default function MekManagementLightboxConcepts() {
   const [showConcepts, setShowConcepts] = useState(false);
   const [activeConcept, setActiveConcept] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(3);
   const [designationCardStyle, setDesignationCardStyle] = useState<'corner-brackets' | 'split-hud' | 'data-terminal'>('corner-brackets');
+  const [statusCardStyle, setStatusCardStyle] = useState<StatusCardStyle>('compact-minimal');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -979,7 +982,7 @@ export default function MekManagementLightboxConcepts() {
         <>
           {activeConcept === 1 && <MekManagementConcept1 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 2 && <MekManagementConcept2 onClose={() => setShowConcepts(false)} />}
-          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} designationCardStyle={designationCardStyle} />}
+          {activeConcept === 3 && <MekManagementConcept3 onClose={() => setShowConcepts(false)} designationCardStyle={designationCardStyle} statusCardStyle={statusCardStyle} />}
           {activeConcept === 4 && <MekManagementConcept4 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 5 && <MekManagementConcept5 onClose={() => setShowConcepts(false)} />}
           {activeConcept === 6 && <MekManagementConcept6 onClose={() => setShowConcepts(false)} />}
