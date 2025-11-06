@@ -1711,14 +1711,20 @@ export default function MekProfileLightbox({
                   <VariationCard
                     title="HEAD VARIATION"
                     imagePath="/variation-images-art-400px/ae1-gn3-ev1.png"
+                    glowSize={variationGlowSize}
+                    glowIntensity={variationGlowIntensity}
                   />
                   <VariationCard
                     title="BODY VARIATION"
                     imagePath="/variation-images-art-400px/ak3-aa5-mo1.png"
+                    glowSize={variationGlowSize}
+                    glowIntensity={variationGlowIntensity}
                   />
                   <VariationCard
                     title="TRAIT VARIATION"
                     imagePath="/variation-images-art-400px/ar1-at1-nm1.png"
+                    glowSize={variationGlowSize}
+                    glowIntensity={variationGlowIntensity}
                   />
                 </div>
 
@@ -1745,7 +1751,17 @@ export default function MekProfileLightbox({
 
 // Reusable Variation Card Component - Direct on Lightbox Style with Yellow Glow
 // Images and text float directly on lightbox base layer, NO card containers
-function VariationCard({ title, imagePath }: { title: string; imagePath?: string }) {
+function VariationCard({
+  title,
+  imagePath,
+  glowSize = 25,
+  glowIntensity = 0.6
+}: {
+  title: string;
+  imagePath?: string;
+  glowSize?: number;
+  glowIntensity?: number;
+}) {
   return (
     <div className="flex flex-col items-center relative">
       {/* Image floating directly on lightbox background with yellow glow behind */}
@@ -1756,7 +1772,7 @@ function VariationCard({ title, imagePath }: { title: string; imagePath?: string
             alt={title}
             className="w-full h-48 object-contain scale-[0.7]"
             style={{
-              filter: `drop-shadow(0 0 ${variationGlowSize}px rgba(250, 182, 23, ${variationGlowIntensity})) drop-shadow(0 0 ${variationGlowSize * 1.6}px rgba(250, 182, 23, ${variationGlowIntensity * 0.5}))`
+              filter: `drop-shadow(0 0 ${glowSize}px rgba(250, 182, 23, ${glowIntensity})) drop-shadow(0 0 ${glowSize * 1.6}px rgba(250, 182, 23, ${glowIntensity * 0.5}))`
             }}
           />
         ) : (

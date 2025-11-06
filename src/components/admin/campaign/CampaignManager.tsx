@@ -6,7 +6,6 @@ import { api } from "../../../../convex/_generated/api";
 import type { Campaign, CampaignStatus } from "@/types/campaign";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import NFTInventoryTable from "./NFTInventoryTable";
-import SyncResultsPanel from "./SyncResultsPanel";
 
 interface CampaignManagerProps {
   selectedCampaignId?: string;
@@ -47,11 +46,6 @@ export default function CampaignManager({
   const [csvPreview, setCsvPreview] = useState<CSVImportPreview | null>(null);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
 
-  // Sync state
-  const [syncResults, setSyncResults] = useState<Record<string, any>>({});
-  const [isSyncing, setIsSyncing] = useState<Record<string, boolean>>({});
-  const [syncExpanded, setSyncExpanded] = useState<Record<string, boolean>>({});
-
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -70,7 +64,6 @@ export default function CampaignManager({
   const deleteCampaign = useMutation(api.campaigns.deleteCampaign);
   const populateInventory = useMutation(api.commemorativeCampaigns.populateCampaignInventory);
   const syncCounters = useMutation(api.commemorativeCampaigns.syncCampaignCounters);
-  const syncCampaignAction = useAction(api.campaignSync.syncCampaignPublic);
 
   const campaigns = useQuery(api.campaigns.getAllCampaigns);
 
