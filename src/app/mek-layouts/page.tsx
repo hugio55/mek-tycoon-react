@@ -644,6 +644,8 @@ export default function MekLayoutsPage() {
         headerBlur={headerBlur}
         variationGlowIntensity={variationGlowIntensity}
         variationGlowSize={variationGlowSize}
+        variationTextStyle={variationTextStyle}
+        onVariationTextStyleChange={setVariationTextStyle}
       />
 
       {/* Gold Generation Details Lightbox */}
