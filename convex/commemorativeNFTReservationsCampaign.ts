@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -567,6 +567,31 @@ export const cleanupAllExpiredReservations = mutation({
     }
 
     console.log('[CAMPAIGN RESERVATION] Cleaned up expired reservations for', totalCleaned, 'campaigns');
+
+    return { success: true, campaignsProcessed: totalCleaned };
+  },
+});
+
+/**
+ * INTERNAL: Cleanup ALL expired reservations (called by cron job)
+ *
+ * Runs every 5 minutes via cron to automatically expire reservations
+ * that have passed their 10-minute timeout window
+ */
+export const internalCleanupExpiredReservations = internalMutation({
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Get all campaigns
+    const campaigns = await ctx.db.query("commemorativeCampaigns").collect();
+
+    let totalCleaned = 0;
+    for (const campaign of campaigns) {
+      await cleanupExpiredCampaignReservations(ctx, campaign._id, now);
+      totalCleaned++;
+    }
+
+    console.log('[CRON CLEANUP] Cleaned up expired reservations for', totalCleaned, 'campaigns');
 
     return { success: true, campaignsProcessed: totalCleaned };
   },
