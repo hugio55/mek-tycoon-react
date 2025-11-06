@@ -11,7 +11,7 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
-export type GoldGenerationStyle = 'pulsing-button' | 'interactive-cards' | 'progress-bar' | 'floating-panel' | 'tech-grid' | 'command-line' | 'matrix-badge';
+export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream';
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -66,7 +66,7 @@ export default function MekProfileLightbox({
   cumulativeGoldStyle = 'stacked-emphasis',
   onCumulativeGoldStyleChange,
   cumulativeGoldFont = 'Orbitron',
-  goldGenerationStyle = 'pulsing-button',
+  goldGenerationStyle = 'matrix-badge',
   onGoldGenerationStyleChange,
   backdropDarkness = 40,
   onBackdropDarknessChange,
