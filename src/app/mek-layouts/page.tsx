@@ -184,7 +184,7 @@ export default function MekLayoutsPage() {
               </label>
               <select
                 value={cumulativeGoldStyle}
-                onChange={(e) => setCumulativeGoldStyle(e.target.value as 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout')}
+                onChange={(e) => setCumulativeGoldStyle(e.target.value as 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal')}
                 className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
               >
                 <option value="stacked-emphasis">Stacked Emphasis</option>
@@ -192,6 +192,9 @@ export default function MekLayoutsPage() {
                 <option value="badge-style">Badge Style</option>
                 <option value="horizontal-bar">Horizontal Bar</option>
                 <option value="diagonal-layout">Diagonal Layout</option>
+                <option value="stacked-compact">Stacked Compact</option>
+                <option value="stacked-wide">Stacked Wide</option>
+                <option value="stacked-minimal">Stacked Minimal</option>
               </select>
             </div>
 
