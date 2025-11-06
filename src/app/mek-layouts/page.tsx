@@ -32,6 +32,7 @@ export default function MekLayoutsPage() {
   const [headerBlur, setHeaderBlur] = useState(13);
   const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
   const [variationGlowSize, setVariationGlowSize] = useState(25);
+  const [variationTextStyle, setVariationTextStyle] = useState<'hero-focus' | 'tech-readout' | 'minimal-labels' | 'data-grid' | 'compact-badge'>('hero-focus');
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
