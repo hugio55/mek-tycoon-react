@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { NFTInventoryItem, NFTStatus } from "@/types/campaign";
@@ -24,6 +24,32 @@ export default function NFTInventoryTable({
     api.commemorativeNFTInventorySetup.clearInventory
   );
 
+  // Log when inventory data changes
+  useEffect(() => {
+    if (inventory) {
+      console.log('[🎨UI] === NFTInventoryTable received new data ===');
+      console.log('[🎨UI] Total items:', inventory.length);
+
+      const statusCounts = {
+        available: inventory.filter((item) => item.isAvailable).length,
+        reserved: inventory.filter((item) => item.status === "reserved").length,
+        sold: inventory.filter((item) => item.status === "sold").length,
+      };
+      console.log('[🎨UI] Status breakdown from useQuery data:', statusCounts);
+
+      // Log first few items
+      const sample = inventory.slice(0, 3);
+      console.log('[🎨UI] Sample items:', sample.map(nft => ({
+        name: nft.name,
+        nftUid: nft.nftUid,
+        status: nft.status,
+        isAvailable: nft.isAvailable,
+      })));
+
+      console.log('[🎨UI] === Component will re-render with this data ===');
+    }
+  }, [inventory]);
+
   const handleClearInventory = async () => {
     try {
       const result = await clearInventory({});
@@ -38,6 +64,7 @@ export default function NFTInventoryTable({
   };
 
   if (!inventory) {
+    console.log('[🎨UI] Inventory is undefined/null - showing loading state');
     return (
       <div className="mek-card-industrial">
         <div className="flex items-center justify-center p-8">

@@ -695,3 +695,58 @@ export const getAllInventoryForDiagnostics = query({
     return await ctx.db.query("commemorativeNFTInventory").collect();
   },
 });
+
+/**
+ * Detailed diagnostic query for a specific NFT by UID
+ * Use this to debug status persistence issues
+ */
+export const diagnoseNFTByUid = query({
+  args: {
+    nftUid: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[🔍DIAGNOSE] Querying NFT with UID:', args.nftUid);
+
+    const nft = await ctx.db
+      .query("commemorativeNFTInventory")
+      .withIndex("by_uid", (q) => q.eq("nftUid", args.nftUid))
+      .first();
+
+    if (!nft) {
+      console.log('[🔍DIAGNOSE] ❌ NFT not found in database');
+      return { found: false, nftUid: args.nftUid };
+    }
+
+    console.log('[🔍DIAGNOSE] ✅ NFT found:', {
+      id: nft._id,
+      name: nft.name,
+      nftNumber: nft.nftNumber,
+      status: nft.status,
+      campaignId: nft.campaignId,
+      creationTime: nft._creationTime,
+    });
+
+    // Also get the campaign info
+    const campaign = await ctx.db.get(nft.campaignId);
+
+    return {
+      found: true,
+      nft: {
+        _id: nft._id,
+        nftUid: nft.nftUid,
+        name: nft.name,
+        nftNumber: nft.nftNumber,
+        status: nft.status,
+        campaignId: nft.campaignId,
+        creationTime: nft._creationTime,
+      },
+      campaign: campaign ? {
+        _id: campaign._id,
+        name: campaign.name,
+        availableNFTs: campaign.availableNFTs,
+        reservedNFTs: campaign.reservedNFTs,
+        soldNFTs: campaign.soldNFTs,
+      } : null,
+    };
+  },
+});

@@ -171,11 +171,32 @@ export const getInventoryStatus = mutation({
 // Get all inventory (query for frontend)
 export const getAllInventory = query({
   handler: async (ctx) => {
+    console.log('[📊GETALL] === getAllInventory query called ===');
+
     const inventory = await ctx.db
       .query("commemorativeNFTInventory")
       .collect();
 
-    return inventory.map((item) => ({
+    console.log('[📊GETALL] Total inventory items from DB:', inventory.length);
+
+    // Log status breakdown from raw database
+    const statusCounts = {
+      available: inventory.filter(item => item.status === "available").length,
+      reserved: inventory.filter(item => item.status === "reserved").length,
+      sold: inventory.filter(item => item.status === "sold").length,
+    };
+    console.log('[📊GETALL] Status breakdown (raw DB):', statusCounts);
+
+    // Log first few items to see actual status values
+    const sample = inventory.slice(0, 3);
+    console.log('[📊GETALL] Sample items:', sample.map(nft => ({
+      name: nft.name,
+      nftUid: nft.nftUid,
+      status: nft.status,
+      _creationTime: nft._creationTime,
+    })));
+
+    const mapped = inventory.map((item) => ({
       _id: item._id,
       nftUid: item.nftUid,
       nftNumber: item.nftNumber,
@@ -183,6 +204,11 @@ export const getAllInventory = query({
       status: item.status,
       isAvailable: item.status === "available",
     }));
+
+    console.log('[📊GETALL] Returning', mapped.length, 'mapped items');
+    console.log('[📊GETALL] === Query execution complete ===');
+
+    return mapped;
   },
 });
 

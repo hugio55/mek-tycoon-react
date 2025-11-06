@@ -304,10 +304,15 @@ export const syncCampaign = internalAction({
       console.log(`[SYNC] Queued ${updateActions.length} updates`);
 
       // ===== STEP 5: APPLY UPDATES =====
+      console.log(`[SYNC] === STEP 5: APPLYING ${updateActions.length} UPDATES ===`);
       const updateResults = [];
 
       for (const action of updateActions) {
         try {
+          console.log(`[SYNC] 🔧 Calling updateNFTStatus mutation for ${action.nftName}...`);
+          console.log(`[SYNC]    UID: ${action.nftUid}`);
+          console.log(`[SYNC]    Changing: ${action.oldStatus} → ${action.newStatus}`);
+
           await ctx.runMutation(api.commemorativeCampaigns.updateNFTStatus, {
             nftUid: action.nftUid,
             status: action.newStatus as "available" | "reserved" | "sold",
@@ -320,7 +325,7 @@ export const syncCampaign = internalAction({
             newStatus: action.newStatus,
           });
 
-          console.log(`[SYNC] ✅ Updated ${action.nftName}: ${action.oldStatus} → ${action.newStatus}`);
+          console.log(`[SYNC] ✅ Mutation completed for ${action.nftName}`);
         } catch (error) {
           updateResults.push({
             success: false,
@@ -331,6 +336,8 @@ export const syncCampaign = internalAction({
           console.error(`[SYNC] ❌ Failed to update ${action.nftName}:`, error);
         }
       }
+
+      console.log(`[SYNC] === UPDATES COMPLETE: ${updateResults.filter(r => r.success).length} succeeded, ${updateResults.filter(r => !r.success).length} failed ===`);
 
       // ===== STEP 6: REFRESH CAMPAIGN COUNTERS =====
       await ctx.runMutation(api.commemorativeCampaigns.syncCampaignCounters, {
