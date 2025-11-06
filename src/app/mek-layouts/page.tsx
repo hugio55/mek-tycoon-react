@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle } from '@/components/MekProfileLightbox';
+import MekProfileLightbox, { CardInteriorStyle, DesignationCardStyle, GoldGenerationStyle } from '@/components/MekProfileLightbox';
 import GoldGenerationDetailsLightbox from '@/components/GoldGenerationDetailsLightbox';
 
 export default function MekLayoutsPage() {
@@ -14,6 +14,7 @@ export default function MekLayoutsPage() {
   const [designationCardStyle, setDesignationCardStyle] = useState<DesignationCardStyle>('corner-brackets');
   const [cumulativeGoldStyle, setCumulativeGoldStyle] = useState<'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout'>('stacked-emphasis');
   const [cumulativeGoldFont, setCumulativeGoldFont] = useState('Orbitron');
+  const [goldGenerationStyle, setGoldGenerationStyle] = useState<GoldGenerationStyle>('pulsing-button');
   const [useYellowGlow, setUseYellowGlow] = useState(false);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
@@ -26,6 +27,8 @@ export default function MekLayoutsPage() {
   const [showLeftDebugPanel, setShowLeftDebugPanel] = useState(true);
   const [headerDarkness, setHeaderDarkness] = useState(80);
   const [headerBlur, setHeaderBlur] = useState(12);
+  const [variationGlowIntensity, setVariationGlowIntensity] = useState(0.6);
+  const [variationGlowSize, setVariationGlowSize] = useState(25);
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4">
@@ -267,6 +270,26 @@ export default function MekLayoutsPage() {
               </select>
             </div>
 
+            {/* Dropdown 7: Gold Generation Style */}
+            <div className="mb-3">
+              <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                Gold Generation Style
+              </label>
+              <select
+                value={goldGenerationStyle}
+                onChange={(e) => setGoldGenerationStyle(e.target.value as GoldGenerationStyle)}
+                className="w-full bg-black/60 border border-cyan-500/50 rounded px-2 py-1.5 text-cyan-300 text-xs font-bold uppercase tracking-wider cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-all"
+              >
+                <option value="pulsing-button">Pulsing Button</option>
+                <option value="interactive-cards">Interactive Cards</option>
+                <option value="progress-bar">Progress Bar</option>
+                <option value="floating-panel">Floating Panel</option>
+                <option value="tech-grid">Tech Grid</option>
+                <option value="command-line">Command Line</option>
+                <option value="matrix-badge">Matrix Badge</option>
+              </select>
+            </div>
+
             {/* Toggle: Glow Color */}
             <div className="mb-3">
               <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
@@ -456,6 +479,8 @@ export default function MekLayoutsPage() {
         onDesignationCardStyleChange={setDesignationCardStyle}
         cumulativeGoldStyle={cumulativeGoldStyle}
         cumulativeGoldFont={cumulativeGoldFont}
+        goldGenerationStyle={goldGenerationStyle}
+        onGoldGenerationStyleChange={setGoldGenerationStyle}
         useYellowGlow={useYellowGlow}
         backdropDarkness={backdropDarkness}
         onBackdropDarknessChange={setBackdropDarkness}
