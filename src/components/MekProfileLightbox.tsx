@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import "@/styles/global-design-system.css";
 import MechanicalToggle from "@/components/controls/MechanicalToggle";
 import CloseButton from "@/components/controls/CloseButton";
+import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
 
 export type CardInteriorStyle = 'compact' | 'spacious' | 'modern' | 'tech-badge' | 'cyber-compact' | 'tactical-display';
 export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-terminal' | 'holographic-overlay' | 'cyber-minimal' | 'tech-frame' | 'neon-edge' | 'matrix-grid';
@@ -12,6 +13,8 @@ export type DesignationCardStyle = 'corner-brackets' | 'split-hud' | 'data-termi
 export type BuffDetailsLayout = 'classic' | 'compact-grid' | 'detailed-cards' | 'minimal';
 export type CumulativeGoldStyle = 'stacked-emphasis' | 'side-split' | 'badge-style' | 'horizontal-bar' | 'diagonal-layout' | 'stacked-compact' | 'stacked-wide' | 'stacked-minimal';
 export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-display' | 'split-panels' | 'holographic-readout' | 'tech-metrics' | 'data-stream';
+
+export { LevelProgressStyle };
 
 interface MekProfileLightboxProps {
   isOpen: boolean;
@@ -29,6 +32,8 @@ interface MekProfileLightboxProps {
   cumulativeGoldFont?: string;
   goldGenerationStyle?: GoldGenerationStyle;
   onGoldGenerationStyleChange?: (style: GoldGenerationStyle) => void;
+  levelProgressStyle?: LevelProgressStyle;
+  onLevelProgressStyleChange?: (style: LevelProgressStyle) => void;
   backdropDarkness?: number;
   onBackdropDarknessChange?: (value: number) => void;
   cardDarkness?: number;
@@ -68,6 +73,8 @@ export default function MekProfileLightbox({
   cumulativeGoldFont = 'Orbitron',
   goldGenerationStyle = 'matrix-badge',
   onGoldGenerationStyleChange,
+  levelProgressStyle = 'flat-bar',
+  onLevelProgressStyleChange,
   backdropDarkness = 40,
   onBackdropDarknessChange,
   cardDarkness = 20,
@@ -1494,17 +1501,13 @@ export default function MekProfileLightbox({
                 <div className="lg:hidden space-y-3">
                   {/* Level Progress */}
                   <div className="mek-card-industrial mek-border-sharp-gold p-4">
-                    <div className="mek-label-uppercase mb-2">LEVEL PROGRESS</div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-400">LEVEL 1</span>
-                      <span className="text-gray-400">LEVEL 2</span>
-                    </div>
-                    <div className="relative w-full h-4 bg-black/60 border border-yellow-500/30 mb-2 overflow-hidden">
-                      <div className="h-full w-3/4 bg-gradient-to-r from-yellow-500 to-yellow-600" style={{
-                        boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
-                      }}></div>
-                    </div>
-                    <div className="text-xs text-gray-400 text-center">6,720 / 10,000 XP</div>
+                    <LevelProgress
+                      currentLevel={12}
+                      currentXP={6720}
+                      requiredXP={10000}
+                      style={levelProgressStyle}
+                      useYellowGlow={useYellowGlow}
+                    />
                   </div>
 
                   {/* Gold Stats Combined */}
@@ -1585,17 +1588,13 @@ export default function MekProfileLightbox({
                   <div className="lg:col-span-3 space-y-4">
                     {/* Level Progress */}
                     <div className={getCardClasses()}>
-                      <div className="mek-label-uppercase mb-2">LEVEL PROGRESS</div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-400">LEVEL 1</span>
-                        <span className="text-gray-400">LEVEL 2</span>
-                      </div>
-                      <div className="relative w-full h-4 bg-black/60 border border-yellow-500/30 mb-2 overflow-hidden">
-                        <div className="h-full w-3/4 bg-gradient-to-r from-yellow-500 to-yellow-600" style={{
-                          boxShadow: '0 0 10px rgba(250, 182, 23, 0.6)'
-                        }}></div>
-                      </div>
-                      <div className="text-xs text-gray-400 text-center">6,720 / 10,000 XP</div>
+                      <LevelProgress
+                        currentLevel={12}
+                        currentXP={6720}
+                        requiredXP={10000}
+                        style={levelProgressStyle}
+                        useYellowGlow={useYellowGlow}
+                      />
                     </div>
 
                     {/* Gold Generation */}
