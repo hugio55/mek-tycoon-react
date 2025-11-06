@@ -5618,8 +5618,18 @@ export default function MekProfileLightbox({
                     {/* Designation Section - Dynamic Style */}
                     {renderDesignationCard()}
 
-                    {/* Employment Status - PowerSwitch */}
-                    {renderStatusCard()}
+                    {/* Gold Cards - Combined or Individual */}
+                    {showCombinedGoldCard ? (
+                      renderCombinedGoldCard()
+                    ) : (
+                      <>
+                        {/* Gold Generation */}
+                        {renderGoldProducedCard()}
+
+                        {/* Cumulative Gold */}
+                        {renderCumulativeGoldCard()}
+                      </>
+                    )}
                   </div>
 
                   {/* CENTER - MEK IMAGE */}
@@ -5650,18 +5660,8 @@ export default function MekProfileLightbox({
 
                   {/* RIGHT SIDEBAR */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* Gold Cards - Combined or Individual */}
-                    {showCombinedGoldCard ? (
-                      renderCombinedGoldCard()
-                    ) : (
-                      <>
-                        {/* Gold Generation */}
-                        {renderGoldProducedCard()}
-
-                        {/* Cumulative Gold */}
-                        {renderCumulativeGoldCard()}
-                      </>
-                    )}
+                    {/* Employment Status - PowerSwitch */}
+                    {renderStatusCard()}
                   </div>
                 </div>
 

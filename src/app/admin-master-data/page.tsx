@@ -3557,23 +3557,16 @@ export default function AdminMasterDataPage() {
                       </span>
                     </div>
 
-                    {/* Component Preview - showing both OFF and ON states */}
-                    <div className="bg-black/60 rounded-lg p-8 space-y-8">
-                      {/* OFF state (static, unchecked) */}
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="text-xs text-zinc-500 uppercase tracking-wider">OFF State (Gray)</div>
-                        <PowerSwitchToggle checked={false} />
-                      </div>
-
-                      {/* ON state (interactive) */}
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="text-xs text-zinc-500 uppercase tracking-wider">Interactive Toggle</div>
+                    {/* Component Preview - Interactive toggle */}
+                    <div className="bg-black/60 rounded-lg p-8">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider">Click to Toggle</div>
                         <PowerSwitchToggle
                           checked={powerSwitchToggleChecked}
                           onChange={setPowerSwitchToggleChecked}
                         />
                         <div className="text-xs text-yellow-400">
-                          Status: {powerSwitchToggleChecked ? 'ON (Glowing)' : 'OFF (Gray)'}
+                          Status: {powerSwitchToggleChecked ? 'ON (Glowing)' : 'OFF (Dim)'}
                         </div>
                       </div>
                     </div>
