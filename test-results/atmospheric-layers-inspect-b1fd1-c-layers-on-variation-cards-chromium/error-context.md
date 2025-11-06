@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - button "0 MEKS ▼" [ref=e11] [cursor=pointer]:
+      - generic [ref=e12]: 0 MEKS
+      - generic [ref=e13]: ▼
+    - link "OE Logo" [ref=e15] [cursor=pointer]:
+      - /url: https://overexposed.io
+      - img "OE Logo" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e19]:
+        - img "Navigation" [ref=e20]
+        - button "ESSENCE" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: ESSENCE
+        - button "Market" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: MARKET
+        - button "MEKS" [ref=e25] [cursor=pointer]:
+          - generic [ref=e26]: MEKS
+        - button "Story" [ref=e27] [cursor=pointer]:
+          - generic [ref=e28]: CORP
+        - button "GOLD" [ref=e29] [cursor=pointer]
+        - generic:
+          - generic: "0"
+          - generic: .
+          - generic: "000"
+      - generic [ref=e30]:
+        - heading "Mek Profile" [level=1] [ref=e31]
+        - button "View Mek Details" [ref=e32] [cursor=pointer]
+        - generic [ref=e33]:
+          - heading "Gold Generation" [level=2] [ref=e37]
+          - generic [ref=e38]:
+            - generic [ref=e39]:
+              - generic [ref=e40]: "Base Rate:"
+              - generic [ref=e41]: 20.0 g/hr
+            - generic [ref=e42]:
+              - generic [ref=e43]: "Effective Rate:"
+              - generic [ref=e44]: 24.0 g/hr
+          - button "View Details" [ref=e45] [cursor=pointer]
+        - button "Header Controls" [ref=e46] [cursor=pointer]
+        - button "Style Variations" [ref=e47] [cursor=pointer]
+        - generic [ref=e49]:
+          - heading "Header Controls" [level=3] [ref=e50]
+          - generic [ref=e51]:
+            - generic [ref=e52]: "Header Darkness: 80%"
+            - slider [ref=e53] [cursor=pointer]: "80"
+          - generic [ref=e54]:
+            - generic [ref=e55]: "Header Blur: 12px"
+            - slider [ref=e56] [cursor=pointer]: "12"
+          - generic [ref=e57]:
+            - generic [ref=e58]: Readability Method
+            - button "🔙 Backdrop Blur" [ref=e59] [cursor=pointer]
+          - heading "Level" [level=4] [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e63]: Progress Display
+            - combobox [ref=e64] [cursor=pointer]:
+              - option "Flat Bar" [selected]
+              - option "Arch"
+              - option "Segmented"
+              - option "Orbital"
+              - option "Diagonal"
+          - heading "Variation PNG Glow" [level=4] [ref=e66]
+          - generic [ref=e67]:
+            - generic [ref=e68]: "Glow Intensity: 60%"
+            - slider [ref=e69] [cursor=pointer]: "0.6"
+          - generic [ref=e70]:
+            - generic [ref=e71]: "Glow Size: 25px"
+            - slider [ref=e72] [cursor=pointer]: "25"
+          - generic [ref=e73]:
+            - generic [ref=e74]: "Atmospheric Noise: 15%"
+            - slider [ref=e75] [cursor=pointer]: "0.15"
+        - generic [ref=e77]:
+          - heading "Style Controls" [level=3] [ref=e78]
+          - generic [ref=e79]:
+            - generic [ref=e80]: Overall Theme
+            - combobox [ref=e81] [cursor=pointer]:
+              - option "Industrial Yellow" [selected]
+              - option "Cyberpunk Cyan"
+              - option "Military Green"
+          - generic [ref=e82]:
+            - generic [ref=e83]: Card Layout
+            - combobox [ref=e84] [cursor=pointer]:
+              - option "Classic Stack" [selected]
+              - option "Side-by-Side"
+              - option "Minimal Centered"
+              - option "Tech Badge"
+              - option "Cyber Compact"
+              - option "Tactical Display"
+          - generic [ref=e85]:
+            - generic [ref=e86]: Buff Details Layout
+            - combobox [ref=e87] [cursor=pointer]:
+              - option "Classic Stack" [selected]
+              - option "Compact Grid"
+              - option "Detailed Cards"
+              - option "Minimal List"
+          - generic [ref=e88]:
+            - generic [ref=e89]: Designation Card Style
+            - combobox [ref=e90] [cursor=pointer]:
+              - option "Corner Brackets" [selected]
+              - option "Split HUD"
+              - option "Data Terminal"
+              - option "Holographic Overlay"
+              - option "Cyber Minimal"
+              - option "Tech Frame"
+              - option "Neon Edge"
+              - option "Matrix Grid"
+          - generic [ref=e91]:
+            - generic [ref=e92]: Cumulative Gold Style
+            - combobox [ref=e93] [cursor=pointer]:
+              - option "Stacked Emphasis" [selected]
+              - option "Side Split"
+              - option "Badge Style"
+              - option "Horizontal Bar"
+              - option "Diagonal Layout"
+              - option "Stacked Compact"
+              - option "Stacked Wide"
+              - option "Stacked Minimal"
+          - generic [ref=e94]:
+            - generic [ref=e95]: Gold Card Font
+            - combobox [ref=e96] [cursor=pointer]:
+              - option "Orbitron" [selected]
+              - option "Rajdhani (Light)"
+              - option "Space Grotesk (Elegant)"
+              - option "Exo 2 (Ultra Thin)"
+              - option "JetBrains Mono"
+              - option "IBM Plex Mono"
+              - option "Share Tech Mono"
+              - option "Inter"
+              - option "Roboto Mono"
+              - option "Michroma"
+              - option "Saira Condensed (Thin)"
+              - option "Teko (Light)"
+              - option "Abel (Condensed)"
+              - option "Josefin Sans (Thin)"
+              - option "Economica (Condensed)"
+              - option "Advent Pro (Thin)"
+              - option "Archivo Narrow (Condensed)"
+          - generic [ref=e97]:
+            - generic [ref=e98]: Gold Generation Style
+            - combobox [ref=e99] [cursor=pointer]:
+              - option "Matrix Badge" [selected]
+              - option "Command Line"
+              - option "Energy Display"
+              - option "Split Panels"
+              - option "Holographic Readout"
+              - option "Tech Metrics"
+              - option "Data Stream"
+              - option "Compact Table"
+              - option "Inline Metrics"
+              - option "Dense Grid"
+              - option "Stat Bar"
+              - option "Compact Table V2"
+              - option "Compact Table V3"
+              - option "Compact Table V4"
+          - generic [ref=e100]:
+            - generic [ref=e101]: Glow Color
+            - button "💠 Cyber Cyan" [ref=e102] [cursor=pointer]
+          - generic [ref=e104]:
+            - button "Opacity & Blur ▲" [ref=e105] [cursor=pointer]:
+              - generic [ref=e106]: Opacity & Blur
+              - generic [ref=e107]: ▲
+            - generic [ref=e108]:
+              - generic [ref=e109]:
+                - generic [ref=e110]: "Backdrop Darkness: 22%"
+                - slider [ref=e111] [cursor=pointer]: "22"
+              - generic [ref=e112]:
+                - generic [ref=e113]: "Card Darkness: 7%"
+                - slider [ref=e114] [cursor=pointer]: "7"
+              - generic [ref=e115]:
+                - generic [ref=e116]: "Backdrop Blur: 0px"
+                - slider [ref=e117] [cursor=pointer]: "0"
+              - generic [ref=e118]:
+                - generic [ref=e119]: "Card Backdrop Blur: 9px"
+                - slider [ref=e120] [cursor=pointer]: "9"
+              - generic [ref=e121]:
+                - generic [ref=e122]: "Header Bottom Padding: 15px"
+                - slider [ref=e123] [cursor=pointer]: "15"
+              - generic [ref=e124]:
+                - generic [ref=e125]: "Content Top Padding: 32px"
+                - slider [ref=e126] [cursor=pointer]: "32"
+              - generic [ref=e127]:
+                - generic [ref=e128]: "Content Card Spacing: 16px"
+                - slider [ref=e129] [cursor=pointer]: "16"
+          - generic [ref=e130]:
+            - generic [ref=e131]: "Active:"
+            - generic [ref=e132]:
+              - generic [ref=e133]: Industrial Yellow
+              - generic [ref=e134]: Classic Stack
+              - generic [ref=e135]: Classic Stack
+              - generic [ref=e136]: Direct on Lightbox (Locked)
+              - generic [ref=e137]: Corner Brackets
+  - button "Open Next.js Dev Tools" [ref=e143] [cursor=pointer]:
+    - img [ref=e144]
+  - alert [ref=e147]: MEK PROFILE
+```
