@@ -272,6 +272,23 @@ export default function MekRateLoggingPage() {
     }
   }, []);
 
+  // Check for valid session and redirect to home if authenticated
+  useEffect(() => {
+    async function checkSessionAndRedirect() {
+      try {
+        const session = await restoreWalletSession();
+        if (session && session.stakeAddress) {
+          console.log('[Root Page] Valid session found, redirecting to /home');
+          window.location.href = '/home';
+        }
+      } catch (error) {
+        console.error('[Root Page] Error checking session:', error);
+      }
+    }
+
+    checkSessionAndRedirect();
+  }, []);
+
   // Wallet state
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>(''); // Track detailed connection progress
@@ -3033,7 +3050,37 @@ export default function MekRateLoggingPage() {
 
       {/* Main Content - Mobile-optimized padding and overflow */}
       <div className="relative z-10 h-screen overflow-auto p-4 pb-24 md:p-6 lg:p-8 mobile-scroll">
-        {!walletConnected || forceNoWallet ? (
+        {isAutoReconnecting ? (
+          // Session Restore Loading Screen
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="relative max-w-md w-full">
+              {/* Corner brackets */}
+              <div className="hidden sm:block absolute -top-4 -left-4 w-12 h-12 border-l-2 border-t-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -top-4 -right-4 w-12 h-12 border-r-2 border-t-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -bottom-4 -left-4 w-12 h-12 border-l-2 border-b-2 border-yellow-500/50" />
+              <div className="hidden sm:block absolute -bottom-4 -right-4 w-12 h-12 border-r-2 border-b-2 border-yellow-500/50" />
+
+              <div className="bg-black/40 border-2 border-yellow-500/30 p-8 backdrop-blur-md">
+                {/* Spinning loader */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 border-4 border-yellow-500/20 rounded-full" />
+                    <div className="absolute inset-0 border-4 border-transparent border-t-yellow-500 rounded-full animate-spin" />
+                  </div>
+                </div>
+
+                {/* Status text */}
+                <h2 className="text-2xl font-black text-yellow-500 mb-4 uppercase tracking-widest text-center font-['Orbitron']">
+                  RESTORING SESSION
+                </h2>
+
+                <p className="text-yellow-400/80 text-center font-mono text-sm">
+                  Reconnecting to your wallet...
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : !walletConnected || forceNoWallet ? (
           // Wallet Connection Screen - Mobile-optimized
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-2rem)] md:h-full py-8 md:py-0">
             {/* Main connection card with corner brackets */}

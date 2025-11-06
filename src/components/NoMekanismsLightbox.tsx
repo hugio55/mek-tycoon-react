@@ -80,24 +80,27 @@ export default function NoMekanismsLightbox({ isOpen, onClose }: NoMekanismsLigh
             </h2>
 
             {/* Message */}
-            <p className="text-gray-300 text-center mb-8 leading-relaxed">
+            <p className="text-gray-300 text-center mb-6 leading-relaxed">
               You need at least <span className="text-white font-bold">1 Mekanism</span> in order to initiate your corporation.
             </p>
 
-            {/* Close Button */}
-            <div className="flex justify-center">
+            {/* Aftermarket Link Button */}
+            <div className="flex flex-col items-center gap-3">
+              <a
+                href="https://www.jpg.store/collection/overexposedmekanism"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all rounded font-mono uppercase tracking-wider text-xs sm:text-sm"
+              >
+                Aftermarket Mekanisms →
+              </a>
+
+              {/* Close Button */}
               <button
                 onClick={onClose}
-                className="group relative px-8 py-3 bg-yellow-500/10 border-2 border-yellow-500/50 hover:border-yellow-500 hover:bg-yellow-500/20 transition-all duration-300"
+                className="text-gray-500 hover:text-gray-300 transition-colors text-sm uppercase tracking-wider"
               >
-                <span
-                  className="text-yellow-500 font-bold uppercase tracking-wider text-sm"
-                  style={{ fontFamily: "'Orbitron', sans-serif" }}
-                >
-                  Understood
-                </span>
-                {/* Button glow on hover */}
-                <div className="absolute inset-0 border-2 border-yellow-500/0 group-hover:border-yellow-500/30 transition-all duration-300" style={{ transform: 'scale(1.1)' }} />
+                Close
               </button>
             </div>
           </div>
