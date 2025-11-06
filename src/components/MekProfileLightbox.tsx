@@ -1576,19 +1576,7 @@ export default function MekProfileLightbox({
                     </div>
 
                     {/* Gold Generation */}
-                    <div className={getCardClasses()}>
-                      <div className="mek-label-uppercase mb-2">GOLD GENERATION</div>
-                      <div className={getCardSpacing()}>
-                        <div className={getCardInteriorClasses()}>
-                          <div className={getLabelClasses()}>BASE</div>
-                          <div className={`text-white ${getValueClasses()}`}>20.0/hr</div>
-                        </div>
-                        <div className={getCardInteriorClasses()}>
-                          <div className={getLabelClasses()}>EFFECTIVE</div>
-                          <div className={`text-green-400 font-bold ${getValueClasses()}`}>24.0/hr</div>
-                        </div>
-                      </div>
-                    </div>
+                    {renderGoldProducedCard()}
 
                     {/* Cumulative Gold */}
                     {renderCumulativeGoldCard()}
