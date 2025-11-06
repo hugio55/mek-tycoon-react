@@ -1459,9 +1459,19 @@ export default function MekProfileLightbox({
               className="sticky top-0 z-40 w-full"
               style={{
                 backgroundColor: `rgba(0, 0, 0, ${headerDarkness / 100})`,
-                backdropFilter: `blur(${headerBlur}px)`
+                backdropFilter: `blur(${headerBlur}px) saturate(80%)`,
+                WebkitBackdropFilter: `blur(${headerBlur}px) saturate(80%)`
               }}
             >
+              {/* Additional blur overlay layer for stronger text blur effect */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                  WebkitBackdropFilter: `blur(${Math.floor(headerBlur / 2)}px)`,
+                  zIndex: -1
+                }}
+              />
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <div className="absolute inset-0" style={{
