@@ -18,7 +18,7 @@ export default function MekLayoutsPage() {
   const [combinedGoldCardStyle, setCombinedGoldCardStyle] = useState<CombinedGoldCardStyle>('vertical-stacked');
   const [showCombinedGoldCard, setShowCombinedGoldCard] = useState(false);
   const [levelProgressStyle, setLevelProgressStyle] = useState<LevelProgressStyle>('flat-bar');
-  const [useYellowGlow, setUseYellowGlow] = useState(false);
+  const [useYellowGlow, setUseYellowGlow] = useState(true);
   const [backdropDarkness, setBackdropDarkness] = useState(22);
   const [cardDarkness, setCardDarkness] = useState(7);
   const [backdropBlur, setBackdropBlur] = useState(0);
