@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import "@/styles/global-design-system.css";
-import DottedToggleSwitch from "@/components/controls/DottedToggleSwitch";
+import PowerSwitch from "@/components/controls/PowerSwitch";
 import CloseButton from "@/components/controls/CloseButton";
 import LevelProgress, { LevelProgressStyle } from "@/components/LevelProgress";
 import { DEFAULT_LEVEL_COLORS } from "@/components/MekCard/types";
@@ -20,6 +20,7 @@ export type GoldGenerationStyle = 'matrix-badge' | 'command-line' | 'energy-disp
 export type CombinedGoldCardStyle = 'vertical-stacked' | 'side-by-side' | 'dashboard-grid' | 'hero-emphasis' | 'elegant-split' | 'cascade-accumulation' | 'energy-conduit' | 'clean-horizontal' | 'stacked-minimal' | 'badge-pair' | 'diagonal-split' | 'compact-density' | 'overlapping-layers' | 'compact-density-v1' | 'compact-density-v2' | 'compact-density-v3' | 'compact-density-v4' | 'compact-density-v5';
 export type StatsLayoutStyle = 'inline-dot' | 'vertical-divider' | 'badge-pills' | 'label-above' | 'glow-separator';
 export type TenureLevelStyle = 'classic-side-labels' | 'stacked-compact' | 'inline-badges' | 'vertical-emphasis' | 'minimal-centered' | 'hero-level-v1' | 'hero-level-v2' | 'hero-level-v3' | 'card-slide-up' | 'card-floating-badge' | 'card-inset-panel' | 'card-tech-plate';
+export type StatusCardStyle = 'compact-minimal' | 'wide-badge' | 'vertical-stack' | 'tech-panel' | 'holographic-glow';
 
 export { LevelProgressStyle };
 
@@ -69,6 +70,8 @@ interface MekProfileLightboxProps {
   onStatsLayoutStyleChange?: (style: StatsLayoutStyle) => void;
   tenureLevelStyle?: TenureLevelStyle;
   onTenureLevelStyleChange?: (style: TenureLevelStyle) => void;
+  statusCardStyle?: StatusCardStyle;
+  onStatusCardStyleChange?: (style: StatusCardStyle) => void;
 }
 
 export default function MekProfileLightbox({
@@ -116,7 +119,9 @@ export default function MekProfileLightbox({
   statsLayoutStyle = 'inline-dot',
   onStatsLayoutStyleChange,
   tenureLevelStyle = 'classic-side-labels',
-  onTenureLevelStyleChange
+  onTenureLevelStyleChange,
+  statusCardStyle = 'compact-minimal',
+  onStatusCardStyleChange
 }: MekProfileLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const [isEmployed, setIsEmployed] = useState(false);
